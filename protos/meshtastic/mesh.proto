@@ -1,0 +1,366 @@
+syntax = "proto3";
+
+package meshtastic;
+
+option java_package = "com.geeksville.mesh";
+option java_outer_classname = "MeshProtos";
+option optimize_for = LITE_RUNTIME;
+option go_package = "github.com/meshtastic/go/generated";
+
+/*
+ * Meshtastic mesh packet definition
+ */
+
+// Unique identifier for a node
+message Position {
+  // Latitude in degrees * 1e-7
+  sfixed32 latitude_i = 1;
+  
+  // Longitude in degrees * 1e-7
+  sfixed32 longitude_i = 2;
+  
+  // Altitude in meters above MSL
+  int32 altitude = 3;
+  
+  // Timestamp in seconds since 1970
+  fixed32 time = 4;
+}
+
+// User information
+message User {
+  // Unique ID
+  string id = 1;
+  
+  // Long name
+  string long_name = 2;
+  
+  // Short name (max 4 chars)
+  string short_name = 3;
+  
+  // Hardware model
+  HardwareModel hw_model = 4;
+}
+
+// Hardware models
+enum HardwareModel {
+  UNSET = 0;
+  TLORA_V2 = 1;
+  TLORA_V1 = 2;
+  TLORA_V2_1_1p6 = 3;
+  TBEAM = 4;
+  HELTEC_V2_0 = 5;
+  TBEAM0p7 = 6;
+  T_ECHO = 7;
+  TLORA_V1_1p3 = 8;
+  RAK4631 = 9;
+  HELTEC_V2_1 = 10;
+  HELTEC_V1 = 11;
+  LILYGO_TBEAM_S3_CORE = 12;
+  RAK11200 = 13;
+  NANO_G1 = 14;
+  TLORA_V2_1_1p8 = 15;
+  STATION_G1 = 25;
+  RAK11310 = 26;
+  PRIVATE_HW = 255;
+}
+
+// Route discovery information
+message RouteDiscovery {
+  repeated fixed32 route = 1;
+}
+
+// Data packet types
+enum PortNum {
+  UNKNOWN_APP = 0;
+  TEXT_MESSAGE_APP = 1;
+  REMOTE_HARDWARE_APP = 2;
+  POSITION_APP = 3;
+  NODEINFO_APP = 4;
+  ROUTING_APP = 5;
+  ADMIN_APP = 6;
+  TEXT_MESSAGE_COMPRESSED_APP = 7;
+  WAYPOINT_APP = 8;
+  AUDIO_APP = 9;
+  DETECTION_SENSOR_APP = 10;
+  REPLY_APP = 32;
+  IP_TUNNEL_APP = 33;
+  SERIAL_APP = 64;
+  STORE_FORWARD_APP = 65;
+  RANGE_TEST_APP = 66;
+  TELEMETRY_APP = 67;
+  ZPS_APP = 68;
+  SIMULATOR_APP = 69;
+  TRACEROUTE_APP = 70;
+  NEIGHBORINFO_APP = 71;
+  ATAK_PLUGIN = 72;
+  PRIVATE_APP = 256;
+  ATAK_FORWARDER = 257;
+  MAX = 511;
+}
+
+// Data payload
+message Data {
+  // The type of payload
+  PortNum portnum = 1;
+  
+  // Payload data
+  bytes payload = 2;
+  
+  // If true, request a receipt/ACK
+  bool want_response = 3;
+  
+  // Destination for replies
+  fixed32 dest = 4;
+  
+  // Source of the message
+  fixed32 source = 5;
+  
+  // Request ID for tracking
+  fixed32 request_id = 6;
+  
+  // For responses
+  fixed32 reply_id = 7;
+  
+  // For emoji reactions
+  fixed32 emoji = 8;
+}
+
+// Mesh packet
+message MeshPacket {
+  // Sender
+  fixed32 from = 1;
+  
+  // Destination (0 = broadcast)
+  fixed32 to = 2;
+  
+  // Channel index
+  uint32 channel = 3;
+  
+  // Payload variant
+  oneof payload_variant {
+    Data decoded = 4;
+    bytes encrypted = 5;
+  }
+  
+  // Unique packet ID
+  fixed32 id = 6;
+  
+  // Time received (local, not from packet)
+  fixed32 rx_time = 7;
+  
+  // SNR of received packet
+  float rx_snr = 8;
+  
+  // Number of hops
+  uint32 hop_limit = 9;
+  
+  // For prioritization
+  bool want_ack = 10;
+  
+  // Priority level
+  uint32 priority = 11;
+  
+  // Delayed broadcast seconds
+  uint32 delayed = 12;
+}
+
+// Node information
+message NodeInfo {
+  // Node number
+  uint32 num = 1;
+  
+  // User info
+  User user = 2;
+  
+  // Position
+  Position position = 3;
+  
+  // SNR of last received packet
+  float snr = 4;
+  
+  // Last heard timestamp
+  fixed32 last_heard = 5;
+  
+  // Device metrics
+  DeviceMetrics device_metrics = 6;
+}
+
+// Device telemetry
+message DeviceMetrics {
+  // Battery level 0-100
+  uint32 battery_level = 1;
+  
+  // Voltage in millivolts
+  float voltage = 2;
+  
+  // Channel utilization
+  float channel_utilization = 3;
+  
+  // Air utilization TX
+  float air_util_tx = 4;
+  
+  // Uptime in seconds
+  uint32 uptime_seconds = 5;
+}
+
+// My node information
+message MyNodeInfo {
+  // My node number
+  uint32 my_node_num = 1;
+  
+  // Max channels
+  uint32 max_channels = 2;
+  
+  // Has GPS
+  bool has_gps = 3;
+  
+  // Reboot count
+  uint32 reboot_count = 4;
+  
+  // Firmware version
+  string firmware_version = 5;
+}
+
+// Channel configuration
+message Channel {
+  // Channel index
+  int32 index = 1;
+  
+  // Channel settings
+  ChannelSettings settings = 2;
+  
+  // Role
+  Role role = 3;
+  
+  enum Role {
+    DISABLED = 0;
+    PRIMARY = 1;
+    SECONDARY = 2;
+  }
+}
+
+// Channel settings
+message ChannelSettings {
+  // Pre-shared key (up to 256 bits)
+  bytes psk = 1;
+  
+  // Channel name
+  string name = 2;
+  
+  // Unique channel ID
+  fixed32 id = 3;
+  
+  // Uplink enabled
+  bool uplink_enabled = 4;
+  
+  // Downlink enabled
+  bool downlink_enabled = 5;
+  
+  // Module settings (JSON)
+  bytes module_settings = 6;
+}
+
+// Configuration requests
+message AdminMessage {
+  oneof payload_variant {
+    // Get channel request
+    uint32 get_channel_request = 1;
+    
+    // Get channel response
+    Channel get_channel_response = 2;
+    
+    // Get radio request
+    bool get_radio_request = 3;
+    
+    // Get radio response
+    RadioConfig get_radio_response = 4;
+    
+    // Get owner request
+    bool get_owner_request = 5;
+    
+    // Get owner response
+    User get_owner_response = 6;
+    
+    // Set owner
+    User set_owner = 7;
+    
+    // Set channel
+    Channel set_channel = 8;
+    
+    // Set radio
+    RadioConfig set_radio = 9;
+  }
+}
+
+// Radio configuration
+message RadioConfig {
+  // LoRa settings
+  message LoRaConfig {
+    // Use preset
+    bool use_preset = 1;
+    
+    // Modem preset
+    ModemPreset modem_preset = 2;
+    
+    // Bandwidth
+    uint32 bandwidth = 3;
+    
+    // Spread factor
+    uint32 spread_factor = 4;
+    
+    // Coding rate
+    uint32 coding_rate = 5;
+    
+    // Frequency offset
+    float frequency_offset = 6;
+    
+    // Region
+    RegionCode region = 7;
+    
+    // Hop limit
+    uint32 hop_limit = 8;
+    
+    // TX enabled
+    bool tx_enabled = 9;
+    
+    // TX power
+    int32 tx_power = 10;
+  }
+  
+  LoRaConfig lora = 1;
+}
+
+// Modem presets
+enum ModemPreset {
+  LONG_FAST = 0;
+  LONG_SLOW = 1;
+  VERY_LONG_SLOW = 2;
+  MEDIUM_SLOW = 3;
+  MEDIUM_FAST = 4;
+  SHORT_SLOW = 5;
+  SHORT_FAST = 6;
+  LONG_MODERATE = 7;
+}
+
+// Region codes
+enum RegionCode {
+  UNSET_REGION = 0;
+  US = 1;
+  EU_433 = 2;
+  EU_868 = 3;
+  CN = 4;
+  JP = 5;
+  ANZ = 6;
+  KR = 7;
+  TW = 8;
+  RU = 9;
+  IN = 10;
+  NZ_865 = 11;
+  TH = 12;
+  LORA_24 = 13;
+  UA_433 = 14;
+  UA_868 = 15;
+  MY_433 = 16;
+  MY_919 = 17;
+  SG_923 = 18;
+}

@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package meshtastic;
+
+option java_package = "com.geeksville.mesh";
+option java_outer_classname = "Portnums";
+option optimize_for = LITE_RUNTIME;
+
+/*
+ * Packet sent to/from the radio for configuration and data
+ */
+
+import "meshtastic/mesh.proto";
+
+// Packets sent to/from the radio
+message ToRadio {
+  oneof payload_variant {
+    // Mesh packet to send
+    MeshPacket packet = 1;
+    
+    // Request device to send info
+    bool want_config_id = 100;
+    
+    // Disconnect
+    bool disconnect = 101;
+  }
+}
+
+// Packets received from radio
+message FromRadio {
+  // Packet ID for tracking
+  uint32 id = 1;
+  
+  oneof payload_variant {
+    // Received mesh packet
+    MeshPacket packet = 2;
+    
+    // My node info
+    MyNodeInfo my_info = 3;
+    
+    // Node database entry
+    NodeInfo node_info = 4;
+    
+    // Configuration complete
+    uint32 config_complete_id = 5;
+    
+    // LoRa config
+    RadioConfig.LoRaConfig lora_config = 6;
+    
+    // Channel info
+    Channel channel = 7;
+    
+    // Module config
+    bytes module_config = 8;
+  }
+}
