@@ -27,10 +27,10 @@ final secureStorageProvider = Provider<SecureStorageService>((ref) {
   return SecureStorageService(logger: logger);
 });
 
-final settingsServiceProvider = Provider<SettingsService>((ref) {
+final settingsServiceProvider = FutureProvider<SettingsService>((ref) async {
   final logger = ref.watch(loggerProvider);
   final service = SettingsService(logger: logger);
-  service.init();
+  await service.init();
   return service;
 });
 

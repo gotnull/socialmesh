@@ -13,6 +13,7 @@ class ScannerScreen extends ConsumerStatefulWidget {
 class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   final List<DeviceInfo> _devices = [];
   bool _scanning = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -26,6 +27,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     setState(() {
       _scanning = true;
       _devices.clear();
+      _errorMessage = null;
     });
 
     try {
@@ -47,9 +49,24 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Scan error: $e')));
+        final message = e.toString().replaceFirst('Exception: ', '');
+        setState(() {
+          _errorMessage = message;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            duration: const Duration(seconds: 5),
+            action: e.toString().contains('Bluetooth')
+                ? SnackBarAction(
+                    label: 'Open Settings',
+                    onPressed: () {
+                      // User needs to manually enable Bluetooth
+                    },
+                  )
+                : null,
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -125,6 +142,40 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
               },
             ),
           ),
+
+          // Error banner
+          if (_errorMessage != null)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              color: Theme.of(context).colorScheme.errorContainer,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _errorMessage!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onErrorContainer,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                    onPressed: () {
+                      setState(() {
+                        _errorMessage = null;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
 
           // Device list
           Expanded(

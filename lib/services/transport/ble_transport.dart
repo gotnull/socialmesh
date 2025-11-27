@@ -58,14 +58,14 @@ class BleTransport implements DeviceTransport {
       // Check if Bluetooth is supported
       if (!await FlutterBluePlus.isSupported) {
         _logger.e('Bluetooth not supported');
-        return;
+        throw Exception('Bluetooth is not supported on this device');
       }
 
       // Check if Bluetooth is on
-      if (await FlutterBluePlus.adapterState.first !=
-          BluetoothAdapterState.on) {
-        _logger.w('Bluetooth is off');
-        return;
+      final adapterState = await FlutterBluePlus.adapterState.first;
+      if (adapterState != BluetoothAdapterState.on) {
+        _logger.w('Bluetooth is off: $adapterState');
+        throw Exception('Please turn on Bluetooth to scan for devices');
       }
 
       // Start scanning
