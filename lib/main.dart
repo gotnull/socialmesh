@@ -19,6 +19,7 @@ class ProtofluffApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'Protofluff',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
@@ -30,6 +31,9 @@ class ProtofluffApp extends ConsumerWidget {
         ),
         useMaterial3: true,
       ),
+      builder: (context, child) {
+        return SafeArea(child: child ?? const SizedBox.shrink());
+      },
       initialRoute: '/scanner',
       routes: {
         '/scanner': (context) => const ScannerScreen(),
