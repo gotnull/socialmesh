@@ -61,12 +61,32 @@ class BleTransport implements DeviceTransport {
         throw Exception('Bluetooth is not supported on this device');
       }
 
-      // Check if Bluetooth is on
-      final adapterState = await FlutterBluePlus.adapterState.first;
-      if (adapterState != BluetoothAdapterState.on) {
-        _logger.w('Bluetooth is off: $adapterState');
-        throw Exception('Please turn on Bluetooth to scan for devices');
+      // Wait for adapter state with timeout
+      BluetoothAdapterState adapterState = BluetoothAdapterState.unknown;
+      try {
+        adapterState = await FlutterBluePlus.adapterState
+            .firstWhere(
+              (state) => state != BluetoothAdapterState.unknown,
+              orElse: () => BluetoothAdapterState.unknown,
+            )
+            .timeout(
+              const Duration(seconds: 3),
+              onTimeout: () => BluetoothAdapterState.unknown,
+            );
+      } catch (e) {
+        _logger.w('Error getting adapter state: $e');
       }
+
+      // Check if Bluetooth is on or unknown (iOS may report unknown even when on)
+      if (adapterState == BluetoothAdapterState.off) {
+        _logger.w('Bluetooth is off');
+        throw Exception('Please turn on Bluetooth to scan for devices');
+      } else if (adapterState == BluetoothAdapterState.unauthorized) {
+        _logger.w('Bluetooth permission not granted');
+        throw Exception('Please grant Bluetooth permission in Settings');
+      }
+
+      _logger.d('Bluetooth adapter state: $adapterState');
 
       // Start scanning
       await FlutterBluePlus.startScan(
