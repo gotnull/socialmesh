@@ -21,11 +21,13 @@ class ProtocolService {
   final StreamController<ChannelConfig> _channelController;
   final StreamController<DeviceError> _errorController;
   final StreamController<int> _myNodeNumController;
+  final StreamController<int> _rssiController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   Completer<void>? _configCompleter;
 
   int? _myNodeNum;
+  int _lastRssi = -90;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
   final Random _random = Random();
@@ -38,7 +40,8 @@ class ProtocolService {
       _nodeController = StreamController<MeshNode>.broadcast(),
       _channelController = StreamController<ChannelConfig>.broadcast(),
       _errorController = StreamController<DeviceError>.broadcast(),
-      _myNodeNumController = StreamController<int>.broadcast();
+      _myNodeNumController = StreamController<int>.broadcast(),
+      _rssiController = StreamController<int>.broadcast();
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -48,6 +51,12 @@ class ProtocolService {
 
   /// Stream of channel updates
   Stream<ChannelConfig> get channelStream => _channelController.stream;
+
+  /// Stream of RSSI updates
+  Stream<int> get rssiStream => _rssiController.stream;
+
+  /// Get last known RSSI
+  int get lastRssi => _lastRssi;
 
   /// Stream of device errors
   Stream<DeviceError> get errorStream => _errorController.stream;
@@ -197,6 +206,12 @@ class ProtocolService {
       final text = utf8.decode(data.payload);
       _logger.i('Text message from ${packet.from}: $text');
 
+      // Track RSSI from incoming packets
+      if (packet.hasRxSnr()) {
+        _lastRssi = packet.rxSnr.toInt();
+        _rssiController.add(_lastRssi);
+      }
+
       final message = Message(
         from: packet.from,
         to: packet.to,
@@ -218,6 +233,12 @@ class ProtocolService {
       _logger.d(
         'Position from ${packet.from}: ${position.latitudeI / 1e7}, ${position.longitudeI / 1e7}',
       );
+
+      // Track RSSI from incoming packets
+      if (packet.hasRxSnr()) {
+        _lastRssi = packet.rxSnr.toInt();
+        _rssiController.add(_lastRssi);
+      }
 
       final node = _nodes[packet.from];
       if (node != null) {

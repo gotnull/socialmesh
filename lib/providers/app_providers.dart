@@ -72,6 +72,14 @@ final connectionStateProvider = StreamProvider<DeviceConnectionState>((
 // Currently connected device
 final connectedDeviceProvider = StateProvider<DeviceInfo?>((ref) => null);
 
+// Current RSSI stream from protocol service
+final currentRssiProvider = StreamProvider<int>((ref) async* {
+  final protocol = ref.watch(protocolServiceProvider);
+  await for (final rssi in protocol.rssiStream) {
+    yield rssi;
+  }
+});
+
 // Protocol service - singleton instance that persists across rebuilds
 final protocolServiceProvider = Provider<ProtocolService>((ref) {
   final transport = ref.watch(transportProvider);

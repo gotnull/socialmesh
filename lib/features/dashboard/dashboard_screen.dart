@@ -475,13 +475,12 @@ class _SignalStrengthChartState extends ConsumerState<_SignalStrengthChart> {
   }
 
   void _addDataPoint() {
-    final device = ref.read(connectedDeviceProvider);
+    final rssiAsync = ref.read(currentRssiProvider);
     final now = DateTime.now();
 
-    // Add new data point with actual device RSSI
-    _signalHistory.add(
-      _SignalData(time: now, rssi: device?.rssi?.toDouble() ?? -90.0),
-    );
+    // Add new data point with actual RSSI from protocol stream
+    final rssiValue = rssiAsync.valueOrNull?.toDouble() ?? -90.0;
+    _signalHistory.add(_SignalData(time: now, rssi: rssiValue));
 
     // Keep last 30 data points (60 seconds at 2s intervals)
     if (_signalHistory.length > 30) {
@@ -499,7 +498,7 @@ class _SignalStrengthChartState extends ConsumerState<_SignalStrengthChart> {
 
     return Container(
       height: 200,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       decoration: BoxDecoration(
         color: AppTheme.darkCard,
         borderRadius: BorderRadius.circular(12),
@@ -540,6 +539,15 @@ class _SignalChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (data.isEmpty) return;
 
+    // Define insets for labels
+    const leftInset = 50.0;
+    const bottomInset = 20.0;
+    const topInset = 8.0;
+    const rightInset = 8.0;
+
+    final chartWidth = size.width - leftInset - rightInset;
+    final chartHeight = size.height - topInset - bottomInset;
+
     final Paint linePaint = Paint()
       ..color = AppTheme.primaryGreen
       ..strokeWidth = 3.0
@@ -557,13 +565,13 @@ class _SignalChartPainter extends CustomPainter {
     double maxRssi = -30;
 
     for (int i = 0; i <= 4; i++) {
-      final y = size.height * (i / 4);
+      final y = topInset + (chartHeight * (i / 4));
 
       // Draw dotted line
-      for (double x = 0; x < size.width; x += 8) {
+      for (double x = leftInset; x < leftInset + chartWidth; x += 8) {
         canvas.drawLine(
           Offset(x, y),
-          Offset((x + 4).clamp(0, size.width), y),
+          Offset((x + 4).clamp(leftInset, leftInset + chartWidth), y),
           dottedPaint,
         );
       }
@@ -571,47 +579,51 @@ class _SignalChartPainter extends CustomPainter {
       // Draw Y-axis label (RSSI values)
       final rssiValue = maxRssi - (i * (maxRssi - minRssi) / 4);
       textPainter.text = TextSpan(
-        text: '${rssiValue.toInt()} dBm',
+        text: '${rssiValue.toInt()}',
         style: const TextStyle(
           color: AppTheme.textTertiary,
-          fontSize: 10,
+          fontSize: 11,
           fontFamily: 'Inter',
+          fontWeight: FontWeight.w500,
         ),
       );
       textPainter.layout();
-      textPainter.paint(canvas, Offset(-60, y - 6));
+      textPainter.paint(canvas, Offset(8, y - 7));
     }
 
     // Draw X-axis time labels
-    final stepX = size.width / (data.length - 1);
-    for (int i = 0; i < data.length; i += 2) {
-      final x = i * stepX;
+    final stepX = chartWidth / (data.length - 1);
+    for (int i = 0; i < data.length; i += 5) {
+      final x = leftInset + (i * stepX);
       final timeStr =
           '${data[i].time.hour.toString().padLeft(2, '0')}:${data[i].time.minute.toString().padLeft(2, '0')}';
       textPainter.text = TextSpan(
         text: timeStr,
         style: const TextStyle(
           color: AppTheme.textTertiary,
-          fontSize: 9,
+          fontSize: 10,
           fontFamily: 'Inter',
+          fontWeight: FontWeight.w500,
         ),
       );
       textPainter.layout();
-      textPainter.paint(canvas, Offset(x - 12, size.height + 4));
+      textPainter.paint(canvas, Offset(x - 15, size.height - bottomInset + 4));
     }
 
     Path path = Path();
     Path fillPath = Path();
 
     for (int i = 0; i < data.length; i++) {
-      final x = i * stepX;
+      final x = leftInset + (i * stepX);
       final rssi = data[i].rssi.clamp(minRssi, maxRssi);
       final y =
-          size.height - ((rssi - minRssi) / (maxRssi - minRssi)) * size.height;
+          topInset +
+          chartHeight -
+          ((rssi - minRssi) / (maxRssi - minRssi)) * chartHeight;
 
       if (i == 0) {
         path.moveTo(x, y);
-        fillPath.moveTo(x, size.height);
+        fillPath.moveTo(x, topInset + chartHeight);
         fillPath.lineTo(x, y);
       } else {
         path.lineTo(x, y);
@@ -620,19 +632,22 @@ class _SignalChartPainter extends CustomPainter {
     }
 
     // Close fill path
-    fillPath.lineTo(data.length * stepX, size.height);
+    fillPath.lineTo(leftInset + chartWidth, topInset + chartHeight);
     fillPath.close();
 
     // Draw gradient fill
     final Paint fillPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          AppTheme.primaryGreen.withValues(alpha: 0.2),
-          AppTheme.primaryGreen.withValues(alpha: 0.0),
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+      ..shader =
+          LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppTheme.primaryGreen.withValues(alpha: 0.2),
+              AppTheme.primaryGreen.withValues(alpha: 0.0),
+            ],
+          ).createShader(
+            Rect.fromLTWH(leftInset, topInset, chartWidth, chartHeight),
+          );
 
     canvas.drawPath(fillPath, fillPaint);
     canvas.drawPath(path, linePaint);
