@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
+import '../../core/theme.dart';
 
 class MessagingScreen extends ConsumerStatefulWidget {
   const MessagingScreen({super.key});
@@ -13,9 +14,7 @@ class MessagingScreen extends ConsumerStatefulWidget {
 
 class _MessagingScreenState extends ConsumerState<MessagingScreen> {
   final TextEditingController _messageController = TextEditingController();
-  int _selectedNodeNum = 0xFFFFFFFF; // Broadcast by default
-  int _selectedChannel = 0; // Primary channel by default
-  bool _dmMode = false; // Direct message mode
+  int _selectedChannel = 0;
 
   @override
   void dispose() {
@@ -27,28 +26,16 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
-    // In DM mode, always send to specific node
-    // In broadcast mode, send to all nodes on channel
-    final targetNode = _dmMode && _selectedNodeNum != 0xFFFFFFFF
-        ? _selectedNodeNum
-        : 0xFFFFFFFF;
-
     try {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.sendMessage(
         text: text,
-        to: targetNode,
+        to: 0xFFFFFFFF, // Broadcast
         channel: _selectedChannel,
-        wantAck: targetNode != 0xFFFFFFFF,
+        wantAck: false,
       );
 
       _messageController.clear();
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Message sent')));
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -65,123 +52,63 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
     final channels = ref.watch(channelsProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
-    // Filter messages for selected node and channel
-    final filteredMessages = messages.where((m) {
-      final matchesChannel = m.channel == _selectedChannel;
-      if (_selectedNodeNum == 0xFFFFFFFF) {
-        return matchesChannel;
-      }
-      return matchesChannel &&
-          ((m.from == _selectedNodeNum || m.to == _selectedNodeNum) ||
-              (m.from == myNodeNum || m.to == myNodeNum));
-    }).toList();
+    // Filter messages for selected channel
+    final filteredMessages = messages
+        .where((m) => m.channel == _selectedChannel)
+        .toList();
 
     return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        title: const Text('Messages'),
-        actions: [
-          IconButton(
-            icon: Icon(_dmMode ? Icons.person : Icons.public),
-            tooltip: _dmMode ? 'Direct Message Mode' : 'Broadcast Mode',
-            onPressed: () {
-              setState(() {
-                _dmMode = !_dmMode;
-              });
-            },
+        backgroundColor: AppTheme.darkBackground,
+        title: const Text(
+          'Messages',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            fontFamily: 'Inter',
           ),
-          PopupMenuButton<int>(
-            icon: const Icon(Icons.wifi_tethering),
-            tooltip: 'Select channel',
-            onSelected: (channelIndex) {
-              setState(() {
-                _selectedChannel = channelIndex;
-              });
-            },
-            itemBuilder: (context) => channels.isEmpty
-                ? [
-                    const PopupMenuItem(
-                      enabled: false,
-                      child: Text('No channels'),
-                    ),
-                  ]
-                : channels
-                      .map(
-                        (ch) => PopupMenuItem(
-                          value: ch.index,
-                          child: ListTile(
-                            leading: Icon(
-                              ch.psk.isNotEmpty ? Icons.lock : Icons.lock_open,
-                            ),
-                            title: Text(
-                              ch.name.isEmpty ? 'Channel ${ch.index}' : ch.name,
-                            ),
-                            subtitle: Text(
-                              ch.index == 0 ? 'Primary' : 'Secondary',
-                            ),
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                        ),
-                      )
-                      .toList(),
-          ),
-          PopupMenuButton<int>(
-            icon: const Icon(Icons.person),
-            tooltip: 'Select recipient',
-            onSelected: (nodeNum) {
-              setState(() {
-                _selectedNodeNum = nodeNum;
-              });
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 0xFFFFFFFF,
-                child: ListTile(
-                  leading: Icon(Icons.public),
-                  title: Text('Broadcast'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuDivider(),
-              ...nodes.values.map(
-                (node) => PopupMenuItem(
-                  value: node.nodeNum,
-                  child: ListTile(
-                    leading: const Icon(Icons.person),
-                    title: Text(node.displayName),
-                    subtitle: Text('Node ${node.nodeNum}'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
       body: Column(
         children: [
-          // Selected channel and recipient indicator
+          // Channel selector tabs
           Container(
-            padding: const EdgeInsets.all(8),
-            color: Theme.of(context).colorScheme.primaryContainer,
-            child: Row(
-              children: [
-                Icon(_dmMode ? Icons.person : Icons.public, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  _dmMode
-                      ? 'DM: ${_getRecipientName(_selectedNodeNum, nodes)}'
-                      : 'Broadcast',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(width: 16),
-                const Icon(Icons.wifi_tethering, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  _getChannelName(_selectedChannel, channels),
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-              ],
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final channel in channels)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: _ChannelChip(
+                        name: channel.name.isEmpty
+                            ? (channel.index == 0
+                                  ? 'Primary'
+                                  : 'Ch ${channel.index}')
+                            : channel.name,
+                        isSelected: _selectedChannel == channel.index,
+                        onTap: () =>
+                            setState(() => _selectedChannel = channel.index),
+                      ),
+                    ),
+                  if (channels.isEmpty)
+                    _ChannelChip(
+                      name: 'Primary',
+                      isSelected: true,
+                      onTap: () {},
+                    ),
+                ],
+              ),
             ),
+          ),
+
+          // Divider
+          Container(
+            height: 1,
+            color: AppTheme.darkBorder.withValues(alpha: 0.3),
           ),
 
           // Message list
@@ -191,31 +118,62 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.message,
-                          size: 64,
-                          color: Theme.of(context).colorScheme.secondary,
+                        Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkCard,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(
+                            Icons.chat_bubble_outline,
+                            size: 40,
+                            color: AppTheme.textTertiary,
+                          ),
                         ),
-                        const SizedBox(height: 16),
-                        const Text('No messages yet'),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'No messages yet',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: AppTheme.textSecondary,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Send a message to get started',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.textTertiary,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
                       ],
                     ),
                   )
                 : ListView.builder(
                     reverse: true,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     itemCount: filteredMessages.length,
                     itemBuilder: (context, index) {
-                      // Reverse order so newest is at bottom
                       final message =
                           filteredMessages[filteredMessages.length - 1 - index];
                       final isFromMe = message.from == myNodeNum;
+                      final senderNode = nodes[message.from];
 
                       return _MessageBubble(
                         message: message,
                         isFromMe: isFromMe,
-                        senderName:
-                            nodes[message.from]?.displayName ??
-                            'Node ${message.from}',
+                        senderName: senderNode?.displayName ?? 'Unknown',
+                        senderShortName:
+                            senderNode?.shortName ??
+                            message.from.toRadixString(16).substring(0, 4),
+                        avatarColor: senderNode?.avatarColor,
                       );
                     },
                   ),
@@ -223,59 +181,111 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
 
           // Message input
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, -2),
+              color: AppTheme.darkCard,
+              border: Border(
+                top: BorderSide(
+                  color: AppTheme.darkBorder.withValues(alpha: 0.3),
                 ),
-              ],
+              ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: const InputDecoration(
-                      hintText: 'Type a message...',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+            child: SafeArea(
+              top: false,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkBackground,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: TextField(
+                        controller: _messageController,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Inter',
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'Message...',
+                          hintStyle: TextStyle(
+                            color: AppTheme.textTertiary,
+                            fontFamily: 'Inter',
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                        ),
+                        maxLines: null,
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => _sendMessage(),
                       ),
                     ),
-                    maxLines: null,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _sendMessage(),
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filled(
-                  onPressed: _sendMessage,
-                  icon: const Icon(Icons.send),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: _sendMessage,
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.primaryGreen,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.send,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  String _getRecipientName(int nodeNum, Map<int, MeshNode> nodes) {
-    if (nodeNum == 0xFFFFFFFF) return 'Broadcast';
-    return nodes[nodeNum]?.displayName ?? 'Node $nodeNum';
-  }
+class _ChannelChip extends StatelessWidget {
+  final String name;
+  final bool isSelected;
+  final VoidCallback onTap;
 
-  String _getChannelName(int channelIndex, List<ChannelConfig> channels) {
-    final channel = channels.firstWhere(
-      (ch) => ch.index == channelIndex,
-      orElse: () => ChannelConfig(index: channelIndex, name: '', psk: []),
+  const _ChannelChip({
+    required this.name,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryGreen : AppTheme.darkCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppTheme.primaryGreen : AppTheme.darkBorder,
+          ),
+        ),
+        child: Text(
+          name,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: isSelected ? Colors.white : AppTheme.textSecondary,
+            fontFamily: 'Inter',
+          ),
+        ),
+      ),
     );
-    return channel.name.isEmpty ? 'Channel $channelIndex' : channel.name;
   }
 }
 
@@ -283,73 +293,157 @@ class _MessageBubble extends StatelessWidget {
   final Message message;
   final bool isFromMe;
   final String senderName;
+  final String senderShortName;
+  final int? avatarColor;
 
   const _MessageBubble({
     required this.message,
     required this.isFromMe,
     required this.senderName,
+    required this.senderShortName,
+    this.avatarColor,
   });
+
+  Color _getAvatarColor() {
+    if (avatarColor != null) {
+      return Color(avatarColor!);
+    }
+    final colors = [
+      const Color(0xFF5B4FCE),
+      const Color(0xFFD946A6),
+      const Color(0xFF3B82F6),
+      const Color(0xFFF59E0B),
+      const Color(0xFFEF4444),
+      const Color(0xFF10B981),
+    ];
+    return colors[message.from % colors.length];
+  }
 
   @override
   Widget build(BuildContext context) {
-    final timeFormat = DateFormat('HH:mm');
+    final timeFormat = DateFormat('h:mm a');
 
-    return Align(
-      alignment: isFromMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        padding: const EdgeInsets.all(12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        decoration: BoxDecoration(
-          color: isFromMe
-              ? Theme.of(context).colorScheme.primaryContainer
-              : Theme.of(context).colorScheme.secondaryContainer,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    if (isFromMe) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            if (!isFromMe)
-              Text(
-                senderName,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: Theme.of(context).colorScheme.secondary,
+            Flexible(
+              child: Container(
+                margin: const EdgeInsets.only(left: 48),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryGreen,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      message.text,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.white,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      timeFormat.format(message.timestamp),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            if (!isFromMe) const SizedBox(height: 4),
-            Text(message.text),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  timeFormat.format(message.timestamp),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                ),
-                if (isFromMe) ...[
-                  const SizedBox(width: 4),
-                  Icon(
-                    message.acked
-                        ? Icons.done_all
-                        : message.sent
-                        ? Icons.done
-                        : Icons.schedule,
-                    size: 14,
-                    color: message.acked ? Colors.blue : null,
-                  ),
-                ],
-              ],
             ),
           ],
         ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Avatar
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: _getAvatarColor(),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                senderShortName.length > 4
+                    ? senderShortName.substring(0, 4)
+                    : senderShortName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Inter',
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Message content
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  senderName,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textSecondary,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  margin: const EdgeInsets.only(right: 48),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkCard,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        message.text,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: Colors.white,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        timeFormat.format(message.timestamp),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.textTertiary,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
