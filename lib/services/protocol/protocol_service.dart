@@ -318,17 +318,16 @@ class ProtocolService {
           : false,
     );
 
-    if (_channels.length <= channel.index) {
-      _channels.addAll(
-        List.filled(
-          channel.index - _channels.length + 1,
-          ChannelConfig(index: 0, name: '', psk: []),
-        ),
-      );
+    // Extend list if needed, but don't add dummy entries to stream
+    while (_channels.length <= channel.index) {
+      _channels.add(ChannelConfig(index: _channels.length, name: '', psk: []));
     }
     _channels[channel.index] = channelConfig;
 
-    _channelController.add(channelConfig);
+    // Always emit channel 0 (Primary), emit others only if they have names
+    if (channel.index == 0 || channelConfig.name.isNotEmpty) {
+      _channelController.add(channelConfig);
+    }
   }
 
   /// Request configuration from device

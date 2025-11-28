@@ -83,6 +83,9 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
   final ProtocolService _protocol;
 
   MessagesNotifier(this._protocol) : super([]) {
+    // Initialize with existing messages from protocol service
+    // Note: Messages are transient and not stored in protocol service
+
     _protocol.messageStream.listen((message) {
       state = [...state, message];
     });
@@ -113,6 +116,9 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
   final ProtocolService _protocol;
 
   NodesNotifier(this._protocol) : super({}) {
+    // Initialize with existing nodes from protocol service
+    state = Map<int, MeshNode>.from(_protocol.nodes);
+
     _protocol.nodeStream.listen((node) {
       state = {...state, node.nodeNum: node};
     });
@@ -144,8 +150,13 @@ final nodesProvider = StateNotifierProvider<NodesNotifier, Map<int, MeshNode>>((
 class ChannelsNotifier extends StateNotifier<List<ChannelConfig>> {
   final ProtocolService _protocol;
 
-  ChannelsNotifier(this._protocol) : super(_protocol.channels) {
-    // Start with existing channels from protocol service
+  ChannelsNotifier(this._protocol) : super([]) {
+    // Initialize with existing channels (include Primary even if name is empty)
+    state = _protocol.channels
+        .where((c) => c.index == 0 || c.name.isNotEmpty)
+        .toList();
+
+    // Listen for future channel updates
     _protocol.channelStream.listen((channel) {
       final index = state.indexWhere((c) => c.index == channel.index);
       if (index >= 0) {
@@ -189,6 +200,9 @@ class MyNodeNumNotifier extends StateNotifier<int?> {
   final ProtocolService _protocol;
 
   MyNodeNumNotifier(this._protocol) : super(null) {
+    // Initialize with existing myNodeNum from protocol service
+    state = _protocol.myNodeNum;
+
     _protocol.myNodeNumStream.listen((nodeNum) {
       state = nodeNum;
     });
