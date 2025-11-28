@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:logger/logger.dart';
 import '../../core/transport.dart';
@@ -279,7 +280,7 @@ class BleTransport implements DeviceTransport {
 
   void _startPolling() {
     _logger.d('Starting polling for fromRadio characteristic');
-    print('📡 Starting polling for fromRadio');
+    debugPrint('📡 Starting polling for fromRadio');
 
     // Poll every 100ms for new data
     _pollingTimer = Timer.periodic(const Duration(milliseconds: 100), (
@@ -295,12 +296,12 @@ class BleTransport implements DeviceTransport {
         final value = await _rxCharacteristic!.read();
         if (value.isNotEmpty) {
           _logger.d('Polled ${value.length} bytes');
-          print('📡 Polled ${value.length} bytes from fromRadio');
+          debugPrint('📡 Polled ${value.length} bytes from fromRadio');
           _dataController.add(value);
         }
       } catch (e) {
         _logger.e('Polling error: $e');
-        print('📡 Polling error: $e');
+        debugPrint('📡 Polling error: $e');
       }
     });
   }
