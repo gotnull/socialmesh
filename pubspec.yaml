@@ -44,6 +44,7 @@ dependencies:
   logger: ^2.4.0
   uuid: ^4.4.2
   permission_handler: ^11.3.1
+  fl_chart: ^1.1.1
 
 dev_dependencies:
   flutter_test:

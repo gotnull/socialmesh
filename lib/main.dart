@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/theme.dart';
 import 'features/scanner/scanner_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/messaging/messaging_screen.dart';
@@ -8,6 +9,8 @@ import 'features/nodes/nodes_screen.dart';
 import 'features/nodes/node_map_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/settings/qr_import_screen.dart';
+import 'features/network/network_details_screen.dart';
+import 'features/network/clients_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: ProtofluffApp()));
@@ -21,17 +24,8 @@ class ProtofluffApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Protofluff',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.darkTheme,
+      themeMode: ThemeMode.dark,
       builder: (context, child) {
         return SafeArea(child: child ?? const SizedBox.shrink());
       },
@@ -45,6 +39,8 @@ class ProtofluffApp extends ConsumerWidget {
         '/map': (context) => const NodeMapScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/qr-import': (context) => const QrImportScreen(),
+        '/network-details': (context) => const NetworkDetailsScreen(),
+        '/clients': (context) => const ClientsScreen(),
       },
     );
   }
