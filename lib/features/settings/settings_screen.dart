@@ -62,9 +62,9 @@ class SettingsScreen extends ConsumerWidget {
                 },
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Notifications Section
             _SectionHeader(title: 'NOTIFICATIONS'),
             _SettingsTile(
@@ -79,15 +79,16 @@ class SettingsScreen extends ConsumerWidget {
                 },
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Data Section
             _SectionHeader(title: 'DATA & STORAGE'),
             _SettingsTile(
               icon: Icons.history,
               title: 'Message history',
-              subtitle: '${settingsService.messageHistoryLimit} messages stored',
+              subtitle:
+                  '${settingsService.messageHistoryLimit} messages stored',
               onTap: () => _showHistoryLimitDialog(context, settingsService),
             ),
             _SettingsTile(
@@ -104,9 +105,9 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: 'Delete messages, settings, and keys',
               onTap: () => _confirmClearData(context, ref),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Device Section
             _SectionHeader(title: 'DEVICE'),
             _SettingsTile(
@@ -121,9 +122,9 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: 'Scan a Meshtastic channel QR code',
               onTap: () => Navigator.pushNamed(context, '/qr-import'),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // About Section
             _SectionHeader(title: 'ABOUT'),
             _SettingsTile(
@@ -131,7 +132,7 @@ class SettingsScreen extends ConsumerWidget {
               title: 'Protofluff',
               subtitle: 'Meshtastic companion app • Version 1.0.0',
             ),
-            
+
             const SizedBox(height: 32),
           ],
         ),
@@ -139,9 +140,12 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showHistoryLimitDialog(BuildContext context, SettingsService settingsService) {
+  void _showHistoryLimitDialog(
+    BuildContext context,
+    SettingsService settingsService,
+  ) {
     final limits = [50, 100, 200, 500, 1000];
-    
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.darkCard,
@@ -165,7 +169,10 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            Container(height: 1, color: AppTheme.darkBorder.withValues(alpha: 0.3)),
+            Container(
+              height: 1,
+              color: AppTheme.darkBorder.withValues(alpha: 0.3),
+            ),
             for (final limit in limits)
               ListTile(
                 leading: Icon(
@@ -195,7 +202,10 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirmClearMessages(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmClearMessages(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -224,9 +234,9 @@ class SettingsScreen extends ConsumerWidget {
 
     if (confirmed == true && context.mounted) {
       ref.read(messagesProvider.notifier).clearMessages();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Messages cleared')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Messages cleared')));
     }
   }
 
@@ -275,9 +285,9 @@ class SettingsScreen extends ConsumerWidget {
       channelsNotifier.clearChannels();
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('All data cleared')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('All data cleared')));
       }
     }
   }
@@ -399,10 +409,7 @@ class _SettingsTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: ListTile(
-        leading: Icon(
-          icon,
-          color: iconColor ?? AppTheme.textSecondary,
-        ),
+        leading: Icon(icon, color: iconColor ?? AppTheme.textSecondary),
         title: Text(
           title,
           style: TextStyle(
@@ -420,9 +427,11 @@ class _SettingsTile extends StatelessWidget {
             fontFamily: 'Inter',
           ),
         ),
-        trailing: trailing ?? (onTap != null
-            ? const Icon(Icons.chevron_right, color: AppTheme.textTertiary)
-            : null),
+        trailing:
+            trailing ??
+            (onTap != null
+                ? const Icon(Icons.chevron_right, color: AppTheme.textTertiary)
+                : null),
         onTap: onTap,
       ),
     );
