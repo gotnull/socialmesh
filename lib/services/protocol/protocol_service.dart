@@ -129,12 +129,14 @@ class ProtocolService {
     _configurationComplete = false;
   }
 
-  /// Handle incoming data
+  /// Handle incoming data from transport
   void _handleData(List<int> data) {
     _logger.d('Received ${data.length} bytes');
+    debugPrint('📥 RAW DATA RECEIVED: ${data.length} bytes');
 
     // Extract packets using framer
     final packets = _framer.addData(data);
+    debugPrint('📥 Framer extracted ${packets.length} complete packet(s)');
 
     for (final packet in packets) {
       _processPacket(packet);
@@ -432,14 +434,25 @@ class ProtocolService {
       }
 
       _logger.i('Requesting device configuration');
+      debugPrint('🚀 SENDING wantConfigId=true to device');
 
       final toRadio = pn.ToRadio()..wantConfigId = true;
       final bytes = toRadio.writeToBuffer();
+      debugPrint('🚀 ToRadio protobuf size: ${bytes.length} bytes');
+
       final framedBytes = PacketFramer.frame(bytes);
+      debugPrint('🚀 Framed packet size: ${framedBytes.length} bytes');
 
       await _transport.send(framedBytes);
+      debugPrint('🚀 Configuration request SENT successfully');
+
+      // Immediately poll after sending config request - device puts response in fromRadio
+      debugPrint('🚀 Immediately polling for response...');
+      await Future.delayed(const Duration(milliseconds: 100));
+      await _transport.pollOnce();
     } catch (e) {
       _logger.e('Error requesting configuration: $e');
+      debugPrint('🚀 ERROR sending config request: $e');
     }
   }
 
@@ -448,13 +461,13 @@ class ProtocolService {
     debugPrint('🔁 Starting configuration polling');
     int pollCount = 0;
 
-    while (!_configurationComplete && pollCount < 100) {
+    while (!_configurationComplete && pollCount < 200) {
       try {
         // Poll the transport for data
         await _transport.pollOnce();
 
         pollCount++;
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 50));
       } catch (e) {
         debugPrint('🔁 Polling error: $e');
       }

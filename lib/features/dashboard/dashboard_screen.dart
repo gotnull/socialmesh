@@ -592,6 +592,8 @@ class _SignalChartPainter extends CustomPainter {
     }
 
     // Draw X-axis time labels
+    if (data.length < 2) return; // Need at least 2 points to draw
+
     final stepX = chartWidth / (data.length - 1);
     for (int i = 0; i < data.length; i += 5) {
       final x = leftInset + (i * stepX);
