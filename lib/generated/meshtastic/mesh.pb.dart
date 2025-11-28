@@ -121,23 +121,23 @@ class User extends $pb.GeneratedMessage {
     $core.String? id,
     $core.String? longName,
     $core.String? shortName,
-    HardwareModel? hwModel,
     $core.List<$core.int>? macaddr,
-    $core.String? hwModelString,
+    HardwareModel? hwModel,
     $core.bool? isLicensed,
     Config_DeviceConfig_Role? role,
     $core.List<$core.int>? publicKey,
+    $core.bool? isUnmessagable,
   }) {
     final result = create();
     if (id != null) result.id = id;
     if (longName != null) result.longName = longName;
     if (shortName != null) result.shortName = shortName;
-    if (hwModel != null) result.hwModel = hwModel;
     if (macaddr != null) result.macaddr = macaddr;
-    if (hwModelString != null) result.hwModelString = hwModelString;
+    if (hwModel != null) result.hwModel = hwModel;
     if (isLicensed != null) result.isLicensed = isLicensed;
     if (role != null) result.role = role;
     if (publicKey != null) result.publicKey = publicKey;
+    if (isUnmessagable != null) result.isUnmessagable = isUnmessagable;
     return result;
   }
 
@@ -157,16 +157,16 @@ class User extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'id')
     ..aOS(2, _omitFieldNames ? '' : 'longName')
     ..aOS(3, _omitFieldNames ? '' : 'shortName')
-    ..aE<HardwareModel>(4, _omitFieldNames ? '' : 'hwModel',
-        enumValues: HardwareModel.values)
     ..a<$core.List<$core.int>>(
-        5, _omitFieldNames ? '' : 'macaddr', $pb.PbFieldType.OY)
-    ..aOS(6, _omitFieldNames ? '' : 'hwModelString')
-    ..aOB(7, _omitFieldNames ? '' : 'isLicensed')
-    ..aE<Config_DeviceConfig_Role>(8, _omitFieldNames ? '' : 'role',
+        4, _omitFieldNames ? '' : 'macaddr', $pb.PbFieldType.OY)
+    ..aE<HardwareModel>(5, _omitFieldNames ? '' : 'hwModel',
+        enumValues: HardwareModel.values)
+    ..aOB(6, _omitFieldNames ? '' : 'isLicensed')
+    ..aE<Config_DeviceConfig_Role>(7, _omitFieldNames ? '' : 'role',
         enumValues: Config_DeviceConfig_Role.values)
     ..a<$core.List<$core.int>>(
-        9, _omitFieldNames ? '' : 'publicKey', $pb.PbFieldType.OY)
+        8, _omitFieldNames ? '' : 'publicKey', $pb.PbFieldType.OY)
+    ..aOB(9, _omitFieldNames ? '' : 'isUnmessagable')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -217,65 +217,65 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearShortName() => $_clearField(3);
 
+  /// MAC address (6 bytes) - deprecated but still sent
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get macaddr => $_getN(3);
+  @$pb.TagNumber(4)
+  set macaddr($core.List<$core.int> value) => $_setBytes(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasMacaddr() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearMacaddr() => $_clearField(4);
+
   /// Hardware model
-  @$pb.TagNumber(4)
-  HardwareModel get hwModel => $_getN(3);
-  @$pb.TagNumber(4)
-  set hwModel(HardwareModel value) => $_setField(4, value);
-  @$pb.TagNumber(4)
-  $core.bool hasHwModel() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearHwModel() => $_clearField(4);
-
-  /// MAC address (6 bytes)
   @$pb.TagNumber(5)
-  $core.List<$core.int> get macaddr => $_getN(4);
+  HardwareModel get hwModel => $_getN(4);
   @$pb.TagNumber(5)
-  set macaddr($core.List<$core.int> value) => $_setBytes(4, value);
+  set hwModel(HardwareModel value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasMacaddr() => $_has(4);
+  $core.bool hasHwModel() => $_has(4);
   @$pb.TagNumber(5)
-  void clearMacaddr() => $_clearField(5);
-
-  /// Hardware model as string (for newer/unknown models)
-  @$pb.TagNumber(6)
-  $core.String get hwModelString => $_getSZ(5);
-  @$pb.TagNumber(6)
-  set hwModelString($core.String value) => $_setString(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasHwModelString() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearHwModelString() => $_clearField(6);
+  void clearHwModel() => $_clearField(5);
 
   /// Licensed ham operator
-  @$pb.TagNumber(7)
-  $core.bool get isLicensed => $_getBF(6);
-  @$pb.TagNumber(7)
-  set isLicensed($core.bool value) => $_setBool(6, value);
-  @$pb.TagNumber(7)
-  $core.bool hasIsLicensed() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearIsLicensed() => $_clearField(7);
+  @$pb.TagNumber(6)
+  $core.bool get isLicensed => $_getBF(5);
+  @$pb.TagNumber(6)
+  set isLicensed($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasIsLicensed() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearIsLicensed() => $_clearField(6);
 
   /// User's role
-  @$pb.TagNumber(8)
-  Config_DeviceConfig_Role get role => $_getN(7);
-  @$pb.TagNumber(8)
-  set role(Config_DeviceConfig_Role value) => $_setField(8, value);
-  @$pb.TagNumber(8)
-  $core.bool hasRole() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearRole() => $_clearField(8);
+  @$pb.TagNumber(7)
+  Config_DeviceConfig_Role get role => $_getN(6);
+  @$pb.TagNumber(7)
+  set role(Config_DeviceConfig_Role value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasRole() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearRole() => $_clearField(7);
 
   /// Public key for encryption (32 bytes)
+  @$pb.TagNumber(8)
+  $core.List<$core.int> get publicKey => $_getN(7);
+  @$pb.TagNumber(8)
+  set publicKey($core.List<$core.int> value) => $_setBytes(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasPublicKey() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearPublicKey() => $_clearField(8);
+
+  /// Whether the node can be messaged
   @$pb.TagNumber(9)
-  $core.List<$core.int> get publicKey => $_getN(8);
+  $core.bool get isUnmessagable => $_getBF(8);
   @$pb.TagNumber(9)
-  set publicKey($core.List<$core.int> value) => $_setBytes(8, value);
+  set isUnmessagable($core.bool value) => $_setBool(8, value);
   @$pb.TagNumber(9)
-  $core.bool hasPublicKey() => $_has(8);
+  $core.bool hasIsUnmessagable() => $_has(8);
   @$pb.TagNumber(9)
-  void clearPublicKey() => $_clearField(9);
+  void clearIsUnmessagable() => $_clearField(9);
 }
 
 /// Route discovery information
@@ -935,17 +935,21 @@ class DeviceMetrics extends $pb.GeneratedMessage {
 class MyNodeInfo extends $pb.GeneratedMessage {
   factory MyNodeInfo({
     $core.int? myNodeNum,
-    $core.int? maxChannels,
-    $core.bool? hasGps,
     $core.int? rebootCount,
-    $core.String? firmwareVersion,
+    $core.int? minAppVersion,
+    $core.List<$core.int>? deviceId,
+    $core.String? pioEnv,
+    $core.String? firmwareEdition,
+    $core.int? nodedbCount,
   }) {
     final result = create();
     if (myNodeNum != null) result.myNodeNum = myNodeNum;
-    if (maxChannels != null) result.maxChannels = maxChannels;
-    if (hasGps != null) result.hasGps = hasGps;
     if (rebootCount != null) result.rebootCount = rebootCount;
-    if (firmwareVersion != null) result.firmwareVersion = firmwareVersion;
+    if (minAppVersion != null) result.minAppVersion = minAppVersion;
+    if (deviceId != null) result.deviceId = deviceId;
+    if (pioEnv != null) result.pioEnv = pioEnv;
+    if (firmwareEdition != null) result.firmwareEdition = firmwareEdition;
+    if (nodedbCount != null) result.nodedbCount = nodedbCount;
     return result;
   }
 
@@ -963,12 +967,16 @@ class MyNodeInfo extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'myNodeNum', fieldType: $pb.PbFieldType.OU3)
-    ..aI(2, _omitFieldNames ? '' : 'maxChannels',
+    ..aI(8, _omitFieldNames ? '' : 'rebootCount',
         fieldType: $pb.PbFieldType.OU3)
-    ..aOB(3, _omitFieldNames ? '' : 'hasGps')
-    ..aI(4, _omitFieldNames ? '' : 'rebootCount',
+    ..aI(11, _omitFieldNames ? '' : 'minAppVersion',
         fieldType: $pb.PbFieldType.OU3)
-    ..aOS(5, _omitFieldNames ? '' : 'firmwareVersion')
+    ..a<$core.List<$core.int>>(
+        12, _omitFieldNames ? '' : 'deviceId', $pb.PbFieldType.OY)
+    ..aOS(13, _omitFieldNames ? '' : 'pioEnv')
+    ..aOS(14, _omitFieldNames ? '' : 'firmwareEdition')
+    ..aI(15, _omitFieldNames ? '' : 'nodedbCount',
+        fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -989,7 +997,7 @@ class MyNodeInfo extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<MyNodeInfo>(create);
   static MyNodeInfo? _defaultInstance;
 
-  /// My node number
+  /// The node number assigned to this node (unique on mesh)
   @$pb.TagNumber(1)
   $core.int get myNodeNum => $_getIZ(0);
   @$pb.TagNumber(1)
@@ -999,45 +1007,65 @@ class MyNodeInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearMyNodeNum() => $_clearField(1);
 
-  /// Max channels
-  @$pb.TagNumber(2)
-  $core.int get maxChannels => $_getIZ(1);
-  @$pb.TagNumber(2)
-  set maxChannels($core.int value) => $_setUnsignedInt32(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasMaxChannels() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearMaxChannels() => $_clearField(2);
+  /// The total number of reboots this node has ever encountered (wraps at MAXINT)
+  @$pb.TagNumber(8)
+  $core.int get rebootCount => $_getIZ(1);
+  @$pb.TagNumber(8)
+  set rebootCount($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(8)
+  $core.bool hasRebootCount() => $_has(1);
+  @$pb.TagNumber(8)
+  void clearRebootCount() => $_clearField(8);
 
-  /// Has GPS
-  @$pb.TagNumber(3)
-  $core.bool get hasGps => $_getBF(2);
-  @$pb.TagNumber(3)
-  set hasGps($core.bool value) => $_setBool(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasHasGps() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearHasGps() => $_clearField(3);
+  /// The minimum app version that can talk to this device
+  @$pb.TagNumber(11)
+  $core.int get minAppVersion => $_getIZ(2);
+  @$pb.TagNumber(11)
+  set minAppVersion($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(11)
+  $core.bool hasMinAppVersion() => $_has(2);
+  @$pb.TagNumber(11)
+  void clearMinAppVersion() => $_clearField(11);
 
-  /// Reboot count
-  @$pb.TagNumber(4)
-  $core.int get rebootCount => $_getIZ(3);
-  @$pb.TagNumber(4)
-  set rebootCount($core.int value) => $_setUnsignedInt32(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasRebootCount() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearRebootCount() => $_clearField(4);
+  /// Unique hardware identifier for this device
+  @$pb.TagNumber(12)
+  $core.List<$core.int> get deviceId => $_getN(3);
+  @$pb.TagNumber(12)
+  set deviceId($core.List<$core.int> value) => $_setBytes(3, value);
+  @$pb.TagNumber(12)
+  $core.bool hasDeviceId() => $_has(3);
+  @$pb.TagNumber(12)
+  void clearDeviceId() => $_clearField(12);
 
-  /// Firmware version
-  @$pb.TagNumber(5)
-  $core.String get firmwareVersion => $_getSZ(4);
-  @$pb.TagNumber(5)
-  set firmwareVersion($core.String value) => $_setString(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasFirmwareVersion() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearFirmwareVersion() => $_clearField(5);
+  /// The PlatformIO build environment used
+  @$pb.TagNumber(13)
+  $core.String get pioEnv => $_getSZ(4);
+  @$pb.TagNumber(13)
+  set pioEnv($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(13)
+  $core.bool hasPioEnv() => $_has(4);
+  @$pb.TagNumber(13)
+  void clearPioEnv() => $_clearField(13);
+
+  /// Firmware edition (e.g. tracker, tcxo, etc.)
+  @$pb.TagNumber(14)
+  $core.String get firmwareEdition => $_getSZ(5);
+  @$pb.TagNumber(14)
+  set firmwareEdition($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(14)
+  $core.bool hasFirmwareEdition() => $_has(5);
+  @$pb.TagNumber(14)
+  void clearFirmwareEdition() => $_clearField(14);
+
+  /// Number of entries in the local node DB
+  @$pb.TagNumber(15)
+  $core.int get nodedbCount => $_getIZ(6);
+  @$pb.TagNumber(15)
+  set nodedbCount($core.int value) => $_setUnsignedInt32(6, value);
+  @$pb.TagNumber(15)
+  $core.bool hasNodedbCount() => $_has(6);
+  @$pb.TagNumber(15)
+  void clearNodedbCount() => $_clearField(15);
 }
 
 /// Channel configuration
@@ -1128,14 +1156,16 @@ class Channel extends $pb.GeneratedMessage {
 /// Channel settings
 class ChannelSettings extends $pb.GeneratedMessage {
   factory ChannelSettings({
+    $core.int? channelNum,
     $core.List<$core.int>? psk,
     $core.String? name,
     $core.int? id,
     $core.bool? uplinkEnabled,
     $core.bool? downlinkEnabled,
-    $core.List<$core.int>? moduleSettings,
+    ModuleSettings? moduleSettings,
   }) {
     final result = create();
+    if (channelNum != null) result.channelNum = channelNum;
     if (psk != null) result.psk = psk;
     if (name != null) result.name = name;
     if (id != null) result.id = id;
@@ -1158,14 +1188,15 @@ class ChannelSettings extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'ChannelSettings',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'channelNum', fieldType: $pb.PbFieldType.OU3)
     ..a<$core.List<$core.int>>(
-        1, _omitFieldNames ? '' : 'psk', $pb.PbFieldType.OY)
-    ..aOS(2, _omitFieldNames ? '' : 'name')
-    ..aI(3, _omitFieldNames ? '' : 'id', fieldType: $pb.PbFieldType.OF3)
-    ..aOB(4, _omitFieldNames ? '' : 'uplinkEnabled')
-    ..aOB(5, _omitFieldNames ? '' : 'downlinkEnabled')
-    ..a<$core.List<$core.int>>(
-        6, _omitFieldNames ? '' : 'moduleSettings', $pb.PbFieldType.OY)
+        2, _omitFieldNames ? '' : 'psk', $pb.PbFieldType.OY)
+    ..aOS(3, _omitFieldNames ? '' : 'name')
+    ..aI(4, _omitFieldNames ? '' : 'id', fieldType: $pb.PbFieldType.OF3)
+    ..aOB(5, _omitFieldNames ? '' : 'uplinkEnabled')
+    ..aOB(6, _omitFieldNames ? '' : 'downlinkEnabled')
+    ..aOM<ModuleSettings>(7, _omitFieldNames ? '' : 'moduleSettings',
+        subBuilder: ModuleSettings.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1187,65 +1218,147 @@ class ChannelSettings extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<ChannelSettings>(create);
   static ChannelSettings? _defaultInstance;
 
+  /// Deprecated channel_num
+  @$pb.TagNumber(1)
+  $core.int get channelNum => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set channelNum($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasChannelNum() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearChannelNum() => $_clearField(1);
+
   /// Pre-shared key (up to 256 bits)
-  @$pb.TagNumber(1)
-  $core.List<$core.int> get psk => $_getN(0);
-  @$pb.TagNumber(1)
-  set psk($core.List<$core.int> value) => $_setBytes(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasPsk() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearPsk() => $_clearField(1);
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get psk => $_getN(1);
+  @$pb.TagNumber(2)
+  set psk($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPsk() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPsk() => $_clearField(2);
 
   /// Channel name
-  @$pb.TagNumber(2)
-  $core.String get name => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set name($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasName() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearName() => $_clearField(2);
+  @$pb.TagNumber(3)
+  $core.String get name => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set name($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasName() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearName() => $_clearField(3);
 
   /// Unique channel ID
-  @$pb.TagNumber(3)
-  $core.int get id => $_getIZ(2);
-  @$pb.TagNumber(3)
-  set id($core.int value) => $_setUnsignedInt32(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasId() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearId() => $_clearField(3);
+  @$pb.TagNumber(4)
+  $core.int get id => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set id($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearId() => $_clearField(4);
 
   /// Uplink enabled
-  @$pb.TagNumber(4)
-  $core.bool get uplinkEnabled => $_getBF(3);
-  @$pb.TagNumber(4)
-  set uplinkEnabled($core.bool value) => $_setBool(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasUplinkEnabled() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearUplinkEnabled() => $_clearField(4);
+  @$pb.TagNumber(5)
+  $core.bool get uplinkEnabled => $_getBF(4);
+  @$pb.TagNumber(5)
+  set uplinkEnabled($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasUplinkEnabled() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearUplinkEnabled() => $_clearField(5);
 
   /// Downlink enabled
-  @$pb.TagNumber(5)
-  $core.bool get downlinkEnabled => $_getBF(4);
-  @$pb.TagNumber(5)
-  set downlinkEnabled($core.bool value) => $_setBool(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasDownlinkEnabled() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearDownlinkEnabled() => $_clearField(5);
+  @$pb.TagNumber(6)
+  $core.bool get downlinkEnabled => $_getBF(5);
+  @$pb.TagNumber(6)
+  set downlinkEnabled($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasDownlinkEnabled() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearDownlinkEnabled() => $_clearField(6);
 
-  /// Module settings (JSON)
-  @$pb.TagNumber(6)
-  $core.List<$core.int> get moduleSettings => $_getN(5);
-  @$pb.TagNumber(6)
-  set moduleSettings($core.List<$core.int> value) => $_setBytes(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasModuleSettings() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearModuleSettings() => $_clearField(6);
+  /// Module settings
+  @$pb.TagNumber(7)
+  ModuleSettings get moduleSettings => $_getN(6);
+  @$pb.TagNumber(7)
+  set moduleSettings(ModuleSettings value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasModuleSettings() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearModuleSettings() => $_clearField(7);
+  @$pb.TagNumber(7)
+  ModuleSettings ensureModuleSettings() => $_ensure(6);
+}
+
+/// Module settings for channels
+class ModuleSettings extends $pb.GeneratedMessage {
+  factory ModuleSettings({
+    $core.int? positionPrecision,
+    $core.bool? isMuted,
+  }) {
+    final result = create();
+    if (positionPrecision != null) result.positionPrecision = positionPrecision;
+    if (isMuted != null) result.isMuted = isMuted;
+    return result;
+  }
+
+  ModuleSettings._();
+
+  factory ModuleSettings.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleSettings.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleSettings',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'positionPrecision',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOB(2, _omitFieldNames ? '' : 'isMuted')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleSettings clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleSettings copyWith(void Function(ModuleSettings) updates) =>
+      super.copyWith((message) => updates(message as ModuleSettings))
+          as ModuleSettings;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleSettings create() => ModuleSettings._();
+  @$core.override
+  ModuleSettings createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleSettings getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ModuleSettings>(create);
+  static ModuleSettings? _defaultInstance;
+
+  /// Position precision bits
+  @$pb.TagNumber(1)
+  $core.int get positionPrecision => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set positionPrecision($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPositionPrecision() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPositionPrecision() => $_clearField(1);
+
+  /// Mute channel
+  @$pb.TagNumber(2)
+  $core.bool get isMuted => $_getBF(1);
+  @$pb.TagNumber(2)
+  set isMuted($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasIsMuted() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearIsMuted() => $_clearField(2);
 }
 
 enum AdminMessage_PayloadVariant {

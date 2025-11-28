@@ -52,23 +52,23 @@ message User {
   // Short name (max 4 chars)
   string short_name = 3;
   
+  // MAC address (6 bytes) - deprecated but still sent
+  bytes macaddr = 4;
+  
   // Hardware model
-  HardwareModel hw_model = 4;
-  
-  // MAC address (6 bytes)
-  bytes macaddr = 5;
-  
-  // Hardware model as string (for newer/unknown models)
-  string hw_model_string = 6;
+  HardwareModel hw_model = 5;
   
   // Licensed ham operator
-  bool is_licensed = 7;
+  bool is_licensed = 6;
   
   // User's role
-  Config_DeviceConfig_Role role = 8;
+  Config_DeviceConfig_Role role = 7;
   
   // Public key for encryption (32 bytes)
-  bytes public_key = 9;
+  bytes public_key = 8;
+  
+  // Whether the node can be messaged
+  bool is_unmessagable = 9;
 }
 
 // Hardware models
@@ -286,20 +286,26 @@ message DeviceMetrics {
 
 // My node information
 message MyNodeInfo {
-  // My node number
+  // The node number assigned to this node (unique on mesh)
   uint32 my_node_num = 1;
-  
-  // Max channels
-  uint32 max_channels = 2;
-  
-  // Has GPS
-  bool has_gps = 3;
-  
-  // Reboot count
-  uint32 reboot_count = 4;
-  
-  // Firmware version
-  string firmware_version = 5;
+
+  // The total number of reboots this node has ever encountered (wraps at MAXINT)
+  uint32 reboot_count = 8;
+
+  // The minimum app version that can talk to this device
+  uint32 min_app_version = 11;
+
+  // Unique hardware identifier for this device
+  bytes device_id = 12;
+
+  // The PlatformIO build environment used
+  string pio_env = 13;
+
+  // Firmware edition (e.g. tracker, tcxo, etc.)
+  string firmware_edition = 14;
+
+  // Number of entries in the local node DB
+  uint32 nodedb_count = 15;
 }
 
 // Channel configuration
@@ -322,23 +328,35 @@ message Channel {
 
 // Channel settings
 message ChannelSettings {
+  // Deprecated channel_num
+  uint32 channel_num = 1;
+  
   // Pre-shared key (up to 256 bits)
-  bytes psk = 1;
+  bytes psk = 2;
   
   // Channel name
-  string name = 2;
+  string name = 3;
   
   // Unique channel ID
-  fixed32 id = 3;
+  fixed32 id = 4;
   
   // Uplink enabled
-  bool uplink_enabled = 4;
+  bool uplink_enabled = 5;
   
   // Downlink enabled
-  bool downlink_enabled = 5;
+  bool downlink_enabled = 6;
   
-  // Module settings (JSON)
-  bytes module_settings = 6;
+  // Module settings
+  ModuleSettings module_settings = 7;
+}
+
+// Module settings for channels
+message ModuleSettings {
+  // Position precision bits
+  uint32 position_precision = 1;
+  
+  // Mute channel
+  bool is_muted = 2;
 }
 
 // Configuration requests

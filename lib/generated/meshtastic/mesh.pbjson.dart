@@ -266,37 +266,37 @@ const User$json = {
     {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
     {'1': 'long_name', '3': 2, '4': 1, '5': 9, '10': 'longName'},
     {'1': 'short_name', '3': 3, '4': 1, '5': 9, '10': 'shortName'},
+    {'1': 'macaddr', '3': 4, '4': 1, '5': 12, '10': 'macaddr'},
     {
       '1': 'hw_model',
-      '3': 4,
+      '3': 5,
       '4': 1,
       '5': 14,
       '6': '.meshtastic.HardwareModel',
       '10': 'hwModel'
     },
-    {'1': 'macaddr', '3': 5, '4': 1, '5': 12, '10': 'macaddr'},
-    {'1': 'hw_model_string', '3': 6, '4': 1, '5': 9, '10': 'hwModelString'},
-    {'1': 'is_licensed', '3': 7, '4': 1, '5': 8, '10': 'isLicensed'},
+    {'1': 'is_licensed', '3': 6, '4': 1, '5': 8, '10': 'isLicensed'},
     {
       '1': 'role',
-      '3': 8,
+      '3': 7,
       '4': 1,
       '5': 14,
       '6': '.meshtastic.Config_DeviceConfig_Role',
       '10': 'role'
     },
-    {'1': 'public_key', '3': 9, '4': 1, '5': 12, '10': 'publicKey'},
+    {'1': 'public_key', '3': 8, '4': 1, '5': 12, '10': 'publicKey'},
+    {'1': 'is_unmessagable', '3': 9, '4': 1, '5': 8, '10': 'isUnmessagable'},
   ],
 };
 
 /// Descriptor for `User`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List userDescriptor = $convert.base64Decode(
     'CgRVc2VyEg4KAmlkGAEgASgJUgJpZBIbCglsb25nX25hbWUYAiABKAlSCGxvbmdOYW1lEh0KCn'
-    'Nob3J0X25hbWUYAyABKAlSCXNob3J0TmFtZRI0Cghod19tb2RlbBgEIAEoDjIZLm1lc2h0YXN0'
-    'aWMuSGFyZHdhcmVNb2RlbFIHaHdNb2RlbBIYCgdtYWNhZGRyGAUgASgMUgdtYWNhZGRyEiYKD2'
-    'h3X21vZGVsX3N0cmluZxgGIAEoCVINaHdNb2RlbFN0cmluZxIfCgtpc19saWNlbnNlZBgHIAEo'
-    'CFIKaXNMaWNlbnNlZBI4CgRyb2xlGAggASgOMiQubWVzaHRhc3RpYy5Db25maWdfRGV2aWNlQ2'
-    '9uZmlnX1JvbGVSBHJvbGUSHQoKcHVibGljX2tleRgJIAEoDFIJcHVibGljS2V5');
+    'Nob3J0X25hbWUYAyABKAlSCXNob3J0TmFtZRIYCgdtYWNhZGRyGAQgASgMUgdtYWNhZGRyEjQK'
+    'CGh3X21vZGVsGAUgASgOMhkubWVzaHRhc3RpYy5IYXJkd2FyZU1vZGVsUgdod01vZGVsEh8KC2'
+    'lzX2xpY2Vuc2VkGAYgASgIUgppc0xpY2Vuc2VkEjgKBHJvbGUYByABKA4yJC5tZXNodGFzdGlj'
+    'LkNvbmZpZ19EZXZpY2VDb25maWdfUm9sZVIEcm9sZRIdCgpwdWJsaWNfa2V5GAggASgMUglwdW'
+    'JsaWNLZXkSJwoPaXNfdW5tZXNzYWdhYmxlGAkgASgIUg5pc1VubWVzc2FnYWJsZQ==');
 
 @$core.Deprecated('Use routeDiscoveryDescriptor instead')
 const RouteDiscovery$json = {
@@ -452,19 +452,22 @@ const MyNodeInfo$json = {
   '1': 'MyNodeInfo',
   '2': [
     {'1': 'my_node_num', '3': 1, '4': 1, '5': 13, '10': 'myNodeNum'},
-    {'1': 'max_channels', '3': 2, '4': 1, '5': 13, '10': 'maxChannels'},
-    {'1': 'has_gps', '3': 3, '4': 1, '5': 8, '10': 'hasGps'},
-    {'1': 'reboot_count', '3': 4, '4': 1, '5': 13, '10': 'rebootCount'},
-    {'1': 'firmware_version', '3': 5, '4': 1, '5': 9, '10': 'firmwareVersion'},
+    {'1': 'reboot_count', '3': 8, '4': 1, '5': 13, '10': 'rebootCount'},
+    {'1': 'min_app_version', '3': 11, '4': 1, '5': 13, '10': 'minAppVersion'},
+    {'1': 'device_id', '3': 12, '4': 1, '5': 12, '10': 'deviceId'},
+    {'1': 'pio_env', '3': 13, '4': 1, '5': 9, '10': 'pioEnv'},
+    {'1': 'firmware_edition', '3': 14, '4': 1, '5': 9, '10': 'firmwareEdition'},
+    {'1': 'nodedb_count', '3': 15, '4': 1, '5': 13, '10': 'nodedbCount'},
   ],
 };
 
 /// Descriptor for `MyNodeInfo`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List myNodeInfoDescriptor = $convert.base64Decode(
-    'CgpNeU5vZGVJbmZvEh4KC215X25vZGVfbnVtGAEgASgNUglteU5vZGVOdW0SIQoMbWF4X2NoYW'
-    '5uZWxzGAIgASgNUgttYXhDaGFubmVscxIXCgdoYXNfZ3BzGAMgASgIUgZoYXNHcHMSIQoMcmVi'
-    'b290X2NvdW50GAQgASgNUgtyZWJvb3RDb3VudBIpChBmaXJtd2FyZV92ZXJzaW9uGAUgASgJUg'
-    '9maXJtd2FyZVZlcnNpb24=');
+    'CgpNeU5vZGVJbmZvEh4KC215X25vZGVfbnVtGAEgASgNUglteU5vZGVOdW0SIQoMcmVib290X2'
+    'NvdW50GAggASgNUgtyZWJvb3RDb3VudBImCg9taW5fYXBwX3ZlcnNpb24YCyABKA1SDW1pbkFw'
+    'cFZlcnNpb24SGwoJZGV2aWNlX2lkGAwgASgMUghkZXZpY2VJZBIXCgdwaW9fZW52GA0gASgJUg'
+    'ZwaW9FbnYSKQoQZmlybXdhcmVfZWRpdGlvbhgOIAEoCVIPZmlybXdhcmVFZGl0aW9uEiEKDG5v'
+    'ZGVkYl9jb3VudBgPIAEoDVILbm9kZWRiQ291bnQ=');
 
 @$core.Deprecated('Use channelDescriptor instead')
 const Channel$json = {
@@ -512,21 +515,50 @@ final $typed_data.Uint8List channelDescriptor = $convert.base64Decode(
 const ChannelSettings$json = {
   '1': 'ChannelSettings',
   '2': [
-    {'1': 'psk', '3': 1, '4': 1, '5': 12, '10': 'psk'},
-    {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'id', '3': 3, '4': 1, '5': 7, '10': 'id'},
-    {'1': 'uplink_enabled', '3': 4, '4': 1, '5': 8, '10': 'uplinkEnabled'},
-    {'1': 'downlink_enabled', '3': 5, '4': 1, '5': 8, '10': 'downlinkEnabled'},
-    {'1': 'module_settings', '3': 6, '4': 1, '5': 12, '10': 'moduleSettings'},
+    {'1': 'channel_num', '3': 1, '4': 1, '5': 13, '10': 'channelNum'},
+    {'1': 'psk', '3': 2, '4': 1, '5': 12, '10': 'psk'},
+    {'1': 'name', '3': 3, '4': 1, '5': 9, '10': 'name'},
+    {'1': 'id', '3': 4, '4': 1, '5': 7, '10': 'id'},
+    {'1': 'uplink_enabled', '3': 5, '4': 1, '5': 8, '10': 'uplinkEnabled'},
+    {'1': 'downlink_enabled', '3': 6, '4': 1, '5': 8, '10': 'downlinkEnabled'},
+    {
+      '1': 'module_settings',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.ModuleSettings',
+      '10': 'moduleSettings'
+    },
   ],
 };
 
 /// Descriptor for `ChannelSettings`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List channelSettingsDescriptor = $convert.base64Decode(
-    'Cg9DaGFubmVsU2V0dGluZ3MSEAoDcHNrGAEgASgMUgNwc2sSEgoEbmFtZRgCIAEoCVIEbmFtZR'
-    'IOCgJpZBgDIAEoB1ICaWQSJQoOdXBsaW5rX2VuYWJsZWQYBCABKAhSDXVwbGlua0VuYWJsZWQS'
-    'KQoQZG93bmxpbmtfZW5hYmxlZBgFIAEoCFIPZG93bmxpbmtFbmFibGVkEicKD21vZHVsZV9zZX'
-    'R0aW5ncxgGIAEoDFIObW9kdWxlU2V0dGluZ3M=');
+    'Cg9DaGFubmVsU2V0dGluZ3MSHwoLY2hhbm5lbF9udW0YASABKA1SCmNoYW5uZWxOdW0SEAoDcH'
+    'NrGAIgASgMUgNwc2sSEgoEbmFtZRgDIAEoCVIEbmFtZRIOCgJpZBgEIAEoB1ICaWQSJQoOdXBs'
+    'aW5rX2VuYWJsZWQYBSABKAhSDXVwbGlua0VuYWJsZWQSKQoQZG93bmxpbmtfZW5hYmxlZBgGIA'
+    'EoCFIPZG93bmxpbmtFbmFibGVkEkMKD21vZHVsZV9zZXR0aW5ncxgHIAEoCzIaLm1lc2h0YXN0'
+    'aWMuTW9kdWxlU2V0dGluZ3NSDm1vZHVsZVNldHRpbmdz');
+
+@$core.Deprecated('Use moduleSettingsDescriptor instead')
+const ModuleSettings$json = {
+  '1': 'ModuleSettings',
+  '2': [
+    {
+      '1': 'position_precision',
+      '3': 1,
+      '4': 1,
+      '5': 13,
+      '10': 'positionPrecision'
+    },
+    {'1': 'is_muted', '3': 2, '4': 1, '5': 8, '10': 'isMuted'},
+  ],
+};
+
+/// Descriptor for `ModuleSettings`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List moduleSettingsDescriptor = $convert.base64Decode(
+    'Cg5Nb2R1bGVTZXR0aW5ncxItChJwb3NpdGlvbl9wcmVjaXNpb24YASABKA1SEXBvc2l0aW9uUH'
+    'JlY2lzaW9uEhkKCGlzX211dGVkGAIgASgIUgdpc011dGVk');
 
 @$core.Deprecated('Use adminMessageDescriptor instead')
 const AdminMessage$json = {
