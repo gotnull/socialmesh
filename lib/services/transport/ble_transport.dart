@@ -219,34 +219,62 @@ class BleTransport implements DeviceTransport {
           _fromNumCharacteristic = characteristic;
           _logger.d('Found fromNum characteristic');
 
+          final canNotify = characteristic.properties.notify;
+          final canIndicate = characteristic.properties.indicate;
+          debugPrint(
+            '🔔 fromNum found! notify=$canNotify, indicate=$canIndicate',
+          );
+
           // Subscribe to fromNum notifications per official docs
-          if (characteristic.properties.notify ||
-              characteristic.properties.indicate) {
+          if (canNotify || canIndicate) {
+            debugPrint('🔔 fromNum supports notifications, setting up...');
             _logger.d('Setting up notifications for fromNum');
             await characteristic.setNotifyValue(true);
+            debugPrint('🔔 setNotifyValue(true) completed');
+
+            // Check if it actually got enabled
+            final isNotifying = await characteristic.isNotifying;
+            debugPrint('🔔 isNotifying=$isNotifying after setNotifyValue');
+
             _fromNumSubscription = characteristic.lastValueStream.listen(
               (value) async {
+                debugPrint(
+                  '🔔🔔🔔 fromNum NOTIFIED! value.length=${value.length}',
+                );
                 if (value.isNotEmpty && _rxCharacteristic != null) {
                   _logger.d('fromNum notified, reading fromRadio');
+                  debugPrint(
+                    '🔔 Reading fromRadio after fromNum notification...',
+                  );
                   try {
                     // Read from fromRadio until empty
+                    int readCount = 0;
                     while (true) {
                       final data = await _rxCharacteristic!.read();
+                      readCount++;
+                      debugPrint(
+                        '🔔 Read attempt $readCount: got ${data.length} bytes',
+                      );
                       if (data.isEmpty) break;
                       _logger.d('Read ${data.length} bytes from fromRadio');
                       _dataController.add(data);
                     }
+                    debugPrint('🔔 Finished reading, $readCount attempts');
                   } catch (e) {
                     _logger.e('Error reading fromRadio: $e');
+                    debugPrint('🔔 ERROR reading fromRadio: $e');
                   }
                 }
               },
               onError: (error) {
                 _logger.e('fromNum error: $error');
+                debugPrint('🔔 fromNum stream ERROR: $error');
               },
             );
+            debugPrint('🔔 fromNum notification listener attached');
           } else {
             _logger.w('fromNum does not support notifications');
+            debugPrint('🔔 WARNING: fromNum does NOT support notifications!');
           }
         }
       }
@@ -328,15 +356,26 @@ class BleTransport implements DeviceTransport {
   Future<void> pollOnce() async {
     if (_rxCharacteristic == null ||
         _state != DeviceConnectionState.connected) {
+      debugPrint(
+        '📡 pollOnce: Cannot poll - rxChar=${_rxCharacteristic != null}, state=$_state',
+      );
       return;
     }
 
     try {
+      debugPrint('📡 pollOnce: Reading fromRadio characteristic...');
       final value = await _rxCharacteristic!.read();
+      debugPrint('📡 pollOnce: Read returned ${value.length} bytes');
+
       if (value.isNotEmpty) {
         _logger.d('Polled ${value.length} bytes');
-        debugPrint('📡 Polled ${value.length} bytes from fromRadio');
+        debugPrint(
+          '📡 Polled ${value.length} bytes from fromRadio: ${value.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
+        );
+        debugPrint('📡 Adding ${value.length} bytes to data stream');
         _dataController.add(value);
+      } else {
+        debugPrint('📡 pollOnce: fromRadio returned EMPTY');
       }
     } catch (e) {
       _logger.e('Polling error: $e');

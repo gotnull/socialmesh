@@ -132,13 +132,24 @@ class ProtocolService {
   /// Handle incoming data from transport
   void _handleData(List<int> data) {
     _logger.d('Received ${data.length} bytes');
-    debugPrint('📥 RAW DATA RECEIVED: ${data.length} bytes');
+    debugPrint(
+      '📥 RAW DATA RECEIVED: ${data.length} bytes - ${data.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
+    );
 
     // Extract packets using framer
     final packets = _framer.addData(data);
     debugPrint('📥 Framer extracted ${packets.length} complete packet(s)');
 
+    if (packets.isEmpty) {
+      debugPrint(
+        '📥 WARNING: No complete packets extracted from ${data.length} bytes!',
+      );
+    }
+
     for (final packet in packets) {
+      debugPrint(
+        '📥 Processing packet ${packets.indexOf(packet) + 1}/${packets.length}',
+      );
       _processPacket(packet);
     }
   }
@@ -147,6 +158,9 @@ class ProtocolService {
   void _processPacket(List<int> packet) {
     try {
       _logger.d('Processing packet: ${packet.length} bytes');
+      debugPrint(
+        '📦 Processing packet: ${packet.length} bytes - ${packet.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
+      );
 
       final fromRadio = pn.FromRadio.fromBuffer(packet);
 
@@ -307,14 +321,26 @@ class ProtocolService {
   void _handleMyNodeInfo(pb.MyNodeInfo myInfo) {
     _myNodeNum = myInfo.myNodeNum;
     _logger.i('My node number: $_myNodeNum');
+    debugPrint('📄 _handleMyNodeInfo: myNodeNum=$_myNodeNum');
     _myNodeNumController.add(_myNodeNum!);
   }
 
   /// Handle node info
   void _handleNodeInfo(pb.NodeInfo nodeInfo) {
     _logger.i('Node info received: ${nodeInfo.num}');
+    debugPrint('📋 _handleNodeInfo START: nodeNum=${nodeInfo.num}');
+    debugPrint(
+      '📋   hasUser=${nodeInfo.hasUser()}, hasPosition=${nodeInfo.hasPosition()}, hasDeviceMetrics=${nodeInfo.hasDeviceMetrics()}',
+    );
+
+    if (nodeInfo.hasUser()) {
+      debugPrint(
+        '📋   longName="${nodeInfo.user.longName}", shortName="${nodeInfo.user.shortName}"',
+      );
+    }
 
     final existingNode = _nodes[nodeInfo.num];
+    debugPrint('📋   existingNode=${existingNode != null ? 'EXISTS' : 'NEW'}');
 
     // Generate consistent color from node number
     final colors = [
@@ -330,6 +356,9 @@ class ProtocolService {
 
     // Assume router role if device has metrics, otherwise client
     final role = nodeInfo.hasDeviceMetrics() ? 'ROUTER' : 'CLIENT';
+    debugPrint(
+      '📋   role=$role, avatarColor=0x${avatarColor.toRadixString(16)}',
+    );
 
     MeshNode updatedNode;
     if (existingNode != null) {
@@ -383,15 +412,30 @@ class ProtocolService {
     }
 
     _nodes[nodeInfo.num] = updatedNode;
+    debugPrint(
+      '📋 _handleNodeInfo: Adding node ${nodeInfo.num} to stream. Total nodes: ${_nodes.length}',
+    );
     _nodeController.add(updatedNode);
+    debugPrint(
+      '📋 _handleNodeInfo COMPLETE: Node ${nodeInfo.num} added successfully',
+    );
   }
 
   /// Handle channel configuration
   void _handleChannel(pb.Channel channel) {
     _logger.i('Channel ${channel.index} config received');
     debugPrint(
-      '🟢 _handleChannel: index=${channel.index}, hasSettings=${channel.hasSettings()}',
+      '📡 _handleChannel START: index=${channel.index}, hasSettings=${channel.hasSettings()}',
     );
+
+    if (channel.hasSettings()) {
+      debugPrint(
+        '📡   settings.name="${channel.settings.name}", psk.length=${channel.settings.psk.length}',
+      );
+      debugPrint(
+        '📡   uplinkEnabled=${channel.settings.uplinkEnabled}, downlinkEnabled=${channel.settings.downlinkEnabled}',
+      );
+    }
 
     final channelConfig = ChannelConfig(
       index: channel.index,
@@ -404,7 +448,7 @@ class ProtocolService {
     );
 
     debugPrint(
-      '🟢 Created ChannelConfig: index=${channelConfig.index}, name="${channelConfig.name}", psk.length=${channelConfig.psk.length}',
+      '📡 Created ChannelConfig: index=${channelConfig.index}, name="${channelConfig.name}", psk.length=${channelConfig.psk.length}',
     );
 
     // Extend list if needed, but don't add dummy entries to stream
@@ -412,15 +456,18 @@ class ProtocolService {
       _channels.add(ChannelConfig(index: _channels.length, name: '', psk: []));
     }
     _channels[channel.index] = channelConfig;
-    debugPrint('🟢 _channels list now has ${_channels.length} entries');
+    debugPrint('📡 _channels list now has ${_channels.length} entries');
 
     // Always emit channel 0 (Primary), emit others only if they have names
     if (channel.index == 0 || channelConfig.name.isNotEmpty) {
-      debugPrint('🟢 Emitting channel ${channel.index} to stream');
+      debugPrint('📡 Emitting channel ${channel.index} to stream');
       _channelController.add(channelConfig);
+      debugPrint(
+        '📡 _handleChannel COMPLETE: Channel ${channel.index} emitted to stream',
+      );
     } else {
       debugPrint(
-        '🟢 NOT emitting channel ${channel.index} (empty name and not Primary)',
+        '📡 NOT emitting channel ${channel.index} (empty name and not Primary)',
       );
     }
   }
@@ -473,17 +520,25 @@ class ProtocolService {
 
     while (!_configurationComplete && pollCount < 200) {
       try {
+        debugPrint('🔁 Poll iteration $pollCount/${200}...');
         // Poll the transport for data
         await _transport.pollOnce();
 
         pollCount++;
+        if (pollCount % 10 == 0) {
+          debugPrint(
+            '🔁 Completed $pollCount polls, configComplete=$_configurationComplete',
+          );
+        }
         await Future.delayed(const Duration(milliseconds: 50));
       } catch (e) {
         debugPrint('🔁 Polling error: $e');
       }
     }
 
-    debugPrint('🔁 Configuration polling stopped after $pollCount polls');
+    debugPrint(
+      '🔁 Configuration polling stopped after $pollCount polls (configComplete=$_configurationComplete)',
+    );
   }
 
   /// Send a text message
