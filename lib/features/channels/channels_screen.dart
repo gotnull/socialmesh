@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
+import '../../core/theme.dart';
 
 class ChannelsScreen extends ConsumerWidget {
   const ChannelsScreen({super.key});
@@ -13,8 +14,18 @@ class ChannelsScreen extends ConsumerWidget {
     final channels = ref.watch(channelsProvider);
 
     return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        title: const Text('Channels'),
+        backgroundColor: AppTheme.darkBackground,
+        title: const Text(
+          'Channels',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            fontFamily: 'Inter',
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
@@ -35,25 +46,61 @@ class ChannelsScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.wifi_tethering,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.secondary,
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkCard,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.wifi_tethering,
+                      size: 40,
+                      color: AppTheme.textTertiary,
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  const Text('No channels configured'),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'No channels configured',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textSecondary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
                   const SizedBox(height: 8),
+                  const Text(
+                    'Channels are still being loaded from device',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   TextButton.icon(
                     onPressed: () {
                       Navigator.of(context).pushNamed('/qr-import');
                     },
-                    icon: const Icon(Icons.qr_code_scanner),
-                    label: const Text('Scan QR Code'),
+                    icon: const Icon(
+                      Icons.qr_code_scanner,
+                      color: AppTheme.primaryGreen,
+                    ),
+                    label: const Text(
+                      'Scan QR Code',
+                      style: TextStyle(
+                        color: AppTheme.primaryGreen,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ],
               ),
             )
           : ListView.builder(
+              padding: const EdgeInsets.all(16),
               itemCount: channels.length,
               itemBuilder: (context, index) {
                 final channel = channels[index];
@@ -159,47 +206,109 @@ class _ChannelTile extends ConsumerWidget {
     final isPrimary = channel.index == 0;
     final hasKey = channel.psk.isNotEmpty;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: isPrimary
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.secondary,
-          child: Text(
-            '${channel.index}',
-            style: const TextStyle(color: Colors.white),
-          ),
-        ),
-        title: Text(
-          channel.name.isEmpty ? 'Channel ${channel.index}' : channel.name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (isPrimary) const Text('Primary Channel'),
-            Row(
-              children: [
-                Icon(
-                  hasKey ? Icons.lock : Icons.lock_open,
-                  size: 16,
-                  color: hasKey ? Colors.green : Colors.orange,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _showChannelOptions(context, ref),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: isPrimary
+                      ? AppTheme.primaryGreen
+                      : AppTheme.darkBackground,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 4),
-                Text(hasKey ? 'Encrypted' : 'No encryption'),
-              ],
-            ),
-            if (channel.uplink || channel.downlink)
-              Text(
-                '${channel.uplink ? "↑" : ""}${channel.downlink ? "↓" : ""}',
-                style: const TextStyle(fontSize: 12),
+                child: Center(
+                  child: Text(
+                    '${channel.index}',
+                    style: TextStyle(
+                      color: isPrimary ? Colors.white : AppTheme.textSecondary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ),
               ),
-          ],
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.more_vert),
-          onPressed: () => _showChannelOptions(context, ref),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      channel.name.isEmpty
+                          ? 'Channel ${channel.index}'
+                          : channel.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          hasKey ? Icons.lock : Icons.lock_open,
+                          size: 14,
+                          color: hasKey
+                              ? AppTheme.primaryGreen
+                              : AppTheme.textTertiary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          hasKey ? 'Encrypted' : 'No encryption',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textSecondary,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        if (isPrimary) ...[
+                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryGreen.withValues(
+                                alpha: 0.2,
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'PRIMARY',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.primaryGreen,
+                                fontFamily: 'Inter',
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+            ],
+          ),
         ),
       ),
     );

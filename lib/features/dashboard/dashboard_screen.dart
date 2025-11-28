@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/transport.dart' as transport;
@@ -72,7 +73,7 @@ class DashboardScreen extends ConsumerWidget {
               children: [
                 // Device card matching scanner design
                 Container(
-                  margin: const EdgeInsets.only(bottom: 16),
+                  margin: const EdgeInsets.only(bottom: 24),
                   decoration: BoxDecoration(
                     color: AppTheme.darkCard,
                     borderRadius: BorderRadius.circular(12),
@@ -82,7 +83,10 @@ class DashboardScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                     onTap: () {},
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
                       child: Row(
                         children: [
                           Container(
@@ -151,7 +155,7 @@ class DashboardScreen extends ConsumerWidget {
                         onTap: () => Navigator.of(context).pushNamed('/nodes'),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: _StatCard(
                         icon: Icons.chat_bubble_outline,
@@ -164,11 +168,11 @@ class DashboardScreen extends ConsumerWidget {
                   ],
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
 
                 // Quick Actions Section
                 const Padding(
-                  padding: EdgeInsets.only(bottom: 12),
+                  padding: EdgeInsets.only(bottom: 16),
                   child: Text(
                     'Quick Actions',
                     style: TextStyle(
@@ -209,11 +213,11 @@ class DashboardScreen extends ConsumerWidget {
                   onTap: () => Navigator.of(context).pushNamed('/channels'),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
 
                 // Signal Strength Live
                 const Padding(
-                  padding: EdgeInsets.only(bottom: 12),
+                  padding: EdgeInsets.only(bottom: 16),
                   child: Text(
                     'Signal Strength Live',
                     style: TextStyle(
@@ -381,7 +385,7 @@ class _ActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: AppTheme.darkCard,
         borderRadius: BorderRadius.circular(12),
@@ -448,26 +452,51 @@ class _SignalStrengthChart extends ConsumerStatefulWidget {
 
 class _SignalStrengthChartState extends ConsumerState<_SignalStrengthChart> {
   final List<_SignalData> _signalHistory = [];
+  Timer? _updateTimer;
 
   @override
   void initState() {
     super.initState();
-    // Initialize with some sample data
+    // Add initial data point
+    _addDataPoint();
+
+    // Update chart every 2 seconds
+    _updateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (mounted) {
+        _addDataPoint();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _updateTimer?.cancel();
+    super.dispose();
+  }
+
+  void _addDataPoint() {
+    final device = ref.read(connectedDeviceProvider);
     final now = DateTime.now();
-    for (int i = 8; i >= 0; i--) {
-      _signalHistory.add(
-        _SignalData(
-          time: now.subtract(Duration(minutes: i)),
-          rssi1: -40 - (i % 3) * 5,
-          rssi2: -50 - (i % 4) * 4,
-          rssi3: -60 - (i % 2) * 3,
-        ),
-      );
+
+    // Add new data point with actual device RSSI
+    _signalHistory.add(
+      _SignalData(time: now, rssi: device?.rssi?.toDouble() ?? -90.0),
+    );
+
+    // Keep last 30 data points (60 seconds at 2s intervals)
+    if (_signalHistory.length > 30) {
+      _signalHistory.removeAt(0);
+    }
+
+    if (mounted) {
+      setState(() {});
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasData = _signalHistory.isNotEmpty;
+
     return Container(
       height: 200,
       padding: const EdgeInsets.all(20),
@@ -476,26 +505,30 @@ class _SignalStrengthChartState extends ConsumerState<_SignalStrengthChart> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.darkBorder),
       ),
-      child: CustomPaint(
-        painter: _SignalChartPainter(_signalHistory),
-        child: Container(),
-      ),
+      child: hasData
+          ? CustomPaint(
+              painter: _SignalChartPainter(_signalHistory),
+              child: Container(),
+            )
+          : const Center(
+              child: Text(
+                'Waiting for signal data...',
+                style: TextStyle(
+                  color: AppTheme.textTertiary,
+                  fontSize: 14,
+                  fontFamily: 'Inter',
+                ),
+              ),
+            ),
     );
   }
 }
 
 class _SignalData {
   final DateTime time;
-  final double rssi1;
-  final double rssi2;
-  final double rssi3;
+  final double rssi;
 
-  _SignalData({
-    required this.time,
-    required this.rssi1,
-    required this.rssi2,
-    required this.rssi3,
-  });
+  _SignalData({required this.time, required this.rssi});
 }
 
 class _SignalChartPainter extends CustomPainter {
@@ -507,21 +540,9 @@ class _SignalChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (data.isEmpty) return;
 
-    final Paint line1Paint = Paint()
-      ..color = const Color(0xFF7F6FF2)
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final Paint line2Paint = Paint()
-      ..color = const Color(0xFFE3B84D)
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final Paint line3Paint = Paint()
-      ..color = const Color(0xFFC15A43)
-      ..strokeWidth = 2.5
+    final Paint linePaint = Paint()
+      ..color = AppTheme.primaryGreen
+      ..strokeWidth = 3.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
@@ -579,36 +600,22 @@ class _SignalChartPainter extends CustomPainter {
       textPainter.paint(canvas, Offset(x - 12, size.height + 4));
     }
 
-    Path path1 = Path();
-    Path path2 = Path();
-    Path path3 = Path();
+    Path path = Path();
 
     for (int i = 0; i < data.length; i++) {
       final x = i * stepX;
-      final y1 =
-          size.height -
-          ((data[i].rssi1 - minRssi) / (maxRssi - minRssi)) * size.height;
-      final y2 =
-          size.height -
-          ((data[i].rssi2 - minRssi) / (maxRssi - minRssi)) * size.height;
-      final y3 =
-          size.height -
-          ((data[i].rssi3 - minRssi) / (maxRssi - minRssi)) * size.height;
+      final rssi = data[i].rssi.clamp(minRssi, maxRssi);
+      final y =
+          size.height - ((rssi - minRssi) / (maxRssi - minRssi)) * size.height;
 
       if (i == 0) {
-        path1.moveTo(x, y1);
-        path2.moveTo(x, y2);
-        path3.moveTo(x, y3);
+        path.moveTo(x, y);
       } else {
-        path1.lineTo(x, y1);
-        path2.lineTo(x, y2);
-        path3.lineTo(x, y3);
+        path.lineTo(x, y);
       }
     }
 
-    canvas.drawPath(path1, line1Paint);
-    canvas.drawPath(path2, line2Paint);
-    canvas.drawPath(path3, line3Paint);
+    canvas.drawPath(path, linePaint);
   }
 
   @override
