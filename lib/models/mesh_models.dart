@@ -67,9 +67,15 @@ class MeshNode {
   final int? altitude;
   final DateTime? lastHeard;
   final int? snr;
+  final int? rssi;
   final int? batteryLevel;
   final String? firmwareVersion;
   final String? hardwareModel;
+  final String? role; // 'CLIENT', 'ROUTER', etc.
+  final double? distance; // distance in meters
+  final bool isOnline;
+  final bool isFavorite;
+  final int? avatarColor; // Color value for avatar
 
   MeshNode({
     required this.nodeNum,
@@ -81,9 +87,15 @@ class MeshNode {
     this.altitude,
     this.lastHeard,
     this.snr,
+    this.rssi,
     this.batteryLevel,
     this.firmwareVersion,
     this.hardwareModel,
+    this.role,
+    this.distance,
+    this.isOnline = false,
+    this.isFavorite = false,
+    this.avatarColor,
   });
 
   MeshNode copyWith({
@@ -96,9 +108,15 @@ class MeshNode {
     int? altitude,
     DateTime? lastHeard,
     int? snr,
+    int? rssi,
     int? batteryLevel,
     String? firmwareVersion,
     String? hardwareModel,
+    String? role,
+    double? distance,
+    bool? isOnline,
+    bool? isFavorite,
+    int? avatarColor,
   }) {
     return MeshNode(
       nodeNum: nodeNum ?? this.nodeNum,
@@ -110,9 +128,15 @@ class MeshNode {
       altitude: altitude ?? this.altitude,
       lastHeard: lastHeard ?? this.lastHeard,
       snr: snr ?? this.snr,
+      rssi: rssi ?? this.rssi,
       batteryLevel: batteryLevel ?? this.batteryLevel,
       firmwareVersion: firmwareVersion ?? this.firmwareVersion,
       hardwareModel: hardwareModel ?? this.hardwareModel,
+      role: role ?? this.role,
+      distance: distance ?? this.distance,
+      isOnline: isOnline ?? this.isOnline,
+      isFavorite: isFavorite ?? this.isFavorite,
+      avatarColor: avatarColor ?? this.avatarColor,
     );
   }
 
