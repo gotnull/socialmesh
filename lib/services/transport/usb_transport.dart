@@ -181,6 +181,11 @@ class UsbTransport implements DeviceTransport {
   }
 
   @override
+  Future<void> pollOnce() async {
+    // USB serial uses continuous stream, no polling needed
+  }
+
+  @override
   Future<void> dispose() async {
     await disconnect();
     await _stateController.close();

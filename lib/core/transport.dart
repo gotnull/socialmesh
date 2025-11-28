@@ -67,6 +67,9 @@ abstract class DeviceTransport {
   /// Send data to the device
   Future<void> send(List<int> data);
 
+  /// Poll for data once (for transports that support active polling)
+  Future<void> pollOnce();
+
   /// Dispose resources
   Future<void> dispose();
 

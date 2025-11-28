@@ -255,6 +255,24 @@ class BleTransport implements DeviceTransport {
         _updateState(DeviceConnectionState.connected);
         _logger.i('Connected successfully');
 
+        // Perform initial read from fromRadio to wake up the device
+        if (_rxCharacteristic != null) {
+          try {
+            debugPrint(
+              '🔄 Performing initial read from fromRadio to wake device',
+            );
+            final initialData = await _rxCharacteristic!.read();
+            if (initialData.isNotEmpty) {
+              debugPrint('🔄 Initial read got ${initialData.length} bytes');
+              _dataController.add(initialData);
+            } else {
+              debugPrint('🔄 Initial read returned empty');
+            }
+          } catch (e) {
+            debugPrint('🔄 Initial read error (ignored): $e');
+          }
+        }
+
         // If fromNum is not available, fall back to polling
         if (_fromNumCharacteristic == null) {
           _logger.w('fromNum not available, using polling fallback');
@@ -304,6 +322,26 @@ class BleTransport implements DeviceTransport {
         debugPrint('📡 Polling error: $e');
       }
     });
+  }
+
+  @override
+  Future<void> pollOnce() async {
+    if (_rxCharacteristic == null ||
+        _state != DeviceConnectionState.connected) {
+      return;
+    }
+
+    try {
+      final value = await _rxCharacteristic!.read();
+      if (value.isNotEmpty) {
+        _logger.d('Polled ${value.length} bytes');
+        debugPrint('📡 Polled ${value.length} bytes from fromRadio');
+        _dataController.add(value);
+      }
+    } catch (e) {
+      _logger.e('Polling error: $e');
+      debugPrint('📡 Polling error: $e');
+    }
   }
 
   @override

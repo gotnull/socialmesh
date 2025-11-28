@@ -84,9 +84,13 @@ class ProtocolService {
     await Future.delayed(const Duration(milliseconds: 500));
     _requestConfiguration();
 
-    // Wait for configuration with timeout
+    // Actively poll for config data - Meshtastic requires pulling data via reads
+    _logger.i('Starting active config polling...');
     final configFuture = _configCompleter!.future;
-    final timeoutFuture = Future.delayed(const Duration(seconds: 5));
+    _pollForConfiguration();
+
+    // Wait for either config complete or timeout (10 seconds to allow for polling)
+    final timeoutFuture = Future.delayed(const Duration(seconds: 10));
 
     _logger.i('Waiting for config or timeout...');
     await Future.any([configFuture, timeoutFuture]);
@@ -368,6 +372,26 @@ class ProtocolService {
     } catch (e) {
       _logger.e('Error requesting configuration: $e');
     }
+  }
+
+  /// Poll for configuration data by reading fromRadio
+  Future<void> _pollForConfiguration() async {
+    debugPrint('🔁 Starting configuration polling');
+    int pollCount = 0;
+
+    while (!_configurationComplete && pollCount < 100) {
+      try {
+        // Poll the transport for data
+        await _transport.pollOnce();
+
+        pollCount++;
+        await Future.delayed(const Duration(milliseconds: 100));
+      } catch (e) {
+        debugPrint('🔁 Polling error: $e');
+      }
+    }
+
+    debugPrint('🔁 Configuration polling stopped after $pollCount polls');
   }
 
   /// Send a text message
