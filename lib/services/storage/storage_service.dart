@@ -2,6 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:logger/logger.dart';
 import 'dart:convert';
+import '../../models/mesh_models.dart';
 
 /// Secure storage service for sensitive data
 class SecureStorageService {
@@ -142,5 +143,100 @@ class SettingsService {
   Future<void> clearAll() async {
     await _preferences.clear();
     _logger.i('Cleared all settings');
+  }
+}
+
+/// Message storage service - persists messages locally
+class MessageStorageService {
+  final Logger _logger;
+  SharedPreferences? _prefs;
+  static const String _messagesKey = 'messages';
+  static const int _maxMessages = 500;
+
+  MessageStorageService({Logger? logger}) : _logger = logger ?? Logger();
+
+  Future<void> init() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  SharedPreferences get _preferences {
+    if (_prefs == null) {
+      throw Exception('MessageStorageService not initialized');
+    }
+    return _prefs!;
+  }
+
+  /// Save a message to local storage
+  Future<void> saveMessage(Message message) async {
+    try {
+      final messages = await loadMessages();
+      messages.add(message);
+
+      // Trim to max messages
+      if (messages.length > _maxMessages) {
+        messages.removeRange(0, messages.length - _maxMessages);
+      }
+
+      final jsonList = messages.map((m) => _messageToJson(m)).toList();
+      await _preferences.setString(_messagesKey, jsonEncode(jsonList));
+    } catch (e) {
+      _logger.e('Error saving message: $e');
+    }
+  }
+
+  /// Load all messages from local storage
+  Future<List<Message>> loadMessages() async {
+    try {
+      final jsonString = _preferences.getString(_messagesKey);
+      if (jsonString == null || jsonString.isEmpty) {
+        return [];
+      }
+
+      final jsonList = jsonDecode(jsonString) as List;
+      return jsonList
+          .map((j) => _messageFromJson(j as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      _logger.e('Error loading messages: $e');
+      return [];
+    }
+  }
+
+  /// Clear all messages
+  Future<void> clearMessages() async {
+    try {
+      await _preferences.remove(_messagesKey);
+      _logger.i('Cleared all messages');
+    } catch (e) {
+      _logger.e('Error clearing messages: $e');
+    }
+  }
+
+  Map<String, dynamic> _messageToJson(Message message) {
+    return {
+      'id': message.id,
+      'from': message.from,
+      'to': message.to,
+      'text': message.text,
+      'timestamp': message.timestamp.millisecondsSinceEpoch,
+      'channel': message.channel,
+      'sent': message.sent,
+      'received': message.received,
+      'acked': message.acked,
+    };
+  }
+
+  Message _messageFromJson(Map<String, dynamic> json) {
+    return Message(
+      id: json['id'] as String,
+      from: json['from'] as int,
+      to: json['to'] as int,
+      text: json['text'] as String,
+      timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
+      channel: json['channel'] as int?,
+      sent: json['sent'] as bool? ?? false,
+      received: json['received'] as bool? ?? false,
+      acked: json['acked'] as bool? ?? false,
+    );
   }
 }

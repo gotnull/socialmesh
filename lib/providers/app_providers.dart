@@ -35,6 +35,16 @@ final settingsServiceProvider = FutureProvider<SettingsService>((ref) async {
   return service;
 });
 
+// Message storage service
+final messageStorageProvider = FutureProvider<MessageStorageService>((
+  ref,
+) async {
+  final logger = ref.watch(loggerProvider);
+  final service = MessageStorageService(logger: logger);
+  await service.init();
+  return service;
+});
+
 // Transport
 final transportTypeProvider = StateProvider<TransportType>((ref) {
   return TransportType.ble;
@@ -101,25 +111,41 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
   return service;
 });
 
-// Messages
+// Messages with persistence
 class MessagesNotifier extends StateNotifier<List<Message>> {
   final ProtocolService _protocol;
+  final MessageStorageService? _storage;
 
-  MessagesNotifier(this._protocol) : super([]) {
-    // Initialize with existing messages from protocol service
-    // Note: Messages are transient and not stored in protocol service
+  MessagesNotifier(this._protocol, this._storage) : super([]) {
+    _init();
+  }
 
+  Future<void> _init() async {
+    // Load persisted messages
+    if (_storage != null) {
+      final savedMessages = await _storage.loadMessages();
+      if (savedMessages.isNotEmpty) {
+        state = savedMessages;
+        debugPrint('📨 Loaded ${savedMessages.length} messages from storage');
+      }
+    }
+
+    // Listen for new messages
     _protocol.messageStream.listen((message) {
       state = [...state, message];
+      // Persist the new message
+      _storage?.saveMessage(message);
     });
   }
 
   void addMessage(Message message) {
     state = [...state, message];
+    _storage?.saveMessage(message);
   }
 
   void clearMessages() {
     state = [];
+    _storage?.clearMessages();
   }
 
   List<Message> getMessagesForNode(int nodeNum) {
@@ -130,7 +156,9 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
 final messagesProvider = StateNotifierProvider<MessagesNotifier, List<Message>>(
   (ref) {
     final protocol = ref.watch(protocolServiceProvider);
-    return MessagesNotifier(protocol);
+    final storageAsync = ref.watch(messageStorageProvider);
+    final storage = storageAsync.valueOrNull;
+    return MessagesNotifier(protocol, storage);
   },
 );
 
