@@ -160,11 +160,11 @@ class DashboardScreen extends ConsumerWidget {
                 ),
 
                 _ActionCard(
-                  icon: Icons.qr_code_scanner,
-                  title: 'Import Channel',
-                  subtitle: 'Scan QR code to import channel',
+                  icon: Icons.wifi_tethering,
+                  title: 'Channels',
+                  subtitle: 'Manage communication channels',
                   onTap: () {
-                    Navigator.of(context).pushNamed('/qr-import');
+                    Navigator.of(context).pushNamed('/channels');
                   },
                 ),
               ],

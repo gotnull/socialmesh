@@ -14,6 +14,8 @@ class MessagingScreen extends ConsumerStatefulWidget {
 class _MessagingScreenState extends ConsumerState<MessagingScreen> {
   final TextEditingController _messageController = TextEditingController();
   int _selectedNodeNum = 0xFFFFFFFF; // Broadcast by default
+  int _selectedChannel = 0; // Primary channel by default
+  bool _dmMode = false; // Direct message mode
 
   @override
   void dispose() {
@@ -25,12 +27,19 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
+    // In DM mode, always send to specific node
+    // In broadcast mode, send to all nodes on channel
+    final targetNode = _dmMode && _selectedNodeNum != 0xFFFFFFFF
+        ? _selectedNodeNum
+        : 0xFFFFFFFF;
+
     try {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.sendMessage(
         text: text,
-        to: _selectedNodeNum,
-        wantAck: _selectedNodeNum != 0xFFFFFFFF,
+        to: targetNode,
+        channel: _selectedChannel,
+        wantAck: targetNode != 0xFFFFFFFF,
       );
 
       _messageController.clear();
@@ -53,23 +62,68 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
   Widget build(BuildContext context) {
     final messages = ref.watch(messagesProvider);
     final nodes = ref.watch(nodesProvider);
+    final channels = ref.watch(channelsProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
-    // Filter messages for selected node (or all for broadcast)
-    final filteredMessages = _selectedNodeNum == 0xFFFFFFFF
-        ? messages
-        : messages
-              .where(
-                (m) =>
-                    (m.from == _selectedNodeNum || m.to == _selectedNodeNum) ||
-                    (m.from == myNodeNum || m.to == myNodeNum),
-              )
-              .toList();
+    // Filter messages for selected node and channel
+    final filteredMessages = messages.where((m) {
+      final matchesChannel = m.channel == _selectedChannel;
+      if (_selectedNodeNum == 0xFFFFFFFF) {
+        return matchesChannel;
+      }
+      return matchesChannel &&
+          ((m.from == _selectedNodeNum || m.to == _selectedNodeNum) ||
+              (m.from == myNodeNum || m.to == myNodeNum));
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Messages'),
         actions: [
+          IconButton(
+            icon: Icon(_dmMode ? Icons.person : Icons.public),
+            tooltip: _dmMode ? 'Direct Message Mode' : 'Broadcast Mode',
+            onPressed: () {
+              setState(() {
+                _dmMode = !_dmMode;
+              });
+            },
+          ),
+          PopupMenuButton<int>(
+            icon: const Icon(Icons.wifi_tethering),
+            tooltip: 'Select channel',
+            onSelected: (channelIndex) {
+              setState(() {
+                _selectedChannel = channelIndex;
+              });
+            },
+            itemBuilder: (context) => channels.isEmpty
+                ? [
+                    const PopupMenuItem(
+                      enabled: false,
+                      child: Text('No channels'),
+                    ),
+                  ]
+                : channels
+                      .map(
+                        (ch) => PopupMenuItem(
+                          value: ch.index,
+                          child: ListTile(
+                            leading: Icon(
+                              ch.psk.isNotEmpty ? Icons.lock : Icons.lock_open,
+                            ),
+                            title: Text(
+                              ch.name.isEmpty ? 'Channel ${ch.index}' : ch.name,
+                            ),
+                            subtitle: Text(
+                              ch.index == 0 ? 'Primary' : 'Secondary',
+                            ),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      )
+                      .toList(),
+          ),
           PopupMenuButton<int>(
             icon: const Icon(Icons.person),
             tooltip: 'Select recipient',
@@ -105,19 +159,25 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
       ),
       body: Column(
         children: [
-          // Selected recipient indicator
+          // Selected channel and recipient indicator
           Container(
             padding: const EdgeInsets.all(8),
             color: Theme.of(context).colorScheme.primaryContainer,
             child: Row(
               children: [
-                Icon(
-                  _selectedNodeNum == 0xFFFFFFFF ? Icons.public : Icons.person,
-                  size: 20,
-                ),
+                Icon(_dmMode ? Icons.person : Icons.public, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'To: ${_getRecipientName(_selectedNodeNum, nodes)}',
+                  _dmMode
+                      ? 'DM: ${_getRecipientName(_selectedNodeNum, nodes)}'
+                      : 'Broadcast',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(width: 16),
+                const Icon(Icons.wifi_tethering, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  _getChannelName(_selectedChannel, channels),
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ],
@@ -208,6 +268,14 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
   String _getRecipientName(int nodeNum, Map<int, MeshNode> nodes) {
     if (nodeNum == 0xFFFFFFFF) return 'Broadcast';
     return nodes[nodeNum]?.displayName ?? 'Node $nodeNum';
+  }
+
+  String _getChannelName(int channelIndex, List<ChannelConfig> channels) {
+    final channel = channels.firstWhere(
+      (ch) => ch.index == channelIndex,
+      orElse: () => ChannelConfig(index: channelIndex, name: '', psk: []),
+    );
+    return channel.name.isEmpty ? 'Channel $channelIndex' : channel.name;
   }
 }
 
