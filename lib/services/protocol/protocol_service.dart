@@ -21,7 +21,7 @@ class ProtocolService {
   final StreamController<DeviceError> _errorController;
 
   StreamSubscription<List<int>>? _dataSubscription;
-  Timer? _configTimeoutTimer;
+  Completer<void>? _configCompleter;
 
   int? _myNodeNum;
   final Map<int, MeshNode> _nodes = {};
@@ -61,9 +61,11 @@ class ProtocolService {
   /// All channels
   List<ChannelConfig> get channels => List.unmodifiable(_channels);
 
-  /// Start listening to transport
-  void start() {
+  /// Start listening to transport and wait for configuration
+  Future<void> start() async {
     _logger.i('Starting protocol service');
+
+    _configCompleter = Completer<void>();
 
     _dataSubscription = _transport.dataStream.listen(
       _handleData,
@@ -73,25 +75,29 @@ class ProtocolService {
     );
 
     // Request configuration after a short delay
-    Future.delayed(const Duration(milliseconds: 500), () {
-      _requestConfiguration();
+    await Future.delayed(const Duration(milliseconds: 500));
+    _requestConfiguration();
 
-      // Set timeout for configuration
-      _configTimeoutTimer?.cancel();
-      _configTimeoutTimer = Timer(const Duration(seconds: 30), () {
-        if (!_configurationComplete) {
-          _logger.w('Configuration timeout - continuing anyway');
-          _configurationComplete = true;
-        }
-      });
-    });
+    // Wait for configuration, but proceed anyway after 5 seconds
+    // Some devices might not send config immediately
+    try {
+      await _configCompleter!.future.timeout(const Duration(seconds: 5));
+    } on TimeoutException {
+      _logger.i('Configuration not received, proceeding anyway');
+      _configurationComplete = true;
+      if (!_configCompleter!.isCompleted) {
+        _configCompleter!.complete();
+      }
+    }
   }
 
   /// Stop listening
   void stop() {
     _logger.i('Stopping protocol service');
-    _configTimeoutTimer?.cancel();
-    _configTimeoutTimer = null;
+    if (_configCompleter != null && !_configCompleter!.isCompleted) {
+      _configCompleter!.completeError('Service stopped');
+    }
+    _configCompleter = null;
     _dataSubscription?.cancel();
     _dataSubscription = null;
     _framer.clear();
@@ -127,8 +133,10 @@ class ProtocolService {
         _handleChannel(fromRadio.channel);
       } else if (fromRadio.hasConfigCompleteId()) {
         _logger.i('Configuration complete: ${fromRadio.configCompleteId}');
-        _configTimeoutTimer?.cancel();
         _configurationComplete = true;
+        if (_configCompleter != null && !_configCompleter!.isCompleted) {
+          _configCompleter!.complete();
+        }
       }
     } catch (e, stack) {
       _logger.e('Error processing packet: $e', error: e, stackTrace: stack);
@@ -517,7 +525,6 @@ class ProtocolService {
 
   /// Dispose resources
   Future<void> dispose() async {
-    _configTimeoutTimer?.cancel();
     await _dataSubscription?.cancel();
     await _messageController.close();
     await _nodeController.close();

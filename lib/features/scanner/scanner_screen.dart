@@ -13,6 +13,7 @@ class ScannerScreen extends ConsumerStatefulWidget {
 class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   final List<DeviceInfo> _devices = [];
   bool _scanning = false;
+  bool _connecting = false;
   String? _errorMessage;
 
   @override
@@ -77,33 +78,47 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   }
 
   Future<void> _connect(DeviceInfo device) async {
+    if (_connecting) {
+      return;
+    }
+
+    setState(() {
+      _connecting = true;
+    });
+
     try {
       final transport = ref.read(transportProvider);
+
       await transport.connect(device);
 
-      if (!transport.isConnected) {
-        throw Exception('Failed to establish connection');
-      }
+      if (!mounted) return;
 
       ref.read(connectedDeviceProvider.notifier).state = device;
 
-      // Start protocol service
+      // Start protocol service and wait for configuration
       final protocol = ref.read(protocolServiceProvider);
-      protocol.start();
+      await protocol.start();
 
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/dashboard');
-      }
+      if (!mounted) return;
+
+      // Navigate to dashboard
+      await Navigator.of(context).pushReplacementNamed('/dashboard');
     } catch (e) {
+      if (!mounted) return;
+
+      final message = e.toString().replaceFirst('Exception: ', '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 6),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
       if (mounted) {
-        final message = e.toString().replaceFirst('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            duration: const Duration(seconds: 6),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        setState(() {
+          _connecting = false;
+        });
       }
     }
   }
@@ -157,30 +172,49 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               color: Theme.of(context).colorScheme.errorContainer,
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    color: Theme.of(context).colorScheme.onErrorContainer,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _errorMessage!,
-                      style: TextStyle(
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
                         color: Theme.of(context).colorScheme.onErrorContainer,
                       ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onErrorContainer,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        color: Theme.of(context).colorScheme.onErrorContainer,
+                        onPressed: () {
+                          setState(() {
+                            _errorMessage = null;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  if (_errorMessage!.toLowerCase().contains('bluetooth'))
+                    Padding(
+                      padding: const EdgeInsets.only(left: 36, top: 8),
+                      child: Text(
+                        'Go to Settings > Bluetooth and ensure it is turned on',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    color: Theme.of(context).colorScheme.onErrorContainer,
-                    onPressed: () {
-                      setState(() {
-                        _errorMessage = null;
-                      });
-                    },
-                  ),
                 ],
               ),
             ),
@@ -212,18 +246,33 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     itemCount: _devices.length,
                     itemBuilder: (context, index) {
                       final device = _devices[index];
+                      final isConnecting = _connecting;
+
                       return ListTile(
+                        enabled: !isConnecting,
                         leading: Icon(
                           device.type == TransportType.ble
                               ? Icons.bluetooth
                               : Icons.usb,
                         ),
                         title: Text(device.name),
-                        subtitle: Text(device.address ?? device.id),
-                        trailing: device.rssi != null
-                            ? Chip(label: Text('${device.rssi} dBm'))
-                            : null,
-                        onTap: () => _connect(device),
+                        subtitle: Text(
+                          isConnecting
+                              ? 'Connecting...'
+                              : (device.address ?? device.id),
+                        ),
+                        trailing: isConnecting
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : (device.rssi != null
+                                  ? Chip(label: Text('${device.rssi} dBm'))
+                                  : null),
+                        onTap: isConnecting ? null : () => _connect(device),
                       );
                     },
                   ),

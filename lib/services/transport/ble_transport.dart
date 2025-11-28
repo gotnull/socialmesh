@@ -12,8 +12,10 @@ class BleTransport implements DeviceTransport {
   BluetoothDevice? _device;
   BluetoothCharacteristic? _txCharacteristic;
   BluetoothCharacteristic? _rxCharacteristic;
+  BluetoothCharacteristic? _fromNumCharacteristic;
   StreamSubscription? _deviceStateSubscription;
   StreamSubscription? _characteristicSubscription;
+  StreamSubscription? _fromNumSubscription;
   Timer? _pollingTimer;
 
   DeviceConnectionState _state = DeviceConnectionState.disconnected;
@@ -23,6 +25,7 @@ class BleTransport implements DeviceTransport {
   static const String _serviceUuid = '6ba1b218-15a8-461f-9fa8-5dcae273eafd';
   static const String _toRadioUuid = 'f75c76d2-129e-4dad-a1dd-7866124401e7';
   static const String _fromRadioUuid = '2c55e69e-4993-11ed-b878-0242ac120002';
+  static const String _fromNumUuid = 'ed9da18c-a800-4f66-a670-aa7547e34453';
 
   BleTransport({Logger? logger})
     : _logger = logger ?? Logger(),
@@ -79,23 +82,39 @@ class BleTransport implements DeviceTransport {
         _logger.w('Error getting adapter state: $e');
       }
 
-      // Check if Bluetooth is on or unknown (iOS may report unknown even when on)
+      // Check Bluetooth state
       if (adapterState == BluetoothAdapterState.off) {
         _logger.w('Bluetooth is off');
         throw Exception('Please turn on Bluetooth to scan for devices');
       } else if (adapterState == BluetoothAdapterState.unauthorized) {
         _logger.w('Bluetooth permission not granted');
-        throw Exception('Please grant Bluetooth permission in Settings');
+        throw Exception(
+          'Bluetooth permission denied. Please enable in Settings > Protofluff > Bluetooth',
+        );
+      } else if (adapterState == BluetoothAdapterState.unknown) {
+        _logger.w('Bluetooth state unknown, attempting scan anyway');
       }
 
       _logger.d('Bluetooth adapter state: $adapterState');
 
       // Start scanning
       final scanDuration = timeout ?? const Duration(seconds: 10);
-      await FlutterBluePlus.startScan(
-        timeout: scanDuration,
-        withServices: [Guid(_serviceUuid)],
-      );
+      try {
+        await FlutterBluePlus.startScan(
+          timeout: scanDuration,
+          withServices: [Guid(_serviceUuid)],
+        );
+      } catch (e) {
+        _logger.e('Scan failed: $e');
+        if (e.toString().contains('CBManagerStateUnknown')) {
+          throw Exception(
+            'Bluetooth is not ready. Please ensure Bluetooth is enabled in iOS Settings',
+          );
+        } else if (e.toString().contains('bluetooth must be turned on')) {
+          throw Exception('Please turn on Bluetooth in Settings');
+        }
+        rethrow;
+      }
 
       // Create timer to complete scan after timeout
       final scanCompleter = Completer<void>();
@@ -162,22 +181,28 @@ class BleTransport implements DeviceTransport {
         _device = BluetoothDevice.fromId(device.id);
       }
 
-      // Connect
+      // Connect (this will trigger PIN dialog if needed)
+      _logger.d('Initiating BLE connection...');
       await _device!.connect(
-        timeout: const Duration(seconds: 15),
+        timeout: const Duration(seconds: 30),
         autoConnect: false,
       );
 
-      // Listen to connection state
+      // Device is now connected, discover services immediately
+      _logger.i('Connection established, discovering services...');
+      await _discoverServices();
+
+      // Set up listener for disconnection events
       _deviceStateSubscription = _device!.connectionState.listen((state) {
-        if (state == BluetoothConnectionState.connected) {
-          _discoverServices();
-        } else if (state == BluetoothConnectionState.disconnected) {
+        _logger.d('Connection state changed: $state');
+        if (state == BluetoothConnectionState.disconnected) {
+          _logger.w('Device disconnected');
           _updateState(DeviceConnectionState.disconnected);
         }
       });
     } catch (e) {
       _logger.e('Connection error: $e');
+      await disconnect();
       _updateState(DeviceConnectionState.error);
       rethrow;
     }
@@ -214,29 +239,38 @@ class BleTransport implements DeviceTransport {
         } else if (uuid == _fromRadioUuid.toLowerCase()) {
           _rxCharacteristic = characteristic;
           _logger.d('Found RX characteristic (fromRadio)');
+        } else if (uuid == _fromNumUuid.toLowerCase()) {
+          _fromNumCharacteristic = characteristic;
+          _logger.d('Found fromNum characteristic');
 
-          // Check if characteristic supports notifications
+          // Subscribe to fromNum notifications per official docs
           if (characteristic.properties.notify ||
               characteristic.properties.indicate) {
-            _logger.d('Setting up notifications for fromRadio');
+            _logger.d('Setting up notifications for fromNum');
             await characteristic.setNotifyValue(true);
-            _characteristicSubscription = characteristic.lastValueStream.listen(
-              (value) {
-                if (value.isNotEmpty) {
-                  _logger.d('Received ${value.length} bytes');
-                  _dataController.add(value);
+            _fromNumSubscription = characteristic.lastValueStream.listen(
+              (value) async {
+                if (value.isNotEmpty && _rxCharacteristic != null) {
+                  _logger.d('fromNum notified, reading fromRadio');
+                  try {
+                    // Read from fromRadio until empty
+                    while (true) {
+                      final data = await _rxCharacteristic!.read();
+                      if (data.isEmpty) break;
+                      _logger.d('Read ${data.length} bytes from fromRadio');
+                      _dataController.add(data);
+                    }
+                  } catch (e) {
+                    _logger.e('Error reading fromRadio: $e');
+                  }
                 }
               },
               onError: (error) {
-                _logger.e('Characteristic error: $error');
+                _logger.e('fromNum error: $error');
               },
             );
           } else {
-            _logger.w(
-              'fromRadio does not support notifications, will use polling',
-            );
-            // Start polling the characteristic
-            _startPolling();
+            _logger.w('fromNum does not support notifications');
           }
         }
       }
@@ -244,6 +278,12 @@ class BleTransport implements DeviceTransport {
       if (_txCharacteristic != null && _rxCharacteristic != null) {
         _updateState(DeviceConnectionState.connected);
         _logger.i('Connected successfully');
+
+        // If fromNum is not available, fall back to polling
+        if (_fromNumCharacteristic == null) {
+          _logger.w('fromNum not available, using polling fallback');
+          _startPolling();
+        }
       } else {
         final missing = <String>[];
         if (_txCharacteristic == null) missing.add('TX');
@@ -299,6 +339,7 @@ class BleTransport implements DeviceTransport {
       _pollingTimer?.cancel();
       _pollingTimer = null;
       await _characteristicSubscription?.cancel();
+      await _fromNumSubscription?.cancel();
       await _deviceStateSubscription?.cancel();
 
       if (_device != null) {
