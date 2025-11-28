@@ -241,18 +241,36 @@ class ProtocolService {
       final user = pb.User.fromBuffer(data.payload);
       _logger.i('Node info from ${packet.from}: ${user.longName}');
 
+      final colors = [
+        0xFF1976D2,
+        0xFFD32F2F,
+        0xFF388E3C,
+        0xFFF57C00,
+        0xFF7B1FA2,
+        0xFF00796B,
+        0xFFC2185B,
+      ];
+      final avatarColor = colors[packet.from % colors.length];
+
       final existingNode = _nodes[packet.from];
       final updatedNode =
           existingNode?.copyWith(
             longName: user.longName,
             shortName: user.shortName,
+            snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : existingNode.snr,
             lastHeard: DateTime.now(),
+            isOnline: true,
           ) ??
           MeshNode(
             nodeNum: packet.from,
             longName: user.longName,
             shortName: user.shortName,
+            snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
             lastHeard: DateTime.now(),
+            isOnline: true,
+            avatarColor: avatarColor,
+            isFavorite: false,
+            role: 'CLIENT',
           );
 
       _nodes[packet.from] = updatedNode;
@@ -275,6 +293,21 @@ class ProtocolService {
 
     final existingNode = _nodes[nodeInfo.num];
 
+    // Generate consistent color from node number
+    final colors = [
+      0xFF1976D2,
+      0xFFD32F2F,
+      0xFF388E3C,
+      0xFFF57C00,
+      0xFF7B1FA2,
+      0xFF00796B,
+      0xFFC2185B,
+    ];
+    final avatarColor = colors[nodeInfo.num % colors.length];
+
+    // Assume router role if device has metrics, otherwise client
+    final role = nodeInfo.hasDeviceMetrics() ? 'ROUTER' : 'CLIENT';
+
     MeshNode updatedNode;
     if (existingNode != null) {
       updatedNode = existingNode.copyWith(
@@ -293,7 +326,14 @@ class ProtocolService {
         altitude: nodeInfo.hasPosition()
             ? nodeInfo.position.altitude
             : existingNode.altitude,
+        snr: nodeInfo.hasSnr() ? nodeInfo.snr.toInt() : existingNode.snr,
+        batteryLevel: nodeInfo.hasDeviceMetrics()
+            ? nodeInfo.deviceMetrics.batteryLevel
+            : existingNode.batteryLevel,
         lastHeard: DateTime.now(),
+        isOnline: true,
+        role: role,
+        avatarColor: existingNode.avatarColor,
       );
     } else {
       updatedNode = MeshNode(
@@ -307,7 +347,15 @@ class ProtocolService {
             ? nodeInfo.position.longitudeI / 1e7
             : null,
         altitude: nodeInfo.hasPosition() ? nodeInfo.position.altitude : null,
+        snr: nodeInfo.hasSnr() ? nodeInfo.snr.toInt() : null,
+        batteryLevel: nodeInfo.hasDeviceMetrics()
+            ? nodeInfo.deviceMetrics.batteryLevel
+            : null,
         lastHeard: DateTime.now(),
+        isOnline: true,
+        role: role,
+        avatarColor: avatarColor,
+        isFavorite: false,
       );
     }
 

@@ -601,6 +601,7 @@ class _SignalChartPainter extends CustomPainter {
     }
 
     Path path = Path();
+    Path fillPath = Path();
 
     for (int i = 0; i < data.length; i++) {
       final x = i * stepX;
@@ -610,11 +611,30 @@ class _SignalChartPainter extends CustomPainter {
 
       if (i == 0) {
         path.moveTo(x, y);
+        fillPath.moveTo(x, size.height);
+        fillPath.lineTo(x, y);
       } else {
         path.lineTo(x, y);
+        fillPath.lineTo(x, y);
       }
     }
 
+    // Close fill path
+    fillPath.lineTo(data.length * stepX, size.height);
+    fillPath.close();
+
+    // Draw gradient fill
+    final Paint fillPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          AppTheme.primaryGreen.withValues(alpha: 0.2),
+          AppTheme.primaryGreen.withValues(alpha: 0.0),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    canvas.drawPath(fillPath, fillPaint);
     canvas.drawPath(path, linePaint);
   }
 
