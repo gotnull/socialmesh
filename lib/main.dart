@@ -9,8 +9,6 @@ import 'features/nodes/nodes_screen.dart';
 import 'features/nodes/node_map_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/settings/qr_import_screen.dart';
-import 'features/network/network_details_screen.dart';
-import 'features/network/clients_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: ProtofluffApp()));
@@ -39,8 +37,6 @@ class ProtofluffApp extends ConsumerWidget {
         '/map': (context) => const NodeMapScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/qr-import': (context) => const QrImportScreen(),
-        '/network-details': (context) => const NetworkDetailsScreen(),
-        '/clients': (context) => const ClientsScreen(),
       },
     );
   }

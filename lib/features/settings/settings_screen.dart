@@ -56,7 +56,8 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: 'Automatically reconnect to last device',
               trailing: Switch(
                 value: settingsService.autoReconnect,
-                activeColor: AppTheme.primaryGreen,
+                activeTrackColor: AppTheme.primaryGreen,
+                inactiveTrackColor: AppTheme.darkBorder,
                 onChanged: (value) {
                   settingsService.setAutoReconnect(value);
                 },
@@ -73,7 +74,8 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: 'Show notifications for new messages',
               trailing: Switch(
                 value: settingsService.notificationsEnabled,
-                activeColor: AppTheme.primaryGreen,
+                activeTrackColor: AppTheme.primaryGreen,
+                inactiveTrackColor: AppTheme.darkBorder,
                 onChanged: (value) {
                   settingsService.setNotificationsEnabled(value);
                 },

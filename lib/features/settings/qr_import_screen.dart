@@ -6,6 +6,7 @@ import 'package:logger/logger.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../core/theme.dart';
 
 class QrImportScreen extends ConsumerStatefulWidget {
   const QrImportScreen({super.key});
@@ -98,15 +99,21 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Channel "${channel.name}" imported')),
+          SnackBar(
+            content: Text('Channel "${channel.name}" imported'),
+            backgroundColor: AppTheme.darkCard,
+          ),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to import: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to import: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
         setState(() {
           _isProcessing = false;
         });
@@ -117,15 +124,25 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        title: const Text('Scan Channel QR'),
+        backgroundColor: AppTheme.darkBackground,
+        title: const Text(
+          'Scan Channel QR',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            fontFamily: 'Inter',
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.flash_on),
+            icon: const Icon(Icons.flash_on, color: Colors.white),
             onPressed: () => _controller.toggleTorch(),
           ),
           IconButton(
-            icon: const Icon(Icons.flip_camera_ios),
+            icon: const Icon(Icons.flip_camera_ios, color: Colors.white),
             onPressed: () => _controller.switchCamera(),
           ),
         ],
@@ -133,22 +150,72 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
       body: Stack(
         children: [
           MobileScanner(controller: _controller, onDetect: _onDetect),
+          // Scanner overlay
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.5),
+                width: 2,
+              ),
+            ),
+          ),
           if (_isProcessing)
             Container(
               color: Colors.black54,
-              child: const Center(child: CircularProgressIndicator()),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppTheme.primaryGreen,
+                  ),
+                ),
+              ),
             ),
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.all(16),
-              color: Colors.black54,
-              child: const Text(
-                'Point your camera at a Meshtastic channel QR code',
-                style: TextStyle(color: Colors.white),
-                textAlign: TextAlign.center,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    AppTheme.darkBackground.withValues(alpha: 0.9),
+                    AppTheme.darkBackground,
+                  ],
+                ),
+              ),
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.qr_code_scanner,
+                    size: 32,
+                    color: AppTheme.primaryGreen,
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    'Point your camera at a Meshtastic channel QR code',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontFamily: 'Inter',
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'The channel will be automatically imported',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 12,
+                      fontFamily: 'Inter',
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
           ),
