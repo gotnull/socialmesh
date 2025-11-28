@@ -68,10 +68,28 @@ class BleTransport implements DeviceTransport {
 
       // Start scanning - skip all adapter state checks, just scan
       final scanDuration = timeout ?? const Duration(seconds: 10);
-      await FlutterBluePlus.startScan(
-        timeout: scanDuration,
-        withServices: [Guid(_serviceUuid)],
-      );
+
+      // Try to start scan, catch adapter state errors and retry once
+      try {
+        await FlutterBluePlus.startScan(
+          timeout: scanDuration,
+          withServices: [Guid(_serviceUuid)],
+        );
+      } catch (e) {
+        // If adapter state is unknown (iOS CBManagerStateUnknown on first launch),
+        // wait briefly and retry once
+        if (e.toString().contains('CBManagerStateUnknown') ||
+            e.toString().contains('bluetooth must be turned on')) {
+          _logger.w('Adapter state unknown, retrying scan after delay...');
+          await Future.delayed(const Duration(milliseconds: 500));
+          await FlutterBluePlus.startScan(
+            timeout: scanDuration,
+            withServices: [Guid(_serviceUuid)],
+          );
+        } else {
+          rethrow;
+        }
+      }
 
       // Create timer to complete scan after timeout
       final scanCompleter = Completer<void>();
