@@ -8,21 +8,26 @@ option optimize_for = LITE_RUNTIME;
 
 /*
  * Packet sent to/from the radio for configuration and data
+ * Field numbers match official Meshtastic protobufs:
+ * https://github.com/meshtastic/protobufs/blob/master/meshtastic/mesh.proto
  */
 
 import "meshtastic/mesh.proto";
 
-// Packets sent to/from the radio
+// Packets sent to the radio
 message ToRadio {
   oneof payload_variant {
-    // Mesh packet to send
+    // Send this packet on the mesh
     MeshPacket packet = 1;
     
-    // Request device to send info
-    bool want_config_id = 100;
+    // Phone wants radio to send full node db to the phone.
+    // The integer you write into this field will be reported back in the
+    // config_complete_id response - allows clients to never be confused by
+    // a stale old partially sent config.
+    uint32 want_config_id = 3;
     
-    // Disconnect
-    bool disconnect = 101;
+    // Tell API server we are disconnecting now.
+    bool disconnect = 4;
   }
 }
 
@@ -35,22 +40,17 @@ message FromRadio {
     // Received mesh packet
     MeshPacket packet = 2;
     
-    // My node info
+    // My node info - tells the phone what our node number is
     MyNodeInfo my_info = 3;
     
-    // Node database entry
+    // One packet is sent for each node in the on radio DB
     NodeInfo node_info = 4;
     
-    // Configuration complete
-    uint32 config_complete_id = 5;
+    // Sent as true once the device has finished sending all of the
+    // responses to want_config - contains the config_id sent in wantConfigId
+    uint32 config_complete_id = 7;
     
-    // LoRa config
-    RadioConfig.LoRaConfig lora_config = 6;
-    
-    // Channel info
-    Channel channel = 7;
-    
-    // Module config
-    bytes module_config = 8;
+    // One packet is sent for each channel
+    Channel channel = 10;
   }
 }

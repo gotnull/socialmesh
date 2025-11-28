@@ -458,25 +458,21 @@ class BleTransport implements DeviceTransport {
 
     try {
       _logger.d('Sending ${data.length} bytes');
+      debugPrint(
+        '📤 BLE SEND: ${data.length} bytes - ${data.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
+      );
 
-      // BLE has MTU limits, so we may need to chunk large packets
-      const int mtu = 20; // Conservative MTU size
-
-      for (int i = 0; i < data.length; i += mtu) {
-        final end = (i + mtu < data.length) ? i + mtu : data.length;
-        final chunk = data.sublist(i, end);
-
-        await _txCharacteristic!.write(chunk, withoutResponse: false);
-
-        // Small delay between chunks to avoid overwhelming the device
-        if (end < data.length) {
-          await Future.delayed(const Duration(milliseconds: 20));
-        }
-      }
+      // Meshtastic BLE expects complete protobufs in a single write.
+      // MTU should be 512 after negotiation. If data is larger, we need to chunk,
+      // but typically config requests are small.
+      // For BLE, we write the complete protobuf in one go (within MTU limits)
+      await _txCharacteristic!.write(data, withoutResponse: false);
 
       _logger.d('Sent successfully');
+      debugPrint('📤 BLE SEND complete');
     } catch (e) {
       _logger.e('Send error: $e');
+      debugPrint('📤 BLE SEND ERROR: $e');
       rethrow;
     }
   }

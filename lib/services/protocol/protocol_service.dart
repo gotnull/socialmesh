@@ -534,11 +534,16 @@ class ProtocolService {
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
-      debugPrint('🚀 SENDING wantConfigId=true to device');
+      // Generate a config ID to track this request
+      final configId = _random.nextInt(0x7FFFFFFF);
+      debugPrint('🚀 SENDING wantConfigId=$configId to device');
 
-      final toRadio = pn.ToRadio()..wantConfigId = true;
+      // wantConfigId is a uint32 per official proto (not a bool!)
+      final toRadio = pn.ToRadio()..wantConfigId = configId;
       final bytes = toRadio.writeToBuffer();
-      debugPrint('🚀 ToRadio protobuf size: ${bytes.length} bytes');
+      debugPrint(
+        '🚀 ToRadio protobuf size: ${bytes.length} bytes - ${bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
+      );
 
       // BLE uses raw protobufs, Serial/USB requires framing
       final sendBytes = _transport.requiresFraming

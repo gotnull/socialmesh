@@ -20,11 +20,11 @@ export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 enum ToRadio_PayloadVariant { packet, wantConfigId, disconnect, notSet }
 
-/// Packets sent to/from the radio
+/// Packets sent to the radio
 class ToRadio extends $pb.GeneratedMessage {
   factory ToRadio({
     $0.MeshPacket? packet,
-    $core.bool? wantConfigId,
+    $core.int? wantConfigId,
     $core.bool? disconnect,
   }) {
     final result = create();
@@ -46,19 +46,20 @@ class ToRadio extends $pb.GeneratedMessage {
   static const $core.Map<$core.int, ToRadio_PayloadVariant>
       _ToRadio_PayloadVariantByTag = {
     1: ToRadio_PayloadVariant.packet,
-    100: ToRadio_PayloadVariant.wantConfigId,
-    101: ToRadio_PayloadVariant.disconnect,
+    3: ToRadio_PayloadVariant.wantConfigId,
+    4: ToRadio_PayloadVariant.disconnect,
     0: ToRadio_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ToRadio',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [1, 100, 101])
+    ..oo(0, [1, 3, 4])
     ..aOM<$0.MeshPacket>(1, _omitFieldNames ? '' : 'packet',
         subBuilder: $0.MeshPacket.create)
-    ..aOB(100, _omitFieldNames ? '' : 'wantConfigId')
-    ..aOB(101, _omitFieldNames ? '' : 'disconnect')
+    ..aI(3, _omitFieldNames ? '' : 'wantConfigId',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOB(4, _omitFieldNames ? '' : 'disconnect')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -80,16 +81,16 @@ class ToRadio extends $pb.GeneratedMessage {
   static ToRadio? _defaultInstance;
 
   @$pb.TagNumber(1)
-  @$pb.TagNumber(100)
-  @$pb.TagNumber(101)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
   ToRadio_PayloadVariant whichPayloadVariant() =>
       _ToRadio_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
-  @$pb.TagNumber(100)
-  @$pb.TagNumber(101)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
-  /// Mesh packet to send
+  /// Send this packet on the mesh
   @$pb.TagNumber(1)
   $0.MeshPacket get packet => $_getN(0);
   @$pb.TagNumber(1)
@@ -101,25 +102,28 @@ class ToRadio extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $0.MeshPacket ensurePacket() => $_ensure(0);
 
-  /// Request device to send info
-  @$pb.TagNumber(100)
-  $core.bool get wantConfigId => $_getBF(1);
-  @$pb.TagNumber(100)
-  set wantConfigId($core.bool value) => $_setBool(1, value);
-  @$pb.TagNumber(100)
+  /// Phone wants radio to send full node db to the phone.
+  /// The integer you write into this field will be reported back in the
+  /// config_complete_id response - allows clients to never be confused by
+  /// a stale old partially sent config.
+  @$pb.TagNumber(3)
+  $core.int get wantConfigId => $_getIZ(1);
+  @$pb.TagNumber(3)
+  set wantConfigId($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(3)
   $core.bool hasWantConfigId() => $_has(1);
-  @$pb.TagNumber(100)
-  void clearWantConfigId() => $_clearField(100);
+  @$pb.TagNumber(3)
+  void clearWantConfigId() => $_clearField(3);
 
-  /// Disconnect
-  @$pb.TagNumber(101)
+  /// Tell API server we are disconnecting now.
+  @$pb.TagNumber(4)
   $core.bool get disconnect => $_getBF(2);
-  @$pb.TagNumber(101)
+  @$pb.TagNumber(4)
   set disconnect($core.bool value) => $_setBool(2, value);
-  @$pb.TagNumber(101)
+  @$pb.TagNumber(4)
   $core.bool hasDisconnect() => $_has(2);
-  @$pb.TagNumber(101)
-  void clearDisconnect() => $_clearField(101);
+  @$pb.TagNumber(4)
+  void clearDisconnect() => $_clearField(4);
 }
 
 enum FromRadio_PayloadVariant {
@@ -127,9 +131,7 @@ enum FromRadio_PayloadVariant {
   myInfo,
   nodeInfo,
   configCompleteId,
-  loraConfig,
   channel,
-  moduleConfig,
   notSet
 }
 
@@ -141,9 +143,7 @@ class FromRadio extends $pb.GeneratedMessage {
     $0.MyNodeInfo? myInfo,
     $0.NodeInfo? nodeInfo,
     $core.int? configCompleteId,
-    $0.RadioConfig_LoRaConfig? loraConfig,
     $0.Channel? channel,
-    $core.List<$core.int>? moduleConfig,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -151,9 +151,7 @@ class FromRadio extends $pb.GeneratedMessage {
     if (myInfo != null) result.myInfo = myInfo;
     if (nodeInfo != null) result.nodeInfo = nodeInfo;
     if (configCompleteId != null) result.configCompleteId = configCompleteId;
-    if (loraConfig != null) result.loraConfig = loraConfig;
     if (channel != null) result.channel = channel;
-    if (moduleConfig != null) result.moduleConfig = moduleConfig;
     return result;
   }
 
@@ -171,17 +169,15 @@ class FromRadio extends $pb.GeneratedMessage {
     2: FromRadio_PayloadVariant.packet,
     3: FromRadio_PayloadVariant.myInfo,
     4: FromRadio_PayloadVariant.nodeInfo,
-    5: FromRadio_PayloadVariant.configCompleteId,
-    6: FromRadio_PayloadVariant.loraConfig,
-    7: FromRadio_PayloadVariant.channel,
-    8: FromRadio_PayloadVariant.moduleConfig,
+    7: FromRadio_PayloadVariant.configCompleteId,
+    10: FromRadio_PayloadVariant.channel,
     0: FromRadio_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'FromRadio',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 5, 6, 7, 8])
+    ..oo(0, [2, 3, 4, 7, 10])
     ..aI(1, _omitFieldNames ? '' : 'id', fieldType: $pb.PbFieldType.OU3)
     ..aOM<$0.MeshPacket>(2, _omitFieldNames ? '' : 'packet',
         subBuilder: $0.MeshPacket.create)
@@ -189,14 +185,10 @@ class FromRadio extends $pb.GeneratedMessage {
         subBuilder: $0.MyNodeInfo.create)
     ..aOM<$0.NodeInfo>(4, _omitFieldNames ? '' : 'nodeInfo',
         subBuilder: $0.NodeInfo.create)
-    ..aI(5, _omitFieldNames ? '' : 'configCompleteId',
+    ..aI(7, _omitFieldNames ? '' : 'configCompleteId',
         fieldType: $pb.PbFieldType.OU3)
-    ..aOM<$0.RadioConfig_LoRaConfig>(6, _omitFieldNames ? '' : 'loraConfig',
-        subBuilder: $0.RadioConfig_LoRaConfig.create)
-    ..aOM<$0.Channel>(7, _omitFieldNames ? '' : 'channel',
+    ..aOM<$0.Channel>(10, _omitFieldNames ? '' : 'channel',
         subBuilder: $0.Channel.create)
-    ..a<$core.List<$core.int>>(
-        8, _omitFieldNames ? '' : 'moduleConfig', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -220,19 +212,15 @@ class FromRadio extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
   @$pb.TagNumber(4)
-  @$pb.TagNumber(5)
-  @$pb.TagNumber(6)
   @$pb.TagNumber(7)
-  @$pb.TagNumber(8)
+  @$pb.TagNumber(10)
   FromRadio_PayloadVariant whichPayloadVariant() =>
       _FromRadio_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
   @$pb.TagNumber(4)
-  @$pb.TagNumber(5)
-  @$pb.TagNumber(6)
   @$pb.TagNumber(7)
-  @$pb.TagNumber(8)
+  @$pb.TagNumber(10)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
   /// Packet ID for tracking
@@ -257,7 +245,7 @@ class FromRadio extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $0.MeshPacket ensurePacket() => $_ensure(1);
 
-  /// My node info
+  /// My node info - tells the phone what our node number is
   @$pb.TagNumber(3)
   $0.MyNodeInfo get myInfo => $_getN(2);
   @$pb.TagNumber(3)
@@ -269,7 +257,7 @@ class FromRadio extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $0.MyNodeInfo ensureMyInfo() => $_ensure(2);
 
-  /// Node database entry
+  /// One packet is sent for each node in the on radio DB
   @$pb.TagNumber(4)
   $0.NodeInfo get nodeInfo => $_getN(3);
   @$pb.TagNumber(4)
@@ -281,49 +269,28 @@ class FromRadio extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $0.NodeInfo ensureNodeInfo() => $_ensure(3);
 
-  /// Configuration complete
-  @$pb.TagNumber(5)
+  /// Sent as true once the device has finished sending all of the
+  /// responses to want_config - contains the config_id sent in wantConfigId
+  @$pb.TagNumber(7)
   $core.int get configCompleteId => $_getIZ(4);
-  @$pb.TagNumber(5)
+  @$pb.TagNumber(7)
   set configCompleteId($core.int value) => $_setUnsignedInt32(4, value);
-  @$pb.TagNumber(5)
+  @$pb.TagNumber(7)
   $core.bool hasConfigCompleteId() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearConfigCompleteId() => $_clearField(5);
+  @$pb.TagNumber(7)
+  void clearConfigCompleteId() => $_clearField(7);
 
-  /// LoRa config
-  @$pb.TagNumber(6)
-  $0.RadioConfig_LoRaConfig get loraConfig => $_getN(5);
-  @$pb.TagNumber(6)
-  set loraConfig($0.RadioConfig_LoRaConfig value) => $_setField(6, value);
-  @$pb.TagNumber(6)
-  $core.bool hasLoraConfig() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearLoraConfig() => $_clearField(6);
-  @$pb.TagNumber(6)
-  $0.RadioConfig_LoRaConfig ensureLoraConfig() => $_ensure(5);
-
-  /// Channel info
-  @$pb.TagNumber(7)
-  $0.Channel get channel => $_getN(6);
-  @$pb.TagNumber(7)
-  set channel($0.Channel value) => $_setField(7, value);
-  @$pb.TagNumber(7)
-  $core.bool hasChannel() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearChannel() => $_clearField(7);
-  @$pb.TagNumber(7)
-  $0.Channel ensureChannel() => $_ensure(6);
-
-  /// Module config
-  @$pb.TagNumber(8)
-  $core.List<$core.int> get moduleConfig => $_getN(7);
-  @$pb.TagNumber(8)
-  set moduleConfig($core.List<$core.int> value) => $_setBytes(7, value);
-  @$pb.TagNumber(8)
-  $core.bool hasModuleConfig() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearModuleConfig() => $_clearField(8);
+  /// One packet is sent for each channel
+  @$pb.TagNumber(10)
+  $0.Channel get channel => $_getN(5);
+  @$pb.TagNumber(10)
+  set channel($0.Channel value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasChannel() => $_has(5);
+  @$pb.TagNumber(10)
+  void clearChannel() => $_clearField(10);
+  @$pb.TagNumber(10)
+  $0.Channel ensureChannel() => $_ensure(5);
 }
 
 const $core.bool _omitFieldNames =
