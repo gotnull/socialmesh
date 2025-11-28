@@ -194,6 +194,101 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     ),
                   ),
 
+                if (_scanning)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: AppTheme.primaryGreen,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Scanning for nearby devices',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _devices.isEmpty
+                                    ? 'Looking for Meshtastic devices...'
+                                    : '${_devices.length} ${_devices.length == 1 ? 'device' : 'devices'} found so far',
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 12,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                if (_devices.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        const Text(
+                          'Available Devices',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textSecondary,
+                            fontFamily: 'Inter',
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${_devices.length}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.primaryGreen,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 if (_devices.isEmpty && !_scanning)
                   Center(
                     child: Column(
@@ -209,15 +304,19 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                           'No devices found',
                           style: TextStyle(
                             fontSize: 18,
+                            fontWeight: FontWeight.w500,
                             color: AppTheme.textSecondary,
+                            fontFamily: 'Inter',
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          'Pull down to scan',
+                        const Text(
+                          'Make sure Bluetooth is enabled and\nyour Meshtastic device is powered on',
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
                             color: AppTheme.textTertiary,
+                            fontFamily: 'Inter',
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -240,26 +339,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                         if (device.rssi != null)
                           _DeviceDetailsTable(device: device),
                       ],
-                    ),
-                  ),
-
-                if (_scanning)
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    margin: const EdgeInsets.only(top: 16),
-                    child: const Center(
-                      child: Column(
-                        children: [
-                          CircularProgressIndicator(
-                            color: AppTheme.primaryGreen,
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            'Scanning for devices...',
-                            style: TextStyle(color: AppTheme.textSecondary),
-                          ),
-                        ],
-                      ),
                     ),
                   ),
               ],
