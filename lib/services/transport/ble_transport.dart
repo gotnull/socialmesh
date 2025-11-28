@@ -17,10 +17,11 @@ class BleTransport implements DeviceTransport {
 
   DeviceConnectionState _state = DeviceConnectionState.disconnected;
 
-  // Meshtastic BLE service and characteristic UUIDs
+  // Meshtastic BLE service and characteristic UUIDs (from official docs)
+  // https://meshtastic.org/docs/development/device/client-api/
   static const String _serviceUuid = '6ba1b218-15a8-461f-9fa8-5dcae273eafd';
   static const String _toRadioUuid = 'f75c76d2-129e-4dad-a1dd-7866124401e7';
-  static const String _fromRadioUuid = '8ba2bcc2-ee02-4a55-a531-c525c5e454d5';
+  static const String _fromRadioUuid = '2c55e69e-4993-11ed-b878-0242ac120002';
 
   BleTransport({Logger? logger})
     : _logger = logger ?? Logger(),
@@ -89,13 +90,24 @@ class BleTransport implements DeviceTransport {
       _logger.d('Bluetooth adapter state: $adapterState');
 
       // Start scanning
+      final scanDuration = timeout ?? const Duration(seconds: 10);
       await FlutterBluePlus.startScan(
-        timeout: timeout ?? const Duration(seconds: 10),
+        timeout: scanDuration,
         withServices: [Guid(_serviceUuid)],
       );
 
-      // Listen to scan results
+      // Create timer to complete scan after timeout
+      final scanCompleter = Completer<void>();
+      final timer = Timer(scanDuration + const Duration(milliseconds: 500), () {
+        if (!scanCompleter.isCompleted) {
+          scanCompleter.complete();
+        }
+      });
+
+      // Yield results until timeout
       await for (final result in FlutterBluePlus.scanResults) {
+        if (scanCompleter.isCompleted) break;
+
         for (final r in result) {
           yield DeviceInfo(
             id: r.device.remoteId.toString(),
@@ -108,8 +120,11 @@ class BleTransport implements DeviceTransport {
           );
         }
       }
+
+      timer.cancel();
     } catch (e) {
       _logger.e('BLE scan error: $e');
+      rethrow;
     } finally {
       await FlutterBluePlus.stopScan();
     }
@@ -135,6 +150,13 @@ class BleTransport implements DeviceTransport {
         _device = systemDevices.firstWhere(
           (d) => d.remoteId.toString() == device.id,
         );
+
+        // If device is already connected from another app, disconnect first
+        if (_device!.isConnected) {
+          _logger.w('Device already connected, forcing disconnect...');
+          await _device!.disconnect();
+          await Future.delayed(const Duration(seconds: 1));
+        }
       } catch (e) {
         _device = BluetoothDevice.fromId(device.id);
       }
@@ -166,21 +188,31 @@ class BleTransport implements DeviceTransport {
 
       final services = await _device!.discoverServices();
 
+      // Log all discovered services and characteristics
+      _logger.d('Found ${services.length} services');
+      for (final svc in services) {
+        _logger.d('Service: ${svc.uuid}');
+        for (final char in svc.characteristics) {
+          _logger.d('  Characteristic: ${char.uuid}');
+        }
+      }
+
       // Find Meshtastic service
       final service = services.firstWhere(
-        (s) => s.uuid.toString() == _serviceUuid,
+        (s) => s.uuid.toString().toLowerCase() == _serviceUuid.toLowerCase(),
       );
 
       // Find characteristics
       for (final characteristic in service.characteristics) {
-        final uuid = characteristic.uuid.toString();
+        final uuid = characteristic.uuid.toString().toLowerCase();
+        _logger.d('Checking characteristic: $uuid');
 
-        if (uuid == _toRadioUuid) {
+        if (uuid == _toRadioUuid.toLowerCase()) {
           _txCharacteristic = characteristic;
-          _logger.d('Found TX characteristic');
-        } else if (uuid == _fromRadioUuid) {
+          _logger.d('Found TX characteristic (toRadio)');
+        } else if (uuid == _fromRadioUuid.toLowerCase()) {
           _rxCharacteristic = characteristic;
-          _logger.d('Found RX characteristic');
+          _logger.d('Found RX characteristic (fromRadio)');
 
           // Subscribe to notifications
           await characteristic.setNotifyValue(true);
@@ -202,7 +234,14 @@ class BleTransport implements DeviceTransport {
         _updateState(DeviceConnectionState.connected);
         _logger.i('Connected successfully');
       } else {
-        throw Exception('Required characteristics not found');
+        final missing = <String>[];
+        if (_txCharacteristic == null) missing.add('TX');
+        if (_rxCharacteristic == null) missing.add('RX');
+        _logger.e('Missing characteristics: ${missing.join(", ")}');
+        throw Exception(
+          'Missing ${missing.join(" and ")} characteristic(s). '
+          'Try power cycling the device.',
+        );
       }
     } catch (e) {
       _logger.e('Service discovery error: $e');

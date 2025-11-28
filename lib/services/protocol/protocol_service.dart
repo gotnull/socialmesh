@@ -289,6 +289,11 @@ class ProtocolService {
   /// Request configuration from device
   Future<void> _requestConfiguration() async {
     try {
+      if (!_transport.isConnected) {
+        _logger.w('Cannot request configuration: not connected');
+        return;
+      }
+
       _logger.i('Requesting device configuration');
 
       final toRadio = pn.ToRadio()..wantConfigId = true;

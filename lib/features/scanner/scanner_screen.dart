@@ -35,17 +35,16 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       final scanStream = transport.scan(timeout: const Duration(seconds: 10));
 
       await for (final device in scanStream) {
-        if (mounted) {
-          setState(() {
-            // Avoid duplicates
-            final index = _devices.indexWhere((d) => d.id == device.id);
-            if (index >= 0) {
-              _devices[index] = device;
-            } else {
-              _devices.add(device);
-            }
-          });
-        }
+        if (!mounted) break;
+        setState(() {
+          // Avoid duplicates
+          final index = _devices.indexWhere((d) => d.id == device.id);
+          if (index >= 0) {
+            _devices[index] = device;
+          } else {
+            _devices.add(device);
+          }
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -82,6 +81,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       final transport = ref.read(transportProvider);
       await transport.connect(device);
 
+      if (!transport.isConnected) {
+        throw Exception('Failed to establish connection');
+      }
+
       ref.read(connectedDeviceProvider.notifier).state = device;
 
       // Start protocol service
@@ -93,9 +96,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Connection failed: $e')));
+        final message = e.toString().replaceFirst('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            duration: const Duration(seconds: 6),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
       }
     }
   }
