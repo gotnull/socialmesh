@@ -434,6 +434,16 @@ class ProtocolService {
       }
 
       _logger.i('Requesting device configuration');
+
+      // Wake device by sending START2 bytes (like Python client does)
+      debugPrint('🚀 Waking device with START2 sequence...');
+      final wakeBytes = List<int>.filled(32, 0xC3); // 32 START2 bytes
+      await _transport.send(Uint8List.fromList(wakeBytes));
+      debugPrint('🚀 Sent 32 START2 bytes to wake device');
+
+      // Wait for device to wake
+      await Future.delayed(const Duration(milliseconds: 100));
+
       debugPrint('🚀 SENDING wantConfigId=true to device');
 
       final toRadio = pn.ToRadio()..wantConfigId = true;
