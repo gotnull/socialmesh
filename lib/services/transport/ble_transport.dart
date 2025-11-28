@@ -14,6 +14,7 @@ class BleTransport implements DeviceTransport {
   BluetoothCharacteristic? _rxCharacteristic;
   StreamSubscription? _deviceStateSubscription;
   StreamSubscription? _characteristicSubscription;
+  Timer? _pollingTimer;
 
   DeviceConnectionState _state = DeviceConnectionState.disconnected;
 
@@ -214,19 +215,29 @@ class BleTransport implements DeviceTransport {
           _rxCharacteristic = characteristic;
           _logger.d('Found RX characteristic (fromRadio)');
 
-          // Subscribe to notifications
-          await characteristic.setNotifyValue(true);
-          _characteristicSubscription = characteristic.lastValueStream.listen(
-            (value) {
-              if (value.isNotEmpty) {
-                _logger.d('Received ${value.length} bytes');
-                _dataController.add(value);
-              }
-            },
-            onError: (error) {
-              _logger.e('Characteristic error: $error');
-            },
-          );
+          // Check if characteristic supports notifications
+          if (characteristic.properties.notify ||
+              characteristic.properties.indicate) {
+            _logger.d('Setting up notifications for fromRadio');
+            await characteristic.setNotifyValue(true);
+            _characteristicSubscription = characteristic.lastValueStream.listen(
+              (value) {
+                if (value.isNotEmpty) {
+                  _logger.d('Received ${value.length} bytes');
+                  _dataController.add(value);
+                }
+              },
+              onError: (error) {
+                _logger.e('Characteristic error: $error');
+              },
+            );
+          } else {
+            _logger.w(
+              'fromRadio does not support notifications, will use polling',
+            );
+            // Start polling the characteristic
+            _startPolling();
+          }
         }
       }
 
@@ -251,6 +262,31 @@ class BleTransport implements DeviceTransport {
     }
   }
 
+  void _startPolling() {
+    _logger.d('Starting polling for fromRadio characteristic');
+
+    // Poll every 100ms for new data
+    _pollingTimer = Timer.periodic(const Duration(milliseconds: 100), (
+      _,
+    ) async {
+      if (_rxCharacteristic == null ||
+          _state != DeviceConnectionState.connected) {
+        _pollingTimer?.cancel();
+        return;
+      }
+
+      try {
+        final value = await _rxCharacteristic!.read();
+        if (value.isNotEmpty) {
+          _logger.d('Polled ${value.length} bytes');
+          _dataController.add(value);
+        }
+      } catch (e) {
+        _logger.e('Polling error: $e');
+      }
+    });
+  }
+
   @override
   Future<void> disconnect() async {
     if (_state == DeviceConnectionState.disconnected) {
@@ -260,6 +296,8 @@ class BleTransport implements DeviceTransport {
     _updateState(DeviceConnectionState.disconnecting);
 
     try {
+      _pollingTimer?.cancel();
+      _pollingTimer = null;
       await _characteristicSubscription?.cancel();
       await _deviceStateSubscription?.cancel();
 

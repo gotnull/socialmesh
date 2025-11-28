@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:logger/logger.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_models.dart';
+import '../../models/device_error.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../generated/meshtastic/portnums.pb.dart' as pn;
 import 'packet_framer.dart';
@@ -17,20 +18,24 @@ class ProtocolService {
   final StreamController<Message> _messageController;
   final StreamController<MeshNode> _nodeController;
   final StreamController<ChannelConfig> _channelController;
+  final StreamController<DeviceError> _errorController;
 
   StreamSubscription<List<int>>? _dataSubscription;
+  Timer? _configTimeoutTimer;
 
   int? _myNodeNum;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
   final Random _random = Random();
+  bool _configurationComplete = false;
 
   ProtocolService(this._transport, {Logger? logger})
     : _logger = logger ?? Logger(),
       _framer = PacketFramer(logger: logger),
       _messageController = StreamController<Message>.broadcast(),
       _nodeController = StreamController<MeshNode>.broadcast(),
-      _channelController = StreamController<ChannelConfig>.broadcast();
+      _channelController = StreamController<ChannelConfig>.broadcast(),
+      _errorController = StreamController<DeviceError>.broadcast();
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -41,8 +46,14 @@ class ProtocolService {
   /// Stream of channel updates
   Stream<ChannelConfig> get channelStream => _channelController.stream;
 
+  /// Stream of device errors
+  Stream<DeviceError> get errorStream => _errorController.stream;
+
   /// My node number
   int? get myNodeNum => _myNodeNum;
+
+  /// Configuration complete
+  bool get configurationComplete => _configurationComplete;
 
   /// All known nodes
   Map<int, MeshNode> get nodes => Map.unmodifiable(_nodes);
@@ -64,15 +75,27 @@ class ProtocolService {
     // Request configuration after a short delay
     Future.delayed(const Duration(milliseconds: 500), () {
       _requestConfiguration();
+
+      // Set timeout for configuration
+      _configTimeoutTimer?.cancel();
+      _configTimeoutTimer = Timer(const Duration(seconds: 30), () {
+        if (!_configurationComplete) {
+          _logger.w('Configuration timeout - continuing anyway');
+          _configurationComplete = true;
+        }
+      });
     });
   }
 
   /// Stop listening
   void stop() {
     _logger.i('Stopping protocol service');
+    _configTimeoutTimer?.cancel();
+    _configTimeoutTimer = null;
     _dataSubscription?.cancel();
     _dataSubscription = null;
     _framer.clear();
+    _configurationComplete = false;
   }
 
   /// Handle incoming data
@@ -104,6 +127,8 @@ class ProtocolService {
         _handleChannel(fromRadio.channel);
       } else if (fromRadio.hasConfigCompleteId()) {
         _logger.i('Configuration complete: ${fromRadio.configCompleteId}');
+        _configTimeoutTimer?.cancel();
+        _configurationComplete = true;
       }
     } catch (e, stack) {
       _logger.e('Error processing packet: $e', error: e, stackTrace: stack);
@@ -492,9 +517,11 @@ class ProtocolService {
 
   /// Dispose resources
   Future<void> dispose() async {
+    _configTimeoutTimer?.cancel();
     await _dataSubscription?.cancel();
     await _messageController.close();
     await _nodeController.close();
     await _channelController.close();
+    await _errorController.close();
   }
 }
