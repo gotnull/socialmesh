@@ -83,6 +83,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       // Start protocol service and wait for configuration
       final protocol = ref.read(protocolServiceProvider);
+      debugPrint('🟡 Scanner screen - protocol instance: ${protocol.hashCode}');
       await protocol.start();
 
       if (!mounted) return;

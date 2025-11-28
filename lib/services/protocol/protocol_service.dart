@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_models.dart';
@@ -134,6 +135,10 @@ class ProtocolService {
 
       final fromRadio = pn.FromRadio.fromBuffer(packet);
 
+      debugPrint(
+        '📦 _processPacket: hasPacket=${fromRadio.hasPacket()}, hasMyInfo=${fromRadio.hasMyInfo()}, hasNodeInfo=${fromRadio.hasNodeInfo()}, hasChannel=${fromRadio.hasChannel()}, hasConfigCompleteId=${fromRadio.hasConfigCompleteId()}',
+      );
+
       if (fromRadio.hasPacket()) {
         _handleMeshPacket(fromRadio.packet);
       } else if (fromRadio.hasMyInfo()) {
@@ -141,9 +146,11 @@ class ProtocolService {
       } else if (fromRadio.hasNodeInfo()) {
         _handleNodeInfo(fromRadio.nodeInfo);
       } else if (fromRadio.hasChannel()) {
+        debugPrint('📦 HAS CHANNEL! Calling _handleChannel');
         _handleChannel(fromRadio.channel);
       } else if (fromRadio.hasConfigCompleteId()) {
         _logger.i('Configuration complete: ${fromRadio.configCompleteId}');
+        debugPrint('📦 CONFIG COMPLETE ID received');
         _configurationComplete = true;
         if (_configCompleter != null && !_configCompleter!.isCompleted) {
           _configCompleter!.complete();
@@ -307,6 +314,9 @@ class ProtocolService {
   /// Handle channel configuration
   void _handleChannel(pb.Channel channel) {
     _logger.i('Channel ${channel.index} config received');
+    debugPrint(
+      '🟢 _handleChannel: index=${channel.index}, hasSettings=${channel.hasSettings()}',
+    );
 
     final channelConfig = ChannelConfig(
       index: channel.index,
@@ -318,15 +328,25 @@ class ProtocolService {
           : false,
     );
 
+    debugPrint(
+      '🟢 Created ChannelConfig: index=${channelConfig.index}, name="${channelConfig.name}", psk.length=${channelConfig.psk.length}',
+    );
+
     // Extend list if needed, but don't add dummy entries to stream
     while (_channels.length <= channel.index) {
       _channels.add(ChannelConfig(index: _channels.length, name: '', psk: []));
     }
     _channels[channel.index] = channelConfig;
+    debugPrint('🟢 _channels list now has ${_channels.length} entries');
 
     // Always emit channel 0 (Primary), emit others only if they have names
     if (channel.index == 0 || channelConfig.name.isNotEmpty) {
+      debugPrint('🟢 Emitting channel ${channel.index} to stream');
       _channelController.add(channelConfig);
+    } else {
+      debugPrint(
+        '🟢 NOT emitting channel ${channel.index} (empty name and not Primary)',
+      );
     }
   }
 

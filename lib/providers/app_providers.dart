@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import '../core/transport.dart';
@@ -71,11 +72,25 @@ final connectionStateProvider = StreamProvider<DeviceConnectionState>((
 // Currently connected device
 final connectedDeviceProvider = StateProvider<DeviceInfo?>((ref) => null);
 
-// Protocol service
+// Protocol service - singleton instance that persists across rebuilds
 final protocolServiceProvider = Provider<ProtocolService>((ref) {
   final transport = ref.watch(transportProvider);
   final logger = ref.watch(loggerProvider);
-  return ProtocolService(transport, logger: logger);
+  final service = ProtocolService(transport, logger: logger);
+
+  debugPrint(
+    '🟢 ProtocolService provider created - instance: ${service.hashCode}',
+  );
+
+  // Keep the service alive for the lifetime of the app
+  ref.onDispose(() {
+    debugPrint(
+      '🔴 ProtocolService being disposed - instance: ${service.hashCode}',
+    );
+    service.stop();
+  });
+
+  return service;
 });
 
 // Messages
@@ -151,23 +166,39 @@ class ChannelsNotifier extends StateNotifier<List<ChannelConfig>> {
   final ProtocolService _protocol;
 
   ChannelsNotifier(this._protocol) : super([]) {
+    debugPrint(
+      '🔵 ChannelsNotifier constructor - protocol has ${_protocol.channels.length} channels',
+    );
+    for (var c in _protocol.channels) {
+      debugPrint(
+        '  Channel ${c.index}: name="${c.name}", psk.length=${c.psk.length}',
+      );
+    }
+
     // Initialize with existing channels (include Primary even if name is empty)
     state = _protocol.channels
         .where((c) => c.index == 0 || c.name.isNotEmpty)
         .toList();
+    debugPrint('🔵 ChannelsNotifier initialized with ${state.length} channels');
 
     // Listen for future channel updates
     _protocol.channelStream.listen((channel) {
+      debugPrint(
+        '🔵 ChannelsNotifier received channel update: index=${channel.index}, name="${channel.name}"',
+      );
       final index = state.indexWhere((c) => c.index == channel.index);
       if (index >= 0) {
+        debugPrint('  Updating existing channel at position $index');
         state = [
           ...state.sublist(0, index),
           channel,
           ...state.sublist(index + 1),
         ];
       } else {
+        debugPrint('  Adding new channel');
         state = [...state, channel];
       }
+      debugPrint('  Total channels now: ${state.length}');
     });
   }
 
