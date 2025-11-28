@@ -485,43 +485,77 @@ class _SignalChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (data.isEmpty) return;
 
-    final Paint gridPaint = Paint()
-      ..color = AppTheme.darkBorder.withValues(alpha: 0.3)
-      ..strokeWidth = 1;
-
     final Paint line1Paint = Paint()
-      ..color =
-          const Color(0xFF8B5CF6) // Purple
-      ..strokeWidth = 2
+      ..color = const Color(0xFF7F6FF2)
+      ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     final Paint line2Paint = Paint()
-      ..color =
-          const Color(0xFF3B82F6) // Blue
-      ..strokeWidth = 2
+      ..color = const Color(0xFFE3B84D)
+      ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     final Paint line3Paint = Paint()
-      ..color =
-          const Color(0xFFFBBF24) // Yellow
-      ..strokeWidth = 2
+      ..color = const Color(0xFFC15A43)
+      ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    // Draw grid
-    for (int i = 0; i <= 4; i++) {
-      final y = size.height * (i / 4);
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
-    }
+    final Paint dottedPaint = Paint()
+      ..color = AppTheme.darkBorder.withValues(alpha: 0.4)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
 
-    // Calculate min/max for scaling
+    // Draw dotted horizontal grid lines and Y-axis labels
+    final textPainter = TextPainter(textDirection: TextDirection.ltr);
     double minRssi = -90;
     double maxRssi = -30;
 
-    // Draw lines
+    for (int i = 0; i <= 4; i++) {
+      final y = size.height * (i / 4);
+
+      // Draw dotted line
+      for (double x = 0; x < size.width; x += 8) {
+        canvas.drawLine(
+          Offset(x, y),
+          Offset((x + 4).clamp(0, size.width), y),
+          dottedPaint,
+        );
+      }
+
+      // Draw Y-axis label (RSSI values)
+      final rssiValue = maxRssi - (i * (maxRssi - minRssi) / 4);
+      textPainter.text = TextSpan(
+        text: '${rssiValue.toInt()} dBm',
+        style: const TextStyle(
+          color: AppTheme.textTertiary,
+          fontSize: 10,
+          fontFamily: 'Inter',
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(-60, y - 6));
+    }
+
+    // Draw X-axis time labels
     final stepX = size.width / (data.length - 1);
+    for (int i = 0; i < data.length; i += 2) {
+      final x = i * stepX;
+      final timeStr =
+          '${data[i].time.hour.toString().padLeft(2, '0')}:${data[i].time.minute.toString().padLeft(2, '0')}';
+      textPainter.text = TextSpan(
+        text: timeStr,
+        style: const TextStyle(
+          color: AppTheme.textTertiary,
+          fontSize: 9,
+          fontFamily: 'Inter',
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(x - 12, size.height + 4));
+    }
 
     Path path1 = Path();
     Path path2 = Path();
@@ -553,34 +587,6 @@ class _SignalChartPainter extends CustomPainter {
     canvas.drawPath(path1, line1Paint);
     canvas.drawPath(path2, line2Paint);
     canvas.drawPath(path3, line3Paint);
-
-    // Draw time labels
-    final textPainter = TextPainter(textDirection: TextDirection.ltr);
-
-    // First timestamp
-    if (data.isNotEmpty) {
-      final firstTime =
-          '${data.first.time.hour.toString().padLeft(2, '0')}:${data.first.time.minute.toString().padLeft(2, '0')}';
-      textPainter.text = TextSpan(
-        text: firstTime,
-        style: const TextStyle(color: AppTheme.textTertiary, fontSize: 10),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(0, size.height + 8));
-
-      // Last timestamp
-      final lastTime =
-          '${data.last.time.hour.toString().padLeft(2, '0')}:${data.last.time.minute.toString().padLeft(2, '0')}';
-      textPainter.text = TextSpan(
-        text: lastTime,
-        style: const TextStyle(color: AppTheme.textTertiary, fontSize: 10),
-      );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset(size.width - textPainter.width, size.height + 8),
-      );
-    }
   }
 
   @override

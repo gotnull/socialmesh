@@ -231,9 +231,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                   )
                 else
                   ..._devices.map(
-                    (device) => _DeviceCard(
-                      device: device,
-                      onTap: () => _connect(device),
+                    (device) => Column(
+                      children: [
+                        _DeviceCard(
+                          device: device,
+                          onTap: () => _connect(device),
+                        ),
+                        if (device.rssi != null)
+                          _DeviceDetailsTable(device: device),
+                      ],
                     ),
                   ),
 
@@ -359,5 +365,87 @@ class _DeviceCard extends StatelessWidget {
     if (rssi >= -80) return 2;
     if (rssi >= -90) return 1;
     return 0;
+  }
+}
+
+class _DeviceDetailsTable extends StatelessWidget {
+  final DeviceInfo device;
+
+  const _DeviceDetailsTable({required this.device});
+
+  @override
+  Widget build(BuildContext context) {
+    final details = [
+      ('Device ID', device.id),
+      ('Address', device.address ?? 'N/A'),
+      (
+        'Type',
+        device.type == TransportType.ble
+            ? 'Bluetooth Low Energy'
+            : 'USB Serial',
+      ),
+      ('Signal Strength', device.rssi != null ? '${device.rssi} dBm' : 'N/A'),
+      ('Status', 'Available'),
+      ('Last Seen', 'Just now'),
+    ];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12, left: 0, right: 0, top: 4),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        children: details.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          final isEven = index % 2 == 0;
+
+          return Container(
+            decoration: BoxDecoration(
+              color: isEven ? AppTheme.darkCard : const Color(0xFF29303D),
+              borderRadius: BorderRadius.vertical(
+                top: index == 0 ? const Radius.circular(12) : Radius.zero,
+                bottom: index == details.length - 1
+                    ? const Radius.circular(12)
+                    : Radius.zero,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      item.$1,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppTheme.textTertiary,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      item.$2,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Inter',
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
   }
 }
