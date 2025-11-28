@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/transport.dart';
+import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
@@ -112,116 +113,115 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final transportType = ref.watch(transportTypeProvider);
-
     return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        title: const Text('Find Device'),
+        backgroundColor: AppTheme.darkBackground,
+        title: const Text(
+          'Meshtastic',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.bluetooth, color: AppTheme.primaryGreen),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
               Navigator.of(context).pushNamed('/settings');
             },
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Transport type selector
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SegmentedButton<TransportType>(
-              segments: const [
-                ButtonSegment(
-                  value: TransportType.ble,
-                  label: Text('Bluetooth'),
-                  icon: Icon(Icons.bluetooth),
-                ),
-                ButtonSegment(
-                  value: TransportType.usb,
-                  label: Text('USB'),
-                  icon: Icon(Icons.usb),
-                ),
-              ],
-              selected: {transportType},
-              onSelectionChanged: (Set<TransportType> newSelection) {
-                ref.read(transportTypeProvider.notifier).state =
-                    newSelection.first;
-                _startScan();
-              },
-            ),
-          ),
-
-          // Error banner
-          if (_errorMessage != null)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              color: Theme.of(context).colorScheme.errorContainer,
+      body: _connecting
+          ? const Center(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: Theme.of(context).colorScheme.onErrorContainer,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          _errorMessage!,
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onErrorContainer,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        color: Theme.of(context).colorScheme.onErrorContainer,
-                        onPressed: () {
-                          setState(() {
-                            _errorMessage = null;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  if (_errorMessage!.toLowerCase().contains('bluetooth'))
-                    Padding(
-                      padding: const EdgeInsets.only(left: 36, top: 8),
-                      child: Text(
-                        'Go to Settings > Bluetooth and ensure it is turned on',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onErrorContainer,
-                          fontSize: 12,
-                        ),
-                      ),
+                  CircularProgressIndicator(color: AppTheme.primaryGreen),
+                  SizedBox(height: 16),
+                  Text(
+                    'Connecting...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppTheme.textSecondary,
                     ),
+                  ),
                 ],
               ),
-            ),
-
-          // Device list
-          Expanded(
-            child: _devices.isEmpty && !_scanning
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+            )
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                if (_errorMessage != null)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.errorRed.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.errorRed.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Row(
                       children: [
-                        Icon(
-                          Icons.devices,
-                          size: 64,
-                          color: Theme.of(context).colorScheme.secondary,
+                        const Icon(
+                          Icons.error_outline,
+                          color: AppTheme.errorRed,
                         ),
-                        const SizedBox(height: 16),
-                        const Text('No devices found'),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: const TextStyle(color: AppTheme.errorRed),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.close,
+                            color: AppTheme.errorRed,
+                          ),
+                          onPressed: () => setState(() => _errorMessage = null),
+                          iconSize: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                if (_devices.isEmpty && !_scanning)
+                  Center(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 100),
+                        const Icon(
+                          Icons.bluetooth_searching,
+                          size: 80,
+                          color: AppTheme.textTertiary,
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'No devices found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
                         const SizedBox(height: 8),
-                        TextButton.icon(
+                        Text(
+                          'Pull down to scan',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.textTertiary,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
                           onPressed: _startScan,
                           icon: const Icon(Icons.refresh),
                           label: const Text('Scan Again'),
@@ -229,96 +229,135 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                       ],
                     ),
                   )
-                : ListView.builder(
-                    itemCount: _devices.length,
-                    itemBuilder: (context, index) {
-                      final device = _devices[index];
-                      final isConnecting = _connecting;
-
-                      return ListTile(
-                        enabled: !isConnecting,
-                        leading: Icon(
-                          device.type == TransportType.ble
-                              ? Icons.bluetooth
-                              : Icons.usb,
-                        ),
-                        title: Text(device.name),
-                        subtitle: Text(
-                          isConnecting
-                              ? 'Connecting...'
-                              : (device.address ?? device.id),
-                        ),
-                        trailing: isConnecting
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : (device.rssi != null
-                                  ? _SignalStrengthIndicator(rssi: device.rssi!)
-                                  : null),
-                        onTap: isConnecting ? null : () => _connect(device),
-                      );
-                    },
+                else
+                  ..._devices.map(
+                    (device) => _DeviceCard(
+                      device: device,
+                      onTap: () => _connect(device),
+                    ),
                   ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _scanning ? null : _startScan,
-        child: const Icon(Icons.refresh),
-      ),
+
+                if (_scanning)
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    margin: const EdgeInsets.only(top: 16),
+                    child: const Center(
+                      child: Column(
+                        children: [
+                          CircularProgressIndicator(
+                            color: AppTheme.primaryGreen,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'Scanning for devices...',
+                            style: TextStyle(color: AppTheme.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
     );
   }
 }
 
-class _SignalStrengthIndicator extends StatelessWidget {
-  final int rssi;
+class _DeviceCard extends StatelessWidget {
+  final DeviceInfo device;
+  final VoidCallback onTap;
 
-  const _SignalStrengthIndicator({required this.rssi});
+  const _DeviceCard({required this.device, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    // RSSI ranges: -30 (excellent) to -90 (unusable)
-    // Normalize to 0-4 bars
-    int bars = 0;
-    Color color = Colors.red;
+    final signalBars = _calculateSignalBars(device.rssi);
 
-    if (rssi >= -50) {
-      bars = 4;
-      color = Colors.green;
-    } else if (rssi >= -60) {
-      bars = 3;
-      color = Colors.lightGreen;
-    } else if (rssi >= -70) {
-      bars = 2;
-      color = Colors.orange;
-    } else if (rssi >= -80) {
-      bars = 1;
-      color = Colors.deepOrange;
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ...List.generate(4, (index) {
-          final height = 8.0 + (index * 4.0);
-          final isActive = index < bars;
-          return Container(
-            width: 4,
-            height: height,
-            margin: const EdgeInsets.symmetric(horizontal: 1),
-            decoration: BoxDecoration(
-              color: isActive ? color : Colors.grey.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(1),
-            ),
-          );
-        }),
-        const SizedBox(width: 4),
-        Icon(Icons.bluetooth, size: 16, color: color),
-      ],
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBackground,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  device.type == TransportType.ble
+                      ? Icons.bluetooth
+                      : Icons.usb,
+                  color: AppTheme.primaryGreen,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      device.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      device.type == TransportType.ble ? 'Bluetooth' : 'USB',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (device.rssi != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (int i = 0; i < 4; i++)
+                      Container(
+                        width: 4,
+                        height: 4 + (i * 4).toDouble(),
+                        margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                        decoration: BoxDecoration(
+                          color: i < signalBars
+                              ? AppTheme.primaryGreen
+                              : AppTheme.textTertiary.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(1),
+                        ),
+                      ),
+                  ],
+                ),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+            ],
+          ),
+        ),
+      ),
     );
+  }
+
+  int _calculateSignalBars(int? rssi) {
+    if (rssi == null) return 0;
+    if (rssi >= -60) return 4;
+    if (rssi >= -70) return 3;
+    if (rssi >= -80) return 2;
+    if (rssi >= -90) return 1;
+    return 0;
   }
 }
