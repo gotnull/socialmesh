@@ -454,76 +454,98 @@ class _DeviceDetailsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final details = [
-      ('Device ID', device.id),
-      ('Address', device.address ?? 'N/A'),
+    final details = <(String, String)>[
+      ('Device Name', device.name),
+      if (device.address != null) ('Address', device.address!),
       (
-        'Type',
+        'Connection Type',
         device.type == TransportType.ble
             ? 'Bluetooth Low Energy'
             : 'USB Serial',
       ),
-      ('Signal Strength', device.rssi != null ? '${device.rssi} dBm' : 'N/A'),
-      ('Status', 'Available'),
-      ('Last Seen', 'Just now'),
+      if (device.rssi != null) ('Signal Strength', '${device.rssi} dBm'),
     ];
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12, left: 0, right: 0, top: 4),
+      margin: const EdgeInsets.only(bottom: 16, top: 4),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.darkBorder),
       ),
-      child: Column(
-        children: details.asMap().entries.map((entry) {
-          final index = entry.key;
-          final item = entry.value;
-          final isEven = index % 2 == 0;
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(11),
+        child: Column(
+          children: details.asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value;
+            final isOdd = index % 2 == 1;
 
-          return Container(
-            decoration: BoxDecoration(
-              color: isEven ? AppTheme.darkCard : const Color(0xFF29303D),
-              borderRadius: BorderRadius.vertical(
-                top: index == 0 ? const Radius.circular(12) : Radius.zero,
-                bottom: index == details.length - 1
-                    ? const Radius.circular(12)
-                    : Radius.zero,
+            return Container(
+              decoration: BoxDecoration(
+                color: isOdd
+                    ? const Color(0xFF29303D)
+                    : AppTheme.darkBackground,
+                border: Border(
+                  bottom: index < details.length - 1
+                      ? const BorderSide(color: AppTheme.darkBorder, width: 1)
+                      : BorderSide.none,
+                ),
               ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      item.$1,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppTheme.textTertiary,
-                        fontFamily: 'Inter',
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            right: BorderSide(
+                              color: AppTheme.darkBorder,
+                              width: 1,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          item.$1,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.textTertiary,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      item.$2,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'Inter',
+                    Expanded(
+                      flex: 7,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                        child: Text(
+                          item.$2,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Inter',
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
                       ),
-                      textAlign: TextAlign.right,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
