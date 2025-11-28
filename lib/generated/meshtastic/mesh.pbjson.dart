@@ -15,6 +15,31 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
+@$core.Deprecated('Use config_DeviceConfig_RoleDescriptor instead')
+const Config_DeviceConfig_Role$json = {
+  '1': 'Config_DeviceConfig_Role',
+  '2': [
+    {'1': 'CLIENT', '2': 0},
+    {'1': 'CLIENT_MUTE', '2': 1},
+    {'1': 'ROUTER', '2': 2},
+    {'1': 'ROUTER_CLIENT', '2': 3},
+    {'1': 'REPEATER', '2': 4},
+    {'1': 'TRACKER', '2': 5},
+    {'1': 'SENSOR', '2': 6},
+    {'1': 'TAK', '2': 7},
+    {'1': 'CLIENT_HIDDEN', '2': 8},
+    {'1': 'LOST_AND_FOUND', '2': 9},
+    {'1': 'TAK_TRACKER', '2': 10},
+  ],
+};
+
+/// Descriptor for `Config_DeviceConfig_Role`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List config_DeviceConfig_RoleDescriptor = $convert.base64Decode(
+    'ChhDb25maWdfRGV2aWNlQ29uZmlnX1JvbGUSCgoGQ0xJRU5UEAASDwoLQ0xJRU5UX01VVEUQAR'
+    'IKCgZST1VURVIQAhIRCg1ST1VURVJfQ0xJRU5UEAMSDAoIUkVQRUFURVIQBBILCgdUUkFDS0VS'
+    'EAUSCgoGU0VOU09SEAYSBwoDVEFLEAcSEQoNQ0xJRU5UX0hJRERFThAIEhIKDkxPU1RfQU5EX0'
+    'ZPVU5EEAkSDwoLVEFLX1RSQUNLRVIQCg==');
+
 @$core.Deprecated('Use hardwareModelDescriptor instead')
 const HardwareModel$json = {
   '1': 'HardwareModel',
@@ -35,8 +60,59 @@ const HardwareModel$json = {
     {'1': 'RAK11200', '2': 13},
     {'1': 'NANO_G1', '2': 14},
     {'1': 'TLORA_V2_1_1p8', '2': 15},
+    {'1': 'TLORA_T3_S3', '2': 16},
+    {'1': 'NANO_G1_EXPLORER', '2': 17},
+    {'1': 'NANO_G2_ULTRA', '2': 18},
+    {'1': 'LORA_TYPE', '2': 19},
+    {'1': 'WIPHONE', '2': 20},
+    {'1': 'WIO_WM1110', '2': 21},
+    {'1': 'RAK2560', '2': 22},
+    {'1': 'HELTEC_HRU_3601', '2': 23},
+    {'1': 'HELTEC_WIRELESS_PAPER', '2': 24},
     {'1': 'STATION_G1', '2': 25},
     {'1': 'RAK11310', '2': 26},
+    {'1': 'SENSELORA_RP2040', '2': 27},
+    {'1': 'SENSELORA_S3', '2': 28},
+    {'1': 'CANARYONE', '2': 29},
+    {'1': 'RP2040_LORA', '2': 30},
+    {'1': 'STATION_G2', '2': 31},
+    {'1': 'LORA_RELAY_V1', '2': 32},
+    {'1': 'NRF52840DK', '2': 33},
+    {'1': 'PPR', '2': 34},
+    {'1': 'GENIEBLOCKS', '2': 35},
+    {'1': 'NRF52_UNKNOWN', '2': 36},
+    {'1': 'PORTDUINO', '2': 37},
+    {'1': 'ANDROID_SIM', '2': 38},
+    {'1': 'DIY_V1', '2': 39},
+    {'1': 'NRF52840_PCA10059', '2': 40},
+    {'1': 'DR_DEV', '2': 41},
+    {'1': 'M5STACK', '2': 42},
+    {'1': 'HELTEC_V3', '2': 43},
+    {'1': 'HELTEC_WSL_V3', '2': 44},
+    {'1': 'BETAFPV_2400_TX', '2': 45},
+    {'1': 'BETAFPV_900_NANO_TX', '2': 46},
+    {'1': 'RPI_PICO', '2': 47},
+    {'1': 'HELTEC_WIRELESS_TRACKER', '2': 48},
+    {'1': 'HELTEC_WIRELESS_PAPER_V1_0', '2': 49},
+    {'1': 'T_DECK', '2': 50},
+    {'1': 'T_WATCH_S3', '2': 51},
+    {'1': 'PICOMPUTER_S3', '2': 52},
+    {'1': 'HELTEC_HT62', '2': 53},
+    {'1': 'EBYTE_ESP32_S3', '2': 54},
+    {'1': 'ESP32_S3_PICO', '2': 55},
+    {'1': 'CHATTER_2', '2': 56},
+    {'1': 'HELTEC_WIRELESS_PAPER_V1_1', '2': 57},
+    {'1': 'HELTEC_CAPSULE_SENSOR_V3', '2': 58},
+    {'1': 'HELTEC_VISION_MASTER_T190', '2': 59},
+    {'1': 'HELTEC_VISION_MASTER_E213', '2': 60},
+    {'1': 'HELTEC_VISION_MASTER_E290', '2': 61},
+    {'1': 'HELTEC_MESH_NODE_T114', '2': 62},
+    {'1': 'SENSECAP_INDICATOR', '2': 63},
+    {'1': 'TRACKER_T1000_E', '2': 64},
+    {'1': 'RAK3172', '2': 65},
+    {'1': 'WIO_E5', '2': 66},
+    {'1': 'RADIOMASTER_900_BANDIT_NANO', '2': 67},
+    {'1': 'HELTEC_CAPSULE_SENSOR_V3_COMPACT', '2': 68},
     {'1': 'PRIVATE_HW', '2': 255},
   ],
 };
@@ -47,8 +123,26 @@ final $typed_data.Uint8List hardwareModelDescriptor = $convert.base64Decode(
     'IKDlRMT1JBX1YyXzFfMXA2EAMSCQoFVEJFQU0QBBIPCgtIRUxURUNfVjJfMBAFEgwKCFRCRUFN'
     'MHA3EAYSCgoGVF9FQ0hPEAcSEAoMVExPUkFfVjFfMXAzEAgSCwoHUkFLNDYzMRAJEg8KC0hFTF'
     'RFQ19WMl8xEAoSDQoJSEVMVEVDX1YxEAsSGAoUTElMWUdPX1RCRUFNX1MzX0NPUkUQDBIMCghS'
-    'QUsxMTIwMBANEgsKB05BTk9fRzEQDhISCg5UTE9SQV9WMl8xXzFwOBAPEg4KClNUQVRJT05fRz'
-    'EQGRIMCghSQUsxMTMxMBAaEg8KClBSSVZBVEVfSFcQ/wE=');
+    'QUsxMTIwMBANEgsKB05BTk9fRzEQDhISCg5UTE9SQV9WMl8xXzFwOBAPEg8KC1RMT1JBX1QzX1'
+    'MzEBASFAoQTkFOT19HMV9FWFBMT1JFUhAREhEKDU5BTk9fRzJfVUxUUkEQEhINCglMT1JBX1RZ'
+    'UEUQExILCgdXSVBIT05FEBQSDgoKV0lPX1dNMTExMBAVEgsKB1JBSzI1NjAQFhITCg9IRUxURU'
+    'NfSFJVXzM2MDEQFxIZChVIRUxURUNfV0lSRUxFU1NfUEFQRVIQGBIOCgpTVEFUSU9OX0cxEBkS'
+    'DAoIUkFLMTEzMTAQGhIUChBTRU5TRUxPUkFfUlAyMDQwEBsSEAoMU0VOU0VMT1JBX1MzEBwSDQ'
+    'oJQ0FOQVJZT05FEB0SDwoLUlAyMDQwX0xPUkEQHhIOCgpTVEFUSU9OX0cyEB8SEQoNTE9SQV9S'
+    'RUxBWV9WMRAgEg4KCk5SRjUyODQwREsQIRIHCgNQUFIQIhIPCgtHRU5JRUJMT0NLUxAjEhEKDU'
+    '5SRjUyX1VOS05PV04QJBINCglQT1JURFVJTk8QJRIPCgtBTkRST0lEX1NJTRAmEgoKBkRJWV9W'
+    'MRAnEhUKEU5SRjUyODQwX1BDQTEwMDU5ECgSCgoGRFJfREVWECkSCwoHTTVTVEFDSxAqEg0KCU'
+    'hFTFRFQ19WMxArEhEKDUhFTFRFQ19XU0xfVjMQLBITCg9CRVRBRlBWXzI0MDBfVFgQLRIXChNC'
+    'RVRBRlBWXzkwMF9OQU5PX1RYEC4SDAoIUlBJX1BJQ08QLxIbChdIRUxURUNfV0lSRUxFU1NfVF'
+    'JBQ0tFUhAwEh4KGkhFTFRFQ19XSVJFTEVTU19QQVBFUl9WMV8wEDESCgoGVF9ERUNLEDISDgoK'
+    'VF9XQVRDSF9TMxAzEhEKDVBJQ09NUFVURVJfUzMQNBIPCgtIRUxURUNfSFQ2MhA1EhIKDkVCWV'
+    'RFX0VTUDMyX1MzEDYSEQoNRVNQMzJfUzNfUElDTxA3Eg0KCUNIQVRURVJfMhA4Eh4KGkhFTFRF'
+    'Q19XSVJFTEVTU19QQVBFUl9WMV8xEDkSHAoYSEVMVEVDX0NBUFNVTEVfU0VOU09SX1YzEDoSHQ'
+    'oZSEVMVEVDX1ZJU0lPTl9NQVNURVJfVDE5MBA7Eh0KGUhFTFRFQ19WSVNJT05fTUFTVEVSX0Uy'
+    'MTMQPBIdChlIRUxURUNfVklTSU9OX01BU1RFUl9FMjkwED0SGQoVSEVMVEVDX01FU0hfTk9ERV'
+    '9UMTE0ED4SFgoSU0VOU0VDQVBfSU5ESUNBVE9SED8SEwoPVFJBQ0tFUl9UMTAwMF9FEEASCwoH'
+    'UkFLMzE3MhBBEgoKBldJT19FNRBCEh8KG1JBRElPTUFTVEVSXzkwMF9CQU5ESVRfTkFOTxBDEi'
+    'QKIEhFTFRFQ19DQVBTVUxFX1NFTlNPUl9WM19DT01QQUNUEEQSDwoKUFJJVkFURV9IVxD/AQ==');
 
 @$core.Deprecated('Use portNumDescriptor instead')
 const PortNum$json = {
@@ -180,6 +274,18 @@ const User$json = {
       '6': '.meshtastic.HardwareModel',
       '10': 'hwModel'
     },
+    {'1': 'macaddr', '3': 5, '4': 1, '5': 12, '10': 'macaddr'},
+    {'1': 'hw_model_string', '3': 6, '4': 1, '5': 9, '10': 'hwModelString'},
+    {'1': 'is_licensed', '3': 7, '4': 1, '5': 8, '10': 'isLicensed'},
+    {
+      '1': 'role',
+      '3': 8,
+      '4': 1,
+      '5': 14,
+      '6': '.meshtastic.Config_DeviceConfig_Role',
+      '10': 'role'
+    },
+    {'1': 'public_key', '3': 9, '4': 1, '5': 12, '10': 'publicKey'},
   ],
 };
 
@@ -187,7 +293,10 @@ const User$json = {
 final $typed_data.Uint8List userDescriptor = $convert.base64Decode(
     'CgRVc2VyEg4KAmlkGAEgASgJUgJpZBIbCglsb25nX25hbWUYAiABKAlSCGxvbmdOYW1lEh0KCn'
     'Nob3J0X25hbWUYAyABKAlSCXNob3J0TmFtZRI0Cghod19tb2RlbBgEIAEoDjIZLm1lc2h0YXN0'
-    'aWMuSGFyZHdhcmVNb2RlbFIHaHdNb2RlbA==');
+    'aWMuSGFyZHdhcmVNb2RlbFIHaHdNb2RlbBIYCgdtYWNhZGRyGAUgASgMUgdtYWNhZGRyEiYKD2'
+    'h3X21vZGVsX3N0cmluZxgGIAEoCVINaHdNb2RlbFN0cmluZxIfCgtpc19saWNlbnNlZBgHIAEo'
+    'CFIKaXNMaWNlbnNlZBI4CgRyb2xlGAggASgOMiQubWVzaHRhc3RpYy5Db25maWdfRGV2aWNlQ2'
+    '9uZmlnX1JvbGVSBHJvbGUSHQoKcHVibGljX2tleRgJIAEoDFIJcHVibGljS2V5');
 
 @$core.Deprecated('Use routeDiscoveryDescriptor instead')
 const RouteDiscovery$json = {

@@ -122,12 +122,22 @@ class User extends $pb.GeneratedMessage {
     $core.String? longName,
     $core.String? shortName,
     HardwareModel? hwModel,
+    $core.List<$core.int>? macaddr,
+    $core.String? hwModelString,
+    $core.bool? isLicensed,
+    Config_DeviceConfig_Role? role,
+    $core.List<$core.int>? publicKey,
   }) {
     final result = create();
     if (id != null) result.id = id;
     if (longName != null) result.longName = longName;
     if (shortName != null) result.shortName = shortName;
     if (hwModel != null) result.hwModel = hwModel;
+    if (macaddr != null) result.macaddr = macaddr;
+    if (hwModelString != null) result.hwModelString = hwModelString;
+    if (isLicensed != null) result.isLicensed = isLicensed;
+    if (role != null) result.role = role;
+    if (publicKey != null) result.publicKey = publicKey;
     return result;
   }
 
@@ -149,6 +159,14 @@ class User extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'shortName')
     ..aE<HardwareModel>(4, _omitFieldNames ? '' : 'hwModel',
         enumValues: HardwareModel.values)
+    ..a<$core.List<$core.int>>(
+        5, _omitFieldNames ? '' : 'macaddr', $pb.PbFieldType.OY)
+    ..aOS(6, _omitFieldNames ? '' : 'hwModelString')
+    ..aOB(7, _omitFieldNames ? '' : 'isLicensed')
+    ..aE<Config_DeviceConfig_Role>(8, _omitFieldNames ? '' : 'role',
+        enumValues: Config_DeviceConfig_Role.values)
+    ..a<$core.List<$core.int>>(
+        9, _omitFieldNames ? '' : 'publicKey', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -169,7 +187,7 @@ class User extends $pb.GeneratedMessage {
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<User>(create);
   static User? _defaultInstance;
 
-  /// Unique ID
+  /// Unique ID (8 hex chars)
   @$pb.TagNumber(1)
   $core.String get id => $_getSZ(0);
   @$pb.TagNumber(1)
@@ -208,6 +226,56 @@ class User extends $pb.GeneratedMessage {
   $core.bool hasHwModel() => $_has(3);
   @$pb.TagNumber(4)
   void clearHwModel() => $_clearField(4);
+
+  /// MAC address (6 bytes)
+  @$pb.TagNumber(5)
+  $core.List<$core.int> get macaddr => $_getN(4);
+  @$pb.TagNumber(5)
+  set macaddr($core.List<$core.int> value) => $_setBytes(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasMacaddr() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearMacaddr() => $_clearField(5);
+
+  /// Hardware model as string (for newer/unknown models)
+  @$pb.TagNumber(6)
+  $core.String get hwModelString => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set hwModelString($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasHwModelString() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearHwModelString() => $_clearField(6);
+
+  /// Licensed ham operator
+  @$pb.TagNumber(7)
+  $core.bool get isLicensed => $_getBF(6);
+  @$pb.TagNumber(7)
+  set isLicensed($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasIsLicensed() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearIsLicensed() => $_clearField(7);
+
+  /// User's role
+  @$pb.TagNumber(8)
+  Config_DeviceConfig_Role get role => $_getN(7);
+  @$pb.TagNumber(8)
+  set role(Config_DeviceConfig_Role value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasRole() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearRole() => $_clearField(8);
+
+  /// Public key for encryption (32 bytes)
+  @$pb.TagNumber(9)
+  $core.List<$core.int> get publicKey => $_getN(8);
+  @$pb.TagNumber(9)
+  set publicKey($core.List<$core.int> value) => $_setBytes(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasPublicKey() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearPublicKey() => $_clearField(9);
 }
 
 /// Route discovery information

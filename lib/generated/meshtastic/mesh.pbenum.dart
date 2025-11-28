@@ -14,6 +14,54 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+/// User role
+class Config_DeviceConfig_Role extends $pb.ProtobufEnum {
+  static const Config_DeviceConfig_Role CLIENT =
+      Config_DeviceConfig_Role._(0, _omitEnumNames ? '' : 'CLIENT');
+  static const Config_DeviceConfig_Role CLIENT_MUTE =
+      Config_DeviceConfig_Role._(1, _omitEnumNames ? '' : 'CLIENT_MUTE');
+  static const Config_DeviceConfig_Role ROUTER =
+      Config_DeviceConfig_Role._(2, _omitEnumNames ? '' : 'ROUTER');
+  static const Config_DeviceConfig_Role ROUTER_CLIENT =
+      Config_DeviceConfig_Role._(3, _omitEnumNames ? '' : 'ROUTER_CLIENT');
+  static const Config_DeviceConfig_Role REPEATER =
+      Config_DeviceConfig_Role._(4, _omitEnumNames ? '' : 'REPEATER');
+  static const Config_DeviceConfig_Role TRACKER =
+      Config_DeviceConfig_Role._(5, _omitEnumNames ? '' : 'TRACKER');
+  static const Config_DeviceConfig_Role SENSOR =
+      Config_DeviceConfig_Role._(6, _omitEnumNames ? '' : 'SENSOR');
+  static const Config_DeviceConfig_Role TAK =
+      Config_DeviceConfig_Role._(7, _omitEnumNames ? '' : 'TAK');
+  static const Config_DeviceConfig_Role CLIENT_HIDDEN =
+      Config_DeviceConfig_Role._(8, _omitEnumNames ? '' : 'CLIENT_HIDDEN');
+  static const Config_DeviceConfig_Role LOST_AND_FOUND =
+      Config_DeviceConfig_Role._(9, _omitEnumNames ? '' : 'LOST_AND_FOUND');
+  static const Config_DeviceConfig_Role TAK_TRACKER =
+      Config_DeviceConfig_Role._(10, _omitEnumNames ? '' : 'TAK_TRACKER');
+
+  static const $core.List<Config_DeviceConfig_Role> values =
+      <Config_DeviceConfig_Role>[
+    CLIENT,
+    CLIENT_MUTE,
+    ROUTER,
+    ROUTER_CLIENT,
+    REPEATER,
+    TRACKER,
+    SENSOR,
+    TAK,
+    CLIENT_HIDDEN,
+    LOST_AND_FOUND,
+    TAK_TRACKER,
+  ];
+
+  static final $core.List<Config_DeviceConfig_Role?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 10);
+  static Config_DeviceConfig_Role? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const Config_DeviceConfig_Role._(super.value, super.name);
+}
+
 /// Hardware models
 class HardwareModel extends $pb.ProtobufEnum {
   static const HardwareModel UNSET =
@@ -48,10 +96,112 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(14, _omitEnumNames ? '' : 'NANO_G1');
   static const HardwareModel TLORA_V2_1_1p8 =
       HardwareModel._(15, _omitEnumNames ? '' : 'TLORA_V2_1_1p8');
+  static const HardwareModel TLORA_T3_S3 =
+      HardwareModel._(16, _omitEnumNames ? '' : 'TLORA_T3_S3');
+  static const HardwareModel NANO_G1_EXPLORER =
+      HardwareModel._(17, _omitEnumNames ? '' : 'NANO_G1_EXPLORER');
+  static const HardwareModel NANO_G2_ULTRA =
+      HardwareModel._(18, _omitEnumNames ? '' : 'NANO_G2_ULTRA');
+  static const HardwareModel LORA_TYPE =
+      HardwareModel._(19, _omitEnumNames ? '' : 'LORA_TYPE');
+  static const HardwareModel WIPHONE =
+      HardwareModel._(20, _omitEnumNames ? '' : 'WIPHONE');
+  static const HardwareModel WIO_WM1110 =
+      HardwareModel._(21, _omitEnumNames ? '' : 'WIO_WM1110');
+  static const HardwareModel RAK2560 =
+      HardwareModel._(22, _omitEnumNames ? '' : 'RAK2560');
+  static const HardwareModel HELTEC_HRU_3601 =
+      HardwareModel._(23, _omitEnumNames ? '' : 'HELTEC_HRU_3601');
+  static const HardwareModel HELTEC_WIRELESS_PAPER =
+      HardwareModel._(24, _omitEnumNames ? '' : 'HELTEC_WIRELESS_PAPER');
   static const HardwareModel STATION_G1 =
       HardwareModel._(25, _omitEnumNames ? '' : 'STATION_G1');
   static const HardwareModel RAK11310 =
       HardwareModel._(26, _omitEnumNames ? '' : 'RAK11310');
+  static const HardwareModel SENSELORA_RP2040 =
+      HardwareModel._(27, _omitEnumNames ? '' : 'SENSELORA_RP2040');
+  static const HardwareModel SENSELORA_S3 =
+      HardwareModel._(28, _omitEnumNames ? '' : 'SENSELORA_S3');
+  static const HardwareModel CANARYONE =
+      HardwareModel._(29, _omitEnumNames ? '' : 'CANARYONE');
+  static const HardwareModel RP2040_LORA =
+      HardwareModel._(30, _omitEnumNames ? '' : 'RP2040_LORA');
+  static const HardwareModel STATION_G2 =
+      HardwareModel._(31, _omitEnumNames ? '' : 'STATION_G2');
+  static const HardwareModel LORA_RELAY_V1 =
+      HardwareModel._(32, _omitEnumNames ? '' : 'LORA_RELAY_V1');
+  static const HardwareModel NRF52840DK =
+      HardwareModel._(33, _omitEnumNames ? '' : 'NRF52840DK');
+  static const HardwareModel PPR =
+      HardwareModel._(34, _omitEnumNames ? '' : 'PPR');
+  static const HardwareModel GENIEBLOCKS =
+      HardwareModel._(35, _omitEnumNames ? '' : 'GENIEBLOCKS');
+  static const HardwareModel NRF52_UNKNOWN =
+      HardwareModel._(36, _omitEnumNames ? '' : 'NRF52_UNKNOWN');
+  static const HardwareModel PORTDUINO =
+      HardwareModel._(37, _omitEnumNames ? '' : 'PORTDUINO');
+  static const HardwareModel ANDROID_SIM =
+      HardwareModel._(38, _omitEnumNames ? '' : 'ANDROID_SIM');
+  static const HardwareModel DIY_V1 =
+      HardwareModel._(39, _omitEnumNames ? '' : 'DIY_V1');
+  static const HardwareModel NRF52840_PCA10059 =
+      HardwareModel._(40, _omitEnumNames ? '' : 'NRF52840_PCA10059');
+  static const HardwareModel DR_DEV =
+      HardwareModel._(41, _omitEnumNames ? '' : 'DR_DEV');
+  static const HardwareModel M5STACK =
+      HardwareModel._(42, _omitEnumNames ? '' : 'M5STACK');
+  static const HardwareModel HELTEC_V3 =
+      HardwareModel._(43, _omitEnumNames ? '' : 'HELTEC_V3');
+  static const HardwareModel HELTEC_WSL_V3 =
+      HardwareModel._(44, _omitEnumNames ? '' : 'HELTEC_WSL_V3');
+  static const HardwareModel BETAFPV_2400_TX =
+      HardwareModel._(45, _omitEnumNames ? '' : 'BETAFPV_2400_TX');
+  static const HardwareModel BETAFPV_900_NANO_TX =
+      HardwareModel._(46, _omitEnumNames ? '' : 'BETAFPV_900_NANO_TX');
+  static const HardwareModel RPI_PICO =
+      HardwareModel._(47, _omitEnumNames ? '' : 'RPI_PICO');
+  static const HardwareModel HELTEC_WIRELESS_TRACKER =
+      HardwareModel._(48, _omitEnumNames ? '' : 'HELTEC_WIRELESS_TRACKER');
+  static const HardwareModel HELTEC_WIRELESS_PAPER_V1_0 =
+      HardwareModel._(49, _omitEnumNames ? '' : 'HELTEC_WIRELESS_PAPER_V1_0');
+  static const HardwareModel T_DECK =
+      HardwareModel._(50, _omitEnumNames ? '' : 'T_DECK');
+  static const HardwareModel T_WATCH_S3 =
+      HardwareModel._(51, _omitEnumNames ? '' : 'T_WATCH_S3');
+  static const HardwareModel PICOMPUTER_S3 =
+      HardwareModel._(52, _omitEnumNames ? '' : 'PICOMPUTER_S3');
+  static const HardwareModel HELTEC_HT62 =
+      HardwareModel._(53, _omitEnumNames ? '' : 'HELTEC_HT62');
+  static const HardwareModel EBYTE_ESP32_S3 =
+      HardwareModel._(54, _omitEnumNames ? '' : 'EBYTE_ESP32_S3');
+  static const HardwareModel ESP32_S3_PICO =
+      HardwareModel._(55, _omitEnumNames ? '' : 'ESP32_S3_PICO');
+  static const HardwareModel CHATTER_2 =
+      HardwareModel._(56, _omitEnumNames ? '' : 'CHATTER_2');
+  static const HardwareModel HELTEC_WIRELESS_PAPER_V1_1 =
+      HardwareModel._(57, _omitEnumNames ? '' : 'HELTEC_WIRELESS_PAPER_V1_1');
+  static const HardwareModel HELTEC_CAPSULE_SENSOR_V3 =
+      HardwareModel._(58, _omitEnumNames ? '' : 'HELTEC_CAPSULE_SENSOR_V3');
+  static const HardwareModel HELTEC_VISION_MASTER_T190 =
+      HardwareModel._(59, _omitEnumNames ? '' : 'HELTEC_VISION_MASTER_T190');
+  static const HardwareModel HELTEC_VISION_MASTER_E213 =
+      HardwareModel._(60, _omitEnumNames ? '' : 'HELTEC_VISION_MASTER_E213');
+  static const HardwareModel HELTEC_VISION_MASTER_E290 =
+      HardwareModel._(61, _omitEnumNames ? '' : 'HELTEC_VISION_MASTER_E290');
+  static const HardwareModel HELTEC_MESH_NODE_T114 =
+      HardwareModel._(62, _omitEnumNames ? '' : 'HELTEC_MESH_NODE_T114');
+  static const HardwareModel SENSECAP_INDICATOR =
+      HardwareModel._(63, _omitEnumNames ? '' : 'SENSECAP_INDICATOR');
+  static const HardwareModel TRACKER_T1000_E =
+      HardwareModel._(64, _omitEnumNames ? '' : 'TRACKER_T1000_E');
+  static const HardwareModel RAK3172 =
+      HardwareModel._(65, _omitEnumNames ? '' : 'RAK3172');
+  static const HardwareModel WIO_E5 =
+      HardwareModel._(66, _omitEnumNames ? '' : 'WIO_E5');
+  static const HardwareModel RADIOMASTER_900_BANDIT_NANO =
+      HardwareModel._(67, _omitEnumNames ? '' : 'RADIOMASTER_900_BANDIT_NANO');
+  static const HardwareModel HELTEC_CAPSULE_SENSOR_V3_COMPACT = HardwareModel._(
+      68, _omitEnumNames ? '' : 'HELTEC_CAPSULE_SENSOR_V3_COMPACT');
   static const HardwareModel PRIVATE_HW =
       HardwareModel._(255, _omitEnumNames ? '' : 'PRIVATE_HW');
 
@@ -72,8 +222,59 @@ class HardwareModel extends $pb.ProtobufEnum {
     RAK11200,
     NANO_G1,
     TLORA_V2_1_1p8,
+    TLORA_T3_S3,
+    NANO_G1_EXPLORER,
+    NANO_G2_ULTRA,
+    LORA_TYPE,
+    WIPHONE,
+    WIO_WM1110,
+    RAK2560,
+    HELTEC_HRU_3601,
+    HELTEC_WIRELESS_PAPER,
     STATION_G1,
     RAK11310,
+    SENSELORA_RP2040,
+    SENSELORA_S3,
+    CANARYONE,
+    RP2040_LORA,
+    STATION_G2,
+    LORA_RELAY_V1,
+    NRF52840DK,
+    PPR,
+    GENIEBLOCKS,
+    NRF52_UNKNOWN,
+    PORTDUINO,
+    ANDROID_SIM,
+    DIY_V1,
+    NRF52840_PCA10059,
+    DR_DEV,
+    M5STACK,
+    HELTEC_V3,
+    HELTEC_WSL_V3,
+    BETAFPV_2400_TX,
+    BETAFPV_900_NANO_TX,
+    RPI_PICO,
+    HELTEC_WIRELESS_TRACKER,
+    HELTEC_WIRELESS_PAPER_V1_0,
+    T_DECK,
+    T_WATCH_S3,
+    PICOMPUTER_S3,
+    HELTEC_HT62,
+    EBYTE_ESP32_S3,
+    ESP32_S3_PICO,
+    CHATTER_2,
+    HELTEC_WIRELESS_PAPER_V1_1,
+    HELTEC_CAPSULE_SENSOR_V3,
+    HELTEC_VISION_MASTER_T190,
+    HELTEC_VISION_MASTER_E213,
+    HELTEC_VISION_MASTER_E290,
+    HELTEC_MESH_NODE_T114,
+    SENSECAP_INDICATOR,
+    TRACKER_T1000_E,
+    RAK3172,
+    WIO_E5,
+    RADIOMASTER_900_BANDIT_NANO,
+    HELTEC_CAPSULE_SENSOR_V3_COMPACT,
     PRIVATE_HW,
   ];
 
