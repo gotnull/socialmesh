@@ -37,6 +37,9 @@ class BleTransport implements DeviceTransport {
   TransportType get type => TransportType.ble;
 
   @override
+  bool get requiresFraming => false; // BLE uses raw protobufs, no framing
+
+  @override
   DeviceConnectionState get state => _state;
 
   @override

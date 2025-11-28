@@ -46,6 +46,11 @@ abstract class DeviceTransport {
   /// Get the transport type
   TransportType get type;
 
+  /// Whether this transport requires packet framing
+  /// BLE does NOT require framing (raw protobufs)
+  /// Serial/USB DOES require framing (0x94, 0xC3, length, payload)
+  bool get requiresFraming;
+
   /// Current connection state
   DeviceConnectionState get state;
 

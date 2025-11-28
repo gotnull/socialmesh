@@ -25,6 +25,9 @@ class UsbTransport implements DeviceTransport {
   TransportType get type => TransportType.usb;
 
   @override
+  bool get requiresFraming => true; // USB Serial requires packet framing
+
+  @override
   DeviceConnectionState get state => _state;
 
   @override

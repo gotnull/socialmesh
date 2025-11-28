@@ -89,17 +89,24 @@ class ProtocolService {
       },
     );
 
-    // Request configuration after a short delay
-    await Future.delayed(const Duration(milliseconds: 500));
-    _requestConfiguration();
+    // Enable notifications FIRST - device needs this to respond to config request
+    debugPrint('🔔 Enabling fromNum notifications BEFORE config request...');
+    await _transport.enableNotifications();
+    debugPrint('🔔 Notifications enabled, now sending config request...');
 
-    // Actively poll for config data - Meshtastic requires pulling data via reads
-    _logger.i('Starting active config polling...');
+    // Short delay to let notifications settle
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    // NOW request configuration - device will respond via notifications
+    await _requestConfiguration();
+
+    // Start polling for configuration response
+    // Notifications should work, but poll as backup
+    _pollForConfigurationAsync();
+
+    // Wait for config with timeout
     final configFuture = _configCompleter!.future;
-    _pollForConfiguration();
-
-    // Wait for either config complete or timeout (10 seconds to allow for polling)
-    final timeoutFuture = Future.delayed(const Duration(seconds: 10));
+    final timeoutFuture = Future.delayed(const Duration(seconds: 15));
 
     _logger.i('Waiting for config or timeout...');
     await Future.any([configFuture, timeoutFuture]);
@@ -113,16 +120,35 @@ class ProtocolService {
       _logger.i('Configuration was received');
     }
 
-    // Enable fromNum notifications AFTER initial config download per Meshtastic docs
-    debugPrint(
-      '🔔 Config download complete, enabling fromNum notifications...',
-    );
-    await _transport.enableNotifications();
-    debugPrint(
-      '🔔 Notifications enabled, future data will arrive via notifications',
-    );
-
     _logger.i('start() method completing');
+  }
+
+  /// Poll for configuration data in background (non-blocking)
+  void _pollForConfigurationAsync() {
+    debugPrint('🔁 Starting background polling for config response...');
+    int pollCount = 0;
+    const maxPolls = 100;
+
+    Future.doWhile(() async {
+      if (_configurationComplete || pollCount >= maxPolls) {
+        debugPrint(
+          '🔁 Stopping poll loop: configComplete=$_configurationComplete, polls=$pollCount',
+        );
+        return false; // Stop polling
+      }
+
+      try {
+        await _transport.pollOnce();
+        pollCount++;
+        if (pollCount % 20 == 0) {
+          debugPrint('🔁 Poll count: $pollCount/$maxPolls');
+        }
+        await Future.delayed(const Duration(milliseconds: 100));
+      } catch (e) {
+        debugPrint('🔁 Poll error: $e');
+      }
+      return true; // Continue polling
+    });
   }
 
   /// Stop listening
@@ -145,21 +171,29 @@ class ProtocolService {
       '📥 RAW DATA RECEIVED: ${data.length} bytes - ${data.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
     );
 
-    // Extract packets using framer
-    final packets = _framer.addData(data);
-    debugPrint('📥 Framer extracted ${packets.length} complete packet(s)');
+    if (_transport.requiresFraming) {
+      // Serial/USB: Extract packets using framer
+      final packets = _framer.addData(data);
+      debugPrint('📥 Framer extracted ${packets.length} complete packet(s)');
 
-    if (packets.isEmpty) {
-      debugPrint(
-        '📥 WARNING: No complete packets extracted from ${data.length} bytes!',
-      );
-    }
+      if (packets.isEmpty) {
+        debugPrint(
+          '📥 WARNING: No complete packets extracted from ${data.length} bytes!',
+        );
+      }
 
-    for (final packet in packets) {
-      debugPrint(
-        '📥 Processing packet ${packets.indexOf(packet) + 1}/${packets.length}',
-      );
-      _processPacket(packet);
+      for (final packet in packets) {
+        debugPrint(
+          '📥 Processing packet ${packets.indexOf(packet) + 1}/${packets.length}',
+        );
+        _processPacket(packet);
+      }
+    } else {
+      // BLE: Data is already a complete raw protobuf
+      if (data.isNotEmpty) {
+        debugPrint('📥 BLE: Processing raw protobuf (${data.length} bytes)');
+        _processPacket(data);
+      }
     }
   }
 
@@ -491,14 +525,14 @@ class ProtocolService {
 
       _logger.i('Requesting device configuration');
 
-      // Wake device by sending START2 bytes (like Python client does)
-      debugPrint('🚀 Waking device with START2 sequence...');
-      final wakeBytes = List<int>.filled(32, 0xC3); // 32 START2 bytes
-      await _transport.send(Uint8List.fromList(wakeBytes));
-      debugPrint('🚀 Sent 32 START2 bytes to wake device');
-
-      // Wait for device to wake
-      await Future.delayed(const Duration(milliseconds: 100));
+      // Wake device by sending START2 bytes (only for serial/USB)
+      if (_transport.requiresFraming) {
+        debugPrint('🚀 Waking device with START2 sequence (serial mode)...');
+        final wakeBytes = List<int>.filled(32, 0xC3); // 32 START2 bytes
+        await _transport.send(Uint8List.fromList(wakeBytes));
+        debugPrint('🚀 Sent 32 START2 bytes to wake device');
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
 
       debugPrint('🚀 SENDING wantConfigId=true to device');
 
@@ -506,48 +540,21 @@ class ProtocolService {
       final bytes = toRadio.writeToBuffer();
       debugPrint('🚀 ToRadio protobuf size: ${bytes.length} bytes');
 
-      final framedBytes = PacketFramer.frame(bytes);
-      debugPrint('🚀 Framed packet size: ${framedBytes.length} bytes');
+      // BLE uses raw protobufs, Serial/USB requires framing
+      final sendBytes = _transport.requiresFraming
+          ? PacketFramer.frame(bytes)
+          : bytes;
+      debugPrint(
+        '🚀 Sending ${sendBytes.length} bytes (framed=${_transport.requiresFraming})',
+      );
 
-      await _transport.send(framedBytes);
+      await _transport.send(sendBytes);
       debugPrint('🚀 Configuration request SENT successfully');
-
-      // Immediately poll after sending config request - device puts response in fromRadio
-      debugPrint('🚀 Immediately polling for response...');
-      await Future.delayed(const Duration(milliseconds: 100));
-      await _transport.pollOnce();
+      // Polling will be handled by background polling loop
     } catch (e) {
       _logger.e('Error requesting configuration: $e');
       debugPrint('🚀 ERROR sending config request: $e');
     }
-  }
-
-  /// Poll for configuration data by reading fromRadio
-  Future<void> _pollForConfiguration() async {
-    debugPrint('🔁 Starting configuration polling');
-    int pollCount = 0;
-
-    while (!_configurationComplete && pollCount < 200) {
-      try {
-        debugPrint('🔁 Poll iteration $pollCount/${200}...');
-        // Poll the transport for data
-        await _transport.pollOnce();
-
-        pollCount++;
-        if (pollCount % 10 == 0) {
-          debugPrint(
-            '🔁 Completed $pollCount polls, configComplete=$_configurationComplete',
-          );
-        }
-        await Future.delayed(const Duration(milliseconds: 50));
-      } catch (e) {
-        debugPrint('🔁 Polling error: $e');
-      }
-    }
-
-    debugPrint(
-      '🔁 Configuration polling stopped after $pollCount polls (configComplete=$_configurationComplete)',
-    );
   }
 
   /// Send a text message
@@ -575,9 +582,8 @@ class ProtocolService {
 
       final toRadio = pn.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
-      final framedBytes = PacketFramer.frame(bytes);
 
-      await _transport.send(framedBytes);
+      await _transport.send(_prepareForSend(bytes));
 
       final message = Message(
         from: _myNodeNum ?? 0,
@@ -597,6 +603,11 @@ class ProtocolService {
   /// Generate a random packet ID
   int _generatePacketId() {
     return _random.nextInt(0x7FFFFFFF);
+  }
+
+  /// Prepare bytes for sending (frame if transport requires it)
+  List<int> _prepareForSend(List<int> bytes) {
+    return _transport.requiresFraming ? PacketFramer.frame(bytes) : bytes;
   }
 
   /// Send position
@@ -630,9 +641,8 @@ class ProtocolService {
 
       final toRadio = pn.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
-      final framedBytes = PacketFramer.frame(bytes);
 
-      await _transport.send(framedBytes);
+      await _transport.send(_prepareForSend(bytes));
     } catch (e) {
       _logger.e('Error sending position: $e');
       rethrow;
@@ -657,9 +667,8 @@ class ProtocolService {
 
       final toRadio = pn.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
-      final framedBytes = PacketFramer.frame(bytes);
 
-      await _transport.send(framedBytes);
+      await _transport.send(_prepareForSend(bytes));
     } catch (e) {
       _logger.e('Error requesting node info: $e');
     }
@@ -697,9 +706,8 @@ class ProtocolService {
 
       final toRadio = pn.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
-      final framedBytes = PacketFramer.frame(bytes);
 
-      await _transport.send(framedBytes);
+      await _transport.send(_prepareForSend(bytes));
     } catch (e) {
       _logger.e('Error setting channel: $e');
       rethrow;
@@ -726,9 +734,8 @@ class ProtocolService {
 
       final toRadio = pn.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
-      final framedBytes = PacketFramer.frame(bytes);
 
-      await _transport.send(framedBytes);
+      await _transport.send(_prepareForSend(bytes));
     } catch (e) {
       _logger.e('Error getting channel: $e');
     }
