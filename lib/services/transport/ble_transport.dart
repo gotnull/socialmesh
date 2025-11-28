@@ -166,6 +166,16 @@ class BleTransport implements DeviceTransport {
 
       // Device is now connected, discover services immediately
       _logger.i('Connection established, discovering services...');
+
+      // Request MTU size 512 per Meshtastic docs
+      debugPrint('📡 Requesting MTU size 512...');
+      try {
+        await _device!.requestMtu(512);
+        debugPrint('📡 MTU size request sent');
+      } catch (e) {
+        _logger.w('MTU request failed (may not be supported): $e');
+      }
+
       await _discoverServices();
 
       // Set up listener for disconnection events
@@ -224,58 +234,7 @@ class BleTransport implements DeviceTransport {
           debugPrint(
             '🔔 fromNum found! notify=$canNotify, indicate=$canIndicate',
           );
-
-          // Subscribe to fromNum notifications per official docs
-          if (canNotify || canIndicate) {
-            debugPrint('🔔 fromNum supports notifications, setting up...');
-            _logger.d('Setting up notifications for fromNum');
-            await characteristic.setNotifyValue(true);
-            debugPrint('🔔 setNotifyValue(true) completed');
-
-            // Check if it actually got enabled
-            final isNotifying = await characteristic.isNotifying;
-            debugPrint('🔔 isNotifying=$isNotifying after setNotifyValue');
-
-            _fromNumSubscription = characteristic.lastValueStream.listen(
-              (value) async {
-                debugPrint(
-                  '🔔🔔🔔 fromNum NOTIFIED! value.length=${value.length}',
-                );
-                if (value.isNotEmpty && _rxCharacteristic != null) {
-                  _logger.d('fromNum notified, reading fromRadio');
-                  debugPrint(
-                    '🔔 Reading fromRadio after fromNum notification...',
-                  );
-                  try {
-                    // Read from fromRadio until empty
-                    int readCount = 0;
-                    while (true) {
-                      final data = await _rxCharacteristic!.read();
-                      readCount++;
-                      debugPrint(
-                        '🔔 Read attempt $readCount: got ${data.length} bytes',
-                      );
-                      if (data.isEmpty) break;
-                      _logger.d('Read ${data.length} bytes from fromRadio');
-                      _dataController.add(data);
-                    }
-                    debugPrint('🔔 Finished reading, $readCount attempts');
-                  } catch (e) {
-                    _logger.e('Error reading fromRadio: $e');
-                    debugPrint('🔔 ERROR reading fromRadio: $e');
-                  }
-                }
-              },
-              onError: (error) {
-                _logger.e('fromNum error: $error');
-                debugPrint('🔔 fromNum stream ERROR: $error');
-              },
-            );
-            debugPrint('🔔 fromNum notification listener attached');
-          } else {
-            _logger.w('fromNum does not support notifications');
-            debugPrint('🔔 WARNING: fromNum does NOT support notifications!');
-          }
+          debugPrint('🔔 Notifications will be enabled AFTER config download');
         }
       }
 
@@ -321,6 +280,74 @@ class BleTransport implements DeviceTransport {
       await disconnect();
       _updateState(DeviceConnectionState.error);
       rethrow;
+    }
+  }
+
+  /// Enable fromNum notifications after initial config download
+  /// Per Meshtastic docs, this should be called AFTER config is received
+  @override
+  Future<void> enableNotifications() async {
+    if (_fromNumCharacteristic == null) {
+      _logger.w(
+        'Cannot enable notifications: fromNum characteristic not found',
+      );
+      return;
+    }
+
+    try {
+      final canNotify = _fromNumCharacteristic!.properties.notify;
+      final canIndicate = _fromNumCharacteristic!.properties.indicate;
+
+      if (!canNotify && !canIndicate) {
+        _logger.w('fromNum does not support notifications');
+        debugPrint('🔔 WARNING: fromNum does NOT support notifications!');
+        return;
+      }
+
+      debugPrint('🔔 Enabling fromNum notifications NOW...');
+      await _fromNumCharacteristic!.setNotifyValue(true);
+      debugPrint('🔔 setNotifyValue(true) completed');
+
+      final isNotifying = _fromNumCharacteristic!.isNotifying;
+      debugPrint('🔔 isNotifying=$isNotifying after setNotifyValue');
+
+      _fromNumSubscription = _fromNumCharacteristic!.lastValueStream.listen(
+        (value) async {
+          debugPrint('🔔🔔🔔 fromNum NOTIFIED! value.length=${value.length}');
+          // fromNum value is just a counter - read fromRadio regardless
+          if (_rxCharacteristic != null) {
+            _logger.d('fromNum notified, reading fromRadio');
+            debugPrint('🔔 Reading fromRadio after fromNum notification...');
+            try {
+              // Read from fromRadio until empty
+              int readCount = 0;
+              while (true) {
+                final data = await _rxCharacteristic!.read();
+                readCount++;
+                debugPrint(
+                  '🔔 Read attempt $readCount: got ${data.length} bytes',
+                );
+                if (data.isEmpty) break;
+                _logger.d('Read ${data.length} bytes from fromRadio');
+                _dataController.add(data);
+              }
+              debugPrint('🔔 Finished reading, $readCount attempts');
+            } catch (e) {
+              _logger.e('Error reading fromRadio: $e');
+              debugPrint('🔔 ERROR reading fromRadio: $e');
+            }
+          }
+        },
+        onError: (error) {
+          _logger.e('fromNum error: $error');
+          debugPrint('🔔 fromNum stream ERROR: $error');
+        },
+      );
+      debugPrint('🔔 fromNum notification listener attached successfully');
+      _logger.i('fromNum notifications enabled');
+    } catch (e) {
+      _logger.e('Error enabling notifications: $e');
+      debugPrint('🔔 ERROR enabling notifications: $e');
     }
   }
 

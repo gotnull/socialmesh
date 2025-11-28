@@ -113,6 +113,15 @@ class ProtocolService {
       _logger.i('Configuration was received');
     }
 
+    // Enable fromNum notifications AFTER initial config download per Meshtastic docs
+    debugPrint(
+      '🔔 Config download complete, enabling fromNum notifications...',
+    );
+    await _transport.enableNotifications();
+    debugPrint(
+      '🔔 Notifications enabled, future data will arrive via notifications',
+    );
+
     _logger.i('start() method completing');
   }
 

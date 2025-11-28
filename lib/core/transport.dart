@@ -70,6 +70,9 @@ abstract class DeviceTransport {
   /// Poll for data once (for transports that support active polling)
   Future<void> pollOnce();
 
+  /// Enable notifications (BLE-specific, called after initial config download)
+  Future<void> enableNotifications();
+
   /// Dispose resources
   Future<void> dispose();
 

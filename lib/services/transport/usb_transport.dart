@@ -186,6 +186,11 @@ class UsbTransport implements DeviceTransport {
   }
 
   @override
+  Future<void> enableNotifications() async {
+    // USB doesn't use BLE notifications
+  }
+
+  @override
   Future<void> dispose() async {
     await disconnect();
     await _stateController.close();
