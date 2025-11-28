@@ -256,7 +256,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                                 ),
                               )
                             : (device.rssi != null
-                                  ? Chip(label: Text('${device.rssi} dBm'))
+                                  ? _SignalStrengthIndicator(rssi: device.rssi!)
                                   : null),
                         onTap: isConnecting ? null : () => _connect(device),
                       );
@@ -269,6 +269,55 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         onPressed: _scanning ? null : _startScan,
         child: const Icon(Icons.refresh),
       ),
+    );
+  }
+}
+
+class _SignalStrengthIndicator extends StatelessWidget {
+  final int rssi;
+
+  const _SignalStrengthIndicator({required this.rssi});
+
+  @override
+  Widget build(BuildContext context) {
+    // RSSI ranges: -30 (excellent) to -90 (unusable)
+    // Normalize to 0-4 bars
+    int bars = 0;
+    Color color = Colors.red;
+
+    if (rssi >= -50) {
+      bars = 4;
+      color = Colors.green;
+    } else if (rssi >= -60) {
+      bars = 3;
+      color = Colors.lightGreen;
+    } else if (rssi >= -70) {
+      bars = 2;
+      color = Colors.orange;
+    } else if (rssi >= -80) {
+      bars = 1;
+      color = Colors.deepOrange;
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ...List.generate(4, (index) {
+          final height = 8.0 + (index * 4.0);
+          final isActive = index < bars;
+          return Container(
+            width: 4,
+            height: height,
+            margin: const EdgeInsets.symmetric(horizontal: 1),
+            decoration: BoxDecoration(
+              color: isActive ? color : Colors.grey.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(1),
+            ),
+          );
+        }),
+        const SizedBox(width: 4),
+        Icon(Icons.bluetooth, size: 16, color: color),
+      ],
     );
   }
 }
