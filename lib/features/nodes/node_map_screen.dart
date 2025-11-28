@@ -14,8 +14,9 @@ class NodeMapScreen extends ConsumerWidget {
     final nodes = ref.watch(nodesProvider);
 
     // Filter nodes with positions
-    final nodesWithPosition =
-        nodes.values.where((node) => node.hasPosition).toList();
+    final nodesWithPosition = nodes.values
+        .where((node) => node.hasPosition)
+        .toList();
 
     // Calculate center point
     LatLng center = const LatLng(37.7749, -122.4194); // Default: San Francisco
@@ -93,10 +94,7 @@ class NodeMapScreen extends ConsumerWidget {
               ),
             )
           : FlutterMap(
-              options: MapOptions(
-                initialCenter: center,
-                initialZoom: 10.0,
-              ),
+              options: MapOptions(initialCenter: center, initialZoom: 10.0),
               children: [
                 TileLayer(
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -126,7 +124,9 @@ class NodeMapScreen extends ConsumerWidget {
                           child: Center(
                             child: Text(
                               node.shortName ??
-                                  node.nodeNum.toRadixString(16).substring(0, 2),
+                                  node.nodeNum
+                                      .toRadixString(16)
+                                      .substring(0, 2),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
