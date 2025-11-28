@@ -263,9 +263,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     },
                   ),
           ),
-
-          // Scanning indicator
-          if (_scanning) const LinearProgressIndicator(),
         ],
       ),
       floatingActionButton: FloatingActionButton(

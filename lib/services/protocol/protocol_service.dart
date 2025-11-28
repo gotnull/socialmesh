@@ -19,6 +19,7 @@ class ProtocolService {
   final StreamController<MeshNode> _nodeController;
   final StreamController<ChannelConfig> _channelController;
   final StreamController<DeviceError> _errorController;
+  final StreamController<int> _myNodeNumController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   Completer<void>? _configCompleter;
@@ -35,7 +36,8 @@ class ProtocolService {
       _messageController = StreamController<Message>.broadcast(),
       _nodeController = StreamController<MeshNode>.broadcast(),
       _channelController = StreamController<ChannelConfig>.broadcast(),
-      _errorController = StreamController<DeviceError>.broadcast();
+      _errorController = StreamController<DeviceError>.broadcast(),
+      _myNodeNumController = StreamController<int>.broadcast();
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -48,6 +50,9 @@ class ProtocolService {
 
   /// Stream of device errors
   Stream<DeviceError> get errorStream => _errorController.stream;
+
+  /// Stream of my node number updates
+  Stream<int> get myNodeNumStream => _myNodeNumController.stream;
 
   /// My node number
   int? get myNodeNum => _myNodeNum;
@@ -250,6 +255,7 @@ class ProtocolService {
   void _handleMyNodeInfo(pb.MyNodeInfo myInfo) {
     _myNodeNum = myInfo.myNodeNum;
     _logger.i('My node number: $_myNodeNum');
+    _myNodeNumController.add(_myNodeNum!);
   }
 
   /// Handle node info

@@ -144,7 +144,8 @@ final nodesProvider = StateNotifierProvider<NodesNotifier, Map<int, MeshNode>>((
 class ChannelsNotifier extends StateNotifier<List<ChannelConfig>> {
   final ProtocolService _protocol;
 
-  ChannelsNotifier(this._protocol) : super([]) {
+  ChannelsNotifier(this._protocol) : super(_protocol.channels) {
+    // Start with existing channels from protocol service
     _protocol.channelStream.listen((channel) {
       final index = state.indexWhere((c) => c.index == channel.index);
       if (index >= 0) {
@@ -183,5 +184,18 @@ final channelsProvider =
       return ChannelsNotifier(protocol);
     });
 
-// My node number
-final myNodeNumProvider = StateProvider<int?>((ref) => null);
+// My node number - updates when received from device
+class MyNodeNumNotifier extends StateNotifier<int?> {
+  final ProtocolService _protocol;
+
+  MyNodeNumNotifier(this._protocol) : super(null) {
+    _protocol.myNodeNumStream.listen((nodeNum) {
+      state = nodeNum;
+    });
+  }
+}
+
+final myNodeNumProvider = StateNotifierProvider<MyNodeNumNotifier, int?>((ref) {
+  final protocol = ref.watch(protocolServiceProvider);
+  return MyNodeNumNotifier(protocol);
+});
