@@ -8,11 +8,18 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connectionState = ref.watch(connectionStateProvider);
+    final connectionStateAsync = ref.watch(connectionStateProvider);
     final connectedDevice = ref.watch(connectedDeviceProvider);
     final nodes = ref.watch(nodesProvider);
     final messages = ref.watch(messagesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
+
+    // Get the actual connection state value, defaulting to disconnected if loading
+    final connectionState = connectionStateAsync.when(
+      data: (state) => state,
+      loading: () => transport.DeviceConnectionState.connecting,
+      error: (error, stackTrace) => transport.DeviceConnectionState.error,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -21,21 +28,16 @@ class DashboardScreen extends ConsumerWidget {
           // Connection status indicator
           IconButton(
             icon: Icon(
-              connectionState.value == transport.DeviceConnectionState.connected
+              connectionState == transport.DeviceConnectionState.connected
                   ? Icons.bluetooth_connected
                   : Icons.bluetooth_disabled,
               color:
-                  connectionState.value ==
-                      transport.DeviceConnectionState.connected
+                  connectionState == transport.DeviceConnectionState.connected
                   ? Colors.green
                   : Colors.red,
             ),
             onPressed: () {
-              _showConnectionInfo(
-                context,
-                connectedDevice,
-                connectionState.value,
-              );
+              _showConnectionInfo(context, connectedDevice, connectionState);
             },
           ),
           IconButton(
@@ -46,7 +48,7 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: connectionState.value != transport.DeviceConnectionState.connected
+      body: connectionState != transport.DeviceConnectionState.connected
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -54,7 +56,7 @@ class DashboardScreen extends ConsumerWidget {
                   const CircularProgressIndicator(),
                   const SizedBox(height: 16),
                   Text(
-                    _getConnectionStateText(connectionState.value),
+                    _getConnectionStateText(connectionState),
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ],
@@ -170,7 +172,7 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  String _getConnectionStateText(transport.DeviceConnectionState? state) {
+  String _getConnectionStateText(transport.DeviceConnectionState state) {
     switch (state) {
       case transport.DeviceConnectionState.connecting:
         return 'Connecting...';
@@ -181,7 +183,6 @@ class DashboardScreen extends ConsumerWidget {
       case transport.DeviceConnectionState.error:
         return 'Connection Error';
       case transport.DeviceConnectionState.disconnected:
-      default:
         return 'Disconnected';
     }
   }
@@ -189,7 +190,7 @@ class DashboardScreen extends ConsumerWidget {
   void _showConnectionInfo(
     BuildContext context,
     transport.DeviceInfo? device,
-    transport.DeviceConnectionState? state,
+    transport.DeviceConnectionState state,
   ) {
     showDialog(
       context: context,
