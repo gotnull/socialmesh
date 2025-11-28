@@ -51,10 +51,21 @@ final transportProvider = Provider<DeviceTransport>((ref) {
   }
 });
 
-// Connection state
-final connectionStateProvider = StreamProvider<DeviceConnectionState>((ref) {
+// Connection state - create a stream that emits current state immediately,
+// then listens for future updates. This fixes the issue where the dashboard
+// subscribes after the state has already changed to connected.
+final connectionStateProvider = StreamProvider<DeviceConnectionState>((
+  ref,
+) async* {
   final transport = ref.watch(transportProvider);
-  return transport.stateStream;
+
+  // Immediately emit the current state
+  yield transport.state;
+
+  // Then emit all future state changes
+  await for (final state in transport.stateStream) {
+    yield state;
+  }
 });
 
 // Currently connected device

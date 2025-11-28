@@ -78,17 +78,23 @@ class ProtocolService {
     await Future.delayed(const Duration(milliseconds: 500));
     _requestConfiguration();
 
-    // Wait for configuration, but proceed anyway after 5 seconds
-    // Some devices might not send config immediately
-    try {
-      await _configCompleter!.future.timeout(const Duration(seconds: 5));
-    } on TimeoutException {
+    // Wait for configuration with timeout
+    final configFuture = _configCompleter!.future;
+    final timeoutFuture = Future.delayed(const Duration(seconds: 5));
+
+    _logger.i('Waiting for config or timeout...');
+    await Future.any([configFuture, timeoutFuture]);
+    _logger.i('Future.any completed');
+
+    if (!_configCompleter!.isCompleted) {
       _logger.i('Configuration not received, proceeding anyway');
       _configurationComplete = true;
-      if (!_configCompleter!.isCompleted) {
-        _configCompleter!.complete();
-      }
+      _configCompleter!.complete();
+    } else {
+      _logger.i('Configuration was received');
     }
+
+    _logger.i('start() method completing');
   }
 
   /// Stop listening

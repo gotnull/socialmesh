@@ -66,55 +66,37 @@ class BleTransport implements DeviceTransport {
         throw Exception('Bluetooth is not supported on this device');
       }
 
-      // Wait for adapter state with timeout
-      BluetoothAdapterState adapterState = BluetoothAdapterState.unknown;
-      try {
-        adapterState = await FlutterBluePlus.adapterState
-            .firstWhere(
-              (state) => state != BluetoothAdapterState.unknown,
-              orElse: () => BluetoothAdapterState.unknown,
-            )
-            .timeout(
-              const Duration(seconds: 3),
-              onTimeout: () => BluetoothAdapterState.unknown,
-            );
-      } catch (e) {
-        _logger.w('Error getting adapter state: $e');
-      }
+      // Wait for Bluetooth to be ready (not unknown state)
+      // iOS reports "unknown" briefly at startup before it knows the real state
+      final stateReady = FlutterBluePlus.adapterState
+          .where((state) => state != BluetoothAdapterState.unknown)
+          .first;
 
-      // Check Bluetooth state
-      if (adapterState == BluetoothAdapterState.off) {
-        _logger.w('Bluetooth is off');
-        throw Exception('Please turn on Bluetooth to scan for devices');
-      } else if (adapterState == BluetoothAdapterState.unauthorized) {
-        _logger.w('Bluetooth permission not granted');
-        throw Exception(
-          'Bluetooth permission denied. Please enable in Settings > Protofluff > Bluetooth',
-        );
-      } else if (adapterState == BluetoothAdapterState.unknown) {
-        _logger.w('Bluetooth state unknown, attempting scan anyway');
-      }
+      final adapterState = await stateReady.timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => BluetoothAdapterState.unknown,
+      );
 
       _logger.d('Bluetooth adapter state: $adapterState');
 
+      if (adapterState == BluetoothAdapterState.off) {
+        throw Exception(
+          'Bluetooth is turned off. Please enable it in Settings.',
+        );
+      }
+
+      if (adapterState == BluetoothAdapterState.unauthorized) {
+        throw Exception(
+          'Bluetooth permission denied. Please grant permission in Settings.',
+        );
+      }
+
       // Start scanning
       final scanDuration = timeout ?? const Duration(seconds: 10);
-      try {
-        await FlutterBluePlus.startScan(
-          timeout: scanDuration,
-          withServices: [Guid(_serviceUuid)],
-        );
-      } catch (e) {
-        _logger.e('Scan failed: $e');
-        if (e.toString().contains('CBManagerStateUnknown')) {
-          throw Exception(
-            'Bluetooth is not ready. Please ensure Bluetooth is enabled in iOS Settings',
-          );
-        } else if (e.toString().contains('bluetooth must be turned on')) {
-          throw Exception('Please turn on Bluetooth in Settings');
-        }
-        rethrow;
-      }
+      await FlutterBluePlus.startScan(
+        timeout: scanDuration,
+        withServices: [Guid(_serviceUuid)],
+      );
 
       // Create timer to complete scan after timeout
       final scanCompleter = Completer<void>();

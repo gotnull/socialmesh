@@ -53,20 +53,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         setState(() {
           _errorMessage = message;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            duration: const Duration(seconds: 5),
-            action: e.toString().contains('Bluetooth')
-                ? SnackBarAction(
-                    label: 'Open Settings',
-                    onPressed: () {
-                      // User needs to manually enable Bluetooth
-                    },
-                  )
-                : null,
-          ),
-        );
       }
     } finally {
       if (mounted) {
@@ -102,7 +88,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       if (!mounted) return;
 
       // Navigate to dashboard
-      await Navigator.of(context).pushReplacementNamed('/dashboard');
+      Navigator.of(context).pushReplacementNamed('/dashboard');
     } catch (e) {
       if (!mounted) return;
 
