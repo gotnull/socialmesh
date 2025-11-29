@@ -532,11 +532,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                     color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    icon,
-                    color: AppTheme.primaryGreen,
-                    size: 20,
-                  ),
+                  child: Icon(icon, color: AppTheme.primaryGreen, size: 20),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
