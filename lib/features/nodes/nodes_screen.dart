@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../messaging/messaging_screen.dart';
 
 class NodesScreen extends ConsumerStatefulWidget {
   const NodesScreen({super.key});
@@ -630,6 +634,189 @@ class _NodeDetailsSheet extends StatelessWidget {
         node.nodeNum.toRadixString(16);
   }
 
+  void _showNodeQrCode(BuildContext context) {
+    // Create a shareable node info JSON
+    final nodeInfo = {
+      'nodeNum': node.nodeNum,
+      'longName': node.longName ?? node.displayName,
+      'shortName': node.shortName ?? _getShortName(),
+      if (node.userId != null) 'userId': node.userId,
+      if (node.hasPosition) 'lat': node.latitude,
+      if (node.hasPosition) 'lon': node.longitude,
+    };
+    final nodeJson = jsonEncode(nodeInfo);
+    final nodeUrl = 'meshtastic://node/${base64Encode(utf8.encode(nodeJson))}';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkCard,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        minimum: const EdgeInsets.only(bottom: 24),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.qr_code,
+                      color: AppTheme.primaryGreen,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          node.displayName,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Scan to add this node',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textTertiary,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // QR Code
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: QrImageView(
+                  data: nodeUrl,
+                  version: QrVersions.auto,
+                  size: 200,
+                  backgroundColor: Colors.white,
+                  eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: Color(0xFF1F2633),
+                  ),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: Color(0xFF1F2633),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Node ID info
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBackground,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.tag,
+                      size: 16,
+                      color: AppTheme.textTertiary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Node ID: ${node.nodeNum.toRadixString(16).toUpperCase()}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppTheme.textSecondary,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Copy button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(
+                      text: '${node.displayName}\nNode: !${node.nodeNum.toRadixString(16)}',
+                    ));
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Node info copied'),
+                        backgroundColor: AppTheme.darkCard,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryGreen,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.copy, size: 20),
+                  label: const Text(
+                    'Copy Node Info',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _sendDirectMessage(BuildContext context) {
+    Navigator.pop(context);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatScreen(
+          type: ConversationType.directMessage,
+          nodeNum: node.nodeNum,
+          title: node.displayName,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM d, yyyy HH:mm');
@@ -646,7 +833,7 @@ class _NodeDetailsSheet extends StatelessWidget {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: _getAvatarColor(),
+                  color: isMyNode ? AppTheme.primaryGreen : _getAvatarColor(),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -666,158 +853,229 @@ class _NodeDetailsSheet extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      node.displayName,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        fontFamily: 'Inter',
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            node.displayName,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ),
+                        if (isMyNode) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryGreen,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'YOU',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Node #${node.nodeNum}',
+                      '!${node.nodeNum.toRadixString(16)}',
                       style: const TextStyle(
                         fontSize: 14,
                         color: AppTheme.textSecondary,
-                        fontFamily: 'Inter',
+                        fontFamily: 'monospace',
                       ),
                     ),
                   ],
                 ),
               ),
+              // QR code button
+              IconButton(
+                onPressed: () => _showNodeQrCode(context),
+                icon: const Icon(
+                  Icons.qr_code,
+                  color: AppTheme.textSecondary,
+                ),
+                tooltip: 'Show QR Code',
+              ),
             ],
           ),
           Container(
-            margin: const EdgeInsets.symmetric(vertical: 24),
+            margin: const EdgeInsets.symmetric(vertical: 20),
             height: 1,
             color: AppTheme.darkBorder.withValues(alpha: 0.3),
           ),
-          _DetailRow(
-            icon: Icons.badge,
-            label: 'User ID',
-            value: node.userId ?? 'Unknown',
-          ),
-          if (node.role != null)
-            _DetailRow(
-              icon: Icons.smartphone,
-              label: 'Role',
-              value: node.role!,
-            ),
-          if (node.hardwareModel != null)
-            _DetailRow(
-              icon: Icons.memory,
-              label: 'Hardware',
-              value: node.hardwareModel!,
-            ),
-          if (node.firmwareVersion != null)
-            _DetailRow(
-              icon: Icons.system_update,
-              label: 'Firmware',
-              value: node.firmwareVersion!,
-            ),
-          if (node.batteryLevel != null)
-            _DetailRow(
-              icon: Icons.battery_charging_full,
-              label: 'Battery',
-              value: '${node.batteryLevel}%',
-            ),
-          if (node.rssi != null)
-            _DetailRow(
-              icon: Icons.signal_cellular_alt,
-              label: 'RSSI',
-              value: '${node.rssi} dBm',
-            ),
-          if (node.snr != null)
-            _DetailRow(
-              icon: Icons.signal_cellular_alt,
-              label: 'SNR',
-              value: '${node.snr} dB',
-            ),
-          if (node.distance != null)
-            _DetailRow(
-              icon: Icons.near_me,
-              label: 'Distance',
-              value: node.distance! < 1000
-                  ? '${node.distance!.toInt()} m'
-                  : '${(node.distance! / 1000).toStringAsFixed(1)} km',
-            ),
-          if (node.hasPosition)
-            _DetailRow(
-              icon: Icons.location_on,
-              label: 'Position',
-              value:
-                  '${node.latitude!.toStringAsFixed(4)}, ${node.longitude!.toStringAsFixed(4)}',
-            ),
-          if (node.altitude != null)
-            _DetailRow(
-              icon: Icons.height,
-              label: 'Altitude',
-              value: '${node.altitude}m',
-            ),
-          if (node.lastHeard != null)
-            _DetailRow(
-              icon: Icons.access_time,
-              label: 'Last Heard',
-              value: dateFormat.format(node.lastHeard!),
-            ),
-          const SizedBox(height: 24),
-          if (!isMyNode)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(
-                    context,
-                    '/messages',
-                    arguments: node.nodeNum,
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryGreen,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: const Icon(Icons.message),
-                label: const Text(
-                  'Send Message',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-              ),
-            )
-          else
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+          
+          // Scrollable details
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
                 children: [
-                  Icon(Icons.person, color: AppTheme.primaryGreen, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'This is your device',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
-                      fontFamily: 'Inter',
-                    ),
+                  _DetailRow(
+                    icon: Icons.badge,
+                    label: 'User ID',
+                    value: node.userId ?? 'Unknown',
                   ),
+                  if (node.role != null)
+                    _DetailRow(
+                      icon: Icons.smartphone,
+                      label: 'Role',
+                      value: node.role!,
+                    ),
+                  if (node.hardwareModel != null)
+                    _DetailRow(
+                      icon: Icons.memory,
+                      label: 'Hardware',
+                      value: node.hardwareModel!,
+                    ),
+                  if (node.firmwareVersion != null)
+                    _DetailRow(
+                      icon: Icons.system_update,
+                      label: 'Firmware',
+                      value: node.firmwareVersion!,
+                    ),
+                  if (node.batteryLevel != null)
+                    _DetailRow(
+                      icon: Icons.battery_charging_full,
+                      label: 'Battery',
+                      value: '${node.batteryLevel}%',
+                    ),
+                  if (node.rssi != null)
+                    _DetailRow(
+                      icon: Icons.signal_cellular_alt,
+                      label: 'RSSI',
+                      value: '${node.rssi} dBm',
+                    ),
+                  if (node.snr != null)
+                    _DetailRow(
+                      icon: Icons.wifi,
+                      label: 'SNR',
+                      value: '${node.snr} dB',
+                    ),
+                  if (node.distance != null)
+                    _DetailRow(
+                      icon: Icons.near_me,
+                      label: 'Distance',
+                      value: node.distance! < 1000
+                          ? '${node.distance!.toInt()} m'
+                          : '${(node.distance! / 1000).toStringAsFixed(1)} km',
+                    ),
+                  if (node.hasPosition)
+                    _DetailRow(
+                      icon: Icons.location_on,
+                      label: 'Position',
+                      value:
+                          '${node.latitude!.toStringAsFixed(5)}, ${node.longitude!.toStringAsFixed(5)}',
+                    ),
+                  if (node.altitude != null)
+                    _DetailRow(
+                      icon: Icons.height,
+                      label: 'Altitude',
+                      value: '${node.altitude}m',
+                    ),
+                  if (node.lastHeard != null)
+                    _DetailRow(
+                      icon: Icons.access_time,
+                      label: 'Last Heard',
+                      value: dateFormat.format(node.lastHeard!),
+                    ),
                 ],
               ),
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Action buttons
+          if (!isMyNode)
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showNodeQrCode(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: AppTheme.darkBorder),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.qr_code, size: 20),
+                    label: const Text(
+                      'QR Code',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _sendDirectMessage(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryGreen,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.message, size: 20),
+                    label: const Text(
+                      'Message',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showNodeQrCode(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryGreen,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.share, size: 20),
+                    label: const Text(
+                      'Share My Node',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
         ],
       ),

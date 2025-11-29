@@ -7,6 +7,7 @@ import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../core/theme.dart';
+import '../channels/channel_form_screen.dart';
 
 class QrImportScreen extends ConsumerStatefulWidget {
   const QrImportScreen({super.key});
@@ -44,58 +45,253 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
 
   Future<void> _processQrCode(String code) async {
     try {
-      // Meshtastic QR codes typically contain base64-encoded channel config
-      // Format: "https://meshtastic.org/e/#<base64data>"
-      // or just the base64 data directly
+      _logger.i('Processing QR code: $code');
 
-      String? base64Data;
-      if (code.startsWith('https://meshtastic.org/e/#')) {
-        base64Data = code.substring('https://meshtastic.org/e/#'.length);
+      // Meshtastic QR codes format: "https://meshtastic.org/e/#<url-encoded-base64data>"
+      // The base64 data is URL-encoded and contains a protobuf ChannelSet or Channel
+
+      String base64Data;
+      if (code.contains('meshtastic.org/e/#')) {
+        // Extract the fragment after #
+        final hashIndex = code.indexOf('#');
+        if (hashIndex == -1 || hashIndex == code.length - 1) {
+          throw Exception('Invalid Meshtastic URL format');
+        }
+        // URL decode the base64 data (it may have + encoded as %2B, etc.)
+        base64Data = Uri.decodeComponent(code.substring(hashIndex + 1));
       } else if (code.startsWith('http')) {
-        // Try to extract from URL
+        // Try to extract from URL fragment
         final uri = Uri.parse(code);
-        base64Data = uri.fragment;
+        if (uri.fragment.isEmpty) {
+          throw Exception('No channel data in URL');
+        }
+        base64Data = Uri.decodeComponent(uri.fragment);
       } else {
-        // Assume it's raw base64
-        base64Data = code;
+        // Assume it's raw base64 (possibly URL-encoded)
+        base64Data = Uri.decodeComponent(code);
       }
+
+      _logger.i('Decoded base64 data: $base64Data');
 
       if (base64Data.isEmpty) {
-        throw Exception('Invalid QR code format');
+        throw Exception('Empty channel data');
       }
 
-      // Decode base64
+      // Decode base64 to bytes
       final bytes = base64Decode(base64Data);
+      _logger.i('Decoded ${bytes.length} bytes');
 
-      ChannelConfig channel;
+      // Try to parse as different protobuf formats
+      ChannelConfig? channel;
+      String? channelName;
+      List<int>? psk;
+
+      // Try parsing as Channel first
       try {
-        // Try parsing as protobuf ChannelSettings
         final pbChannel = pb.Channel.fromBuffer(bytes);
-        channel = ChannelConfig(
-          index: pbChannel.index,
-          name: pbChannel.hasSettings()
-              ? pbChannel.settings.name
-              : 'Imported Channel',
-          psk: pbChannel.hasSettings() ? pbChannel.settings.psk : bytes,
-          uplink: pbChannel.hasSettings()
-              ? pbChannel.settings.uplinkEnabled
-              : true,
-          downlink: pbChannel.hasSettings()
-              ? pbChannel.settings.downlinkEnabled
-              : true,
+        _logger.i(
+          'Parsed as Channel: index=${pbChannel.index}, hasSettings=${pbChannel.hasSettings()}',
         );
+
+        if (pbChannel.hasSettings()) {
+          final settings = pbChannel.settings;
+          channelName = settings.name.isNotEmpty ? settings.name : null;
+          psk = settings.psk.isNotEmpty ? settings.psk : null;
+
+          _logger.i(
+            'Channel settings: name="$channelName", psk length=${psk?.length ?? 0}',
+          );
+        }
       } catch (e) {
-        // If protobuf parsing fails, treat as raw PSK
-        _logger.w('Failed to parse as protobuf, using raw PSK: $e');
-        channel = ChannelConfig(index: 0, name: 'Imported Channel', psk: bytes);
+        _logger.w('Failed to parse as Channel: $e');
       }
 
-      // Store the channel key
-      final secureStorage = ref.read(secureStorageProvider);
-      await secureStorage.storeChannelKey(channel.name, channel.psk);
+      // Try parsing as ChannelSettings if Channel parsing failed or had no PSK
+      if (psk == null || psk.isEmpty) {
+        try {
+          final pbSettings = pb.ChannelSettings.fromBuffer(bytes);
+          _logger.i(
+            'Parsed as ChannelSettings: name="${pbSettings.name}", psk length=${pbSettings.psk.length}',
+          );
 
-      // Update channels
+          if (pbSettings.psk.isNotEmpty) {
+            channelName = pbSettings.name.isNotEmpty ? pbSettings.name : null;
+            psk = pbSettings.psk;
+          }
+        } catch (e) {
+          _logger.w('Failed to parse as ChannelSettings: $e');
+        }
+      }
+
+      // If still no PSK, treat the raw bytes as the PSK (legacy format)
+      if (psk == null || psk.isEmpty) {
+        _logger.i('Using raw bytes as PSK (${bytes.length} bytes)');
+        // Validate PSK length (should be 16 or 32 bytes for AES)
+        if (bytes.length == 16 || bytes.length == 32) {
+          psk = bytes;
+        } else {
+          throw Exception(
+            'Invalid key length: ${bytes.length} bytes (expected 16 or 32)',
+          );
+        }
+      }
+
+      // Find next available channel index
+      final channels = ref.read(channelsProvider);
+      final usedIndices = channels.map((c) => c.index).toSet();
+      int newIndex = 1; // Start from 1 (0 is primary)
+      while (usedIndices.contains(newIndex) && newIndex < 8) {
+        newIndex++;
+      }
+      if (newIndex >= 8) {
+        throw Exception('Maximum 8 channels - delete one first');
+      }
+
+      // Create channel config
+      channel = ChannelConfig(
+        index: newIndex,
+        name: channelName ?? 'Imported',
+        psk: psk,
+        uplink: false,
+        downlink: false,
+        role: 'SECONDARY',
+      );
+
+      _logger.i(
+        'Created channel: index=${channel.index}, name="${channel.name}", psk=${channel.psk.length} bytes',
+      );
+
+      // Show confirmation dialog with option to edit
+      if (mounted) {
+        final confirmed = await _showImportConfirmation(channel);
+        if (confirmed == true) {
+          await _importChannel(channel);
+        } else if (confirmed == false) {
+          // User wants to edit - navigate to form
+          if (mounted) {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChannelFormScreen(
+                  existingChannel: channel,
+                  channelIndex: channel!.index,
+                ),
+              ),
+            );
+          }
+          return;
+        }
+        // null = cancelled, just reset processing state
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+    } catch (e) {
+      _logger.e('QR import error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to import: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+    }
+  }
+
+  Future<bool?> _showImportConfirmation(ChannelConfig channel) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Import Channel',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildInfoRow('Name', channel.name),
+            const SizedBox(height: 8),
+            _buildInfoRow('Slot', '${channel.index}'),
+            const SizedBox(height: 8),
+            _buildInfoRow('Encryption', '${channel.psk.length * 8}-bit AES'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, null),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              'Edit First',
+              style: TextStyle(color: AppTheme.primaryGreen),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.primaryGreen,
+            ),
+            child: const Text('Import'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      children: [
+        Text(
+          '$label: ',
+          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _importChannel(ChannelConfig channel) async {
+    try {
+      // Sync to device first
+      try {
+        final protocol = ref.read(protocolServiceProvider);
+        await protocol.setChannel(channel);
+        await Future.delayed(const Duration(milliseconds: 300));
+        await protocol.getChannel(channel.index);
+      } catch (e) {
+        _logger.w('Could not sync to device: $e');
+      }
+
+      // Update local state
       ref.read(channelsProvider.notifier).setChannel(channel);
+
+      // Store key securely
+      if (channel.psk.isNotEmpty) {
+        final secureStorage = ref.read(secureStorageProvider);
+        await secureStorage.storeChannelKey(channel.name, channel.psk);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -110,7 +306,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to import: $e'),
+            content: Text('Import failed: $e'),
             backgroundColor: AppTheme.errorRed,
           ),
         );
