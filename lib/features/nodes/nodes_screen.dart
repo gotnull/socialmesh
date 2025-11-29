@@ -29,11 +29,6 @@ Color _getBatteryColor(int level) {
   return AppTheme.errorRed;
 }
 
-String _getBatteryText(int level) {
-  if (level > 100) return 'Charging'; // Show "Charging" instead of percentage
-  return '$level%';
-}
-
 class NodesScreen extends ConsumerStatefulWidget {
   const NodesScreen({super.key});
 
@@ -355,14 +350,16 @@ class _NodeCard extends StatelessWidget {
                               size: 14,
                               color: _getBatteryColor(node.batteryLevel!),
                             ),
-                            Text(
-                              _getBatteryText(node.batteryLevel!),
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: _getBatteryColor(node.batteryLevel!),
-                                fontFamily: 'Inter',
+                            // Only show percentage text if not charging
+                            if (node.batteryLevel! <= 100)
+                              Text(
+                                '${node.batteryLevel}%',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: _getBatteryColor(node.batteryLevel!),
+                                  fontFamily: 'Inter',
+                                ),
                               ),
-                            ),
                           ],
                         ],
                       ),
@@ -977,7 +974,9 @@ class _NodeDetailsSheet extends StatelessWidget {
                       icon: _getBatteryIcon(node.batteryLevel!),
                       iconColor: _getBatteryColor(node.batteryLevel!),
                       label: 'Battery',
-                      value: _getBatteryText(node.batteryLevel!),
+                      value: node.batteryLevel! > 100
+                          ? 'Charging'
+                          : '${node.batteryLevel}%',
                     ),
                   if (node.rssi != null)
                     _DetailRow(

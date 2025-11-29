@@ -58,16 +58,19 @@ class DashboardScreen extends ConsumerWidget {
                     size: 20,
                     color: _getBatteryColor(batteryLevel),
                   ),
-                  const SizedBox(width: 2),
-                  Text(
-                    _getBatteryText(batteryLevel),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _getBatteryColor(batteryLevel),
-                      fontFamily: 'Inter',
+                  // Only show percentage text if not charging
+                  if (batteryLevel <= 100) ...[
+                    const SizedBox(width: 2),
+                    Text(
+                      '$batteryLevel%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _getBatteryColor(batteryLevel),
+                        fontFamily: 'Inter',
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -364,12 +367,6 @@ class DashboardScreen extends ConsumerWidget {
     if (level >= 50) return AppTheme.primaryGreen;
     if (level >= 20) return AppTheme.warningYellow;
     return AppTheme.errorRed;
-  }
-
-  String _getBatteryText(int level) {
-    // For charging (101+), show "Charging" indicator
-    if (level > 100) return 'Charging';
-    return '$level%';
   }
 
   String _getConnectionStateText(
