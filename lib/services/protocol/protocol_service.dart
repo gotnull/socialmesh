@@ -552,8 +552,12 @@ class ProtocolService {
     String? userId;
     if (nodeInfo.hasUser()) {
       final user = nodeInfo.user;
+      _logger.d(
+        'NodeInfo user: longName=${user.longName}, hwModel=${user.hwModel}, hasHwModel=${user.hasHwModel()}',
+      );
       if (user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET) {
         hwModel = _formatHardwareModel(user.hwModel);
+        _logger.d('Formatted hardware model: $hwModel');
       }
       if (user.hasRole()) {
         role = user.role.name;
@@ -561,6 +565,8 @@ class ProtocolService {
       if (user.hasId()) {
         userId = user.id;
       }
+    } else {
+      _logger.d('NodeInfo has no user data');
     }
 
     MeshNode updatedNode;

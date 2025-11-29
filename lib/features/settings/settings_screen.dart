@@ -4,6 +4,7 @@ import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
+import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import '../device/region_selection_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -47,111 +48,133 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
         ),
-        data: (settingsService) => ListView(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          children: [
-            // Connection Section
-            _SectionHeader(title: 'CONNECTION'),
-            _SettingsTile(
-              icon: Icons.bluetooth,
-              title: 'Auto-reconnect',
-              subtitle: 'Automatically reconnect to last device',
-              trailing: Switch(
-                value: settingsService.autoReconnect,
-                activeTrackColor: AppTheme.primaryGreen,
-                inactiveTrackColor: AppTheme.darkBorder,
-                onChanged: (value) {
-                  settingsService.setAutoReconnect(value);
-                },
-              ),
-            ),
+        data: (settingsService) {
+          // Get current region for display
+          final regionAsync = ref.watch(deviceRegionProvider);
+          final regionSubtitle = regionAsync.when(
+            data: (region) {
+              if (region == pbenum.RegionCode.UNSET_REGION) {
+                return 'Not configured';
+              }
+              // Find the region info for display
+              final regionInfo = availableRegions
+                  .where((r) => r.code == region)
+                  .firstOrNull;
+              if (regionInfo != null) {
+                return '${regionInfo.name} (${regionInfo.frequency})';
+              }
+              return region.name;
+            },
+            loading: () => 'Loading...',
+            error: (e, _) => 'Configure device radio frequency',
+          );
 
-            const SizedBox(height: 16),
-
-            // Notifications Section
-            _SectionHeader(title: 'NOTIFICATIONS'),
-            _SettingsTile(
-              icon: Icons.notifications_outlined,
-              title: 'Push notifications',
-              subtitle: 'Show notifications for new messages',
-              trailing: Switch(
-                value: settingsService.notificationsEnabled,
-                activeTrackColor: AppTheme.primaryGreen,
-                inactiveTrackColor: AppTheme.darkBorder,
-                onChanged: (value) {
-                  settingsService.setNotificationsEnabled(value);
-                },
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Data Section
-            _SectionHeader(title: 'DATA & STORAGE'),
-            _SettingsTile(
-              icon: Icons.history,
-              title: 'Message history',
-              subtitle:
-                  '${settingsService.messageHistoryLimit} messages stored',
-              onTap: () => _showHistoryLimitDialog(context, settingsService),
-            ),
-            _SettingsTile(
-              icon: Icons.delete_sweep_outlined,
-              title: 'Clear message history',
-              subtitle: 'Delete all stored messages',
-              onTap: () => _confirmClearMessages(context, ref),
-            ),
-            _SettingsTile(
-              icon: Icons.delete_forever,
-              iconColor: AppTheme.errorRed,
-              title: 'Clear all data',
-              titleColor: AppTheme.errorRed,
-              subtitle: 'Delete messages, settings, and keys',
-              onTap: () => _confirmClearData(context, ref),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Device Section
-            _SectionHeader(title: 'DEVICE'),
-            _SettingsTile(
-              icon: Icons.language,
-              title: 'Region / Frequency',
-              subtitle: 'Configure device radio frequency',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      const RegionSelectionScreen(isInitialSetup: false),
+          return ListView(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            children: [
+              // Connection Section
+              _SectionHeader(title: 'CONNECTION'),
+              _SettingsTile(
+                icon: Icons.bluetooth,
+                title: 'Auto-reconnect',
+                subtitle: 'Automatically reconnect to last device',
+                trailing: Switch(
+                  value: settingsService.autoReconnect,
+                  activeTrackColor: AppTheme.primaryGreen,
+                  inactiveTrackColor: AppTheme.darkBorder,
+                  onChanged: (value) {
+                    settingsService.setAutoReconnect(value);
+                  },
                 ),
               ),
-            ),
-            _SettingsTile(
-              icon: Icons.info_outline,
-              title: 'Device info',
-              subtitle: 'View connected device details',
-              onTap: () => _showDeviceInfo(context, ref),
-            ),
-            _SettingsTile(
-              icon: Icons.qr_code_scanner,
-              title: 'Import channel via QR',
-              subtitle: 'Scan a Meshtastic channel QR code',
-              onTap: () => Navigator.pushNamed(context, '/qr-import'),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // About Section
-            _SectionHeader(title: 'ABOUT'),
-            _SettingsTile(
-              icon: Icons.info,
-              title: 'Protofluff',
-              subtitle: 'Meshtastic companion app • Version 1.0.0',
-            ),
+              // Notifications Section
+              _SectionHeader(title: 'NOTIFICATIONS'),
+              _SettingsTile(
+                icon: Icons.notifications_outlined,
+                title: 'Push notifications',
+                subtitle: 'Show notifications for new messages',
+                trailing: Switch(
+                  value: settingsService.notificationsEnabled,
+                  activeTrackColor: AppTheme.primaryGreen,
+                  inactiveTrackColor: AppTheme.darkBorder,
+                  onChanged: (value) {
+                    settingsService.setNotificationsEnabled(value);
+                  },
+                ),
+              ),
 
-            const SizedBox(height: 32),
-          ],
-        ),
+              const SizedBox(height: 16),
+
+              // Data Section
+              _SectionHeader(title: 'DATA & STORAGE'),
+              _SettingsTile(
+                icon: Icons.history,
+                title: 'Message history',
+                subtitle:
+                    '${settingsService.messageHistoryLimit} messages stored',
+                onTap: () => _showHistoryLimitDialog(context, settingsService),
+              ),
+              _SettingsTile(
+                icon: Icons.delete_sweep_outlined,
+                title: 'Clear message history',
+                subtitle: 'Delete all stored messages',
+                onTap: () => _confirmClearMessages(context, ref),
+              ),
+              _SettingsTile(
+                icon: Icons.delete_forever,
+                iconColor: AppTheme.errorRed,
+                title: 'Clear all data',
+                titleColor: AppTheme.errorRed,
+                subtitle: 'Delete messages, settings, and keys',
+                onTap: () => _confirmClearData(context, ref),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Device Section
+              _SectionHeader(title: 'DEVICE'),
+              _SettingsTile(
+                icon: Icons.language,
+                title: 'Region / Frequency',
+                subtitle: regionSubtitle,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const RegionSelectionScreen(isInitialSetup: false),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.info_outline,
+                title: 'Device info',
+                subtitle: 'View connected device details',
+                onTap: () => _showDeviceInfo(context, ref),
+              ),
+              _SettingsTile(
+                icon: Icons.qr_code_scanner,
+                title: 'Import channel via QR',
+                subtitle: 'Scan a Meshtastic channel QR code',
+                onTap: () => Navigator.pushNamed(context, '/qr-import'),
+              ),
+
+              const SizedBox(height: 16),
+
+              // About Section
+              _SectionHeader(title: 'ABOUT'),
+              _SettingsTile(
+                icon: Icons.info,
+                title: 'Protofluff',
+                subtitle: 'Meshtastic companion app • Version 1.0.0',
+              ),
+
+              const SizedBox(height: 32),
+            ],
+          );
+        },
       ),
     );
   }

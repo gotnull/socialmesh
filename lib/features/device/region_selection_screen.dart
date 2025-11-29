@@ -143,8 +143,33 @@ class RegionSelectionScreen extends ConsumerStatefulWidget {
 
 class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
   RegionCode? _selectedRegion;
+  RegionCode? _currentRegion;
   bool _isSaving = false;
   String _searchQuery = '';
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load current region after build
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadCurrentRegion());
+  }
+
+  void _loadCurrentRegion() {
+    if (_initialized) return;
+    final protocol = ref.read(protocolServiceProvider);
+    final region = protocol.currentRegion;
+    if (region != null && region != RegionCode.UNSET_REGION) {
+      setState(() {
+        _currentRegion = region;
+        // Pre-select current region when editing (not initial setup)
+        if (!widget.isInitialSetup) {
+          _selectedRegion = region;
+        }
+        _initialized = true;
+      });
+    }
+  }
 
   List<RegionInfo> get _filteredRegions {
     if (_searchQuery.isEmpty) return availableRegions;
@@ -405,6 +430,32 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                                 ),
                               ),
                             ),
+                            // Show "Current" badge for the device's current region
+                            if (_currentRegion == region.code &&
+                                !isSelected) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.graphBlue.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text(
+                                  'CURRENT',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.graphBlue,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                              ),
+                            ],
                             if (isSelected) ...[
                               const SizedBox(width: 12),
                               Icon(
