@@ -131,7 +131,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
       if (psk.isNotEmpty) {
         final secureStorage = ref.read(secureStorageProvider);
         await secureStorage.storeChannelKey(
-          newChannel.name.isEmpty ? 'Channel \$index' : newChannel.name,
+          newChannel.name.isEmpty ? 'Channel $index' : newChannel.name,
           psk,
         );
       }
@@ -140,7 +140,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         final protocol = ref.read(protocolServiceProvider);
         await protocol.setChannel(newChannel);
       } catch (e) {
-        debugPrint('Could not sync channel to device: \$e');
+        debugPrint('Could not sync channel to device: $e');
       }
 
       if (mounted) {
@@ -157,7 +157,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: \$e'),
+            content: Text('Error: $e'),
             backgroundColor: AppTheme.errorRed,
             behavior: SnackBarBehavior.floating,
           ),
@@ -274,12 +274,12 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.darkBorder),
       ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
           Container(
-            width: 56,
-            height: 56,
-            margin: const EdgeInsets.only(left: 12),
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: AppTheme.primaryGreen.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
@@ -287,25 +287,24 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
             child: const Icon(
               Icons.tag,
               color: AppTheme.primaryGreen,
-              size: 22,
+              size: 20,
             ),
           ),
+          const SizedBox(width: 14),
           Expanded(
             child: TextFormField(
               controller: _nameController,
               focusNode: _nameFocusNode,
               style: const TextStyle(
-                fontSize: 16,
+                fontSize: 15,
                 color: Colors.white,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w500,
               ),
               decoration: const InputDecoration(
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 18,
-                ),
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -329,8 +328,8 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   },
             ),
           ),
+          const SizedBox(width: 12),
           Container(
-            margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: _nameController.text.length > 9
@@ -503,7 +502,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         children: [
           // Header row with label and actions
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
             child: Row(
               children: [
                 Container(

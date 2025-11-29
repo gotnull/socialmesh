@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/transport.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../services/storage/storage_service.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
   const ScannerScreen({super.key});
@@ -25,11 +26,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   }
 
   Future<void> _tryAutoReconnect() async {
-    // Check if auto-reconnect is enabled
-    final settingsServiceAsync = ref.read(settingsServiceProvider);
-    final settingsService = settingsServiceAsync.valueOrNull;
+    // Wait for settings service to initialize
+    final SettingsService settingsService;
+    try {
+      settingsService = await ref.read(settingsServiceProvider.future);
+    } catch (e) {
+      debugPrint('Failed to load settings service: $e');
+      _startScan();
+      return;
+    }
 
-    if (settingsService == null || !settingsService.autoReconnect) {
+    // Check if auto-reconnect is enabled
+    if (!settingsService.autoReconnect) {
       _startScan();
       return;
     }
@@ -42,9 +50,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       return;
     }
 
+    if (!mounted) return;
+
     setState(() {
       _autoReconnecting = true;
     });
+
+    debugPrint(
+      '🔄 Auto-reconnect: looking for device $lastDeviceId ($lastDeviceType)',
+    );
 
     try {
       // Start scanning to find the last device
@@ -54,6 +68,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       await for (final device in scanStream) {
         if (!mounted) break;
+        debugPrint(
+          '🔄 Auto-reconnect: found ${device.id} - checking if matches',
+        );
         if (device.id == lastDeviceId) {
           lastDevice = device;
           break;
@@ -63,9 +80,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       if (!mounted) return;
 
       if (lastDevice != null) {
+        debugPrint('🔄 Auto-reconnect: device found, connecting...');
         // Found the device, try to connect
         await _connectToDevice(lastDevice, isAutoReconnect: true);
       } else {
+        debugPrint(
+          '🔄 Auto-reconnect: device not found, starting regular scan',
+        );
         // Device not found, start regular scan
         setState(() {
           _autoReconnecting = false;
@@ -73,6 +94,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         _startScan();
       }
     } catch (e) {
+      debugPrint('🔄 Auto-reconnect failed: $e');
       if (mounted) {
         setState(() {
           _autoReconnecting = false;
