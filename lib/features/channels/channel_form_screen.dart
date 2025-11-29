@@ -72,7 +72,9 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
       _downlinkEnabled = channel.downlink;
     } else {
       _selectedKeySize = KeySize.bit256;
-      _downlinkEnabled = true;
+      // Match Meshtastic iOS: uplink disabled, downlink disabled by default
+      _uplinkEnabled = false;
+      _downlinkEnabled = false;
       _generateRandomKey();
     }
   }
@@ -116,10 +118,36 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
       }
 
       final channels = ref.read(channelsProvider);
-      final index =
-          widget.channelIndex ??
-          widget.existingChannel?.index ??
-          channels.length;
+
+      // Calculate proper index for new channels
+      int index;
+      if (widget.channelIndex != null) {
+        // Explicitly provided index
+        index = widget.channelIndex!;
+      } else if (widget.existingChannel != null) {
+        // Editing existing channel - keep its index
+        index = widget.existingChannel!.index;
+      } else {
+        // New channel - find first available slot (1-7, slot 0 is primary)
+        final usedIndices = channels.map((c) => c.index).toSet();
+        index = 1; // Start from 1 (0 is always primary)
+        while (usedIndices.contains(index) && index < 8) {
+          index++;
+        }
+        if (index >= 8) {
+          throw Exception('Maximum 8 channels allowed');
+        }
+      }
+
+      // Determine channel role
+      String role;
+      if (index == 0) {
+        role = 'PRIMARY';
+      } else if (_selectedKeySize == KeySize.none) {
+        role = 'DISABLED';
+      } else {
+        role = 'SECONDARY';
+      }
 
       final newChannel = ChannelConfig(
         index: index,
@@ -127,9 +155,25 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         psk: psk,
         uplink: _uplinkEnabled,
         downlink: _downlinkEnabled,
-        role: _selectedKeySize == KeySize.none ? 'DISABLED' : 'SECONDARY',
+        role: role,
       );
 
+      // Send to device first - this is the source of truth
+      try {
+        final protocol = ref.read(protocolServiceProvider);
+        await protocol.setChannel(newChannel);
+
+        // Small delay to allow device to process
+        await Future.delayed(const Duration(milliseconds: 300));
+
+        // Request updated channel info from device to confirm
+        await protocol.getChannel(index);
+      } catch (e) {
+        debugPrint('Could not sync channel to device: $e');
+        // Still update local state even if device sync fails
+      }
+
+      // Update local state
       ref.read(channelsProvider.notifier).setChannel(newChannel);
 
       if (psk.isNotEmpty) {
@@ -138,13 +182,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
           newChannel.name.isEmpty ? 'Channel $index' : newChannel.name,
           psk,
         );
-      }
-
-      try {
-        final protocol = ref.read(protocolServiceProvider);
-        await protocol.setChannel(newChannel);
-      } catch (e) {
-        debugPrint('Could not sync channel to device: $e');
       }
 
       if (mounted) {

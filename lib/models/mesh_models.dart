@@ -257,7 +257,7 @@ class ChannelConfig {
     required this.name,
     required this.psk,
     this.uplink = false,
-    this.downlink = true,
+    this.downlink = false,
     this.role = 'SECONDARY',
   });
 

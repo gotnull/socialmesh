@@ -671,7 +671,9 @@ class ProtocolService {
   /// Set channel
   Future<void> setChannel(ChannelConfig config) async {
     try {
-      _logger.i('Setting channel ${config.index}: ${config.name}');
+      _logger.i(
+        'Setting channel ${config.index}: ${config.name} (role: ${config.role})',
+      );
 
       final channelSettings = pb.ChannelSettings()
         ..name = config.name
@@ -679,9 +681,25 @@ class ProtocolService {
         ..uplinkEnabled = config.uplink
         ..downlinkEnabled = config.downlink;
 
+      // Determine channel role from config
+      pb.Channel_Role role;
+      switch (config.role.toUpperCase()) {
+        case 'PRIMARY':
+          role = pb.Channel_Role.PRIMARY;
+          break;
+        case 'SECONDARY':
+          role = pb.Channel_Role.SECONDARY;
+          break;
+        case 'DISABLED':
+        default:
+          role = pb.Channel_Role.DISABLED;
+          break;
+      }
+
       final channel = pb.Channel()
         ..index = config.index
-        ..settings = channelSettings;
+        ..settings = channelSettings
+        ..role = role;
 
       final adminMsg = pb.AdminMessage()..setChannel = channel;
 
