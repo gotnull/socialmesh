@@ -367,7 +367,8 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   String _getBatteryText(int level) {
-    if (level > 100) return 'Charging';
+    // For charging (101+), show full/charging indicator with %
+    if (level > 100) return '100%';
     return '$level%';
   }
 

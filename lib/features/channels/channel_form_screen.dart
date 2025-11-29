@@ -227,8 +227,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
             padding: const EdgeInsets.all(20),
             children: [
               // Channel Name Field
-              _buildFieldLabel('Channel Name'),
-              const SizedBox(height: 8),
               _buildNameField(),
 
               const SizedBox(height: 28),
@@ -281,24 +279,90 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.darkBorder),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.tag,
-              color: AppTheme.primaryGreen,
-              size: 20,
+          // Header row with label
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.tag,
+                    color: AppTheme.primaryGreen,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Channel Name',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Max 11 characters',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textTertiary,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _nameController.text.length > 9
+                        ? AppTheme.warningYellow.withValues(alpha: 0.15)
+                        : AppTheme.darkBackground,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${_nameController.text.length}/11',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _nameController.text.length > 9
+                          ? AppTheme.warningYellow
+                          : AppTheme.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 14),
-          Expanded(
+
+          // Input field area
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.5),
+              ),
+            ),
             child: TextFormField(
               controller: _nameController,
               focusNode: _nameFocusNode,
@@ -311,7 +375,12 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
               decoration: const InputDecoration(
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding: EdgeInsets.zero,
+                contentPadding: EdgeInsets.all(16),
+                hintText: 'Enter channel name',
+                hintStyle: TextStyle(
+                  color: AppTheme.textTertiary,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -333,27 +402,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   }) {
                     return null; // Hide default counter
                   },
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: _nameController.text.length > 9
-                  ? AppTheme.warningYellow.withValues(alpha: 0.15)
-                  : AppTheme.darkBackground,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '${_nameController.text.length}/11',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: _nameController.text.length > 9
-                    ? AppTheme.warningYellow
-                    : AppTheme.textTertiary,
-                fontFamily: 'Inter',
-              ),
             ),
           ),
         ],
