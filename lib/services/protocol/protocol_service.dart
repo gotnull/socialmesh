@@ -254,7 +254,7 @@ class ProtocolService {
           _logger.d('Received admin message');
           break;
         default:
-          _logger.d('Received message with portnum: ${data.portnum}');
+          _logger.d('Received message with portnum: ${data.portnum} (${data.portnum.value})');
       }
     }
   }
@@ -329,20 +329,34 @@ class ProtocolService {
   /// Handle telemetry message (battery, voltage, etc.)
   void _handleTelemetry(pb.MeshPacket packet, pb.Data data) {
     try {
+      // Telemetry packets can contain DeviceMetrics directly
+      // The payload is the DeviceMetrics protobuf
       final deviceMetrics = pb.DeviceMetrics.fromBuffer(data.payload);
+      
+      final batteryLevel = deviceMetrics.hasBatteryLevel() ? deviceMetrics.batteryLevel : null;
+      final voltage = deviceMetrics.hasVoltage() ? deviceMetrics.voltage : null;
+      
       _logger.i(
-        'Telemetry from ${packet.from}: battery=${deviceMetrics.batteryLevel}%, voltage=${deviceMetrics.voltage}V',
+        'Telemetry from ${packet.from}: battery=$batteryLevel%, voltage=${voltage}V, '
+        'rawPayload=${data.payload.length} bytes',
       );
+      
+      // Only update if we got valid battery data
+      if (batteryLevel == null || batteryLevel == 0) {
+        _logger.d('No valid battery level in telemetry, skipping update');
+        return;
+      }
 
       final node = _nodes[packet.from];
       if (node != null) {
         final updatedNode = node.copyWith(
-          batteryLevel: deviceMetrics.batteryLevel,
+          batteryLevel: batteryLevel,
           lastHeard: DateTime.now(),
           isOnline: true,
         );
         _nodes[packet.from] = updatedNode;
         _nodeController.add(updatedNode);
+        _logger.d('Updated node ${packet.from} battery to $batteryLevel%');
       } else {
         // Create a new node entry with just the telemetry data
         _logger.d('Creating new node entry for ${packet.from} from telemetry');
@@ -359,7 +373,7 @@ class ProtocolService {
 
         final newNode = MeshNode(
           nodeNum: packet.from,
-          batteryLevel: deviceMetrics.batteryLevel,
+          batteryLevel: batteryLevel,
           lastHeard: DateTime.now(),
           isOnline: true,
           avatarColor: avatarColor,
@@ -370,6 +384,8 @@ class ProtocolService {
       }
     } catch (e) {
       _logger.e('Error decoding telemetry: $e');
+      // Log the raw payload for debugging
+      _logger.d('Raw telemetry payload: ${data.payload}');
     }
   }
 
