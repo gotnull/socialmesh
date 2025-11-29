@@ -7,6 +7,7 @@ import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../channels/channel_form_screen.dart';
 
 /// Conversation type enum
@@ -895,9 +896,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _showQrCode(BuildContext context, ChannelConfig channel) {
-    final base64Key = base64Encode(channel.psk);
+    // Create proper protobuf Channel object for QR code
+    final pbChannel = pb.Channel()
+      ..index = channel.index
+      ..settings = (pb.ChannelSettings()
+        ..name = channel.name
+        ..psk = channel.psk)
+      ..role = channel.index == 0
+          ? pb.Channel_Role.PRIMARY
+          : pb.Channel_Role.SECONDARY;
+
+    final base64Data = base64Encode(pbChannel.writeToBuffer());
     final channelUrl =
-        'https://meshtastic.org/e/#${Uri.encodeComponent(base64Key)}';
+        'https://meshtastic.org/e/#${Uri.encodeComponent(base64Data)}';
 
     showModalBottomSheet(
       context: context,
