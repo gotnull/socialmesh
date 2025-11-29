@@ -655,17 +655,17 @@ class _ChannelTile extends ConsumerWidget {
   void _deleteChannel(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Channel'),
         content: Text('Delete channel "${channel.name}"?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
 
               // Create disabled channel config
               final disabledChannel = ChannelConfig(
@@ -688,16 +688,18 @@ class _ChannelTile extends ConsumerWidget {
               // Update local state
               ref.read(channelsProvider.notifier).removeChannel(channel.index);
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Channel deleted'),
-                  backgroundColor: AppTheme.darkCard,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Channel deleted'),
+                    backgroundColor: AppTheme.darkCard,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             },
             style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
             ),
             child: const Text('Delete'),
           ),

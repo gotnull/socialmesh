@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pb;
+import '../../utils/validation.dart';
 
 /// Device role options with descriptions
 class DeviceRoleOption {
@@ -83,10 +85,25 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   bool _isSaving = false;
   bool _hasChanges = false;
 
+  // Name editing
+  late TextEditingController _longNameController;
+  late TextEditingController _shortNameController;
+  String? _originalLongName;
+  String? _originalShortName;
+
   @override
   void initState() {
     super.initState();
+    _longNameController = TextEditingController();
+    _shortNameController = TextEditingController();
     _loadCurrentConfig();
+  }
+
+  @override
+  void dispose() {
+    _longNameController.dispose();
+    _shortNameController.dispose();
+    super.dispose();
   }
 
   void _loadCurrentConfig() {
@@ -94,14 +111,25 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     final nodes = ref.read(nodesProvider);
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
 
-    if (myNode != null && myNode.role != null) {
-      final roleString = myNode.role!.toUpperCase().replaceAll(' ', '_');
-      try {
-        _selectedRole = pb.Config_DeviceConfig_Role.values.firstWhere(
-          (r) => r.name == roleString,
-          orElse: () => pb.Config_DeviceConfig_Role.CLIENT,
-        );
-      } catch (e) {
+    if (myNode != null) {
+      // Load names
+      _originalLongName = myNode.longName ?? '';
+      _originalShortName = myNode.shortName ?? '';
+      _longNameController.text = _originalLongName!;
+      _shortNameController.text = _originalShortName!;
+
+      // Load role
+      if (myNode.role != null) {
+        final roleString = myNode.role!.toUpperCase().replaceAll(' ', '_');
+        try {
+          _selectedRole = pb.Config_DeviceConfig_Role.values.firstWhere(
+            (r) => r.name == roleString,
+            orElse: () => pb.Config_DeviceConfig_Role.CLIENT,
+          );
+        } catch (e) {
+          _selectedRole = pb.Config_DeviceConfig_Role.CLIENT;
+        }
+      } else {
         _selectedRole = pb.Config_DeviceConfig_Role.CLIENT;
       }
     } else {
@@ -109,14 +137,36 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     }
   }
 
-  Future<void> _saveConfig() async {
-    if (_selectedRole == null) return;
+  void _checkForChanges() {
+    final nameChanged =
+        _longNameController.text != _originalLongName ||
+        _shortNameController.text != _originalShortName;
+    setState(() {
+      _hasChanges = nameChanged || _selectedRole != null;
+    });
+  }
 
+  Future<void> _saveConfig() async {
     setState(() => _isSaving = true);
 
     try {
       final protocol = ref.read(protocolServiceProvider);
-      await protocol.setDeviceRole(_selectedRole!);
+
+      // Save name if changed
+      final nameChanged =
+          _longNameController.text != _originalLongName ||
+          _shortNameController.text != _originalShortName;
+      if (nameChanged) {
+        await protocol.setUserName(
+          longName: _longNameController.text,
+          shortName: _shortNameController.text,
+        );
+      }
+
+      // Save role if changed
+      if (_selectedRole != null) {
+        await protocol.setDeviceRole(_selectedRole!);
+      }
 
       if (mounted) {
         setState(() => _hasChanges = false);
@@ -187,14 +237,53 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Long Name Field
+          _buildNameField(
+            icon: Icons.badge_outlined,
+            label: 'Long Name',
+            subtitle: 'Display name visible on the mesh',
+            controller: _longNameController,
+            maxLength: maxLongNameLength,
+            hint: 'Enter display name',
+          ),
+
+          const SizedBox(height: 16),
+
+          // Short Name Field
+          _buildNameField(
+            icon: Icons.short_text,
+            label: 'Short Name',
+            subtitle: 'Max $maxShortNameLength characters (A-Z, 0-9)',
+            controller: _shortNameController,
+            maxLength: maxShortNameLength,
+            hint: 'e.g. FUZZ',
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+              UpperCaseTextFormatter(),
+              LengthLimitingTextInputFormatter(maxShortNameLength),
+            ],
+            textCapitalization: TextCapitalization.characters,
+          ),
+
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              'Your device name is broadcast to the mesh and visible to other nodes.',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppTheme.textTertiary,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
           // Device Info Section
-          _buildSectionHeader('Connected Device'),
+          _buildSectionHeader('Device Info'),
           _buildCard([
-            _buildInfoRow('Name', connectedDevice?.name ?? 'Unknown'),
-            _buildDivider(),
-            _buildInfoRow('Long Name', myNode?.longName ?? 'Unknown'),
-            _buildDivider(),
-            _buildInfoRow('Short Name', myNode?.shortName ?? '???'),
+            _buildInfoRow('BLE Name', connectedDevice?.name ?? 'Unknown'),
             _buildDivider(),
             _buildInfoRow('Hardware', myNode?.hardwareModel ?? 'Unknown'),
             _buildDivider(),
@@ -405,6 +494,139 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               fontSize: 15,
               color: Colors.white,
               fontFamily: 'Inter',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNameField({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required TextEditingController controller,
+    required int maxLength,
+    required String hint,
+    List<TextInputFormatter>? inputFormatters,
+    TextCapitalization textCapitalization = TextCapitalization.none,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row with label
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: AppTheme.primaryGreen,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textTertiary,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: controller.text.length >= maxLength
+                        ? AppTheme.warningYellow.withValues(alpha: 0.15)
+                        : AppTheme.darkBackground,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${controller.text.length}/$maxLength',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: controller.text.length >= maxLength
+                          ? AppTheme.warningYellow
+                          : AppTheme.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Input field area
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: AppTheme.darkBorder.withValues(alpha: 0.5),
+              ),
+            ),
+            child: TextField(
+              controller: controller,
+              maxLength: maxLength,
+              inputFormatters: inputFormatters,
+              textCapitalization: textCapitalization,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Colors.white,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.all(16),
+                hintText: hint,
+                hintStyle: const TextStyle(
+                  color: AppTheme.textTertiary,
+                  fontWeight: FontWeight.w400,
+                ),
+                counterText: '',
+              ),
+              onChanged: (_) {
+                _checkForChanges();
+                setState(() {}); // Update character counter
+              },
             ),
           ),
         ],

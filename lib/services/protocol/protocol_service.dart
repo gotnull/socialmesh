@@ -917,6 +917,52 @@ class ProtocolService {
     }
   }
 
+  /// Set the user name (long name and short name)
+  /// Long name is up to 36 bytes, short name is up to 4 characters
+  Future<void> setUserName({
+    required String longName,
+    required String shortName,
+  }) async {
+    try {
+      // Validate lengths
+      final trimmedLong = longName.length > 36
+          ? longName.substring(0, 36)
+          : longName;
+      final trimmedShort = shortName.length > 4
+          ? shortName.substring(0, 4)
+          : shortName;
+
+      _logger.i(
+        'Setting user name: long="$trimmedLong", short="$trimmedShort"',
+      );
+
+      final user = pb.User()
+        ..longName = trimmedLong
+        ..shortName = trimmedShort;
+
+      final adminMsg = pb.AdminMessage()..setOwner = user;
+
+      final data = pb.Data()
+        ..portnum = pb.PortNum.ADMIN_APP
+        ..payload = adminMsg.writeToBuffer()
+        ..wantResponse = true;
+
+      final packet = pb.MeshPacket()
+        ..from = _myNodeNum ?? 0
+        ..to = _myNodeNum ?? 0
+        ..decoded = data
+        ..id = _generatePacketId();
+
+      final toRadio = pn.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+    } catch (e) {
+      _logger.e('Error setting user name: $e');
+      rethrow;
+    }
+  }
+
   /// Set the region/frequency for the device
   Future<void> setRegion(pbenum.RegionCode region) async {
     try {

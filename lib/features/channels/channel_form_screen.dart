@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/validation.dart';
 
 /// Key size options
 enum KeySize {
@@ -413,23 +414,19 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.all(16),
-                hintText: 'Enter channel name',
+                hintText: 'Enter channel name (no spaces)',
                 hintStyle: TextStyle(
                   color: AppTheme.textTertiary,
                   fontWeight: FontWeight.w400,
                 ),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Name required';
-                }
-                if (value.length > 11) {
-                  return 'Max 11 characters';
-                }
-                return null;
-              },
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
+                LengthLimitingTextInputFormatter(maxChannelNameLength),
+              ],
+              validator: (value) => validateChannelName(value ?? ''),
               textInputAction: TextInputAction.done,
-              maxLength: 11,
+              maxLength: maxChannelNameLength,
               buildCounter:
                   (
                     context, {
