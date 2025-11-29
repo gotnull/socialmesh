@@ -247,6 +247,9 @@ class ProtocolService {
         case pb.PortNum.ROUTING_APP:
           _handleRoutingMessage(packet, data);
           break;
+        case pb.PortNum.TELEMETRY_APP:
+          _handleTelemetry(packet, data);
+          break;
         case pb.PortNum.ADMIN_APP:
           _logger.d('Received admin message');
           break;
@@ -320,6 +323,53 @@ class ProtocolService {
       _deliveryController.add(update);
     } catch (e) {
       _logger.e('Error handling routing message: $e');
+    }
+  }
+
+  /// Handle telemetry message (battery, voltage, etc.)
+  void _handleTelemetry(pb.MeshPacket packet, pb.Data data) {
+    try {
+      final deviceMetrics = pb.DeviceMetrics.fromBuffer(data.payload);
+      _logger.i(
+        'Telemetry from ${packet.from}: battery=${deviceMetrics.batteryLevel}%, voltage=${deviceMetrics.voltage}V',
+      );
+
+      final node = _nodes[packet.from];
+      if (node != null) {
+        final updatedNode = node.copyWith(
+          batteryLevel: deviceMetrics.batteryLevel,
+          lastHeard: DateTime.now(),
+          isOnline: true,
+        );
+        _nodes[packet.from] = updatedNode;
+        _nodeController.add(updatedNode);
+      } else {
+        // Create a new node entry with just the telemetry data
+        _logger.d('Creating new node entry for ${packet.from} from telemetry');
+        final colors = [
+          0xFF1976D2,
+          0xFFD32F2F,
+          0xFF388E3C,
+          0xFFF57C00,
+          0xFF7B1FA2,
+          0xFF00796B,
+          0xFFC2185B,
+        ];
+        final avatarColor = colors[packet.from % colors.length];
+
+        final newNode = MeshNode(
+          nodeNum: packet.from,
+          batteryLevel: deviceMetrics.batteryLevel,
+          lastHeard: DateTime.now(),
+          isOnline: true,
+          avatarColor: avatarColor,
+          isFavorite: false,
+        );
+        _nodes[packet.from] = newNode;
+        _nodeController.add(newNode);
+      }
+    } catch (e) {
+      _logger.e('Error decoding telemetry: $e');
     }
   }
 
