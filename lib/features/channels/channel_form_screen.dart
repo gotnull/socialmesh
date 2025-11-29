@@ -274,7 +274,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.darkBorder),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           Container(
@@ -502,7 +502,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         children: [
           // Header row with label and actions
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
             child: Row(
               children: [
                 Container(
