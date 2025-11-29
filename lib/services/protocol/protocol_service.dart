@@ -254,7 +254,9 @@ class ProtocolService {
           _logger.d('Received admin message');
           break;
         default:
-          _logger.d('Received message with portnum: ${data.portnum} (${data.portnum.value})');
+          _logger.d(
+            'Received message with portnum: ${data.portnum} (${data.portnum.value})',
+          );
       }
     }
   }
@@ -332,15 +334,17 @@ class ProtocolService {
       // Telemetry packets can contain DeviceMetrics directly
       // The payload is the DeviceMetrics protobuf
       final deviceMetrics = pb.DeviceMetrics.fromBuffer(data.payload);
-      
-      final batteryLevel = deviceMetrics.hasBatteryLevel() ? deviceMetrics.batteryLevel : null;
+
+      final batteryLevel = deviceMetrics.hasBatteryLevel()
+          ? deviceMetrics.batteryLevel
+          : null;
       final voltage = deviceMetrics.hasVoltage() ? deviceMetrics.voltage : null;
-      
+
       _logger.i(
         'Telemetry from ${packet.from}: battery=$batteryLevel%, voltage=${voltage}V, '
         'rawPayload=${data.payload.length} bytes',
       );
-      
+
       // Only update if we got valid battery data
       if (batteryLevel == null || batteryLevel == 0) {
         _logger.d('No valid battery level in telemetry, skipping update');
@@ -468,6 +472,17 @@ class ProtocolService {
   /// Handle node info
   void _handleNodeInfo(pb.NodeInfo nodeInfo) {
     _logger.i('Node info received: ${nodeInfo.num}');
+
+    // Log device metrics if present
+    if (nodeInfo.hasDeviceMetrics()) {
+      final metrics = nodeInfo.deviceMetrics;
+      _logger.i(
+        'NodeInfo deviceMetrics: battery=${metrics.batteryLevel}%, '
+        'voltage=${metrics.voltage}V, uptime=${metrics.uptimeSeconds}s',
+      );
+    } else {
+      _logger.d('NodeInfo has no deviceMetrics');
+    }
 
     final existingNode = _nodes[nodeInfo.num];
 

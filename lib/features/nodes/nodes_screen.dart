@@ -30,7 +30,7 @@ Color _getBatteryColor(int level) {
 }
 
 String _getBatteryText(int level) {
-  if (level > 100) return '100%'; // Charging shows as full
+  if (level > 100) return 'Charging'; // Show "Charging" instead of percentage
   return '$level%';
 }
 
