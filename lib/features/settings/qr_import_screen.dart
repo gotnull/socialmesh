@@ -274,17 +274,13 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
 
   Future<void> _importChannel(ChannelConfig channel) async {
     try {
-      // Sync to device first
-      try {
-        final protocol = ref.read(protocolServiceProvider);
-        await protocol.setChannel(channel);
-        await Future.delayed(const Duration(milliseconds: 300));
-        await protocol.getChannel(channel.index);
-      } catch (e) {
-        _logger.w('Could not sync to device: $e');
-      }
+      // Sync to device first - this must succeed
+      final protocol = ref.read(protocolServiceProvider);
+      await protocol.setChannel(channel);
+      await Future.delayed(const Duration(milliseconds: 300));
+      await protocol.getChannel(channel.index);
 
-      // Update local state
+      // Update local state only after successful device sync
       ref.read(channelsProvider.notifier).setChannel(channel);
 
       // Store key securely

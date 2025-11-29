@@ -254,21 +254,22 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
       );
 
       // Send to device first - this is the source of truth
-      try {
-        final protocol = ref.read(protocolServiceProvider);
-        await protocol.setChannel(newChannel);
+      final protocol = ref.read(protocolServiceProvider);
 
-        // Small delay to allow device to process
-        await Future.delayed(const Duration(milliseconds: 300));
-
-        // Request updated channel info from device to confirm
-        await protocol.getChannel(index);
-      } catch (e) {
-        debugPrint('Could not sync channel to device: $e');
-        // Still update local state even if device sync fails
+      // Verify we have node info (indicates device is ready)
+      if (protocol.myNodeNum == null) {
+        throw Exception('Device not ready - please wait for connection');
       }
 
-      // Update local state
+      await protocol.setChannel(newChannel);
+
+      // Small delay to allow device to process
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      // Request updated channel info from device to confirm
+      await protocol.getChannel(index);
+
+      // Update local state only after successful device sync
       ref.read(channelsProvider.notifier).setChannel(newChannel);
 
       if (psk.isNotEmpty) {

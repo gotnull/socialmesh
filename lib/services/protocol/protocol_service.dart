@@ -841,6 +841,14 @@ class ProtocolService {
 
   /// Set channel
   Future<void> setChannel(ChannelConfig config) async {
+    // Validate we're ready to send
+    if (_myNodeNum == null) {
+      throw StateError('Cannot set channel: device not ready (no node number)');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot set channel: not connected to device');
+    }
+
     try {
       _logger.i(
         'Setting channel ${config.index}: ${config.name} (role: ${config.role})',
@@ -880,10 +888,8 @@ class ProtocolService {
         ..wantResponse = true;
 
       final packet = pb.MeshPacket()
-        ..from = _myNodeNum ?? 0
-        ..to =
-            _myNodeNum ??
-            0 // Admin messages to self
+        ..from = _myNodeNum!
+        ..to = _myNodeNum! // Admin messages to self
         ..decoded = data
         ..id = _generatePacketId();
 
@@ -891,6 +897,7 @@ class ProtocolService {
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
+      _logger.i('Channel ${config.index} sent to device');
     } catch (e) {
       _logger.e('Error setting channel: $e');
       rethrow;

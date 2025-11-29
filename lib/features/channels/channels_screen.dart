@@ -681,21 +681,29 @@ class _ChannelTile extends ConsumerWidget {
               try {
                 final protocol = ref.read(protocolServiceProvider);
                 await protocol.setChannel(disabledChannel);
+
+                // Update local state only after successful device sync
+                ref.read(channelsProvider.notifier).removeChannel(channel.index);
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Channel deleted'),
+                      backgroundColor: AppTheme.darkCard,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               } catch (e) {
-                debugPrint('Could not sync channel deletion to device: $e');
-              }
-
-              // Update local state
-              ref.read(channelsProvider.notifier).removeChannel(channel.index);
-
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Channel deleted'),
-                    backgroundColor: AppTheme.darkCard,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to delete channel: $e'),
+                      backgroundColor: AppTheme.errorRed,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               }
             },
             style: FilledButton.styleFrom(
