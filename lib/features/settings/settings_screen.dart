@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
 import '../../core/theme.dart';
+import '../device/region_selection_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -112,6 +113,18 @@ class SettingsScreen extends ConsumerWidget {
 
             // Device Section
             _SectionHeader(title: 'DEVICE'),
+            _SettingsTile(
+              icon: Icons.language,
+              title: 'Region / Frequency',
+              subtitle: 'Configure device radio frequency',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      const RegionSelectionScreen(isInitialSetup: false),
+                ),
+              ),
+            ),
             _SettingsTile(
               icon: Icons.info_outline,
               title: 'Device info',

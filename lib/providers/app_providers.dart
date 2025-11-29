@@ -7,6 +7,7 @@ import '../services/transport/usb_transport.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/storage/storage_service.dart';
 import '../models/mesh_models.dart';
+import '../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 
 // Logger
 final loggerProvider = Provider<Logger>((ref) {
@@ -539,4 +540,28 @@ final unreadMessagesCountProvider = Provider<int>((ref) {
 /// Has unread messages provider - simple boolean check
 final hasUnreadMessagesProvider = Provider<bool>((ref) {
   return ref.watch(unreadMessagesCountProvider) > 0;
+});
+
+/// Current device region - stream that emits region updates
+final deviceRegionProvider = StreamProvider<pbenum.RegionCode>((ref) async* {
+  final protocol = ref.watch(protocolServiceProvider);
+
+  // Emit current region if available
+  if (protocol.currentRegion != null) {
+    yield protocol.currentRegion!;
+  }
+
+  // Emit future updates
+  await for (final region in protocol.regionStream) {
+    yield region;
+  }
+});
+
+/// Needs region setup - true if region is UNSET
+final needsRegionSetupProvider = Provider<bool>((ref) {
+  final regionAsync = ref.watch(deviceRegionProvider);
+  return regionAsync.whenOrNull(
+        data: (region) => region == pbenum.RegionCode.UNSET_REGION,
+      ) ??
+      false;
 });

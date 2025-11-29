@@ -7,6 +7,7 @@ import '../../core/transport.dart';
 import '../../models/mesh_models.dart';
 import '../../models/device_error.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import '../../generated/meshtastic/portnums.pb.dart' as pn;
 import 'packet_framer.dart';
 
@@ -23,6 +24,7 @@ class ProtocolService {
   final StreamController<int> _myNodeNumController;
   final StreamController<int> _rssiController;
   final StreamController<MessageDeliveryUpdate> _deliveryController;
+  final StreamController<pbenum.RegionCode> _regionController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   Completer<void>? _configCompleter;
@@ -30,6 +32,7 @@ class ProtocolService {
 
   int? _myNodeNum;
   int _lastRssi = -90;
+  pbenum.RegionCode? _currentRegion;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
   final Random _random = Random();
@@ -47,7 +50,8 @@ class ProtocolService {
       _errorController = StreamController<DeviceError>.broadcast(),
       _myNodeNumController = StreamController<int>.broadcast(),
       _rssiController = StreamController<int>.broadcast(),
-      _deliveryController = StreamController<MessageDeliveryUpdate>.broadcast();
+      _deliveryController = StreamController<MessageDeliveryUpdate>.broadcast(),
+      _regionController = StreamController<pbenum.RegionCode>.broadcast();
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -57,6 +61,12 @@ class ProtocolService {
 
   /// Stream of channel updates
   Stream<ChannelConfig> get channelStream => _channelController.stream;
+
+  /// Stream of region updates
+  Stream<pbenum.RegionCode> get regionStream => _regionController.stream;
+
+  /// Current region
+  pbenum.RegionCode? get currentRegion => _currentRegion;
 
   /// Stream of RSSI updates
   Stream<int> get rssiStream => _rssiController.stream;
@@ -251,13 +261,37 @@ class ProtocolService {
           _handleTelemetry(packet, data);
           break;
         case pb.PortNum.ADMIN_APP:
-          _logger.d('Received admin message');
+          _handleAdminMessage(packet, data);
           break;
         default:
           _logger.d(
             'Received message with portnum: ${data.portnum} (${data.portnum.value})',
           );
       }
+    }
+  }
+
+  /// Handle admin message responses
+  void _handleAdminMessage(pb.MeshPacket packet, pb.Data data) {
+    try {
+      final adminMsg = pb.AdminMessage.fromBuffer(data.payload);
+      _logger.d('Admin message variant: ${adminMsg.whichPayloadVariant()}');
+
+      if (adminMsg.hasGetRadioResponse()) {
+        final radioConfig = adminMsg.getRadioResponse;
+        if (radioConfig.hasLora()) {
+          final loraConfig = radioConfig.lora;
+          final region = loraConfig.region;
+          _logger.i('Received radio config - region: ${region.name}');
+          _currentRegion = region;
+          _regionController.add(region);
+        }
+      } else if (adminMsg.hasGetChannelResponse()) {
+        // Channel response handling
+        _logger.d('Received channel response');
+      }
+    } catch (e) {
+      _logger.e('Error handling admin message: $e');
     }
   }
 
@@ -883,6 +917,65 @@ class ProtocolService {
     }
   }
 
+  /// Set the region/frequency for the device
+  Future<void> setRegion(pbenum.RegionCode region) async {
+    try {
+      _logger.i('Setting region: ${region.name}');
+
+      final loraConfig = pb.RadioConfig_LoRaConfig()..region = region;
+
+      final radioConfig = pb.RadioConfig()..lora = loraConfig;
+
+      final adminMsg = pb.AdminMessage()..setRadio = radioConfig;
+
+      final data = pb.Data()
+        ..portnum = pb.PortNum.ADMIN_APP
+        ..payload = adminMsg.writeToBuffer()
+        ..wantResponse = true;
+
+      final packet = pb.MeshPacket()
+        ..from = _myNodeNum ?? 0
+        ..to = _myNodeNum ?? 0
+        ..decoded = data
+        ..id = _generatePacketId();
+
+      final toRadio = pn.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+    } catch (e) {
+      _logger.e('Error setting region: $e');
+      rethrow;
+    }
+  }
+
+  /// Request the current radio configuration
+  Future<void> getRadioConfig() async {
+    try {
+      _logger.i('Requesting radio config');
+
+      final adminMsg = pb.AdminMessage()..getRadioRequest = true;
+
+      final data = pb.Data()
+        ..portnum = pb.PortNum.ADMIN_APP
+        ..payload = adminMsg.writeToBuffer()
+        ..wantResponse = true;
+
+      final packet = pb.MeshPacket()
+        ..from = _myNodeNum ?? 0
+        ..to = _myNodeNum ?? 0
+        ..decoded = data
+        ..id = _generatePacketId();
+
+      final toRadio = pn.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+    } catch (e) {
+      _logger.e('Error getting radio config: $e');
+    }
+  }
+
   /// Dispose resources
   Future<void> dispose() async {
     await _dataSubscription?.cancel();
@@ -891,5 +984,6 @@ class ProtocolService {
     await _channelController.close();
     await _errorController.close();
     await _deliveryController.close();
+    await _regionController.close();
   }
 }

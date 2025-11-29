@@ -199,8 +199,23 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         return;
       }
 
-      // Navigate to main app
-      Navigator.of(context).pushReplacementNamed('/main');
+      // Request radio config to check region
+      protocol.getRadioConfig();
+
+      // Wait a moment for the response
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      if (!mounted) return;
+
+      // Check if region is unset - need to configure before using
+      final region = protocol.currentRegion;
+      if (region == null || region.value == 0) {
+        // Navigate to region selection (initial setup mode)
+        Navigator.of(context).pushReplacementNamed('/region-setup');
+      } else {
+        // Navigate to main app
+        Navigator.of(context).pushReplacementNamed('/main');
+      }
     } catch (e) {
       if (!mounted) return;
 

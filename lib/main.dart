@@ -11,6 +11,7 @@ import 'features/nodes/node_map_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/settings/qr_import_screen.dart';
 import 'features/device/device_config_screen.dart';
+import 'features/device/region_selection_screen.dart';
 import 'features/navigation/main_shell.dart';
 import 'features/onboarding/onboarding_screen.dart';
 
@@ -52,6 +53,8 @@ class _ProtofluffAppState extends ConsumerState<ProtofluffApp> {
         '/settings': (context) => const SettingsScreen(),
         '/qr-import': (context) => const QrImportScreen(),
         '/device-config': (context) => const DeviceConfigScreen(),
+        '/region-setup': (context) =>
+            const RegionSelectionScreen(isInitialSetup: true),
         '/main': (context) => const MainShell(),
         '/onboarding': (context) => const OnboardingScreen(),
       },
