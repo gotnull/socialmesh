@@ -54,6 +54,10 @@ class _MainShellState extends ConsumerState<MainShell> {
     final theme = Theme.of(context);
     final connectionStateAsync = ref.watch(connectionStateProvider);
     final autoReconnectState = ref.watch(autoReconnectStateProvider);
+
+    // Watch the auto-reconnect manager to keep it active
+    ref.watch(autoReconnectManagerProvider);
+
     final isConnected = connectionStateAsync.when(
       data: (state) => state == DeviceConnectionState.connected,
       loading: () => false,

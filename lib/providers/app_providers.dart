@@ -178,6 +178,95 @@ final autoReconnectStateProvider = StateProvider<AutoReconnectState>((ref) {
   return AutoReconnectState.idle;
 });
 
+// Auto-reconnect manager - monitors connection and attempts to reconnect on unexpected disconnect
+final autoReconnectManagerProvider = Provider<void>((ref) {
+  final connectionState = ref.watch(connectionStateProvider);
+  final connectedDevice = ref.watch(connectedDeviceProvider);
+  final autoReconnectState = ref.watch(autoReconnectStateProvider);
+
+  connectionState.whenData((state) async {
+    // If we were connected and now disconnected, try to reconnect
+    if (state == DeviceConnectionState.disconnected &&
+        connectedDevice != null &&
+        autoReconnectState == AutoReconnectState.idle) {
+      debugPrint(
+        '🔄 Device disconnected unexpectedly, attempting to reconnect...',
+      );
+
+      // Wait a bit before attempting reconnect (device might be rebooting)
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Check settings for auto-reconnect preference
+      final settings = await ref.read(settingsServiceProvider.future);
+      if (!settings.autoReconnect) {
+        debugPrint('🔄 Auto-reconnect disabled in settings');
+        return;
+      }
+
+      // Start reconnection attempt
+      ref.read(autoReconnectStateProvider.notifier).state =
+          AutoReconnectState.scanning;
+
+      final transport = ref.read(transportProvider);
+      final lastDeviceId = connectedDevice.id;
+
+      try {
+        DeviceInfo? foundDevice;
+
+        // Scan for the device
+        await for (final device in transport.scan(
+          timeout: const Duration(seconds: 10),
+        )) {
+          if (device.id == lastDeviceId) {
+            foundDevice = device;
+            break;
+          }
+        }
+
+        if (foundDevice != null) {
+          ref.read(autoReconnectStateProvider.notifier).state =
+              AutoReconnectState.connecting;
+          await transport.connect(foundDevice);
+
+          // Restart protocol service
+          final protocol = ref.read(protocolServiceProvider);
+          await protocol.start();
+
+          ref.read(autoReconnectStateProvider.notifier).state =
+              AutoReconnectState.success;
+          debugPrint('🔄 Reconnection successful!');
+
+          // Reset to idle after showing success
+          await Future.delayed(const Duration(seconds: 2));
+          ref.read(autoReconnectStateProvider.notifier).state =
+              AutoReconnectState.idle;
+        } else {
+          debugPrint('🔄 Device not found during scan');
+          ref.read(autoReconnectStateProvider.notifier).state =
+              AutoReconnectState.failed;
+
+          // Clear connected device since we couldn't reconnect
+          ref.read(connectedDeviceProvider.notifier).state = null;
+
+          // Reset to idle after showing failure
+          await Future.delayed(const Duration(seconds: 3));
+          ref.read(autoReconnectStateProvider.notifier).state =
+              AutoReconnectState.idle;
+        }
+      } catch (e) {
+        debugPrint('🔄 Reconnection failed: $e');
+        ref.read(autoReconnectStateProvider.notifier).state =
+            AutoReconnectState.failed;
+
+        // Reset to idle after showing failure
+        await Future.delayed(const Duration(seconds: 3));
+        ref.read(autoReconnectStateProvider.notifier).state =
+            AutoReconnectState.idle;
+      }
+    }
+  });
+});
+
 // Current RSSI stream from protocol service
 final currentRssiProvider = StreamProvider<int>((ref) async* {
   final protocol = ref.watch(protocolServiceProvider);
