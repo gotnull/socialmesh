@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/info_table.dart';
 import '../device/region_selection_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -336,31 +337,45 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              _InfoRow(
-                label: 'Device Name',
-                value: connectedDevice?.name ?? 'Not connected',
+              InfoTable(
+                rows: [
+                  InfoTableRow(
+                    label: 'Device Name',
+                    value: connectedDevice?.name ?? 'Not connected',
+                    icon: Icons.bluetooth,
+                  ),
+                  InfoTableRow(
+                    label: 'Connection',
+                    value: connectedDevice?.type.name.toUpperCase() ?? 'None',
+                    icon: Icons.wifi,
+                  ),
+                  InfoTableRow(
+                    label: 'Node Number',
+                    value: myNodeNum?.toString() ?? 'Unknown',
+                    icon: Icons.tag,
+                  ),
+                  InfoTableRow(
+                    label: 'Long Name',
+                    value: myNode?.longName ?? 'Unknown',
+                    icon: Icons.badge_outlined,
+                  ),
+                  InfoTableRow(
+                    label: 'Short Name',
+                    value: myNode?.shortName ?? 'Unknown',
+                    icon: Icons.short_text,
+                  ),
+                  InfoTableRow(
+                    label: 'Hardware',
+                    value: myNode?.hardwareModel ?? 'Unknown',
+                    icon: Icons.memory_outlined,
+                  ),
+                  InfoTableRow(
+                    label: 'User ID',
+                    value: myNode?.userId ?? 'Unknown',
+                    icon: Icons.fingerprint,
+                  ),
+                ],
               ),
-              _InfoRow(
-                label: 'Connection',
-                value: connectedDevice?.type.name.toUpperCase() ?? 'None',
-              ),
-              _InfoRow(
-                label: 'Node Number',
-                value: myNodeNum?.toString() ?? 'Unknown',
-              ),
-              _InfoRow(
-                label: 'Long Name',
-                value: myNode?.longName ?? 'Unknown',
-              ),
-              _InfoRow(
-                label: 'Short Name',
-                value: myNode?.shortName ?? 'Unknown',
-              ),
-              _InfoRow(
-                label: 'Hardware',
-                value: myNode?.hardwareModel ?? 'Unknown',
-              ),
-              _InfoRow(label: 'User ID', value: myNode?.userId ?? 'Unknown'),
               const SizedBox(height: 16),
             ],
           ),
@@ -445,46 +460,6 @@ class _SettingsTile extends StatelessWidget {
                 ? const Icon(Icons.chevron_right, color: AppTheme.textTertiary)
                 : null),
         onTap: onTap,
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _InfoRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppTheme.textTertiary,
-                fontFamily: 'Inter',
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
-                fontFamily: 'Inter',
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

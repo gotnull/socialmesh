@@ -7,6 +7,7 @@ import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/info_table.dart';
 import '../messaging/messaging_screen.dart';
 
 // Battery helper functions
@@ -944,33 +945,33 @@ class _NodeDetailsSheet extends StatelessWidget {
           // Scrollable details
           Flexible(
             child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  _DetailRow(
+              child: InfoTable(
+                rows: [
+                  InfoTableRow(
                     icon: Icons.badge,
                     label: 'User ID',
                     value: node.userId ?? 'Unknown',
                   ),
                   if (node.role != null)
-                    _DetailRow(
+                    InfoTableRow(
                       icon: Icons.smartphone,
                       label: 'Role',
                       value: node.role!,
                     ),
                   if (node.hardwareModel != null)
-                    _DetailRow(
+                    InfoTableRow(
                       icon: Icons.memory,
                       label: 'Hardware',
                       value: node.hardwareModel!,
                     ),
                   if (node.firmwareVersion != null)
-                    _DetailRow(
+                    InfoTableRow(
                       icon: Icons.system_update,
                       label: 'Firmware',
                       value: node.firmwareVersion!,
                     ),
                   if (node.batteryLevel != null)
-                    _DetailRow(
+                    InfoTableRow(
                       icon: _getBatteryIcon(node.batteryLevel!),
                       iconColor: _getBatteryColor(node.batteryLevel!),
                       label: 'Battery',
@@ -979,19 +980,19 @@ class _NodeDetailsSheet extends StatelessWidget {
                           : '${node.batteryLevel}%',
                     ),
                   if (node.rssi != null)
-                    _DetailRow(
+                    InfoTableRow(
                       icon: Icons.signal_cellular_alt,
                       label: 'RSSI',
                       value: '${node.rssi} dBm',
                     ),
                   if (node.snr != null)
-                    _DetailRow(
+                    InfoTableRow(
                       icon: Icons.wifi,
                       label: 'SNR',
                       value: '${node.snr} dB',
                     ),
                   if (node.distance != null)
-                    _DetailRow(
+                    InfoTableRow(
                       icon: Icons.near_me,
                       label: 'Distance',
                       value: node.distance! < 1000
@@ -999,20 +1000,20 @@ class _NodeDetailsSheet extends StatelessWidget {
                           : '${(node.distance! / 1000).toStringAsFixed(1)} km',
                     ),
                   if (node.hasPosition)
-                    _DetailRow(
+                    InfoTableRow(
                       icon: Icons.location_on,
                       label: 'Position',
                       value:
                           '${node.latitude!.toStringAsFixed(5)}, ${node.longitude!.toStringAsFixed(5)}',
                     ),
                   if (node.altitude != null)
-                    _DetailRow(
+                    InfoTableRow(
                       icon: Icons.height,
                       label: 'Altitude',
                       value: '${node.altitude}m',
                     ),
                   if (node.lastHeard != null)
-                    _DetailRow(
+                    InfoTableRow(
                       icon: Icons.access_time,
                       label: 'Last Heard',
                       value: dateFormat.format(node.lastHeard!),
@@ -1102,55 +1103,6 @@ class _NodeDetailsSheet extends StatelessWidget {
                 ),
               ],
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  final IconData icon;
-  final Color? iconColor;
-  final String label;
-  final String value;
-
-  const _DetailRow({
-    required this.icon,
-    this.iconColor,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: iconColor ?? AppTheme.textSecondary),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppTheme.textSecondary,
-                fontFamily: 'Inter',
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-                fontFamily: 'Inter',
-              ),
-            ),
-          ),
         ],
       ),
     );

@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/app_providers.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/info_table.dart';
 import '../../models/mesh_models.dart';
 
 class NodeMapScreen extends ConsumerStatefulWidget {
@@ -242,41 +243,64 @@ class _NodeMapScreenState extends ConsumerState<NodeMapScreen> {
                             fontFamily: 'Inter',
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${node.latitude!.toStringAsFixed(5)}, ${node.longitude!.toStringAsFixed(5)}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.textSecondary,
-                            fontFamily: 'Inter',
+                        if (isMyNode) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryGreen,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'YOU',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
                 ],
               ),
-              if (node.altitude != null || node.distance != null) ...[
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    if (node.altitude != null)
-                      _InfoChip(
-                        icon: Icons.height,
-                        label: '${node.altitude}m altitude',
-                      ),
-                    if (node.altitude != null && node.distance != null)
-                      const SizedBox(width: 12),
-                    if (node.distance != null)
-                      _InfoChip(
-                        icon: Icons.near_me,
-                        label: node.distance! < 1000
-                            ? '${node.distance!.toInt()}m away'
-                            : '${(node.distance! / 1000).toStringAsFixed(1)}km away',
-                      ),
-                  ],
-                ),
-              ],
+              const SizedBox(height: 20),
+              InfoTable(
+                rows: [
+                  InfoTableRow(
+                    icon: Icons.location_on,
+                    label: 'Position',
+                    value:
+                        '${node.latitude!.toStringAsFixed(5)}, ${node.longitude!.toStringAsFixed(5)}',
+                  ),
+                  if (node.altitude != null)
+                    InfoTableRow(
+                      icon: Icons.height,
+                      label: 'Altitude',
+                      value: '${node.altitude}m',
+                    ),
+                  if (node.distance != null)
+                    InfoTableRow(
+                      icon: Icons.near_me,
+                      label: 'Distance',
+                      value: node.distance! < 1000
+                          ? '${node.distance!.toInt()} m'
+                          : '${(node.distance! / 1000).toStringAsFixed(1)} km',
+                    ),
+                  if (node.hardwareModel != null)
+                    InfoTableRow(
+                      icon: Icons.memory,
+                      label: 'Hardware',
+                      value: node.hardwareModel!,
+                    ),
+                ],
+              ),
               const SizedBox(height: 24),
               Row(
                 children: [
@@ -385,38 +409,5 @@ class _NodeMapScreenState extends ConsumerState<NodeMapScreen> {
     } else if (await canLaunchUrl(googleMapsUrl)) {
       await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
     }
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _InfoChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: AppTheme.textSecondary),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppTheme.textSecondary,
-              fontFamily: 'Inter',
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

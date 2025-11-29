@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/transport.dart' as transport;
 import '../../core/theme.dart';
+import '../../core/widgets/info_table.dart';
 import '../../providers/app_providers.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -1121,138 +1122,58 @@ class _DeviceDetailsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final details = <(String, String, IconData?, Color?)>[
-      (
-        'Device Name',
-        device?.name ?? 'Unknown',
-        Icons.router,
-        AppTheme.primaryGreen,
-      ),
-      (
-        'Status',
-        _getConnectionStateText(state),
-        Icons.circle,
-        state == transport.DeviceConnectionState.connected
-            ? AppTheme.primaryGreen
-            : AppTheme.textTertiary,
-      ),
-      (
-        'Connection Type',
-        device?.type == transport.TransportType.ble ? 'Bluetooth LE' : 'USB',
-        device?.type == transport.TransportType.ble
-            ? Icons.bluetooth
-            : Icons.usb,
-        AppTheme.graphBlue,
-      ),
-      if (device?.address != null)
-        ('Address', device!.address!, Icons.tag, null),
-      if (device?.rssi != null)
-        (
-          'Signal Strength',
-          '${device!.rssi} dBm',
-          Icons.signal_cellular_alt,
-          device!.rssi! > -70
+    final statusColor = state == transport.DeviceConnectionState.connected
+        ? AppTheme.primaryGreen
+        : AppTheme.textTertiary;
+
+    final rssiColor = device?.rssi != null
+        ? (device!.rssi! > -70
               ? AppTheme.primaryGreen
               : device!.rssi! > -85
               ? AppTheme.warningYellow
-              : AppTheme.errorRed,
-        ),
-    ];
+              : AppTheme.errorRed)
+        : null;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(11),
-        child: Column(
-          children: details.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-            final isOdd = index % 2 == 1;
-
-            return Container(
-              decoration: BoxDecoration(
-                color: isOdd
-                    ? const Color(0xFF29303D)
-                    : AppTheme.darkBackground,
-                border: Border(
-                  bottom: index < details.length - 1
-                      ? const BorderSide(color: AppTheme.darkBorder, width: 1)
-                      : BorderSide.none,
-                ),
-              ),
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      flex: 5,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            right: BorderSide(
-                              color: AppTheme.darkBorder,
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            if (item.$3 != null) ...[
-                              Icon(
-                                item.$3,
-                                size: 16,
-                                color: item.$4 ?? AppTheme.textTertiary,
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            Expanded(
-                              child: Text(
-                                item.$1,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: AppTheme.textTertiary,
-                                  fontFamily: 'Inter',
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 6,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        child: Text(
-                          item.$2,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Inter',
-                          ),
-                          textAlign: TextAlign.right,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: InfoTable(
+        rows: [
+          InfoTableRow(
+            label: 'Device Name',
+            value: device?.name ?? 'Unknown',
+            icon: Icons.router,
+            iconColor: AppTheme.primaryGreen,
+          ),
+          InfoTableRow(
+            label: 'Status',
+            value: _getConnectionStateText(state),
+            icon: Icons.circle,
+            iconColor: statusColor,
+          ),
+          InfoTableRow(
+            label: 'Connection Type',
+            value: device?.type == transport.TransportType.ble
+                ? 'Bluetooth LE'
+                : 'USB',
+            icon: device?.type == transport.TransportType.ble
+                ? Icons.bluetooth
+                : Icons.usb,
+            iconColor: AppTheme.graphBlue,
+          ),
+          if (device?.address != null)
+            InfoTableRow(
+              label: 'Address',
+              value: device!.address!,
+              icon: Icons.tag,
+            ),
+          if (device?.rssi != null)
+            InfoTableRow(
+              label: 'Signal Strength',
+              value: '${device!.rssi} dBm',
+              icon: Icons.signal_cellular_alt,
+              iconColor: rssiColor,
+            ),
+        ],
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/info_table.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pb;
 import '../../utils/validation.dart';
@@ -282,15 +283,30 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
 
           // Device Info Section
           _buildSectionHeader('Device Info'),
-          _buildCard([
-            _buildInfoRow('BLE Name', connectedDevice?.name ?? 'Unknown'),
-            _buildDivider(),
-            _buildInfoRow('Hardware', myNode?.hardwareModel ?? 'Unknown'),
-            _buildDivider(),
-            _buildInfoRow('User ID', myNode?.userId ?? 'Unknown'),
-            _buildDivider(),
-            _buildInfoRow('Node Number', '${myNode?.nodeNum ?? 0}'),
-          ]),
+          InfoTable(
+            rows: [
+              InfoTableRow(
+                label: 'BLE Name',
+                value: connectedDevice?.name ?? 'Unknown',
+                icon: Icons.bluetooth,
+              ),
+              InfoTableRow(
+                label: 'Hardware',
+                value: myNode?.hardwareModel ?? 'Unknown',
+                icon: Icons.memory_outlined,
+              ),
+              InfoTableRow(
+                label: 'User ID',
+                value: myNode?.userId ?? 'Unknown',
+                icon: Icons.fingerprint,
+              ),
+              InfoTableRow(
+                label: 'Node Number',
+                value: '${myNode?.nodeNum ?? 0}',
+                icon: Icons.tag,
+              ),
+            ],
+          ),
 
           const SizedBox(height: 24),
 
@@ -456,48 +472,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     );
   }
 
-  Widget _buildCard(List<Widget> children) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.darkCard,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(children: children),
-    );
-  }
-
   Widget _buildDivider() {
     return Container(
       height: 1,
       margin: const EdgeInsets.symmetric(horizontal: 16),
       color: AppTheme.darkBorder.withValues(alpha: 0.3),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 15,
-              color: AppTheme.textSecondary,
-              fontFamily: 'Inter',
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 15,
-              color: Colors.white,
-              fontFamily: 'Inter',
-            ),
-          ),
-        ],
-      ),
     );
   }
 
