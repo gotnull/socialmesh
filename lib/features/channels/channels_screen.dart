@@ -6,6 +6,7 @@ import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../messaging/messaging_screen.dart';
 import 'channel_form_screen.dart';
 
 class ChannelsScreen extends ConsumerWidget {
@@ -80,30 +81,13 @@ class ChannelsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Channels are still being loaded from device',
+                    'Channels are still being loaded from device\nor use the icons above to add channels',
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.textTertiary,
                       fontFamily: 'Inter',
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  TextButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).pushNamed('/qr-import');
-                    },
-                    icon: const Icon(
-                      Icons.qr_code_scanner,
-                      color: AppTheme.primaryGreen,
-                    ),
-                    label: const Text(
-                      'Scan QR Code',
-                      style: TextStyle(
-                        color: AppTheme.primaryGreen,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -141,7 +125,8 @@ class _ChannelTile extends ConsumerWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () => _showChannelOptions(context, ref),
+          onTap: () => _openChannelChat(context),
+          onLongPress: () => _showChannelOptions(context, ref),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -238,6 +223,23 @@ class _ChannelTile extends ConsumerWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  void _openChannelChat(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatScreen(
+          type: ConversationType.channel,
+          channelIndex: channel.index,
+          title: channel.name.isEmpty
+              ? (channel.index == 0
+                    ? 'Primary Channel'
+                    : 'Channel ${channel.index}')
+              : channel.name,
         ),
       ),
     );
@@ -513,12 +515,14 @@ class _ChannelTile extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.darkCard,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) => SafeArea(
+        minimum: const EdgeInsets.only(bottom: 24),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

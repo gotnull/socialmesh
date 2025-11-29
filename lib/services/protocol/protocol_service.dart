@@ -22,6 +22,7 @@ class ProtocolService {
   final StreamController<DeviceError> _errorController;
   final StreamController<int> _myNodeNumController;
   final StreamController<int> _rssiController;
+  final StreamController<MessageDeliveryUpdate> _deliveryController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   Completer<void>? _configCompleter;
@@ -34,6 +35,9 @@ class ProtocolService {
   final Random _random = Random();
   bool _configurationComplete = false;
 
+  // Track pending messages by packet ID for delivery status updates
+  final Map<int, String> _pendingMessages = {}; // packetId -> messageId
+
   ProtocolService(this._transport, {Logger? logger})
     : _logger = logger ?? Logger(),
       _framer = PacketFramer(logger: logger),
@@ -42,7 +46,8 @@ class ProtocolService {
       _channelController = StreamController<ChannelConfig>.broadcast(),
       _errorController = StreamController<DeviceError>.broadcast(),
       _myNodeNumController = StreamController<int>.broadcast(),
-      _rssiController = StreamController<int>.broadcast();
+      _rssiController = StreamController<int>.broadcast(),
+      _deliveryController = StreamController<MessageDeliveryUpdate>.broadcast();
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -55,6 +60,10 @@ class ProtocolService {
 
   /// Stream of RSSI updates
   Stream<int> get rssiStream => _rssiController.stream;
+
+  /// Stream of message delivery updates
+  Stream<MessageDeliveryUpdate> get deliveryStream =>
+      _deliveryController.stream;
 
   /// Get last known RSSI
   int get lastRssi => _lastRssi;
@@ -235,6 +244,9 @@ class ProtocolService {
         case pb.PortNum.NODEINFO_APP:
           _handleNodeInfoUpdate(packet, data);
           break;
+        case pb.PortNum.ROUTING_APP:
+          _handleRoutingMessage(packet, data);
+          break;
         case pb.PortNum.ADMIN_APP:
           _logger.d('Received admin message');
           break;
@@ -261,6 +273,53 @@ class ProtocolService {
       _messageController.add(message);
     } catch (e) {
       _logger.e('Error decoding text message: $e');
+    }
+  }
+
+  /// Handle routing message (ACK/NAK/errors)
+  void _handleRoutingMessage(pb.MeshPacket packet, pb.Data data) {
+    try {
+      // The routing payload contains an error code
+      // If requestId is set, it references the original packet that this is a response to
+      final requestId = data.requestId;
+
+      if (requestId == 0) {
+        _logger.d('Routing message with no requestId, ignoring');
+        return;
+      }
+
+      // Parse the error code from the payload
+      // The Routing message has: errorReason field (uint32)
+      int errorCode = 0;
+      if (data.payload.isNotEmpty) {
+        // Simple parsing - error code is typically the first varint in the routing payload
+        // For a proper implementation, we'd need the Routing protobuf message
+        // But we can check if it's a success (empty or 0) vs failure
+        errorCode = data.payload[0];
+      }
+
+      final routingError = RoutingError.fromCode(errorCode);
+      final delivered = routingError.isSuccess;
+
+      _logger.i(
+        'Routing response for packet $requestId: ${routingError.message} (code: $errorCode)',
+      );
+
+      // Check if we're tracking this packet
+      final messageId = _pendingMessages[requestId];
+      if (messageId != null) {
+        _pendingMessages.remove(requestId);
+      }
+
+      // Emit delivery update
+      final update = MessageDeliveryUpdate(
+        packetId: requestId,
+        delivered: delivered,
+        error: delivered ? null : routingError,
+      );
+      _deliveryController.add(update);
+    } catch (e) {
+      _logger.e('Error handling routing message: $e');
     }
   }
 
@@ -479,14 +538,18 @@ class ProtocolService {
   }
 
   /// Send a text message
-  Future<void> sendMessage({
+  /// Returns the packet ID for tracking delivery status
+  Future<int> sendMessage({
     required String text,
     required int to,
     int channel = 0,
-    bool wantAck = false,
+    bool wantAck = true,
+    String? messageId,
   }) async {
     try {
       _logger.i('Sending message to $to: $text');
+
+      final packetId = _generatePacketId();
 
       final data = pb.Data()
         ..portnum = pb.PortNum.TEXT_MESSAGE_APP
@@ -498,7 +561,7 @@ class ProtocolService {
         ..to = to
         ..channel = channel
         ..decoded = data
-        ..id = _generatePacketId()
+        ..id = packetId
         ..wantAck = wantAck;
 
       final toRadio = pn.ToRadio()..packet = packet;
@@ -506,15 +569,25 @@ class ProtocolService {
 
       await _transport.send(_prepareForSend(bytes));
 
+      // Track the message for delivery status
+      if (messageId != null && wantAck) {
+        _pendingMessages[packetId] = messageId;
+      }
+
       final message = Message(
+        id: messageId,
         from: _myNodeNum ?? 0,
         to: to,
         text: text,
         channel: channel,
         sent: true,
+        packetId: packetId,
+        status: wantAck ? MessageStatus.pending : MessageStatus.sent,
       );
 
       _messageController.add(message);
+
+      return packetId;
     } catch (e) {
       _logger.e('Error sending message: $e');
       rethrow;
@@ -700,5 +773,6 @@ class ProtocolService {
     await _nodeController.close();
     await _channelController.close();
     await _errorController.close();
+    await _deliveryController.close();
   }
 }

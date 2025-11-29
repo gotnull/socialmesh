@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
@@ -14,45 +17,14 @@ class MessagingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final channels = ref.watch(channelsProvider);
     final nodes = ref.watch(nodesProvider);
     final messages = ref.watch(messagesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
-    // Build conversation list: channels first, then DM threads
+    // Build DM conversations only (group messages by node)
     final List<_Conversation> conversations = [];
-
-    // Add channel conversations
-    for (final channel in channels) {
-      final channelMessages = messages
-          .where((m) => m.channel == channel.index && m.isBroadcast)
-          .toList();
-      final lastMessage = channelMessages.isNotEmpty
-          ? channelMessages.last
-          : null;
-      final unreadCount = channelMessages
-          .where((m) => m.received && m.from != myNodeNum)
-          .length;
-
-      conversations.add(
-        _Conversation(
-          type: ConversationType.channel,
-          channelIndex: channel.index,
-          name: channel.name.isEmpty
-              ? (channel.index == 0
-                    ? 'Primary Channel'
-                    : 'Channel ${channel.index}')
-              : channel.name,
-          lastMessage: lastMessage?.text,
-          lastMessageTime: lastMessage?.timestamp,
-          unreadCount: unreadCount,
-          isEncrypted: channel.psk.isNotEmpty,
-        ),
-      );
-    }
-
-    // Add DM conversations (group messages by node)
     final dmNodes = <int>{};
+
     for (final message in messages) {
       if (message.isDirect) {
         final otherNode = message.from == myNodeNum ? message.to : message.from;
@@ -164,7 +136,6 @@ class MessagingScreen extends ConsumerWidget {
                       MaterialPageRoute(
                         builder: (_) => ChatScreen(
                           type: conv.type,
-                          channelIndex: conv.channelIndex,
                           nodeNum: conv.nodeNum,
                           title: conv.name,
                         ),
@@ -178,7 +149,6 @@ class MessagingScreen extends ConsumerWidget {
   }
 
   void _showNewMessageSheet(BuildContext context, WidgetRef ref) {
-    final channels = ref.read(channelsProvider);
     final nodes = ref.read(nodesProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
 
@@ -215,71 +185,26 @@ class MessagingScreen extends ConsumerWidget {
               color: AppTheme.darkBorder.withValues(alpha: 0.3),
             ),
 
-            // Channels section
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(
-                'CHANNELS',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textTertiary,
-                  fontFamily: 'Inter',
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-            for (final channel in channels)
-              ListTile(
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    channel.psk.isNotEmpty ? Icons.lock : Icons.tag,
-                    color: AppTheme.primaryGreen,
-                    size: 20,
-                  ),
-                ),
-                title: Text(
-                  channel.name.isEmpty
-                      ? (channel.index == 0
-                            ? 'Primary Channel'
-                            : 'Channel ${channel.index}')
-                      : channel.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        type: ConversationType.channel,
-                        channelIndex: channel.index,
-                        title: channel.name.isEmpty
-                            ? (channel.index == 0
-                                  ? 'Primary Channel'
-                                  : 'Channel ${channel.index}')
-                            : channel.name,
-                      ),
+            // Nodes section
+            if (otherNodes.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(
+                  child: Text(
+                    'No other nodes in range',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.textTertiary,
+                      fontFamily: 'Inter',
                     ),
-                  );
-                },
-              ),
-
-            // Direct messages section
-            if (otherNodes.isNotEmpty) ...[
+                  ),
+                ),
+              )
+            else ...[
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Text(
-                  'DIRECT MESSAGE',
+                  'NEARBY NODES',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -289,7 +214,7 @@ class MessagingScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              for (final node in otherNodes.take(5))
+              for (final node in otherNodes.take(10))
                 ListTile(
                   leading: Container(
                     width: 40,
@@ -345,7 +270,6 @@ class MessagingScreen extends ConsumerWidget {
 
 class _Conversation {
   final ConversationType type;
-  final int? channelIndex;
   final int? nodeNum;
   final String name;
   final String? shortName;
@@ -353,11 +277,9 @@ class _Conversation {
   final String? lastMessage;
   final DateTime? lastMessageTime;
   final int unreadCount;
-  final bool isEncrypted;
 
   _Conversation({
     required this.type,
-    this.channelIndex,
     this.nodeNum,
     required this.name,
     this.shortName,
@@ -365,7 +287,6 @@ class _Conversation {
     this.lastMessage,
     this.lastMessageTime,
     this.unreadCount = 0,
-    this.isEncrypted = false,
   });
 }
 
@@ -378,7 +299,6 @@ class _ConversationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final timeFormat = DateFormat('h:mm a');
-    final isChannel = conversation.type == ConversationType.channel;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -401,30 +321,22 @@ class _ConversationTile extends StatelessWidget {
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: isChannel
-                        ? AppTheme.primaryGreen.withValues(alpha: 0.2)
-                        : (conversation.avatarColor != null
-                              ? Color(conversation.avatarColor!)
-                              : AppTheme.graphPurple),
+                    color: conversation.avatarColor != null
+                        ? Color(conversation.avatarColor!)
+                        : AppTheme.graphPurple,
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    child: isChannel
-                        ? Icon(
-                            conversation.isEncrypted ? Icons.lock : Icons.tag,
-                            color: AppTheme.primaryGreen,
-                            size: 24,
-                          )
-                        : Text(
-                            conversation.shortName ??
-                                conversation.name.substring(0, 2),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              fontFamily: 'Inter',
-                            ),
-                          ),
+                    child: Text(
+                      conversation.shortName ??
+                          conversation.name.substring(0, 2),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -465,9 +377,7 @@ class _ConversationTile extends StatelessWidget {
                           Expanded(
                             child: Text(
                               conversation.lastMessage ??
-                                  (isChannel
-                                      ? 'No messages'
-                                      : 'Start a conversation'),
+                                  'Start a conversation',
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: AppTheme.textSecondary,
@@ -534,10 +444,24 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
+  final FocusNode _messageFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _messageFocusNode.requestFocus();
+    });
+  }
+
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
 
   @override
   void dispose() {
     _messageController.dispose();
+    _messageFocusNode.dispose();
     super.dispose();
   }
 
@@ -569,16 +493,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     try {
       final protocol = ref.read(protocolServiceProvider);
+      int packetId;
 
       if (widget.type == ConversationType.channel) {
-        await protocol.sendMessage(
+        packetId = await protocol.sendMessage(
           text: text,
           to: 0xFFFFFFFF, // Broadcast to channel
           channel: widget.channelIndex ?? 0,
           wantAck: false,
         );
       } else {
-        await protocol.sendMessage(
+        packetId = await protocol.sendMessage(
           text: text,
           to: widget.nodeNum!,
           channel: 0,
@@ -586,12 +511,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         );
       }
 
-      // Update status to sent
+      // Track the packet ID for delivery updates
+      ref.read(messagesProvider.notifier).trackPacket(packetId, messageId);
+
+      // Update status to sent with packet ID
       ref
           .read(messagesProvider.notifier)
           .updateMessage(
             messageId,
-            pendingMessage.copyWith(status: MessageStatus.sent),
+            pendingMessage.copyWith(
+              status: MessageStatus.sent,
+              packetId: packetId,
+            ),
           );
     } catch (e) {
       // Update status to failed with error
@@ -608,26 +539,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _retryMessage(Message message) async {
-    // Update to pending
+    // Update to pending, clear error
     ref
         .read(messagesProvider.notifier)
         .updateMessage(
           message.id,
-          message.copyWith(status: MessageStatus.pending, errorMessage: null),
+          message.copyWith(
+            status: MessageStatus.pending,
+            errorMessage: null,
+            routingError: null,
+          ),
         );
 
     try {
       final protocol = ref.read(protocolServiceProvider);
+      int packetId;
 
       if (message.isBroadcast) {
-        await protocol.sendMessage(
+        packetId = await protocol.sendMessage(
           text: message.text,
           to: 0xFFFFFFFF,
           channel: message.channel ?? 0,
           wantAck: false,
         );
       } else {
-        await protocol.sendMessage(
+        packetId = await protocol.sendMessage(
           text: message.text,
           to: message.to,
           channel: 0,
@@ -635,11 +571,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         );
       }
 
+      // Track the new packet ID for delivery updates
+      ref.read(messagesProvider.notifier).trackPacket(packetId, message.id);
+
       ref
           .read(messagesProvider.notifier)
           .updateMessage(
             message.id,
-            message.copyWith(status: MessageStatus.sent, errorMessage: null),
+            message.copyWith(
+              status: MessageStatus.sent,
+              errorMessage: null,
+              routingError: null,
+              packetId: packetId,
+            ),
           );
     } catch (e) {
       ref
@@ -652,6 +596,409 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           );
     }
+  }
+
+  void _showChannelSettings(BuildContext context) {
+    final channels = ref.read(channelsProvider);
+    final channel = channels.firstWhere(
+      (c) => c.index == widget.channelIndex,
+      orElse: () =>
+          ChannelConfig(index: widget.channelIndex ?? 0, name: '', psk: []),
+    );
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.darkBorder,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.wifi_tethering,
+                      color: AppTheme.primaryGreen,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          channel.psk.isNotEmpty
+                              ? 'Encrypted'
+                              : 'No encryption',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.edit, color: Colors.white),
+              title: const Text(
+                'Edit Channel',
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/channels').then((_) {
+                  // Navigate to channel form - for now just go to channels
+                });
+              },
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.key,
+                color: channel.psk.isNotEmpty
+                    ? Colors.white
+                    : AppTheme.textTertiary,
+              ),
+              title: Text(
+                'View Encryption Key',
+                style: TextStyle(
+                  color: channel.psk.isNotEmpty
+                      ? Colors.white
+                      : AppTheme.textTertiary,
+                ),
+              ),
+              enabled: channel.psk.isNotEmpty,
+              onTap: channel.psk.isNotEmpty
+                  ? () {
+                      Navigator.pop(context);
+                      _showEncryptionKey(context, channel);
+                    }
+                  : null,
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.qr_code,
+                color: channel.psk.isNotEmpty
+                    ? Colors.white
+                    : AppTheme.textTertiary,
+              ),
+              title: Text(
+                'Show QR Code',
+                style: TextStyle(
+                  color: channel.psk.isNotEmpty
+                      ? Colors.white
+                      : AppTheme.textTertiary,
+                ),
+              ),
+              enabled: channel.psk.isNotEmpty,
+              onTap: channel.psk.isNotEmpty
+                  ? () {
+                      Navigator.pop(context);
+                      _showQrCode(context, channel);
+                    }
+                  : null,
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEncryptionKey(BuildContext context, ChannelConfig channel) {
+    final base64Key = base64Encode(channel.psk);
+    final keyBits = channel.psk.length * 8;
+    bool showKey = false;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.key,
+                        color: AppTheme.primaryGreen,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Encryption Key',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$keyBits-bit · ${channel.psk.length} bytes',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.darkBorder),
+                  ),
+                  child: showKey
+                      ? SelectableText(
+                          base64Key,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.primaryGreen,
+                            fontFamily: 'monospace',
+                          ),
+                        )
+                      : Text(
+                          '•' * 32,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          setModalState(() => showKey = !showKey);
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: AppTheme.darkBorder),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: Icon(
+                          showKey ? Icons.visibility_off : Icons.visibility,
+                          size: 20,
+                        ),
+                        label: Text(showKey ? 'Hide' : 'Show'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: showKey
+                            ? () {
+                                Clipboard.setData(
+                                  ClipboardData(text: base64Key),
+                                );
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Key copied to clipboard'),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryGreen,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: AppTheme.darkBackground,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: const Icon(Icons.copy, size: 20),
+                        label: const Text('Copy'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showQrCode(BuildContext context, ChannelConfig channel) {
+    final base64Key = base64Encode(channel.psk);
+    final channelUrl =
+        'https://meshtastic.org/e/#${Uri.encodeComponent(base64Key)}';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkCard,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        minimum: const EdgeInsets.only(bottom: 24),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.qr_code,
+                      color: AppTheme.primaryGreen,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const Text(
+                          'Scan to join this channel',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: QrImageView(
+                  data: channelUrl,
+                  version: QrVersions.auto,
+                  size: 200,
+                  backgroundColor: Colors.white,
+                  eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: Color(0xFF1F2633),
+                  ),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: Color(0xFF1F2633),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: channelUrl));
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Channel URL copied to clipboard'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryGreen,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.share, size: 20),
+                  label: const Text('Copy Channel URL'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -676,203 +1023,221 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           .toList();
     }
 
-    return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: Scaffold(
         backgroundColor: AppTheme.darkBackground,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: widget.type == ConversationType.channel
-                    ? AppTheme.primaryGreen.withValues(alpha: 0.2)
-                    : AppTheme.graphPurple,
-                shape: BoxShape.circle,
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkBackground,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () {
+              _dismissKeyboard();
+              Navigator.pop(context);
+            },
+          ),
+          title: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: widget.type == ConversationType.channel
+                      ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+                      : AppTheme.graphPurple,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: widget.type == ConversationType.channel
+                      ? const Icon(
+                          Icons.tag,
+                          color: AppTheme.primaryGreen,
+                          size: 18,
+                        )
+                      : Text(
+                          widget.title.substring(0, 2),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                ),
               ),
-              child: Center(
-                child: widget.type == ConversationType.channel
-                    ? const Icon(
-                        Icons.tag,
-                        color: AppTheme.primaryGreen,
-                        size: 18,
-                      )
-                    : Text(
-                        widget.title.substring(0, 2),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'Inter',
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    Text(
+                      widget.type == ConversationType.channel
+                          ? 'Channel'
+                          : 'Direct Message',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textTertiary,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: widget.type == ConversationType.channel
+              ? [
+                  IconButton(
+                    icon: const Icon(Icons.settings, color: Colors.white),
+                    tooltip: 'Channel Settings',
+                    onPressed: () => _showChannelSettings(context),
+                  ),
+                ]
+              : null,
+        ),
+        body: Column(
+          children: [
+            // Messages
+            Expanded(
+              child: filteredMessages.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.chat_bubble_outline,
+                            size: 48,
+                            color: AppTheme.textTertiary,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            widget.type == ConversationType.channel
+                                ? 'No messages in this channel'
+                                : 'Start the conversation',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.textTertiary,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      reverse: true,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      itemCount: filteredMessages.length,
+                      itemBuilder: (context, index) {
+                        final message =
+                            filteredMessages[filteredMessages.length -
+                                1 -
+                                index];
+                        final isFromMe = message.from == myNodeNum;
+                        final senderNode = nodes[message.from];
+
+                        return _MessageBubble(
+                          message: message,
+                          isFromMe: isFromMe,
+                          senderName: senderNode?.displayName ?? 'Unknown',
+                          senderShortName:
+                              senderNode?.shortName ??
+                              message.from
+                                  .toRadixString(16)
+                                  .padLeft(4, '0')
+                                  .substring(0, 4),
+                          avatarColor: senderNode?.avatarColor,
+                          showSender:
+                              widget.type == ConversationType.channel &&
+                              !isFromMe,
+                          onRetry: message.isFailed
+                              ? () => _retryMessage(message)
+                              : null,
+                        );
+                      },
+                    ),
+            ),
+
+            // Input
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.darkCard,
+                border: Border(
+                  top: BorderSide(
+                    color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                  ),
+                ),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkBackground,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: TextField(
+                          controller: _messageController,
+                          focusNode: _messageFocusNode,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Inter',
+                          ),
+                          decoration: const InputDecoration(
+                            hintText: 'Message...',
+                            hintStyle: TextStyle(
+                              color: AppTheme.textTertiary,
+                              fontFamily: 'Inter',
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                          ),
+                          maxLines: null,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _sendMessage(),
                         ),
                       ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                      fontFamily: 'Inter',
                     ),
-                  ),
-                  Text(
-                    widget.type == ConversationType.channel
-                        ? 'Channel'
-                        : 'Direct Message',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.textTertiary,
-                      fontFamily: 'Inter',
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: _sendMessage,
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          color: AppTheme.primaryGreen,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.send,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
         ),
-      ),
-      body: Column(
-        children: [
-          // Messages
-          Expanded(
-            child: filteredMessages.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.chat_bubble_outline,
-                          size: 48,
-                          color: AppTheme.textTertiary,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          widget.type == ConversationType.channel
-                              ? 'No messages in this channel'
-                              : 'Start the conversation',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppTheme.textTertiary,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    reverse: true,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    itemCount: filteredMessages.length,
-                    itemBuilder: (context, index) {
-                      final message =
-                          filteredMessages[filteredMessages.length - 1 - index];
-                      final isFromMe = message.from == myNodeNum;
-                      final senderNode = nodes[message.from];
-
-                      return _MessageBubble(
-                        message: message,
-                        isFromMe: isFromMe,
-                        senderName: senderNode?.displayName ?? 'Unknown',
-                        senderShortName:
-                            senderNode?.shortName ??
-                            message.from
-                                .toRadixString(16)
-                                .padLeft(4, '0')
-                                .substring(0, 4),
-                        avatarColor: senderNode?.avatarColor,
-                        showSender:
-                            widget.type == ConversationType.channel &&
-                            !isFromMe,
-                        onRetry: message.isFailed
-                            ? () => _retryMessage(message)
-                            : null,
-                      );
-                    },
-                  ),
-          ),
-
-          // Input
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.darkCard,
-              border: Border(
-                top: BorderSide(
-                  color: AppTheme.darkBorder.withValues(alpha: 0.3),
-                ),
-              ),
-            ),
-            child: SafeArea(
-              top: false,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.darkBackground,
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: TextField(
-                        controller: _messageController,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: 'Inter',
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: 'Message...',
-                          hintStyle: TextStyle(
-                            color: AppTheme.textTertiary,
-                            fontFamily: 'Inter',
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                        ),
-                        maxLines: null,
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (_) => _sendMessage(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: _sendMessage,
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.primaryGreen,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.send,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -915,6 +1280,7 @@ class _MessageBubble extends StatelessWidget {
     final timeFormat = DateFormat('h:mm a');
     final isFailed = message.isFailed;
     final isPending = message.isPending;
+    final isDelivered = message.status == MessageStatus.delivered;
 
     if (isFromMe) {
       return Padding(
@@ -976,6 +1342,14 @@ class _MessageBubble extends StatelessWidget {
                                 fontFamily: 'Inter',
                               ),
                             ),
+                            if (!isPending && !isFailed) ...[
+                              const SizedBox(width: 4),
+                              Icon(
+                                isDelivered ? Icons.done_all : Icons.done,
+                                size: 14,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ],
                           ],
                         ),
                       ],
@@ -997,12 +1371,16 @@ class _MessageBubble extends StatelessWidget {
                       color: AppTheme.errorRed,
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      message.errorMessage ?? 'Failed to send',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppTheme.errorRed,
-                        fontFamily: 'Inter',
+                    Flexible(
+                      child: Text(
+                        message.errorMessage ?? 'Failed to send',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.errorRed,
+                          fontFamily: 'Inter',
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (onRetry != null) ...[

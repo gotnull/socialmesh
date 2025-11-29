@@ -1,56 +1,100 @@
 # Protofluff
 
-A complete Flutter companion app for Meshtastic devices with BLE and USB serial communication.
+A **privacy-first social network** built on Meshtastic mesh radios. Communicate without internet - messages hop between nearby devices, creating a truly decentralized network.
 
 ## Features
 
+### Social Features
+- **Ephemeral Identity**: Auto-rotating anonymous identities that prevent tracking while preserving reputation
+- **Hyperlocal Feed**: Discover content from your area that spreads organically through the mesh
+- **Encrypted Communities**: Private groups with end-to-end encryption
+- **Verified Friends**: Cryptographically verify trusted contacts
+
+### Mesh Features
 - **Multi-Transport Support**: Connect via Bluetooth Low Energy (BLE) or USB Serial
 - **Device Scanner**: Discover and connect to Meshtastic devices
 - **Real-time Messaging**: Send and receive text messages over the mesh network
 - **Node Discovery**: Track and display all discovered mesh nodes
 - **Node Map**: View node positions on an interactive map (for nodes with GPS)
 - **Channel Management**: Import channel configurations via QR code
+
+### Technical Features
 - **Secure Storage**: Encrypted storage for channel keys and sensitive data
-- **Settings**: Customize app behavior and manage data
 - **Protocol Service**: Full Meshtastic protobuf packet handling with framing
 - **State Management**: Reactive global state using Riverpod
-- **Extensible Architecture**: Clean separation of concerns for easy customization
+- **Offline-First**: Works entirely without internet connectivity
 
 ## Architecture
+
+### Data Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         UI LAYER                                │
+│  Feed, Communities, Identity, Messaging, Nodes, Settings        │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │ watches/reads
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    RIVERPOD PROVIDERS                           │
+│  feedPostsProvider, communitiesProvider, currentIdentityProvider│
+│  messagesProvider, nodesProvider, channelsProvider              │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │ uses
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      SERVICES LAYER                             │
+│  ProtocolService (Meshtastic), SocialMeshService, DatabaseService│
+└─────────────────────────┬───────────────────────────────────────┘
+                          │ communicates via
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    TRANSPORT LAYER                              │
+│  BleTransport (Bluetooth) / UsbTransport (Serial)               │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │
+                          ▼
+                   [Meshtastic Radio]
+```
 
 ### Project Structure
 
 ```
 lib/
-├── core/                    # Core abstractions
-│   └── transport.dart       # DeviceTransport interface
+├── core/                    # Core abstractions and models
+│   ├── transport.dart       # DeviceTransport interface
+│   ├── identity.dart        # EphemeralIdentity model
+│   ├── feed_models.dart     # FeedPost, Reaction models
+│   ├── community_models.dart # Community, CommunityPost models
+│   ├── crypto.dart          # Cryptographic utilities
+│   └── theme.dart           # App theming
 ├── features/                # UI feature modules
-│   ├── dashboard/
-│   │   └── dashboard_screen.dart
-│   ├── messaging/
-│   │   └── messaging_screen.dart
-│   ├── nodes/
-│   │   ├── nodes_screen.dart
-│   │   └── node_map_screen.dart
-│   ├── scanner/
-│   │   └── scanner_screen.dart
-│   └── settings/
-│       ├── settings_screen.dart
-│       └── qr_import_screen.dart
+│   ├── dashboard/           # Connection dashboard
+│   ├── feed/                # Social feed
+│   ├── communities/         # Community management
+│   ├── identity/            # Identity management
+│   ├── messaging/           # Direct messaging
+│   ├── nodes/               # Mesh node discovery
+│   ├── channels/            # Channel management
+│   ├── scanner/             # Device scanner
+│   ├── settings/            # App settings
+│   ├── onboarding/          # First-time setup
+│   └── navigation/          # Main navigation shell
 ├── generated/               # Generated protobuf code
+│   └── meshtastic/          # Meshtastic protocol buffers
 ├── models/                  # Data models
-│   └── mesh_models.dart     # Message, MeshNode, ChannelConfig
+│   ├── mesh_models.dart     # Message, MeshNode, ChannelConfig
+│   └── device_error.dart    # Error models
 ├── providers/               # Riverpod providers
-│   └── app_providers.dart   # Global state management
+│   ├── app_providers.dart   # Device/network state
+│   └── social_providers.dart # Social feature state
 ├── services/                # Business logic services
-│   ├── protocol/
-│   │   ├── packet_framer.dart    # Meshtastic packet framing
-│   │   └── protocol_service.dart # Protocol handling
-│   ├── storage/
-│   │   └── storage_service.dart  # Secure & settings storage
-│   └── transport/
-│       ├── ble_transport.dart    # BLE implementation
-│       └── usb_transport.dart    # USB serial implementation
+│   ├── protocol/            # Meshtastic protocol handling
+│   ├── social/              # Social mesh protocol
+│   ├── storage/             # Data persistence
+│   └── transport/           # BLE/USB communication
+├── widgets/                 # Reusable UI components
+│   └── common_widgets.dart  # Shared widgets
 ├── utils/                   # Utility functions
 └── main.dart                # App entry point
 
@@ -60,9 +104,49 @@ protos/                      # Protobuf definitions
     └── portnums.proto
 ```
 
+### Data Storage
+
+| Data | Storage | Service |
+|------|---------|---------|
+| Identities | SQLite | `DatabaseService` |
+| Feed Posts | SQLite | `DatabaseService` |
+| Communities | SQLite | `DatabaseService` |
+| Verified Friends | SQLite | `DatabaseService` |
+| Messages | SharedPreferences | `MessageStorageService` |
+| Settings | SharedPreferences | `SettingsService` |
+| Channel Keys | Secure Storage | `SecureStorageService` |
+
 ### Key Components
 
-#### 1. Transport Layer
+#### 1. Identity System (`lib/core/identity.dart`)
+
+**EphemeralIdentity** provides anonymous, rotating identities:
+- Cryptographic keypair (public/private)
+- Auto-rotates every 24 hours to prevent tracking
+- Avatar generated from identity seed
+- Stored encrypted in SQLite
+
+#### 2. Social Protocol (`lib/services/social/social_mesh_service.dart`)
+
+Custom packet format for social features:
+```
+[Magic: 2 bytes "PF"] [Type: 1 byte] [Version: 1 byte] [Flags: 1 byte] [Length: 2 bytes] [Checksum: 1 byte] [Payload...]
+```
+
+**Packet Types:**
+| Type | Code | Description |
+|------|------|-------------|
+| `feedPost` | 0x01 | New feed post |
+| `feedPropagation` | 0x02 | Request to re-broadcast a post |
+| `communityPost` | 0x03 | Post to a community |
+| `communitySync` | 0x04 | Sync community state |
+| `mediaChunk` | 0x05 | Chunked media data |
+| `identityProof` | 0x06 | Verify identity |
+| `friendRequest` | 0x07 | Friend request |
+| `friendResponse` | 0x08 | Accept/reject friend |
+| `heartbeat` | 0x09 | Presence announcement |
+
+#### 3. Transport Layer
 
 The transport layer provides an abstraction over BLE and USB serial communication:
 
@@ -77,13 +161,7 @@ The transport layer provides an abstraction over BLE and USB serial communicatio
 - `BleTransport`: Uses `flutter_blue_plus` for Bluetooth communication
 - `UsbTransport`: Uses `usb_serial` for USB serial communication
 
-Both implementations handle:
-- Connection management
-- Automatic reconnection
-- Data buffering
-- Error handling
-
-#### 2. Protocol Service
+#### 4. Protocol Service (`lib/services/protocol/protocol_service.dart`)
 
 **`ProtocolService`** handles Meshtastic protocol:
 - **Packet Framing**: Uses `PacketFramer` to frame/deframe packets with magic bytes
@@ -92,28 +170,67 @@ Both implementations handle:
 - **Node Discovery**: Tracks mesh nodes and their metadata
 - **Channel Configuration**: Manages channel settings
 
-**Packet Format:**
+**Meshtastic Packet Format:**
 ```
 [0x94, 0xC3, MSB(length), LSB(length), ...payload...]
 ```
 
-#### 3. State Management
+#### 5. State Management (Riverpod)
 
-Uses **Riverpod** for reactive state management:
+**Core Providers:**
+```dart
+// App initialization
+appInitProvider           → initializes DB, loads identity, auto-reconnects
 
-**Providers:**
-- `transportProvider`: Current transport (BLE/USB)
-- `connectionStateProvider`: Connection status stream
-- `protocolServiceProvider`: Protocol service instance
-- `messagesProvider`: Message history
-- `nodesProvider`: Discovered nodes
-- `channelsProvider`: Channel configurations
-- `myNodeNumProvider`: Current node number
+// Identity & Social
+currentIdentityProvider   → your ephemeral identity
+feedPostsProvider         → list of feed posts
+communitiesProvider       → list of communities
+verifiedFriendsProvider   → your verified friends
 
-**State Notifiers:**
-- `MessagesNotifier`: Manages message list
-- `NodesNotifier`: Manages node map
-- `ChannelsNotifier`: Manages channel list
+// Device/Network
+transportProvider         → BLE or USB transport
+protocolServiceProvider   → Meshtastic protocol handler
+connectionStateProvider   → connected/disconnected status
+connectedDeviceProvider   → currently connected device
+
+// Mesh Data
+nodesProvider            → mesh nodes discovered
+channelsProvider         → Meshtastic channels
+messagesProvider         → text messages
+myNodeNumProvider        → your node number
+
+// Settings
+settingsServiceProvider   → app settings (auto-reconnect, last device, etc.)
+```
+
+## How It Works
+
+### Posting to Feed
+
+1. User taps "Post" in Feed screen
+2. `feedPostsProvider.notifier.createPost()` is called
+3. Creates `FeedPost` with current identity as author
+4. Saves to SQLite via `DatabaseService`
+5. Broadcasts over mesh via `SocialMeshService.broadcastFeedPost()`
+6. Other devices receive and store the post locally
+
+### Receiving Posts Over Mesh
+
+1. Radio receives data → `BleTransport.dataStream` emits bytes
+2. `ProtocolService` processes Meshtastic packet
+3. If social packet, `SocialMeshService.processIncomingData()` parses it
+4. Deserializes to `FeedPost`, checks expiry
+5. Emits on `newPosts` stream
+6. UI updates via provider
+
+### Identity Rotation
+
+1. Identity created with 24-hour validity
+2. Timer schedules rotation check
+3. When expired, `rotateIdentity()` generates new keypair
+4. Old identity archived, new one becomes active
+5. Reputation transfers via cryptographic proof
 
 ## Setup
 
@@ -243,24 +360,39 @@ class MyCustomTransport implements DeviceTransport {
 ### Storage
 - `flutter_secure_storage`: Encrypted storage
 - `shared_preferences`: Settings persistence
+- `sqflite`: SQLite database
 
 ### UI/UX
 - `flutter_map`: Interactive maps
 - `mobile_scanner`: QR code scanning
 - `intl`: Date/time formatting
 
+## Key Files Reference
+
+| Purpose | File |
+|---------|------|
+| App entry & routing | `lib/main.dart` |
+| Device/network providers | `lib/providers/app_providers.dart` |
+| Social feature providers | `lib/providers/social_providers.dart` |
+| Identity model | `lib/core/identity.dart` |
+| Feed model | `lib/core/feed_models.dart` |
+| Community model | `lib/core/community_models.dart` |
+| SQLite database | `lib/services/storage/database_service.dart` |
+| Settings storage | `lib/services/storage/storage_service.dart` |
+| BLE communication | `lib/services/transport/ble_transport.dart` |
+| Meshtastic protocol | `lib/services/protocol/protocol_service.dart` |
+| Social mesh protocol | `lib/services/social/social_mesh_service.dart` |
+
 ## Future Enhancements
 
-- [ ] Implement actual protobuf message encoding/decoding
-- [ ] Add message retry and delivery confirmation
-- [ ] Implement telemetry display
-- [ ] Add position sharing
-- [ ] Implement channel creation UI
-- [ ] Add message filtering and search
-- [ ] Implement route tracing
-- [ ] Add notification support
-- [ ] Background service for continuous connection
+- [ ] Media attachments (images chunked over mesh)
+- [ ] Location-based post filtering
+- [ ] Community invitations via QR
+- [ ] Message reactions and replies
+- [ ] Push notifications
+- [ ] Background mesh service
 - [ ] Mesh statistics and analytics
+- [ ] Route tracing visualization
 
 ## License
 

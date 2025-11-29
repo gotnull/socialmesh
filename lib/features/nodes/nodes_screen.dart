@@ -15,6 +15,10 @@ class NodesScreen extends ConsumerStatefulWidget {
 class _NodesScreenState extends ConsumerState<NodesScreen> {
   String _searchQuery = '';
 
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final nodes = ref.watch(nodesProvider);
@@ -44,105 +48,112 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
       }).toList();
     }
 
-    return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: Scaffold(
         backgroundColor: AppTheme.darkBackground,
-        title: Text(
-          'Nodes (${nodes.length})',
-          style: const TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-            fontFamily: 'Inter',
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkBackground,
+          title: Text(
+            'Nodes (${nodes.length})',
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              fontFamily: 'Inter',
+            ),
           ),
         ),
-      ),
-      body: Column(
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppTheme.darkCard,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: TextField(
-                onChanged: (value) => setState(() => _searchQuery = value),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Inter',
+        body: Column(
+          children: [
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.darkCard,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                decoration: const InputDecoration(
-                  hintText: 'Find a node',
-                  hintStyle: TextStyle(
-                    color: AppTheme.textTertiary,
+                child: TextField(
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontFamily: 'Inter',
                   ),
-                  prefixIcon: Icon(Icons.search, color: AppTheme.textTertiary),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
+                  decoration: const InputDecoration(
+                    hintText: 'Find a node',
+                    hintStyle: TextStyle(
+                      color: AppTheme.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: AppTheme.textTertiary,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          // Divider
-          Container(
-            height: 1,
-            color: AppTheme.darkBorder.withValues(alpha: 0.3),
-          ),
-          // Node list
-          Expanded(
-            child: nodes.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            color: AppTheme.darkCard,
-                            borderRadius: BorderRadius.circular(16),
+            // Divider
+            Container(
+              height: 1,
+              color: AppTheme.darkBorder.withValues(alpha: 0.3),
+            ),
+            // Node list
+            Expanded(
+              child: nodes.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: AppTheme.darkCard,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(
+                              Icons.group,
+                              size: 40,
+                              color: AppTheme.textTertiary,
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.group,
-                            size: 40,
-                            color: AppTheme.textTertiary,
+                          const SizedBox(height: 24),
+                          const Text(
+                            'No nodes discovered yet',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.textSecondary,
+                              fontFamily: 'Inter',
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'No nodes discovered yet',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.textSecondary,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: nodesList.length,
-                    itemBuilder: (context, index) {
-                      final node = nodesList[index];
-                      final isMyNode = node.nodeNum == myNodeNum;
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: nodesList.length,
+                      itemBuilder: (context, index) {
+                        final node = nodesList[index];
+                        final isMyNode = node.nodeNum == myNodeNum;
 
-                      return _NodeCard(
-                        node: node,
-                        isMyNode: isMyNode,
-                        onTap: () => _showNodeDetails(context, node, isMyNode),
-                      );
-                    },
-                  ),
-          ),
-        ],
+                        return _NodeCard(
+                          node: node,
+                          isMyNode: isMyNode,
+                          onTap: () =>
+                              _showNodeDetails(context, node, isMyNode),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

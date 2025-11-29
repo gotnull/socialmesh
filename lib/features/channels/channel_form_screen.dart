@@ -85,6 +85,10 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
     super.dispose();
   }
 
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
   void _generateRandomKey() {
     if (_selectedKeySize == KeySize.none) {
       _keyController.text = '';
@@ -170,85 +174,88 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: Scaffold(
         backgroundColor: AppTheme.darkBackground,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          isEditing ? 'Edit Channel' : 'New Channel',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-            fontFamily: 'Inter',
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkBackground,
+          leading: IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
           ),
-        ),
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton(
-              onPressed: _isSaving ? null : _saveChannel,
-              child: _isSaving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppTheme.primaryGreen,
-                      ),
-                    )
-                  : const Text(
-                      'Save',
-                      style: TextStyle(
-                        color: AppTheme.primaryGreen,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
+          title: Text(
+            isEditing ? 'Edit Channel' : 'New Channel',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              fontFamily: 'Inter',
             ),
           ),
-        ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            // Channel Name Field
-            _buildFieldLabel('Channel Name'),
-            const SizedBox(height: 8),
-            _buildNameField(),
-
-            const SizedBox(height: 28),
-
-            // Encryption Section
-            _buildFieldLabel('Encryption'),
-            const SizedBox(height: 8),
-            _buildEncryptionSelector(),
-
-            if (_selectedKeySize != KeySize.none) ...[
-              const SizedBox(height: 20),
-              _buildKeyField(),
-            ],
-
-            const SizedBox(height: 28),
-
-            // MQTT Options
-            _buildFieldLabel('MQTT Settings'),
-            const SizedBox(height: 8),
-            _buildMqttOptions(),
-
-            if (isPrimaryChannel) ...[
-              const SizedBox(height: 20),
-              _buildPrimaryChannelNote(),
-            ],
+          centerTitle: true,
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton(
+                onPressed: _isSaving ? null : _saveChannel,
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppTheme.primaryGreen,
+                        ),
+                      )
+                    : const Text(
+                        'Save',
+                        style: TextStyle(
+                          color: AppTheme.primaryGreen,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+              ),
+            ),
           ],
+        ),
+        body: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              // Channel Name Field
+              _buildFieldLabel('Channel Name'),
+              const SizedBox(height: 8),
+              _buildNameField(),
+
+              const SizedBox(height: 28),
+
+              // Encryption Section
+              _buildFieldLabel('Encryption'),
+              const SizedBox(height: 8),
+              _buildEncryptionSelector(),
+
+              if (_selectedKeySize != KeySize.none) ...[
+                const SizedBox(height: 20),
+                _buildKeyField(),
+              ],
+
+              const SizedBox(height: 28),
+
+              // MQTT Options
+              _buildFieldLabel('MQTT Settings'),
+              const SizedBox(height: 8),
+              _buildMqttOptions(),
+
+              if (isPrimaryChannel) ...[
+                const SizedBox(height: 20),
+                _buildPrimaryChannelNote(),
+              ],
+            ],
+          ),
         ),
       ),
     );

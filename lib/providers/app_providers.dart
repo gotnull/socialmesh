@@ -22,6 +22,83 @@ final loggerProvider = Provider<Logger>((ref) {
   );
 });
 
+// App initialization state
+enum AppInitState { uninitialized, initializing, initialized, error }
+
+class AppInitNotifier extends StateNotifier<AppInitState> {
+  final Ref _ref;
+
+  AppInitNotifier(this._ref) : super(AppInitState.uninitialized);
+
+  Future<void> initialize() async {
+    if (state == AppInitState.initializing) return;
+
+    state = AppInitState.initializing;
+    try {
+      // Initialize storage services
+      await _ref.read(settingsServiceProvider.future);
+      await _ref.read(messageStorageProvider.future);
+
+      // Check for auto-reconnect settings
+      final settings = await _ref.read(settingsServiceProvider.future);
+      final lastDeviceId = settings.lastDeviceId;
+      final shouldAutoReconnect = settings.autoReconnect;
+
+      if (lastDeviceId != null && shouldAutoReconnect) {
+        _ref.read(autoReconnectStateProvider.notifier).state =
+            AutoReconnectState.scanning;
+
+        final transport = _ref.read(transportProvider);
+        try {
+          DeviceInfo? lastDevice;
+
+          // Scan for devices and try to find the last connected one
+          await for (final device in transport.scan(
+            timeout: const Duration(seconds: 5),
+          )) {
+            if (device.id == lastDeviceId) {
+              lastDevice = device;
+              break;
+            }
+          }
+
+          if (lastDevice != null) {
+            _ref.read(autoReconnectStateProvider.notifier).state =
+                AutoReconnectState.connecting;
+            await transport.connect(lastDevice);
+
+            // Start protocol service
+            final protocol = _ref.read(protocolServiceProvider);
+            await protocol.start();
+
+            _ref.read(connectedDeviceProvider.notifier).state = lastDevice;
+            _ref.read(autoReconnectStateProvider.notifier).state =
+                AutoReconnectState.success;
+          } else {
+            _ref.read(autoReconnectStateProvider.notifier).state =
+                AutoReconnectState.idle;
+          }
+        } catch (e) {
+          debugPrint('Auto-reconnect failed: $e');
+          _ref.read(autoReconnectStateProvider.notifier).state =
+              AutoReconnectState.failed;
+        }
+      }
+
+      state = AppInitState.initialized;
+    } catch (e) {
+      debugPrint('App initialization failed: $e');
+      state = AppInitState.error;
+    }
+  }
+}
+
+final appInitProvider = StateNotifierProvider<AppInitNotifier, AppInitState>((
+  ref,
+) {
+  return AppInitNotifier(ref);
+});
+
 // Storage services
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
   final logger = ref.watch(loggerProvider);
@@ -82,6 +159,13 @@ final connectionStateProvider = StreamProvider<DeviceConnectionState>((
 // Currently connected device
 final connectedDeviceProvider = StateProvider<DeviceInfo?>((ref) => null);
 
+// Auto-reconnect state
+enum AutoReconnectState { idle, scanning, connecting, failed, success }
+
+final autoReconnectStateProvider = StateProvider<AutoReconnectState>((ref) {
+  return AutoReconnectState.idle;
+});
+
 // Current RSSI stream from protocol service
 final currentRssiProvider = StreamProvider<int>((ref) async* {
   final protocol = ref.watch(protocolServiceProvider);
@@ -115,6 +199,7 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
 class MessagesNotifier extends StateNotifier<List<Message>> {
   final ProtocolService _protocol;
   final MessageStorageService? _storage;
+  final Map<int, String> _packetToMessageId = {};
 
   MessagesNotifier(this._protocol, this._storage) : super([]) {
     _init();
@@ -132,13 +217,61 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
 
     // Listen for new messages
     _protocol.messageStream.listen((message) {
+      // Skip sent messages - they're handled via optimistic UI in messaging_screen
+      if (message.sent) {
+        return;
+      }
       state = [...state, message];
       // Persist the new message
       _storage?.saveMessage(message);
     });
+
+    // Listen for delivery status updates
+    _protocol.deliveryStream.listen(_handleDeliveryUpdate);
+  }
+
+  void _handleDeliveryUpdate(MessageDeliveryUpdate update) {
+    final messageId = _packetToMessageId[update.packetId];
+    if (messageId == null) {
+      debugPrint('📨 Delivery update for unknown packet ${update.packetId}');
+      return;
+    }
+
+    final messageIndex = state.indexWhere((m) => m.id == messageId);
+    if (messageIndex == -1) {
+      debugPrint('📨 Delivery update for message not in state: $messageId');
+      return;
+    }
+
+    final message = state[messageIndex];
+    final updatedMessage = message.copyWith(
+      status: update.isSuccess ? MessageStatus.delivered : MessageStatus.failed,
+      routingError: update.error,
+      errorMessage: update.error?.message,
+    );
+
+    state = [
+      ...state.sublist(0, messageIndex),
+      updatedMessage,
+      ...state.sublist(messageIndex + 1),
+    ];
+    _storage?.saveMessage(updatedMessage);
+
+    debugPrint(
+      '📨 Message ${update.isSuccess ? "delivered" : "failed"}: $messageId'
+      '${update.error != null ? " - ${update.error!.message}" : ""}',
+    );
+  }
+
+  void trackPacket(int packetId, String messageId) {
+    _packetToMessageId[packetId] = messageId;
   }
 
   void addMessage(Message message) {
+    // Check for duplicate by ID to prevent optimistic UI + stream double-add
+    if (state.any((m) => m.id == message.id)) {
+      return;
+    }
     state = [...state, message];
     _storage?.saveMessage(message);
   }
@@ -284,4 +417,21 @@ class MyNodeNumNotifier extends StateNotifier<int?> {
 final myNodeNumProvider = StateNotifierProvider<MyNodeNumNotifier, int?>((ref) {
   final protocol = ref.watch(protocolServiceProvider);
   return MyNodeNumNotifier(protocol);
+});
+
+/// Unread messages count provider
+/// Returns the count of messages that were received from other nodes
+/// and not yet read (messages where received=true and from != myNodeNum)
+final unreadMessagesCountProvider = Provider<int>((ref) {
+  final messages = ref.watch(messagesProvider);
+  final myNodeNum = ref.watch(myNodeNumProvider);
+
+  if (myNodeNum == null) return 0;
+
+  return messages.where((m) => m.received && m.from != myNodeNum).length;
+});
+
+/// Has unread messages provider - simple boolean check
+final hasUnreadMessagesProvider = Provider<bool>((ref) {
+  return ref.watch(unreadMessagesCountProvider) > 0;
 });

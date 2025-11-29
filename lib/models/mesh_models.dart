@@ -8,6 +8,46 @@ enum MessageStatus {
   failed, // Failed to send
 }
 
+/// Routing error codes from Meshtastic protocol
+enum RoutingError {
+  none(0, 'Delivered'),
+  noRoute(1, 'No route to destination'),
+  gotNak(2, 'Received NAK from relay'),
+  timeout(3, 'Delivery timed out'),
+  noInterface(4, 'No suitable interface'),
+  maxRetransmit(5, 'Max retransmissions reached'),
+  noChannel(6, 'Channel not available'),
+  tooLarge(7, 'Message too large'),
+  noResponse(8, 'No response from destination'),
+  dutyCycleLimit(9, 'Duty cycle limit exceeded'),
+  badRequest(32, 'Invalid request'),
+  notAuthorized(33, 'Not authorized'),
+  pkiFailed(34, 'PKI encryption failed'),
+  pkiUnknownPubkey(35, 'Unknown public key'),
+  adminBadSessionKey(36, 'Invalid admin session key'),
+  adminPublicKeyUnauthorized(37, 'Admin key not authorized'),
+  rateLimitExceeded(38, 'Rate limit exceeded');
+
+  final int code;
+  final String message;
+
+  const RoutingError(this.code, this.message);
+
+  static RoutingError fromCode(int code) {
+    return RoutingError.values.firstWhere(
+      (e) => e.code == code,
+      orElse: () => RoutingError.none,
+    );
+  }
+
+  bool get isSuccess => this == RoutingError.none;
+  bool get isRetryable =>
+      this == RoutingError.timeout ||
+      this == RoutingError.maxRetransmit ||
+      this == RoutingError.noRoute ||
+      this == RoutingError.dutyCycleLimit;
+}
+
 /// Message model
 class Message {
   final String id;
@@ -21,6 +61,8 @@ class Message {
   final bool acked;
   final MessageStatus status;
   final String? errorMessage;
+  final RoutingError? routingError;
+  final int? packetId; // Meshtastic packet ID for tracking delivery
 
   Message({
     String? id,
@@ -34,6 +76,8 @@ class Message {
     this.acked = false,
     this.status = MessageStatus.sent,
     this.errorMessage,
+    this.routingError,
+    this.packetId,
   }) : id = id ?? const Uuid().v4(),
        timestamp = timestamp ?? DateTime.now();
 
@@ -49,6 +93,8 @@ class Message {
     bool? acked,
     MessageStatus? status,
     String? errorMessage,
+    RoutingError? routingError,
+    int? packetId,
   }) {
     return Message(
       id: id ?? this.id,
@@ -62,6 +108,8 @@ class Message {
       acked: acked ?? this.acked,
       status: status ?? this.status,
       errorMessage: errorMessage ?? this.errorMessage,
+      routingError: routingError ?? this.routingError,
+      packetId: packetId ?? this.packetId,
     );
   }
 
@@ -69,9 +117,28 @@ class Message {
   bool get isDirect => !isBroadcast;
   bool get isFailed => status == MessageStatus.failed;
   bool get isPending => status == MessageStatus.pending;
+  bool get isRetryable => routingError?.isRetryable ?? false;
 
   @override
   String toString() => 'Message(from: $from, to: $to, text: $text)';
+}
+
+/// Message delivery status update from the mesh
+class MessageDeliveryUpdate {
+  final int packetId;
+  final bool delivered;
+  final RoutingError? error;
+
+  MessageDeliveryUpdate({
+    required this.packetId,
+    required this.delivered,
+    this.error,
+  });
+
+  bool get isSuccess =>
+      delivered && (error == null || error == RoutingError.none);
+  bool get isFailed =>
+      !delivered || (error != null && error != RoutingError.none);
 }
 
 /// Node in the mesh network

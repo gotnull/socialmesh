@@ -69,27 +69,58 @@ class BleTransport implements DeviceTransport {
         throw Exception('Bluetooth is not supported on this device');
       }
 
-      // Start scanning - skip all adapter state checks, just scan
+      // Wait for Bluetooth adapter to be ready (up to 3 seconds)
+      final adapterState = await FlutterBluePlus.adapterState
+          .where(
+            (s) =>
+                s == BluetoothAdapterState.on || s == BluetoothAdapterState.off,
+          )
+          .first
+          .timeout(
+            const Duration(seconds: 3),
+            onTimeout: () => BluetoothAdapterState.unknown,
+          );
+
+      if (adapterState == BluetoothAdapterState.off) {
+        _logger.e('Bluetooth is turned off');
+        throw Exception('Please turn on Bluetooth to scan for devices');
+      }
+
+      if (adapterState == BluetoothAdapterState.unknown) {
+        _logger.w('Bluetooth state unknown, attempting scan anyway...');
+      }
+
       final scanDuration = timeout ?? const Duration(seconds: 10);
 
-      // Try to start scan, catch adapter state errors and retry once
-      try {
-        await FlutterBluePlus.startScan(
-          timeout: scanDuration,
-          withServices: [Guid(_serviceUuid)],
-        );
-      } catch (e) {
-        // If adapter state is unknown (iOS CBManagerStateUnknown on first launch),
-        // wait briefly and retry once
-        if (e.toString().contains('CBManagerStateUnknown') ||
-            e.toString().contains('bluetooth must be turned on')) {
-          _logger.w('Adapter state unknown, retrying scan after delay...');
-          await Future.delayed(const Duration(milliseconds: 500));
+      // Try to start scan with retry for transient states
+      int retryCount = 0;
+      const maxRetries = 3;
+      while (retryCount < maxRetries) {
+        try {
           await FlutterBluePlus.startScan(
             timeout: scanDuration,
             withServices: [Guid(_serviceUuid)],
           );
-        } else {
+          break; // Success, exit retry loop
+        } catch (e) {
+          retryCount++;
+          final errorStr = e.toString();
+          // Handle transient Bluetooth states
+          if (errorStr.contains('CBManagerStateUnknown') ||
+              errorStr.contains('bluetooth must be turned on') ||
+              errorStr.contains('Bluetooth adapter is not available')) {
+            if (retryCount < maxRetries) {
+              _logger.w(
+                'Bluetooth not ready (attempt $retryCount/$maxRetries), retrying...',
+              );
+              await Future.delayed(Duration(milliseconds: 500 * retryCount));
+              continue;
+            }
+            // All retries exhausted
+            throw Exception(
+              'Bluetooth is not ready. Please ensure Bluetooth is enabled and try again.',
+            );
+          }
           rethrow;
         }
       }

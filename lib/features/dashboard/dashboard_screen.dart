@@ -14,12 +14,23 @@ class DashboardScreen extends ConsumerWidget {
     final connectedDevice = ref.watch(connectedDeviceProvider);
     final nodes = ref.watch(nodesProvider);
     final messages = ref.watch(messagesProvider);
+    final autoReconnectState = ref.watch(autoReconnectStateProvider);
+    final myNodeNum = ref.watch(myNodeNumProvider);
+
+    // Get battery level from our own node
+    final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
+    final batteryLevel = myNode?.batteryLevel;
 
     final connectionState = connectionStateAsync.when(
       data: (state) => state,
       loading: () => transport.DeviceConnectionState.connecting,
       error: (error, stackTrace) => transport.DeviceConnectionState.error,
     );
+
+    // Determine effective state: if auto-reconnect is in progress, show that
+    final isReconnecting =
+        autoReconnectState == AutoReconnectState.scanning ||
+        autoReconnectState == AutoReconnectState.connecting;
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
@@ -34,12 +45,40 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ),
         actions: [
+          // Battery indicator
+          if (batteryLevel != null &&
+              connectionState == transport.DeviceConnectionState.connected)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _getBatteryIcon(batteryLevel),
+                    size: 20,
+                    color: _getBatteryColor(batteryLevel),
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    '$batteryLevel%',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _getBatteryColor(batteryLevel),
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
+              ),
+            ),
           IconButton(
             icon: Icon(
               Icons.bluetooth,
               color:
                   connectionState == transport.DeviceConnectionState.connected
                   ? AppTheme.primaryGreen
+                  : isReconnecting
+                  ? AppTheme.warningYellow
                   : AppTheme.textTertiary,
             ),
             onPressed: () {
@@ -59,12 +98,70 @@ class DashboardScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  Text(
-                    _getConnectionStateText(connectionState),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
+                  if (isReconnecting) ...[
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Text(
+                      _getConnectionStateText(
+                        connectionState,
+                        autoReconnectState,
+                      ),
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      autoReconnectState == AutoReconnectState.scanning
+                          ? 'Scanning for device...'
+                          : 'Establishing connection...',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textTertiary,
+                      ),
+                    ),
+                  ] else ...[
+                    Icon(
+                      autoReconnectState == AutoReconnectState.failed
+                          ? Icons.wifi_off
+                          : Icons.bluetooth_disabled,
+                      size: 64,
+                      color: AppTheme.textTertiary,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _getConnectionStateText(
+                        connectionState,
+                        autoReconnectState,
+                      ),
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    if (autoReconnectState == AutoReconnectState.failed) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Could not find saved device',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textTertiary,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).pushNamed('/scanner');
+                      },
+                      icon: const Icon(Icons.bluetooth_searching, size: 20),
+                      label: const Text('Scan for Devices'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryGreen,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             )
@@ -250,7 +347,34 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  String _getConnectionStateText(transport.DeviceConnectionState state) {
+  IconData _getBatteryIcon(int level) {
+    if (level >= 95) return Icons.battery_full;
+    if (level >= 80) return Icons.battery_6_bar;
+    if (level >= 60) return Icons.battery_5_bar;
+    if (level >= 40) return Icons.battery_4_bar;
+    if (level >= 20) return Icons.battery_2_bar;
+    if (level >= 10) return Icons.battery_1_bar;
+    return Icons.battery_alert;
+  }
+
+  Color _getBatteryColor(int level) {
+    if (level >= 50) return AppTheme.primaryGreen;
+    if (level >= 20) return AppTheme.warningYellow;
+    return AppTheme.errorRed;
+  }
+
+  String _getConnectionStateText(
+    transport.DeviceConnectionState state,
+    AutoReconnectState autoReconnectState,
+  ) {
+    // If auto-reconnect is in progress, show that status
+    if (autoReconnectState == AutoReconnectState.scanning) {
+      return 'Reconnecting...';
+    }
+    if (autoReconnectState == AutoReconnectState.connecting) {
+      return 'Reconnecting...';
+    }
+
     switch (state) {
       case transport.DeviceConnectionState.connecting:
         return 'Connecting...';
