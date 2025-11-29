@@ -717,6 +717,16 @@ class ProtocolService {
     bool wantAck = true,
     String? messageId,
   }) async {
+    // Validate we're ready to send
+    if (_myNodeNum == null) {
+      throw StateError(
+        'Cannot send message: device not ready (no node number)',
+      );
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot send message: not connected to device');
+    }
+
     try {
       _logger.i('Sending message to $to: $text');
 
@@ -728,7 +738,7 @@ class ProtocolService {
         ..wantResponse = wantAck;
 
       final packet = pb.MeshPacket()
-        ..from = _myNodeNum ?? 0
+        ..from = _myNodeNum!
         ..to = to
         ..channel = channel
         ..decoded = data
@@ -747,7 +757,7 @@ class ProtocolService {
 
       final message = Message(
         id: messageId,
-        from: _myNodeNum ?? 0,
+        from: _myNodeNum!,
         to: to,
         text: text,
         channel: channel,
@@ -934,6 +944,16 @@ class ProtocolService {
 
   /// Set device role
   Future<void> setDeviceRole(pb.Config_DeviceConfig_Role role) async {
+    // Validate we're ready to send
+    if (_myNodeNum == null) {
+      throw StateError(
+        'Cannot set device role: device not ready (no node number)',
+      );
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot set device role: not connected to device');
+    }
+
     try {
       _logger.i('Setting device role: ${role.name}');
 
@@ -948,8 +968,8 @@ class ProtocolService {
         ..wantResponse = true;
 
       final packet = pb.MeshPacket()
-        ..from = _myNodeNum ?? 0
-        ..to = _myNodeNum ?? 0
+        ..from = _myNodeNum!
+        ..to = _myNodeNum!
         ..decoded = data
         ..id = _generatePacketId();
 
@@ -969,6 +989,16 @@ class ProtocolService {
     required String longName,
     required String shortName,
   }) async {
+    // Validate we're ready to send
+    if (_myNodeNum == null) {
+      throw StateError(
+        'Cannot set user name: device not ready (no node number)',
+      );
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot set user name: not connected to device');
+    }
+
     try {
       // Validate lengths
       final trimmedLong = longName.length > 36
@@ -994,8 +1024,8 @@ class ProtocolService {
         ..wantResponse = true;
 
       final packet = pb.MeshPacket()
-        ..from = _myNodeNum ?? 0
-        ..to = _myNodeNum ?? 0
+        ..from = _myNodeNum!
+        ..to = _myNodeNum!
         ..decoded = data
         ..id = _generatePacketId();
 
@@ -1011,6 +1041,14 @@ class ProtocolService {
 
   /// Set the region/frequency for the device
   Future<void> setRegion(pbenum.RegionCode region) async {
+    // Validate we're ready to send
+    if (_myNodeNum == null) {
+      throw StateError('Cannot set region: device not ready (no node number)');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot set region: not connected to device');
+    }
+
     try {
       _logger.i('Setting region: ${region.name}');
 
@@ -1026,8 +1064,8 @@ class ProtocolService {
         ..wantResponse = true;
 
       final packet = pb.MeshPacket()
-        ..from = _myNodeNum ?? 0
-        ..to = _myNodeNum ?? 0
+        ..from = _myNodeNum!
+        ..to = _myNodeNum!
         ..decoded = data
         ..id = _generatePacketId();
 
