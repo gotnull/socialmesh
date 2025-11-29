@@ -60,7 +60,7 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                   const SizedBox(width: 2),
                   Text(
-                    '$batteryLevel%',
+                    _getBatteryText(batteryLevel),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -348,6 +348,8 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   IconData _getBatteryIcon(int level) {
+    // Meshtastic uses 101 for charging, 100 for plugged in fully charged
+    if (level > 100) return Icons.battery_charging_full;
     if (level >= 95) return Icons.battery_full;
     if (level >= 80) return Icons.battery_6_bar;
     if (level >= 60) return Icons.battery_5_bar;
@@ -358,9 +360,15 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   Color _getBatteryColor(int level) {
+    if (level > 100) return AppTheme.primaryGreen; // Charging
     if (level >= 50) return AppTheme.primaryGreen;
     if (level >= 20) return AppTheme.warningYellow;
     return AppTheme.errorRed;
+  }
+
+  String _getBatteryText(int level) {
+    if (level > 100) return 'Charging';
+    return '$level%';
   }
 
   String _getConnectionStateText(
