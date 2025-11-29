@@ -683,7 +683,9 @@ class _ChannelTile extends ConsumerWidget {
                 await protocol.setChannel(disabledChannel);
 
                 // Update local state only after successful device sync
-                ref.read(channelsProvider.notifier).removeChannel(channel.index);
+                ref
+                    .read(channelsProvider.notifier)
+                    .removeChannel(channel.index);
 
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(

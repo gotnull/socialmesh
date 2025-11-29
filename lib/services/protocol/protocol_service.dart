@@ -889,7 +889,8 @@ class ProtocolService {
 
       final packet = pb.MeshPacket()
         ..from = _myNodeNum!
-        ..to = _myNodeNum! // Admin messages to self
+        ..to =
+            _myNodeNum! // Admin messages to self
         ..decoded = data
         ..id = _generatePacketId();
 
