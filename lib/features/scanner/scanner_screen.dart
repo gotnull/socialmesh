@@ -6,7 +6,9 @@ import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
-  const ScannerScreen({super.key});
+  final bool isOnboarding;
+
+  const ScannerScreen({super.key, this.isOnboarding = false});
 
   @override
   ConsumerState<ScannerScreen> createState() => _ScannerScreenState();
@@ -22,7 +24,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   @override
   void initState() {
     super.initState();
-    _tryAutoReconnect();
+    // Skip auto-reconnect during onboarding - user needs to select device
+    if (widget.isOnboarding) {
+      _startScan();
+    } else {
+      _tryAutoReconnect();
+    }
   }
 
   Future<void> _tryAutoReconnect() async {
@@ -186,8 +193,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       if (!mounted) return;
 
-      // Navigate to dashboard
-      Navigator.of(context).pushReplacementNamed('/dashboard');
+      // If onboarding, return the device and let onboarding handle navigation
+      if (widget.isOnboarding) {
+        Navigator.of(context).pop(device);
+        return;
+      }
+
+      // Navigate to main app
+      Navigator.of(context).pushReplacementNamed('/main');
     } catch (e) {
       if (!mounted) return;
 
@@ -223,36 +236,44 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
-        title: const Text(
-          'Meshtastic',
-          style: TextStyle(
+        leading: widget.isOnboarding
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
+        title: Text(
+          widget.isOnboarding ? 'Connect Device' : 'Meshtastic',
+          style: const TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.bluetooth,
-              color: _connecting
-                  ? AppTheme.textTertiary
-                  : AppTheme.textSecondary,
-            ),
-            onPressed: _connecting ? null : () {},
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.settings,
-              color: _connecting ? AppTheme.textTertiary : Colors.white,
-            ),
-            onPressed: _connecting
-                ? null
-                : () {
-                    Navigator.of(context).pushNamed('/settings');
-                  },
-          ),
-        ],
+        actions: widget.isOnboarding
+            ? null
+            : [
+                IconButton(
+                  icon: Icon(
+                    Icons.bluetooth,
+                    color: _connecting
+                        ? AppTheme.textTertiary
+                        : AppTheme.textSecondary,
+                  ),
+                  onPressed: _connecting ? null : () {},
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.settings,
+                    color: _connecting ? AppTheme.textTertiary : Colors.white,
+                  ),
+                  onPressed: _connecting
+                      ? null
+                      : () {
+                          Navigator.of(context).pushNamed('/settings');
+                        },
+                ),
+              ],
       ),
       body: _connecting
           ? Center(

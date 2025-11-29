@@ -12,6 +12,7 @@ import 'features/settings/settings_screen.dart';
 import 'features/settings/qr_import_screen.dart';
 import 'features/device/device_config_screen.dart';
 import 'features/navigation/main_shell.dart';
+import 'features/onboarding/onboarding_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: ProtofluffApp()));
@@ -52,6 +53,7 @@ class _ProtofluffAppState extends ConsumerState<ProtofluffApp> {
         '/qr-import': (context) => const QrImportScreen(),
         '/device-config': (context) => const DeviceConfigScreen(),
         '/main': (context) => const MainShell(),
+        '/onboarding': (context) => const OnboardingScreen(),
       },
     );
   }
@@ -71,6 +73,8 @@ class _AppRouter extends ConsumerWidget {
         return const _SplashScreen();
       case AppInitState.error:
         return const _ErrorScreen();
+      case AppInitState.needsOnboarding:
+        return const OnboardingScreen();
       case AppInitState.initialized:
         return const MainShell();
     }

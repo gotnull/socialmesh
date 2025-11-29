@@ -7,6 +7,7 @@ import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../channels/channel_form_screen.dart';
 
 /// Conversation type enum
 enum ConversationType { channel, directMessage }
@@ -679,9 +680,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/channels').then((_) {
-                  // Navigate to channel form - for now just go to channels
-                });
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChannelFormScreen(
+                      existingChannel: channel,
+                      channelIndex: channel.index,
+                    ),
+                  ),
+                );
               },
             ),
             ListTile(

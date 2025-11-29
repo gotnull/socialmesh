@@ -360,7 +360,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
               color: AppTheme.darkBackground,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: AppTheme.primaryGreen.withValues(alpha: 0.5),
+                color: AppTheme.darkBorder.withValues(alpha: 0.5),
               ),
             ),
             child: TextFormField(
@@ -605,7 +605,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
 
           // Key display area
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppTheme.darkBackground,

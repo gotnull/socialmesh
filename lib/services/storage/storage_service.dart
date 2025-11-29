@@ -144,6 +144,14 @@ class SettingsService {
     await _preferences.clear();
     _logger.i('Cleared all settings');
   }
+
+  // Onboarding completion
+  Future<void> setOnboardingComplete(bool complete) async {
+    await _preferences.setBool('onboarding_complete', complete);
+  }
+
+  bool get onboardingComplete =>
+      _preferences.getBool('onboarding_complete') ?? false;
 }
 
 /// Message storage service - persists messages locally

@@ -23,7 +23,13 @@ final loggerProvider = Provider<Logger>((ref) {
 });
 
 // App initialization state
-enum AppInitState { uninitialized, initializing, initialized, error }
+enum AppInitState {
+  uninitialized,
+  initializing,
+  initialized,
+  needsOnboarding,
+  error,
+}
 
 class AppInitNotifier extends StateNotifier<AppInitState> {
   final Ref _ref;
@@ -39,8 +45,14 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
       await _ref.read(settingsServiceProvider.future);
       await _ref.read(messageStorageProvider.future);
 
-      // Check for auto-reconnect settings
+      // Check for onboarding completion
       final settings = await _ref.read(settingsServiceProvider.future);
+      if (!settings.onboardingComplete) {
+        state = AppInitState.needsOnboarding;
+        return;
+      }
+
+      // Check for auto-reconnect settings
       final lastDeviceId = settings.lastDeviceId;
       final shouldAutoReconnect = settings.autoReconnect;
 

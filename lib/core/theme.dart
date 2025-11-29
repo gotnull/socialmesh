@@ -273,6 +273,18 @@ class AppTheme {
         ),
       ),
 
+      // Snackbar
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: darkSurface,
+        contentTextStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+
       // Chip
       chipTheme: ChipThemeData(
         backgroundColor: darkSurface,
