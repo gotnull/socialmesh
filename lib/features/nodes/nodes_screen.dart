@@ -22,12 +22,12 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
 
     var nodesList = nodes.values.toList()
       ..sort((a, b) {
-        // Favorites first
-        if (a.isFavorite && !b.isFavorite) return -1;
-        if (!a.isFavorite && b.isFavorite) return 1;
-        // My node second
+        // My node always first
         if (a.nodeNum == myNodeNum) return -1;
         if (b.nodeNum == myNodeNum) return 1;
+        // Favorites second
+        if (a.isFavorite && !b.isFavorite) return -1;
+        if (!a.isFavorite && b.isFavorite) return 1;
         // Then by last heard (most recent first)
         if (a.lastHeard == null) return 1;
         if (b.lastHeard == null) return -1;
@@ -218,9 +218,16 @@ class _NodeCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: isMyNode
+            ? AppTheme.primaryGreen.withValues(alpha: 0.08)
+            : AppTheme.darkCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(
+          color: isMyNode
+              ? AppTheme.primaryGreen.withValues(alpha: 0.5)
+              : AppTheme.darkBorder,
+          width: isMyNode ? 1.5 : 1,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -235,24 +242,59 @@ class _NodeCard extends StatelessWidget {
                 // Avatar
                 Column(
                   children: [
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: _getAvatarColor(),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          _getShortName(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            fontFamily: 'Inter',
+                    Stack(
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: isMyNode
+                                ? AppTheme.primaryGreen
+                                : _getAvatarColor(),
+                            shape: BoxShape.circle,
+                            border: isMyNode
+                                ? Border.all(
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                    width: 2,
+                                  )
+                                : null,
+                          ),
+                          child: Center(
+                            child: Text(
+                              _getShortName(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        // "You" indicator on avatar
+                        if (isMyNode)
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: AppTheme.darkCard,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppTheme.primaryGreen,
+                                  width: 2,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.person,
+                                size: 12,
+                                color: AppTheme.primaryGreen,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     // PWD/Battery indicator
@@ -302,7 +344,7 @@ class _NodeCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           // Name
-                          Expanded(
+                          Flexible(
                             child: Text(
                               node.displayName,
                               style: const TextStyle(
@@ -315,30 +357,75 @@ class _NodeCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          // "You" badge
+                          if (isMyNode) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryGreen,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'YOU',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  fontFamily: 'Inter',
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 6),
-                      // Status
-                      Row(
-                        children: [
-                          Icon(
-                            node.isOnline ? Icons.wifi : Icons.wifi_off,
-                            size: 14,
-                            color: node.isOnline
-                                ? AppTheme.primaryGreen
-                                : AppTheme.textTertiary,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            node.isOnline ? 'Connected' : 'Offline',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppTheme.textSecondary,
-                              fontFamily: 'Inter',
+                      // Status - show "This Device" for your own node
+                      if (isMyNode)
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.smartphone,
+                              size: 14,
+                              color: AppTheme.primaryGreen,
                             ),
-                          ),
-                        ],
-                      ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'This Device',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.primaryGreen,
+                                fontWeight: FontWeight.w500,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        Row(
+                          children: [
+                            Icon(
+                              node.isOnline ? Icons.wifi : Icons.wifi_off,
+                              size: 14,
+                              color: node.isOnline
+                                  ? AppTheme.primaryGreen
+                                  : AppTheme.textTertiary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              node.isOnline ? 'Connected' : 'Offline',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.textSecondary,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ],
+                        ),
                       const SizedBox(height: 4),
                       // Last heard
                       if (node.lastHeard != null) ...[
