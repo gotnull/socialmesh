@@ -468,11 +468,23 @@ class ProtocolService {
       ];
       final avatarColor = colors[packet.from % colors.length];
 
+      // Extract hardware model from user
+      final hwModel =
+          user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET
+          ? _formatHardwareModel(user.hwModel)
+          : null;
+
+      // Extract role from user
+      final role = user.hasRole() ? user.role.name : 'CLIENT';
+
       final existingNode = _nodes[packet.from];
       final updatedNode =
           existingNode?.copyWith(
             longName: user.longName,
             shortName: user.shortName,
+            userId: user.hasId() ? user.id : existingNode.userId,
+            hardwareModel: hwModel ?? existingNode.hardwareModel,
+            role: role,
             snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : existingNode.snr,
             lastHeard: DateTime.now(),
             isOnline: true,
@@ -481,12 +493,14 @@ class ProtocolService {
             nodeNum: packet.from,
             longName: user.longName,
             shortName: user.shortName,
+            userId: user.hasId() ? user.id : null,
+            hardwareModel: hwModel,
+            role: role,
             snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
             lastHeard: DateTime.now(),
             isOnline: true,
             avatarColor: avatarColor,
             isFavorite: false,
-            role: 'CLIENT',
           );
 
       _nodes[packet.from] = updatedNode;
@@ -532,8 +546,22 @@ class ProtocolService {
     ];
     final avatarColor = colors[nodeInfo.num % colors.length];
 
-    // Assume router role if device has metrics, otherwise client
-    final role = nodeInfo.hasDeviceMetrics() ? 'ROUTER' : 'CLIENT';
+    // Extract hardware model and role from user if present
+    String? hwModel;
+    String role = 'CLIENT';
+    String? userId;
+    if (nodeInfo.hasUser()) {
+      final user = nodeInfo.user;
+      if (user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET) {
+        hwModel = _formatHardwareModel(user.hwModel);
+      }
+      if (user.hasRole()) {
+        role = user.role.name;
+      }
+      if (user.hasId()) {
+        userId = user.id;
+      }
+    }
 
     MeshNode updatedNode;
     if (existingNode != null) {
@@ -544,6 +572,8 @@ class ProtocolService {
         shortName: nodeInfo.hasUser()
             ? nodeInfo.user.shortName
             : existingNode.shortName,
+        userId: userId ?? existingNode.userId,
+        hardwareModel: hwModel ?? existingNode.hardwareModel,
         latitude: nodeInfo.hasPosition()
             ? nodeInfo.position.latitudeI / 1e7
             : existingNode.latitude,
@@ -567,6 +597,8 @@ class ProtocolService {
         nodeNum: nodeInfo.num,
         longName: nodeInfo.hasUser() ? nodeInfo.user.longName : '',
         shortName: nodeInfo.hasUser() ? nodeInfo.user.shortName : '',
+        userId: userId,
+        hardwareModel: hwModel,
         latitude: nodeInfo.hasPosition()
             ? nodeInfo.position.latitudeI / 1e7
             : null,
@@ -1020,6 +1052,90 @@ class ProtocolService {
     } catch (e) {
       _logger.e('Error getting radio config: $e');
     }
+  }
+
+  /// Format hardware model enum to readable string
+  String _formatHardwareModel(pb.HardwareModel model) {
+    // Convert enum name to readable format
+    // e.g., HELTEC_V3 -> Heltec V3, TLORA_V2_1_1p6 -> T-LoRa V2.1 1.6
+    final name = model.name;
+
+    // Handle special cases
+    final specialNames = {
+      'UNSET': 'Unknown',
+      'TLORA_V2': 'T-LoRa V2',
+      'TLORA_V1': 'T-LoRa V1',
+      'TLORA_V2_1_1p6': 'T-LoRa V2.1 1.6',
+      'TLORA_V2_1_1p8': 'T-LoRa V2.1 1.8',
+      'TLORA_V1_1p3': 'T-LoRa V1 1.3',
+      'TLORA_T3_S3': 'T-LoRa T3-S3',
+      'TBEAM': 'T-Beam',
+      'TBEAM0p7': 'T-Beam 0.7',
+      'T_ECHO': 'T-Echo',
+      'T_DECK': 'T-Deck',
+      'T_WATCH_S3': 'T-Watch S3',
+      'HELTEC_V1': 'Heltec V1',
+      'HELTEC_V2_0': 'Heltec V2.0',
+      'HELTEC_V2_1': 'Heltec V2.1',
+      'HELTEC_V3': 'Heltec V3',
+      'HELTEC_WSL_V3': 'Heltec WSL V3',
+      'HELTEC_WIRELESS_PAPER': 'Heltec Wireless Paper',
+      'HELTEC_WIRELESS_PAPER_V1_0': 'Heltec Wireless Paper V1.0',
+      'HELTEC_WIRELESS_PAPER_V1_1': 'Heltec Wireless Paper V1.1',
+      'HELTEC_WIRELESS_TRACKER': 'Heltec Wireless Tracker',
+      'HELTEC_HT62': 'Heltec HT62',
+      'HELTEC_CAPSULE_SENSOR_V3': 'Heltec Capsule Sensor V3',
+      'HELTEC_CAPSULE_SENSOR_V3_COMPACT': 'Heltec Capsule Sensor V3 Compact',
+      'HELTEC_VISION_MASTER_T190': 'Heltec Vision Master T190',
+      'HELTEC_VISION_MASTER_E213': 'Heltec Vision Master E213',
+      'HELTEC_VISION_MASTER_E290': 'Heltec Vision Master E290',
+      'HELTEC_MESH_NODE_T114': 'Heltec Mesh Node T114',
+      'HELTEC_HRU_3601': 'Heltec HRU-3601',
+      'RAK4631': 'RAK4631',
+      'RAK11200': 'RAK11200',
+      'RAK11310': 'RAK11310',
+      'RAK2560': 'RAK2560',
+      'RAK3172': 'RAK3172',
+      'LILYGO_TBEAM_S3_CORE': 'LilyGo T-Beam S3 Core',
+      'NANO_G1': 'Nano G1',
+      'NANO_G1_EXPLORER': 'Nano G1 Explorer',
+      'NANO_G2_ULTRA': 'Nano G2 Ultra',
+      'STATION_G1': 'Station G1',
+      'STATION_G2': 'Station G2',
+      'WIO_WM1110': 'Wio WM1110',
+      'WIO_E5': 'Wio E5',
+      'SENSECAP_INDICATOR': 'SenseCAP Indicator',
+      'TRACKER_T1000_E': 'Tracker T1000-E',
+      'M5STACK': 'M5Stack',
+      'PICOMPUTER_S3': 'Pi Computer S3',
+      'RP2040_LORA': 'RP2040 LoRa',
+      'RPI_PICO': 'Raspberry Pi Pico',
+      'ESP32_S3_PICO': 'ESP32-S3 Pico',
+      'EBYTE_ESP32_S3': 'EByte ESP32-S3',
+      'CHATTER_2': 'Chatter 2',
+      'NRF52840DK': 'nRF52840 DK',
+      'NRF52_UNKNOWN': 'nRF52 Unknown',
+      'NRF52840_PCA10059': 'nRF52840 PCA10059',
+      'PORTDUINO': 'Portduino',
+      'ANDROID_SIM': 'Android Simulator',
+      'DIY_V1': 'DIY V1',
+      'DR_DEV': 'DR Dev',
+      'PRIVATE_HW': 'Private Hardware',
+    };
+
+    if (specialNames.containsKey(name)) {
+      return specialNames[name]!;
+    }
+
+    // Default: replace underscores with spaces and title case
+    return name
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
   }
 
   /// Dispose resources

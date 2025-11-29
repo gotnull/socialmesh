@@ -360,10 +360,7 @@ class SettingsScreen extends ConsumerWidget {
                 label: 'Hardware',
                 value: myNode?.hardwareModel ?? 'Unknown',
               ),
-              _InfoRow(
-                label: 'Firmware',
-                value: myNode?.firmwareVersion ?? 'Unknown',
-              ),
+              _InfoRow(label: 'User ID', value: myNode?.userId ?? 'Unknown'),
               const SizedBox(height: 16),
             ],
           ),

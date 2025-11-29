@@ -287,7 +287,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             _buildDivider(),
             _buildInfoRow('Hardware', myNode?.hardwareModel ?? 'Unknown'),
             _buildDivider(),
-            _buildInfoRow('Firmware', myNode?.firmwareVersion ?? 'Unknown'),
+            _buildInfoRow('User ID', myNode?.userId ?? 'Unknown'),
             _buildDivider(),
             _buildInfoRow('Node Number', '${myNode?.nodeNum ?? 0}'),
           ]),
