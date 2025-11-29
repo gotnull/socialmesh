@@ -11,12 +11,31 @@ import '../../utils/validation.dart';
 /// Key size options
 enum KeySize {
   none(0, 'No Encryption'),
+  default1(1, 'Default (Simple)'),
   bit128(16, 'AES-128'),
   bit256(32, 'AES-256');
 
   final int bytes;
   final String displayName;
   const KeySize(this.bytes, this.displayName);
+
+  static KeySize fromBytes(int bytes) {
+    switch (bytes) {
+      case 0:
+        return KeySize.none;
+      case 1:
+        return KeySize.default1;
+      case 16:
+        return KeySize.bit128;
+      case 32:
+        return KeySize.bit256;
+      default:
+        // For non-standard sizes, pick closest match
+        if (bytes <= 1) return KeySize.default1;
+        if (bytes <= 16) return KeySize.bit128;
+        return KeySize.bit256;
+    }
+  }
 }
 
 class ChannelFormScreen extends ConsumerStatefulWidget {
@@ -40,6 +59,9 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
   bool _downlinkEnabled = false;
   bool _isSaving = false;
   bool _showKey = false;
+  bool _isEditingKey = false;
+  String? _keyValidationError;
+  KeySize? _detectedKeySize;
 
   bool get isEditing => widget.existingChannel != null;
   bool get isPrimaryChannel => widget.existingChannel?.index == 0;
@@ -59,6 +81,8 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
 
       if (channel.psk.isEmpty) {
         _selectedKeySize = KeySize.none;
+      } else if (channel.psk.length == 1) {
+        _selectedKeySize = KeySize.default1;
       } else if (channel.psk.length == 16) {
         _selectedKeySize = KeySize.bit128;
       } else {
@@ -67,6 +91,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
 
       if (channel.psk.isNotEmpty) {
         _keyController.text = base64Encode(channel.psk);
+        _validateAndDetectKey(_keyController.text);
       }
 
       _uplinkEnabled = channel.uplink;
@@ -95,6 +120,8 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
   void _generateRandomKey() {
     if (_selectedKeySize == KeySize.none) {
       _keyController.text = '';
+      _keyValidationError = null;
+      _detectedKeySize = null;
       return;
     }
 
@@ -104,11 +131,78 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
       (_) => random.nextInt(256),
     );
     _keyController.text = base64Encode(keyBytes);
+    _validateAndDetectKey(_keyController.text);
     setState(() {});
+  }
+
+  /// Validates a base64 key and detects its size
+  void _validateAndDetectKey(String keyText) {
+    if (keyText.isEmpty) {
+      _keyValidationError = null;
+      _detectedKeySize = null;
+      return;
+    }
+
+    try {
+      final decoded = base64Decode(keyText.trim());
+      final bytes = decoded.length;
+
+      // Check for valid key sizes
+      if (bytes == 0) {
+        _keyValidationError = 'Key cannot be empty';
+        _detectedKeySize = null;
+      } else if (bytes == 1) {
+        _keyValidationError = null;
+        _detectedKeySize = KeySize.default1;
+      } else if (bytes == 16) {
+        _keyValidationError = null;
+        _detectedKeySize = KeySize.bit128;
+      } else if (bytes == 32) {
+        _keyValidationError = null;
+        _detectedKeySize = KeySize.bit256;
+      } else {
+        _keyValidationError =
+            'Invalid key size ($bytes bytes). Use 1, 16, or 32 bytes.';
+        _detectedKeySize = null;
+      }
+    } catch (e) {
+      _keyValidationError = 'Invalid base64 encoding';
+      _detectedKeySize = null;
+    }
+  }
+
+  /// Get display string for detected key size
+  String _getDetectedKeySizeDisplay() {
+    if (_detectedKeySize == null) return '';
+    switch (_detectedKeySize!) {
+      case KeySize.none:
+        return '';
+      case KeySize.default1:
+        return '1 byte · Default PSK';
+      case KeySize.bit128:
+        return '16 bytes · AES-128';
+      case KeySize.bit256:
+        return '32 bytes · AES-256';
+    }
   }
 
   Future<void> _saveChannel() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Validate key if encryption is enabled
+    if (_selectedKeySize != KeySize.none) {
+      _validateAndDetectKey(_keyController.text);
+      if (_keyValidationError != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Invalid key: $_keyValidationError'),
+            backgroundColor: AppTheme.errorRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+    }
 
     setState(() => _isSaving = true);
 
@@ -525,6 +619,8 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                               Text(
                                 keySize == KeySize.none
                                     ? 'Messages sent in plaintext'
+                                    : keySize == KeySize.default1
+                                    ? '1-byte simple key (AQ==)'
                                     : '${keySize.bytes * 8}-bit encryption key',
                                 style: const TextStyle(
                                   fontSize: 12,
@@ -577,14 +673,19 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
   }
 
   Widget _buildKeyField() {
-    final keyLength = _selectedKeySize.bytes;
-    final keyBits = keyLength * 8;
+    final hasValidKey =
+        _keyValidationError == null && _keyController.text.isNotEmpty;
+    final detectedDisplay = _getDetectedKeySizeDisplay();
 
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.darkCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(
+          color: _keyValidationError != null
+              ? AppTheme.errorRed.withValues(alpha: 0.5)
+              : AppTheme.darkBorder,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -598,12 +699,20 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                    color: hasValidKey
+                        ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                        : _keyValidationError != null
+                        ? AppTheme.errorRed.withValues(alpha: 0.15)
+                        : AppTheme.darkBackground,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.key,
-                    color: AppTheme.primaryGreen,
+                    color: hasValidKey
+                        ? AppTheme.primaryGreen
+                        : _keyValidationError != null
+                        ? AppTheme.errorRed
+                        : AppTheme.textTertiary,
                     size: 20,
                   ),
                 ),
@@ -623,59 +732,165 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '$keyBits-bit · Base64 encoded',
-                        style: const TextStyle(
+                        _isEditingKey
+                            ? 'Enter base64-encoded key'
+                            : hasValidKey && detectedDisplay.isNotEmpty
+                            ? detectedDisplay
+                            : 'Base64 encoded',
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textTertiary,
+                          color: hasValidKey
+                              ? AppTheme.primaryGreen
+                              : AppTheme.textTertiary,
                           fontFamily: 'Inter',
                         ),
                       ),
                     ],
                   ),
                 ),
+                // Auto-detect badge when valid
+                if (hasValidKey && _detectedKeySize != null && !_isEditingKey)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      _detectedKeySize!.displayName,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primaryGreen,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
 
-          // Key display area
+          // Key input/display area
           Container(
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppTheme.darkBackground,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: AppTheme.darkBorder.withValues(alpha: 0.5),
+                color: _keyValidationError != null
+                    ? AppTheme.errorRed.withValues(alpha: 0.5)
+                    : AppTheme.darkBorder.withValues(alpha: 0.5),
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Key value
-                _showKey
-                    ? SelectableText(
-                        _keyController.text,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.primaryGreen,
-                          fontFamily: 'monospace',
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.5,
-                          height: 1.5,
-                        ),
-                      )
-                    : Text(
-                        '•' * 32,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.textTertiary.withValues(alpha: 0.5),
-                          fontFamily: 'monospace',
-                          letterSpacing: 2,
-                        ),
+            child: _isEditingKey
+                ? TextField(
+                    controller: _keyController,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.w500,
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.all(16),
+                      hintText: 'e.g., AQ== or AAAAAAAAAAAAAAAAAAAAAA==',
+                      hintStyle: TextStyle(
+                        color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                        fontFamily: 'monospace',
                       ),
-              ],
-            ),
+                      suffixIcon: IconButton(
+                        icon: const Icon(
+                          Icons.check,
+                          color: AppTheme.primaryGreen,
+                        ),
+                        onPressed: () {
+                          _validateAndDetectKey(_keyController.text);
+                          setState(() {
+                            _isEditingKey = false;
+                            // Auto-update key size selector based on detected size
+                            if (_detectedKeySize != null) {
+                              _selectedKeySize = _detectedKeySize!;
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                    onChanged: (value) {
+                      _validateAndDetectKey(value);
+                      setState(() {});
+                    },
+                    onSubmitted: (_) {
+                      _validateAndDetectKey(_keyController.text);
+                      setState(() {
+                        _isEditingKey = false;
+                        if (_detectedKeySize != null) {
+                          _selectedKeySize = _detectedKeySize!;
+                        }
+                      });
+                    },
+                    autofocus: true,
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _showKey
+                        ? SelectableText(
+                            _keyController.text.isEmpty
+                                ? '(no key set)'
+                                : _keyController.text,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: _keyController.text.isEmpty
+                                  ? AppTheme.textTertiary
+                                  : AppTheme.primaryGreen,
+                              fontFamily: 'monospace',
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.5,
+                              height: 1.5,
+                            ),
+                          )
+                        : Text(
+                            _keyController.text.isEmpty
+                                ? '(no key set)'
+                                : '•' * min(32, _keyController.text.length),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.textTertiary.withValues(
+                                alpha: 0.5,
+                              ),
+                              fontFamily: 'monospace',
+                              letterSpacing: 2,
+                            ),
+                          ),
+                  ),
           ),
+
+          // Validation error message
+          if (_keyValidationError != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: AppTheme.errorRed,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _keyValidationError!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.errorRed,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           // Action buttons row
           Padding(
@@ -690,11 +905,24 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   isEnabled: true,
                 ),
                 const SizedBox(width: 4),
-                // Regenerate - only when visible
+                // Edit manually
+                _buildKeyActionButton(
+                  icon: Icons.edit,
+                  label: 'Edit',
+                  onPressed: () {
+                    setState(() {
+                      _isEditingKey = true;
+                      _showKey = true;
+                    });
+                  },
+                  isEnabled: !_isEditingKey,
+                ),
+                const SizedBox(width: 4),
+                // Regenerate
                 _buildKeyActionButton(
                   icon: Icons.refresh,
-                  label: 'Regenerate',
-                  onPressed: _showKey
+                  label: 'Generate',
+                  onPressed: !_isEditingKey
                       ? () {
                           _generateRandomKey();
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -707,14 +935,17 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           );
                         }
                       : null,
-                  isEnabled: _showKey,
+                  isEnabled: !_isEditingKey,
                 ),
                 const SizedBox(width: 4),
-                // Copy - only when visible
+                // Copy - only when visible and not editing
                 _buildKeyActionButton(
                   icon: Icons.copy,
                   label: 'Copy',
-                  onPressed: _showKey
+                  onPressed:
+                      _showKey &&
+                          !_isEditingKey &&
+                          _keyController.text.isNotEmpty
                       ? () {
                           Clipboard.setData(
                             ClipboardData(text: _keyController.text),
@@ -729,7 +960,10 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           );
                         }
                       : null,
-                  isEnabled: _showKey,
+                  isEnabled:
+                      _showKey &&
+                      !_isEditingKey &&
+                      _keyController.text.isNotEmpty,
                 ),
               ],
             ),
