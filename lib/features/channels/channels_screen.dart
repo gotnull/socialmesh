@@ -6,6 +6,7 @@ import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../messaging/messaging_screen.dart';
 import 'channel_form_screen.dart';
 
@@ -507,10 +508,22 @@ class _ChannelTile extends ConsumerWidget {
   }
 
   void _showQrCode(BuildContext context) {
-    final base64Key = base64Encode(channel.psk);
-    // Create Meshtastic URL format: https://meshtastic.org/e/#<base64_channel_config>
+    // Build a proper protobuf Channel message for the QR code
+    final channelSettings = pb.ChannelSettings()
+      ..name = channel.name
+      ..psk = channel.psk;
+
+    final pbChannel = pb.Channel()
+      ..index = channel.index
+      ..settings = channelSettings
+      ..role = channel.index == 0
+          ? pb.Channel_Role.PRIMARY
+          : pb.Channel_Role.SECONDARY;
+
+    // Encode as base64 and URL-encode for the URL fragment
+    final base64Data = base64Encode(pbChannel.writeToBuffer());
     final channelUrl =
-        'https://meshtastic.org/e/#${Uri.encodeComponent(base64Key)}';
+        'https://meshtastic.org/e/#${Uri.encodeComponent(base64Data)}';
 
     showModalBottomSheet(
       context: context,
@@ -651,16 +664,37 @@ class _ChannelTile extends ConsumerWidget {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
-              ref
-                  .read(channelsProvider.notifier)
-                  .setChannel(
-                    ChannelConfig(index: channel.index, name: '', psk: []),
-                  );
+            onPressed: () async {
               Navigator.pop(context);
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Channel deleted')));
+
+              // Create disabled channel config
+              final disabledChannel = ChannelConfig(
+                index: channel.index,
+                name: '',
+                psk: [],
+                uplink: false,
+                downlink: false,
+                role: 'DISABLED',
+              );
+
+              // Send to device first
+              try {
+                final protocol = ref.read(protocolServiceProvider);
+                await protocol.setChannel(disabledChannel);
+              } catch (e) {
+                debugPrint('Could not sync channel deletion to device: $e');
+              }
+
+              // Update local state
+              ref.read(channelsProvider.notifier).removeChannel(channel.index);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Channel deleted'),
+                  backgroundColor: AppTheme.darkCard,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
             },
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,

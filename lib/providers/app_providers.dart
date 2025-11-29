@@ -361,9 +361,9 @@ class ChannelsNotifier extends StateNotifier<List<ChannelConfig>> {
       );
     }
 
-    // Initialize with existing channels (include Primary even if name is empty)
+    // Initialize with existing channels (include Primary, exclude DISABLED)
     state = _protocol.channels
-        .where((c) => c.index == 0 || c.name.isNotEmpty)
+        .where((c) => c.index == 0 || c.role != 'DISABLED')
         .toList();
     debugPrint('🔵 ChannelsNotifier initialized with ${state.length} channels');
 
@@ -399,6 +399,10 @@ class ChannelsNotifier extends StateNotifier<List<ChannelConfig>> {
     } else {
       state = [...state, channel];
     }
+  }
+
+  void removeChannel(int channelIndex) {
+    state = state.where((c) => c.index != channelIndex).toList();
   }
 
   void clearChannels() {

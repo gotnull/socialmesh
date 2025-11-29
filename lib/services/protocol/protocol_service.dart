@@ -477,7 +477,24 @@ class ProtocolService {
 
   /// Handle channel configuration
   void _handleChannel(pb.Channel channel) {
-    _logger.i('Channel ${channel.index} config received');
+    _logger.i(
+      'Channel ${channel.index} config received (role: ${channel.role.name})',
+    );
+
+    // Map protobuf role to string
+    String roleStr;
+    switch (channel.role) {
+      case pb.Channel_Role.PRIMARY:
+        roleStr = 'PRIMARY';
+        break;
+      case pb.Channel_Role.SECONDARY:
+        roleStr = 'SECONDARY';
+        break;
+      case pb.Channel_Role.DISABLED:
+      default:
+        roleStr = 'DISABLED';
+        break;
+    }
 
     final channelConfig = ChannelConfig(
       index: channel.index,
@@ -487,6 +504,7 @@ class ProtocolService {
       downlink: channel.hasSettings()
           ? channel.settings.downlinkEnabled
           : false,
+      role: roleStr,
     );
 
     // Extend list if needed, but don't add dummy entries to stream
@@ -495,8 +513,8 @@ class ProtocolService {
     }
     _channels[channel.index] = channelConfig;
 
-    // Always emit channel 0 (Primary), emit others only if they have names
-    if (channel.index == 0 || channelConfig.name.isNotEmpty) {
+    // Emit channel 0 (Primary), emit others only if they're not disabled
+    if (channel.index == 0 || channel.role != pb.Channel_Role.DISABLED) {
       _channelController.add(channelConfig);
     }
   }

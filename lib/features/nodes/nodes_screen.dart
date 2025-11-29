@@ -9,6 +9,31 @@ import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../messaging/messaging_screen.dart';
 
+// Battery helper functions
+// Meshtastic uses 101 for charging, 100 for plugged in fully charged
+IconData _getBatteryIcon(int level) {
+  if (level > 100) return Icons.battery_charging_full;
+  if (level >= 95) return Icons.battery_full;
+  if (level >= 80) return Icons.battery_6_bar;
+  if (level >= 60) return Icons.battery_5_bar;
+  if (level >= 40) return Icons.battery_4_bar;
+  if (level >= 20) return Icons.battery_2_bar;
+  if (level >= 10) return Icons.battery_1_bar;
+  return Icons.battery_alert;
+}
+
+Color _getBatteryColor(int level) {
+  if (level > 100) return AppTheme.primaryGreen; // Charging
+  if (level >= 50) return AppTheme.primaryGreen;
+  if (level >= 20) return AppTheme.warningYellow;
+  return AppTheme.errorRed;
+}
+
+String _getBatteryText(int level) {
+  if (level > 100) return '100%'; // Charging shows as full
+  return '$level%';
+}
+
 class NodesScreen extends ConsumerStatefulWidget {
   const NodesScreen({super.key});
 
@@ -326,15 +351,15 @@ class _NodeCard extends StatelessWidget {
                           if (node.batteryLevel != null) ...[
                             if (node.role != null) const SizedBox(width: 4),
                             Icon(
-                              Icons.battery_std,
+                              _getBatteryIcon(node.batteryLevel!),
                               size: 14,
-                              color: AppTheme.textSecondary,
+                              color: _getBatteryColor(node.batteryLevel!),
                             ),
                             Text(
-                              '${node.batteryLevel}%',
-                              style: const TextStyle(
+                              _getBatteryText(node.batteryLevel!),
+                              style: TextStyle(
                                 fontSize: 10,
-                                color: AppTheme.textSecondary,
+                                color: _getBatteryColor(node.batteryLevel!),
                                 fontFamily: 'Inter',
                               ),
                             ),
@@ -949,9 +974,10 @@ class _NodeDetailsSheet extends StatelessWidget {
                     ),
                   if (node.batteryLevel != null)
                     _DetailRow(
-                      icon: Icons.battery_charging_full,
+                      icon: _getBatteryIcon(node.batteryLevel!),
+                      iconColor: _getBatteryColor(node.batteryLevel!),
                       label: 'Battery',
-                      value: '${node.batteryLevel}%',
+                      value: _getBatteryText(node.batteryLevel!),
                     ),
                   if (node.rssi != null)
                     _DetailRow(
@@ -1085,11 +1111,13 @@ class _NodeDetailsSheet extends StatelessWidget {
 
 class _DetailRow extends StatelessWidget {
   final IconData icon;
+  final Color? iconColor;
   final String label;
   final String value;
 
   const _DetailRow({
     required this.icon,
+    this.iconColor,
     required this.label,
     required this.value,
   });
@@ -1100,7 +1128,7 @@ class _DetailRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: AppTheme.textSecondary),
+          Icon(icon, size: 20, color: iconColor ?? AppTheme.textSecondary),
           const SizedBox(width: 12),
           SizedBox(
             width: 100,
