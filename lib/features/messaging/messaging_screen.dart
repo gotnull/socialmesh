@@ -180,6 +180,12 @@ class MessagingScreen extends ConsumerWidget {
   void _showNewMessageSheet(BuildContext context, WidgetRef ref) {
     final channels = ref.read(channelsProvider);
     final nodes = ref.read(nodesProvider);
+    final myNodeNum = ref.read(myNodeNumProvider);
+
+    // Filter out self from potential recipients
+    final otherNodes = nodes.values
+        .where((n) => n.nodeNum != myNodeNum)
+        .toList();
 
     showModalBottomSheet(
       context: context,
@@ -269,7 +275,7 @@ class MessagingScreen extends ConsumerWidget {
               ),
 
             // Direct messages section
-            if (nodes.isNotEmpty) ...[
+            if (otherNodes.isNotEmpty) ...[
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Text(
@@ -283,7 +289,7 @@ class MessagingScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              for (final node in nodes.values.take(5))
+              for (final node in otherNodes.take(5))
                 ListTile(
                   leading: Container(
                     width: 40,
