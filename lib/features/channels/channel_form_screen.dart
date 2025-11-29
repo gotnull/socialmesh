@@ -437,7 +437,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                               Text(
                                 keySize == KeySize.none
                                     ? 'Messages sent in plaintext'
-                                    : '\${keySize.bytes * 8}-bit encryption key',
+                                    : '${keySize.bytes * 8}-bit encryption key',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: AppTheme.textTertiary,
