@@ -15,12 +15,71 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   final List<DeviceInfo> _devices = [];
   bool _scanning = false;
   bool _connecting = false;
+  bool _autoReconnecting = false;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _startScan();
+    _tryAutoReconnect();
+  }
+
+  Future<void> _tryAutoReconnect() async {
+    // Check if auto-reconnect is enabled
+    final settingsServiceAsync = ref.read(settingsServiceProvider);
+    final settingsService = settingsServiceAsync.valueOrNull;
+
+    if (settingsService == null || !settingsService.autoReconnect) {
+      _startScan();
+      return;
+    }
+
+    final lastDeviceId = settingsService.lastDeviceId;
+    final lastDeviceType = settingsService.lastDeviceType;
+
+    if (lastDeviceId == null || lastDeviceType == null) {
+      _startScan();
+      return;
+    }
+
+    setState(() {
+      _autoReconnecting = true;
+    });
+
+    try {
+      // Start scanning to find the last device
+      final transport = ref.read(transportProvider);
+      final scanStream = transport.scan(timeout: const Duration(seconds: 5));
+      DeviceInfo? lastDevice;
+
+      await for (final device in scanStream) {
+        if (!mounted) break;
+        if (device.id == lastDeviceId) {
+          lastDevice = device;
+          break;
+        }
+      }
+
+      if (!mounted) return;
+
+      if (lastDevice != null) {
+        // Found the device, try to connect
+        await _connectToDevice(lastDevice, isAutoReconnect: true);
+      } else {
+        // Device not found, start regular scan
+        setState(() {
+          _autoReconnecting = false;
+        });
+        _startScan();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _autoReconnecting = false;
+        });
+        _startScan();
+      }
+    }
   }
 
   Future<void> _startScan() async {
@@ -65,12 +124,20 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   }
 
   Future<void> _connect(DeviceInfo device) async {
+    await _connectToDevice(device, isAutoReconnect: false);
+  }
+
+  Future<void> _connectToDevice(
+    DeviceInfo device, {
+    required bool isAutoReconnect,
+  }) async {
     if (_connecting) {
       return;
     }
 
     setState(() {
       _connecting = true;
+      _autoReconnecting = isAutoReconnect;
     });
 
     try {
@@ -81,6 +148,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       if (!mounted) return;
 
       ref.read(connectedDeviceProvider.notifier).state = device;
+
+      // Save device for auto-reconnect
+      final settingsServiceAsync = ref.read(settingsServiceProvider);
+      final settingsService = settingsServiceAsync.valueOrNull;
+      if (settingsService != null) {
+        final deviceType = device.type == TransportType.ble ? 'ble' : 'usb';
+        await settingsService.setLastDevice(device.id, deviceType);
+      }
 
       // Start protocol service and wait for configuration
       final protocol = ref.read(protocolServiceProvider);
@@ -95,18 +170,27 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       if (!mounted) return;
 
       final message = e.toString().replaceFirst('Exception: ', '');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: const Duration(seconds: 6),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+
+      if (!isAutoReconnect) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            duration: const Duration(seconds: 6),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
           _connecting = false;
+          _autoReconnecting = false;
         });
+
+        // If auto-reconnect failed, start regular scan
+        if (isAutoReconnect) {
+          _startScan();
+        }
       }
     }
   }
@@ -127,31 +211,59 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.bluetooth, color: AppTheme.primaryGreen),
-            onPressed: () {},
+            icon: Icon(
+              Icons.bluetooth,
+              color: _connecting
+                  ? AppTheme.textTertiary
+                  : AppTheme.textSecondary,
+            ),
+            onPressed: _connecting ? null : () {},
           ),
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              Navigator.of(context).pushNamed('/settings');
-            },
+            icon: Icon(
+              Icons.settings,
+              color: _connecting ? AppTheme.textTertiary : Colors.white,
+            ),
+            onPressed: _connecting
+                ? null
+                : () {
+                    Navigator.of(context).pushNamed('/settings');
+                  },
           ),
         ],
       ),
       body: _connecting
-          ? const Center(
+          ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(color: AppTheme.primaryGreen),
-                  SizedBox(height: 16),
+                  const CircularProgressIndicator(color: AppTheme.primaryGreen),
+                  const SizedBox(height: 16),
                   Text(
-                    'Connecting...',
-                    style: TextStyle(
+                    _autoReconnecting
+                        ? 'Auto-reconnecting...'
+                        : 'Connecting...',
+                    style: const TextStyle(
                       fontSize: 16,
                       color: AppTheme.textSecondary,
                     ),
                   ),
+                  if (_autoReconnecting) ...[
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _connecting = false;
+                          _autoReconnecting = false;
+                        });
+                        _startScan();
+                      },
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: AppTheme.textTertiary),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             )
@@ -359,78 +471,83 @@ class _DeviceCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
+      child: Material(
         color: AppTheme.darkCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppTheme.darkBackground,
-                  borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          splashColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
+          highlightColor: AppTheme.primaryGreen.withValues(alpha: 0.1),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.darkBorder),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkBackground,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    device.type == TransportType.ble
+                        ? Icons.bluetooth
+                        : Icons.usb,
+                    color: AppTheme.primaryGreen,
+                    size: 24,
+                  ),
                 ),
-                child: Icon(
-                  device.type == TransportType.ble
-                      ? Icons.bluetooth
-                      : Icons.usb,
-                  color: AppTheme.primaryGreen,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      device.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      device.type == TransportType.ble ? 'Bluetooth' : 'USB',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppTheme.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (device.rssi != null)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (int i = 0; i < 4; i++)
-                      Container(
-                        width: 4,
-                        height: 4 + (i * 4).toDouble(),
-                        margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                        decoration: BoxDecoration(
-                          color: i < signalBars
-                              ? AppTheme.primaryGreen
-                              : AppTheme.textTertiary.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(1),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        device.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        device.type == TransportType.ble ? 'Bluetooth' : 'USB',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              const SizedBox(width: 4),
-              const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
-            ],
+                if (device.rssi != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (int i = 0; i < 4; i++)
+                        Container(
+                          width: 4,
+                          height: 4 + (i * 4).toDouble(),
+                          margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                          decoration: BoxDecoration(
+                            color: i < signalBars
+                                ? AppTheme.primaryGreen
+                                : AppTheme.textTertiary.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                    ],
+                  ),
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+              ],
+            ),
           ),
         ),
       ),

@@ -194,6 +194,12 @@ class UsbTransport implements DeviceTransport {
   }
 
   @override
+  Future<int?> readRssi() async {
+    // USB doesn't support RSSI
+    return null;
+  }
+
+  @override
   Future<void> dispose() async {
     await disconnect();
     await _stateController.close();

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:logger/logger.dart';
 import '../../core/transport.dart';
@@ -171,10 +170,8 @@ class BleTransport implements DeviceTransport {
       _logger.i('Connection established, discovering services...');
 
       // Request MTU size 512 per Meshtastic docs
-      debugPrint('📡 Requesting MTU size 512...');
       try {
         await _device!.requestMtu(512);
-        debugPrint('📡 MTU size request sent');
       } catch (e) {
         _logger.w('MTU request failed (may not be supported): $e');
       }
@@ -231,13 +228,6 @@ class BleTransport implements DeviceTransport {
         } else if (uuid == _fromNumUuid.toLowerCase()) {
           _fromNumCharacteristic = characteristic;
           _logger.d('Found fromNum characteristic');
-
-          final canNotify = characteristic.properties.notify;
-          final canIndicate = characteristic.properties.indicate;
-          debugPrint(
-            '🔔 fromNum found! notify=$canNotify, indicate=$canIndicate',
-          );
-          debugPrint('🔔 Notifications will be enabled AFTER config download');
         }
       }
 
@@ -248,18 +238,12 @@ class BleTransport implements DeviceTransport {
         // Perform initial read from fromRadio to wake up the device
         if (_rxCharacteristic != null) {
           try {
-            debugPrint(
-              '🔄 Performing initial read from fromRadio to wake device',
-            );
             final initialData = await _rxCharacteristic!.read();
             if (initialData.isNotEmpty) {
-              debugPrint('🔄 Initial read got ${initialData.length} bytes');
               _dataController.add(initialData);
-            } else {
-              debugPrint('🔄 Initial read returned empty');
             }
           } catch (e) {
-            debugPrint('🔄 Initial read error (ignored): $e');
+            _logger.d('Initial read error (ignored): $e');
           }
         }
 
@@ -303,60 +287,41 @@ class BleTransport implements DeviceTransport {
 
       if (!canNotify && !canIndicate) {
         _logger.w('fromNum does not support notifications');
-        debugPrint('🔔 WARNING: fromNum does NOT support notifications!');
         return;
       }
 
-      debugPrint('🔔 Enabling fromNum notifications NOW...');
       await _fromNumCharacteristic!.setNotifyValue(true);
-      debugPrint('🔔 setNotifyValue(true) completed');
-
-      final isNotifying = _fromNumCharacteristic!.isNotifying;
-      debugPrint('🔔 isNotifying=$isNotifying after setNotifyValue');
 
       _fromNumSubscription = _fromNumCharacteristic!.lastValueStream.listen(
         (value) async {
-          debugPrint('🔔🔔🔔 fromNum NOTIFIED! value.length=${value.length}');
           // fromNum value is just a counter - read fromRadio regardless
           if (_rxCharacteristic != null) {
             _logger.d('fromNum notified, reading fromRadio');
-            debugPrint('🔔 Reading fromRadio after fromNum notification...');
             try {
               // Read from fromRadio until empty
-              int readCount = 0;
               while (true) {
                 final data = await _rxCharacteristic!.read();
-                readCount++;
-                debugPrint(
-                  '🔔 Read attempt $readCount: got ${data.length} bytes',
-                );
                 if (data.isEmpty) break;
                 _logger.d('Read ${data.length} bytes from fromRadio');
                 _dataController.add(data);
               }
-              debugPrint('🔔 Finished reading, $readCount attempts');
             } catch (e) {
               _logger.e('Error reading fromRadio: $e');
-              debugPrint('🔔 ERROR reading fromRadio: $e');
             }
           }
         },
         onError: (error) {
           _logger.e('fromNum error: $error');
-          debugPrint('🔔 fromNum stream ERROR: $error');
         },
       );
-      debugPrint('🔔 fromNum notification listener attached successfully');
       _logger.i('fromNum notifications enabled');
     } catch (e) {
       _logger.e('Error enabling notifications: $e');
-      debugPrint('🔔 ERROR enabling notifications: $e');
     }
   }
 
   void _startPolling() {
     _logger.d('Starting polling for fromRadio characteristic');
-    debugPrint('📡 Starting polling for fromRadio');
 
     // Poll every 100ms for new data
     _pollingTimer = Timer.periodic(const Duration(milliseconds: 100), (
@@ -372,12 +337,10 @@ class BleTransport implements DeviceTransport {
         final value = await _rxCharacteristic!.read();
         if (value.isNotEmpty) {
           _logger.d('Polled ${value.length} bytes');
-          debugPrint('📡 Polled ${value.length} bytes from fromRadio');
           _dataController.add(value);
         }
       } catch (e) {
         _logger.e('Polling error: $e');
-        debugPrint('📡 Polling error: $e');
       }
     });
   }
@@ -386,30 +349,17 @@ class BleTransport implements DeviceTransport {
   Future<void> pollOnce() async {
     if (_rxCharacteristic == null ||
         _state != DeviceConnectionState.connected) {
-      debugPrint(
-        '📡 pollOnce: Cannot poll - rxChar=${_rxCharacteristic != null}, state=$_state',
-      );
       return;
     }
 
     try {
-      debugPrint('📡 pollOnce: Reading fromRadio characteristic...');
       final value = await _rxCharacteristic!.read();
-      debugPrint('📡 pollOnce: Read returned ${value.length} bytes');
-
       if (value.isNotEmpty) {
         _logger.d('Polled ${value.length} bytes');
-        debugPrint(
-          '📡 Polled ${value.length} bytes from fromRadio: ${value.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
-        );
-        debugPrint('📡 Adding ${value.length} bytes to data stream');
         _dataController.add(value);
-      } else {
-        debugPrint('📡 pollOnce: fromRadio returned EMPTY');
       }
     } catch (e) {
       _logger.e('Polling error: $e');
-      debugPrint('📡 Polling error: $e');
     }
   }
 
@@ -458,9 +408,6 @@ class BleTransport implements DeviceTransport {
 
     try {
       _logger.d('Sending ${data.length} bytes');
-      debugPrint(
-        '📤 BLE SEND: ${data.length} bytes - ${data.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
-      );
 
       // Meshtastic BLE expects complete protobufs in a single write.
       // MTU should be 512 after negotiation. If data is larger, we need to chunk,
@@ -469,11 +416,24 @@ class BleTransport implements DeviceTransport {
       await _txCharacteristic!.write(data, withoutResponse: false);
 
       _logger.d('Sent successfully');
-      debugPrint('📤 BLE SEND complete');
     } catch (e) {
       _logger.e('Send error: $e');
-      debugPrint('📤 BLE SEND ERROR: $e');
       rethrow;
+    }
+  }
+
+  @override
+  Future<int?> readRssi() async {
+    if (_device == null || _state != DeviceConnectionState.connected) {
+      return null;
+    }
+
+    try {
+      final rssi = await _device!.readRssi();
+      return rssi;
+    } catch (e) {
+      _logger.w('Failed to read RSSI: $e');
+      return null;
     }
   }
 

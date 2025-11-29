@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
 import 'package:logger/logger.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_models.dart';
@@ -25,6 +25,7 @@ class ProtocolService {
 
   StreamSubscription<List<int>>? _dataSubscription;
   Completer<void>? _configCompleter;
+  Timer? _rssiTimer;
 
   int? _myNodeNum;
   int _lastRssi = -90;
@@ -90,9 +91,7 @@ class ProtocolService {
     );
 
     // Enable notifications FIRST - device needs this to respond to config request
-    debugPrint('🔔 Enabling fromNum notifications BEFORE config request...');
     await _transport.enableNotifications();
-    debugPrint('🔔 Notifications enabled, now sending config request...');
 
     // Short delay to let notifications settle
     await Future.delayed(const Duration(milliseconds: 200));
@@ -110,7 +109,6 @@ class ProtocolService {
 
     _logger.i('Waiting for config or timeout...');
     await Future.any([configFuture, timeoutFuture]);
-    _logger.i('Future.any completed');
 
     if (!_configCompleter!.isCompleted) {
       _logger.i('Configuration not received, proceeding anyway');
@@ -120,32 +118,40 @@ class ProtocolService {
       _logger.i('Configuration was received');
     }
 
-    _logger.i('start() method completing');
+    // Start RSSI polling timer (every 2 seconds)
+    _startRssiPolling();
+
+    _logger.i('Protocol service started');
+  }
+
+  /// Start periodic RSSI polling from BLE connection
+  void _startRssiPolling() {
+    _rssiTimer?.cancel();
+    _rssiTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
+      final rssi = await _transport.readRssi();
+      if (rssi != null && rssi != _lastRssi) {
+        _lastRssi = rssi;
+        _rssiController.add(rssi);
+      }
+    });
   }
 
   /// Poll for configuration data in background (non-blocking)
   void _pollForConfigurationAsync() {
-    debugPrint('🔁 Starting background polling for config response...');
     int pollCount = 0;
     const maxPolls = 100;
 
     Future.doWhile(() async {
       if (_configurationComplete || pollCount >= maxPolls) {
-        debugPrint(
-          '🔁 Stopping poll loop: configComplete=$_configurationComplete, polls=$pollCount',
-        );
         return false; // Stop polling
       }
 
       try {
         await _transport.pollOnce();
         pollCount++;
-        if (pollCount % 20 == 0) {
-          debugPrint('🔁 Poll count: $pollCount/$maxPolls');
-        }
         await Future.delayed(const Duration(milliseconds: 100));
       } catch (e) {
-        debugPrint('🔁 Poll error: $e');
+        _logger.w('Poll error: $e');
       }
       return true; // Continue polling
     });
@@ -154,6 +160,8 @@ class ProtocolService {
   /// Stop listening
   void stop() {
     _logger.i('Stopping protocol service');
+    _rssiTimer?.cancel();
+    _rssiTimer = null;
     if (_configCompleter != null && !_configCompleter!.isCompleted) {
       _configCompleter!.completeError('Service stopped');
     }
@@ -167,31 +175,17 @@ class ProtocolService {
   /// Handle incoming data from transport
   void _handleData(List<int> data) {
     _logger.d('Received ${data.length} bytes');
-    debugPrint(
-      '📥 RAW DATA RECEIVED: ${data.length} bytes - ${data.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
-    );
 
     if (_transport.requiresFraming) {
       // Serial/USB: Extract packets using framer
       final packets = _framer.addData(data);
-      debugPrint('📥 Framer extracted ${packets.length} complete packet(s)');
-
-      if (packets.isEmpty) {
-        debugPrint(
-          '📥 WARNING: No complete packets extracted from ${data.length} bytes!',
-        );
-      }
 
       for (final packet in packets) {
-        debugPrint(
-          '📥 Processing packet ${packets.indexOf(packet) + 1}/${packets.length}',
-        );
         _processPacket(packet);
       }
     } else {
       // BLE: Data is already a complete raw protobuf
       if (data.isNotEmpty) {
-        debugPrint('📥 BLE: Processing raw protobuf (${data.length} bytes)');
         _processPacket(data);
       }
     }
@@ -201,15 +195,8 @@ class ProtocolService {
   void _processPacket(List<int> packet) {
     try {
       _logger.d('Processing packet: ${packet.length} bytes');
-      debugPrint(
-        '📦 Processing packet: ${packet.length} bytes - ${packet.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
-      );
 
       final fromRadio = pn.FromRadio.fromBuffer(packet);
-
-      debugPrint(
-        '📦 _processPacket: hasPacket=${fromRadio.hasPacket()}, hasMyInfo=${fromRadio.hasMyInfo()}, hasNodeInfo=${fromRadio.hasNodeInfo()}, hasChannel=${fromRadio.hasChannel()}, hasConfigCompleteId=${fromRadio.hasConfigCompleteId()}',
-      );
 
       if (fromRadio.hasPacket()) {
         _handleMeshPacket(fromRadio.packet);
@@ -218,11 +205,9 @@ class ProtocolService {
       } else if (fromRadio.hasNodeInfo()) {
         _handleNodeInfo(fromRadio.nodeInfo);
       } else if (fromRadio.hasChannel()) {
-        debugPrint('📦 HAS CHANNEL! Calling _handleChannel');
         _handleChannel(fromRadio.channel);
       } else if (fromRadio.hasConfigCompleteId()) {
         _logger.i('Configuration complete: ${fromRadio.configCompleteId}');
-        debugPrint('📦 CONFIG COMPLETE ID received');
         _configurationComplete = true;
         if (_configCompleter != null && !_configCompleter!.isCompleted) {
           _configCompleter!.complete();
@@ -265,12 +250,6 @@ class ProtocolService {
       final text = utf8.decode(data.payload);
       _logger.i('Text message from ${packet.from}: $text');
 
-      // Track RSSI from incoming packets
-      if (packet.hasRxSnr()) {
-        _lastRssi = packet.rxSnr.toInt();
-        _rssiController.add(_lastRssi);
-      }
-
       final message = Message(
         from: packet.from,
         to: packet.to,
@@ -292,12 +271,6 @@ class ProtocolService {
       _logger.d(
         'Position from ${packet.from}: ${position.latitudeI / 1e7}, ${position.longitudeI / 1e7}',
       );
-
-      // Track RSSI from incoming packets
-      if (packet.hasRxSnr()) {
-        _lastRssi = packet.rxSnr.toInt();
-        _rssiController.add(_lastRssi);
-      }
 
       final node = _nodes[packet.from];
       if (node != null) {
@@ -364,26 +337,14 @@ class ProtocolService {
   void _handleMyNodeInfo(pb.MyNodeInfo myInfo) {
     _myNodeNum = myInfo.myNodeNum;
     _logger.i('My node number: $_myNodeNum');
-    debugPrint('📄 _handleMyNodeInfo: myNodeNum=$_myNodeNum');
     _myNodeNumController.add(_myNodeNum!);
   }
 
   /// Handle node info
   void _handleNodeInfo(pb.NodeInfo nodeInfo) {
     _logger.i('Node info received: ${nodeInfo.num}');
-    debugPrint('📋 _handleNodeInfo START: nodeNum=${nodeInfo.num}');
-    debugPrint(
-      '📋   hasUser=${nodeInfo.hasUser()}, hasPosition=${nodeInfo.hasPosition()}, hasDeviceMetrics=${nodeInfo.hasDeviceMetrics()}',
-    );
-
-    if (nodeInfo.hasUser()) {
-      debugPrint(
-        '📋   longName="${nodeInfo.user.longName}", shortName="${nodeInfo.user.shortName}"',
-      );
-    }
 
     final existingNode = _nodes[nodeInfo.num];
-    debugPrint('📋   existingNode=${existingNode != null ? 'EXISTS' : 'NEW'}');
 
     // Generate consistent color from node number
     final colors = [
@@ -399,9 +360,6 @@ class ProtocolService {
 
     // Assume router role if device has metrics, otherwise client
     final role = nodeInfo.hasDeviceMetrics() ? 'ROUTER' : 'CLIENT';
-    debugPrint(
-      '📋   role=$role, avatarColor=0x${avatarColor.toRadixString(16)}',
-    );
 
     MeshNode updatedNode;
     if (existingNode != null) {
@@ -455,30 +413,12 @@ class ProtocolService {
     }
 
     _nodes[nodeInfo.num] = updatedNode;
-    debugPrint(
-      '📋 _handleNodeInfo: Adding node ${nodeInfo.num} to stream. Total nodes: ${_nodes.length}',
-    );
     _nodeController.add(updatedNode);
-    debugPrint(
-      '📋 _handleNodeInfo COMPLETE: Node ${nodeInfo.num} added successfully',
-    );
   }
 
   /// Handle channel configuration
   void _handleChannel(pb.Channel channel) {
     _logger.i('Channel ${channel.index} config received');
-    debugPrint(
-      '📡 _handleChannel START: index=${channel.index}, hasSettings=${channel.hasSettings()}',
-    );
-
-    if (channel.hasSettings()) {
-      debugPrint(
-        '📡   settings.name="${channel.settings.name}", psk.length=${channel.settings.psk.length}',
-      );
-      debugPrint(
-        '📡   uplinkEnabled=${channel.settings.uplinkEnabled}, downlinkEnabled=${channel.settings.downlinkEnabled}',
-      );
-    }
 
     final channelConfig = ChannelConfig(
       index: channel.index,
@@ -490,28 +430,15 @@ class ProtocolService {
           : false,
     );
 
-    debugPrint(
-      '📡 Created ChannelConfig: index=${channelConfig.index}, name="${channelConfig.name}", psk.length=${channelConfig.psk.length}',
-    );
-
     // Extend list if needed, but don't add dummy entries to stream
     while (_channels.length <= channel.index) {
       _channels.add(ChannelConfig(index: _channels.length, name: '', psk: []));
     }
     _channels[channel.index] = channelConfig;
-    debugPrint('📡 _channels list now has ${_channels.length} entries');
 
     // Always emit channel 0 (Primary), emit others only if they have names
     if (channel.index == 0 || channelConfig.name.isNotEmpty) {
-      debugPrint('📡 Emitting channel ${channel.index} to stream');
       _channelController.add(channelConfig);
-      debugPrint(
-        '📡 _handleChannel COMPLETE: Channel ${channel.index} emitted to stream',
-      );
-    } else {
-      debugPrint(
-        '📡 NOT emitting channel ${channel.index} (empty name and not Primary)',
-      );
     }
   }
 
@@ -527,38 +454,27 @@ class ProtocolService {
 
       // Wake device by sending START2 bytes (only for serial/USB)
       if (_transport.requiresFraming) {
-        debugPrint('🚀 Waking device with START2 sequence (serial mode)...');
         final wakeBytes = List<int>.filled(32, 0xC3); // 32 START2 bytes
         await _transport.send(Uint8List.fromList(wakeBytes));
-        debugPrint('🚀 Sent 32 START2 bytes to wake device');
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
       // Generate a config ID to track this request
       final configId = _random.nextInt(0x7FFFFFFF);
-      debugPrint('🚀 SENDING wantConfigId=$configId to device');
 
       // wantConfigId is a uint32 per official proto (not a bool!)
       final toRadio = pn.ToRadio()..wantConfigId = configId;
       final bytes = toRadio.writeToBuffer();
-      debugPrint(
-        '🚀 ToRadio protobuf size: ${bytes.length} bytes - ${bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
-      );
 
       // BLE uses raw protobufs, Serial/USB requires framing
       final sendBytes = _transport.requiresFraming
           ? PacketFramer.frame(bytes)
           : bytes;
-      debugPrint(
-        '🚀 Sending ${sendBytes.length} bytes (framed=${_transport.requiresFraming})',
-      );
 
       await _transport.send(sendBytes);
-      debugPrint('🚀 Configuration request SENT successfully');
-      // Polling will be handled by background polling loop
+      _logger.i('Configuration request sent');
     } catch (e) {
       _logger.e('Error requesting configuration: $e');
-      debugPrint('🚀 ERROR sending config request: $e');
     }
   }
 
@@ -743,6 +659,37 @@ class ProtocolService {
       await _transport.send(_prepareForSend(bytes));
     } catch (e) {
       _logger.e('Error getting channel: $e');
+    }
+  }
+
+  /// Set device role
+  Future<void> setDeviceRole(pb.Config_DeviceConfig_Role role) async {
+    try {
+      _logger.i('Setting device role: ${role.name}');
+
+      // Get current owner info and update role
+      final user = pb.User()..role = role;
+
+      final adminMsg = pb.AdminMessage()..setOwner = user;
+
+      final data = pb.Data()
+        ..portnum = pb.PortNum.ADMIN_APP
+        ..payload = adminMsg.writeToBuffer()
+        ..wantResponse = true;
+
+      final packet = pb.MeshPacket()
+        ..from = _myNodeNum ?? 0
+        ..to = _myNodeNum ?? 0
+        ..decoded = data
+        ..id = _generatePacketId();
+
+      final toRadio = pn.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+    } catch (e) {
+      _logger.e('Error setting device role: $e');
+      rethrow;
     }
   }
 

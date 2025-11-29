@@ -78,6 +78,10 @@ abstract class DeviceTransport {
   /// Enable notifications (BLE-specific, called after initial config download)
   Future<void> enableNotifications();
 
+  /// Read current RSSI value (BLE-specific)
+  /// Returns null if not supported or not connected
+  Future<int?> readRssi();
+
   /// Dispose resources
   Future<void> dispose();
 

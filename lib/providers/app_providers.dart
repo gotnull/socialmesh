@@ -143,6 +143,11 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
     _storage?.saveMessage(message);
   }
 
+  void updateMessage(String messageId, Message updatedMessage) {
+    state = state.map((m) => m.id == messageId ? updatedMessage : m).toList();
+    _storage?.saveMessage(updatedMessage);
+  }
+
   void clearMessages() {
     state = [];
     _storage?.clearMessages();

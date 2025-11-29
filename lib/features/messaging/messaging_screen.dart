@@ -24,19 +24,31 @@ class MessagingScreen extends ConsumerWidget {
 
     // Add channel conversations
     for (final channel in channels) {
-      final channelMessages = messages.where((m) => m.channel == channel.index && m.isBroadcast).toList();
-      final lastMessage = channelMessages.isNotEmpty ? channelMessages.last : null;
-      final unreadCount = channelMessages.where((m) => m.received && m.from != myNodeNum).length;
+      final channelMessages = messages
+          .where((m) => m.channel == channel.index && m.isBroadcast)
+          .toList();
+      final lastMessage = channelMessages.isNotEmpty
+          ? channelMessages.last
+          : null;
+      final unreadCount = channelMessages
+          .where((m) => m.received && m.from != myNodeNum)
+          .length;
 
-      conversations.add(_Conversation(
-        type: ConversationType.channel,
-        channelIndex: channel.index,
-        name: channel.name.isEmpty ? (channel.index == 0 ? 'Primary Channel' : 'Channel ${channel.index}') : channel.name,
-        lastMessage: lastMessage?.text,
-        lastMessageTime: lastMessage?.timestamp,
-        unreadCount: unreadCount,
-        isEncrypted: channel.psk.isNotEmpty,
-      ));
+      conversations.add(
+        _Conversation(
+          type: ConversationType.channel,
+          channelIndex: channel.index,
+          name: channel.name.isEmpty
+              ? (channel.index == 0
+                    ? 'Primary Channel'
+                    : 'Channel ${channel.index}')
+              : channel.name,
+          lastMessage: lastMessage?.text,
+          lastMessageTime: lastMessage?.timestamp,
+          unreadCount: unreadCount,
+          isEncrypted: channel.psk.isNotEmpty,
+        ),
+      );
     }
 
     // Add DM conversations (group messages by node)
@@ -50,22 +62,26 @@ class MessagingScreen extends ConsumerWidget {
 
     for (final nodeNum in dmNodes) {
       final node = nodes[nodeNum];
-      final nodeMessages = messages.where((m) =>
-        m.isDirect && (m.from == nodeNum || m.to == nodeNum)
-      ).toList();
+      final nodeMessages = messages
+          .where((m) => m.isDirect && (m.from == nodeNum || m.to == nodeNum))
+          .toList();
       final lastMessage = nodeMessages.isNotEmpty ? nodeMessages.last : null;
-      final unreadCount = nodeMessages.where((m) => m.received && m.from == nodeNum).length;
+      final unreadCount = nodeMessages
+          .where((m) => m.received && m.from == nodeNum)
+          .length;
 
-      conversations.add(_Conversation(
-        type: ConversationType.directMessage,
-        nodeNum: nodeNum,
-        name: node?.displayName ?? 'Node ${nodeNum.toRadixString(16)}',
-        shortName: node?.shortName,
-        avatarColor: node?.avatarColor,
-        lastMessage: lastMessage?.text,
-        lastMessageTime: lastMessage?.timestamp,
-        unreadCount: unreadCount,
-      ));
+      conversations.add(
+        _Conversation(
+          type: ConversationType.directMessage,
+          nodeNum: nodeNum,
+          name: node?.displayName ?? 'Node ${nodeNum.toRadixString(16)}',
+          shortName: node?.shortName,
+          avatarColor: node?.avatarColor,
+          lastMessage: lastMessage?.text,
+          lastMessageTime: lastMessage?.timestamp,
+          unreadCount: unreadCount,
+        ),
+      );
     }
 
     // Sort by last message time
@@ -188,8 +204,11 @@ class MessagingScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            Container(height: 1, color: AppTheme.darkBorder.withValues(alpha: 0.3)),
-            
+            Container(
+              height: 1,
+              color: AppTheme.darkBorder.withValues(alpha: 0.3),
+            ),
+
             // Channels section
             const Padding(
               padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -220,7 +239,11 @@ class MessagingScreen extends ConsumerWidget {
                   ),
                 ),
                 title: Text(
-                  channel.name.isEmpty ? (channel.index == 0 ? 'Primary Channel' : 'Channel ${channel.index}') : channel.name,
+                  channel.name.isEmpty
+                      ? (channel.index == 0
+                            ? 'Primary Channel'
+                            : 'Channel ${channel.index}')
+                      : channel.name,
                   style: const TextStyle(
                     color: Colors.white,
                     fontFamily: 'Inter',
@@ -234,13 +257,17 @@ class MessagingScreen extends ConsumerWidget {
                       builder: (_) => ChatScreen(
                         type: ConversationType.channel,
                         channelIndex: channel.index,
-                        title: channel.name.isEmpty ? (channel.index == 0 ? 'Primary Channel' : 'Channel ${channel.index}') : channel.name,
+                        title: channel.name.isEmpty
+                            ? (channel.index == 0
+                                  ? 'Primary Channel'
+                                  : 'Channel ${channel.index}')
+                            : channel.name,
                       ),
                     ),
                   );
                 },
               ),
-            
+
             // Direct messages section
             if (nodes.isNotEmpty) ...[
               const Padding(
@@ -269,7 +296,8 @@ class MessagingScreen extends ConsumerWidget {
                     ),
                     child: Center(
                       child: Text(
-                        node.shortName ?? node.nodeNum.toRadixString(16).substring(0, 2),
+                        node.shortName ??
+                            node.nodeNum.toRadixString(16).substring(0, 2),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -339,134 +367,140 @@ class _ConversationTile extends StatelessWidget {
   final _Conversation conversation;
   final VoidCallback onTap;
 
-  const _ConversationTile({
-    required this.conversation,
-    required this.onTap,
-  });
+  const _ConversationTile({required this.conversation, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final timeFormat = DateFormat('h:mm a');
     final isChannel = conversation.type == ConversationType.channel;
 
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: AppTheme.darkBorder.withValues(alpha: 0.3),
-            ),
-          ),
-        ),
-        child: Row(
-          children: [
-            // Avatar
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: isChannel
-                    ? AppTheme.primaryGreen.withValues(alpha: 0.2)
-                    : (conversation.avatarColor != null
-                        ? Color(conversation.avatarColor!)
-                        : AppTheme.graphPurple),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: isChannel
-                    ? Icon(
-                        conversation.isEncrypted ? Icons.lock : Icons.tag,
-                        color: AppTheme.primaryGreen,
-                        size: 24,
-                      )
-                    : Text(
-                        conversation.shortName ?? conversation.name.substring(0, 2),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          conversation.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                            fontFamily: 'Inter',
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (conversation.lastMessageTime != null)
-                        Text(
-                          timeFormat.format(conversation.lastMessageTime!),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.textTertiary,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                    ],
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // Avatar
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: isChannel
+                        ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+                        : (conversation.avatarColor != null
+                              ? Color(conversation.avatarColor!)
+                              : AppTheme.graphPurple),
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          conversation.lastMessage ?? (isChannel ? 'No messages' : 'Start a conversation'),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppTheme.textSecondary,
-                            fontFamily: 'Inter',
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (conversation.unreadCount > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
+                  child: Center(
+                    child: isChannel
+                        ? Icon(
+                            conversation.isEncrypted ? Icons.lock : Icons.tag,
                             color: AppTheme.primaryGreen,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            '${conversation.unreadCount}',
+                            size: 24,
+                          )
+                        : Text(
+                            conversation.shortName ??
+                                conversation.name.substring(0, 2),
                             style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
                               color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
                               fontFamily: 'Inter',
                             ),
                           ),
-                        ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              conversation.name,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                fontFamily: 'Inter',
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (conversation.lastMessageTime != null)
+                            Text(
+                              timeFormat.format(conversation.lastMessageTime!),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.textTertiary,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              conversation.lastMessage ??
+                                  (isChannel
+                                      ? 'No messages'
+                                      : 'Start a conversation'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: AppTheme.textSecondary,
+                                fontFamily: 'Inter',
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (conversation.unreadCount > 0)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryGreen,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '${conversation.unreadCount}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+              ],
             ),
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.chevron_right,
-              color: AppTheme.textTertiary,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -505,9 +539,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
+    final myNodeNum = ref.read(myNodeNumProvider);
+    final messageId = DateTime.now().millisecondsSinceEpoch.toString();
+
+    // Create pending message
+    final pendingMessage = Message(
+      id: messageId,
+      from: myNodeNum ?? 0,
+      to: widget.type == ConversationType.channel
+          ? 0xFFFFFFFF
+          : widget.nodeNum!,
+      text: text,
+      channel: widget.type == ConversationType.channel
+          ? widget.channelIndex ?? 0
+          : 0,
+      sent: true,
+      status: MessageStatus.pending,
+    );
+
+    // Add to messages immediately for optimistic UI
+    ref.read(messagesProvider.notifier).addMessage(pendingMessage);
+    _messageController.clear();
+
     try {
       final protocol = ref.read(protocolServiceProvider);
-      
+
       if (widget.type == ConversationType.channel) {
         await protocol.sendMessage(
           text: text,
@@ -524,13 +580,71 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         );
       }
 
-      _messageController.clear();
+      // Update status to sent
+      ref
+          .read(messagesProvider.notifier)
+          .updateMessage(
+            messageId,
+            pendingMessage.copyWith(status: MessageStatus.sent),
+          );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send: $e')),
+      // Update status to failed with error
+      ref
+          .read(messagesProvider.notifier)
+          .updateMessage(
+            messageId,
+            pendingMessage.copyWith(
+              status: MessageStatus.failed,
+              errorMessage: e.toString(),
+            ),
+          );
+    }
+  }
+
+  Future<void> _retryMessage(Message message) async {
+    // Update to pending
+    ref
+        .read(messagesProvider.notifier)
+        .updateMessage(
+          message.id,
+          message.copyWith(status: MessageStatus.pending, errorMessage: null),
+        );
+
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+
+      if (message.isBroadcast) {
+        await protocol.sendMessage(
+          text: message.text,
+          to: 0xFFFFFFFF,
+          channel: message.channel ?? 0,
+          wantAck: false,
+        );
+      } else {
+        await protocol.sendMessage(
+          text: message.text,
+          to: message.to,
+          channel: 0,
+          wantAck: true,
         );
       }
+
+      ref
+          .read(messagesProvider.notifier)
+          .updateMessage(
+            message.id,
+            message.copyWith(status: MessageStatus.sent, errorMessage: null),
+          );
+    } catch (e) {
+      ref
+          .read(messagesProvider.notifier)
+          .updateMessage(
+            message.id,
+            message.copyWith(
+              status: MessageStatus.failed,
+              errorMessage: e.toString(),
+            ),
+          );
     }
   }
 
@@ -548,7 +662,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           .toList();
     } else {
       filteredMessages = messages
-          .where((m) => m.isDirect && (m.from == widget.nodeNum || m.to == widget.nodeNum))
+          .where(
+            (m) =>
+                m.isDirect &&
+                (m.from == widget.nodeNum || m.to == widget.nodeNum),
+          )
           .toList();
     }
 
@@ -573,7 +691,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
               child: Center(
                 child: widget.type == ConversationType.channel
-                    ? const Icon(Icons.tag, color: AppTheme.primaryGreen, size: 18)
+                    ? const Icon(
+                        Icons.tag,
+                        color: AppTheme.primaryGreen,
+                        size: 18,
+                      )
                     : Text(
                         widget.title.substring(0, 2),
                         style: const TextStyle(
@@ -645,10 +767,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   )
                 : ListView.builder(
                     reverse: true,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     itemCount: filteredMessages.length,
                     itemBuilder: (context, index) {
-                      final message = filteredMessages[filteredMessages.length - 1 - index];
+                      final message =
+                          filteredMessages[filteredMessages.length - 1 - index];
                       final isFromMe = message.from == myNodeNum;
                       final senderNode = nodes[message.from];
 
@@ -656,9 +782,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         message: message,
                         isFromMe: isFromMe,
                         senderName: senderNode?.displayName ?? 'Unknown',
-                        senderShortName: senderNode?.shortName ?? message.from.toRadixString(16).padLeft(4, '0').substring(0, 4),
+                        senderShortName:
+                            senderNode?.shortName ??
+                            message.from
+                                .toRadixString(16)
+                                .padLeft(4, '0')
+                                .substring(0, 4),
                         avatarColor: senderNode?.avatarColor,
-                        showSender: widget.type == ConversationType.channel && !isFromMe,
+                        showSender:
+                            widget.type == ConversationType.channel &&
+                            !isFromMe,
+                        onRetry: message.isFailed
+                            ? () => _retryMessage(message)
+                            : null,
                       );
                     },
                   ),
@@ -670,7 +806,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             decoration: BoxDecoration(
               color: AppTheme.darkCard,
               border: Border(
-                top: BorderSide(color: AppTheme.darkBorder.withValues(alpha: 0.3)),
+                top: BorderSide(
+                  color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                ),
               ),
             ),
             child: SafeArea(
@@ -696,7 +834,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             fontFamily: 'Inter',
                           ),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
                         ),
                         maxLines: null,
                         textInputAction: TextInputAction.send,
@@ -714,7 +855,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         color: AppTheme.primaryGreen,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.send, color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.send,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
@@ -734,6 +879,7 @@ class _MessageBubble extends StatelessWidget {
   final String senderShortName;
   final int? avatarColor;
   final bool showSender;
+  final VoidCallback? onRetry;
 
   const _MessageBubble({
     required this.message,
@@ -742,6 +888,7 @@ class _MessageBubble extends StatelessWidget {
     required this.senderShortName,
     this.avatarColor,
     this.showSender = true,
+    this.onRetry,
   });
 
   Color _getAvatarColor() {
@@ -760,45 +907,138 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final timeFormat = DateFormat('h:mm a');
+    final isFailed = message.isFailed;
+    final isPending = message.isPending;
 
     if (isFromMe) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Flexible(
-              child: Container(
-                margin: const EdgeInsets.only(left: 64),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen,
-                  borderRadius: BorderRadius.circular(18),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Flexible(
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 64),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isFailed
+                          ? AppTheme.errorRed.withValues(alpha: 0.8)
+                          : isPending
+                          ? AppTheme.primaryGreen.withValues(alpha: 0.6)
+                          : AppTheme.primaryGreen,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          message.text,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.white,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isPending) ...[
+                              SizedBox(
+                                width: 12,
+                                height: 12,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white.withValues(alpha: 0.7),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                            Text(
+                              timeFormat.format(message.timestamp),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+              ],
+            ),
+            if (isFailed) ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 14,
+                      color: AppTheme.errorRed,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
-                      message.text,
+                      message.errorMessage ?? 'Failed to send',
                       style: const TextStyle(
-                        fontSize: 15,
-                        color: Colors.white,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      timeFormat.format(message.timestamp),
-                      style: TextStyle(
                         fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: AppTheme.errorRed,
                         fontFamily: 'Inter',
                       ),
                     ),
+                    if (onRetry != null) ...[
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: onRetry,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkCard,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.refresh,
+                                size: 12,
+                                color: AppTheme.primaryGreen,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Retry',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppTheme.primaryGreen,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
-            ),
+            ],
           ],
         ),
       );
@@ -820,7 +1060,9 @@ class _MessageBubble extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  senderShortName.length > 4 ? senderShortName.substring(0, 4) : senderShortName,
+                  senderShortName.length > 4
+                      ? senderShortName.substring(0, 4)
+                      : senderShortName,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,

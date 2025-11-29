@@ -1,5 +1,13 @@
 import 'package:uuid/uuid.dart';
 
+/// Message status enum
+enum MessageStatus {
+  pending, // Message being sent
+  sent, // Message sent to device
+  delivered, // Message delivered (acked)
+  failed, // Failed to send
+}
+
 /// Message model
 class Message {
   final String id;
@@ -11,6 +19,8 @@ class Message {
   final bool sent;
   final bool received;
   final bool acked;
+  final MessageStatus status;
+  final String? errorMessage;
 
   Message({
     String? id,
@@ -22,6 +32,8 @@ class Message {
     this.sent = false,
     this.received = false,
     this.acked = false,
+    this.status = MessageStatus.sent,
+    this.errorMessage,
   }) : id = id ?? const Uuid().v4(),
        timestamp = timestamp ?? DateTime.now();
 
@@ -35,6 +47,8 @@ class Message {
     bool? sent,
     bool? received,
     bool? acked,
+    MessageStatus? status,
+    String? errorMessage,
   }) {
     return Message(
       id: id ?? this.id,
@@ -46,11 +60,15 @@ class Message {
       sent: sent ?? this.sent,
       received: received ?? this.received,
       acked: acked ?? this.acked,
+      status: status ?? this.status,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 
   bool get isBroadcast => to == 0xFFFFFFFF;
   bool get isDirect => !isBroadcast;
+  bool get isFailed => status == MessageStatus.failed;
+  bool get isPending => status == MessageStatus.pending;
 
   @override
   String toString() => 'Message(from: $from, to: $to, text: $text)';
