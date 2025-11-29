@@ -765,9 +765,12 @@ class _NodeDetailsSheet extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(
-                      text: '${node.displayName}\nNode: !${node.nodeNum.toRadixString(16)}',
-                    ));
+                    Clipboard.setData(
+                      ClipboardData(
+                        text:
+                            '${node.displayName}\nNode: !${node.nodeNum.toRadixString(16)}',
+                      ),
+                    );
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -905,10 +908,7 @@ class _NodeDetailsSheet extends StatelessWidget {
               // QR code button
               IconButton(
                 onPressed: () => _showNodeQrCode(context),
-                icon: const Icon(
-                  Icons.qr_code,
-                  color: AppTheme.textSecondary,
-                ),
+                icon: const Icon(Icons.qr_code, color: AppTheme.textSecondary),
                 tooltip: 'Show QR Code',
               ),
             ],
@@ -918,7 +918,7 @@ class _NodeDetailsSheet extends StatelessWidget {
             height: 1,
             color: AppTheme.darkBorder.withValues(alpha: 0.3),
           ),
-          
+
           // Scrollable details
           Flexible(
             child: SingleChildScrollView(
@@ -996,9 +996,9 @@ class _NodeDetailsSheet extends StatelessWidget {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Action buttons
           if (!isMyNode)
             Row(
