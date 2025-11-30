@@ -133,8 +133,11 @@ class NotificationService {
     final nodeName = node.displayName;
     final nodeId = node.userId ?? '!${node.nodeNum.toRadixString(16)}';
 
+    // Use modulo to keep ID within 32-bit signed int range
+    final notificationId = (node.nodeNum % 1000000).toInt();
+
     await _notifications.show(
-      node.nodeNum, // Use node number as notification ID (allows updates)
+      notificationId,
       'New Node Discovered',
       '$nodeName ($nodeId) joined the mesh',
       notificationDetails,
@@ -193,9 +196,12 @@ class NotificationService {
 
     debugPrint('🔔 Calling _notifications.show() for DM from $senderName');
     try {
+      // Use modulo to keep ID within 32-bit signed int range
+      // Offset by 1000000 to avoid collision with node notifications
+      final notificationId = (fromNodeNum % 1000000) + 1000000;
+
       await _notifications.show(
-        fromNodeNum +
-            1000000, // Offset to avoid collision with node notifications
+        notificationId,
         'Message from $senderName',
         truncatedMessage,
         notificationDetails,
@@ -249,8 +255,7 @@ class NotificationService {
         : message;
 
     await _notifications.show(
-      channelIndex +
-          2000000, // Offset to avoid collision with other notifications
+      channelIndex + 2000000, // Channel indices are small, this is safe
       '$senderName in $channelName',
       truncatedMessage,
       notificationDetails,
