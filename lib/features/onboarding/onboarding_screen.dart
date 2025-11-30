@@ -19,10 +19,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   final List<_OnboardingPage> _pages = [
     _OnboardingPage(
-      icon: Icons.blur_on,
+      icon: null, // Uses app icon instead
       title: 'Welcome to Protofluff',
       description:
           'Privacy-first mesh messaging.\nCommunicate off-grid with your community.',
+      useAppIcon: true,
     ),
     _OnboardingPage(
       icon: Icons.wifi_tethering,
@@ -200,15 +201,32 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
+          if (page.useAppIcon)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: Image.asset(
+                'assets/app_icons/source/protofluff_icon_1024.png',
+                width: 140,
+                height: 140,
+              ),
+            )
+          else
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppTheme.primaryMagenta.withValues(alpha: 0.2),
+                    AppTheme.primaryPurple.withValues(alpha: 0.2),
+                  ],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(page.icon, size: 56, color: AppTheme.primaryMagenta),
             ),
-            child: Icon(page.icon, size: 56, color: AppTheme.primaryGreen),
-          ),
           const SizedBox(height: 48),
           Text(
             page.title,
@@ -237,15 +255,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 }
 
 class _OnboardingPage {
-  final IconData icon;
+  final IconData? icon;
   final String title;
   final String description;
   final bool isLastPage;
+  final bool useAppIcon;
 
   const _OnboardingPage({
-    required this.icon,
+    this.icon,
     required this.title,
     required this.description,
     this.isLastPage = false,
+    this.useAppIcon = false,
   });
 }

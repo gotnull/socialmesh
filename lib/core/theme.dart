@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AppTheme {
-  // Brand colors from the design
-  static const primaryGreen = Color(0xFF5EBD85);
+  // Brand colors - extracted from app icon gradient
+  static const primaryMagenta = Color(0xFFE91E8C); // Hot pink/magenta
+  static const primaryPurple = Color(0xFF8B5CF6); // Purple
+  static const primaryBlue = Color(0xFF4F6AF6); // Blue
+  
+  // Legacy alias for compatibility
+  static const primaryGreen = primaryMagenta;
+  
+  // Accent colors
   static const secondaryPink = Color(0xFFF97BBD);
   static const accentOrange = Color(0xFFFF9D6E);
   static const successGreen = Color(0xFF4ADE80);
@@ -25,6 +32,27 @@ class AppTheme {
   static const graphBlue = Color(0xFF3B82F6);
   static const graphYellow = Color(0xFFFBBF24);
   static const graphRed = Color(0xFFEF4444);
+
+  // Brand gradient (matches app icon)
+  static const brandGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xFFE91E8C), // Magenta
+      Color(0xFF8B5CF6), // Purple
+      Color(0xFF4F6AF6), // Blue
+    ],
+  );
+  
+  // Horizontal brand gradient for buttons
+  static const brandGradientHorizontal = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [
+      Color(0xFFE91E8C), // Magenta
+      Color(0xFF8B5CF6), // Purple
+    ],
+  );
 
   // Gradients
   static const backgroundGradient = LinearGradient(
