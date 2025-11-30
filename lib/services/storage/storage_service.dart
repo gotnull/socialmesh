@@ -123,13 +123,53 @@ class SettingsService {
 
   bool get darkMode => _preferences.getBool('dark_mode') ?? false;
 
-  // Notifications
+  // Notifications - Master toggle
   Future<void> setNotificationsEnabled(bool enabled) async {
     await _preferences.setBool('notifications_enabled', enabled);
   }
 
   bool get notificationsEnabled =>
       _preferences.getBool('notifications_enabled') ?? true;
+
+  // Notification: New Nodes
+  Future<void> setNewNodeNotificationsEnabled(bool enabled) async {
+    await _preferences.setBool('new_node_notifications_enabled', enabled);
+  }
+
+  bool get newNodeNotificationsEnabled =>
+      _preferences.getBool('new_node_notifications_enabled') ?? true;
+
+  // Notification: Direct Messages
+  Future<void> setDirectMessageNotificationsEnabled(bool enabled) async {
+    await _preferences.setBool('dm_notifications_enabled', enabled);
+  }
+
+  bool get directMessageNotificationsEnabled =>
+      _preferences.getBool('dm_notifications_enabled') ?? true;
+
+  // Notification: Channel Messages
+  Future<void> setChannelMessageNotificationsEnabled(bool enabled) async {
+    await _preferences.setBool('channel_notifications_enabled', enabled);
+  }
+
+  bool get channelMessageNotificationsEnabled =>
+      _preferences.getBool('channel_notifications_enabled') ?? true;
+
+  // Notification: Sound
+  Future<void> setNotificationSoundEnabled(bool enabled) async {
+    await _preferences.setBool('notification_sound_enabled', enabled);
+  }
+
+  bool get notificationSoundEnabled =>
+      _preferences.getBool('notification_sound_enabled') ?? true;
+
+  // Notification: Vibration
+  Future<void> setNotificationVibrationEnabled(bool enabled) async {
+    await _preferences.setBool('notification_vibration_enabled', enabled);
+  }
+
+  bool get notificationVibrationEnabled =>
+      _preferences.getBool('notification_vibration_enabled') ?? true;
 
   // Message history limit
   Future<void> setMessageHistoryLimit(int limit) async {

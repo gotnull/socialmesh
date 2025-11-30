@@ -233,7 +233,7 @@ class SettingsScreen extends ConsumerWidget {
               _SettingsTile(
                 icon: Icons.notifications_outlined,
                 title: 'Push notifications',
-                subtitle: 'Show notifications for new messages',
+                subtitle: 'Master toggle for all notifications',
                 trailing: Switch(
                   value: settingsService.notificationsEnabled,
                   activeTrackColor: AppTheme.primaryGreen,
@@ -243,6 +243,77 @@ class SettingsScreen extends ConsumerWidget {
                   },
                 ),
               ),
+              if (settingsService.notificationsEnabled) ...[
+                _SettingsTile(
+                  icon: Icons.person_add_outlined,
+                  title: 'New nodes',
+                  subtitle: 'Notify when new nodes join the mesh',
+                  trailing: Switch(
+                    value: settingsService.newNodeNotificationsEnabled,
+                    activeTrackColor: AppTheme.primaryGreen,
+                    inactiveTrackColor: AppTheme.darkBorder,
+                    onChanged: (value) {
+                      settingsService.setNewNodeNotificationsEnabled(value);
+                    },
+                  ),
+                ),
+                _SettingsTile(
+                  icon: Icons.chat_bubble_outline,
+                  title: 'Direct messages',
+                  subtitle: 'Notify for private messages',
+                  trailing: Switch(
+                    value: settingsService.directMessageNotificationsEnabled,
+                    activeTrackColor: AppTheme.primaryGreen,
+                    inactiveTrackColor: AppTheme.darkBorder,
+                    onChanged: (value) {
+                      settingsService.setDirectMessageNotificationsEnabled(
+                        value,
+                      );
+                    },
+                  ),
+                ),
+                _SettingsTile(
+                  icon: Icons.forum_outlined,
+                  title: 'Channel messages',
+                  subtitle: 'Notify for channel broadcasts',
+                  trailing: Switch(
+                    value: settingsService.channelMessageNotificationsEnabled,
+                    activeTrackColor: AppTheme.primaryGreen,
+                    inactiveTrackColor: AppTheme.darkBorder,
+                    onChanged: (value) {
+                      settingsService.setChannelMessageNotificationsEnabled(
+                        value,
+                      );
+                    },
+                  ),
+                ),
+                _SettingsTile(
+                  icon: Icons.volume_up_outlined,
+                  title: 'Sound',
+                  subtitle: 'Play sound with notifications',
+                  trailing: Switch(
+                    value: settingsService.notificationSoundEnabled,
+                    activeTrackColor: AppTheme.primaryGreen,
+                    inactiveTrackColor: AppTheme.darkBorder,
+                    onChanged: (value) {
+                      settingsService.setNotificationSoundEnabled(value);
+                    },
+                  ),
+                ),
+                _SettingsTile(
+                  icon: Icons.vibration,
+                  title: 'Vibration',
+                  subtitle: 'Vibrate with notifications',
+                  trailing: Switch(
+                    value: settingsService.notificationVibrationEnabled,
+                    activeTrackColor: AppTheme.primaryGreen,
+                    inactiveTrackColor: AppTheme.darkBorder,
+                    onChanged: (value) {
+                      settingsService.setNotificationVibrationEnabled(value);
+                    },
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 16),
 

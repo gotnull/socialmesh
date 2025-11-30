@@ -357,6 +357,11 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
   }
 
   void _notifyNewMessage(Message message) {
+    // Check master notification toggle
+    final settingsAsync = _ref.read(settingsServiceProvider);
+    final settings = settingsAsync.valueOrNull;
+    if (settings == null || !settings.notificationsEnabled) return;
+
     // Get sender name from nodes
     final nodes = _ref.read(nodesProvider);
     final senderNode = nodes[message.from];
@@ -366,6 +371,9 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
     final isChannelMessage = message.channel != null && message.channel! > 0;
 
     if (isChannelMessage) {
+      // Check channel message setting
+      if (!settings.channelMessageNotificationsEnabled) return;
+
       // Channel message notification
       final channels = _ref.read(channelsProvider);
       final channel = channels
@@ -378,13 +386,20 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
         channelName: channelName,
         message: message.text,
         channelIndex: message.channel!,
+        playSound: settings.notificationSoundEnabled,
+        vibrate: settings.notificationVibrationEnabled,
       );
     } else {
+      // Check direct message setting
+      if (!settings.directMessageNotificationsEnabled) return;
+
       // Direct message notification
       NotificationService().showNewMessageNotification(
         senderName: senderName,
         message: message.text,
         fromNodeNum: message.from,
+        playSound: settings.notificationSoundEnabled,
+        vibrate: settings.notificationVibrationEnabled,
       );
     }
   }
@@ -615,18 +630,30 @@ final newNodesCountProvider = StateProvider<int>((ref) => 0);
 /// Node discovery notifier - triggers notifications when new nodes are found
 class NodeDiscoveryNotifier extends StateNotifier<MeshNode?> {
   final NotificationService _notificationService;
+  final Ref _ref;
 
-  NodeDiscoveryNotifier(this._notificationService) : super(null);
+  NodeDiscoveryNotifier(this._notificationService, this._ref) : super(null);
 
   Future<void> notifyNewNode(MeshNode node) async {
+    // Check master notification toggle and new node setting
+    final settingsAsync = _ref.read(settingsServiceProvider);
+    final settings = settingsAsync.valueOrNull;
+    if (settings == null) return;
+    if (!settings.notificationsEnabled) return;
+    if (!settings.newNodeNotificationsEnabled) return;
+
     state = node;
-    await _notificationService.showNewNodeNotification(node);
+    await _notificationService.showNewNodeNotification(
+      node,
+      playSound: settings.notificationSoundEnabled,
+      vibrate: settings.notificationVibrationEnabled,
+    );
   }
 }
 
 final nodeDiscoveryNotifierProvider =
     StateNotifierProvider<NodeDiscoveryNotifier, MeshNode?>((ref) {
-      return NodeDiscoveryNotifier(NotificationService());
+      return NodeDiscoveryNotifier(NotificationService(), ref);
     });
 
 /// Current device region - stream that emits region updates

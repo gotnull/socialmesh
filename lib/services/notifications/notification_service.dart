@@ -79,7 +79,11 @@ class NotificationService {
   }
 
   /// Show notification for new node discovery
-  Future<void> showNewNodeNotification(MeshNode node) async {
+  Future<void> showNewNodeNotification(
+    MeshNode node, {
+    bool playSound = true,
+    bool vibrate = true,
+  }) async {
     if (!_initialized) {
       debugPrint(
         '🔔 NotificationService not initialized, skipping notification',
@@ -87,7 +91,7 @@ class NotificationService {
       return;
     }
 
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'new_nodes',
       'New Nodes',
       channelDescription: 'Notifications for newly discovered mesh nodes',
@@ -95,15 +99,17 @@ class NotificationService {
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
       groupKey: 'mesh_nodes',
+      playSound: playSound,
+      enableVibration: vibrate,
     );
 
-    const iosDetails = DarwinNotificationDetails(
+    final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
-      presentSound: true,
+      presentSound: playSound,
     );
 
-    const notificationDetails = NotificationDetails(
+    final notificationDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
       macOS: iosDetails,
@@ -128,10 +134,12 @@ class NotificationService {
     required String senderName,
     required String message,
     required int fromNodeNum,
+    bool playSound = true,
+    bool vibrate = true,
   }) async {
     if (!_initialized) return;
 
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'direct_messages',
       'Direct Messages',
       channelDescription: 'Notifications for direct mesh messages',
@@ -139,15 +147,17 @@ class NotificationService {
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
       groupKey: 'mesh_direct_messages',
+      playSound: playSound,
+      enableVibration: vibrate,
     );
 
-    const iosDetails = DarwinNotificationDetails(
+    final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
-      presentSound: true,
+      presentSound: playSound,
     );
 
-    const notificationDetails = NotificationDetails(
+    final notificationDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
       macOS: iosDetails,
@@ -176,10 +186,12 @@ class NotificationService {
     required String channelName,
     required String message,
     required int channelIndex,
+    bool playSound = true,
+    bool vibrate = true,
   }) async {
     if (!_initialized) return;
 
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'channel_messages',
       'Channel Messages',
       channelDescription: 'Notifications for channel mesh messages',
@@ -187,15 +199,17 @@ class NotificationService {
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
       groupKey: 'mesh_channel_messages',
+      playSound: playSound,
+      enableVibration: vibrate,
     );
 
-    const iosDetails = DarwinNotificationDetails(
+    final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
-      presentSound: true,
+      presentSound: playSound,
     );
 
-    const notificationDetails = NotificationDetails(
+    final notificationDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
       macOS: iosDetails,
