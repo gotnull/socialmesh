@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_providers.dart';
+import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
 /// Screen for configuring MQTT module settings
 class MqttConfigScreen extends ConsumerStatefulWidget {
@@ -23,14 +25,64 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
   bool _proxyToClientEnabled = false;
   bool _mapReportingEnabled = false;
   bool _obscurePassword = true;
+  StreamSubscription<pb.ModuleConfig_MQTTConfig>? _configSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentConfig();
+  }
 
   @override
   void dispose() {
+    _configSubscription?.cancel();
     _addressController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     _rootController.dispose();
     super.dispose();
+  }
+
+  void _applyConfig(pb.ModuleConfig_MQTTConfig config) {
+    setState(() {
+      _enabled = config.enabled;
+      _addressController.text = config.address;
+      _usernameController.text = config.username;
+      _passwordController.text = config.password;
+      if (config.root.isNotEmpty) {
+        _rootController.text = config.root;
+      }
+      _encryptionEnabled = config.encryptionEnabled;
+      _jsonEnabled = config.jsonEnabled;
+      _tlsEnabled = config.tlsEnabled;
+      _proxyToClientEnabled = config.proxyToClientEnabled;
+      _mapReportingEnabled = config.mapReportingEnabled;
+    });
+  }
+
+  Future<void> _loadCurrentConfig() async {
+    setState(() => _isLoading = true);
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+
+      // Apply cached config immediately if available
+      final cached = protocol.currentMqttConfig;
+      if (cached != null) {
+        _applyConfig(cached);
+      }
+
+      // Listen for config response
+      _configSubscription = protocol.mqttConfigStream.listen((config) {
+        if (mounted) _applyConfig(config);
+      });
+
+      // Request fresh config from device
+      await protocol.getModuleConfig(
+        pb.AdminMessage_ModuleConfigType.MQTT_CONFIG,
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _saveConfig() async {

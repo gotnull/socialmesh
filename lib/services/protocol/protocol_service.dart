@@ -58,6 +58,7 @@ class ProtocolService {
   final StreamController<pb.Config_BluetoothConfig> _bluetoothConfigController;
   final StreamController<pb.Config_SecurityConfig> _securityConfigController;
   final StreamController<pb.Config_LoRaConfig> _loraConfigController;
+  final StreamController<pb.ModuleConfig_MQTTConfig> _mqttConfigController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   Completer<void>? _configCompleter;
@@ -76,6 +77,7 @@ class ProtocolService {
   pb.Config_BluetoothConfig? _currentBluetoothConfig;
   pb.Config_SecurityConfig? _currentSecurityConfig;
   pb.Config_LoRaConfig? _currentLoraConfig;
+  pb.ModuleConfig_MQTTConfig? _currentMqttConfig;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
   final Random _random = Random();
@@ -112,7 +114,9 @@ class ProtocolService {
       _securityConfigController =
           StreamController<pb.Config_SecurityConfig>.broadcast(),
       _loraConfigController =
-          StreamController<pb.Config_LoRaConfig>.broadcast();
+          StreamController<pb.Config_LoRaConfig>.broadcast(),
+      _mqttConfigController =
+          StreamController<pb.ModuleConfig_MQTTConfig>.broadcast();
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -185,6 +189,13 @@ class ProtocolService {
 
   /// Current LoRa config
   pb.Config_LoRaConfig? get currentLoraConfig => _currentLoraConfig;
+
+  /// Stream of MQTT config updates
+  Stream<pb.ModuleConfig_MQTTConfig> get mqttConfigStream =>
+      _mqttConfigController.stream;
+
+  /// Current MQTT config
+  pb.ModuleConfig_MQTTConfig? get currentMqttConfig => _currentMqttConfig;
 
   /// Stream of RSSI updates
   Stream<int> get rssiStream => _rssiController.stream;
@@ -522,6 +533,16 @@ class ProtocolService {
           );
           _currentSecurityConfig = secConfig;
           _securityConfigController.add(secConfig);
+        }
+      } else if (adminMsg.hasGetModuleConfigResponse()) {
+        final moduleConfig = adminMsg.getModuleConfigResponse;
+
+        // Handle MQTT config
+        if (moduleConfig.hasMqtt()) {
+          final mqttConfig = moduleConfig.mqtt;
+          _logger.i('Received MQTT config - enabled: ${mqttConfig.enabled}');
+          _currentMqttConfig = mqttConfig;
+          _mqttConfigController.add(mqttConfig);
         }
       } else if (adminMsg.hasGetChannelResponse()) {
         // Handle channel response - update local channel list

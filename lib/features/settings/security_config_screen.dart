@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
 class SecurityConfigScreen extends ConsumerStatefulWidget {
   const SecurityConfigScreen({super.key});
@@ -17,6 +19,52 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
   bool _debugLogEnabled = false;
   bool _adminChannelEnabled = false;
   bool _saving = false;
+  bool _loading = false;
+  StreamSubscription<pb.Config_SecurityConfig>? _configSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentConfig();
+  }
+
+  @override
+  void dispose() {
+    _configSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _applyConfig(pb.Config_SecurityConfig config) {
+    setState(() {
+      _isManaged = config.isManaged;
+      _serialEnabled = config.serialEnabled;
+      _debugLogEnabled = config.debugLogApiEnabled;
+      _adminChannelEnabled = config.adminChannelEnabled;
+    });
+  }
+
+  Future<void> _loadCurrentConfig() async {
+    setState(() => _loading = true);
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+
+      // Apply cached config immediately if available
+      final cached = protocol.currentSecurityConfig;
+      if (cached != null) {
+        _applyConfig(cached);
+      }
+
+      // Listen for config response
+      _configSubscription = protocol.securityConfigStream.listen((config) {
+        if (mounted) _applyConfig(config);
+      });
+
+      // Request fresh config from device
+      await protocol.getConfig(pb.AdminMessage_ConfigType.SECURITY_CONFIG);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   Future<void> _saveConfig() async {
     final protocol = ref.read(protocolServiceProvider);
@@ -99,227 +147,230 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Managed Device
-          const Text(
-            'DEVICE MANAGEMENT',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textTertiary,
-              letterSpacing: 1,
-              fontFamily: 'Inter',
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Container(
-            decoration: BoxDecoration(
-              color: AppTheme.darkCard,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: SwitchListTile(
-              title: const Text(
-                'Managed Mode',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: 'Inter',
-                ),
-              ),
-              subtitle: const Text(
-                'Device is managed by an external system',
-                style: TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 13,
-                  fontFamily: 'Inter',
-                ),
-              ),
-              value: _isManaged,
-              onChanged: (value) => setState(() => _isManaged = value),
-              activeTrackColor: AppTheme.primaryGreen,
-              thumbColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return Colors.white;
-                }
-                return AppTheme.textSecondary;
-              }),
-              secondary: const Icon(
-                Icons.admin_panel_settings,
-                color: AppTheme.textSecondary,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Access Controls
-          const Text(
-            'ACCESS CONTROLS',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textTertiary,
-              letterSpacing: 1,
-              fontFamily: 'Inter',
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Container(
-            decoration: BoxDecoration(
-              color: AppTheme.darkCard,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(16),
               children: [
-                SwitchListTile(
-                  title: const Text(
-                    'Serial Console',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Inter',
-                    ),
+                // Managed Device
+                const Text(
+                  'DEVICE MANAGEMENT',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textTertiary,
+                    letterSpacing: 1,
+                    fontFamily: 'Inter',
                   ),
-                  subtitle: const Text(
-                    'Enable USB serial console access',
-                    style: TextStyle(
+                ),
+                const SizedBox(height: 12),
+
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkCard,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: SwitchListTile(
+                    title: const Text(
+                      'Managed Mode',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'Device is managed by an external system',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    value: _isManaged,
+                    onChanged: (value) => setState(() => _isManaged = value),
+                    activeTrackColor: AppTheme.primaryGreen,
+                    thumbColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return Colors.white;
+                      }
+                      return AppTheme.textSecondary;
+                    }),
+                    secondary: const Icon(
+                      Icons.admin_panel_settings,
                       color: AppTheme.textSecondary,
-                      fontSize: 13,
-                      fontFamily: 'Inter',
                     ),
-                  ),
-                  value: _serialEnabled,
-                  onChanged: (value) => setState(() => _serialEnabled = value),
-                  activeTrackColor: AppTheme.primaryGreen,
-                  thumbColor: WidgetStateProperty.resolveWith((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return Colors.white;
-                    }
-                    return AppTheme.textSecondary;
-                  }),
-                  secondary: const Icon(
-                    Icons.usb,
-                    color: AppTheme.textSecondary,
                   ),
                 ),
-                const Divider(
-                  height: 1,
-                  indent: 16,
-                  endIndent: 16,
-                  color: AppTheme.darkBorder,
-                ),
-                SwitchListTile(
-                  title: const Text(
-                    'Debug Logging',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                  subtitle: const Text(
-                    'Enable verbose debug log output',
-                    style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 13,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                  value: _debugLogEnabled,
-                  onChanged: (value) =>
-                      setState(() => _debugLogEnabled = value),
-                  activeTrackColor: AppTheme.primaryGreen,
-                  thumbColor: WidgetStateProperty.resolveWith((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return Colors.white;
-                    }
-                    return AppTheme.textSecondary;
-                  }),
-                  secondary: const Icon(
-                    Icons.bug_report,
-                    color: AppTheme.textSecondary,
+                const SizedBox(height: 24),
+
+                // Access Controls
+                const Text(
+                  'ACCESS CONTROLS',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textTertiary,
+                    letterSpacing: 1,
+                    fontFamily: 'Inter',
                   ),
                 ),
-                const Divider(
-                  height: 1,
-                  indent: 16,
-                  endIndent: 16,
-                  color: AppTheme.darkBorder,
+                const SizedBox(height: 12),
+
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkCard,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        title: const Text(
+                          'Serial Console',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        subtitle: const Text(
+                          'Enable USB serial console access',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 13,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        value: _serialEnabled,
+                        onChanged: (value) =>
+                            setState(() => _serialEnabled = value),
+                        activeTrackColor: AppTheme.primaryGreen,
+                        thumbColor: WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return Colors.white;
+                          }
+                          return AppTheme.textSecondary;
+                        }),
+                        secondary: const Icon(
+                          Icons.usb,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      const Divider(
+                        height: 1,
+                        indent: 16,
+                        endIndent: 16,
+                        color: AppTheme.darkBorder,
+                      ),
+                      SwitchListTile(
+                        title: const Text(
+                          'Debug Logging',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        subtitle: const Text(
+                          'Enable verbose debug log output',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 13,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        value: _debugLogEnabled,
+                        onChanged: (value) =>
+                            setState(() => _debugLogEnabled = value),
+                        activeTrackColor: AppTheme.primaryGreen,
+                        thumbColor: WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return Colors.white;
+                          }
+                          return AppTheme.textSecondary;
+                        }),
+                        secondary: const Icon(
+                          Icons.bug_report,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      const Divider(
+                        height: 1,
+                        indent: 16,
+                        endIndent: 16,
+                        color: AppTheme.darkBorder,
+                      ),
+                      SwitchListTile(
+                        title: const Text(
+                          'Admin Channel',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        subtitle: const Text(
+                          'Allow remote admin via admin channel',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 13,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        value: _adminChannelEnabled,
+                        onChanged: (value) =>
+                            setState(() => _adminChannelEnabled = value),
+                        activeTrackColor: AppTheme.primaryGreen,
+                        thumbColor: WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return Colors.white;
+                          }
+                          return AppTheme.textSecondary;
+                        }),
+                        secondary: const Icon(
+                          Icons.security,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                SwitchListTile(
-                  title: const Text(
-                    'Admin Channel',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Inter',
+                const SizedBox(height: 24),
+
+                // Warning card
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.errorRed.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppTheme.errorRed.withValues(alpha: 0.3),
                     ),
                   ),
-                  subtitle: const Text(
-                    'Allow remote admin via admin channel',
-                    style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 13,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                  value: _adminChannelEnabled,
-                  onChanged: (value) =>
-                      setState(() => _adminChannelEnabled = value),
-                  activeTrackColor: AppTheme.primaryGreen,
-                  thumbColor: WidgetStateProperty.resolveWith((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return Colors.white;
-                    }
-                    return AppTheme.textSecondary;
-                  }),
-                  secondary: const Icon(
-                    Icons.security,
-                    color: AppTheme.textSecondary,
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.shield,
+                        color: AppTheme.errorRed.withValues(alpha: 0.8),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Disabling serial console or enabling managed mode may make it difficult to recover the device. Make sure you understand the implications before making changes.',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 13,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 24),
-
-          // Warning card
-          Container(
-            decoration: BoxDecoration(
-              color: AppTheme.errorRed.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.errorRed.withValues(alpha: 0.3),
-              ),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.shield,
-                  color: AppTheme.errorRed.withValues(alpha: 0.8),
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Disabling serial console or enabling managed mode may make it difficult to recover the device. Make sure you understand the implications before making changes.',
-                    style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 13,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_providers.dart';
@@ -19,18 +20,51 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
   int _hopLimit = 3;
   bool _txEnabled = true;
   int _txPower = 0;
-  bool _initialized = false;
+  StreamSubscription<pb.Config_LoRaConfig>? _configSubscription;
 
   @override
   void initState() {
     super.initState();
-    _requestConfig();
+    _loadCurrentConfig();
   }
 
-  Future<void> _requestConfig() async {
-    final protocol = ref.read(protocolServiceProvider);
-    // Request the current config from device - response will come via stream
-    await protocol.getConfig(pb.AdminMessage_ConfigType.LORA_CONFIG);
+  @override
+  void dispose() {
+    _configSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _applyConfig(pb.Config_LoRaConfig config) {
+    setState(() {
+      _selectedRegion = config.region;
+      _selectedModemPreset = config.modemPreset;
+      _hopLimit = config.hopLimit > 0 ? config.hopLimit : 3;
+      _txEnabled = config.txEnabled;
+      _txPower = config.txPower;
+    });
+  }
+
+  Future<void> _loadCurrentConfig() async {
+    setState(() => _isLoading = true);
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+
+      // Apply cached config immediately if available
+      final cached = protocol.currentLoraConfig;
+      if (cached != null) {
+        _applyConfig(cached);
+      }
+
+      // Listen for config response
+      _configSubscription = protocol.loraConfigStream.listen((config) {
+        if (mounted) _applyConfig(config);
+      });
+
+      // Request fresh config from device
+      await protocol.getConfig(pb.AdminMessage_ConfigType.LORA_CONFIG);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _saveConfig() async {
@@ -72,21 +106,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    // Watch the region provider and initialize selection if not yet set
-    final regionAsync = ref.watch(deviceRegionProvider);
-    regionAsync.whenData((region) {
-      if (!_initialized && _selectedRegion == null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            setState(() {
-              _selectedRegion = region;
-              _initialized = true;
-            });
-          }
-        });
-      }
-    });
 
     return Scaffold(
       appBar: AppBar(
