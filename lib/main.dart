@@ -113,17 +113,12 @@ class _SplashScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.blur_on,
-                size: 56,
-                color: AppTheme.primaryGreen,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Image.asset(
+                'assets/app_icons/source/protofluff_icon_1024.png',
+                width: 120,
+                height: 120,
               ),
             ),
             const SizedBox(height: 32),

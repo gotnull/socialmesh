@@ -1,15 +1,14 @@
-"""Generate iOS app icon variants from a single 1024x1024 source image.
+"""Generate iOS and Android app icon variants from a single 1024x1024 source image.
 
 Usage:
-    python3 scripts/build_ios_icons.py
+    python3 scripts/build_app_icons.py
 
 Prerequisites:
     - macOS with the `sips` command available (installed by default)
     - Source image placed at assets/app_icons/source/protofluff_icon_1024.png
     - Destination directory assets/app_icons/generated/ will be created automatically
 
-The script resizes the source into all required iOS icon sizes and writes
-PNG files whose names match Xcode's AppIcon.appiconset expectations.
+The script resizes the source into all required iOS and Android icon sizes.
 """
 
 from __future__ import annotations
@@ -23,6 +22,17 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_PATH = PROJECT_ROOT / "assets/app_icons/source/protofluff_icon_1024.png"
 OUTPUT_DIR = PROJECT_ROOT / "assets/app_icons/generated"
 APP_ICONSET_PATH = PROJECT_ROOT / "ios/Runner/Assets.xcassets/AppIcon.appiconset"
+
+# Android mipmap directories and their required sizes
+ANDROID_ICON_SPECS = {
+    "mipmap-mdpi": 48,
+    "mipmap-hdpi": 72,
+    "mipmap-xhdpi": 96,
+    "mipmap-xxhdpi": 144,
+    "mipmap-xxxhdpi": 192,
+}
+
+ANDROID_RES_PATH = PROJECT_ROOT / "android/app/src/main/res"
 
 ICON_SPECS = {
     "Icon-App-20x20@1x.png": 20,
@@ -118,10 +128,40 @@ def sync_to_xcode_asset_catalog() -> None:
     print(f"AppIcon.appiconset updated at {APP_ICONSET_PATH.resolve()}")
 
 
+def generate_android_icons() -> None:
+    """Generate Android launcher icons in all mipmap densities."""
+    print("\nGenerating Android icons...")
+    
+    for folder, size in ANDROID_ICON_SPECS.items():
+        mipmap_dir = ANDROID_RES_PATH / folder
+        mipmap_dir.mkdir(parents=True, exist_ok=True)
+        
+        destination = mipmap_dir / "ic_launcher.png"
+        print(f"Generating {folder}/ic_launcher.png ({size}x{size})")
+        subprocess.run(
+            [
+                "sips",
+                "-s",
+                "format",
+                "png",
+                "-z",
+                str(size),
+                str(size),
+                str(SOURCE_PATH),
+                "--out",
+                str(destination),
+            ],
+            check=True,
+        )
+    
+    print(f"\nAndroid icons updated in {ANDROID_RES_PATH.resolve()}")
+
+
 def main() -> None:
     ensure_source_exists()
     generate_icons()
     sync_to_xcode_asset_catalog()
+    generate_android_icons()
 
 
 if __name__ == "__main__":
