@@ -581,14 +581,16 @@ class ProtocolService {
       // Check if position has valid coordinates (matching iOS implementation)
       // Require BOTH lat AND lng to be non-zero
       // Filter Apple Park coordinates (default invalid position)
+      final isApplePark =
+          position.latitudeI == 373346000 && position.longitudeI == -1220090000;
       final hasValidPosition =
-          (position.latitudeI != 0 && position.longitudeI != 0) &&
-          !(position.latitudeI == 373346000 &&
-              position.longitudeI == -1220090000);
+          (position.latitudeI != 0 && position.longitudeI != 0) && !isApplePark;
 
       _logger.i(
-        '📍 POSITION_APP from ${packet.from}: latI=${position.latitudeI}, lngI=${position.longitudeI}, '
-        'lat=${position.latitudeI / 1e7}, lng=${position.longitudeI / 1e7}, valid=$hasValidPosition',
+        '📍 POSITION_APP from ${packet.from.toRadixString(16)}: '
+        'latI=${position.latitudeI}, lngI=${position.longitudeI}, '
+        'lat=${position.latitudeI / 1e7}, lng=${position.longitudeI / 1e7}, '
+        'isApplePark=$isApplePark, valid=$hasValidPosition',
       );
 
       final node = _nodes[packet.from];

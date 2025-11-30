@@ -455,7 +455,7 @@ class _NodeMarker extends StatelessWidget {
 }
 
 /// Info card shown when a node is selected
-class _NodeInfoCard extends StatelessWidget {
+class _NodeInfoCard extends ConsumerWidget {
   final MeshNode node;
   final bool isMyNode;
   final VoidCallback onClose;
@@ -468,8 +468,35 @@ class _NodeInfoCard extends StatelessWidget {
     required this.onMessage,
   });
 
+  Future<void> _exchangePositions(BuildContext context, WidgetRef ref) async {
+    final protocol = ref.read(protocolServiceProvider);
+
+    try {
+      await protocol.requestPosition(node.nodeNum);
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Position requested from ${node.displayName}'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: $e'),
+            backgroundColor: AppTheme.errorRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -602,22 +629,45 @@ class _NodeInfoCard extends StatelessWidget {
           ),
           if (!isMyNode) ...[
             const SizedBox(height: 12),
-            // Action button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: onMessage,
-                icon: const Icon(Icons.message, size: 18),
-                label: const Text('Send Message'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryMagenta,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            // Action buttons row
+            Row(
+              children: [
+                // Exchange position button
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _exchangePositions(context, ref),
+                    icon: const Icon(Icons.swap_horiz, size: 18),
+                    label: const Text('Position'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.primaryMagenta,
+                      side: BorderSide(
+                        color: AppTheme.primaryMagenta.withValues(alpha: 0.5),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                // Message button
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: onMessage,
+                    icon: const Icon(Icons.message, size: 18),
+                    label: const Text('Message'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryMagenta,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ],

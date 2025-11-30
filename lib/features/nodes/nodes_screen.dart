@@ -1021,6 +1021,37 @@ class _NodeDetailsSheet extends ConsumerWidget {
     }
   }
 
+  void _exchangePositions(BuildContext context, WidgetRef ref) async {
+    Navigator.pop(context);
+
+    final protocol = ref.read(protocolServiceProvider);
+
+    try {
+      // Request position from the target node
+      await protocol.requestPosition(node.nodeNum);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Position requested from ${node.displayName}'),
+            backgroundColor: AppTheme.darkCard,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to request position: $e'),
+            backgroundColor: AppTheme.errorRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   void _showMoreOptions(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
@@ -1043,6 +1074,28 @@ class _NodeDetailsSheet extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(
+                Icons.swap_horiz,
+                color: AppTheme.primaryGreen,
+              ),
+              title: const Text(
+                'Exchange Positions',
+                style: TextStyle(color: Colors.white, fontFamily: 'Inter'),
+              ),
+              subtitle: const Text(
+                'Request GPS position from this node',
+                style: TextStyle(
+                  color: AppTheme.textTertiary,
+                  fontSize: 12,
+                  fontFamily: 'Inter',
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _exchangePositions(context, ref);
+              },
+            ),
             ListTile(
               leading: Icon(
                 node.isFavorite ? Icons.star : Icons.star_border,
