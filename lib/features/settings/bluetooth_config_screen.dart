@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pb;
+import '../../generated/meshtastic/mesh.pb.dart' as pb_config;
 
 class BluetoothConfigScreen extends ConsumerStatefulWidget {
   const BluetoothConfigScreen({super.key});
@@ -18,6 +20,51 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
       pb.Config_BluetoothConfig_PairingMode.FIXED_PIN;
   int _fixedPin = 123456;
   bool _saving = false;
+  bool _loading = false;
+  StreamSubscription<pb_config.Config_BluetoothConfig>? _configSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentConfig();
+  }
+
+  @override
+  void dispose() {
+    _configSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _applyConfig(pb_config.Config_BluetoothConfig config) {
+    setState(() {
+      _enabled = config.enabled;
+      _mode = config.mode;
+      _fixedPin = config.fixedPin > 0 ? config.fixedPin : 123456;
+    });
+  }
+
+  Future<void> _loadCurrentConfig() async {
+    setState(() => _loading = true);
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      
+      // Apply cached config immediately if available
+      final cached = protocol.currentBluetoothConfig;
+      if (cached != null) {
+        _applyConfig(cached);
+      }
+      
+      // Listen for config response
+      _configSubscription = protocol.bluetoothConfigStream.listen((config) {
+        if (mounted) _applyConfig(config);
+      });
+      
+      // Request fresh config from device
+      await protocol.getConfig(pb_config.AdminMessage_ConfigType.BLUETOOTH_CONFIG);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   Future<void> _saveConfig() async {
     final protocol = ref.read(protocolServiceProvider);
