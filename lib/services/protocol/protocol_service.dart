@@ -574,8 +574,9 @@ class ProtocolService {
           position.hasLongitudeI() &&
           !(position.latitudeI == 0 && position.longitudeI == 0);
 
-      _logger.d(
-        'Position from ${packet.from}: ${position.latitudeI / 1e7}, ${position.longitudeI / 1e7} (valid: $hasValidPosition)',
+      _logger.i(
+        'Position update from ${packet.from}: latI=${position.latitudeI}, lngI=${position.longitudeI}, '
+        'lat=${position.latitudeI / 1e7}, lng=${position.longitudeI / 1e7}, valid=$hasValidPosition',
       );
 
       final node = _nodes[packet.from];
@@ -714,6 +715,17 @@ class ProtocolService {
   /// Handle node info
   void _handleNodeInfo(pb.NodeInfo nodeInfo) {
     _logger.i('Node info received: ${nodeInfo.num}');
+
+    // Log position status
+    if (nodeInfo.hasPosition()) {
+      final pos = nodeInfo.position;
+      _logger.i(
+        'NodeInfo ${nodeInfo.num} has position: lat=${pos.latitudeI}, lng=${pos.longitudeI}, '
+        'latDeg=${pos.latitudeI / 1e7}, lngDeg=${pos.longitudeI / 1e7}',
+      );
+    } else {
+      _logger.i('NodeInfo ${nodeInfo.num} has NO position data');
+    }
 
     // Log device metrics if present
     if (nodeInfo.hasDeviceMetrics()) {
@@ -1063,8 +1075,12 @@ class ProtocolService {
     try {
       _logger.i('Requesting position for node $nodeNum');
 
+      // Create an empty position to request the node's position
+      final position = pb.Position();
+      
       final data = pb.Data()
         ..portnum = pb.PortNum.POSITION_APP
+        ..payload = position.writeToBuffer()
         ..wantResponse = true;
 
       final packet = pb.MeshPacket()

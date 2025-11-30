@@ -487,10 +487,10 @@ class _NodeCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                       ],
-                      // Role
-                      if (node.role != null)
-                        Row(
-                          children: [
+                      // Role and GPS status
+                      Row(
+                        children: [
+                          if (node.role != null) ...[
                             const Icon(
                               Icons.smartphone,
                               size: 14,
@@ -498,15 +498,35 @@ class _NodeCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Role: ${node.role}',
+                              node.role!,
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppTheme.textTertiary,
                                 fontFamily: 'Inter',
                               ),
                             ),
+                            const SizedBox(width: 12),
                           ],
-                        ),
+                          Icon(
+                            Icons.gps_fixed,
+                            size: 14,
+                            color: node.hasPosition
+                                ? AppTheme.primaryGreen
+                                : AppTheme.textTertiary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            node.hasPosition ? 'GPS' : 'No GPS',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: node.hasPosition
+                                  ? AppTheme.primaryGreen
+                                  : AppTheme.textTertiary,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ],
+                      ),
                       // Distance & heading
                       if (node.distance != null) ...[
                         const SizedBox(height: 4),
