@@ -143,7 +143,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     height: 8,
                     decoration: BoxDecoration(
                       color: _currentPage == index
-                          ? AppTheme.primaryGreen
+                          ? AppTheme.primaryMagenta
                           : AppTheme.darkBorder,
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -158,33 +158,40 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: SizedBox(
                 width: double.infinity,
                 height: 56,
-                child: ElevatedButton(
-                  onPressed: _nextPage,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryGreen,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 0,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.brandGradientHorizontal,
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _pages[_currentPage].isLastPage
-                            ? 'Connect Device'
-                            : 'Continue',
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  child: ElevatedButton(
+                    onPressed: _nextPage,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      if (_pages[_currentPage].isLastPage) ...[
-                        const SizedBox(width: 8),
-                        const Icon(Icons.bluetooth, size: 20),
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _pages[_currentPage].isLastPage
+                              ? 'Connect Device'
+                              : 'Continue',
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (_pages[_currentPage].isLastPage) ...[
+                          const SizedBox(width: 8),
+                          const Icon(Icons.bluetooth, size: 20),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
