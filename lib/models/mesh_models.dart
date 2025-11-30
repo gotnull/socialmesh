@@ -227,7 +227,12 @@ class MeshNode {
 
   String get displayName => longName ?? shortName ?? 'Node $nodeNum';
 
-  bool get hasPosition => latitude != null && longitude != null;
+  /// Check if node has valid position data
+  /// Position must be non-null and not exactly 0,0 (invalid/unset marker)
+  bool get hasPosition =>
+      latitude != null &&
+      longitude != null &&
+      !(latitude == 0.0 && longitude == 0.0);
 
   @override
   String toString() => 'MeshNode($displayName, num: $nodeNum)';

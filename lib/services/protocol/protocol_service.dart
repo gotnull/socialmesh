@@ -481,18 +481,32 @@ class ProtocolService {
   void _handlePositionUpdate(pb.MeshPacket packet, pb.Data data) {
     try {
       final position = pb.Position.fromBuffer(data.payload);
+
+      // Check if position has valid coordinates
+      // hasLatitudeI/hasLongitudeI checks if the field was actually set
+      // Also verify coordinates are not exactly 0,0 (invalid/unset marker)
+      final hasValidPosition =
+          position.hasLatitudeI() &&
+          position.hasLongitudeI() &&
+          !(position.latitudeI == 0 && position.longitudeI == 0);
+
       _logger.d(
-        'Position from ${packet.from}: ${position.latitudeI / 1e7}, ${position.longitudeI / 1e7}',
+        'Position from ${packet.from}: ${position.latitudeI / 1e7}, ${position.longitudeI / 1e7} (valid: $hasValidPosition)',
       );
 
       final node = _nodes[packet.from];
-      if (node != null) {
+      if (node != null && hasValidPosition) {
         final updatedNode = node.copyWith(
           latitude: position.latitudeI / 1e7,
           longitude: position.longitudeI / 1e7,
-          altitude: position.altitude,
+          altitude: position.hasAltitude() ? position.altitude : node.altitude,
           lastHeard: DateTime.now(),
         );
+        _nodes[packet.from] = updatedNode;
+        _nodeController.add(updatedNode);
+      } else if (node != null) {
+        // Update lastHeard even if position is invalid
+        final updatedNode = node.copyWith(lastHeard: DateTime.now());
         _nodes[packet.from] = updatedNode;
         _nodeController.add(updatedNode);
       }
@@ -620,6 +634,23 @@ class ProtocolService {
     }
 
     MeshNode updatedNode;
+
+    // Check if NodeInfo has valid position data
+    final hasValidPosition =
+        nodeInfo.hasPosition() &&
+        nodeInfo.position.hasLatitudeI() &&
+        nodeInfo.position.hasLongitudeI() &&
+        !(nodeInfo.position.latitudeI == 0 &&
+            nodeInfo.position.longitudeI == 0);
+
+    if (nodeInfo.hasPosition()) {
+      _logger.d(
+        'NodeInfo ${nodeInfo.num} position: lat=${nodeInfo.position.latitudeI / 1e7}, '
+        'lng=${nodeInfo.position.longitudeI / 1e7}, hasLat=${nodeInfo.position.hasLatitudeI()}, '
+        'hasLng=${nodeInfo.position.hasLongitudeI()}, valid=$hasValidPosition',
+      );
+    }
+
     if (existingNode != null) {
       updatedNode = existingNode.copyWith(
         longName: nodeInfo.hasUser()
@@ -630,13 +661,13 @@ class ProtocolService {
             : existingNode.shortName,
         userId: userId ?? existingNode.userId,
         hardwareModel: hwModel ?? existingNode.hardwareModel,
-        latitude: nodeInfo.hasPosition()
+        latitude: hasValidPosition
             ? nodeInfo.position.latitudeI / 1e7
             : existingNode.latitude,
-        longitude: nodeInfo.hasPosition()
+        longitude: hasValidPosition
             ? nodeInfo.position.longitudeI / 1e7
             : existingNode.longitude,
-        altitude: nodeInfo.hasPosition()
+        altitude: hasValidPosition && nodeInfo.position.hasAltitude()
             ? nodeInfo.position.altitude
             : existingNode.altitude,
         snr: nodeInfo.hasSnr() ? nodeInfo.snr.toInt() : existingNode.snr,
@@ -655,13 +686,11 @@ class ProtocolService {
         shortName: nodeInfo.hasUser() ? nodeInfo.user.shortName : '',
         userId: userId,
         hardwareModel: hwModel,
-        latitude: nodeInfo.hasPosition()
-            ? nodeInfo.position.latitudeI / 1e7
+        latitude: hasValidPosition ? nodeInfo.position.latitudeI / 1e7 : null,
+        longitude: hasValidPosition ? nodeInfo.position.longitudeI / 1e7 : null,
+        altitude: hasValidPosition && nodeInfo.position.hasAltitude()
+            ? nodeInfo.position.altitude
             : null,
-        longitude: nodeInfo.hasPosition()
-            ? nodeInfo.position.longitudeI / 1e7
-            : null,
-        altitude: nodeInfo.hasPosition() ? nodeInfo.position.altitude : null,
         snr: nodeInfo.hasSnr() ? nodeInfo.snr.toInt() : null,
         batteryLevel: nodeInfo.hasDeviceMetrics()
             ? nodeInfo.deviceMetrics.batteryLevel
