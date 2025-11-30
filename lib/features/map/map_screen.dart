@@ -56,25 +56,30 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     }
   }
 
+  // Debug flag for map logging
+  static const bool _debugMapLogging = false;
+
   @override
   Widget build(BuildContext context) {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
-    // === MAP DEBUG LOGGING ===
-    debugPrint('🗺️ === MAP SCREEN BUILD ===');
-    debugPrint('🗺️ Total nodes: ${nodes.length}');
-    debugPrint('🗺️ My node num: $myNodeNum');
+    // === MAP DEBUG LOGGING (controlled by flag) ===
+    if (_debugMapLogging) {
+      debugPrint('🗺️ === MAP SCREEN BUILD ===');
+      debugPrint('🗺️ Total nodes: ${nodes.length}');
+      debugPrint('🗺️ My node num: $myNodeNum');
 
-    // Log ALL nodes with their position status
-    for (final node in nodes.values) {
-      final hasPos = node.hasPosition;
-      final lat = node.latitude;
-      final lng = node.longitude;
-      debugPrint(
-        '🗺️ Node ${node.nodeNum.toRadixString(16)} "${node.longName}": '
-        'hasPosition=$hasPos, lat=$lat, lng=$lng',
-      );
+      // Log ALL nodes with their position status
+      for (final node in nodes.values) {
+        final hasPos = node.hasPosition;
+        final lat = node.latitude;
+        final lng = node.longitude;
+        debugPrint(
+          '🗺️ Node ${node.nodeNum.toRadixString(16)} "${node.longName}": '
+          'hasPosition=$hasPos, lat=$lat, lng=$lng',
+        );
+      }
     }
 
     // Filter nodes with valid positions
@@ -82,14 +87,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         .where((node) => node.hasPosition)
         .toList();
 
-    debugPrint('🗺️ Nodes with valid position: ${nodesWithPosition.length}');
-    for (final node in nodesWithPosition) {
-      debugPrint(
-        '🗺️ ✅ Valid: ${node.nodeNum.toRadixString(16)} at '
-        '${node.latitude}, ${node.longitude}',
-      );
+    if (_debugMapLogging) {
+      debugPrint('🗺️ Nodes with valid position: ${nodesWithPosition.length}');
+      for (final node in nodesWithPosition) {
+        debugPrint(
+          '🗺️ ✅ Valid: ${node.nodeNum.toRadixString(16)} at '
+          '${node.latitude}, ${node.longitude}',
+        );
+      }
+      debugPrint('🗺️ === END MAP DEBUG ===');
     }
-    debugPrint('🗺️ === END MAP DEBUG ===');
 
     // Calculate center point
     LatLng center = const LatLng(0, 0);

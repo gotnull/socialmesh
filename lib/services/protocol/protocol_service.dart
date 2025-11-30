@@ -13,6 +13,27 @@ import '../../generated/meshtastic/portnums.pb.dart' as pn;
 import '../../generated/meshtastic/telemetry.pb.dart' as telemetry;
 import 'packet_framer.dart';
 
+/// Debug flags to control verbose logging
+class ProtocolDebugFlags {
+  /// Log RSSI polling updates
+  static bool logRssi = false;
+
+  /// Log position-related messages (POSITION_APP, NodeInfo positions)
+  static bool logPosition = true;
+
+  /// Log telemetry messages (battery, voltage, etc.)
+  static bool logTelemetry = false;
+
+  /// Log packet processing details
+  static bool logPackets = false;
+
+  /// Log node info updates
+  static bool logNodeInfo = true;
+
+  /// Log channel configuration
+  static bool logChannels = false;
+}
+
 /// Protocol service for handling Meshtastic protocol
 class ProtocolService {
   final DeviceTransport _transport;
@@ -263,9 +284,13 @@ class ProtocolService {
         }
         _logger.i('==========================================');
 
-        // Request LoRa config to get current region
+        // Request LoRa config to get current region, and Position config
         Future.delayed(const Duration(milliseconds: 100), () {
           getLoRaConfig();
+          // Also request Position config to see GPS settings
+          Future.delayed(const Duration(milliseconds: 200), () {
+            getPositionConfig();
+          });
           // Request positions from all nodes including ourselves
           Future.delayed(const Duration(milliseconds: 500), () {
             requestAllPositions();
@@ -334,6 +359,17 @@ class ProtocolService {
           _logger.i('Received config - region: ${region.name}');
           _currentRegion = region;
           _regionController.add(region);
+        }
+        if (config.hasPosition()) {
+          final posConfig = config.position;
+          debugPrint(
+            '📍 Received Position config: '
+            'gpsEnabled=${posConfig.gpsEnabled}, '
+            'gpsMode=${posConfig.gpsMode}, '
+            'fixedPosition=${posConfig.fixedPosition}, '
+            'positionBroadcastSecs=${posConfig.positionBroadcastSecs}, '
+            'gpsUpdateInterval=${posConfig.gpsUpdateInterval}',
+          );
         }
       } else if (adminMsg.hasGetChannelResponse()) {
         // Handle channel response - update local channel list
@@ -468,42 +504,52 @@ class ProtocolService {
               ? deviceMetrics.uptimeSeconds
               : null;
 
-          _logger.i(
-            'DeviceMetrics from ${packet.from}: battery=$batteryLevel%, voltage=${voltage}V, '
-            'channelUtil=$channelUtil%, airUtilTx=$airUtilTx%, uptime=${uptimeSeconds}s',
-          );
+          if (ProtocolDebugFlags.logTelemetry) {
+            _logger.i(
+              'DeviceMetrics from ${packet.from}: battery=$batteryLevel%, voltage=${voltage}V, '
+              'channelUtil=$channelUtil%, airUtilTx=$airUtilTx%, uptime=${uptimeSeconds}s',
+            );
+          }
           break;
 
         case telemetry.Telemetry_Variant.environmentMetrics:
-          final envMetrics = telem.environmentMetrics;
-          _logger.i(
-            'EnvironmentMetrics from ${packet.from}: '
-            'temp=${envMetrics.hasTemperature() ? envMetrics.temperature : "N/A"}°C, '
-            'humidity=${envMetrics.hasRelativeHumidity() ? envMetrics.relativeHumidity : "N/A"}%, '
-            'pressure=${envMetrics.hasBarometricPressure() ? envMetrics.barometricPressure : "N/A"}hPa',
-          );
+          if (ProtocolDebugFlags.logTelemetry) {
+            final envMetrics = telem.environmentMetrics;
+            _logger.i(
+              'EnvironmentMetrics from ${packet.from}: '
+              'temp=${envMetrics.hasTemperature() ? envMetrics.temperature : "N/A"}°C, '
+              'humidity=${envMetrics.hasRelativeHumidity() ? envMetrics.relativeHumidity : "N/A"}%, '
+              'pressure=${envMetrics.hasBarometricPressure() ? envMetrics.barometricPressure : "N/A"}hPa',
+            );
+          }
           // Environment metrics don't update battery - just log
           return;
 
         case telemetry.Telemetry_Variant.airQualityMetrics:
-          final aqMetrics = telem.airQualityMetrics;
-          _logger.i(
-            'AirQualityMetrics from ${packet.from}: '
-            'PM2.5=${aqMetrics.hasPm25Standard() ? aqMetrics.pm25Standard : "N/A"}ug/m3',
-          );
+          if (ProtocolDebugFlags.logTelemetry) {
+            final aqMetrics = telem.airQualityMetrics;
+            _logger.i(
+              'AirQualityMetrics from ${packet.from}: '
+              'PM2.5=${aqMetrics.hasPm25Standard() ? aqMetrics.pm25Standard : "N/A"}ug/m3',
+            );
+          }
           return;
 
         case telemetry.Telemetry_Variant.powerMetrics:
-          _logger.i('PowerMetrics from ${packet.from}');
+          if (ProtocolDebugFlags.logTelemetry) {
+            _logger.i('PowerMetrics from ${packet.from}');
+          }
           return;
 
         case telemetry.Telemetry_Variant.localStats:
           final stats = telem.localStats;
-          _logger.i(
-            'LocalStats from ${packet.from}: '
-            'channelUtil=${stats.channelUtilization}%, airUtilTx=${stats.airUtilTx}%, '
-            'numOnlineNodes=${stats.numOnlineNodes}, numTotalNodes=${stats.numTotalNodes}',
-          );
+          if (ProtocolDebugFlags.logTelemetry) {
+            _logger.i(
+              'LocalStats from ${packet.from}: '
+              'channelUtil=${stats.channelUtilization}%, airUtilTx=${stats.airUtilTx}%, '
+              'numOnlineNodes=${stats.numOnlineNodes}, numTotalNodes=${stats.numTotalNodes}',
+            );
+          }
           // Local stats can provide channel utilization
           if (packet.from == _myNodeNum) {
             _lastChannelUtil = stats.channelUtilization.toDouble();
@@ -512,11 +558,15 @@ class ProtocolService {
           return;
 
         case telemetry.Telemetry_Variant.healthMetrics:
-          _logger.i('HealthMetrics from ${packet.from}');
+          if (ProtocolDebugFlags.logTelemetry) {
+            _logger.i('HealthMetrics from ${packet.from}');
+          }
           return;
 
         case telemetry.Telemetry_Variant.notSet:
-          _logger.d('Telemetry with no variant set from ${packet.from}');
+          if (ProtocolDebugFlags.logTelemetry) {
+            _logger.d('Telemetry with no variant set from ${packet.from}');
+          }
           return;
       }
 
@@ -587,13 +637,14 @@ class ProtocolService {
       final hasValidPosition =
           (position.latitudeI != 0 && position.longitudeI != 0) && !isApplePark;
 
-      // Use debugPrint so it shows in Flutter console
-      debugPrint(
-        '📍 POSITION_APP from !${packet.from.toRadixString(16)}: '
-        'latI=${position.latitudeI}, lngI=${position.longitudeI}, '
-        'lat=${position.latitudeI / 1e7}, lng=${position.longitudeI / 1e7}, '
-        'isApplePark=$isApplePark, valid=$hasValidPosition',
-      );
+      if (ProtocolDebugFlags.logPosition) {
+        debugPrint(
+          '📍 POSITION_APP from !${packet.from.toRadixString(16)}: '
+          'latI=${position.latitudeI}, lngI=${position.longitudeI}, '
+          'lat=${position.latitudeI / 1e7}, lng=${position.longitudeI / 1e7}, '
+          'isApplePark=$isApplePark, valid=$hasValidPosition',
+        );
+      }
 
       final node = _nodes[packet.from];
       if (node != null && hasValidPosition) {
@@ -737,28 +788,27 @@ class ProtocolService {
 
   /// Handle node info
   void _handleNodeInfo(pb.NodeInfo nodeInfo) {
-    _logger.i('Node info received: ${nodeInfo.num}');
+    if (ProtocolDebugFlags.logNodeInfo) {
+      _logger.i('Node info received: ${nodeInfo.num}');
+    }
 
     // DEBUG: Log position status with debugPrint so it shows in console
-    debugPrint(
-      '📍 NodeInfo ${nodeInfo.num.toRadixString(16)}: hasPosition=${nodeInfo.hasPosition()}',
-    );
-    if (nodeInfo.hasPosition()) {
-      final pos = nodeInfo.position;
+    if (ProtocolDebugFlags.logPosition) {
       debugPrint(
-        '📍 NodeInfo ${nodeInfo.num.toRadixString(16)} POSITION: '
-        'latI=${pos.latitudeI}, lngI=${pos.longitudeI}, '
-        'lat=${pos.latitudeI / 1e7}, lng=${pos.longitudeI / 1e7}',
+        '📍 NodeInfo ${nodeInfo.num.toRadixString(16)}: hasPosition=${nodeInfo.hasPosition()}',
       );
-      _logger.i(
-        'NodeInfo ${nodeInfo.num} has position: lat=${pos.latitudeI}, lng=${pos.longitudeI}, '
-        'latDeg=${pos.latitudeI / 1e7}, lngDeg=${pos.longitudeI / 1e7}',
-      );
-    } else {
-      debugPrint(
-        '📍 NodeInfo ${nodeInfo.num.toRadixString(16)} has NO position data',
-      );
-      _logger.i('NodeInfo ${nodeInfo.num} has NO position data');
+      if (nodeInfo.hasPosition()) {
+        final pos = nodeInfo.position;
+        debugPrint(
+          '📍 NodeInfo ${nodeInfo.num.toRadixString(16)} POSITION: '
+          'latI=${pos.latitudeI}, lngI=${pos.longitudeI}, '
+          'lat=${pos.latitudeI / 1e7}, lng=${pos.longitudeI / 1e7}',
+        );
+      } else {
+        debugPrint(
+          '📍 NodeInfo ${nodeInfo.num.toRadixString(16)} has NO position data',
+        );
+      }
     }
 
     // Log device metrics if present
@@ -1076,6 +1126,25 @@ class ProtocolService {
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
+
+      // Also update our own node's position locally immediately
+      // This ensures the map shows our position right away without waiting for echo
+      if (_myNodeNum != null) {
+        final myNode = _nodes[_myNodeNum];
+        if (myNode != null) {
+          final updatedNode = myNode.copyWith(
+            latitude: latitude,
+            longitude: longitude,
+            altitude: altitude,
+            lastHeard: DateTime.now(),
+          );
+          _nodes[_myNodeNum!] = updatedNode;
+          _nodeController.add(updatedNode);
+          debugPrint(
+            '📍 Updated MY node position locally: $latitude, $longitude',
+          );
+        }
+      }
     } catch (e) {
       _logger.e('Error sending position: $e');
       rethrow;
@@ -1457,6 +1526,34 @@ class ProtocolService {
       await _transport.send(_prepareForSend(bytes));
     } catch (e) {
       _logger.e('Error getting LoRa config: $e');
+    }
+  }
+
+  /// Request the current Position configuration (GPS settings)
+  Future<void> getPositionConfig() async {
+    try {
+      _logger.i('Requesting Position config');
+
+      final adminMsg = pb.AdminMessage()
+        ..getConfigRequest = pb.AdminMessage_ConfigType.POSITION_CONFIG;
+
+      final data = pb.Data()
+        ..portnum = pb.PortNum.ADMIN_APP
+        ..payload = adminMsg.writeToBuffer()
+        ..wantResponse = true;
+
+      final packet = pb.MeshPacket()
+        ..from = _myNodeNum ?? 0
+        ..to = _myNodeNum ?? 0
+        ..decoded = data
+        ..id = _generatePacketId();
+
+      final toRadio = pn.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+    } catch (e) {
+      _logger.e('Error getting Position config: $e');
     }
   }
 
