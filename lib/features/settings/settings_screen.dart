@@ -216,13 +216,14 @@ class SettingsScreen extends ConsumerWidget {
                 icon: Icons.bluetooth,
                 title: 'Auto-reconnect',
                 subtitle: 'Automatically reconnect to last device',
-                trailing: Switch(
+                trailing: Switch.adaptive(
                   value: settingsService.autoReconnect,
                   activeTrackColor: AppTheme.primaryGreen,
-                  inactiveTrackColor: AppTheme.darkBorder,
+                  inactiveTrackColor: Colors.grey.shade600,
+                  thumbColor: WidgetStateProperty.all(Colors.white),
                   onChanged: (value) async {
                     await settingsService.setAutoReconnect(value);
-                    ref.invalidate(settingsServiceProvider);
+                    ref.read(settingsRefreshProvider.notifier).state++;
                   },
                 ),
               ),
@@ -235,13 +236,14 @@ class SettingsScreen extends ConsumerWidget {
                 icon: Icons.notifications_outlined,
                 title: 'Push notifications',
                 subtitle: 'Master toggle for all notifications',
-                trailing: Switch(
+                trailing: Switch.adaptive(
                   value: settingsService.notificationsEnabled,
                   activeTrackColor: AppTheme.primaryGreen,
-                  inactiveTrackColor: AppTheme.darkBorder,
+                  inactiveTrackColor: Colors.grey.shade600,
+                  thumbColor: WidgetStateProperty.all(Colors.white),
                   onChanged: (value) async {
                     await settingsService.setNotificationsEnabled(value);
-                    ref.invalidate(settingsServiceProvider);
+                    ref.read(settingsRefreshProvider.notifier).state++;
                   },
                 ),
               ),
@@ -250,15 +252,16 @@ class SettingsScreen extends ConsumerWidget {
                   icon: Icons.person_add_outlined,
                   title: 'New nodes',
                   subtitle: 'Notify when new nodes join the mesh',
-                  trailing: Switch(
+                  trailing: Switch.adaptive(
                     value: settingsService.newNodeNotificationsEnabled,
                     activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: AppTheme.darkBorder,
+                    inactiveTrackColor: Colors.grey.shade600,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
                       await settingsService.setNewNodeNotificationsEnabled(
                         value,
                       );
-                      ref.invalidate(settingsServiceProvider);
+                      ref.read(settingsRefreshProvider.notifier).state++;
                     },
                   ),
                 ),
@@ -266,14 +269,15 @@ class SettingsScreen extends ConsumerWidget {
                   icon: Icons.chat_bubble_outline,
                   title: 'Direct messages',
                   subtitle: 'Notify for private messages',
-                  trailing: Switch(
+                  trailing: Switch.adaptive(
                     value: settingsService.directMessageNotificationsEnabled,
                     activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: AppTheme.darkBorder,
+                    inactiveTrackColor: Colors.grey.shade600,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
                       await settingsService
                           .setDirectMessageNotificationsEnabled(value);
-                      ref.invalidate(settingsServiceProvider);
+                      ref.read(settingsRefreshProvider.notifier).state++;
                     },
                   ),
                 ),
@@ -281,14 +285,15 @@ class SettingsScreen extends ConsumerWidget {
                   icon: Icons.forum_outlined,
                   title: 'Channel messages',
                   subtitle: 'Notify for channel broadcasts',
-                  trailing: Switch(
+                  trailing: Switch.adaptive(
                     value: settingsService.channelMessageNotificationsEnabled,
                     activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: AppTheme.darkBorder,
+                    inactiveTrackColor: Colors.grey.shade600,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
                       await settingsService
                           .setChannelMessageNotificationsEnabled(value);
-                      ref.invalidate(settingsServiceProvider);
+                      ref.read(settingsRefreshProvider.notifier).state++;
                     },
                   ),
                 ),
@@ -296,13 +301,14 @@ class SettingsScreen extends ConsumerWidget {
                   icon: Icons.volume_up_outlined,
                   title: 'Sound',
                   subtitle: 'Play sound with notifications',
-                  trailing: Switch(
+                  trailing: Switch.adaptive(
                     value: settingsService.notificationSoundEnabled,
                     activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: AppTheme.darkBorder,
+                    inactiveTrackColor: Colors.grey.shade600,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
                       await settingsService.setNotificationSoundEnabled(value);
-                      ref.invalidate(settingsServiceProvider);
+                      ref.read(settingsRefreshProvider.notifier).state++;
                     },
                   ),
                 ),
@@ -310,15 +316,16 @@ class SettingsScreen extends ConsumerWidget {
                   icon: Icons.vibration,
                   title: 'Vibration',
                   subtitle: 'Vibrate with notifications',
-                  trailing: Switch(
+                  trailing: Switch.adaptive(
                     value: settingsService.notificationVibrationEnabled,
                     activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: AppTheme.darkBorder,
+                    inactiveTrackColor: Colors.grey.shade600,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
                       await settingsService.setNotificationVibrationEnabled(
                         value,
                       );
-                      ref.invalidate(settingsServiceProvider);
+                      ref.read(settingsRefreshProvider.notifier).state++;
                     },
                   ),
                 ),

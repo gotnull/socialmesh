@@ -122,10 +122,25 @@ final secureStorageProvider = Provider<SecureStorageService>((ref) {
   return SecureStorageService(logger: logger);
 });
 
+/// Settings refresh trigger - increment this to force settings UI to rebuild
+final settingsRefreshProvider = StateProvider<int>((ref) => 0);
+
+/// Cached settings service instance
+SettingsService? _cachedSettingsService;
+
 final settingsServiceProvider = FutureProvider<SettingsService>((ref) async {
+  // Watch the refresh trigger to rebuild when settings change
+  ref.watch(settingsRefreshProvider);
+
+  // Return cached instance if available (already initialized)
+  if (_cachedSettingsService != null) {
+    return _cachedSettingsService!;
+  }
+
   final logger = ref.watch(loggerProvider);
   final service = SettingsService(logger: logger);
   await service.init();
+  _cachedSettingsService = service;
   return service;
 });
 
