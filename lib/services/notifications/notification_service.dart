@@ -25,11 +25,15 @@ class NotificationService {
       '@mipmap/ic_launcher',
     );
 
-    // iOS settings - request permissions
+    // iOS settings - request permissions and enable foreground presentation
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
+      // Enable foreground notifications on iOS 10+
+      defaultPresentAlert: true,
+      defaultPresentBadge: true,
+      defaultPresentSound: true,
     );
 
     // macOS settings
@@ -37,6 +41,9 @@ class NotificationService {
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
+      defaultPresentAlert: true,
+      defaultPresentBadge: true,
+      defaultPresentSound: true,
     );
 
     const initSettings = InitializationSettings(

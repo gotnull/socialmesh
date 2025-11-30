@@ -51,5 +51,11 @@
 		<string>This app needs Bluetooth to communicate with Meshtastic devices</string>
 		<key>NSCameraUsageDescription</key>
 		<string>This app needs camera access to scan QR codes for channel configuration</string>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>bluetooth-central</string>
+			<string>fetch</string>
+			<string>remote-notification</string>
+		</array>
 	</dict>
 </plist>

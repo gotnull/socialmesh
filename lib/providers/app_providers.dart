@@ -357,22 +357,38 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
   }
 
   void _notifyNewMessage(Message message) {
+    debugPrint('🔔 _notifyNewMessage called for message from ${message.from}');
+
     // Check master notification toggle
     final settingsAsync = _ref.read(settingsServiceProvider);
     final settings = settingsAsync.valueOrNull;
-    if (settings == null || !settings.notificationsEnabled) return;
+    if (settings == null) {
+      debugPrint('🔔 Settings not available, skipping notification');
+      return;
+    }
+    if (!settings.notificationsEnabled) {
+      debugPrint('🔔 Notifications disabled in settings');
+      return;
+    }
 
     // Get sender name from nodes
     final nodes = _ref.read(nodesProvider);
     final senderNode = nodes[message.from];
     final senderName = senderNode?.displayName ?? 'Unknown';
+    debugPrint('🔔 Sender: $senderName');
 
     // Check if it's a channel message or direct message
     final isChannelMessage = message.channel != null && message.channel! > 0;
+    debugPrint(
+      '🔔 Is channel message: $isChannelMessage (channel: ${message.channel})',
+    );
 
     if (isChannelMessage) {
       // Check channel message setting
-      if (!settings.channelMessageNotificationsEnabled) return;
+      if (!settings.channelMessageNotificationsEnabled) {
+        debugPrint('🔔 Channel notifications disabled');
+        return;
+      }
 
       // Channel message notification
       final channels = _ref.read(channelsProvider);
@@ -381,6 +397,9 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
           .firstOrNull;
       final channelName = channel?.name ?? 'Channel ${message.channel}';
 
+      debugPrint(
+        '🔔 Showing channel notification: $senderName in $channelName',
+      );
       NotificationService().showChannelMessageNotification(
         senderName: senderName,
         channelName: channelName,
@@ -391,9 +410,13 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
       );
     } else {
       // Check direct message setting
-      if (!settings.directMessageNotificationsEnabled) return;
+      if (!settings.directMessageNotificationsEnabled) {
+        debugPrint('🔔 DM notifications disabled');
+        return;
+      }
 
       // Direct message notification
+      debugPrint('🔔 Showing DM notification from: $senderName');
       NotificationService().showNewMessageNotification(
         senderName: senderName,
         message: message.text,

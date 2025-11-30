@@ -220,8 +220,9 @@ class SettingsScreen extends ConsumerWidget {
                   value: settingsService.autoReconnect,
                   activeTrackColor: AppTheme.primaryGreen,
                   inactiveTrackColor: AppTheme.darkBorder,
-                  onChanged: (value) {
-                    settingsService.setAutoReconnect(value);
+                  onChanged: (value) async {
+                    await settingsService.setAutoReconnect(value);
+                    ref.invalidate(settingsServiceProvider);
                   },
                 ),
               ),
@@ -238,8 +239,9 @@ class SettingsScreen extends ConsumerWidget {
                   value: settingsService.notificationsEnabled,
                   activeTrackColor: AppTheme.primaryGreen,
                   inactiveTrackColor: AppTheme.darkBorder,
-                  onChanged: (value) {
-                    settingsService.setNotificationsEnabled(value);
+                  onChanged: (value) async {
+                    await settingsService.setNotificationsEnabled(value);
+                    ref.invalidate(settingsServiceProvider);
                   },
                 ),
               ),
@@ -252,8 +254,11 @@ class SettingsScreen extends ConsumerWidget {
                     value: settingsService.newNodeNotificationsEnabled,
                     activeTrackColor: AppTheme.primaryGreen,
                     inactiveTrackColor: AppTheme.darkBorder,
-                    onChanged: (value) {
-                      settingsService.setNewNodeNotificationsEnabled(value);
+                    onChanged: (value) async {
+                      await settingsService.setNewNodeNotificationsEnabled(
+                        value,
+                      );
+                      ref.invalidate(settingsServiceProvider);
                     },
                   ),
                 ),
@@ -265,10 +270,10 @@ class SettingsScreen extends ConsumerWidget {
                     value: settingsService.directMessageNotificationsEnabled,
                     activeTrackColor: AppTheme.primaryGreen,
                     inactiveTrackColor: AppTheme.darkBorder,
-                    onChanged: (value) {
-                      settingsService.setDirectMessageNotificationsEnabled(
-                        value,
-                      );
+                    onChanged: (value) async {
+                      await settingsService
+                          .setDirectMessageNotificationsEnabled(value);
+                      ref.invalidate(settingsServiceProvider);
                     },
                   ),
                 ),
@@ -280,10 +285,10 @@ class SettingsScreen extends ConsumerWidget {
                     value: settingsService.channelMessageNotificationsEnabled,
                     activeTrackColor: AppTheme.primaryGreen,
                     inactiveTrackColor: AppTheme.darkBorder,
-                    onChanged: (value) {
-                      settingsService.setChannelMessageNotificationsEnabled(
-                        value,
-                      );
+                    onChanged: (value) async {
+                      await settingsService
+                          .setChannelMessageNotificationsEnabled(value);
+                      ref.invalidate(settingsServiceProvider);
                     },
                   ),
                 ),
@@ -295,8 +300,9 @@ class SettingsScreen extends ConsumerWidget {
                     value: settingsService.notificationSoundEnabled,
                     activeTrackColor: AppTheme.primaryGreen,
                     inactiveTrackColor: AppTheme.darkBorder,
-                    onChanged: (value) {
-                      settingsService.setNotificationSoundEnabled(value);
+                    onChanged: (value) async {
+                      await settingsService.setNotificationSoundEnabled(value);
+                      ref.invalidate(settingsServiceProvider);
                     },
                   ),
                 ),
@@ -308,8 +314,11 @@ class SettingsScreen extends ConsumerWidget {
                     value: settingsService.notificationVibrationEnabled,
                     activeTrackColor: AppTheme.primaryGreen,
                     inactiveTrackColor: AppTheme.darkBorder,
-                    onChanged: (value) {
-                      settingsService.setNotificationVibrationEnabled(value);
+                    onChanged: (value) async {
+                      await settingsService.setNotificationVibrationEnabled(
+                        value,
+                      );
+                      ref.invalidate(settingsServiceProvider);
                     },
                   ),
                 ),
