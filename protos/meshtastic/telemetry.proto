@@ -1,0 +1,365 @@
+syntax = "proto3";
+
+package meshtastic;
+
+option java_package = "com.geeksville.mesh";
+option java_outer_classname = "TelemetryProtos";
+option optimize_for = LITE_RUNTIME;
+option go_package = "github.com/meshtastic/go/generated";
+
+/*
+ * Key native device metrics such as battery level
+ */
+message DeviceMetrics {
+  /*
+   * 0-100 (>100 means powered)
+   */
+  optional uint32 battery_level = 1;
+
+  /*
+   * Voltage measured
+   */
+  optional float voltage = 2;
+
+  /*
+   * Utilization for the current channel, including well formed TX, RX and malformed RX (aka noise).
+   */
+  optional float channel_utilization = 3;
+
+  /*
+   * Percent of airtime for transmission used within the last hour.
+   */
+  optional float air_util_tx = 4;
+
+  /*
+   * How long the device has been running since the last reboot (in seconds)
+   */
+  optional uint32 uptime_seconds = 5;
+}
+
+/*
+ * Weather station or other environmental metrics
+ */
+message EnvironmentMetrics {
+  /*
+   * Temperature measured
+   */
+  optional float temperature = 1;
+
+  /*
+   * Relative humidity percent measured
+   */
+  optional float relative_humidity = 2;
+
+  /*
+   * Barometric pressure in hPA measured
+   */
+  optional float barometric_pressure = 3;
+
+  /*
+   * Gas resistance in MOhm measured
+   */
+  optional float gas_resistance = 4;
+
+  /*
+   * Voltage measured
+   */
+  optional float voltage = 5;
+
+  /*
+   * Current measured
+   */
+  optional float current = 6;
+
+  /*
+   * relative scale IAQ value as measured by Bosch BME680 . value 0-500.
+   */
+  optional uint32 iaq = 7;
+
+  /*
+   * RCWL9620 Doppler Radar Distance Sensor, used for water level detection. Float value in mm.
+   */
+  optional float distance = 8;
+
+  /*
+   * VEML7700 high accuracy ambient light(Lux) digital 16-bit resolution sensor.
+   */
+  optional float lux = 9;
+
+  /*
+   * VEML7700 high accuracy white light(irradiance) not calibrated digital 16-bit resolution sensor.
+   */
+  optional float white_lux = 10;
+
+  /*
+   * Infrared lux
+   */
+  optional float ir_lux = 11;
+
+  /*
+   * Ultraviolet lux
+   */
+  optional float uv_lux = 12;
+
+  /*
+   * Wind direction in degrees (0 = North, 90 = East, etc.)
+   */
+  optional uint32 wind_direction = 13;
+
+  /*
+   * Wind speed in m/s
+   */
+  optional float wind_speed = 14;
+
+  /*
+   * Weight in KG
+   */
+  optional float weight = 15;
+
+  /*
+   * Wind gust in m/s
+   */
+  optional float wind_gust = 16;
+
+  /*
+   * Wind lull in m/s
+   */
+  optional float wind_lull = 17;
+
+  /*
+   * Radiation in µR/h
+   */
+  optional float radiation = 18;
+
+  /*
+   * Rainfall in the last hour in mm
+   */
+  optional float rainfall_1h = 19;
+
+  /*
+   * Rainfall in the last 24 hours in mm
+   */
+  optional float rainfall_24h = 20;
+
+  /*
+   * Soil moisture measured (% 1-100)
+   */
+  optional uint32 soil_moisture = 21;
+
+  /*
+   * Soil temperature measured (*C)
+   */
+  optional float soil_temperature = 22;
+}
+
+/*
+ * Power Metrics (voltage / current / etc)
+ */
+message PowerMetrics {
+  /*
+   * Voltage (Ch1)
+   */
+  optional float ch1_voltage = 1;
+
+  /*
+   * Current (Ch1)
+   */
+  optional float ch1_current = 2;
+
+  /*
+   * Voltage (Ch2)
+   */
+  optional float ch2_voltage = 3;
+
+  /*
+   * Current (Ch2)
+   */
+  optional float ch2_current = 4;
+
+  /*
+   * Voltage (Ch3)
+   */
+  optional float ch3_voltage = 5;
+
+  /*
+   * Current (Ch3)
+   */
+  optional float ch3_current = 6;
+}
+
+/*
+ * Air quality metrics
+ */
+message AirQualityMetrics {
+  /*
+   * Concentration Units Standard PM1.0 in ug/m3
+   */
+  optional uint32 pm10_standard = 1;
+
+  /*
+   * Concentration Units Standard PM2.5 in ug/m3
+   */
+  optional uint32 pm25_standard = 2;
+
+  /*
+   * Concentration Units Standard PM10.0 in ug/m3
+   */
+  optional uint32 pm100_standard = 3;
+
+  /*
+   * Concentration Units Environmental PM1.0 in ug/m3
+   */
+  optional uint32 pm10_environmental = 4;
+
+  /*
+   * Concentration Units Environmental PM2.5 in ug/m3
+   */
+  optional uint32 pm25_environmental = 5;
+
+  /*
+   * Concentration Units Environmental PM10.0 in ug/m3
+   */
+  optional uint32 pm100_environmental = 6;
+
+  /*
+   * 0.3um Particle Count in #/0.1l
+   */
+  optional uint32 particles_03um = 7;
+
+  /*
+   * 0.5um Particle Count in #/0.1l
+   */
+  optional uint32 particles_05um = 8;
+
+  /*
+   * 1.0um Particle Count in #/0.1l
+   */
+  optional uint32 particles_10um = 9;
+
+  /*
+   * 2.5um Particle Count in #/0.1l
+   */
+  optional uint32 particles_25um = 10;
+
+  /*
+   * 5.0um Particle Count in #/0.1l
+   */
+  optional uint32 particles_50um = 11;
+
+  /*
+   * 10.0um Particle Count in #/0.1l
+   */
+  optional uint32 particles_100um = 12;
+
+  /*
+   * CO2 concentration in ppm
+   */
+  optional uint32 co2 = 13;
+}
+
+/*
+ * Local device mesh statistics
+ */
+message LocalStats {
+  /*
+   * How long the device has been running since the last reboot (in seconds)
+   */
+  uint32 uptime_seconds = 1;
+
+  /*
+   * Utilization for the current channel
+   */
+  float channel_utilization = 2;
+
+  /*
+   * Percent of airtime for transmission used within the last hour.
+   */
+  float air_util_tx = 3;
+
+  /*
+   * Number of packets sent
+   */
+  uint32 num_packets_tx = 4;
+
+  /*
+   * Number of packets received (both good and bad)
+   */
+  uint32 num_packets_rx = 5;
+
+  /*
+   * Number of packets received that are malformed or violate the protocol
+   */
+  uint32 num_packets_rx_bad = 6;
+
+  /*
+   * Number of nodes online (in the past 2 hours)
+   */
+  uint32 num_online_nodes = 7;
+
+  /*
+   * Number of nodes total
+   */
+  uint32 num_total_nodes = 8;
+}
+
+/*
+ * Health telemetry metrics
+ */
+message HealthMetrics {
+  /*
+   * Heart rate (beats per minute)
+   */
+  optional uint32 heart_bpm = 1;
+
+  /*
+   * SpO2 (blood oxygen saturation) level
+   */
+  optional uint32 spO2 = 2;
+
+  /*
+   * Body temperature in degrees Celsius
+   */
+  optional float temperature = 3;
+}
+
+/*
+ * Types of Measurements the telemetry module is equipped to handle
+ */
+message Telemetry {
+  /*
+   * Seconds since 1970 - or 0 for unknown/unset
+   */
+  fixed32 time = 1;
+
+  oneof variant {
+    /*
+     * Key native device metrics such as battery level
+     */
+    DeviceMetrics device_metrics = 2;
+
+    /*
+     * Weather station or other environmental metrics
+     */
+    EnvironmentMetrics environment_metrics = 3;
+
+    /*
+     * Air quality metrics
+     */
+    AirQualityMetrics air_quality_metrics = 4;
+
+    /*
+     * Power Metrics
+     */
+    PowerMetrics power_metrics = 5;
+
+    /*
+     * Local device mesh statistics
+     */
+    LocalStats local_stats = 6;
+
+    /*
+     * Health telemetry metrics
+     */
+    HealthMetrics health_metrics = 7;
+  }
+}

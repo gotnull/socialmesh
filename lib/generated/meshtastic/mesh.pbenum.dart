@@ -285,6 +285,114 @@ class HardwareModel extends $pb.ProtobufEnum {
   const HardwareModel._(super.value, super.name);
 }
 
+/// Routing error codes for message delivery status
+class Routing_Error extends $pb.ProtobufEnum {
+  ///
+  ///  No error, message delivered successfully
+  static const Routing_Error NONE =
+      Routing_Error._(0, _omitEnumNames ? '' : 'NONE');
+
+  ///
+  ///  No route found to destination node
+  static const Routing_Error NO_ROUTE =
+      Routing_Error._(1, _omitEnumNames ? '' : 'NO_ROUTE');
+
+  ///
+  ///  Got a NAK while waiting for an ACK
+  static const Routing_Error GOT_NAK =
+      Routing_Error._(2, _omitEnumNames ? '' : 'GOT_NAK');
+
+  ///
+  ///  Timeout waiting for ACK/NAK
+  static const Routing_Error TIMEOUT =
+      Routing_Error._(3, _omitEnumNames ? '' : 'TIMEOUT');
+
+  ///
+  ///  No interface available for sending
+  static const Routing_Error NO_INTERFACE =
+      Routing_Error._(4, _omitEnumNames ? '' : 'NO_INTERFACE');
+
+  ///
+  ///  Max retransmissions reached
+  static const Routing_Error MAX_RETRANSMIT =
+      Routing_Error._(5, _omitEnumNames ? '' : 'MAX_RETRANSMIT');
+
+  ///
+  ///  No channel for this packet
+  static const Routing_Error NO_CHANNEL =
+      Routing_Error._(6, _omitEnumNames ? '' : 'NO_CHANNEL');
+
+  ///
+  ///  Packet too big for this interface
+  static const Routing_Error TOO_LARGE =
+      Routing_Error._(7, _omitEnumNames ? '' : 'TOO_LARGE');
+
+  ///
+  ///  Not interested in this packet
+  static const Routing_Error NO_RESPONSE =
+      Routing_Error._(8, _omitEnumNames ? '' : 'NO_RESPONSE');
+
+  ///
+  ///  Duplicate packet detected
+  static const Routing_Error DUTY_CYCLE_LIMIT =
+      Routing_Error._(9, _omitEnumNames ? '' : 'DUTY_CYCLE_LIMIT');
+
+  ///
+  ///  Bad request
+  static const Routing_Error BAD_REQUEST =
+      Routing_Error._(32, _omitEnumNames ? '' : 'BAD_REQUEST');
+
+  ///
+  ///  Not authorized for this operation
+  static const Routing_Error NOT_AUTHORIZED =
+      Routing_Error._(33, _omitEnumNames ? '' : 'NOT_AUTHORIZED');
+
+  ///
+  ///  PKC decryption failed
+  static const Routing_Error PKC_FAILED =
+      Routing_Error._(34, _omitEnumNames ? '' : 'PKC_FAILED');
+
+  ///
+  ///  PKI message not for us
+  static const Routing_Error PKI_UNKNOWN_PUBKEY =
+      Routing_Error._(35, _omitEnumNames ? '' : 'PKI_UNKNOWN_PUBKEY');
+
+  ///
+  ///  Admin channel must be enabled
+  static const Routing_Error ADMIN_BAD_SESSION_KEY =
+      Routing_Error._(36, _omitEnumNames ? '' : 'ADMIN_BAD_SESSION_KEY');
+
+  ///
+  ///  Admin public key not authorized
+  static const Routing_Error ADMIN_PUBLIC_KEY_UNAUTHORIZED = Routing_Error._(
+      37, _omitEnumNames ? '' : 'ADMIN_PUBLIC_KEY_UNAUTHORIZED');
+
+  static const $core.List<Routing_Error> values = <Routing_Error>[
+    NONE,
+    NO_ROUTE,
+    GOT_NAK,
+    TIMEOUT,
+    NO_INTERFACE,
+    MAX_RETRANSMIT,
+    NO_CHANNEL,
+    TOO_LARGE,
+    NO_RESPONSE,
+    DUTY_CYCLE_LIMIT,
+    BAD_REQUEST,
+    NOT_AUTHORIZED,
+    PKC_FAILED,
+    PKI_UNKNOWN_PUBKEY,
+    ADMIN_BAD_SESSION_KEY,
+    ADMIN_PUBLIC_KEY_UNAUTHORIZED,
+  ];
+
+  static final $core.Map<$core.int, Routing_Error> _byValue =
+      $pb.ProtobufEnum.initByValue(values);
+  static Routing_Error? valueOf($core.int value) => _byValue[value];
+
+  const Routing_Error._(super.value, super.name);
+}
+
 /// Data packet types
 class PortNum extends $pb.ProtobufEnum {
   static const PortNum UNKNOWN_APP =

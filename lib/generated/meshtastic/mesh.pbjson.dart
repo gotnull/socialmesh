@@ -144,6 +144,38 @@ final $typed_data.Uint8List hardwareModelDescriptor = $convert.base64Decode(
     'UkFLMzE3MhBBEgoKBldJT19FNRBCEh8KG1JBRElPTUFTVEVSXzkwMF9CQU5ESVRfTkFOTxBDEi'
     'QKIEhFTFRFQ19DQVBTVUxFX1NFTlNPUl9WM19DT01QQUNUEEQSDwoKUFJJVkFURV9IVxD/AQ==');
 
+@$core.Deprecated('Use routing_ErrorDescriptor instead')
+const Routing_Error$json = {
+  '1': 'Routing_Error',
+  '2': [
+    {'1': 'NONE', '2': 0},
+    {'1': 'NO_ROUTE', '2': 1},
+    {'1': 'GOT_NAK', '2': 2},
+    {'1': 'TIMEOUT', '2': 3},
+    {'1': 'NO_INTERFACE', '2': 4},
+    {'1': 'MAX_RETRANSMIT', '2': 5},
+    {'1': 'NO_CHANNEL', '2': 6},
+    {'1': 'TOO_LARGE', '2': 7},
+    {'1': 'NO_RESPONSE', '2': 8},
+    {'1': 'DUTY_CYCLE_LIMIT', '2': 9},
+    {'1': 'BAD_REQUEST', '2': 32},
+    {'1': 'NOT_AUTHORIZED', '2': 33},
+    {'1': 'PKC_FAILED', '2': 34},
+    {'1': 'PKI_UNKNOWN_PUBKEY', '2': 35},
+    {'1': 'ADMIN_BAD_SESSION_KEY', '2': 36},
+    {'1': 'ADMIN_PUBLIC_KEY_UNAUTHORIZED', '2': 37},
+  ],
+};
+
+/// Descriptor for `Routing_Error`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List routing_ErrorDescriptor = $convert.base64Decode(
+    'Cg1Sb3V0aW5nX0Vycm9yEggKBE5PTkUQABIMCghOT19ST1VURRABEgsKB0dPVF9OQUsQAhILCg'
+    'dUSU1FT1VUEAMSEAoMTk9fSU5URVJGQUNFEAQSEgoOTUFYX1JFVFJBTlNNSVQQBRIOCgpOT19D'
+    'SEFOTkVMEAYSDQoJVE9PX0xBUkdFEAcSDwoLTk9fUkVTUE9OU0UQCBIUChBEVVRZX0NZQ0xFX0'
+    'xJTUlUEAkSDwoLQkFEX1JFUVVFU1QQIBISCg5OT1RfQVVUSE9SSVpFRBAhEg4KClBLQ19GQUlM'
+    'RUQQIhIWChJQS0lfVU5LTk9XTl9QVUJLRVkQIxIZChVBRE1JTl9CQURfU0VTU0lPTl9LRVkQJB'
+    'IhCh1BRE1JTl9QVUJMSUNfS0VZX1VOQVVUSE9SSVpFRBAl');
+
 @$core.Deprecated('Use portNumDescriptor instead')
 const PortNum$json = {
   '1': 'PortNum',
@@ -325,6 +357,50 @@ const RouteDiscovery$json = {
 final $typed_data.Uint8List routeDiscoveryDescriptor = $convert
     .base64Decode('Cg5Sb3V0ZURpc2NvdmVyeRIUCgVyb3V0ZRgBIAMoB1IFcm91dGU=');
 
+@$core.Deprecated('Use routingDescriptor instead')
+const Routing$json = {
+  '1': 'Routing',
+  '2': [
+    {
+      '1': 'route_request',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.RouteDiscovery',
+      '9': 0,
+      '10': 'routeRequest'
+    },
+    {
+      '1': 'route_reply',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.RouteDiscovery',
+      '9': 0,
+      '10': 'routeReply'
+    },
+    {
+      '1': 'error_reason',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.meshtastic.Routing_Error',
+      '9': 0,
+      '10': 'errorReason'
+    },
+  ],
+  '8': [
+    {'1': 'variant'},
+  ],
+};
+
+/// Descriptor for `Routing`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List routingDescriptor = $convert.base64Decode(
+    'CgdSb3V0aW5nEkEKDXJvdXRlX3JlcXVlc3QYASABKAsyGi5tZXNodGFzdGljLlJvdXRlRGlzY2'
+    '92ZXJ5SABSDHJvdXRlUmVxdWVzdBI9Cgtyb3V0ZV9yZXBseRgCIAEoCzIaLm1lc2h0YXN0aWMu'
+    'Um91dGVEaXNjb3ZlcnlIAFIKcm91dGVSZXBseRI+CgxlcnJvcl9yZWFzb24YAyABKA4yGS5tZX'
+    'NodGFzdGljLlJvdXRpbmdfRXJyb3JIAFILZXJyb3JSZWFzb25CCQoHdmFyaWFudA==');
+
 @$core.Deprecated('Use dataDescriptor instead')
 const Data$json = {
   '1': 'Data',
@@ -436,31 +512,6 @@ final $typed_data.Uint8List nodeInfoDescriptor = $convert.base64Decode(
     'aXRpb24SEAoDc25yGAQgASgCUgNzbnISHQoKbGFzdF9oZWFyZBgFIAEoB1IJbGFzdEhlYXJkEk'
     'AKDmRldmljZV9tZXRyaWNzGAYgASgLMhkubWVzaHRhc3RpYy5EZXZpY2VNZXRyaWNzUg1kZXZp'
     'Y2VNZXRyaWNz');
-
-@$core.Deprecated('Use deviceMetricsDescriptor instead')
-const DeviceMetrics$json = {
-  '1': 'DeviceMetrics',
-  '2': [
-    {'1': 'battery_level', '3': 1, '4': 1, '5': 13, '10': 'batteryLevel'},
-    {'1': 'voltage', '3': 2, '4': 1, '5': 2, '10': 'voltage'},
-    {
-      '1': 'channel_utilization',
-      '3': 3,
-      '4': 1,
-      '5': 2,
-      '10': 'channelUtilization'
-    },
-    {'1': 'air_util_tx', '3': 4, '4': 1, '5': 2, '10': 'airUtilTx'},
-    {'1': 'uptime_seconds', '3': 5, '4': 1, '5': 13, '10': 'uptimeSeconds'},
-  ],
-};
-
-/// Descriptor for `DeviceMetrics`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List deviceMetricsDescriptor = $convert.base64Decode(
-    'Cg1EZXZpY2VNZXRyaWNzEiMKDWJhdHRlcnlfbGV2ZWwYASABKA1SDGJhdHRlcnlMZXZlbBIYCg'
-    'd2b2x0YWdlGAIgASgCUgd2b2x0YWdlEi8KE2NoYW5uZWxfdXRpbGl6YXRpb24YAyABKAJSEmNo'
-    'YW5uZWxVdGlsaXphdGlvbhIeCgthaXJfdXRpbF90eBgEIAEoAlIJYWlyVXRpbFR4EiUKDnVwdG'
-    'ltZV9zZWNvbmRzGAUgASgNUg11cHRpbWVTZWNvbmRz');
 
 @$core.Deprecated('Use myNodeInfoDescriptor instead')
 const MyNodeInfo$json = {

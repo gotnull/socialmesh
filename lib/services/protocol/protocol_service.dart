@@ -9,6 +9,7 @@ import '../../models/device_error.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import '../../generated/meshtastic/portnums.pb.dart' as pn;
+import '../../generated/meshtastic/telemetry.pb.dart' as telemetry;
 import 'packet_framer.dart';
 
 /// Protocol service for handling Meshtastic protocol
@@ -353,7 +354,6 @@ class ProtocolService {
   /// Handle routing message (ACK/NAK/errors)
   void _handleRoutingMessage(pb.MeshPacket packet, pb.Data data) {
     try {
-      // The routing payload contains an error code
       // If requestId is set, it references the original packet that this is a response to
       final requestId = data.requestId;
 
@@ -362,22 +362,41 @@ class ProtocolService {
         return;
       }
 
-      // Parse the error code from the payload
-      // The Routing message has: errorReason field (uint32)
-      int errorCode = 0;
-      if (data.payload.isNotEmpty) {
-        // Simple parsing - error code is typically the first varint in the routing payload
-        // For a proper implementation, we'd need the Routing protobuf message
-        // But we can check if it's a success (empty or 0) vs failure
-        errorCode = data.payload[0];
+      // Parse the Routing protobuf message
+      final routing = pb.Routing.fromBuffer(data.payload);
+      final variant = routing.whichVariant();
+
+      RoutingError routingError;
+      bool delivered;
+
+      switch (variant) {
+        case pb.Routing_Variant.errorReason:
+          // Error response - check the error code
+          final errorCode = routing.errorReason.value;
+          routingError = RoutingError.fromCode(errorCode);
+          delivered = routingError.isSuccess;
+          _logger.i(
+            'Routing error for packet $requestId: ${routingError.message} (${routing.errorReason.name})',
+          );
+          break;
+
+        case pb.Routing_Variant.routeRequest:
+          _logger.d('Route request received for packet $requestId');
+          // Route requests don't indicate delivery status
+          return;
+
+        case pb.Routing_Variant.routeReply:
+          _logger.d('Route reply received for packet $requestId');
+          // Route replies don't indicate delivery status
+          return;
+
+        case pb.Routing_Variant.notSet:
+          // Empty routing message typically means success (ACK)
+          routingError = RoutingError.fromCode(0);
+          delivered = true;
+          _logger.d('Empty routing message (ACK) for packet $requestId');
+          break;
       }
-
-      final routingError = RoutingError.fromCode(errorCode);
-      final delivered = routingError.isSuccess;
-
-      _logger.i(
-        'Routing response for packet $requestId: ${routingError.message} (code: $errorCode)',
-      );
 
       // Check if we're tracking this packet
       final messageId = _pendingMessages[requestId];
@@ -400,28 +419,89 @@ class ProtocolService {
   /// Handle telemetry message (battery, voltage, etc.)
   void _handleTelemetry(pb.MeshPacket packet, pb.Data data) {
     try {
-      // Telemetry packets can contain DeviceMetrics directly
-      // The payload is the DeviceMetrics protobuf
-      final deviceMetrics = pb.DeviceMetrics.fromBuffer(data.payload);
+      // TELEMETRY_APP payload is a Telemetry message wrapper with oneof variant
+      final telem = telemetry.Telemetry.fromBuffer(data.payload);
 
-      final batteryLevel = deviceMetrics.hasBatteryLevel()
-          ? deviceMetrics.batteryLevel
-          : null;
-      final voltage = deviceMetrics.hasVoltage() ? deviceMetrics.voltage : null;
+      // Check which variant we received
+      final variant = telem.whichVariant();
+      _logger.d('Telemetry variant: $variant from ${packet.from}');
 
-      // Extract channel utilization and air util from DeviceMetrics
-      final channelUtil = deviceMetrics.hasChannelUtilization()
-          ? deviceMetrics.channelUtilization.toDouble()
-          : null;
-      final airUtilTx = deviceMetrics.hasAirUtilTx()
-          ? deviceMetrics.airUtilTx.toDouble()
-          : null;
+      int? batteryLevel;
+      double? voltage;
+      double? channelUtil;
+      double? airUtilTx;
+      int? uptimeSeconds;
 
-      _logger.i(
-        'Telemetry from ${packet.from}: battery=$batteryLevel%, voltage=${voltage}V, '
-        'channelUtil=$channelUtil%, airUtilTx=$airUtilTx%, '
-        'rawPayload=${data.payload.length} bytes',
-      );
+      switch (variant) {
+        case telemetry.Telemetry_Variant.deviceMetrics:
+          final deviceMetrics = telem.deviceMetrics;
+          batteryLevel = deviceMetrics.hasBatteryLevel()
+              ? deviceMetrics.batteryLevel
+              : null;
+          voltage = deviceMetrics.hasVoltage()
+              ? deviceMetrics.voltage.toDouble()
+              : null;
+          channelUtil = deviceMetrics.hasChannelUtilization()
+              ? deviceMetrics.channelUtilization.toDouble()
+              : null;
+          airUtilTx = deviceMetrics.hasAirUtilTx()
+              ? deviceMetrics.airUtilTx.toDouble()
+              : null;
+          uptimeSeconds = deviceMetrics.hasUptimeSeconds()
+              ? deviceMetrics.uptimeSeconds
+              : null;
+
+          _logger.i(
+            'DeviceMetrics from ${packet.from}: battery=$batteryLevel%, voltage=${voltage}V, '
+            'channelUtil=$channelUtil%, airUtilTx=$airUtilTx%, uptime=${uptimeSeconds}s',
+          );
+          break;
+
+        case telemetry.Telemetry_Variant.environmentMetrics:
+          final envMetrics = telem.environmentMetrics;
+          _logger.i(
+            'EnvironmentMetrics from ${packet.from}: '
+            'temp=${envMetrics.hasTemperature() ? envMetrics.temperature : "N/A"}°C, '
+            'humidity=${envMetrics.hasRelativeHumidity() ? envMetrics.relativeHumidity : "N/A"}%, '
+            'pressure=${envMetrics.hasBarometricPressure() ? envMetrics.barometricPressure : "N/A"}hPa',
+          );
+          // Environment metrics don't update battery - just log
+          return;
+
+        case telemetry.Telemetry_Variant.airQualityMetrics:
+          final aqMetrics = telem.airQualityMetrics;
+          _logger.i(
+            'AirQualityMetrics from ${packet.from}: '
+            'PM2.5=${aqMetrics.hasPm25Standard() ? aqMetrics.pm25Standard : "N/A"}ug/m3',
+          );
+          return;
+
+        case telemetry.Telemetry_Variant.powerMetrics:
+          _logger.i('PowerMetrics from ${packet.from}');
+          return;
+
+        case telemetry.Telemetry_Variant.localStats:
+          final stats = telem.localStats;
+          _logger.i(
+            'LocalStats from ${packet.from}: '
+            'channelUtil=${stats.channelUtilization}%, airUtilTx=${stats.airUtilTx}%, '
+            'numOnlineNodes=${stats.numOnlineNodes}, numTotalNodes=${stats.numTotalNodes}',
+          );
+          // Local stats can provide channel utilization
+          if (packet.from == _myNodeNum) {
+            _lastChannelUtil = stats.channelUtilization.toDouble();
+            _channelUtilController.add(_lastChannelUtil);
+          }
+          return;
+
+        case telemetry.Telemetry_Variant.healthMetrics:
+          _logger.i('HealthMetrics from ${packet.from}');
+          return;
+
+        case telemetry.Telemetry_Variant.notSet:
+          _logger.d('Telemetry with no variant set from ${packet.from}');
+          return;
+      }
 
       // Emit channel utilization if available (from our own device)
       if (channelUtil != null && packet.from == _myNodeNum) {
@@ -429,9 +509,9 @@ class ProtocolService {
         _channelUtilController.add(channelUtil);
       }
 
-      // Only update if we got valid battery data
+      // Only update node if we got valid battery data from deviceMetrics
       if (batteryLevel == null || batteryLevel == 0) {
-        _logger.d('No valid battery level in telemetry, skipping update');
+        _logger.d('No valid battery level in telemetry, skipping node update');
         return;
       }
 

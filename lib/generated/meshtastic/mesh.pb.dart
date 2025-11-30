@@ -16,6 +16,7 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'mesh.pbenum.dart';
+import 'telemetry.pb.dart' as $0;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
@@ -326,6 +327,115 @@ class RouteDiscovery extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   $pb.PbList<$core.int> get route => $_getList(0);
+}
+
+enum Routing_Variant { routeRequest, routeReply, errorReason, notSet }
+
+/// Routing message for ACK/NAK delivery status
+class Routing extends $pb.GeneratedMessage {
+  factory Routing({
+    RouteDiscovery? routeRequest,
+    RouteDiscovery? routeReply,
+    Routing_Error? errorReason,
+  }) {
+    final result = create();
+    if (routeRequest != null) result.routeRequest = routeRequest;
+    if (routeReply != null) result.routeReply = routeReply;
+    if (errorReason != null) result.errorReason = errorReason;
+    return result;
+  }
+
+  Routing._();
+
+  factory Routing.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Routing.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, Routing_Variant> _Routing_VariantByTag = {
+    1: Routing_Variant.routeRequest,
+    2: Routing_Variant.routeReply,
+    3: Routing_Variant.errorReason,
+    0: Routing_Variant.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Routing',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2, 3])
+    ..aOM<RouteDiscovery>(1, _omitFieldNames ? '' : 'routeRequest',
+        subBuilder: RouteDiscovery.create)
+    ..aOM<RouteDiscovery>(2, _omitFieldNames ? '' : 'routeReply',
+        subBuilder: RouteDiscovery.create)
+    ..aE<Routing_Error>(3, _omitFieldNames ? '' : 'errorReason',
+        enumValues: Routing_Error.values)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Routing clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Routing copyWith(void Function(Routing) updates) =>
+      super.copyWith((message) => updates(message as Routing)) as Routing;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Routing create() => Routing._();
+  @$core.override
+  Routing createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Routing getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Routing>(create);
+  static Routing? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  Routing_Variant whichVariant() => _Routing_VariantByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  void clearVariant() => $_clearField($_whichOneof(0));
+
+  ///
+  ///  Route request
+  @$pb.TagNumber(1)
+  RouteDiscovery get routeRequest => $_getN(0);
+  @$pb.TagNumber(1)
+  set routeRequest(RouteDiscovery value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRouteRequest() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRouteRequest() => $_clearField(1);
+  @$pb.TagNumber(1)
+  RouteDiscovery ensureRouteRequest() => $_ensure(0);
+
+  ///
+  ///  Route reply
+  @$pb.TagNumber(2)
+  RouteDiscovery get routeReply => $_getN(1);
+  @$pb.TagNumber(2)
+  set routeReply(RouteDiscovery value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRouteReply() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRouteReply() => $_clearField(2);
+  @$pb.TagNumber(2)
+  RouteDiscovery ensureRouteReply() => $_ensure(1);
+
+  ///
+  ///  Error reason for message delivery failure
+  @$pb.TagNumber(3)
+  Routing_Error get errorReason => $_getN(2);
+  @$pb.TagNumber(3)
+  set errorReason(Routing_Error value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasErrorReason() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearErrorReason() => $_clearField(3);
 }
 
 /// Data payload
@@ -700,7 +810,7 @@ class NodeInfo extends $pb.GeneratedMessage {
     Position? position,
     $core.double? snr,
     $core.int? lastHeard,
-    DeviceMetrics? deviceMetrics,
+    $0.DeviceMetrics? deviceMetrics,
   }) {
     final result = create();
     if (num != null) result.num = num;
@@ -731,8 +841,8 @@ class NodeInfo extends $pb.GeneratedMessage {
         subBuilder: Position.create)
     ..aD(4, _omitFieldNames ? '' : 'snr', fieldType: $pb.PbFieldType.OF)
     ..aI(5, _omitFieldNames ? '' : 'lastHeard', fieldType: $pb.PbFieldType.OF3)
-    ..aOM<DeviceMetrics>(6, _omitFieldNames ? '' : 'deviceMetrics',
-        subBuilder: DeviceMetrics.create)
+    ..aOM<$0.DeviceMetrics>(6, _omitFieldNames ? '' : 'deviceMetrics',
+        subBuilder: $0.DeviceMetrics.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -809,127 +919,15 @@ class NodeInfo extends $pb.GeneratedMessage {
 
   /// Device metrics
   @$pb.TagNumber(6)
-  DeviceMetrics get deviceMetrics => $_getN(5);
+  $0.DeviceMetrics get deviceMetrics => $_getN(5);
   @$pb.TagNumber(6)
-  set deviceMetrics(DeviceMetrics value) => $_setField(6, value);
+  set deviceMetrics($0.DeviceMetrics value) => $_setField(6, value);
   @$pb.TagNumber(6)
   $core.bool hasDeviceMetrics() => $_has(5);
   @$pb.TagNumber(6)
   void clearDeviceMetrics() => $_clearField(6);
   @$pb.TagNumber(6)
-  DeviceMetrics ensureDeviceMetrics() => $_ensure(5);
-}
-
-/// Device telemetry
-class DeviceMetrics extends $pb.GeneratedMessage {
-  factory DeviceMetrics({
-    $core.int? batteryLevel,
-    $core.double? voltage,
-    $core.double? channelUtilization,
-    $core.double? airUtilTx,
-    $core.int? uptimeSeconds,
-  }) {
-    final result = create();
-    if (batteryLevel != null) result.batteryLevel = batteryLevel;
-    if (voltage != null) result.voltage = voltage;
-    if (channelUtilization != null)
-      result.channelUtilization = channelUtilization;
-    if (airUtilTx != null) result.airUtilTx = airUtilTx;
-    if (uptimeSeconds != null) result.uptimeSeconds = uptimeSeconds;
-    return result;
-  }
-
-  DeviceMetrics._();
-
-  factory DeviceMetrics.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory DeviceMetrics.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'DeviceMetrics',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
-      createEmptyInstance: create)
-    ..aI(1, _omitFieldNames ? '' : 'batteryLevel',
-        fieldType: $pb.PbFieldType.OU3)
-    ..aD(2, _omitFieldNames ? '' : 'voltage', fieldType: $pb.PbFieldType.OF)
-    ..aD(3, _omitFieldNames ? '' : 'channelUtilization',
-        fieldType: $pb.PbFieldType.OF)
-    ..aD(4, _omitFieldNames ? '' : 'airUtilTx', fieldType: $pb.PbFieldType.OF)
-    ..aI(5, _omitFieldNames ? '' : 'uptimeSeconds',
-        fieldType: $pb.PbFieldType.OU3)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  DeviceMetrics clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  DeviceMetrics copyWith(void Function(DeviceMetrics) updates) =>
-      super.copyWith((message) => updates(message as DeviceMetrics))
-          as DeviceMetrics;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static DeviceMetrics create() => DeviceMetrics._();
-  @$core.override
-  DeviceMetrics createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static DeviceMetrics getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<DeviceMetrics>(create);
-  static DeviceMetrics? _defaultInstance;
-
-  /// Battery level 0-100
-  @$pb.TagNumber(1)
-  $core.int get batteryLevel => $_getIZ(0);
-  @$pb.TagNumber(1)
-  set batteryLevel($core.int value) => $_setUnsignedInt32(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasBatteryLevel() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearBatteryLevel() => $_clearField(1);
-
-  /// Voltage in millivolts
-  @$pb.TagNumber(2)
-  $core.double get voltage => $_getN(1);
-  @$pb.TagNumber(2)
-  set voltage($core.double value) => $_setFloat(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasVoltage() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearVoltage() => $_clearField(2);
-
-  /// Channel utilization
-  @$pb.TagNumber(3)
-  $core.double get channelUtilization => $_getN(2);
-  @$pb.TagNumber(3)
-  set channelUtilization($core.double value) => $_setFloat(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasChannelUtilization() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearChannelUtilization() => $_clearField(3);
-
-  /// Air utilization TX
-  @$pb.TagNumber(4)
-  $core.double get airUtilTx => $_getN(3);
-  @$pb.TagNumber(4)
-  set airUtilTx($core.double value) => $_setFloat(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasAirUtilTx() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearAirUtilTx() => $_clearField(4);
-
-  /// Uptime in seconds
-  @$pb.TagNumber(5)
-  $core.int get uptimeSeconds => $_getIZ(4);
-  @$pb.TagNumber(5)
-  set uptimeSeconds($core.int value) => $_setUnsignedInt32(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasUptimeSeconds() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearUptimeSeconds() => $_clearField(5);
+  $0.DeviceMetrics ensureDeviceMetrics() => $_ensure(5);
 }
 
 /// My node information

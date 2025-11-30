@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package meshtastic;
 
+import "meshtastic/telemetry.proto";
+
 option java_package = "com.geeksville.mesh";
 option java_outer_classname = "MeshProtos";
 option optimize_for = LITE_RUNTIME;
@@ -150,6 +152,109 @@ message RouteDiscovery {
   repeated fixed32 route = 1;
 }
 
+// Routing error codes for message delivery status
+enum Routing_Error {
+  /*
+   * No error, message delivered successfully
+   */
+  NONE = 0;
+  
+  /*
+   * No route found to destination node
+   */
+  NO_ROUTE = 1;
+  
+  /*
+   * Got a NAK while waiting for an ACK
+   */
+  GOT_NAK = 2;
+  
+  /*
+   * Timeout waiting for ACK/NAK
+   */
+  TIMEOUT = 3;
+  
+  /*
+   * No interface available for sending
+   */
+  NO_INTERFACE = 4;
+  
+  /*
+   * Max retransmissions reached
+   */
+  MAX_RETRANSMIT = 5;
+  
+  /*
+   * No channel for this packet
+   */
+  NO_CHANNEL = 6;
+  
+  /*
+   * Packet too big for this interface
+   */
+  TOO_LARGE = 7;
+  
+  /*
+   * Not interested in this packet
+   */
+  NO_RESPONSE = 8;
+  
+  /*
+   * Duplicate packet detected
+   */
+  DUTY_CYCLE_LIMIT = 9;
+  
+  /*
+   * Bad request
+   */
+  BAD_REQUEST = 32;
+  
+  /*
+   * Not authorized for this operation
+   */
+  NOT_AUTHORIZED = 33;
+  
+  /*
+   * PKC decryption failed
+   */
+  PKC_FAILED = 34;
+  
+  /*
+   * PKI message not for us
+   */
+  PKI_UNKNOWN_PUBKEY = 35;
+  
+  /*
+   * Admin channel must be enabled
+   */
+  ADMIN_BAD_SESSION_KEY = 36;
+  
+  /*
+   * Admin public key not authorized
+   */
+  ADMIN_PUBLIC_KEY_UNAUTHORIZED = 37;
+}
+
+// Routing message for ACK/NAK delivery status
+message Routing {
+  oneof variant {
+    /*
+     * Route request
+     */
+    RouteDiscovery route_request = 1;
+    
+    /*
+     * Route reply
+     */
+    RouteDiscovery route_reply = 2;
+    
+    /*
+     * Error reason for message delivery failure
+     */
+    Routing_Error error_reason = 3;
+  }
+}
+
 // Data packet types
 enum PortNum {
   UNKNOWN_APP = 0;
@@ -264,24 +369,6 @@ message NodeInfo {
   
   // Device metrics
   DeviceMetrics device_metrics = 6;
-}
-
-// Device telemetry
-message DeviceMetrics {
-  // Battery level 0-100
-  uint32 battery_level = 1;
-  
-  // Voltage in millivolts
-  float voltage = 2;
-  
-  // Channel utilization
-  float channel_utilization = 3;
-  
-  // Air utilization TX
-  float air_util_tx = 4;
-  
-  // Uptime in seconds
-  uint32 uptime_seconds = 5;
 }
 
 // My node information
