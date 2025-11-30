@@ -150,6 +150,7 @@ class NotificationService {
   /// Show notification for new message
   Future<void> showNewMessageNotification({
     required String senderName,
+    required String? senderId,
     required String message,
     required int fromNodeNum,
     bool playSound = true,
@@ -200,9 +201,11 @@ class NotificationService {
       // Offset by 1000000 to avoid collision with node notifications
       final notificationId = (fromNodeNum % 1000000) + 1000000;
 
+      final nodeId = senderId ?? '!${fromNodeNum.toRadixString(16)}';
+
       await _notifications.show(
         notificationId,
-        'Message from $senderName',
+        'Message from $senderName ($nodeId)',
         truncatedMessage,
         notificationDetails,
         payload: 'dm:$fromNodeNum',
@@ -217,9 +220,11 @@ class NotificationService {
   /// Show notification for channel message
   Future<void> showChannelMessageNotification({
     required String senderName,
+    required String? senderId,
     required String channelName,
     required String message,
     required int channelIndex,
+    required int fromNodeNum,
     bool playSound = true,
     bool vibrate = true,
   }) async {
@@ -254,9 +259,11 @@ class NotificationService {
         ? '${message.substring(0, 100)}...'
         : message;
 
+    final nodeId = senderId ?? '!${fromNodeNum.toRadixString(16)}';
+
     await _notifications.show(
       channelIndex + 2000000, // Channel indices are small, this is safe
-      '$senderName in $channelName',
+      '$senderName ($nodeId) in $channelName',
       truncatedMessage,
       notificationDetails,
       payload: 'channel:$channelIndex',
