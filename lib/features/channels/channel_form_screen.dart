@@ -125,6 +125,16 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
       return;
     }
 
+    // For Default (Simple), always use the standard Meshtastic default key AQ==
+    // This is base64 for [1] - the single byte with value 1
+    // This matches the official Meshtastic iOS app behavior
+    if (_selectedKeySize == KeySize.default1) {
+      _keyController.text = 'AQ==';
+      _validateAndDetectKey(_keyController.text);
+      setState(() {});
+      return;
+    }
+
     final random = Random.secure();
     final keyBytes = List<int>.generate(
       _selectedKeySize.bytes,
