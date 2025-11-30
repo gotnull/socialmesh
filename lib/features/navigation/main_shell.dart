@@ -7,6 +7,7 @@ import '../channels/channels_screen.dart';
 import '../messaging/messaging_screen.dart';
 import '../nodes/nodes_screen.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../scanner/scanner_screen.dart';
 
 /// Main navigation shell with bottom navigation bar
 class MainShell extends ConsumerStatefulWidget {
@@ -62,6 +63,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     final theme = Theme.of(context);
     final connectionStateAsync = ref.watch(connectionStateProvider);
     final autoReconnectState = ref.watch(autoReconnectStateProvider);
+    final settingsAsync = ref.watch(settingsServiceProvider);
 
     // Watch the auto-reconnect manager to keep it active
     ref.watch(autoReconnectManagerProvider);
@@ -69,11 +71,24 @@ class _MainShellState extends ConsumerState<MainShell> {
     final isConnected = connectionStateAsync.when(
       data: (state) => state == DeviceConnectionState.connected,
       loading: () => false,
-      error: (_, _) => false,
+      error: (e, s) => false,
     );
     final isReconnecting =
         autoReconnectState == AutoReconnectState.scanning ||
         autoReconnectState == AutoReconnectState.connecting;
+
+    // Check if we need to show the "Connect Device" screen
+    // Show it when: not connected AND not reconnecting AND auto-reconnect is disabled
+    final autoReconnectEnabled =
+        settingsAsync.whenOrNull(data: (settings) => settings.autoReconnect) ??
+        true;
+
+    final showConnectScreen =
+        !isConnected && !isReconnecting && !autoReconnectEnabled;
+
+    if (showConnectScreen) {
+      return const ScannerScreen();
+    }
 
     return Scaffold(
       body: IndexedStack(
