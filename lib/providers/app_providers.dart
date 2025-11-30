@@ -50,6 +50,7 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
       // Initialize storage services
       await _ref.read(settingsServiceProvider.future);
       await _ref.read(messageStorageProvider.future);
+      await _ref.read(nodeStorageProvider.future);
 
       // Check for onboarding completion
       final settings = await _ref.read(settingsServiceProvider.future);
@@ -151,6 +152,14 @@ final messageStorageProvider = FutureProvider<MessageStorageService>((
 ) async {
   final logger = ref.watch(loggerProvider);
   final service = MessageStorageService(logger: logger);
+  await service.init();
+  return service;
+});
+
+// Node storage service - persists nodes and positions
+final nodeStorageProvider = FutureProvider<NodeStorageService>((ref) async {
+  final logger = ref.watch(loggerProvider);
+  final service = NodeStorageService(logger: logger);
   await service.init();
   return service;
 });
@@ -519,15 +528,67 @@ final messagesProvider = StateNotifierProvider<MessagesNotifier, List<Message>>(
 // Nodes
 class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
   final ProtocolService _protocol;
+  final NodeStorageService? _storage;
   final Ref _ref;
 
-  NodesNotifier(this._protocol, this._ref) : super({}) {
-    // Initialize with existing nodes from protocol service
-    state = Map<int, MeshNode>.from(_protocol.nodes);
+  NodesNotifier(this._protocol, this._storage, this._ref) : super({}) {
+    _init();
+  }
 
+  Future<void> _init() async {
+    // Load persisted nodes (with their positions) first
+    if (_storage != null) {
+      final savedNodes = await _storage.loadNodes();
+      if (savedNodes.isNotEmpty) {
+        debugPrint('📍 Loaded ${savedNodes.length} nodes from storage');
+        final nodeMap = <int, MeshNode>{};
+        for (final node in savedNodes) {
+          nodeMap[node.nodeNum] = node;
+          if (node.hasPosition) {
+            debugPrint(
+              '📍 Node ${node.nodeNum} has stored position: ${node.latitude}, ${node.longitude}',
+            );
+          }
+        }
+        state = nodeMap;
+      }
+    }
+
+    // Then merge with existing nodes from protocol service
+    // Protocol nodes take precedence but preserve stored positions if new nodes don't have them
+    final protocolNodes = Map<int, MeshNode>.from(_protocol.nodes);
+    for (final entry in protocolNodes.entries) {
+      var node = entry.value;
+      final existing = state[entry.key];
+      // If protocol node has no position but stored node does, preserve stored position
+      if (!node.hasPosition && existing != null && existing.hasPosition) {
+        node = node.copyWith(
+          latitude: existing.latitude,
+          longitude: existing.longitude,
+          altitude: existing.altitude,
+        );
+      }
+      state = {...state, entry.key: node};
+    }
+
+    // Listen for new nodes
     _protocol.nodeStream.listen((node) {
       final isNewNode = !state.containsKey(node.nodeNum);
+      final existing = state[node.nodeNum];
+
+      // Preserve position from storage if new node doesn't have one
+      if (!node.hasPosition && existing != null && existing.hasPosition) {
+        node = node.copyWith(
+          latitude: existing.latitude,
+          longitude: existing.longitude,
+          altitude: existing.altitude,
+        );
+      }
+
       state = {...state, node.nodeNum: node};
+
+      // Persist node to storage
+      _storage?.saveNode(node);
 
       // Increment new nodes counter if this is a genuinely new node
       if (isNewNode) {
@@ -540,6 +601,7 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
 
   void addOrUpdateNode(MeshNode node) {
     state = {...state, node.nodeNum: node};
+    _storage?.saveNode(node);
   }
 
   void removeNode(int nodeNum) {
@@ -550,6 +612,7 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
 
   void clearNodes() {
     state = {};
+    _storage?.clearNodes();
   }
 }
 
@@ -557,7 +620,9 @@ final nodesProvider = StateNotifierProvider<NodesNotifier, Map<int, MeshNode>>((
   ref,
 ) {
   final protocol = ref.watch(protocolServiceProvider);
-  return NodesNotifier(protocol, ref);
+  final storageAsync = ref.watch(nodeStorageProvider);
+  final storage = storageAsync.valueOrNull;
+  return NodesNotifier(protocol, storage, ref);
 });
 
 // Channels

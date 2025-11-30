@@ -288,3 +288,170 @@ class MessageStorageService {
     );
   }
 }
+
+/// Node storage service - persists nodes and positions locally
+class NodeStorageService {
+  final Logger _logger;
+  SharedPreferences? _prefs;
+  static const String _nodesKey = 'nodes';
+
+  NodeStorageService({Logger? logger}) : _logger = logger ?? Logger();
+
+  Future<void> init() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  SharedPreferences get _preferences {
+    if (_prefs == null) {
+      throw Exception('NodeStorageService not initialized');
+    }
+    return _prefs!;
+  }
+
+  /// Save a node to local storage
+  Future<void> saveNode(MeshNode node) async {
+    try {
+      final nodes = await loadNodes();
+      // Update existing node or add new
+      final index = nodes.indexWhere((n) => n.nodeNum == node.nodeNum);
+      if (index >= 0) {
+        // Preserve position if new node doesn't have one
+        if (!node.hasPosition && nodes[index].hasPosition) {
+          node = node.copyWith(
+            latitude: nodes[index].latitude,
+            longitude: nodes[index].longitude,
+            altitude: nodes[index].altitude,
+          );
+        }
+        nodes[index] = node;
+      } else {
+        nodes.add(node);
+      }
+
+      final jsonList = nodes.map((n) => _nodeToJson(n)).toList();
+      await _preferences.setString(_nodesKey, jsonEncode(jsonList));
+      _logger.d('Saved node ${node.nodeNum} to storage');
+    } catch (e) {
+      _logger.e('Error saving node: $e');
+    }
+  }
+
+  /// Save multiple nodes to local storage
+  Future<void> saveNodes(List<MeshNode> nodesToSave) async {
+    try {
+      final existingNodes = await loadNodes();
+      final nodeMap = <int, MeshNode>{};
+
+      // Start with existing nodes
+      for (final node in existingNodes) {
+        nodeMap[node.nodeNum] = node;
+      }
+
+      // Update with new nodes, preserving positions when needed
+      for (var node in nodesToSave) {
+        final existing = nodeMap[node.nodeNum];
+        if (existing != null && !node.hasPosition && existing.hasPosition) {
+          node = node.copyWith(
+            latitude: existing.latitude,
+            longitude: existing.longitude,
+            altitude: existing.altitude,
+          );
+        }
+        nodeMap[node.nodeNum] = node;
+      }
+
+      final jsonList = nodeMap.values.map((n) => _nodeToJson(n)).toList();
+      await _preferences.setString(_nodesKey, jsonEncode(jsonList));
+      _logger.d('Saved ${nodesToSave.length} nodes to storage');
+    } catch (e) {
+      _logger.e('Error saving nodes: $e');
+    }
+  }
+
+  /// Load all nodes from local storage
+  Future<List<MeshNode>> loadNodes() async {
+    try {
+      final jsonString = _preferences.getString(_nodesKey);
+      if (jsonString == null || jsonString.isEmpty) {
+        return [];
+      }
+
+      final jsonList = jsonDecode(jsonString) as List;
+      return jsonList
+          .map((j) => _nodeFromJson(j as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      _logger.e('Error loading nodes: $e');
+      return [];
+    }
+  }
+
+  /// Get a specific node from storage
+  Future<MeshNode?> getNode(int nodeNum) async {
+    try {
+      final nodes = await loadNodes();
+      return nodes.where((n) => n.nodeNum == nodeNum).firstOrNull;
+    } catch (e) {
+      _logger.e('Error getting node: $e');
+      return null;
+    }
+  }
+
+  /// Clear all nodes
+  Future<void> clearNodes() async {
+    try {
+      await _preferences.remove(_nodesKey);
+      _logger.i('Cleared all nodes');
+    } catch (e) {
+      _logger.e('Error clearing nodes: $e');
+    }
+  }
+
+  Map<String, dynamic> _nodeToJson(MeshNode node) {
+    return {
+      'nodeNum': node.nodeNum,
+      'longName': node.longName,
+      'shortName': node.shortName,
+      'userId': node.userId,
+      'hardwareModel': node.hardwareModel,
+      'latitude': node.latitude,
+      'longitude': node.longitude,
+      'altitude': node.altitude,
+      'batteryLevel': node.batteryLevel,
+      'snr': node.snr,
+      'rssi': node.rssi,
+      'firmwareVersion': node.firmwareVersion,
+      'lastHeard': node.lastHeard?.millisecondsSinceEpoch,
+      'isOnline': node.isOnline,
+      'avatarColor': node.avatarColor,
+      'role': node.role,
+      'isFavorite': node.isFavorite,
+      'distance': node.distance,
+    };
+  }
+
+  MeshNode _nodeFromJson(Map<String, dynamic> json) {
+    return MeshNode(
+      nodeNum: json['nodeNum'] as int,
+      longName: json['longName'] as String?,
+      shortName: json['shortName'] as String?,
+      userId: json['userId'] as String?,
+      hardwareModel: json['hardwareModel'] as String?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      altitude: json['altitude'] as int?,
+      batteryLevel: json['batteryLevel'] as int?,
+      snr: json['snr'] as int?,
+      rssi: json['rssi'] as int?,
+      firmwareVersion: json['firmwareVersion'] as String?,
+      lastHeard: json['lastHeard'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['lastHeard'] as int)
+          : null,
+      isOnline: json['isOnline'] as bool? ?? false,
+      avatarColor: json['avatarColor'] as int? ?? 0xFF1976D2,
+      role: json['role'] as String?,
+      isFavorite: json['isFavorite'] as bool? ?? false,
+      distance: (json['distance'] as num?)?.toDouble(),
+    );
+  }
+}
