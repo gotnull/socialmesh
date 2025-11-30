@@ -7,8 +7,13 @@ import '../../services/storage/storage_service.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
   final bool isOnboarding;
+  final bool isInline;
 
-  const ScannerScreen({super.key, this.isOnboarding = false});
+  const ScannerScreen({
+    super.key,
+    this.isOnboarding = false,
+    this.isInline = false,
+  });
 
   @override
   ConsumerState<ScannerScreen> createState() => _ScannerScreenState();
@@ -24,8 +29,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   @override
   void initState() {
     super.initState();
-    // Skip auto-reconnect during onboarding - user needs to select device
-    if (widget.isOnboarding) {
+    // Skip auto-reconnect during onboarding or inline - user needs to select device
+    if (widget.isOnboarding || widget.isInline) {
       _startScan();
     } else {
       _tryAutoReconnect();
@@ -212,10 +217,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       if (region == null || region.value == 0) {
         // Navigate to region selection (initial setup mode)
         Navigator.of(context).pushReplacementNamed('/region-setup');
-      } else {
-        // Navigate to main app
+      } else if (!widget.isInline) {
+        // Navigate to main app (only if not inline - inline will auto-rebuild)
         Navigator.of(context).pushReplacementNamed('/main');
       }
+      // If inline (shown within MainShell), don't navigate - just let the
+      // connection state change trigger MainShell to rebuild and show main content
     } catch (e) {
       if (!mounted) return;
 

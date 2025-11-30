@@ -4,6 +4,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../models/subscription_models.dart';
 import '../../services/storage/storage_service.dart';
+import '../../services/notifications/notification_service.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
@@ -329,6 +330,12 @@ class SettingsScreen extends ConsumerWidget {
                     },
                   ),
                 ),
+                _SettingsTile(
+                  icon: Icons.bug_report_outlined,
+                  title: 'Test notification',
+                  subtitle: 'Send a test notification',
+                  onTap: () => _testNotification(context),
+                ),
               ],
 
               const SizedBox(height: 16),
@@ -532,6 +539,32 @@ class SettingsScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  Future<void> _testNotification(BuildContext context) async {
+    final notificationService = NotificationService();
+
+    // First ensure initialized
+    await notificationService.initialize();
+
+    // Show a test DM notification
+    await notificationService.showNewMessageNotification(
+      senderName: 'Test User',
+      message:
+          'This is a test notification to verify notifications are working correctly.',
+      fromNodeNum: 999999,
+      playSound: true,
+      vibrate: true,
+    );
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Test notification sent'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   void _showHistoryLimitDialog(
