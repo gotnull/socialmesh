@@ -47,20 +47,22 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
     setState(() => _loading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
-      
+
       // Apply cached config immediately if available
       final cached = protocol.currentBluetoothConfig;
       if (cached != null) {
         _applyConfig(cached);
       }
-      
+
       // Listen for config response
       _configSubscription = protocol.bluetoothConfigStream.listen((config) {
         if (mounted) _applyConfig(config);
       });
-      
+
       // Request fresh config from device
-      await protocol.getConfig(pb_config.AdminMessage_ConfigType.BLUETOOTH_CONFIG);
+      await protocol.getConfig(
+        pb_config.AdminMessage_ConfigType.BLUETOOTH_CONFIG,
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -178,7 +180,9 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
           ),
         ],
       ),
-      body: ListView(
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // Bluetooth enabled toggle
