@@ -578,11 +578,11 @@ class ProtocolService {
     try {
       final position = pb.Position.fromBuffer(data.payload);
 
-      // Check if position has valid coordinates
-      // Also verify coordinates are not exactly 0,0 (invalid/unset marker)
+      // Check if position has valid coordinates (matching iOS implementation)
+      // Require BOTH lat AND lng to be non-zero
       // Filter Apple Park coordinates (default invalid position)
       final hasValidPosition =
-          (position.latitudeI != 0 || position.longitudeI != 0) &&
+          (position.latitudeI != 0 && position.longitudeI != 0) &&
           !(position.latitudeI == 373346000 &&
               position.longitudeI == -1220090000);
 
@@ -789,11 +789,12 @@ class ProtocolService {
 
     MeshNode updatedNode;
 
-    // Check if NodeInfo has valid position data
-    // iOS app also filters Apple Park coordinates (37.3346, -122.009) which are invalid default
+    // Check if NodeInfo has valid position data (matching iOS implementation)
+    // Require BOTH lat AND lng to be non-zero
+    // Filter Apple Park coordinates (default invalid position)
     final hasValidPosition =
         nodeInfo.hasPosition() &&
-        (nodeInfo.position.latitudeI != 0 ||
+        (nodeInfo.position.latitudeI != 0 &&
             nodeInfo.position.longitudeI != 0) &&
         !(nodeInfo.position.latitudeI == 373346000 &&
             nodeInfo.position.longitudeI == -1220090000);
