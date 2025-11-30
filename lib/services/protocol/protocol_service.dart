@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_models.dart';
@@ -737,14 +738,25 @@ class ProtocolService {
   void _handleNodeInfo(pb.NodeInfo nodeInfo) {
     _logger.i('Node info received: ${nodeInfo.num}');
 
-    // Log position status
+    // DEBUG: Log position status with debugPrint so it shows in console
+    debugPrint(
+      '📍 NodeInfo ${nodeInfo.num.toRadixString(16)}: hasPosition=${nodeInfo.hasPosition()}',
+    );
     if (nodeInfo.hasPosition()) {
       final pos = nodeInfo.position;
+      debugPrint(
+        '📍 NodeInfo ${nodeInfo.num.toRadixString(16)} POSITION: '
+        'latI=${pos.latitudeI}, lngI=${pos.longitudeI}, '
+        'lat=${pos.latitudeI / 1e7}, lng=${pos.longitudeI / 1e7}',
+      );
       _logger.i(
         'NodeInfo ${nodeInfo.num} has position: lat=${pos.latitudeI}, lng=${pos.longitudeI}, '
         'latDeg=${pos.latitudeI / 1e7}, lngDeg=${pos.longitudeI / 1e7}',
       );
     } else {
+      debugPrint(
+        '📍 NodeInfo ${nodeInfo.num.toRadixString(16)} has NO position data',
+      );
       _logger.i('NodeInfo ${nodeInfo.num} has NO position data');
     }
 
