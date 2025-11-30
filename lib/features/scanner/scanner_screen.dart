@@ -199,8 +199,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         return;
       }
 
-      // Request radio config to check region
-      protocol.getRadioConfig();
+      // Request LoRa config to check region
+      protocol.getLoRaConfig();
 
       // Wait a moment for the response
       await Future.delayed(const Duration(milliseconds: 500));

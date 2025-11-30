@@ -277,18 +277,22 @@ class ProtocolService {
       final adminMsg = pb.AdminMessage.fromBuffer(data.payload);
       _logger.d('Admin message variant: ${adminMsg.whichPayloadVariant()}');
 
-      if (adminMsg.hasGetRadioResponse()) {
-        final radioConfig = adminMsg.getRadioResponse;
-        if (radioConfig.hasLora()) {
-          final loraConfig = radioConfig.lora;
+      if (adminMsg.hasGetConfigResponse()) {
+        final config = adminMsg.getConfigResponse;
+        if (config.hasLora()) {
+          final loraConfig = config.lora;
           final region = loraConfig.region;
-          _logger.i('Received radio config - region: ${region.name}');
+          _logger.i('Received config - region: ${region.name}');
           _currentRegion = region;
           _regionController.add(region);
         }
       } else if (adminMsg.hasGetChannelResponse()) {
-        // Channel response handling
-        _logger.d('Received channel response');
+        // Handle channel response - update local channel list
+        final channel = adminMsg.getChannelResponse;
+        _logger.i(
+          'Received channel response: index=${channel.index}, role=${channel.role.name}',
+        );
+        _handleChannel(channel);
       }
     } catch (e) {
       _logger.e('Error handling admin message: $e');
@@ -849,7 +853,53 @@ class ProtocolService {
     }
   }
 
-  /// Set channel
+  /// Begin edit settings transaction
+  Future<void> _beginEditSettings() async {
+    _logger.d('Beginning edit settings transaction');
+
+    final adminMsg = pb.AdminMessage()..beginEditSettings = true;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    final bytes = toRadio.writeToBuffer();
+
+    await _transport.send(_prepareForSend(bytes));
+    // Small delay to let device process
+    await Future.delayed(const Duration(milliseconds: 100));
+  }
+
+  /// Commit edit settings transaction
+  Future<void> _commitEditSettings() async {
+    _logger.d('Committing edit settings transaction');
+
+    final adminMsg = pb.AdminMessage()..commitEditSettings = true;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    final bytes = toRadio.writeToBuffer();
+
+    await _transport.send(_prepareForSend(bytes));
+  }
+
+  /// Set channel with proper transaction handling
   Future<void> setChannel(ChannelConfig config) async {
     // Validate we're ready to send
     if (_myNodeNum == null) {
@@ -863,6 +913,9 @@ class ProtocolService {
       _logger.i(
         'Setting channel ${config.index}: ${config.name} (role: ${config.role})',
       );
+
+      // Begin edit transaction
+      await _beginEditSettings();
 
       final channelSettings = pb.ChannelSettings()
         ..name = config.name
@@ -899,8 +952,7 @@ class ProtocolService {
 
       final packet = pb.MeshPacket()
         ..from = _myNodeNum!
-        ..to =
-            _myNodeNum! // Admin messages to self
+        ..to = _myNodeNum!
         ..decoded = data
         ..id = _generatePacketId();
 
@@ -909,6 +961,13 @@ class ProtocolService {
 
       await _transport.send(_prepareForSend(bytes));
       _logger.i('Channel ${config.index} sent to device');
+
+      // Small delay before commit
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      // Commit the transaction - this triggers the save to flash
+      await _commitEditSettings();
+      _logger.i('Channel settings committed');
     } catch (e) {
       _logger.e('Error setting channel: $e');
       rethrow;
@@ -1052,11 +1111,11 @@ class ProtocolService {
     try {
       _logger.i('Setting region: ${region.name}');
 
-      final loraConfig = pb.RadioConfig_LoRaConfig()..region = region;
+      final loraConfig = pb.Config_LoRaConfig()..region = region;
 
-      final radioConfig = pb.RadioConfig()..lora = loraConfig;
+      final config = pb.Config()..lora = loraConfig;
 
-      final adminMsg = pb.AdminMessage()..setRadio = radioConfig;
+      final adminMsg = pb.AdminMessage()..setConfig = config;
 
       final data = pb.Data()
         ..portnum = pb.PortNum.ADMIN_APP
@@ -1079,12 +1138,13 @@ class ProtocolService {
     }
   }
 
-  /// Request the current radio configuration
-  Future<void> getRadioConfig() async {
+  /// Request the current LoRa configuration (for region)
+  Future<void> getLoRaConfig() async {
     try {
-      _logger.i('Requesting radio config');
+      _logger.i('Requesting LoRa config');
 
-      final adminMsg = pb.AdminMessage()..getRadioRequest = true;
+      // ConfigType: LORA_CONFIG = 5
+      final adminMsg = pb.AdminMessage()..getConfigRequest = 5;
 
       final data = pb.Data()
         ..portnum = pb.PortNum.ADMIN_APP
@@ -1102,7 +1162,7 @@ class ProtocolService {
 
       await _transport.send(_prepareForSend(bytes));
     } catch (e) {
-      _logger.e('Error getting radio config: $e');
+      _logger.e('Error getting LoRa config: $e');
     }
   }
 

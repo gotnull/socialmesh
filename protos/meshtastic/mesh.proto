@@ -362,71 +362,162 @@ message ModuleSettings {
 // Configuration requests
 message AdminMessage {
   oneof payload_variant {
-    // Get channel request
+    // Get channel request (index + 1, so 0 is never sent)
     uint32 get_channel_request = 1;
     
     // Get channel response
     Channel get_channel_response = 2;
     
-    // Get radio request
-    bool get_radio_request = 3;
-    
-    // Get radio response
-    RadioConfig get_radio_response = 4;
-    
     // Get owner request
-    bool get_owner_request = 5;
+    bool get_owner_request = 3;
     
     // Get owner response
-    User get_owner_response = 6;
+    User get_owner_response = 4;
+    
+    // Get config request
+    uint32 get_config_request = 5;
+    
+    // Get config response
+    Config get_config_response = 6;
+    
+    // Get module config request
+    uint32 get_module_config_request = 7;
+    
+    // Get module config response
+    ModuleConfig get_module_config_response = 8;
     
     // Set owner
-    User set_owner = 7;
+    User set_owner = 32;
     
     // Set channel
-    Channel set_channel = 8;
+    Channel set_channel = 33;
     
-    // Set radio
-    RadioConfig set_radio = 9;
+    // Set config
+    Config set_config = 34;
+    
+    // Set module config
+    ModuleConfig set_module_config = 35;
+    
+    // Begin edit settings transaction
+    bool begin_edit_settings = 64;
+    
+    // Commit edit settings transaction  
+    bool commit_edit_settings = 65;
+    
+    // Reboot in N seconds
+    int32 reboot_seconds = 97;
+    
+    // Shutdown in N seconds
+    int32 shutdown_seconds = 98;
+    
+    // Factory reset config
+    int32 factory_reset_config = 99;
+    
+    // Reset nodedb
+    bool nodedb_reset = 100;
   }
 }
 
-// Radio configuration
-message RadioConfig {
-  // LoRa settings
+// Config message wrapper
+message Config {
+  oneof payload_variant {
+    DeviceConfig device = 1;
+    PositionConfig position = 2;
+    PowerConfig power = 3;
+    NetworkConfig network = 4;
+    DisplayConfig display = 5;
+    LoRaConfig lora = 6;
+    BluetoothConfig bluetooth = 7;
+    SecurityConfig security = 8;
+  }
+  
+  message DeviceConfig {
+    string role = 1;
+  }
+  
+  message PositionConfig {
+    bool gps_enabled = 1;
+  }
+  
+  message PowerConfig {
+    bool is_power_saving = 1;
+  }
+  
+  message NetworkConfig {
+    bool wifi_enabled = 1;
+  }
+  
+  message DisplayConfig {
+    uint32 screen_on_secs = 1;
+  }
+  
   message LoRaConfig {
-    // Use preset
     bool use_preset = 1;
-    
-    // Modem preset
     ModemPreset modem_preset = 2;
-    
-    // Bandwidth
     uint32 bandwidth = 3;
-    
-    // Spread factor
     uint32 spread_factor = 4;
-    
-    // Coding rate
     uint32 coding_rate = 5;
-    
-    // Frequency offset
     float frequency_offset = 6;
-    
-    // Region
     RegionCode region = 7;
-    
-    // Hop limit
     uint32 hop_limit = 8;
-    
-    // TX enabled
     bool tx_enabled = 9;
-    
-    // TX power
     int32 tx_power = 10;
   }
   
-  LoRaConfig lora = 1;
+  message BluetoothConfig {
+    bool enabled = 1;
+  }
+  
+  message SecurityConfig {
+    bytes public_key = 1;
+    bytes private_key = 2;
+  }
+}
+
+// Module config message wrapper
+message ModuleConfig {
+  oneof payload_variant {
+    MQTTConfig mqtt = 1;
+    SerialConfig serial = 2;
+    ExternalNotificationConfig ext_notification = 3;
+    StoreForwardConfig store_forward = 4;
+    RangeTestConfig range_test = 5;
+    TelemetryConfig telemetry = 6;
+    CannedMessageConfig canned_message = 7;
+    AudioConfig audio = 8;
+  }
+  
+  message MQTTConfig {
+    bool enabled = 1;
+  }
+  
+  message SerialConfig {
+    bool enabled = 1;
+  }
+  
+  message ExternalNotificationConfig {
+    bool enabled = 1;
+  }
+  
+  message StoreForwardConfig {
+    bool enabled = 1;
+  }
+  
+  message RangeTestConfig {
+    bool enabled = 1;
+  }
+  
+  message TelemetryConfig {
+    uint32 device_update_interval = 1;
+  }
+  
+  message CannedMessageConfig {
+    bool enabled = 1;
+  }
+  
+  message AudioConfig {
+    bool codec2_enabled = 1;
+  }
 }
 
 // Modem presets

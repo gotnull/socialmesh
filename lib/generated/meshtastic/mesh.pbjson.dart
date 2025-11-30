@@ -582,25 +582,8 @@ const AdminMessage$json = {
       '10': 'getChannelResponse'
     },
     {
-      '1': 'get_radio_request',
-      '3': 3,
-      '4': 1,
-      '5': 8,
-      '9': 0,
-      '10': 'getRadioRequest'
-    },
-    {
-      '1': 'get_radio_response',
-      '3': 4,
-      '4': 1,
-      '5': 11,
-      '6': '.meshtastic.RadioConfig',
-      '9': 0,
-      '10': 'getRadioResponse'
-    },
-    {
       '1': 'get_owner_request',
-      '3': 5,
+      '3': 3,
       '4': 1,
       '5': 8,
       '9': 0,
@@ -608,7 +591,7 @@ const AdminMessage$json = {
     },
     {
       '1': 'get_owner_response',
-      '3': 6,
+      '3': 4,
       '4': 1,
       '5': 11,
       '6': '.meshtastic.User',
@@ -616,8 +599,42 @@ const AdminMessage$json = {
       '10': 'getOwnerResponse'
     },
     {
-      '1': 'set_owner',
+      '1': 'get_config_request',
+      '3': 5,
+      '4': 1,
+      '5': 13,
+      '9': 0,
+      '10': 'getConfigRequest'
+    },
+    {
+      '1': 'get_config_response',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.Config',
+      '9': 0,
+      '10': 'getConfigResponse'
+    },
+    {
+      '1': 'get_module_config_request',
       '3': 7,
+      '4': 1,
+      '5': 13,
+      '9': 0,
+      '10': 'getModuleConfigRequest'
+    },
+    {
+      '1': 'get_module_config_response',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.ModuleConfig',
+      '9': 0,
+      '10': 'getModuleConfigResponse'
+    },
+    {
+      '1': 'set_owner',
+      '3': 32,
       '4': 1,
       '5': 11,
       '6': '.meshtastic.User',
@@ -626,7 +643,7 @@ const AdminMessage$json = {
     },
     {
       '1': 'set_channel',
-      '3': 8,
+      '3': 33,
       '4': 1,
       '5': 11,
       '6': '.meshtastic.Channel',
@@ -634,13 +651,70 @@ const AdminMessage$json = {
       '10': 'setChannel'
     },
     {
-      '1': 'set_radio',
-      '3': 9,
+      '1': 'set_config',
+      '3': 34,
       '4': 1,
       '5': 11,
-      '6': '.meshtastic.RadioConfig',
+      '6': '.meshtastic.Config',
       '9': 0,
-      '10': 'setRadio'
+      '10': 'setConfig'
+    },
+    {
+      '1': 'set_module_config',
+      '3': 35,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.ModuleConfig',
+      '9': 0,
+      '10': 'setModuleConfig'
+    },
+    {
+      '1': 'begin_edit_settings',
+      '3': 64,
+      '4': 1,
+      '5': 8,
+      '9': 0,
+      '10': 'beginEditSettings'
+    },
+    {
+      '1': 'commit_edit_settings',
+      '3': 65,
+      '4': 1,
+      '5': 8,
+      '9': 0,
+      '10': 'commitEditSettings'
+    },
+    {
+      '1': 'reboot_seconds',
+      '3': 97,
+      '4': 1,
+      '5': 5,
+      '9': 0,
+      '10': 'rebootSeconds'
+    },
+    {
+      '1': 'shutdown_seconds',
+      '3': 98,
+      '4': 1,
+      '5': 5,
+      '9': 0,
+      '10': 'shutdownSeconds'
+    },
+    {
+      '1': 'factory_reset_config',
+      '3': 99,
+      '4': 1,
+      '5': 5,
+      '9': 0,
+      '10': 'factoryResetConfig'
+    },
+    {
+      '1': 'nodedb_reset',
+      '3': 100,
+      '4': 1,
+      '5': 8,
+      '9': 0,
+      '10': 'nodedbReset'
     },
   ],
   '8': [
@@ -652,33 +726,158 @@ const AdminMessage$json = {
 final $typed_data.Uint8List adminMessageDescriptor = $convert.base64Decode(
     'CgxBZG1pbk1lc3NhZ2USMAoTZ2V0X2NoYW5uZWxfcmVxdWVzdBgBIAEoDUgAUhFnZXRDaGFubm'
     'VsUmVxdWVzdBJHChRnZXRfY2hhbm5lbF9yZXNwb25zZRgCIAEoCzITLm1lc2h0YXN0aWMuQ2hh'
-    'bm5lbEgAUhJnZXRDaGFubmVsUmVzcG9uc2USLAoRZ2V0X3JhZGlvX3JlcXVlc3QYAyABKAhIAF'
-    'IPZ2V0UmFkaW9SZXF1ZXN0EkcKEmdldF9yYWRpb19yZXNwb25zZRgEIAEoCzIXLm1lc2h0YXN0'
-    'aWMuUmFkaW9Db25maWdIAFIQZ2V0UmFkaW9SZXNwb25zZRIsChFnZXRfb3duZXJfcmVxdWVzdB'
-    'gFIAEoCEgAUg9nZXRPd25lclJlcXVlc3QSQAoSZ2V0X293bmVyX3Jlc3BvbnNlGAYgASgLMhAu'
-    'bWVzaHRhc3RpYy5Vc2VySABSEGdldE93bmVyUmVzcG9uc2USLwoJc2V0X293bmVyGAcgASgLMh'
-    'AubWVzaHRhc3RpYy5Vc2VySABSCHNldE93bmVyEjYKC3NldF9jaGFubmVsGAggASgLMhMubWVz'
-    'aHRhc3RpYy5DaGFubmVsSABSCnNldENoYW5uZWwSNgoJc2V0X3JhZGlvGAkgASgLMhcubWVzaH'
-    'Rhc3RpYy5SYWRpb0NvbmZpZ0gAUghzZXRSYWRpb0IRCg9wYXlsb2FkX3ZhcmlhbnQ=');
+    'bm5lbEgAUhJnZXRDaGFubmVsUmVzcG9uc2USLAoRZ2V0X293bmVyX3JlcXVlc3QYAyABKAhIAF'
+    'IPZ2V0T3duZXJSZXF1ZXN0EkAKEmdldF9vd25lcl9yZXNwb25zZRgEIAEoCzIQLm1lc2h0YXN0'
+    'aWMuVXNlckgAUhBnZXRPd25lclJlc3BvbnNlEi4KEmdldF9jb25maWdfcmVxdWVzdBgFIAEoDU'
+    'gAUhBnZXRDb25maWdSZXF1ZXN0EkQKE2dldF9jb25maWdfcmVzcG9uc2UYBiABKAsyEi5tZXNo'
+    'dGFzdGljLkNvbmZpZ0gAUhFnZXRDb25maWdSZXNwb25zZRI7ChlnZXRfbW9kdWxlX2NvbmZpZ1'
+    '9yZXF1ZXN0GAcgASgNSABSFmdldE1vZHVsZUNvbmZpZ1JlcXVlc3QSVwoaZ2V0X21vZHVsZV9j'
+    'b25maWdfcmVzcG9uc2UYCCABKAsyGC5tZXNodGFzdGljLk1vZHVsZUNvbmZpZ0gAUhdnZXRNb2'
+    'R1bGVDb25maWdSZXNwb25zZRIvCglzZXRfb3duZXIYICABKAsyEC5tZXNodGFzdGljLlVzZXJI'
+    'AFIIc2V0T3duZXISNgoLc2V0X2NoYW5uZWwYISABKAsyEy5tZXNodGFzdGljLkNoYW5uZWxIAF'
+    'IKc2V0Q2hhbm5lbBIzCgpzZXRfY29uZmlnGCIgASgLMhIubWVzaHRhc3RpYy5Db25maWdIAFIJ'
+    'c2V0Q29uZmlnEkYKEXNldF9tb2R1bGVfY29uZmlnGCMgASgLMhgubWVzaHRhc3RpYy5Nb2R1bG'
+    'VDb25maWdIAFIPc2V0TW9kdWxlQ29uZmlnEjAKE2JlZ2luX2VkaXRfc2V0dGluZ3MYQCABKAhI'
+    'AFIRYmVnaW5FZGl0U2V0dGluZ3MSMgoUY29tbWl0X2VkaXRfc2V0dGluZ3MYQSABKAhIAFISY2'
+    '9tbWl0RWRpdFNldHRpbmdzEicKDnJlYm9vdF9zZWNvbmRzGGEgASgFSABSDXJlYm9vdFNlY29u'
+    'ZHMSKwoQc2h1dGRvd25fc2Vjb25kcxhiIAEoBUgAUg9zaHV0ZG93blNlY29uZHMSMgoUZmFjdG'
+    '9yeV9yZXNldF9jb25maWcYYyABKAVIAFISZmFjdG9yeVJlc2V0Q29uZmlnEiMKDG5vZGVkYl9y'
+    'ZXNldBhkIAEoCEgAUgtub2RlZGJSZXNldEIRCg9wYXlsb2FkX3ZhcmlhbnQ=');
 
-@$core.Deprecated('Use radioConfigDescriptor instead')
-const RadioConfig$json = {
-  '1': 'RadioConfig',
+@$core.Deprecated('Use configDescriptor instead')
+const Config$json = {
+  '1': 'Config',
   '2': [
     {
-      '1': 'lora',
+      '1': 'device',
       '3': 1,
       '4': 1,
       '5': 11,
-      '6': '.meshtastic.RadioConfig.LoRaConfig',
+      '6': '.meshtastic.Config.DeviceConfig',
+      '9': 0,
+      '10': 'device'
+    },
+    {
+      '1': 'position',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.Config.PositionConfig',
+      '9': 0,
+      '10': 'position'
+    },
+    {
+      '1': 'power',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.Config.PowerConfig',
+      '9': 0,
+      '10': 'power'
+    },
+    {
+      '1': 'network',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.Config.NetworkConfig',
+      '9': 0,
+      '10': 'network'
+    },
+    {
+      '1': 'display',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.Config.DisplayConfig',
+      '9': 0,
+      '10': 'display'
+    },
+    {
+      '1': 'lora',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.Config.LoRaConfig',
+      '9': 0,
       '10': 'lora'
     },
+    {
+      '1': 'bluetooth',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.Config.BluetoothConfig',
+      '9': 0,
+      '10': 'bluetooth'
+    },
+    {
+      '1': 'security',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.Config.SecurityConfig',
+      '9': 0,
+      '10': 'security'
+    },
   ],
-  '3': [RadioConfig_LoRaConfig$json],
+  '3': [
+    Config_DeviceConfig$json,
+    Config_PositionConfig$json,
+    Config_PowerConfig$json,
+    Config_NetworkConfig$json,
+    Config_DisplayConfig$json,
+    Config_LoRaConfig$json,
+    Config_BluetoothConfig$json,
+    Config_SecurityConfig$json
+  ],
+  '8': [
+    {'1': 'payload_variant'},
+  ],
 };
 
-@$core.Deprecated('Use radioConfigDescriptor instead')
-const RadioConfig_LoRaConfig$json = {
+@$core.Deprecated('Use configDescriptor instead')
+const Config_DeviceConfig$json = {
+  '1': 'DeviceConfig',
+  '2': [
+    {'1': 'role', '3': 1, '4': 1, '5': 9, '10': 'role'},
+  ],
+};
+
+@$core.Deprecated('Use configDescriptor instead')
+const Config_PositionConfig$json = {
+  '1': 'PositionConfig',
+  '2': [
+    {'1': 'gps_enabled', '3': 1, '4': 1, '5': 8, '10': 'gpsEnabled'},
+  ],
+};
+
+@$core.Deprecated('Use configDescriptor instead')
+const Config_PowerConfig$json = {
+  '1': 'PowerConfig',
+  '2': [
+    {'1': 'is_power_saving', '3': 1, '4': 1, '5': 8, '10': 'isPowerSaving'},
+  ],
+};
+
+@$core.Deprecated('Use configDescriptor instead')
+const Config_NetworkConfig$json = {
+  '1': 'NetworkConfig',
+  '2': [
+    {'1': 'wifi_enabled', '3': 1, '4': 1, '5': 8, '10': 'wifiEnabled'},
+  ],
+};
+
+@$core.Deprecated('Use configDescriptor instead')
+const Config_DisplayConfig$json = {
+  '1': 'DisplayConfig',
+  '2': [
+    {'1': 'screen_on_secs', '3': 1, '4': 1, '5': 13, '10': 'screenOnSecs'},
+  ],
+};
+
+@$core.Deprecated('Use configDescriptor instead')
+const Config_LoRaConfig$json = {
   '1': 'LoRaConfig',
   '2': [
     {'1': 'use_preset', '3': 1, '4': 1, '5': 8, '10': 'usePreset'},
@@ -708,14 +907,230 @@ const RadioConfig_LoRaConfig$json = {
   ],
 };
 
-/// Descriptor for `RadioConfig`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List radioConfigDescriptor = $convert.base64Decode(
-    'CgtSYWRpb0NvbmZpZxI2CgRsb3JhGAEgASgLMiIubWVzaHRhc3RpYy5SYWRpb0NvbmZpZy5Mb1'
-    'JhQ29uZmlnUgRsb3JhGv0CCgpMb1JhQ29uZmlnEh0KCnVzZV9wcmVzZXQYASABKAhSCXVzZVBy'
-    'ZXNldBI6Cgxtb2RlbV9wcmVzZXQYAiABKA4yFy5tZXNodGFzdGljLk1vZGVtUHJlc2V0Ugttb2'
-    'RlbVByZXNldBIcCgliYW5kd2lkdGgYAyABKA1SCWJhbmR3aWR0aBIjCg1zcHJlYWRfZmFjdG9y'
-    'GAQgASgNUgxzcHJlYWRGYWN0b3ISHwoLY29kaW5nX3JhdGUYBSABKA1SCmNvZGluZ1JhdGUSKQ'
-    'oQZnJlcXVlbmN5X29mZnNldBgGIAEoAlIPZnJlcXVlbmN5T2Zmc2V0Ei4KBnJlZ2lvbhgHIAEo'
-    'DjIWLm1lc2h0YXN0aWMuUmVnaW9uQ29kZVIGcmVnaW9uEhsKCWhvcF9saW1pdBgIIAEoDVIIaG'
-    '9wTGltaXQSHQoKdHhfZW5hYmxlZBgJIAEoCFIJdHhFbmFibGVkEhkKCHR4X3Bvd2VyGAogASgF'
-    'Ugd0eFBvd2Vy');
+@$core.Deprecated('Use configDescriptor instead')
+const Config_BluetoothConfig$json = {
+  '1': 'BluetoothConfig',
+  '2': [
+    {'1': 'enabled', '3': 1, '4': 1, '5': 8, '10': 'enabled'},
+  ],
+};
+
+@$core.Deprecated('Use configDescriptor instead')
+const Config_SecurityConfig$json = {
+  '1': 'SecurityConfig',
+  '2': [
+    {'1': 'public_key', '3': 1, '4': 1, '5': 12, '10': 'publicKey'},
+    {'1': 'private_key', '3': 2, '4': 1, '5': 12, '10': 'privateKey'},
+  ],
+};
+
+/// Descriptor for `Config`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List configDescriptor = $convert.base64Decode(
+    'CgZDb25maWcSOQoGZGV2aWNlGAEgASgLMh8ubWVzaHRhc3RpYy5Db25maWcuRGV2aWNlQ29uZm'
+    'lnSABSBmRldmljZRI/Cghwb3NpdGlvbhgCIAEoCzIhLm1lc2h0YXN0aWMuQ29uZmlnLlBvc2l0'
+    'aW9uQ29uZmlnSABSCHBvc2l0aW9uEjYKBXBvd2VyGAMgASgLMh4ubWVzaHRhc3RpYy5Db25maW'
+    'cuUG93ZXJDb25maWdIAFIFcG93ZXISPAoHbmV0d29yaxgEIAEoCzIgLm1lc2h0YXN0aWMuQ29u'
+    'ZmlnLk5ldHdvcmtDb25maWdIAFIHbmV0d29yaxI8CgdkaXNwbGF5GAUgASgLMiAubWVzaHRhc3'
+    'RpYy5Db25maWcuRGlzcGxheUNvbmZpZ0gAUgdkaXNwbGF5EjMKBGxvcmEYBiABKAsyHS5tZXNo'
+    'dGFzdGljLkNvbmZpZy5Mb1JhQ29uZmlnSABSBGxvcmESQgoJYmx1ZXRvb3RoGAcgASgLMiIubW'
+    'VzaHRhc3RpYy5Db25maWcuQmx1ZXRvb3RoQ29uZmlnSABSCWJsdWV0b290aBI/CghzZWN1cml0'
+    'eRgIIAEoCzIhLm1lc2h0YXN0aWMuQ29uZmlnLlNlY3VyaXR5Q29uZmlnSABSCHNlY3VyaXR5Gi'
+    'IKDERldmljZUNvbmZpZxISCgRyb2xlGAEgASgJUgRyb2xlGjEKDlBvc2l0aW9uQ29uZmlnEh8K'
+    'C2dwc19lbmFibGVkGAEgASgIUgpncHNFbmFibGVkGjUKC1Bvd2VyQ29uZmlnEiYKD2lzX3Bvd2'
+    'VyX3NhdmluZxgBIAEoCFINaXNQb3dlclNhdmluZxoyCg1OZXR3b3JrQ29uZmlnEiEKDHdpZmlf'
+    'ZW5hYmxlZBgBIAEoCFILd2lmaUVuYWJsZWQaNQoNRGlzcGxheUNvbmZpZxIkCg5zY3JlZW5fb2'
+    '5fc2VjcxgBIAEoDVIMc2NyZWVuT25TZWNzGv0CCgpMb1JhQ29uZmlnEh0KCnVzZV9wcmVzZXQY'
+    'ASABKAhSCXVzZVByZXNldBI6Cgxtb2RlbV9wcmVzZXQYAiABKA4yFy5tZXNodGFzdGljLk1vZG'
+    'VtUHJlc2V0Ugttb2RlbVByZXNldBIcCgliYW5kd2lkdGgYAyABKA1SCWJhbmR3aWR0aBIjCg1z'
+    'cHJlYWRfZmFjdG9yGAQgASgNUgxzcHJlYWRGYWN0b3ISHwoLY29kaW5nX3JhdGUYBSABKA1SCm'
+    'NvZGluZ1JhdGUSKQoQZnJlcXVlbmN5X29mZnNldBgGIAEoAlIPZnJlcXVlbmN5T2Zmc2V0Ei4K'
+    'BnJlZ2lvbhgHIAEoDjIWLm1lc2h0YXN0aWMuUmVnaW9uQ29kZVIGcmVnaW9uEhsKCWhvcF9saW'
+    '1pdBgIIAEoDVIIaG9wTGltaXQSHQoKdHhfZW5hYmxlZBgJIAEoCFIJdHhFbmFibGVkEhkKCHR4'
+    'X3Bvd2VyGAogASgFUgd0eFBvd2VyGisKD0JsdWV0b290aENvbmZpZxIYCgdlbmFibGVkGAEgAS'
+    'gIUgdlbmFibGVkGlAKDlNlY3VyaXR5Q29uZmlnEh0KCnB1YmxpY19rZXkYASABKAxSCXB1Ymxp'
+    'Y0tleRIfCgtwcml2YXRlX2tleRgCIAEoDFIKcHJpdmF0ZUtleUIRCg9wYXlsb2FkX3Zhcmlhbn'
+    'Q=');
+
+@$core.Deprecated('Use moduleConfigDescriptor instead')
+const ModuleConfig$json = {
+  '1': 'ModuleConfig',
+  '2': [
+    {
+      '1': 'mqtt',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.ModuleConfig.MQTTConfig',
+      '9': 0,
+      '10': 'mqtt'
+    },
+    {
+      '1': 'serial',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.ModuleConfig.SerialConfig',
+      '9': 0,
+      '10': 'serial'
+    },
+    {
+      '1': 'ext_notification',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.ModuleConfig.ExternalNotificationConfig',
+      '9': 0,
+      '10': 'extNotification'
+    },
+    {
+      '1': 'store_forward',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.ModuleConfig.StoreForwardConfig',
+      '9': 0,
+      '10': 'storeForward'
+    },
+    {
+      '1': 'range_test',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.ModuleConfig.RangeTestConfig',
+      '9': 0,
+      '10': 'rangeTest'
+    },
+    {
+      '1': 'telemetry',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.ModuleConfig.TelemetryConfig',
+      '9': 0,
+      '10': 'telemetry'
+    },
+    {
+      '1': 'canned_message',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.ModuleConfig.CannedMessageConfig',
+      '9': 0,
+      '10': 'cannedMessage'
+    },
+    {
+      '1': 'audio',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.ModuleConfig.AudioConfig',
+      '9': 0,
+      '10': 'audio'
+    },
+  ],
+  '3': [
+    ModuleConfig_MQTTConfig$json,
+    ModuleConfig_SerialConfig$json,
+    ModuleConfig_ExternalNotificationConfig$json,
+    ModuleConfig_StoreForwardConfig$json,
+    ModuleConfig_RangeTestConfig$json,
+    ModuleConfig_TelemetryConfig$json,
+    ModuleConfig_CannedMessageConfig$json,
+    ModuleConfig_AudioConfig$json
+  ],
+  '8': [
+    {'1': 'payload_variant'},
+  ],
+};
+
+@$core.Deprecated('Use moduleConfigDescriptor instead')
+const ModuleConfig_MQTTConfig$json = {
+  '1': 'MQTTConfig',
+  '2': [
+    {'1': 'enabled', '3': 1, '4': 1, '5': 8, '10': 'enabled'},
+  ],
+};
+
+@$core.Deprecated('Use moduleConfigDescriptor instead')
+const ModuleConfig_SerialConfig$json = {
+  '1': 'SerialConfig',
+  '2': [
+    {'1': 'enabled', '3': 1, '4': 1, '5': 8, '10': 'enabled'},
+  ],
+};
+
+@$core.Deprecated('Use moduleConfigDescriptor instead')
+const ModuleConfig_ExternalNotificationConfig$json = {
+  '1': 'ExternalNotificationConfig',
+  '2': [
+    {'1': 'enabled', '3': 1, '4': 1, '5': 8, '10': 'enabled'},
+  ],
+};
+
+@$core.Deprecated('Use moduleConfigDescriptor instead')
+const ModuleConfig_StoreForwardConfig$json = {
+  '1': 'StoreForwardConfig',
+  '2': [
+    {'1': 'enabled', '3': 1, '4': 1, '5': 8, '10': 'enabled'},
+  ],
+};
+
+@$core.Deprecated('Use moduleConfigDescriptor instead')
+const ModuleConfig_RangeTestConfig$json = {
+  '1': 'RangeTestConfig',
+  '2': [
+    {'1': 'enabled', '3': 1, '4': 1, '5': 8, '10': 'enabled'},
+  ],
+};
+
+@$core.Deprecated('Use moduleConfigDescriptor instead')
+const ModuleConfig_TelemetryConfig$json = {
+  '1': 'TelemetryConfig',
+  '2': [
+    {
+      '1': 'device_update_interval',
+      '3': 1,
+      '4': 1,
+      '5': 13,
+      '10': 'deviceUpdateInterval'
+    },
+  ],
+};
+
+@$core.Deprecated('Use moduleConfigDescriptor instead')
+const ModuleConfig_CannedMessageConfig$json = {
+  '1': 'CannedMessageConfig',
+  '2': [
+    {'1': 'enabled', '3': 1, '4': 1, '5': 8, '10': 'enabled'},
+  ],
+};
+
+@$core.Deprecated('Use moduleConfigDescriptor instead')
+const ModuleConfig_AudioConfig$json = {
+  '1': 'AudioConfig',
+  '2': [
+    {'1': 'codec2_enabled', '3': 1, '4': 1, '5': 8, '10': 'codec2Enabled'},
+  ],
+};
+
+/// Descriptor for `ModuleConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List moduleConfigDescriptor = $convert.base64Decode(
+    'CgxNb2R1bGVDb25maWcSOQoEbXF0dBgBIAEoCzIjLm1lc2h0YXN0aWMuTW9kdWxlQ29uZmlnLk'
+    '1RVFRDb25maWdIAFIEbXF0dBI/CgZzZXJpYWwYAiABKAsyJS5tZXNodGFzdGljLk1vZHVsZUNv'
+    'bmZpZy5TZXJpYWxDb25maWdIAFIGc2VyaWFsEmAKEGV4dF9ub3RpZmljYXRpb24YAyABKAsyMy'
+    '5tZXNodGFzdGljLk1vZHVsZUNvbmZpZy5FeHRlcm5hbE5vdGlmaWNhdGlvbkNvbmZpZ0gAUg9l'
+    'eHROb3RpZmljYXRpb24SUgoNc3RvcmVfZm9yd2FyZBgEIAEoCzIrLm1lc2h0YXN0aWMuTW9kdW'
+    'xlQ29uZmlnLlN0b3JlRm9yd2FyZENvbmZpZ0gAUgxzdG9yZUZvcndhcmQSSQoKcmFuZ2VfdGVz'
+    'dBgFIAEoCzIoLm1lc2h0YXN0aWMuTW9kdWxlQ29uZmlnLlJhbmdlVGVzdENvbmZpZ0gAUglyYW'
+    '5nZVRlc3QSSAoJdGVsZW1ldHJ5GAYgASgLMigubWVzaHRhc3RpYy5Nb2R1bGVDb25maWcuVGVs'
+    'ZW1ldHJ5Q29uZmlnSABSCXRlbGVtZXRyeRJVCg5jYW5uZWRfbWVzc2FnZRgHIAEoCzIsLm1lc2'
+    'h0YXN0aWMuTW9kdWxlQ29uZmlnLkNhbm5lZE1lc3NhZ2VDb25maWdIAFINY2FubmVkTWVzc2Fn'
+    'ZRI8CgVhdWRpbxgIIAEoCzIkLm1lc2h0YXN0aWMuTW9kdWxlQ29uZmlnLkF1ZGlvQ29uZmlnSA'
+    'BSBWF1ZGlvGiYKCk1RVFRDb25maWcSGAoHZW5hYmxlZBgBIAEoCFIHZW5hYmxlZBooCgxTZXJp'
+    'YWxDb25maWcSGAoHZW5hYmxlZBgBIAEoCFIHZW5hYmxlZBo2ChpFeHRlcm5hbE5vdGlmaWNhdG'
+    'lvbkNvbmZpZxIYCgdlbmFibGVkGAEgASgIUgdlbmFibGVkGi4KElN0b3JlRm9yd2FyZENvbmZp'
+    'ZxIYCgdlbmFibGVkGAEgASgIUgdlbmFibGVkGisKD1JhbmdlVGVzdENvbmZpZxIYCgdlbmFibG'
+    'VkGAEgASgIUgdlbmFibGVkGkcKD1RlbGVtZXRyeUNvbmZpZxI0ChZkZXZpY2VfdXBkYXRlX2lu'
+    'dGVydmFsGAEgASgNUhRkZXZpY2VVcGRhdGVJbnRlcnZhbBovChNDYW5uZWRNZXNzYWdlQ29uZm'
+    'lnEhgKB2VuYWJsZWQYASABKAhSB2VuYWJsZWQaNAoLQXVkaW9Db25maWcSJQoOY29kZWMyX2Vu'
+    'YWJsZWQYASABKAhSDWNvZGVjMkVuYWJsZWRCEQoPcGF5bG9hZF92YXJpYW50');

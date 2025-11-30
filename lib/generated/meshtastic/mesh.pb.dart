@@ -1364,13 +1364,22 @@ class ModuleSettings extends $pb.GeneratedMessage {
 enum AdminMessage_PayloadVariant {
   getChannelRequest,
   getChannelResponse,
-  getRadioRequest,
-  getRadioResponse,
   getOwnerRequest,
   getOwnerResponse,
+  getConfigRequest,
+  getConfigResponse,
+  getModuleConfigRequest,
+  getModuleConfigResponse,
   setOwner,
   setChannel,
-  setRadio,
+  setConfig,
+  setModuleConfig,
+  beginEditSettings,
+  commitEditSettings,
+  rebootSeconds,
+  shutdownSeconds,
+  factoryResetConfig,
+  nodedbReset,
   notSet
 }
 
@@ -1379,25 +1388,47 @@ class AdminMessage extends $pb.GeneratedMessage {
   factory AdminMessage({
     $core.int? getChannelRequest,
     Channel? getChannelResponse,
-    $core.bool? getRadioRequest,
-    RadioConfig? getRadioResponse,
     $core.bool? getOwnerRequest,
     User? getOwnerResponse,
+    $core.int? getConfigRequest,
+    Config? getConfigResponse,
+    $core.int? getModuleConfigRequest,
+    ModuleConfig? getModuleConfigResponse,
     User? setOwner,
     Channel? setChannel,
-    RadioConfig? setRadio,
+    Config? setConfig,
+    ModuleConfig? setModuleConfig,
+    $core.bool? beginEditSettings,
+    $core.bool? commitEditSettings,
+    $core.int? rebootSeconds,
+    $core.int? shutdownSeconds,
+    $core.int? factoryResetConfig,
+    $core.bool? nodedbReset,
   }) {
     final result = create();
     if (getChannelRequest != null) result.getChannelRequest = getChannelRequest;
     if (getChannelResponse != null)
       result.getChannelResponse = getChannelResponse;
-    if (getRadioRequest != null) result.getRadioRequest = getRadioRequest;
-    if (getRadioResponse != null) result.getRadioResponse = getRadioResponse;
     if (getOwnerRequest != null) result.getOwnerRequest = getOwnerRequest;
     if (getOwnerResponse != null) result.getOwnerResponse = getOwnerResponse;
+    if (getConfigRequest != null) result.getConfigRequest = getConfigRequest;
+    if (getConfigResponse != null) result.getConfigResponse = getConfigResponse;
+    if (getModuleConfigRequest != null)
+      result.getModuleConfigRequest = getModuleConfigRequest;
+    if (getModuleConfigResponse != null)
+      result.getModuleConfigResponse = getModuleConfigResponse;
     if (setOwner != null) result.setOwner = setOwner;
     if (setChannel != null) result.setChannel = setChannel;
-    if (setRadio != null) result.setRadio = setRadio;
+    if (setConfig != null) result.setConfig = setConfig;
+    if (setModuleConfig != null) result.setModuleConfig = setModuleConfig;
+    if (beginEditSettings != null) result.beginEditSettings = beginEditSettings;
+    if (commitEditSettings != null)
+      result.commitEditSettings = commitEditSettings;
+    if (rebootSeconds != null) result.rebootSeconds = rebootSeconds;
+    if (shutdownSeconds != null) result.shutdownSeconds = shutdownSeconds;
+    if (factoryResetConfig != null)
+      result.factoryResetConfig = factoryResetConfig;
+    if (nodedbReset != null) result.nodedbReset = nodedbReset;
     return result;
   }
 
@@ -1414,35 +1445,57 @@ class AdminMessage extends $pb.GeneratedMessage {
       _AdminMessage_PayloadVariantByTag = {
     1: AdminMessage_PayloadVariant.getChannelRequest,
     2: AdminMessage_PayloadVariant.getChannelResponse,
-    3: AdminMessage_PayloadVariant.getRadioRequest,
-    4: AdminMessage_PayloadVariant.getRadioResponse,
-    5: AdminMessage_PayloadVariant.getOwnerRequest,
-    6: AdminMessage_PayloadVariant.getOwnerResponse,
-    7: AdminMessage_PayloadVariant.setOwner,
-    8: AdminMessage_PayloadVariant.setChannel,
-    9: AdminMessage_PayloadVariant.setRadio,
+    3: AdminMessage_PayloadVariant.getOwnerRequest,
+    4: AdminMessage_PayloadVariant.getOwnerResponse,
+    5: AdminMessage_PayloadVariant.getConfigRequest,
+    6: AdminMessage_PayloadVariant.getConfigResponse,
+    7: AdminMessage_PayloadVariant.getModuleConfigRequest,
+    8: AdminMessage_PayloadVariant.getModuleConfigResponse,
+    32: AdminMessage_PayloadVariant.setOwner,
+    33: AdminMessage_PayloadVariant.setChannel,
+    34: AdminMessage_PayloadVariant.setConfig,
+    35: AdminMessage_PayloadVariant.setModuleConfig,
+    64: AdminMessage_PayloadVariant.beginEditSettings,
+    65: AdminMessage_PayloadVariant.commitEditSettings,
+    97: AdminMessage_PayloadVariant.rebootSeconds,
+    98: AdminMessage_PayloadVariant.shutdownSeconds,
+    99: AdminMessage_PayloadVariant.factoryResetConfig,
+    100: AdminMessage_PayloadVariant.nodedbReset,
     0: AdminMessage_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'AdminMessage',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 32, 33, 34, 35, 64, 65, 97, 98, 99, 100])
     ..aI(1, _omitFieldNames ? '' : 'getChannelRequest',
         fieldType: $pb.PbFieldType.OU3)
     ..aOM<Channel>(2, _omitFieldNames ? '' : 'getChannelResponse',
         subBuilder: Channel.create)
-    ..aOB(3, _omitFieldNames ? '' : 'getRadioRequest')
-    ..aOM<RadioConfig>(4, _omitFieldNames ? '' : 'getRadioResponse',
-        subBuilder: RadioConfig.create)
-    ..aOB(5, _omitFieldNames ? '' : 'getOwnerRequest')
-    ..aOM<User>(6, _omitFieldNames ? '' : 'getOwnerResponse',
+    ..aOB(3, _omitFieldNames ? '' : 'getOwnerRequest')
+    ..aOM<User>(4, _omitFieldNames ? '' : 'getOwnerResponse',
         subBuilder: User.create)
-    ..aOM<User>(7, _omitFieldNames ? '' : 'setOwner', subBuilder: User.create)
-    ..aOM<Channel>(8, _omitFieldNames ? '' : 'setChannel',
+    ..aI(5, _omitFieldNames ? '' : 'getConfigRequest',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOM<Config>(6, _omitFieldNames ? '' : 'getConfigResponse',
+        subBuilder: Config.create)
+    ..aI(7, _omitFieldNames ? '' : 'getModuleConfigRequest',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOM<ModuleConfig>(8, _omitFieldNames ? '' : 'getModuleConfigResponse',
+        subBuilder: ModuleConfig.create)
+    ..aOM<User>(32, _omitFieldNames ? '' : 'setOwner', subBuilder: User.create)
+    ..aOM<Channel>(33, _omitFieldNames ? '' : 'setChannel',
         subBuilder: Channel.create)
-    ..aOM<RadioConfig>(9, _omitFieldNames ? '' : 'setRadio',
-        subBuilder: RadioConfig.create)
+    ..aOM<Config>(34, _omitFieldNames ? '' : 'setConfig',
+        subBuilder: Config.create)
+    ..aOM<ModuleConfig>(35, _omitFieldNames ? '' : 'setModuleConfig',
+        subBuilder: ModuleConfig.create)
+    ..aOB(64, _omitFieldNames ? '' : 'beginEditSettings')
+    ..aOB(65, _omitFieldNames ? '' : 'commitEditSettings')
+    ..aI(97, _omitFieldNames ? '' : 'rebootSeconds')
+    ..aI(98, _omitFieldNames ? '' : 'shutdownSeconds')
+    ..aI(99, _omitFieldNames ? '' : 'factoryResetConfig')
+    ..aOB(100, _omitFieldNames ? '' : 'nodedbReset')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1472,7 +1525,16 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
-  @$pb.TagNumber(9)
+  @$pb.TagNumber(32)
+  @$pb.TagNumber(33)
+  @$pb.TagNumber(34)
+  @$pb.TagNumber(35)
+  @$pb.TagNumber(64)
+  @$pb.TagNumber(65)
+  @$pb.TagNumber(97)
+  @$pb.TagNumber(98)
+  @$pb.TagNumber(99)
+  @$pb.TagNumber(100)
   AdminMessage_PayloadVariant whichPayloadVariant() =>
       _AdminMessage_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -1483,10 +1545,19 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
-  @$pb.TagNumber(9)
+  @$pb.TagNumber(32)
+  @$pb.TagNumber(33)
+  @$pb.TagNumber(34)
+  @$pb.TagNumber(35)
+  @$pb.TagNumber(64)
+  @$pb.TagNumber(65)
+  @$pb.TagNumber(97)
+  @$pb.TagNumber(98)
+  @$pb.TagNumber(99)
+  @$pb.TagNumber(100)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
-  /// Get channel request
+  /// Get channel request (index + 1, so 0 is never sent)
   @$pb.TagNumber(1)
   $core.int get getChannelRequest => $_getIZ(0);
   @$pb.TagNumber(1)
@@ -1508,90 +1579,455 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   Channel ensureGetChannelResponse() => $_ensure(1);
 
-  /// Get radio request
-  @$pb.TagNumber(3)
-  $core.bool get getRadioRequest => $_getBF(2);
-  @$pb.TagNumber(3)
-  set getRadioRequest($core.bool value) => $_setBool(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasGetRadioRequest() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearGetRadioRequest() => $_clearField(3);
-
-  /// Get radio response
-  @$pb.TagNumber(4)
-  RadioConfig get getRadioResponse => $_getN(3);
-  @$pb.TagNumber(4)
-  set getRadioResponse(RadioConfig value) => $_setField(4, value);
-  @$pb.TagNumber(4)
-  $core.bool hasGetRadioResponse() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearGetRadioResponse() => $_clearField(4);
-  @$pb.TagNumber(4)
-  RadioConfig ensureGetRadioResponse() => $_ensure(3);
-
   /// Get owner request
-  @$pb.TagNumber(5)
-  $core.bool get getOwnerRequest => $_getBF(4);
-  @$pb.TagNumber(5)
-  set getOwnerRequest($core.bool value) => $_setBool(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasGetOwnerRequest() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearGetOwnerRequest() => $_clearField(5);
+  @$pb.TagNumber(3)
+  $core.bool get getOwnerRequest => $_getBF(2);
+  @$pb.TagNumber(3)
+  set getOwnerRequest($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasGetOwnerRequest() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearGetOwnerRequest() => $_clearField(3);
 
   /// Get owner response
+  @$pb.TagNumber(4)
+  User get getOwnerResponse => $_getN(3);
+  @$pb.TagNumber(4)
+  set getOwnerResponse(User value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasGetOwnerResponse() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearGetOwnerResponse() => $_clearField(4);
+  @$pb.TagNumber(4)
+  User ensureGetOwnerResponse() => $_ensure(3);
+
+  /// Get config request
+  @$pb.TagNumber(5)
+  $core.int get getConfigRequest => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set getConfigRequest($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasGetConfigRequest() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearGetConfigRequest() => $_clearField(5);
+
+  /// Get config response
   @$pb.TagNumber(6)
-  User get getOwnerResponse => $_getN(5);
+  Config get getConfigResponse => $_getN(5);
   @$pb.TagNumber(6)
-  set getOwnerResponse(User value) => $_setField(6, value);
+  set getConfigResponse(Config value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasGetOwnerResponse() => $_has(5);
+  $core.bool hasGetConfigResponse() => $_has(5);
   @$pb.TagNumber(6)
-  void clearGetOwnerResponse() => $_clearField(6);
+  void clearGetConfigResponse() => $_clearField(6);
   @$pb.TagNumber(6)
-  User ensureGetOwnerResponse() => $_ensure(5);
+  Config ensureGetConfigResponse() => $_ensure(5);
+
+  /// Get module config request
+  @$pb.TagNumber(7)
+  $core.int get getModuleConfigRequest => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set getModuleConfigRequest($core.int value) => $_setUnsignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasGetModuleConfigRequest() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearGetModuleConfigRequest() => $_clearField(7);
+
+  /// Get module config response
+  @$pb.TagNumber(8)
+  ModuleConfig get getModuleConfigResponse => $_getN(7);
+  @$pb.TagNumber(8)
+  set getModuleConfigResponse(ModuleConfig value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasGetModuleConfigResponse() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearGetModuleConfigResponse() => $_clearField(8);
+  @$pb.TagNumber(8)
+  ModuleConfig ensureGetModuleConfigResponse() => $_ensure(7);
 
   /// Set owner
-  @$pb.TagNumber(7)
-  User get setOwner => $_getN(6);
-  @$pb.TagNumber(7)
-  set setOwner(User value) => $_setField(7, value);
-  @$pb.TagNumber(7)
-  $core.bool hasSetOwner() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearSetOwner() => $_clearField(7);
-  @$pb.TagNumber(7)
-  User ensureSetOwner() => $_ensure(6);
+  @$pb.TagNumber(32)
+  User get setOwner => $_getN(8);
+  @$pb.TagNumber(32)
+  set setOwner(User value) => $_setField(32, value);
+  @$pb.TagNumber(32)
+  $core.bool hasSetOwner() => $_has(8);
+  @$pb.TagNumber(32)
+  void clearSetOwner() => $_clearField(32);
+  @$pb.TagNumber(32)
+  User ensureSetOwner() => $_ensure(8);
 
   /// Set channel
-  @$pb.TagNumber(8)
-  Channel get setChannel => $_getN(7);
-  @$pb.TagNumber(8)
-  set setChannel(Channel value) => $_setField(8, value);
-  @$pb.TagNumber(8)
-  $core.bool hasSetChannel() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearSetChannel() => $_clearField(8);
-  @$pb.TagNumber(8)
-  Channel ensureSetChannel() => $_ensure(7);
+  @$pb.TagNumber(33)
+  Channel get setChannel => $_getN(9);
+  @$pb.TagNumber(33)
+  set setChannel(Channel value) => $_setField(33, value);
+  @$pb.TagNumber(33)
+  $core.bool hasSetChannel() => $_has(9);
+  @$pb.TagNumber(33)
+  void clearSetChannel() => $_clearField(33);
+  @$pb.TagNumber(33)
+  Channel ensureSetChannel() => $_ensure(9);
 
-  /// Set radio
-  @$pb.TagNumber(9)
-  RadioConfig get setRadio => $_getN(8);
-  @$pb.TagNumber(9)
-  set setRadio(RadioConfig value) => $_setField(9, value);
-  @$pb.TagNumber(9)
-  $core.bool hasSetRadio() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearSetRadio() => $_clearField(9);
-  @$pb.TagNumber(9)
-  RadioConfig ensureSetRadio() => $_ensure(8);
+  /// Set config
+  @$pb.TagNumber(34)
+  Config get setConfig => $_getN(10);
+  @$pb.TagNumber(34)
+  set setConfig(Config value) => $_setField(34, value);
+  @$pb.TagNumber(34)
+  $core.bool hasSetConfig() => $_has(10);
+  @$pb.TagNumber(34)
+  void clearSetConfig() => $_clearField(34);
+  @$pb.TagNumber(34)
+  Config ensureSetConfig() => $_ensure(10);
+
+  /// Set module config
+  @$pb.TagNumber(35)
+  ModuleConfig get setModuleConfig => $_getN(11);
+  @$pb.TagNumber(35)
+  set setModuleConfig(ModuleConfig value) => $_setField(35, value);
+  @$pb.TagNumber(35)
+  $core.bool hasSetModuleConfig() => $_has(11);
+  @$pb.TagNumber(35)
+  void clearSetModuleConfig() => $_clearField(35);
+  @$pb.TagNumber(35)
+  ModuleConfig ensureSetModuleConfig() => $_ensure(11);
+
+  /// Begin edit settings transaction
+  @$pb.TagNumber(64)
+  $core.bool get beginEditSettings => $_getBF(12);
+  @$pb.TagNumber(64)
+  set beginEditSettings($core.bool value) => $_setBool(12, value);
+  @$pb.TagNumber(64)
+  $core.bool hasBeginEditSettings() => $_has(12);
+  @$pb.TagNumber(64)
+  void clearBeginEditSettings() => $_clearField(64);
+
+  /// Commit edit settings transaction
+  @$pb.TagNumber(65)
+  $core.bool get commitEditSettings => $_getBF(13);
+  @$pb.TagNumber(65)
+  set commitEditSettings($core.bool value) => $_setBool(13, value);
+  @$pb.TagNumber(65)
+  $core.bool hasCommitEditSettings() => $_has(13);
+  @$pb.TagNumber(65)
+  void clearCommitEditSettings() => $_clearField(65);
+
+  /// Reboot in N seconds
+  @$pb.TagNumber(97)
+  $core.int get rebootSeconds => $_getIZ(14);
+  @$pb.TagNumber(97)
+  set rebootSeconds($core.int value) => $_setSignedInt32(14, value);
+  @$pb.TagNumber(97)
+  $core.bool hasRebootSeconds() => $_has(14);
+  @$pb.TagNumber(97)
+  void clearRebootSeconds() => $_clearField(97);
+
+  /// Shutdown in N seconds
+  @$pb.TagNumber(98)
+  $core.int get shutdownSeconds => $_getIZ(15);
+  @$pb.TagNumber(98)
+  set shutdownSeconds($core.int value) => $_setSignedInt32(15, value);
+  @$pb.TagNumber(98)
+  $core.bool hasShutdownSeconds() => $_has(15);
+  @$pb.TagNumber(98)
+  void clearShutdownSeconds() => $_clearField(98);
+
+  /// Factory reset config
+  @$pb.TagNumber(99)
+  $core.int get factoryResetConfig => $_getIZ(16);
+  @$pb.TagNumber(99)
+  set factoryResetConfig($core.int value) => $_setSignedInt32(16, value);
+  @$pb.TagNumber(99)
+  $core.bool hasFactoryResetConfig() => $_has(16);
+  @$pb.TagNumber(99)
+  void clearFactoryResetConfig() => $_clearField(99);
+
+  /// Reset nodedb
+  @$pb.TagNumber(100)
+  $core.bool get nodedbReset => $_getBF(17);
+  @$pb.TagNumber(100)
+  set nodedbReset($core.bool value) => $_setBool(17, value);
+  @$pb.TagNumber(100)
+  $core.bool hasNodedbReset() => $_has(17);
+  @$pb.TagNumber(100)
+  void clearNodedbReset() => $_clearField(100);
 }
 
-/// LoRa settings
-class RadioConfig_LoRaConfig extends $pb.GeneratedMessage {
-  factory RadioConfig_LoRaConfig({
+class Config_DeviceConfig extends $pb.GeneratedMessage {
+  factory Config_DeviceConfig({
+    $core.String? role,
+  }) {
+    final result = create();
+    if (role != null) result.role = role;
+    return result;
+  }
+
+  Config_DeviceConfig._();
+
+  factory Config_DeviceConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Config_DeviceConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Config.DeviceConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'role')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Config_DeviceConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Config_DeviceConfig copyWith(void Function(Config_DeviceConfig) updates) =>
+      super.copyWith((message) => updates(message as Config_DeviceConfig))
+          as Config_DeviceConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Config_DeviceConfig create() => Config_DeviceConfig._();
+  @$core.override
+  Config_DeviceConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Config_DeviceConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Config_DeviceConfig>(create);
+  static Config_DeviceConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get role => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set role($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRole() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRole() => $_clearField(1);
+}
+
+class Config_PositionConfig extends $pb.GeneratedMessage {
+  factory Config_PositionConfig({
+    $core.bool? gpsEnabled,
+  }) {
+    final result = create();
+    if (gpsEnabled != null) result.gpsEnabled = gpsEnabled;
+    return result;
+  }
+
+  Config_PositionConfig._();
+
+  factory Config_PositionConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Config_PositionConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Config.PositionConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'gpsEnabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Config_PositionConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Config_PositionConfig copyWith(
+          void Function(Config_PositionConfig) updates) =>
+      super.copyWith((message) => updates(message as Config_PositionConfig))
+          as Config_PositionConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Config_PositionConfig create() => Config_PositionConfig._();
+  @$core.override
+  Config_PositionConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Config_PositionConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Config_PositionConfig>(create);
+  static Config_PositionConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get gpsEnabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set gpsEnabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasGpsEnabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearGpsEnabled() => $_clearField(1);
+}
+
+class Config_PowerConfig extends $pb.GeneratedMessage {
+  factory Config_PowerConfig({
+    $core.bool? isPowerSaving,
+  }) {
+    final result = create();
+    if (isPowerSaving != null) result.isPowerSaving = isPowerSaving;
+    return result;
+  }
+
+  Config_PowerConfig._();
+
+  factory Config_PowerConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Config_PowerConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Config.PowerConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'isPowerSaving')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Config_PowerConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Config_PowerConfig copyWith(void Function(Config_PowerConfig) updates) =>
+      super.copyWith((message) => updates(message as Config_PowerConfig))
+          as Config_PowerConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Config_PowerConfig create() => Config_PowerConfig._();
+  @$core.override
+  Config_PowerConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Config_PowerConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Config_PowerConfig>(create);
+  static Config_PowerConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get isPowerSaving => $_getBF(0);
+  @$pb.TagNumber(1)
+  set isPowerSaving($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasIsPowerSaving() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearIsPowerSaving() => $_clearField(1);
+}
+
+class Config_NetworkConfig extends $pb.GeneratedMessage {
+  factory Config_NetworkConfig({
+    $core.bool? wifiEnabled,
+  }) {
+    final result = create();
+    if (wifiEnabled != null) result.wifiEnabled = wifiEnabled;
+    return result;
+  }
+
+  Config_NetworkConfig._();
+
+  factory Config_NetworkConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Config_NetworkConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Config.NetworkConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'wifiEnabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Config_NetworkConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Config_NetworkConfig copyWith(void Function(Config_NetworkConfig) updates) =>
+      super.copyWith((message) => updates(message as Config_NetworkConfig))
+          as Config_NetworkConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Config_NetworkConfig create() => Config_NetworkConfig._();
+  @$core.override
+  Config_NetworkConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Config_NetworkConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Config_NetworkConfig>(create);
+  static Config_NetworkConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get wifiEnabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set wifiEnabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasWifiEnabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearWifiEnabled() => $_clearField(1);
+}
+
+class Config_DisplayConfig extends $pb.GeneratedMessage {
+  factory Config_DisplayConfig({
+    $core.int? screenOnSecs,
+  }) {
+    final result = create();
+    if (screenOnSecs != null) result.screenOnSecs = screenOnSecs;
+    return result;
+  }
+
+  Config_DisplayConfig._();
+
+  factory Config_DisplayConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Config_DisplayConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Config.DisplayConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'screenOnSecs',
+        fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Config_DisplayConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Config_DisplayConfig copyWith(void Function(Config_DisplayConfig) updates) =>
+      super.copyWith((message) => updates(message as Config_DisplayConfig))
+          as Config_DisplayConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Config_DisplayConfig create() => Config_DisplayConfig._();
+  @$core.override
+  Config_DisplayConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Config_DisplayConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Config_DisplayConfig>(create);
+  static Config_DisplayConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get screenOnSecs => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set screenOnSecs($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasScreenOnSecs() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearScreenOnSecs() => $_clearField(1);
+}
+
+class Config_LoRaConfig extends $pb.GeneratedMessage {
+  factory Config_LoRaConfig({
     $core.bool? usePreset,
     ModemPreset? modemPreset,
     $core.int? bandwidth,
@@ -1617,17 +2053,17 @@ class RadioConfig_LoRaConfig extends $pb.GeneratedMessage {
     return result;
   }
 
-  RadioConfig_LoRaConfig._();
+  Config_LoRaConfig._();
 
-  factory RadioConfig_LoRaConfig.fromBuffer($core.List<$core.int> data,
+  factory Config_LoRaConfig.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory RadioConfig_LoRaConfig.fromJson($core.String json,
+  factory Config_LoRaConfig.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RadioConfig.LoRaConfig',
+      _omitMessageNames ? '' : 'Config.LoRaConfig',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'usePreset')
@@ -1647,26 +2083,24 @@ class RadioConfig_LoRaConfig extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RadioConfig_LoRaConfig clone() => deepCopy();
+  Config_LoRaConfig clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RadioConfig_LoRaConfig copyWith(
-          void Function(RadioConfig_LoRaConfig) updates) =>
-      super.copyWith((message) => updates(message as RadioConfig_LoRaConfig))
-          as RadioConfig_LoRaConfig;
+  Config_LoRaConfig copyWith(void Function(Config_LoRaConfig) updates) =>
+      super.copyWith((message) => updates(message as Config_LoRaConfig))
+          as Config_LoRaConfig;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static RadioConfig_LoRaConfig create() => RadioConfig_LoRaConfig._();
+  static Config_LoRaConfig create() => Config_LoRaConfig._();
   @$core.override
-  RadioConfig_LoRaConfig createEmptyInstance() => create();
+  Config_LoRaConfig createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static RadioConfig_LoRaConfig getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RadioConfig_LoRaConfig>(create);
-  static RadioConfig_LoRaConfig? _defaultInstance;
+  static Config_LoRaConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Config_LoRaConfig>(create);
+  static Config_LoRaConfig? _defaultInstance;
 
-  /// Use preset
   @$pb.TagNumber(1)
   $core.bool get usePreset => $_getBF(0);
   @$pb.TagNumber(1)
@@ -1676,7 +2110,6 @@ class RadioConfig_LoRaConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearUsePreset() => $_clearField(1);
 
-  /// Modem preset
   @$pb.TagNumber(2)
   ModemPreset get modemPreset => $_getN(1);
   @$pb.TagNumber(2)
@@ -1686,7 +2119,6 @@ class RadioConfig_LoRaConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearModemPreset() => $_clearField(2);
 
-  /// Bandwidth
   @$pb.TagNumber(3)
   $core.int get bandwidth => $_getIZ(2);
   @$pb.TagNumber(3)
@@ -1696,7 +2128,6 @@ class RadioConfig_LoRaConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearBandwidth() => $_clearField(3);
 
-  /// Spread factor
   @$pb.TagNumber(4)
   $core.int get spreadFactor => $_getIZ(3);
   @$pb.TagNumber(4)
@@ -1706,7 +2137,6 @@ class RadioConfig_LoRaConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   void clearSpreadFactor() => $_clearField(4);
 
-  /// Coding rate
   @$pb.TagNumber(5)
   $core.int get codingRate => $_getIZ(4);
   @$pb.TagNumber(5)
@@ -1716,7 +2146,6 @@ class RadioConfig_LoRaConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   void clearCodingRate() => $_clearField(5);
 
-  /// Frequency offset
   @$pb.TagNumber(6)
   $core.double get frequencyOffset => $_getN(5);
   @$pb.TagNumber(6)
@@ -1726,7 +2155,6 @@ class RadioConfig_LoRaConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   void clearFrequencyOffset() => $_clearField(6);
 
-  /// Region
   @$pb.TagNumber(7)
   RegionCode get region => $_getN(6);
   @$pb.TagNumber(7)
@@ -1736,7 +2164,6 @@ class RadioConfig_LoRaConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   void clearRegion() => $_clearField(7);
 
-  /// Hop limit
   @$pb.TagNumber(8)
   $core.int get hopLimit => $_getIZ(7);
   @$pb.TagNumber(8)
@@ -1746,7 +2173,6 @@ class RadioConfig_LoRaConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(8)
   void clearHopLimit() => $_clearField(8);
 
-  /// TX enabled
   @$pb.TagNumber(9)
   $core.bool get txEnabled => $_getBF(8);
   @$pb.TagNumber(9)
@@ -1756,7 +2182,6 @@ class RadioConfig_LoRaConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(9)
   void clearTxEnabled() => $_clearField(9);
 
-  /// TX power
   @$pb.TagNumber(10)
   $core.int get txPower => $_getIZ(9);
   @$pb.TagNumber(10)
@@ -1767,62 +2192,1007 @@ class RadioConfig_LoRaConfig extends $pb.GeneratedMessage {
   void clearTxPower() => $_clearField(10);
 }
 
-/// Radio configuration
-class RadioConfig extends $pb.GeneratedMessage {
-  factory RadioConfig({
-    RadioConfig_LoRaConfig? lora,
+class Config_BluetoothConfig extends $pb.GeneratedMessage {
+  factory Config_BluetoothConfig({
+    $core.bool? enabled,
   }) {
     final result = create();
-    if (lora != null) result.lora = lora;
+    if (enabled != null) result.enabled = enabled;
     return result;
   }
 
-  RadioConfig._();
+  Config_BluetoothConfig._();
 
-  factory RadioConfig.fromBuffer($core.List<$core.int> data,
+  factory Config_BluetoothConfig.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory RadioConfig.fromJson($core.String json,
+  factory Config_BluetoothConfig.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RadioConfig',
+      _omitMessageNames ? '' : 'Config.BluetoothConfig',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..aOM<RadioConfig_LoRaConfig>(1, _omitFieldNames ? '' : 'lora',
-        subBuilder: RadioConfig_LoRaConfig.create)
+    ..aOB(1, _omitFieldNames ? '' : 'enabled')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RadioConfig clone() => deepCopy();
+  Config_BluetoothConfig clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RadioConfig copyWith(void Function(RadioConfig) updates) =>
-      super.copyWith((message) => updates(message as RadioConfig))
-          as RadioConfig;
+  Config_BluetoothConfig copyWith(
+          void Function(Config_BluetoothConfig) updates) =>
+      super.copyWith((message) => updates(message as Config_BluetoothConfig))
+          as Config_BluetoothConfig;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static RadioConfig create() => RadioConfig._();
+  static Config_BluetoothConfig create() => Config_BluetoothConfig._();
   @$core.override
-  RadioConfig createEmptyInstance() => create();
+  Config_BluetoothConfig createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static RadioConfig getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RadioConfig>(create);
-  static RadioConfig? _defaultInstance;
+  static Config_BluetoothConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Config_BluetoothConfig>(create);
+  static Config_BluetoothConfig? _defaultInstance;
 
   @$pb.TagNumber(1)
-  RadioConfig_LoRaConfig get lora => $_getN(0);
+  $core.bool get enabled => $_getBF(0);
   @$pb.TagNumber(1)
-  set lora(RadioConfig_LoRaConfig value) => $_setField(1, value);
+  set enabled($core.bool value) => $_setBool(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasLora() => $_has(0);
+  $core.bool hasEnabled() => $_has(0);
   @$pb.TagNumber(1)
-  void clearLora() => $_clearField(1);
+  void clearEnabled() => $_clearField(1);
+}
+
+class Config_SecurityConfig extends $pb.GeneratedMessage {
+  factory Config_SecurityConfig({
+    $core.List<$core.int>? publicKey,
+    $core.List<$core.int>? privateKey,
+  }) {
+    final result = create();
+    if (publicKey != null) result.publicKey = publicKey;
+    if (privateKey != null) result.privateKey = privateKey;
+    return result;
+  }
+
+  Config_SecurityConfig._();
+
+  factory Config_SecurityConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Config_SecurityConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Config.SecurityConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'publicKey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'privateKey', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Config_SecurityConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Config_SecurityConfig copyWith(
+          void Function(Config_SecurityConfig) updates) =>
+      super.copyWith((message) => updates(message as Config_SecurityConfig))
+          as Config_SecurityConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Config_SecurityConfig create() => Config_SecurityConfig._();
+  @$core.override
+  Config_SecurityConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Config_SecurityConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Config_SecurityConfig>(create);
+  static Config_SecurityConfig? _defaultInstance;
+
   @$pb.TagNumber(1)
-  RadioConfig_LoRaConfig ensureLora() => $_ensure(0);
+  $core.List<$core.int> get publicKey => $_getN(0);
+  @$pb.TagNumber(1)
+  set publicKey($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPublicKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPublicKey() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get privateKey => $_getN(1);
+  @$pb.TagNumber(2)
+  set privateKey($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPrivateKey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPrivateKey() => $_clearField(2);
+}
+
+enum Config_PayloadVariant {
+  device,
+  position,
+  power,
+  network,
+  display,
+  lora,
+  bluetooth,
+  security,
+  notSet
+}
+
+/// Config message wrapper
+class Config extends $pb.GeneratedMessage {
+  factory Config({
+    Config_DeviceConfig? device,
+    Config_PositionConfig? position,
+    Config_PowerConfig? power,
+    Config_NetworkConfig? network,
+    Config_DisplayConfig? display,
+    Config_LoRaConfig? lora,
+    Config_BluetoothConfig? bluetooth,
+    Config_SecurityConfig? security,
+  }) {
+    final result = create();
+    if (device != null) result.device = device;
+    if (position != null) result.position = position;
+    if (power != null) result.power = power;
+    if (network != null) result.network = network;
+    if (display != null) result.display = display;
+    if (lora != null) result.lora = lora;
+    if (bluetooth != null) result.bluetooth = bluetooth;
+    if (security != null) result.security = security;
+    return result;
+  }
+
+  Config._();
+
+  factory Config.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Config.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, Config_PayloadVariant>
+      _Config_PayloadVariantByTag = {
+    1: Config_PayloadVariant.device,
+    2: Config_PayloadVariant.position,
+    3: Config_PayloadVariant.power,
+    4: Config_PayloadVariant.network,
+    5: Config_PayloadVariant.display,
+    6: Config_PayloadVariant.lora,
+    7: Config_PayloadVariant.bluetooth,
+    8: Config_PayloadVariant.security,
+    0: Config_PayloadVariant.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Config',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8])
+    ..aOM<Config_DeviceConfig>(1, _omitFieldNames ? '' : 'device',
+        subBuilder: Config_DeviceConfig.create)
+    ..aOM<Config_PositionConfig>(2, _omitFieldNames ? '' : 'position',
+        subBuilder: Config_PositionConfig.create)
+    ..aOM<Config_PowerConfig>(3, _omitFieldNames ? '' : 'power',
+        subBuilder: Config_PowerConfig.create)
+    ..aOM<Config_NetworkConfig>(4, _omitFieldNames ? '' : 'network',
+        subBuilder: Config_NetworkConfig.create)
+    ..aOM<Config_DisplayConfig>(5, _omitFieldNames ? '' : 'display',
+        subBuilder: Config_DisplayConfig.create)
+    ..aOM<Config_LoRaConfig>(6, _omitFieldNames ? '' : 'lora',
+        subBuilder: Config_LoRaConfig.create)
+    ..aOM<Config_BluetoothConfig>(7, _omitFieldNames ? '' : 'bluetooth',
+        subBuilder: Config_BluetoothConfig.create)
+    ..aOM<Config_SecurityConfig>(8, _omitFieldNames ? '' : 'security',
+        subBuilder: Config_SecurityConfig.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Config clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Config copyWith(void Function(Config) updates) =>
+      super.copyWith((message) => updates(message as Config)) as Config;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Config create() => Config._();
+  @$core.override
+  Config createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Config getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Config>(create);
+  static Config? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  Config_PayloadVariant whichPayloadVariant() =>
+      _Config_PayloadVariantByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  void clearPayloadVariant() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  Config_DeviceConfig get device => $_getN(0);
+  @$pb.TagNumber(1)
+  set device(Config_DeviceConfig value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDevice() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDevice() => $_clearField(1);
+  @$pb.TagNumber(1)
+  Config_DeviceConfig ensureDevice() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  Config_PositionConfig get position => $_getN(1);
+  @$pb.TagNumber(2)
+  set position(Config_PositionConfig value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPosition() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPosition() => $_clearField(2);
+  @$pb.TagNumber(2)
+  Config_PositionConfig ensurePosition() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  Config_PowerConfig get power => $_getN(2);
+  @$pb.TagNumber(3)
+  set power(Config_PowerConfig value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPower() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPower() => $_clearField(3);
+  @$pb.TagNumber(3)
+  Config_PowerConfig ensurePower() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  Config_NetworkConfig get network => $_getN(3);
+  @$pb.TagNumber(4)
+  set network(Config_NetworkConfig value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasNetwork() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearNetwork() => $_clearField(4);
+  @$pb.TagNumber(4)
+  Config_NetworkConfig ensureNetwork() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  Config_DisplayConfig get display => $_getN(4);
+  @$pb.TagNumber(5)
+  set display(Config_DisplayConfig value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasDisplay() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearDisplay() => $_clearField(5);
+  @$pb.TagNumber(5)
+  Config_DisplayConfig ensureDisplay() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  Config_LoRaConfig get lora => $_getN(5);
+  @$pb.TagNumber(6)
+  set lora(Config_LoRaConfig value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasLora() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearLora() => $_clearField(6);
+  @$pb.TagNumber(6)
+  Config_LoRaConfig ensureLora() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  Config_BluetoothConfig get bluetooth => $_getN(6);
+  @$pb.TagNumber(7)
+  set bluetooth(Config_BluetoothConfig value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasBluetooth() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearBluetooth() => $_clearField(7);
+  @$pb.TagNumber(7)
+  Config_BluetoothConfig ensureBluetooth() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  Config_SecurityConfig get security => $_getN(7);
+  @$pb.TagNumber(8)
+  set security(Config_SecurityConfig value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasSecurity() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearSecurity() => $_clearField(8);
+  @$pb.TagNumber(8)
+  Config_SecurityConfig ensureSecurity() => $_ensure(7);
+}
+
+class ModuleConfig_MQTTConfig extends $pb.GeneratedMessage {
+  factory ModuleConfig_MQTTConfig({
+    $core.bool? enabled,
+  }) {
+    final result = create();
+    if (enabled != null) result.enabled = enabled;
+    return result;
+  }
+
+  ModuleConfig_MQTTConfig._();
+
+  factory ModuleConfig_MQTTConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleConfig_MQTTConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleConfig.MQTTConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'enabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_MQTTConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_MQTTConfig copyWith(
+          void Function(ModuleConfig_MQTTConfig) updates) =>
+      super.copyWith((message) => updates(message as ModuleConfig_MQTTConfig))
+          as ModuleConfig_MQTTConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_MQTTConfig create() => ModuleConfig_MQTTConfig._();
+  @$core.override
+  ModuleConfig_MQTTConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_MQTTConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ModuleConfig_MQTTConfig>(create);
+  static ModuleConfig_MQTTConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get enabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set enabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEnabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEnabled() => $_clearField(1);
+}
+
+class ModuleConfig_SerialConfig extends $pb.GeneratedMessage {
+  factory ModuleConfig_SerialConfig({
+    $core.bool? enabled,
+  }) {
+    final result = create();
+    if (enabled != null) result.enabled = enabled;
+    return result;
+  }
+
+  ModuleConfig_SerialConfig._();
+
+  factory ModuleConfig_SerialConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleConfig_SerialConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleConfig.SerialConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'enabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_SerialConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_SerialConfig copyWith(
+          void Function(ModuleConfig_SerialConfig) updates) =>
+      super.copyWith((message) => updates(message as ModuleConfig_SerialConfig))
+          as ModuleConfig_SerialConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_SerialConfig create() => ModuleConfig_SerialConfig._();
+  @$core.override
+  ModuleConfig_SerialConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_SerialConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ModuleConfig_SerialConfig>(create);
+  static ModuleConfig_SerialConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get enabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set enabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEnabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEnabled() => $_clearField(1);
+}
+
+class ModuleConfig_ExternalNotificationConfig extends $pb.GeneratedMessage {
+  factory ModuleConfig_ExternalNotificationConfig({
+    $core.bool? enabled,
+  }) {
+    final result = create();
+    if (enabled != null) result.enabled = enabled;
+    return result;
+  }
+
+  ModuleConfig_ExternalNotificationConfig._();
+
+  factory ModuleConfig_ExternalNotificationConfig.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleConfig_ExternalNotificationConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleConfig.ExternalNotificationConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'enabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_ExternalNotificationConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_ExternalNotificationConfig copyWith(
+          void Function(ModuleConfig_ExternalNotificationConfig) updates) =>
+      super.copyWith((message) =>
+              updates(message as ModuleConfig_ExternalNotificationConfig))
+          as ModuleConfig_ExternalNotificationConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_ExternalNotificationConfig create() =>
+      ModuleConfig_ExternalNotificationConfig._();
+  @$core.override
+  ModuleConfig_ExternalNotificationConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_ExternalNotificationConfig getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          ModuleConfig_ExternalNotificationConfig>(create);
+  static ModuleConfig_ExternalNotificationConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get enabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set enabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEnabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEnabled() => $_clearField(1);
+}
+
+class ModuleConfig_StoreForwardConfig extends $pb.GeneratedMessage {
+  factory ModuleConfig_StoreForwardConfig({
+    $core.bool? enabled,
+  }) {
+    final result = create();
+    if (enabled != null) result.enabled = enabled;
+    return result;
+  }
+
+  ModuleConfig_StoreForwardConfig._();
+
+  factory ModuleConfig_StoreForwardConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleConfig_StoreForwardConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleConfig.StoreForwardConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'enabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_StoreForwardConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_StoreForwardConfig copyWith(
+          void Function(ModuleConfig_StoreForwardConfig) updates) =>
+      super.copyWith(
+              (message) => updates(message as ModuleConfig_StoreForwardConfig))
+          as ModuleConfig_StoreForwardConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_StoreForwardConfig create() =>
+      ModuleConfig_StoreForwardConfig._();
+  @$core.override
+  ModuleConfig_StoreForwardConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_StoreForwardConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ModuleConfig_StoreForwardConfig>(
+          create);
+  static ModuleConfig_StoreForwardConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get enabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set enabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEnabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEnabled() => $_clearField(1);
+}
+
+class ModuleConfig_RangeTestConfig extends $pb.GeneratedMessage {
+  factory ModuleConfig_RangeTestConfig({
+    $core.bool? enabled,
+  }) {
+    final result = create();
+    if (enabled != null) result.enabled = enabled;
+    return result;
+  }
+
+  ModuleConfig_RangeTestConfig._();
+
+  factory ModuleConfig_RangeTestConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleConfig_RangeTestConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleConfig.RangeTestConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'enabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_RangeTestConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_RangeTestConfig copyWith(
+          void Function(ModuleConfig_RangeTestConfig) updates) =>
+      super.copyWith(
+              (message) => updates(message as ModuleConfig_RangeTestConfig))
+          as ModuleConfig_RangeTestConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_RangeTestConfig create() =>
+      ModuleConfig_RangeTestConfig._();
+  @$core.override
+  ModuleConfig_RangeTestConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_RangeTestConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ModuleConfig_RangeTestConfig>(create);
+  static ModuleConfig_RangeTestConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get enabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set enabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEnabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEnabled() => $_clearField(1);
+}
+
+class ModuleConfig_TelemetryConfig extends $pb.GeneratedMessage {
+  factory ModuleConfig_TelemetryConfig({
+    $core.int? deviceUpdateInterval,
+  }) {
+    final result = create();
+    if (deviceUpdateInterval != null)
+      result.deviceUpdateInterval = deviceUpdateInterval;
+    return result;
+  }
+
+  ModuleConfig_TelemetryConfig._();
+
+  factory ModuleConfig_TelemetryConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleConfig_TelemetryConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleConfig.TelemetryConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'deviceUpdateInterval',
+        fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_TelemetryConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_TelemetryConfig copyWith(
+          void Function(ModuleConfig_TelemetryConfig) updates) =>
+      super.copyWith(
+              (message) => updates(message as ModuleConfig_TelemetryConfig))
+          as ModuleConfig_TelemetryConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_TelemetryConfig create() =>
+      ModuleConfig_TelemetryConfig._();
+  @$core.override
+  ModuleConfig_TelemetryConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_TelemetryConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ModuleConfig_TelemetryConfig>(create);
+  static ModuleConfig_TelemetryConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get deviceUpdateInterval => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set deviceUpdateInterval($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDeviceUpdateInterval() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDeviceUpdateInterval() => $_clearField(1);
+}
+
+class ModuleConfig_CannedMessageConfig extends $pb.GeneratedMessage {
+  factory ModuleConfig_CannedMessageConfig({
+    $core.bool? enabled,
+  }) {
+    final result = create();
+    if (enabled != null) result.enabled = enabled;
+    return result;
+  }
+
+  ModuleConfig_CannedMessageConfig._();
+
+  factory ModuleConfig_CannedMessageConfig.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleConfig_CannedMessageConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleConfig.CannedMessageConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'enabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_CannedMessageConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_CannedMessageConfig copyWith(
+          void Function(ModuleConfig_CannedMessageConfig) updates) =>
+      super.copyWith(
+              (message) => updates(message as ModuleConfig_CannedMessageConfig))
+          as ModuleConfig_CannedMessageConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_CannedMessageConfig create() =>
+      ModuleConfig_CannedMessageConfig._();
+  @$core.override
+  ModuleConfig_CannedMessageConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_CannedMessageConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ModuleConfig_CannedMessageConfig>(
+          create);
+  static ModuleConfig_CannedMessageConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get enabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set enabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEnabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEnabled() => $_clearField(1);
+}
+
+class ModuleConfig_AudioConfig extends $pb.GeneratedMessage {
+  factory ModuleConfig_AudioConfig({
+    $core.bool? codec2Enabled,
+  }) {
+    final result = create();
+    if (codec2Enabled != null) result.codec2Enabled = codec2Enabled;
+    return result;
+  }
+
+  ModuleConfig_AudioConfig._();
+
+  factory ModuleConfig_AudioConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleConfig_AudioConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleConfig.AudioConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'codec2Enabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_AudioConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_AudioConfig copyWith(
+          void Function(ModuleConfig_AudioConfig) updates) =>
+      super.copyWith((message) => updates(message as ModuleConfig_AudioConfig))
+          as ModuleConfig_AudioConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_AudioConfig create() => ModuleConfig_AudioConfig._();
+  @$core.override
+  ModuleConfig_AudioConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_AudioConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ModuleConfig_AudioConfig>(create);
+  static ModuleConfig_AudioConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get codec2Enabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set codec2Enabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCodec2Enabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCodec2Enabled() => $_clearField(1);
+}
+
+enum ModuleConfig_PayloadVariant {
+  mqtt,
+  serial,
+  extNotification,
+  storeForward,
+  rangeTest,
+  telemetry,
+  cannedMessage,
+  audio,
+  notSet
+}
+
+/// Module config message wrapper
+class ModuleConfig extends $pb.GeneratedMessage {
+  factory ModuleConfig({
+    ModuleConfig_MQTTConfig? mqtt,
+    ModuleConfig_SerialConfig? serial,
+    ModuleConfig_ExternalNotificationConfig? extNotification,
+    ModuleConfig_StoreForwardConfig? storeForward,
+    ModuleConfig_RangeTestConfig? rangeTest,
+    ModuleConfig_TelemetryConfig? telemetry,
+    ModuleConfig_CannedMessageConfig? cannedMessage,
+    ModuleConfig_AudioConfig? audio,
+  }) {
+    final result = create();
+    if (mqtt != null) result.mqtt = mqtt;
+    if (serial != null) result.serial = serial;
+    if (extNotification != null) result.extNotification = extNotification;
+    if (storeForward != null) result.storeForward = storeForward;
+    if (rangeTest != null) result.rangeTest = rangeTest;
+    if (telemetry != null) result.telemetry = telemetry;
+    if (cannedMessage != null) result.cannedMessage = cannedMessage;
+    if (audio != null) result.audio = audio;
+    return result;
+  }
+
+  ModuleConfig._();
+
+  factory ModuleConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, ModuleConfig_PayloadVariant>
+      _ModuleConfig_PayloadVariantByTag = {
+    1: ModuleConfig_PayloadVariant.mqtt,
+    2: ModuleConfig_PayloadVariant.serial,
+    3: ModuleConfig_PayloadVariant.extNotification,
+    4: ModuleConfig_PayloadVariant.storeForward,
+    5: ModuleConfig_PayloadVariant.rangeTest,
+    6: ModuleConfig_PayloadVariant.telemetry,
+    7: ModuleConfig_PayloadVariant.cannedMessage,
+    8: ModuleConfig_PayloadVariant.audio,
+    0: ModuleConfig_PayloadVariant.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8])
+    ..aOM<ModuleConfig_MQTTConfig>(1, _omitFieldNames ? '' : 'mqtt',
+        subBuilder: ModuleConfig_MQTTConfig.create)
+    ..aOM<ModuleConfig_SerialConfig>(2, _omitFieldNames ? '' : 'serial',
+        subBuilder: ModuleConfig_SerialConfig.create)
+    ..aOM<ModuleConfig_ExternalNotificationConfig>(
+        3, _omitFieldNames ? '' : 'extNotification',
+        subBuilder: ModuleConfig_ExternalNotificationConfig.create)
+    ..aOM<ModuleConfig_StoreForwardConfig>(
+        4, _omitFieldNames ? '' : 'storeForward',
+        subBuilder: ModuleConfig_StoreForwardConfig.create)
+    ..aOM<ModuleConfig_RangeTestConfig>(5, _omitFieldNames ? '' : 'rangeTest',
+        subBuilder: ModuleConfig_RangeTestConfig.create)
+    ..aOM<ModuleConfig_TelemetryConfig>(6, _omitFieldNames ? '' : 'telemetry',
+        subBuilder: ModuleConfig_TelemetryConfig.create)
+    ..aOM<ModuleConfig_CannedMessageConfig>(
+        7, _omitFieldNames ? '' : 'cannedMessage',
+        subBuilder: ModuleConfig_CannedMessageConfig.create)
+    ..aOM<ModuleConfig_AudioConfig>(8, _omitFieldNames ? '' : 'audio',
+        subBuilder: ModuleConfig_AudioConfig.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig copyWith(void Function(ModuleConfig) updates) =>
+      super.copyWith((message) => updates(message as ModuleConfig))
+          as ModuleConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig create() => ModuleConfig._();
+  @$core.override
+  ModuleConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ModuleConfig>(create);
+  static ModuleConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  ModuleConfig_PayloadVariant whichPayloadVariant() =>
+      _ModuleConfig_PayloadVariantByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  void clearPayloadVariant() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  ModuleConfig_MQTTConfig get mqtt => $_getN(0);
+  @$pb.TagNumber(1)
+  set mqtt(ModuleConfig_MQTTConfig value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMqtt() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMqtt() => $_clearField(1);
+  @$pb.TagNumber(1)
+  ModuleConfig_MQTTConfig ensureMqtt() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  ModuleConfig_SerialConfig get serial => $_getN(1);
+  @$pb.TagNumber(2)
+  set serial(ModuleConfig_SerialConfig value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSerial() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSerial() => $_clearField(2);
+  @$pb.TagNumber(2)
+  ModuleConfig_SerialConfig ensureSerial() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  ModuleConfig_ExternalNotificationConfig get extNotification => $_getN(2);
+  @$pb.TagNumber(3)
+  set extNotification(ModuleConfig_ExternalNotificationConfig value) =>
+      $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasExtNotification() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearExtNotification() => $_clearField(3);
+  @$pb.TagNumber(3)
+  ModuleConfig_ExternalNotificationConfig ensureExtNotification() =>
+      $_ensure(2);
+
+  @$pb.TagNumber(4)
+  ModuleConfig_StoreForwardConfig get storeForward => $_getN(3);
+  @$pb.TagNumber(4)
+  set storeForward(ModuleConfig_StoreForwardConfig value) =>
+      $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasStoreForward() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearStoreForward() => $_clearField(4);
+  @$pb.TagNumber(4)
+  ModuleConfig_StoreForwardConfig ensureStoreForward() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  ModuleConfig_RangeTestConfig get rangeTest => $_getN(4);
+  @$pb.TagNumber(5)
+  set rangeTest(ModuleConfig_RangeTestConfig value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasRangeTest() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearRangeTest() => $_clearField(5);
+  @$pb.TagNumber(5)
+  ModuleConfig_RangeTestConfig ensureRangeTest() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  ModuleConfig_TelemetryConfig get telemetry => $_getN(5);
+  @$pb.TagNumber(6)
+  set telemetry(ModuleConfig_TelemetryConfig value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasTelemetry() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearTelemetry() => $_clearField(6);
+  @$pb.TagNumber(6)
+  ModuleConfig_TelemetryConfig ensureTelemetry() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  ModuleConfig_CannedMessageConfig get cannedMessage => $_getN(6);
+  @$pb.TagNumber(7)
+  set cannedMessage(ModuleConfig_CannedMessageConfig value) =>
+      $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasCannedMessage() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearCannedMessage() => $_clearField(7);
+  @$pb.TagNumber(7)
+  ModuleConfig_CannedMessageConfig ensureCannedMessage() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  ModuleConfig_AudioConfig get audio => $_getN(7);
+  @$pb.TagNumber(8)
+  set audio(ModuleConfig_AudioConfig value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasAudio() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearAudio() => $_clearField(8);
+  @$pb.TagNumber(8)
+  ModuleConfig_AudioConfig ensureAudio() => $_ensure(7);
 }
 
 const $core.bool _omitFieldNames =
