@@ -231,6 +231,10 @@ class ProtocolService {
         if (_configCompleter != null && !_configCompleter!.isCompleted) {
           _configCompleter!.complete();
         }
+        // Request LoRa config to get current region
+        Future.delayed(const Duration(milliseconds: 100), () {
+          getLoRaConfig();
+        });
       }
     } catch (e, stack) {
       _logger.e('Error processing packet: $e', error: e, stackTrace: stack);

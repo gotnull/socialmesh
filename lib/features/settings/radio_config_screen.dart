@@ -19,26 +19,18 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
   int _hopLimit = 3;
   bool _txEnabled = true;
   int _txPower = 0;
+  bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
-    _loadCurrentConfig();
+    _requestConfig();
   }
 
-  Future<void> _loadCurrentConfig() async {
-    setState(() => _isLoading = true);
-    try {
-      final protocol = ref.read(protocolServiceProvider);
-      await protocol.getConfig(pb.AdminMessage_ConfigType.LORA_CONFIG);
-      // The response will come via the regionStream
-      final currentRegion = protocol.currentRegion;
-      if (currentRegion != null) {
-        setState(() => _selectedRegion = currentRegion);
-      }
-    } finally {
-      setState(() => _isLoading = false);
-    }
+  Future<void> _requestConfig() async {
+    final protocol = ref.read(protocolServiceProvider);
+    // Request the current config from device - response will come via stream
+    await protocol.getConfig(pb.AdminMessage_ConfigType.LORA_CONFIG);
   }
 
   Future<void> _saveConfig() async {
@@ -80,6 +72,21 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    // Watch the region provider and initialize selection if not yet set
+    final regionAsync = ref.watch(deviceRegionProvider);
+    regionAsync.whenData((region) {
+      if (!_initialized && _selectedRegion == null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              _selectedRegion = region;
+              _initialized = true;
+            });
+          }
+        });
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
