@@ -6,6 +6,7 @@ import '../services/transport/ble_transport.dart';
 import '../services/transport/usb_transport.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/storage/storage_service.dart';
+import '../services/notifications/notification_service.dart';
 import '../models/mesh_models.dart';
 import '../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 
@@ -42,6 +43,9 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
 
     state = AppInitState.initializing;
     try {
+      // Initialize notification service
+      await NotificationService().initialize();
+
       // Initialize storage services
       await _ref.read(settingsServiceProvider.future);
       await _ref.read(messageStorageProvider.future);
@@ -276,6 +280,22 @@ final currentRssiProvider = StreamProvider<int>((ref) async* {
   }
 });
 
+// Current SNR (Signal-to-Noise Ratio) stream from protocol service
+final currentSnrProvider = StreamProvider<double>((ref) async* {
+  final protocol = ref.watch(protocolServiceProvider);
+  await for (final snr in protocol.snrStream) {
+    yield snr;
+  }
+});
+
+// Current channel utilization stream from protocol service
+final currentChannelUtilProvider = StreamProvider<double>((ref) async* {
+  final protocol = ref.watch(protocolServiceProvider);
+  await for (final util in protocol.channelUtilStream) {
+    yield util;
+  }
+});
+
 // Protocol service - singleton instance that persists across rebuilds
 final protocolServiceProvider = Provider<ProtocolService>((ref) {
   final transport = ref.watch(transportProvider);
@@ -405,13 +425,22 @@ final messagesProvider = StateNotifierProvider<MessagesNotifier, List<Message>>(
 // Nodes
 class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
   final ProtocolService _protocol;
+  final Ref _ref;
 
-  NodesNotifier(this._protocol) : super({}) {
+  NodesNotifier(this._protocol, this._ref) : super({}) {
     // Initialize with existing nodes from protocol service
     state = Map<int, MeshNode>.from(_protocol.nodes);
 
     _protocol.nodeStream.listen((node) {
+      final isNewNode = !state.containsKey(node.nodeNum);
       state = {...state, node.nodeNum: node};
+
+      // Increment new nodes counter if this is a genuinely new node
+      if (isNewNode) {
+        _ref.read(newNodesCountProvider.notifier).state++;
+        // Trigger notification for new node discovery
+        _ref.read(nodeDiscoveryNotifierProvider.notifier).notifyNewNode(node);
+      }
     });
   }
 
@@ -434,7 +463,7 @@ final nodesProvider = StateNotifierProvider<NodesNotifier, Map<int, MeshNode>>((
   ref,
 ) {
   final protocol = ref.watch(protocolServiceProvider);
-  return NodesNotifier(protocol);
+  return NodesNotifier(protocol, ref);
 });
 
 // Channels
@@ -541,6 +570,27 @@ final unreadMessagesCountProvider = Provider<int>((ref) {
 final hasUnreadMessagesProvider = Provider<bool>((ref) {
   return ref.watch(unreadMessagesCountProvider) > 0;
 });
+
+/// New nodes count - tracks number of newly discovered nodes since last check
+/// Reset when user views the Nodes tab
+final newNodesCountProvider = StateProvider<int>((ref) => 0);
+
+/// Node discovery notifier - triggers notifications when new nodes are found
+class NodeDiscoveryNotifier extends StateNotifier<MeshNode?> {
+  final NotificationService _notificationService;
+
+  NodeDiscoveryNotifier(this._notificationService) : super(null);
+
+  Future<void> notifyNewNode(MeshNode node) async {
+    state = node;
+    await _notificationService.showNewNodeNotification(node);
+  }
+}
+
+final nodeDiscoveryNotifierProvider =
+    StateNotifierProvider<NodeDiscoveryNotifier, MeshNode?>((ref) {
+      return NodeDiscoveryNotifier(NotificationService());
+    });
 
 /// Current device region - stream that emits region updates
 final deviceRegionProvider = StreamProvider<pbenum.RegionCode>((ref) async* {

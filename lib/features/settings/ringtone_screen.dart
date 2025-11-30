@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../services/audio/rtttl_player.dart';
 
 /// Preset ringtones with name and RTTTL string
 class RingtonePreset {
@@ -142,8 +143,10 @@ class RingtoneScreen extends ConsumerStatefulWidget {
 
 class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   final _rtttlController = TextEditingController();
+  final _rtttlPlayer = RtttlPlayer();
   bool _saving = false;
   bool _loading = false;
+  bool _playing = false;
   int _selectedPresetIndex = -1;
   bool _showingCustom = false;
 
@@ -156,7 +159,53 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   @override
   void dispose() {
     _rtttlController.dispose();
+    _rtttlPlayer.dispose();
     super.dispose();
+  }
+
+  Future<void> _playPreview() async {
+    if (_rtttlController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter an RTTTL string to preview'),
+          backgroundColor: AppTheme.errorRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (_playing) {
+      await _rtttlPlayer.stop();
+      setState(() => _playing = false);
+      return;
+    }
+
+    setState(() => _playing = true);
+
+    try {
+      await _rtttlPlayer.play(_rtttlController.text.trim());
+
+      // Wait for playback to complete
+      while (_rtttlPlayer.isPlaying) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted) break;
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to play: ${e.toString()}'),
+            backgroundColor: AppTheme.errorRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _playing = false);
+      }
+    }
   }
 
   Future<void> _loadCurrentRingtone() async {
@@ -609,18 +658,29 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              'This will be sent to your device when you tap Save',
-                              style: TextStyle(
-                                color: AppTheme.textSecondary.withValues(
-                                  alpha: 0.7,
-                                ),
-                                fontSize: 12,
-                                fontFamily: 'Inter',
+                          // Play/Preview button
+                          ElevatedButton.icon(
+                            onPressed: _playPreview,
+                            icon: Icon(
+                              _playing ? Icons.stop : Icons.play_arrow,
+                              size: 20,
+                            ),
+                            label: Text(_playing ? 'Stop' : 'Preview'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _playing
+                                  ? AppTheme.errorRed
+                                  : AppTheme.graphBlue,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
                               ),
                             ),
                           ),
+                          const Spacer(),
                           TextButton.icon(
                             onPressed: () {
                               _rtttlController.clear();
@@ -638,6 +698,15 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tap Preview to hear how it sounds, then Save to device',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary.withValues(alpha: 0.7),
+                          fontSize: 12,
+                          fontFamily: 'Inter',
+                        ),
                       ),
                     ],
                   ),

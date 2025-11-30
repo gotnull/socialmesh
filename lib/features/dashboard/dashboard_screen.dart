@@ -663,7 +663,7 @@ class _SignalStrengthChart extends ConsumerStatefulWidget {
 }
 
 class _SignalStrengthChartState extends ConsumerState<_SignalStrengthChart> {
-  final List<_SignalData> _signalHistory = [];
+  final List<_MultiSignalData> _signalHistory = [];
   Timer? _updateTimer;
 
   @override
@@ -683,9 +683,22 @@ class _SignalStrengthChartState extends ConsumerState<_SignalStrengthChart> {
 
   void _addDataPoint() {
     final rssiAsync = ref.read(currentRssiProvider);
+    final snrAsync = ref.read(currentSnrProvider);
+    final channelUtilAsync = ref.read(currentChannelUtilProvider);
     final now = DateTime.now();
+
     final rssiValue = rssiAsync.valueOrNull?.toDouble() ?? -90.0;
-    _signalHistory.add(_SignalData(time: now, rssi: rssiValue));
+    final snrValue = snrAsync.valueOrNull ?? 0.0;
+    final channelUtilValue = channelUtilAsync.valueOrNull ?? 0.0;
+
+    _signalHistory.add(
+      _MultiSignalData(
+        time: now,
+        rssi: rssiValue,
+        snr: snrValue,
+        channelUtil: channelUtilValue,
+      ),
+    );
     if (_signalHistory.length > 30) _signalHistory.removeAt(0);
     if (mounted) setState(() {});
   }
@@ -710,6 +723,12 @@ class _SignalStrengthChartState extends ConsumerState<_SignalStrengthChart> {
     final currentRssi = _signalHistory.isNotEmpty
         ? _signalHistory.last.rssi
         : -90.0;
+    final currentSnr = _signalHistory.isNotEmpty
+        ? _signalHistory.last.snr
+        : 0.0;
+    final currentChannelUtil = _signalHistory.isNotEmpty
+        ? _signalHistory.last.channelUtil
+        : 0.0;
     final hasData = _signalHistory.isNotEmpty;
 
     return Container(
@@ -797,13 +816,21 @@ class _SignalStrengthChartState extends ConsumerState<_SignalStrengthChart> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        'Bluetooth LE Signal Strength',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppTheme.textTertiary,
-                          fontFamily: 'Inter',
-                        ),
+                      // Show all 3 metrics inline
+                      Row(
+                        children: [
+                          _MetricChip(
+                            label: 'SNR',
+                            value: '${currentSnr.toStringAsFixed(1)} dB',
+                            color: const Color(0xFF2196F3),
+                          ),
+                          const SizedBox(width: 8),
+                          _MetricChip(
+                            label: 'Ch Util',
+                            value: '${currentChannelUtil.toStringAsFixed(1)}%',
+                            color: const Color(0xFFFF9800),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -853,14 +880,30 @@ class _SignalStrengthChartState extends ConsumerState<_SignalStrengthChart> {
               ],
             ),
           ),
+          // Legend
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Row(
+              children: [
+                _LegendItem(color: AppTheme.primaryGreen, label: 'RSSI (dBm)'),
+                const SizedBox(width: 16),
+                _LegendItem(color: const Color(0xFF2196F3), label: 'SNR (dB)'),
+                const SizedBox(width: 16),
+                _LegendItem(
+                  color: const Color(0xFFFF9800),
+                  label: 'Ch Util (%)',
+                ),
+              ],
+            ),
+          ),
           // Chart
           SizedBox(
-            height: 160,
+            height: 180,
             child: hasData
                 ? Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 16, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(12, 12, 16, 8),
                     child: CustomPaint(
-                      painter: _SignalChartPainter(_signalHistory),
+                      painter: _MultiLineChartPainter(_signalHistory),
                       child: Container(),
                     ),
                   )
@@ -881,17 +924,105 @@ class _SignalStrengthChartState extends ConsumerState<_SignalStrengthChart> {
   }
 }
 
-class _SignalData {
-  final DateTime time;
-  final double rssi;
+class _MetricChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
 
-  _SignalData({required this.time, required this.rssi});
+  const _MetricChip({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '$label: $value',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+              fontFamily: 'monospace',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _SignalChartPainter extends CustomPainter {
-  final List<_SignalData> data;
+class _LegendItem extends StatelessWidget {
+  final Color color;
+  final String label;
 
-  _SignalChartPainter(this.data);
+  const _LegendItem({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 3,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            color: AppTheme.textTertiary,
+            fontFamily: 'Inter',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MultiSignalData {
+  final DateTime time;
+  final double rssi;
+  final double snr;
+  final double channelUtil;
+
+  _MultiSignalData({
+    required this.time,
+    required this.rssi,
+    required this.snr,
+    required this.channelUtil,
+  });
+}
+
+class _MultiLineChartPainter extends CustomPainter {
+  final List<_MultiSignalData> data;
+
+  // Colors for each metric
+  static const Color rssiColor = AppTheme.primaryGreen;
+  static const Color snrColor = Color(0xFF2196F3);
+  static const Color channelUtilColor = Color(0xFFFF9800);
+
+  _MultiLineChartPainter(this.data);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -900,13 +1031,18 @@ class _SignalChartPainter extends CustomPainter {
     const leftInset = 42.0;
     const bottomInset = 20.0;
     const topInset = 4.0;
-    const rightInset = 4.0;
+    const rightInset = 40.0; // Extra space for right Y-axis
 
     final chartWidth = size.width - leftInset - rightInset;
     final chartHeight = size.height - topInset - bottomInset;
 
+    // Scale ranges
     const double minRssi = -100;
     const double maxRssi = -30;
+    const double minSnr = -20;
+    const double maxSnr = 20;
+    const double minChannelUtil = 0;
+    const double maxChannelUtil = 100;
 
     // Grid line paint
     final Paint gridPaint = Paint()
@@ -917,24 +1053,23 @@ class _SignalChartPainter extends CustomPainter {
     // Text painter for labels
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
-    // Draw horizontal grid lines and Y-axis labels
+    // Draw horizontal grid lines
     for (int i = 0; i <= 4; i++) {
       final y = topInset + (chartHeight * (i / 4));
 
-      // Draw grid line
       canvas.drawLine(
         Offset(leftInset, y),
         Offset(leftInset + chartWidth, y),
         gridPaint,
       );
 
-      // Draw Y-axis label
+      // Left Y-axis label (RSSI/SNR scale)
       final rssiValue = maxRssi - (i * (maxRssi - minRssi) / 4);
       textPainter.text = TextSpan(
         text: '${rssiValue.toInt()}',
         style: const TextStyle(
           color: AppTheme.textTertiary,
-          fontSize: 10,
+          fontSize: 9,
           fontFamily: 'Inter',
           fontWeight: FontWeight.w500,
         ),
@@ -942,8 +1077,23 @@ class _SignalChartPainter extends CustomPainter {
       textPainter.layout();
       textPainter.paint(
         canvas,
-        Offset(leftInset - textPainter.width - 8, y - 6),
+        Offset(leftInset - textPainter.width - 6, y - 5),
       );
+
+      // Right Y-axis label (Channel Util scale)
+      final utilValue =
+          maxChannelUtil - (i * (maxChannelUtil - minChannelUtil) / 4);
+      textPainter.text = TextSpan(
+        text: '${utilValue.toInt()}%',
+        style: const TextStyle(
+          color: channelUtilColor,
+          fontSize: 9,
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w500,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(leftInset + chartWidth + 6, y - 5));
     }
 
     if (data.length < 2) return;
@@ -973,126 +1123,305 @@ class _SignalChartPainter extends CustomPainter {
       textPainter.paint(canvas, Offset(xOffset, size.height - bottomInset + 6));
     }
 
-    // Create gradient for line based on signal strength
+    // Draw RSSI line
+    _drawLine(
+      canvas,
+      data.map((d) => d.rssi).toList(),
+      minRssi,
+      maxRssi,
+      rssiColor,
+      leftInset,
+      topInset,
+      chartWidth,
+      chartHeight,
+      stepX,
+      showFill: true,
+    );
+
+    // Draw SNR line (using same scale as RSSI for simplicity, normalized)
+    _drawLine(
+      canvas,
+      data
+          .map(
+            (d) => _normalizeSnrToRssiScale(
+              d.snr,
+              minSnr,
+              maxSnr,
+              minRssi,
+              maxRssi,
+            ),
+          )
+          .toList(),
+      minRssi,
+      maxRssi,
+      snrColor,
+      leftInset,
+      topInset,
+      chartWidth,
+      chartHeight,
+      stepX,
+      showFill: false,
+    );
+
+    // Draw Channel Utilization line (using percentage scale, normalized)
+    _drawLine(
+      canvas,
+      data
+          .map(
+            (d) => _normalizeUtilToRssiScale(
+              d.channelUtil,
+              minChannelUtil,
+              maxChannelUtil,
+              minRssi,
+              maxRssi,
+            ),
+          )
+          .toList(),
+      minRssi,
+      maxRssi,
+      channelUtilColor,
+      leftInset,
+      topInset,
+      chartWidth,
+      chartHeight,
+      stepX,
+      showFill: false,
+      dashed: true,
+    );
+
+    // Draw current value dots for each line
+    _drawDot(
+      canvas,
+      data.last.rssi,
+      minRssi,
+      maxRssi,
+      rssiColor,
+      leftInset,
+      topInset,
+      chartWidth,
+      chartHeight,
+      stepX,
+      data.length - 1,
+    );
+    _drawDot(
+      canvas,
+      _normalizeSnrToRssiScale(data.last.snr, minSnr, maxSnr, minRssi, maxRssi),
+      minRssi,
+      maxRssi,
+      snrColor,
+      leftInset,
+      topInset,
+      chartWidth,
+      chartHeight,
+      stepX,
+      data.length - 1,
+    );
+    _drawDot(
+      canvas,
+      _normalizeUtilToRssiScale(
+        data.last.channelUtil,
+        minChannelUtil,
+        maxChannelUtil,
+        minRssi,
+        maxRssi,
+      ),
+      minRssi,
+      maxRssi,
+      channelUtilColor,
+      leftInset,
+      topInset,
+      chartWidth,
+      chartHeight,
+      stepX,
+      data.length - 1,
+    );
+  }
+
+  double _normalizeSnrToRssiScale(
+    double snr,
+    double minSnr,
+    double maxSnr,
+    double minRssi,
+    double maxRssi,
+  ) {
+    // Map SNR (-20 to 20) to RSSI scale (-100 to -30)
+    final normalized = (snr - minSnr) / (maxSnr - minSnr);
+    return minRssi + normalized * (maxRssi - minRssi);
+  }
+
+  double _normalizeUtilToRssiScale(
+    double util,
+    double minUtil,
+    double maxUtil,
+    double minRssi,
+    double maxRssi,
+  ) {
+    // Map Util (0 to 100) to RSSI scale (-100 to -30)
+    final normalized = (util - minUtil) / (maxUtil - minUtil);
+    return minRssi + normalized * (maxRssi - minRssi);
+  }
+
+  void _drawLine(
+    Canvas canvas,
+    List<double> values,
+    double minValue,
+    double maxValue,
+    Color color,
+    double leftInset,
+    double topInset,
+    double chartWidth,
+    double chartHeight,
+    double stepX, {
+    bool showFill = false,
+    bool dashed = false,
+  }) {
     Path path = Path();
     Path fillPath = Path();
 
-    for (int i = 0; i < data.length; i++) {
+    for (int i = 0; i < values.length; i++) {
       final x = leftInset + (i * stepX);
-      final rssi = data[i].rssi.clamp(minRssi, maxRssi);
+      final value = values[i].clamp(minValue, maxValue);
       final y =
           topInset +
           chartHeight -
-          ((rssi - minRssi) / (maxRssi - minRssi)) * chartHeight;
+          ((value - minValue) / (maxValue - minValue)) * chartHeight;
 
       if (i == 0) {
         path.moveTo(x, y);
-        fillPath.moveTo(x, topInset + chartHeight);
-        fillPath.lineTo(x, y);
+        if (showFill) {
+          fillPath.moveTo(x, topInset + chartHeight);
+          fillPath.lineTo(x, y);
+        }
       } else {
-        // Smooth curve using cubic bezier
         final prevX = leftInset + ((i - 1) * stepX);
-        final prevRssi = data[i - 1].rssi.clamp(minRssi, maxRssi);
+        final prevValue = values[i - 1].clamp(minValue, maxValue);
         final prevY =
             topInset +
             chartHeight -
-            ((prevRssi - minRssi) / (maxRssi - minRssi)) * chartHeight;
+            ((prevValue - minValue) / (maxValue - minValue)) * chartHeight;
 
         final controlX1 = prevX + (x - prevX) / 2;
         final controlX2 = prevX + (x - prevX) / 2;
 
         path.cubicTo(controlX1, prevY, controlX2, y, x, y);
-        fillPath.cubicTo(controlX1, prevY, controlX2, y, x, y);
+        if (showFill) {
+          fillPath.cubicTo(controlX1, prevY, controlX2, y, x, y);
+        }
       }
     }
 
-    // Close fill path
-    fillPath.lineTo(leftInset + chartWidth, topInset + chartHeight);
-    fillPath.close();
+    if (showFill) {
+      fillPath.lineTo(leftInset + chartWidth, topInset + chartHeight);
+      fillPath.close();
 
-    // Get current rssi for color
-    final currentRssi = data.last.rssi;
-    Color lineColor;
-    if (currentRssi >= -60) {
-      lineColor = AppTheme.primaryGreen;
-    } else if (currentRssi >= -75) {
-      lineColor = AppTheme.warningYellow;
-    } else {
-      lineColor = AppTheme.errorRed;
+      final Paint fillPaint = Paint()
+        ..shader =
+            LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                color.withValues(alpha: 0.2),
+                color.withValues(alpha: 0.05),
+                color.withValues(alpha: 0.0),
+              ],
+              stops: const [0.0, 0.5, 1.0],
+            ).createShader(
+              Rect.fromLTWH(leftInset, topInset, chartWidth, chartHeight),
+            );
+
+      canvas.drawPath(fillPath, fillPaint);
     }
 
-    // Draw gradient fill
-    final Paint fillPaint = Paint()
-      ..shader =
-          LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              lineColor.withValues(alpha: 0.25),
-              lineColor.withValues(alpha: 0.05),
-              lineColor.withValues(alpha: 0.0),
-            ],
-            stops: const [0.0, 0.5, 1.0],
-          ).createShader(
-            Rect.fromLTWH(leftInset, topInset, chartWidth, chartHeight),
-          );
-
-    canvas.drawPath(fillPath, fillPaint);
-
-    // Draw line with glow effect
+    // Draw glow effect
     final Paint glowPaint = Paint()
-      ..color = lineColor.withValues(alpha: 0.3)
-      ..strokeWidth = 6.0
+      ..color = color.withValues(alpha: 0.25)
+      ..strokeWidth = 4.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
 
     canvas.drawPath(path, glowPaint);
 
+    // Draw line
     final Paint linePaint = Paint()
-      ..color = lineColor
-      ..strokeWidth = 2.5
+      ..color = color
+      ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    canvas.drawPath(path, linePaint);
-
-    // Draw current value dot
-    if (data.isNotEmpty) {
-      final lastX = leftInset + ((data.length - 1) * stepX);
-      final lastRssi = data.last.rssi.clamp(minRssi, maxRssi);
-      final lastY =
-          topInset +
-          chartHeight -
-          ((lastRssi - minRssi) / (maxRssi - minRssi)) * chartHeight;
-
-      // Outer glow
-      canvas.drawCircle(
-        Offset(lastX, lastY),
-        8,
-        Paint()
-          ..color = lineColor.withValues(alpha: 0.3)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
-      );
-
-      // White outer ring
-      canvas.drawCircle(
-        Offset(lastX, lastY),
-        5,
-        Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.fill,
-      );
-
-      // Colored inner dot
-      canvas.drawCircle(
-        Offset(lastX, lastY),
-        3.5,
-        Paint()
-          ..color = lineColor
-          ..style = PaintingStyle.fill,
-      );
+    if (dashed) {
+      _drawDashedPath(canvas, path, linePaint);
+    } else {
+      canvas.drawPath(path, linePaint);
     }
+  }
+
+  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
+    final pathMetrics = path.computeMetrics();
+    for (final metric in pathMetrics) {
+      double distance = 0;
+      bool draw = true;
+      const dashLength = 6.0;
+      const gapLength = 4.0;
+
+      while (distance < metric.length) {
+        final length = draw ? dashLength : gapLength;
+        if (draw) {
+          final extractedPath = metric.extractPath(distance, distance + length);
+          canvas.drawPath(extractedPath, paint);
+        }
+        distance += length;
+        draw = !draw;
+      }
+    }
+  }
+
+  void _drawDot(
+    Canvas canvas,
+    double value,
+    double minValue,
+    double maxValue,
+    Color color,
+    double leftInset,
+    double topInset,
+    double chartWidth,
+    double chartHeight,
+    double stepX,
+    int index,
+  ) {
+    final x = leftInset + (index * stepX);
+    final clampedValue = value.clamp(minValue, maxValue);
+    final y =
+        topInset +
+        chartHeight -
+        ((clampedValue - minValue) / (maxValue - minValue)) * chartHeight;
+
+    // Outer glow
+    canvas.drawCircle(
+      Offset(x, y),
+      6,
+      Paint()
+        ..color = color.withValues(alpha: 0.3)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+    );
+
+    // White outer ring
+    canvas.drawCircle(
+      Offset(x, y),
+      4,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill,
+    );
+
+    // Colored inner dot
+    canvas.drawCircle(
+      Offset(x, y),
+      2.5,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.fill,
+    );
   }
 
   @override

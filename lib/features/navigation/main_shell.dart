@@ -5,6 +5,7 @@ import '../../core/transport.dart';
 import '../../providers/app_providers.dart';
 import '../channels/channels_screen.dart';
 import '../messaging/messaging_screen.dart';
+import '../nodes/nodes_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 
 /// Main navigation shell with bottom navigation bar
@@ -30,6 +31,11 @@ class _MainShellState extends ConsumerState<MainShell> {
       label: 'Messages',
     ),
     _NavItem(
+      icon: Icons.people_outline,
+      activeIcon: Icons.people,
+      label: 'Nodes',
+    ),
+    _NavItem(
       icon: Icons.router_outlined,
       activeIcon: Icons.router,
       label: 'Device',
@@ -43,6 +49,8 @@ class _MainShellState extends ConsumerState<MainShell> {
       case 1:
         return const MessagingScreen();
       case 2:
+        return const NodesScreen();
+      case 3:
         return const DashboardScreen();
       default:
         return const ChannelsScreen();
@@ -98,19 +106,26 @@ class _MainShellState extends ConsumerState<MainShell> {
                 final item = _navItems[index];
                 final isSelected = _currentIndex == index;
 
-                // Show warning badge on Device tab when disconnected
-                final showWarningBadge = index == 2 && !isConnected;
+                // Show warning badge on Device tab (index 3) when disconnected
+                final showWarningBadge = index == 3 && !isConnected;
                 // Show reconnecting indicator
-                final showReconnectingBadge = index == 2 && isReconnecting;
+                final showReconnectingBadge = index == 3 && isReconnecting;
+                // Show badge on Nodes tab (index 2) when new nodes discovered
+                final showNodesBadge = index == 2 && _hasNewNodes(ref);
 
                 return _NavBarItem(
                   icon: isSelected ? item.activeIcon : item.icon,
                   label: item.label,
                   isSelected: isSelected,
-                  showBadge: index == 1 && _hasUnreadMessages(ref),
+                  showBadge:
+                      (index == 1 && _hasUnreadMessages(ref)) || showNodesBadge,
                   showWarningBadge: showWarningBadge && !showReconnectingBadge,
                   showReconnectingBadge: showReconnectingBadge,
                   onTap: () {
+                    // Clear new nodes badge when navigating to Nodes tab
+                    if (index == 2) {
+                      ref.read(newNodesCountProvider.notifier).state = 0;
+                    }
                     setState(() => _currentIndex = index);
                   },
                 );
@@ -124,6 +139,10 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   bool _hasUnreadMessages(WidgetRef ref) {
     return ref.watch(hasUnreadMessagesProvider);
+  }
+
+  bool _hasNewNodes(WidgetRef ref) {
+    return ref.watch(newNodesCountProvider) > 0;
   }
 }
 

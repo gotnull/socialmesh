@@ -1,8 +1,12 @@
 PODS:
+  - audio_session (0.0.1):
+    - Flutter
   - Flutter (1.0.0)
   - flutter_blue_plus_darwin (0.0.2):
     - Flutter
     - FlutterMacOS
+  - flutter_local_notifications (0.0.1):
+    - Flutter
   - flutter_secure_storage (6.0.0):
     - Flutter
   - GoogleDataTransport (9.4.1):
@@ -32,6 +36,9 @@ PODS:
   - GoogleUtilitiesComponents (1.1.0):
     - GoogleUtilities/Logger
   - GTMSessionFetcher/Core (3.5.0)
+  - just_audio (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - MLImage (1.0.0-beta5)
   - MLKitBarcodeScanning (5.0.0):
     - MLKitCommon (~> 11.0)
@@ -73,9 +80,12 @@ PODS:
     - Flutter
 
 DEPENDENCIES:
+  - audio_session (from `.symlinks/plugins/audio_session/ios`)
   - Flutter (from `Flutter`)
   - flutter_blue_plus_darwin (from `.symlinks/plugins/flutter_blue_plus_darwin/darwin`)
+  - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
+  - just_audio (from `.symlinks/plugins/just_audio/darwin`)
   - mobile_scanner (from `.symlinks/plugins/mobile_scanner/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
@@ -99,12 +109,18 @@ SPEC REPOS:
     - PromisesObjC
 
 EXTERNAL SOURCES:
+  audio_session:
+    :path: ".symlinks/plugins/audio_session/ios"
   Flutter:
     :path: Flutter
   flutter_blue_plus_darwin:
     :path: ".symlinks/plugins/flutter_blue_plus_darwin/darwin"
+  flutter_local_notifications:
+    :path: ".symlinks/plugins/flutter_local_notifications/ios"
   flutter_secure_storage:
     :path: ".symlinks/plugins/flutter_secure_storage/ios"
+  just_audio:
+    :path: ".symlinks/plugins/just_audio/darwin"
   mobile_scanner:
     :path: ".symlinks/plugins/mobile_scanner/ios"
   path_provider_foundation:
@@ -119,8 +135,10 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 SPEC CHECKSUMS:
+  audio_session: 9bb7f6c970f21241b19f5a3658097ae459681ba0
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_blue_plus_darwin: 20a08bfeaa0f7804d524858d3d8744bcc1b6dbc3
+  flutter_local_notifications: a5a732f069baa862e728d839dd2ebb904737effb
   flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
   GoogleDataTransport: 6c09b596d841063d76d4288cc2d2f42cc36e1e2a
   GoogleMLKit: 97ac7af399057e99182ee8edfa8249e3226a4065
@@ -128,6 +146,7 @@ SPEC CHECKSUMS:
   GoogleUtilities: ea963c370a38a8069cc5f7ba4ca849a60b6d7d15
   GoogleUtilitiesComponents: 679b2c881db3b615a2777504623df6122dd20afe
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
+  just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
   MLImage: 1824212150da33ef225fbd3dc49f184cf611046c
   MLKitBarcodeScanning: 10ca0845a6d15f2f6e911f682a1998b68b973e8b
   MLKitCommon: afec63980417d29ffbb4790529a1b0a2291699e1

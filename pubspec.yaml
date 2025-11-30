@@ -51,6 +51,8 @@ dependencies:
   url_launcher: ^6.3.0
   http: ^1.2.0
   flutter_dotenv: ^6.0.0
+  flutter_local_notifications: ^19.5.0
+  just_audio: ^0.10.5
 
 dev_dependencies:
   flutter_test:

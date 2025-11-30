@@ -23,6 +23,8 @@ class ProtocolService {
   final StreamController<DeviceError> _errorController;
   final StreamController<int> _myNodeNumController;
   final StreamController<int> _rssiController;
+  final StreamController<double> _snrController;
+  final StreamController<double> _channelUtilController;
   final StreamController<MessageDeliveryUpdate> _deliveryController;
   final StreamController<pbenum.RegionCode> _regionController;
 
@@ -32,6 +34,8 @@ class ProtocolService {
 
   int? _myNodeNum;
   int _lastRssi = -90;
+  double _lastSnr = 0.0;
+  double _lastChannelUtil = 0.0;
   pbenum.RegionCode? _currentRegion;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
@@ -50,6 +54,8 @@ class ProtocolService {
       _errorController = StreamController<DeviceError>.broadcast(),
       _myNodeNumController = StreamController<int>.broadcast(),
       _rssiController = StreamController<int>.broadcast(),
+      _snrController = StreamController<double>.broadcast(),
+      _channelUtilController = StreamController<double>.broadcast(),
       _deliveryController = StreamController<MessageDeliveryUpdate>.broadcast(),
       _regionController = StreamController<pbenum.RegionCode>.broadcast();
 
@@ -70,6 +76,18 @@ class ProtocolService {
 
   /// Stream of RSSI updates
   Stream<int> get rssiStream => _rssiController.stream;
+
+  /// Stream of SNR (Signal-to-Noise Ratio) updates
+  Stream<double> get snrStream => _snrController.stream;
+
+  /// Stream of channel utilization updates (0-100%)
+  Stream<double> get channelUtilStream => _channelUtilController.stream;
+
+  /// Get last known SNR
+  double get lastSnr => _lastSnr;
+
+  /// Get last known channel utilization
+  double get lastChannelUtil => _lastChannelUtil;
 
   /// Stream of message delivery updates
   Stream<MessageDeliveryUpdate> get deliveryStream =>
@@ -245,6 +263,15 @@ class ProtocolService {
   void _handleMeshPacket(pb.MeshPacket packet) {
     _logger.d('Handling mesh packet from ${packet.from} to ${packet.to}');
 
+    // Extract and emit SNR from received packets
+    if (packet.hasRxSnr()) {
+      final snr = packet.rxSnr.toDouble();
+      if (snr != _lastSnr) {
+        _lastSnr = snr;
+        _snrController.add(snr);
+      }
+    }
+
     if (packet.hasDecoded()) {
       final data = packet.decoded;
 
@@ -382,10 +409,25 @@ class ProtocolService {
           : null;
       final voltage = deviceMetrics.hasVoltage() ? deviceMetrics.voltage : null;
 
+      // Extract channel utilization and air util from DeviceMetrics
+      final channelUtil = deviceMetrics.hasChannelUtilization()
+          ? deviceMetrics.channelUtilization.toDouble()
+          : null;
+      final airUtilTx = deviceMetrics.hasAirUtilTx()
+          ? deviceMetrics.airUtilTx.toDouble()
+          : null;
+
       _logger.i(
         'Telemetry from ${packet.from}: battery=$batteryLevel%, voltage=${voltage}V, '
+        'channelUtil=$channelUtil%, airUtilTx=$airUtilTx%, '
         'rawPayload=${data.payload.length} bytes',
       );
+
+      // Emit channel utilization if available (from our own device)
+      if (channelUtil != null && packet.from == _myNodeNum) {
+        _lastChannelUtil = channelUtil;
+        _channelUtilController.add(channelUtil);
+      }
 
       // Only update if we got valid battery data
       if (batteryLevel == null || batteryLevel == 0) {
