@@ -587,7 +587,8 @@ class ProtocolService {
       final hasValidPosition =
           (position.latitudeI != 0 && position.longitudeI != 0) && !isApplePark;
 
-      _logger.i(
+      // Use debugPrint so it shows in Flutter console
+      debugPrint(
         '📍 POSITION_APP from !${packet.from.toRadixString(16)}: '
         'latI=${position.latitudeI}, lngI=${position.longitudeI}, '
         'lat=${position.latitudeI / 1e7}, lng=${position.longitudeI / 1e7}, '

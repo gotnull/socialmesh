@@ -8,6 +8,7 @@ import '../services/protocol/protocol_service.dart';
 import '../services/storage/storage_service.dart';
 import '../services/notifications/notification_service.dart';
 import '../services/messaging/offline_queue_service.dart';
+import '../services/location/location_service.dart';
 import '../models/mesh_models.dart';
 import '../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 
@@ -89,6 +90,10 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
             // Start protocol service
             final protocol = _ref.read(protocolServiceProvider);
             await protocol.start();
+
+            // Start phone GPS location updates
+            final locationService = _ref.read(locationServiceProvider);
+            await locationService.startLocationUpdates();
 
             _ref.read(connectedDeviceProvider.notifier).state = lastDevice;
             _ref.read(autoReconnectStateProvider.notifier).state =
@@ -262,6 +267,10 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
           final protocol = ref.read(protocolServiceProvider);
           await protocol.start();
 
+          // Restart phone GPS location updates
+          final locationService = ref.read(locationServiceProvider);
+          await locationService.startLocationUpdates();
+
           ref.read(autoReconnectStateProvider.notifier).state =
               AutoReconnectState.success;
           debugPrint('🔄 Reconnection successful!');
@@ -337,6 +346,20 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
       '🔴 ProtocolService being disposed - instance: ${service.hashCode}',
     );
     service.stop();
+  });
+
+  return service;
+});
+
+// Location service - provides phone GPS to mesh devices
+// Like iOS Meshtastic app, sends phone GPS coordinates to mesh
+// when device doesn't have its own GPS hardware
+final locationServiceProvider = Provider<LocationService>((ref) {
+  final protocol = ref.watch(protocolServiceProvider);
+  final service = LocationService(protocol);
+
+  ref.onDispose(() {
+    service.dispose();
   });
 
   return service;

@@ -198,6 +198,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       debugPrint('🟡 Scanner screen - protocol instance: ${protocol.hashCode}');
       await protocol.start();
 
+      // Start phone GPS location updates (like iOS app does)
+      // This sends phone GPS to mesh for devices without GPS hardware
+      final locationService = ref.read(locationServiceProvider);
+      await locationService.startLocationUpdates();
+
       if (!mounted) return;
 
       // If onboarding, return the device and let onboarding handle navigation
