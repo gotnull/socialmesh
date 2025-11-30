@@ -6,6 +6,17 @@ import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import '../device/region_selection_screen.dart';
+import 'device_management_screen.dart';
+import 'device_config_screen.dart';
+import 'radio_config_screen.dart';
+import 'position_config_screen.dart';
+import 'display_config_screen.dart';
+import 'mqtt_config_screen.dart';
+import 'bluetooth_config_screen.dart';
+import 'network_config_screen.dart';
+import 'power_config_screen.dart';
+import 'security_config_screen.dart';
+import 'ringtone_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -149,6 +160,99 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
               _SettingsTile(
+                icon: Icons.settings,
+                title: 'Device Role & Settings',
+                subtitle: 'Configure device behavior and role',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DeviceConfigScreen()),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.radio,
+                title: 'Radio Configuration',
+                subtitle: 'LoRa settings, modem preset, power',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RadioConfigScreen()),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.gps_fixed,
+                title: 'Position & GPS',
+                subtitle: 'GPS mode, broadcast intervals, fixed position',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const PositionConfigScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.display_settings,
+                title: 'Display Settings',
+                subtitle: 'Screen timeout, units, display mode',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DisplayConfigScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.bluetooth,
+                title: 'Bluetooth',
+                subtitle: 'Pairing mode, PIN settings',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const BluetoothConfigScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.wifi,
+                title: 'Network',
+                subtitle: 'WiFi, Ethernet, NTP settings',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const NetworkConfigScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.battery_full,
+                title: 'Power Management',
+                subtitle: 'Power saving, sleep settings',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PowerConfigScreen()),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.security,
+                title: 'Security',
+                subtitle: 'Access controls, managed mode',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SecurityConfigScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.power_settings_new,
+                title: 'Device Management',
+                subtitle: 'Reboot, shutdown, factory reset',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DeviceManagementScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
                 icon: Icons.info_outline,
                 title: 'Device info',
                 subtitle: 'View connected device details',
@@ -159,6 +263,29 @@ class SettingsScreen extends ConsumerWidget {
                 title: 'Import channel via QR',
                 subtitle: 'Scan a Meshtastic channel QR code',
                 onTap: () => Navigator.pushNamed(context, '/qr-import'),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Modules Section
+              _SectionHeader(title: 'MODULES'),
+              _SettingsTile(
+                icon: Icons.cloud,
+                title: 'MQTT',
+                subtitle: 'Configure mesh-to-internet bridge',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MqttConfigScreen()),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.music_note,
+                title: 'Ringtone',
+                subtitle: 'Customize notification sound (RTTTL)',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RingtoneScreen()),
+                ),
               ),
 
               const SizedBox(height: 16),

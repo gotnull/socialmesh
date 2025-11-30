@@ -1167,6 +1167,1046 @@ class ProtocolService {
     }
   }
 
+  // ============================================================================
+  // DEVICE MANAGEMENT METHODS
+  // ============================================================================
+
+  /// Reboot the device after specified seconds (0 = immediate)
+  Future<void> reboot({int delaySeconds = 2}) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot reboot: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot reboot: not connected');
+    }
+
+    _logger.i('Rebooting device in $delaySeconds seconds');
+
+    final adminMsg = pb.AdminMessage()..rebootSeconds = delaySeconds;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Shutdown the device after specified seconds (0 = immediate)
+  Future<void> shutdown({int delaySeconds = 2}) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot shutdown: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot shutdown: not connected');
+    }
+
+    _logger.i('Shutting down device in $delaySeconds seconds');
+
+    final adminMsg = pb.AdminMessage()..shutdownSeconds = delaySeconds;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Factory reset the device configuration (keeps node DB)
+  Future<void> factoryResetConfig() async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot factory reset config: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot factory reset config: not connected');
+    }
+
+    _logger.i('Factory resetting configuration');
+
+    final adminMsg = pb.AdminMessage()..factoryResetConfig = 1;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Factory reset the entire device (config + node DB)
+  Future<void> factoryResetDevice() async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot factory reset device: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot factory reset device: not connected');
+    }
+
+    _logger.i('Factory resetting entire device');
+
+    final adminMsg = pb.AdminMessage()..factoryResetDevice = 1;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Reset the node database (removes all learned nodes)
+  Future<void> nodeDbReset() async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot reset node DB: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot reset node DB: not connected');
+    }
+
+    _logger.i('Resetting node database');
+
+    final adminMsg = pb.AdminMessage()..nodedbReset = true;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Enter DFU (Device Firmware Update) mode
+  Future<void> enterDfuMode() async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot enter DFU mode: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot enter DFU mode: not connected');
+    }
+
+    _logger.i('Entering DFU mode');
+
+    final adminMsg = pb.AdminMessage()..enterDfuModeRequest = true;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Request device metadata
+  Future<void> getDeviceMetadata() async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot get metadata: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot get metadata: not connected');
+    }
+
+    _logger.i('Requesting device metadata');
+
+    final adminMsg = pb.AdminMessage()..getDeviceMetadataRequest = true;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer()
+      ..wantResponse = true;
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  // ============================================================================
+  // NODE MANAGEMENT METHODS
+  // ============================================================================
+
+  /// Remove a node from the device's node database
+  Future<void> removeNode(int nodeNum) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot remove node: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot remove node: not connected');
+    }
+
+    _logger.i('Removing node $nodeNum');
+
+    final adminMsg = pb.AdminMessage()..removeByNodenum = nodeNum;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Set a node as favorite
+  Future<void> setFavoriteNode(int nodeNum) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot set favorite: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot set favorite: not connected');
+    }
+
+    _logger.i('Setting node $nodeNum as favorite');
+
+    final adminMsg = pb.AdminMessage()..setFavoriteNode = nodeNum;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Remove a node from favorites
+  Future<void> removeFavoriteNode(int nodeNum) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot remove favorite: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot remove favorite: not connected');
+    }
+
+    _logger.i('Removing node $nodeNum from favorites');
+
+    final adminMsg = pb.AdminMessage()..removeFavoriteNode = nodeNum;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Set a fixed position for the device
+  Future<void> setFixedPosition({
+    required double latitude,
+    required double longitude,
+    int altitude = 0,
+  }) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot set fixed position: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot set fixed position: not connected');
+    }
+
+    _logger.i('Setting fixed position: $latitude, $longitude, alt=$altitude');
+
+    final position = pb.Position()
+      ..latitudeI = (latitude * 1e7).toInt()
+      ..longitudeI = (longitude * 1e7).toInt()
+      ..altitude = altitude;
+
+    final adminMsg = pb.AdminMessage()..setFixedPosition = position;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Remove fixed position (use GPS)
+  Future<void> removeFixedPosition() async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot remove fixed position: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot remove fixed position: not connected');
+    }
+
+    _logger.i('Removing fixed position');
+
+    final adminMsg = pb.AdminMessage()..removeFixedPosition = true;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Set the device time to a specific Unix timestamp
+  Future<void> setTimeOnly(int unixTimestamp) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot set time: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot set time: not connected');
+    }
+
+    _logger.i('Setting device time to $unixTimestamp');
+
+    final adminMsg = pb.AdminMessage()..setTimeOnly = unixTimestamp;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Set device time to current time
+  Future<void> syncTime() async {
+    final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    await setTimeOnly(timestamp);
+  }
+
+  // ============================================================================
+  // HAM RADIO MODE
+  // ============================================================================
+
+  /// Set HAM radio mode with call sign
+  Future<void> setHamMode({
+    required String callSign,
+    int txPower = 0,
+    double frequency = 0.0,
+  }) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot set HAM mode: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot set HAM mode: not connected');
+    }
+
+    _logger.i('Setting HAM mode: callSign=$callSign');
+
+    final hamParams = pb.HamParameters()
+      ..callSign = callSign
+      ..txPower = txPower
+      ..frequency = frequency;
+
+    final adminMsg = pb.AdminMessage()..setHamMode = hamParams;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  // ============================================================================
+  // CONFIGURATION METHODS
+  // ============================================================================
+
+  /// Get device configuration by type
+  Future<void> getConfig(pb.AdminMessage_ConfigType configType) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot get config: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot get config: not connected');
+    }
+
+    _logger.i('Requesting config: ${configType.name}');
+
+    final adminMsg = pb.AdminMessage()..getConfigRequest = configType;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer()
+      ..wantResponse = true;
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Set device configuration (wraps with begin/commit transaction)
+  Future<void> setConfig(pb.Config config) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot set config: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot set config: not connected');
+    }
+
+    _logger.i('Setting config');
+
+    await _beginEditSettings();
+
+    final adminMsg = pb.AdminMessage()..setConfig = config;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer()
+      ..wantResponse = true;
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    await Future.delayed(const Duration(milliseconds: 200));
+    await _commitEditSettings();
+  }
+
+  /// Set LoRa configuration (region, modem preset, TX power, etc.)
+  Future<void> setLoRaConfig({
+    pbenum.RegionCode? region,
+    pb.ModemPreset? modemPreset,
+    int? hopLimit,
+    bool? txEnabled,
+    int? txPower,
+    bool? overrideDutyCycle,
+  }) async {
+    _logger.i('Setting LoRa config');
+
+    final loraConfig = pb.Config_LoRaConfig();
+    if (region != null) loraConfig.region = region;
+    if (modemPreset != null) loraConfig.modemPreset = modemPreset;
+    if (hopLimit != null) loraConfig.hopLimit = hopLimit;
+    if (txEnabled != null) loraConfig.txEnabled = txEnabled;
+    if (txPower != null) loraConfig.txPower = txPower;
+    if (overrideDutyCycle != null) {
+      loraConfig.overrideDutyCycle = overrideDutyCycle;
+    }
+
+    final config = pb.Config()..lora = loraConfig;
+    await setConfig(config);
+  }
+
+  /// Set device configuration (role, serial, etc.)
+  Future<void> setDeviceConfig({
+    pb.Config_DeviceConfig_Role_? role,
+    pb.Config_DeviceConfig_RebroadcastMode? rebroadcastMode,
+    bool? serialEnabled,
+    int? nodeInfoBroadcastSecs,
+    bool? doubleTapAsButtonPress,
+    bool? ledHeartbeatDisabled,
+  }) async {
+    _logger.i('Setting device config');
+
+    final deviceConfig = pb.Config_DeviceConfig();
+    if (role != null) deviceConfig.role = role;
+    if (rebroadcastMode != null) deviceConfig.rebroadcastMode = rebroadcastMode;
+    if (serialEnabled != null) deviceConfig.serialEnabled = serialEnabled;
+    if (nodeInfoBroadcastSecs != null) {
+      deviceConfig.nodeInfoBroadcastSecs = nodeInfoBroadcastSecs;
+    }
+    if (doubleTapAsButtonPress != null) {
+      deviceConfig.doubleTapAsButtonPress = doubleTapAsButtonPress;
+    }
+    if (ledHeartbeatDisabled != null) {
+      deviceConfig.ledHeartbeatDisabled = ledHeartbeatDisabled;
+    }
+
+    final config = pb.Config()..device = deviceConfig;
+    await setConfig(config);
+  }
+
+  /// Set position configuration
+  Future<void> setPositionConfig({
+    int? positionBroadcastSecs,
+    bool? positionBroadcastSmartEnabled,
+    bool? fixedPosition,
+    pb.Config_PositionConfig_GpsMode? gpsMode,
+    int? gpsUpdateInterval,
+  }) async {
+    _logger.i('Setting position config');
+
+    final posConfig = pb.Config_PositionConfig();
+    if (positionBroadcastSecs != null) {
+      posConfig.positionBroadcastSecs = positionBroadcastSecs;
+    }
+    if (positionBroadcastSmartEnabled != null) {
+      posConfig.positionBroadcastSmartEnabled = positionBroadcastSmartEnabled;
+    }
+    if (fixedPosition != null) posConfig.fixedPosition = fixedPosition;
+    if (gpsMode != null) posConfig.gpsMode = gpsMode;
+    if (gpsUpdateInterval != null) {
+      posConfig.gpsUpdateInterval = gpsUpdateInterval;
+    }
+
+    final config = pb.Config()..position = posConfig;
+    await setConfig(config);
+  }
+
+  /// Set power configuration
+  Future<void> setPowerConfig({
+    bool? isPowerSaving,
+    int? onBatteryShutdownAfterSecs,
+    int? waitBluetoothSecs,
+    int? sdsSecs,
+    int? lsSecs,
+    int? minWakeSecs,
+  }) async {
+    _logger.i('Setting power config');
+
+    final powerConfig = pb.Config_PowerConfig();
+    if (isPowerSaving != null) powerConfig.isPowerSaving = isPowerSaving;
+    if (onBatteryShutdownAfterSecs != null) {
+      powerConfig.onBatteryShutdownAfterSecs = onBatteryShutdownAfterSecs;
+    }
+    if (waitBluetoothSecs != null) {
+      powerConfig.waitBluetoothSecs = waitBluetoothSecs;
+    }
+    if (sdsSecs != null) powerConfig.sdsSecs = sdsSecs;
+    if (lsSecs != null) powerConfig.lsSecs = lsSecs;
+    if (minWakeSecs != null) powerConfig.minWakeSecs = minWakeSecs;
+
+    final config = pb.Config()..power = powerConfig;
+    await setConfig(config);
+  }
+
+  /// Set display configuration
+  Future<void> setDisplayConfig({
+    int? screenOnSecs,
+    int? gpsFormat,
+    int? autoScreenCarouselSecs,
+    bool? flipScreen,
+    pb.Config_DisplayConfig_DisplayUnits? units,
+    pb.Config_DisplayConfig_DisplayMode? displayMode,
+    bool? headingBold,
+    bool? wakeOnTapOrMotion,
+  }) async {
+    _logger.i('Setting display config');
+
+    final displayConfig = pb.Config_DisplayConfig();
+    if (screenOnSecs != null) displayConfig.screenOnSecs = screenOnSecs;
+    if (gpsFormat != null) displayConfig.gpsFormat = gpsFormat;
+    if (autoScreenCarouselSecs != null) {
+      displayConfig.autoScreenCarouselSecs = autoScreenCarouselSecs;
+    }
+    if (flipScreen != null) displayConfig.flipScreen = flipScreen;
+    if (units != null) displayConfig.units = units;
+    if (displayMode != null) displayConfig.displaymode = displayMode;
+    if (headingBold != null) displayConfig.headingBold = headingBold;
+    if (wakeOnTapOrMotion != null) {
+      displayConfig.wakeOnTapOrMotion = wakeOnTapOrMotion;
+    }
+
+    final config = pb.Config()..display = displayConfig;
+    await setConfig(config);
+  }
+
+  /// Set Bluetooth configuration
+  Future<void> setBluetoothConfig({
+    bool? enabled,
+    pb.Config_BluetoothConfig_PairingMode? mode,
+    int? fixedPin,
+  }) async {
+    _logger.i('Setting Bluetooth config');
+
+    final btConfig = pb.Config_BluetoothConfig();
+    if (enabled != null) btConfig.enabled = enabled;
+    if (mode != null) btConfig.mode = mode;
+    if (fixedPin != null) btConfig.fixedPin = fixedPin;
+
+    final config = pb.Config()..bluetooth = btConfig;
+    await setConfig(config);
+  }
+
+  /// Set network configuration
+  Future<void> setNetworkConfig({
+    bool? wifiEnabled,
+    String? wifiSsid,
+    String? wifiPsk,
+    bool? ethEnabled,
+    String? ntpServer,
+  }) async {
+    _logger.i('Setting network config');
+
+    final networkConfig = pb.Config_NetworkConfig();
+    if (wifiEnabled != null) networkConfig.wifiEnabled = wifiEnabled;
+    if (wifiSsid != null) networkConfig.wifiSsid = wifiSsid;
+    if (wifiPsk != null) networkConfig.wifiPsk = wifiPsk;
+    if (ethEnabled != null) networkConfig.ethEnabled = ethEnabled;
+    if (ntpServer != null) networkConfig.ntpServer = ntpServer;
+
+    final config = pb.Config()..network = networkConfig;
+    await setConfig(config);
+  }
+
+  /// Set security configuration
+  Future<void> setSecurityConfig({
+    bool? isManaged,
+    bool? serialEnabled,
+    bool? debugLogEnabled,
+    bool? adminChannelEnabled,
+  }) async {
+    _logger.i('Setting security config');
+
+    final secConfig = pb.Config_SecurityConfig();
+    if (isManaged != null) secConfig.isManaged = isManaged;
+    if (serialEnabled != null) secConfig.serialEnabled = serialEnabled;
+    if (debugLogEnabled != null) secConfig.debugLogApiEnabled = debugLogEnabled;
+    if (adminChannelEnabled != null) {
+      secConfig.adminChannelEnabled = adminChannelEnabled;
+    }
+
+    final config = pb.Config()..security = secConfig;
+    await setConfig(config);
+  }
+
+  // ============================================================================
+  // MODULE CONFIGURATION METHODS
+  // ============================================================================
+
+  /// Get module configuration by type
+  Future<void> getModuleConfig(
+    pb.AdminMessage_ModuleConfigType moduleType,
+  ) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot get module config: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot get module config: not connected');
+    }
+
+    _logger.i('Requesting module config: ${moduleType.name}');
+
+    final adminMsg = pb.AdminMessage()..getModuleConfigRequest = moduleType;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer()
+      ..wantResponse = true;
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Set module configuration (wraps with begin/commit transaction)
+  Future<void> setModuleConfig(pb.ModuleConfig moduleConfig) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot set module config: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot set module config: not connected');
+    }
+
+    _logger.i('Setting module config');
+
+    await _beginEditSettings();
+
+    final adminMsg = pb.AdminMessage()..setModuleConfig = moduleConfig;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer()
+      ..wantResponse = true;
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    await Future.delayed(const Duration(milliseconds: 200));
+    await _commitEditSettings();
+  }
+
+  /// Set MQTT module configuration
+  Future<void> setMQTTConfig({
+    bool? enabled,
+    String? address,
+    String? username,
+    String? password,
+    bool? encryptionEnabled,
+    bool? jsonEnabled,
+    bool? tlsEnabled,
+    String? root,
+    bool? proxyToClientEnabled,
+    bool? mapReportingEnabled,
+  }) async {
+    _logger.i('Setting MQTT config');
+
+    final mqttConfig = pb.ModuleConfig_MQTTConfig();
+    if (enabled != null) mqttConfig.enabled = enabled;
+    if (address != null) mqttConfig.address = address;
+    if (username != null) mqttConfig.username = username;
+    if (password != null) mqttConfig.password = password;
+    if (encryptionEnabled != null) {
+      mqttConfig.encryptionEnabled = encryptionEnabled;
+    }
+    if (jsonEnabled != null) mqttConfig.jsonEnabled = jsonEnabled;
+    if (tlsEnabled != null) mqttConfig.tlsEnabled = tlsEnabled;
+    if (root != null) mqttConfig.root = root;
+    if (proxyToClientEnabled != null) {
+      mqttConfig.proxyToClientEnabled = proxyToClientEnabled;
+    }
+    if (mapReportingEnabled != null) {
+      mqttConfig.mapReportingEnabled = mapReportingEnabled;
+    }
+
+    final moduleConfig = pb.ModuleConfig()..mqtt = mqttConfig;
+    await setModuleConfig(moduleConfig);
+  }
+
+  /// Set Telemetry module configuration
+  Future<void> setTelemetryConfig({
+    int? deviceUpdateInterval,
+    int? environmentUpdateInterval,
+    bool? environmentMeasurementEnabled,
+    bool? environmentScreenEnabled,
+    bool? environmentDisplayFahrenheit,
+    bool? airQualityEnabled,
+    int? airQualityInterval,
+    bool? powerMeasurementEnabled,
+    int? powerUpdateInterval,
+  }) async {
+    _logger.i('Setting telemetry config');
+
+    final telemetryConfig = pb.ModuleConfig_TelemetryConfig();
+    if (deviceUpdateInterval != null) {
+      telemetryConfig.deviceUpdateInterval = deviceUpdateInterval;
+    }
+    if (environmentUpdateInterval != null) {
+      telemetryConfig.environmentUpdateInterval = environmentUpdateInterval;
+    }
+    if (environmentMeasurementEnabled != null) {
+      telemetryConfig.environmentMeasurementEnabled =
+          environmentMeasurementEnabled;
+    }
+    if (environmentScreenEnabled != null) {
+      telemetryConfig.environmentScreenEnabled = environmentScreenEnabled;
+    }
+    if (environmentDisplayFahrenheit != null) {
+      telemetryConfig.environmentDisplayFahrenheit =
+          environmentDisplayFahrenheit;
+    }
+    if (airQualityEnabled != null) {
+      telemetryConfig.airQualityEnabled = airQualityEnabled;
+    }
+    if (airQualityInterval != null) {
+      telemetryConfig.airQualityInterval = airQualityInterval;
+    }
+    if (powerMeasurementEnabled != null) {
+      telemetryConfig.powerMeasurementEnabled = powerMeasurementEnabled;
+    }
+    if (powerUpdateInterval != null) {
+      telemetryConfig.powerUpdateInterval = powerUpdateInterval;
+    }
+
+    final moduleConfig = pb.ModuleConfig()..telemetry = telemetryConfig;
+    await setModuleConfig(moduleConfig);
+  }
+
+  /// Set External Notification module configuration
+  Future<void> setExternalNotificationConfig({
+    bool? enabled,
+    int? outputMs,
+    bool? active,
+    bool? alertMessage,
+    bool? alertBell,
+    bool? usePwm,
+    int? nagTimeout,
+  }) async {
+    _logger.i('Setting external notification config');
+
+    final extNotifConfig = pb.ModuleConfig_ExternalNotificationConfig();
+    if (enabled != null) extNotifConfig.enabled = enabled;
+    if (outputMs != null) extNotifConfig.outputMs = outputMs;
+    if (active != null) extNotifConfig.active = active;
+    if (alertMessage != null) extNotifConfig.alertMessage = alertMessage;
+    if (alertBell != null) extNotifConfig.alertBell = alertBell;
+    if (usePwm != null) extNotifConfig.usePwm = usePwm;
+    if (nagTimeout != null) extNotifConfig.nagTimeout = nagTimeout;
+
+    final moduleConfig = pb.ModuleConfig()
+      ..externalNotification = extNotifConfig;
+    await setModuleConfig(moduleConfig);
+  }
+
+  /// Set Store & Forward module configuration
+  Future<void> setStoreForwardConfig({
+    bool? enabled,
+    bool? heartbeat,
+    int? records,
+    int? historyReturnMax,
+    int? historyReturnWindow,
+  }) async {
+    _logger.i('Setting store & forward config');
+
+    final sfConfig = pb.ModuleConfig_StoreForwardConfig();
+    if (enabled != null) sfConfig.enabled = enabled;
+    if (heartbeat != null) sfConfig.heartbeat = heartbeat;
+    if (records != null) sfConfig.records = records;
+    if (historyReturnMax != null) sfConfig.historyReturnMax = historyReturnMax;
+    if (historyReturnWindow != null) {
+      sfConfig.historyReturnWindow = historyReturnWindow;
+    }
+
+    final moduleConfig = pb.ModuleConfig()..storeForward = sfConfig;
+    await setModuleConfig(moduleConfig);
+  }
+
+  /// Set Range Test module configuration
+  Future<void> setRangeTestConfig({
+    bool? enabled,
+    int? sender,
+    bool? save,
+  }) async {
+    _logger.i('Setting range test config');
+
+    final rtConfig = pb.ModuleConfig_RangeTestConfig();
+    if (enabled != null) rtConfig.enabled = enabled;
+    if (sender != null) rtConfig.sender = sender;
+    if (save != null) rtConfig.save = save;
+
+    final moduleConfig = pb.ModuleConfig()..rangeTest = rtConfig;
+    await setModuleConfig(moduleConfig);
+  }
+
+  // ============================================================================
+  // CANNED MESSAGES & RINGTONE
+  // ============================================================================
+
+  /// Get canned messages
+  Future<void> getCannedMessages() async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot get canned messages: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot get canned messages: not connected');
+    }
+
+    _logger.i('Requesting canned messages');
+
+    final adminMsg = pb.AdminMessage()
+      ..getCannedMessageModuleMessagesRequest = true;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer()
+      ..wantResponse = true;
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Set canned messages (pipe-separated list)
+  Future<void> setCannedMessages(String messages) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot set canned messages: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot set canned messages: not connected');
+    }
+
+    _logger.i('Setting canned messages');
+
+    final adminMsg = pb.AdminMessage()
+      ..setCannedMessageModuleMessages = messages;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Get device ringtone
+  Future<void> getRingtone() async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot get ringtone: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot get ringtone: not connected');
+    }
+
+    _logger.i('Requesting ringtone');
+
+    final adminMsg = pb.AdminMessage()..getRingtoneRequest = true;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer()
+      ..wantResponse = true;
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Set device ringtone (RTTTL format)
+  Future<void> setRingtone(String rtttl) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot set ringtone: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot set ringtone: not connected');
+    }
+
+    _logger.i('Setting ringtone');
+
+    final adminMsg = pb.AdminMessage()..setRingtoneMessage = rtttl;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Delete a file from the device
+  Future<void> deleteFile(String filename) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot delete file: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot delete file: not connected');
+    }
+
+    _logger.i('Deleting file: $filename');
+
+    final adminMsg = pb.AdminMessage()..deleteFileRequest = filename;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId();
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
   /// Format hardware model enum to readable string
   String _formatHardwareModel(pb.HardwareModel model) {
     // Convert enum name to readable format

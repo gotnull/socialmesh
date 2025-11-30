@@ -630,7 +630,7 @@ class _NodeCard extends StatelessWidget {
   }
 }
 
-class _NodeDetailsSheet extends StatelessWidget {
+class _NodeDetailsSheet extends ConsumerWidget {
   final MeshNode node;
   final bool isMyNode;
 
@@ -843,8 +843,242 @@ class _NodeDetailsSheet extends StatelessWidget {
     );
   }
 
+  void _toggleFavorite(BuildContext context, WidgetRef ref) async {
+    final protocol = ref.read(protocolServiceProvider);
+    Navigator.pop(context);
+
+    try {
+      if (node.isFavorite) {
+        await protocol.removeFavoriteNode(node.nodeNum);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${node.displayName} removed from favorites'),
+              backgroundColor: AppTheme.darkCard,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } else {
+        await protocol.setFavoriteNode(node.nodeNum);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${node.displayName} added to favorites'),
+              backgroundColor: AppTheme.darkCard,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update favorite: $e'),
+            backgroundColor: AppTheme.errorRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  void _removeNode(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Remove Node',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Inter',
+          ),
+        ),
+        content: Text(
+          'Remove ${node.displayName} from the node database? This will remove the node from your local device.',
+          style: const TextStyle(
+            color: AppTheme.textSecondary,
+            fontFamily: 'Inter',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              Navigator.pop(context);
+
+              final protocol = ref.read(protocolServiceProvider);
+
+              try {
+                await protocol.removeNode(node.nodeNum);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${node.displayName} removed'),
+                      backgroundColor: AppTheme.darkCard,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to remove node: $e'),
+                      backgroundColor: AppTheme.errorRed,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorRed,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _setFixedPosition(BuildContext context, WidgetRef ref) async {
+    if (!node.hasPosition) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Node has no position data'),
+          backgroundColor: AppTheme.darkCard,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    Navigator.pop(context);
+
+    final protocol = ref.read(protocolServiceProvider);
+
+    try {
+      // Sets the connected device's fixed position to this node's location
+      await protocol.setFixedPosition(
+        latitude: node.latitude!,
+        longitude: node.longitude!,
+        altitude: node.altitude ?? 0,
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Fixed position set to ${node.displayName}\'s location',
+            ),
+            backgroundColor: AppTheme.darkCard,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to set fixed position: $e'),
+            backgroundColor: AppTheme.errorRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showMoreOptions(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        minimum: const EdgeInsets.only(bottom: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.textTertiary.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: Icon(
+                node.isFavorite ? Icons.star : Icons.star_border,
+                color: node.isFavorite
+                    ? AppTheme.warningYellow
+                    : AppTheme.textSecondary,
+              ),
+              title: Text(
+                node.isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Inter',
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _toggleFavorite(context, ref);
+              },
+            ),
+            if (node.hasPosition)
+              ListTile(
+                leading: const Icon(
+                  Icons.location_on,
+                  color: AppTheme.textSecondary,
+                ),
+                title: const Text(
+                  'Set as Fixed Position',
+                  style: TextStyle(color: Colors.white, fontFamily: 'Inter'),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _setFixedPosition(context, ref);
+                },
+              ),
+            ListTile(
+              leading: const Icon(
+                Icons.delete_outline,
+                color: AppTheme.errorRed,
+              ),
+              title: const Text(
+                'Remove Node',
+                style: TextStyle(color: AppTheme.errorRed, fontFamily: 'Inter'),
+              ),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _removeNode(context, ref);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final dateFormat = DateFormat('MMM d, yyyy HH:mm');
 
     return Container(
@@ -1027,52 +1261,101 @@ class _NodeDetailsSheet extends StatelessWidget {
 
           // Action buttons
           if (!isMyNode)
-            Row(
+            Column(
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showNodeQrCode(context),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: AppTheme.darkBorder),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
+                // Primary actions row
+                Row(
+                  children: [
+                    // Favorite button
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppTheme.darkBorder),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                    icon: const Icon(Icons.qr_code, size: 20),
-                    label: const Text(
-                      'QR Code',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Inter',
+                      child: IconButton(
+                        onPressed: () => _toggleFavorite(context, ref),
+                        icon: Icon(
+                          node.isFavorite ? Icons.star : Icons.star_border,
+                          color: node.isFavorite
+                              ? AppTheme.warningYellow
+                              : AppTheme.textSecondary,
+                          size: 22,
+                        ),
+                        tooltip: node.isFavorite
+                            ? 'Remove from favorites'
+                            : 'Add to favorites',
+                        padding: const EdgeInsets.all(12),
+                        constraints: const BoxConstraints(),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _sendDirectMessage(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryGreen,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
+                    const SizedBox(width: 8),
+                    // More options button
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppTheme.darkBorder),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                    icon: const Icon(Icons.message, size: 20),
-                    label: const Text(
-                      'Message',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Inter',
+                      child: IconButton(
+                        onPressed: () => _showMoreOptions(context, ref),
+                        icon: const Icon(
+                          Icons.more_horiz,
+                          color: AppTheme.textSecondary,
+                          size: 22,
+                        ),
+                        tooltip: 'More options',
+                        padding: const EdgeInsets.all(12),
+                        constraints: const BoxConstraints(),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    // QR Code button
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showNodeQrCode(context),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: AppTheme.darkBorder),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: const Icon(Icons.qr_code, size: 20),
+                        label: const Text(
+                          'QR Code',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Message button
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _sendDirectMessage(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryGreen,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: const Icon(Icons.message, size: 20),
+                        label: const Text(
+                          'Message',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             )
