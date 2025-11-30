@@ -9,6 +9,7 @@ import '../services/storage/storage_service.dart';
 import '../services/notifications/notification_service.dart';
 import '../services/messaging/offline_queue_service.dart';
 import '../services/location/location_service.dart';
+import '../services/live_activity/live_activity_service.dart';
 import '../models/mesh_models.dart';
 import '../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 
@@ -382,6 +383,17 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
 final locationServiceProvider = Provider<LocationService>((ref) {
   final protocol = ref.watch(protocolServiceProvider);
   final service = LocationService(protocol);
+
+  ref.onDispose(() {
+    service.dispose();
+  });
+
+  return service;
+});
+
+// Live Activity service - shows device status on iOS Lock Screen and Dynamic Island
+final liveActivityServiceProvider = Provider<LiveActivityService>((ref) {
+  final service = LiveActivityService();
 
   ref.onDispose(() {
     service.dispose();

@@ -57,6 +57,8 @@
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 		<string>This app needs location access to show your position on the map and share it with mesh
 			nodes even when in background</string>
+		<key>NSSupportsLiveActivities</key>
+		<true />
 		<key>UIBackgroundModes</key>
 		<array>
 			<string>bluetooth-central</string>
