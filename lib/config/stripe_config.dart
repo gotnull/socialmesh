@@ -16,8 +16,7 @@ class StripeConfig {
   static String get pricePremium =>
       dotenv.env['STRIPE_PRICE_PREMIUM'] ?? 'price_premium';
 
-  static String get pricePro =>
-      dotenv.env['STRIPE_PRICE_PRO'] ?? 'price_pro';
+  static String get pricePro => dotenv.env['STRIPE_PRICE_PRO'] ?? 'price_pro';
 
   static String get priceEnterprise =>
       dotenv.env['STRIPE_PRICE_ENTERPRISE'] ?? 'price_enterprise';
