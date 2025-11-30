@@ -253,6 +253,10 @@ class ProtocolService {
         // Request LoRa config to get current region
         Future.delayed(const Duration(milliseconds: 100), () {
           getLoRaConfig();
+          // Request positions from all nodes including ourselves
+          Future.delayed(const Duration(milliseconds: 500), () {
+            requestAllPositions();
+          });
         });
       }
     } catch (e, stack) {
@@ -698,6 +702,13 @@ class ProtocolService {
     _myNodeNum = myInfo.myNodeNum;
     _logger.i('My node number: $_myNodeNum');
     _myNodeNumController.add(_myNodeNum!);
+
+    // Request our own position after a short delay
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (_myNodeNum != null) {
+        requestPosition(_myNodeNum!);
+      }
+    });
   }
 
   /// Handle node info
@@ -1044,6 +1055,41 @@ class ProtocolService {
       await _transport.send(_prepareForSend(bytes));
     } catch (e) {
       _logger.e('Error requesting node info: $e');
+    }
+  }
+
+  /// Request position from a specific node
+  Future<void> requestPosition(int nodeNum) async {
+    try {
+      _logger.i('Requesting position for node $nodeNum');
+
+      final data = pb.Data()
+        ..portnum = pb.PortNum.POSITION_APP
+        ..wantResponse = true;
+
+      final packet = pb.MeshPacket()
+        ..from = _myNodeNum ?? 0
+        ..to = nodeNum
+        ..decoded = data
+        ..id = _generatePacketId()
+        ..wantAck = true;
+
+      final toRadio = pn.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+    } catch (e) {
+      _logger.e('Error requesting position: $e');
+    }
+  }
+
+  /// Request positions from all known nodes
+  Future<void> requestAllPositions() async {
+    _logger.i('Requesting positions from all ${_nodes.length} known nodes');
+    for (final nodeNum in _nodes.keys) {
+      await requestPosition(nodeNum);
+      // Small delay between requests to avoid flooding
+      await Future.delayed(const Duration(milliseconds: 100));
     }
   }
 

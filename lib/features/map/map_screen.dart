@@ -20,11 +20,40 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   final MapController _mapController = MapController();
   MeshNode? _selectedNode;
   bool _showHeatmap = false;
+  bool _isRefreshing = false;
 
   @override
   void dispose() {
     _mapController.dispose();
     super.dispose();
+  }
+
+  Future<void> _refreshPositions() async {
+    if (_isRefreshing) return;
+
+    setState(() => _isRefreshing = true);
+
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      await protocol.requestAllPositions();
+
+      // Show feedback
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Requesting positions from nodes...'),
+            duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      // Wait a bit before allowing another refresh
+      await Future.delayed(const Duration(seconds: 2));
+      if (mounted) {
+        setState(() => _isRefreshing = false);
+      }
+    }
   }
 
   @override
@@ -74,6 +103,21 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           ),
         ),
         actions: [
+          // Refresh positions
+          IconButton(
+            icon: _isRefreshing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppTheme.textSecondary,
+                    ),
+                  )
+                : const Icon(Icons.refresh, color: AppTheme.textSecondary),
+            onPressed: _isRefreshing ? null : _refreshPositions,
+            tooltip: 'Request positions from nodes',
+          ),
           // Heatmap toggle
           IconButton(
             icon: Icon(
@@ -222,6 +266,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   Widget _buildEmptyState() {
+    final nodes = ref.watch(nodesProvider);
+    final totalNodes = nodes.length;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -251,9 +298,48 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Nodes will appear on the map once they\nreport their GPS position.',
-              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+            Text(
+              totalNodes > 0
+                  ? '$totalNodes nodes discovered but none have\nreported GPS position yet.'
+                  : 'Nodes will appear on the map once they\nreport their GPS position.',
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppTheme.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _isRefreshing ? null : _refreshPositions,
+              icon: _isRefreshing
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.refresh, size: 18),
+              label: Text(
+                _isRefreshing ? 'Requesting...' : 'Request Positions',
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryMagenta,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Position broadcasts can take up to 15 minutes.\nTap to request immediately.',
+              style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
               textAlign: TextAlign.center,
             ),
           ],

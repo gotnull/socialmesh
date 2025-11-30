@@ -520,17 +520,10 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                 ],
               ),
             ),
-            Radio<PrivacyLevel>(
-              value: level,
-              groupValue: _privacyLevel,
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _privacyLevel = value;
-                  });
-                }
-              },
-              activeColor: level.color,
+            Icon(
+              isSelected ? Icons.check_circle : Icons.circle_outlined,
+              color: isSelected ? level.color : AppTheme.textTertiary,
+              size: 24,
             ),
           ],
         ),
@@ -707,7 +700,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppTheme.primaryMagenta,
+            activeTrackColor: AppTheme.primaryMagenta,
           ),
         ],
       ),

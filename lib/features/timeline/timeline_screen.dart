@@ -344,7 +344,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: TimelineFilter.values.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final filter = TimelineFilter.values[index];
           final isSelected = _filter == filter;
