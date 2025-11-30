@@ -142,7 +142,7 @@ class _SplashScreen extends ConsumerWidget {
               child: CircularProgressIndicator(
                 strokeWidth: 2,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  AppTheme.primaryGreen,
+                  AppTheme.primaryMagenta,
                 ),
               ),
             ),
