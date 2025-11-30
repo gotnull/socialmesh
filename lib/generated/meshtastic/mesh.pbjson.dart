@@ -293,18 +293,76 @@ final $typed_data.Uint8List regionCodeDescriptor = $convert.base64Decode(
 const Position$json = {
   '1': 'Position',
   '2': [
-    {'1': 'latitude_i', '3': 1, '4': 1, '5': 15, '10': 'latitudeI'},
-    {'1': 'longitude_i', '3': 2, '4': 1, '5': 15, '10': 'longitudeI'},
-    {'1': 'altitude', '3': 3, '4': 1, '5': 5, '10': 'altitude'},
+    {
+      '1': 'latitude_i',
+      '3': 1,
+      '4': 1,
+      '5': 15,
+      '9': 0,
+      '10': 'latitudeI',
+      '17': true
+    },
+    {
+      '1': 'longitude_i',
+      '3': 2,
+      '4': 1,
+      '5': 15,
+      '9': 1,
+      '10': 'longitudeI',
+      '17': true
+    },
+    {
+      '1': 'altitude',
+      '3': 3,
+      '4': 1,
+      '5': 5,
+      '9': 2,
+      '10': 'altitude',
+      '17': true
+    },
     {'1': 'time', '3': 4, '4': 1, '5': 7, '10': 'time'},
+    {'1': 'gps_accuracy', '3': 14, '4': 1, '5': 13, '10': 'gpsAccuracy'},
+    {
+      '1': 'ground_speed',
+      '3': 15,
+      '4': 1,
+      '5': 13,
+      '9': 3,
+      '10': 'groundSpeed',
+      '17': true
+    },
+    {
+      '1': 'ground_track',
+      '3': 16,
+      '4': 1,
+      '5': 13,
+      '9': 4,
+      '10': 'groundTrack',
+      '17': true
+    },
+    {'1': 'sats_in_view', '3': 19, '4': 1, '5': 13, '10': 'satsInView'},
+    {'1': 'seq_number', '3': 22, '4': 1, '5': 13, '10': 'seqNumber'},
+    {'1': 'precision_bits', '3': 23, '4': 1, '5': 13, '10': 'precisionBits'},
+  ],
+  '8': [
+    {'1': '_latitude_i'},
+    {'1': '_longitude_i'},
+    {'1': '_altitude'},
+    {'1': '_ground_speed'},
+    {'1': '_ground_track'},
   ],
 };
 
 /// Descriptor for `Position`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List positionDescriptor = $convert.base64Decode(
-    'CghQb3NpdGlvbhIdCgpsYXRpdHVkZV9pGAEgASgPUglsYXRpdHVkZUkSHwoLbG9uZ2l0dWRlX2'
-    'kYAiABKA9SCmxvbmdpdHVkZUkSGgoIYWx0aXR1ZGUYAyABKAVSCGFsdGl0dWRlEhIKBHRpbWUY'
-    'BCABKAdSBHRpbWU=');
+    'CghQb3NpdGlvbhIiCgpsYXRpdHVkZV9pGAEgASgPSABSCWxhdGl0dWRlSYgBARIkCgtsb25naX'
+    'R1ZGVfaRgCIAEoD0gBUgpsb25naXR1ZGVJiAEBEh8KCGFsdGl0dWRlGAMgASgFSAJSCGFsdGl0'
+    'dWRliAEBEhIKBHRpbWUYBCABKAdSBHRpbWUSIQoMZ3BzX2FjY3VyYWN5GA4gASgNUgtncHNBY2'
+    'N1cmFjeRImCgxncm91bmRfc3BlZWQYDyABKA1IA1ILZ3JvdW5kU3BlZWSIAQESJgoMZ3JvdW5k'
+    'X3RyYWNrGBAgASgNSARSC2dyb3VuZFRyYWNriAEBEiAKDHNhdHNfaW5fdmlldxgTIAEoDVIKc2'
+    'F0c0luVmlldxIdCgpzZXFfbnVtYmVyGBYgASgNUglzZXFOdW1iZXISJQoOcHJlY2lzaW9uX2Jp'
+    'dHMYFyABKA1SDXByZWNpc2lvbkJpdHNCDQoLX2xhdGl0dWRlX2lCDgoMX2xvbmdpdHVkZV9pQg'
+    'sKCV9hbHRpdHVkZUIPCg1fZ3JvdW5kX3NwZWVkQg8KDV9ncm91bmRfdHJhY2s=');
 
 @$core.Deprecated('Use userDescriptor instead')
 const User$json = {

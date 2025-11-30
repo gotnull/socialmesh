@@ -13,19 +13,37 @@ option go_package = "github.com/meshtastic/go/generated";
  * Meshtastic mesh packet definition
  */
 
-// Unique identifier for a node
+// A GPS Position
 message Position {
   // Latitude in degrees * 1e-7
-  sfixed32 latitude_i = 1;
+  optional sfixed32 latitude_i = 1;
   
   // Longitude in degrees * 1e-7
-  sfixed32 longitude_i = 2;
+  optional sfixed32 longitude_i = 2;
   
   // Altitude in meters above MSL
-  int32 altitude = 3;
+  optional int32 altitude = 3;
   
   // Timestamp in seconds since 1970
   fixed32 time = 4;
+  
+  // GPS accuracy in mm multiplied with DOP
+  uint32 gps_accuracy = 14;
+  
+  // Ground speed in m/s
+  optional uint32 ground_speed = 15;
+  
+  // True North TRACK in 1/100 degrees
+  optional uint32 ground_track = 16;
+  
+  // GPS Satellites in View
+  uint32 sats_in_view = 19;
+  
+  // Sequence number
+  uint32 seq_number = 22;
+  
+  // Precision bits
+  uint32 precision_bits = 23;
 }
 
 // User role

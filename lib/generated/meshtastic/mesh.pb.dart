@@ -22,19 +22,31 @@ export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 export 'mesh.pbenum.dart';
 
-/// Unique identifier for a node
+/// A GPS Position
 class Position extends $pb.GeneratedMessage {
   factory Position({
     $core.int? latitudeI,
     $core.int? longitudeI,
     $core.int? altitude,
     $core.int? time,
+    $core.int? gpsAccuracy,
+    $core.int? groundSpeed,
+    $core.int? groundTrack,
+    $core.int? satsInView,
+    $core.int? seqNumber,
+    $core.int? precisionBits,
   }) {
     final result = create();
     if (latitudeI != null) result.latitudeI = latitudeI;
     if (longitudeI != null) result.longitudeI = longitudeI;
     if (altitude != null) result.altitude = altitude;
     if (time != null) result.time = time;
+    if (gpsAccuracy != null) result.gpsAccuracy = gpsAccuracy;
+    if (groundSpeed != null) result.groundSpeed = groundSpeed;
+    if (groundTrack != null) result.groundTrack = groundTrack;
+    if (satsInView != null) result.satsInView = satsInView;
+    if (seqNumber != null) result.seqNumber = seqNumber;
+    if (precisionBits != null) result.precisionBits = precisionBits;
     return result;
   }
 
@@ -56,6 +68,17 @@ class Position extends $pb.GeneratedMessage {
         fieldType: $pb.PbFieldType.OSF3)
     ..aI(3, _omitFieldNames ? '' : 'altitude')
     ..aI(4, _omitFieldNames ? '' : 'time', fieldType: $pb.PbFieldType.OF3)
+    ..aI(14, _omitFieldNames ? '' : 'gpsAccuracy',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(15, _omitFieldNames ? '' : 'groundSpeed',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(16, _omitFieldNames ? '' : 'groundTrack',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(19, _omitFieldNames ? '' : 'satsInView',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(22, _omitFieldNames ? '' : 'seqNumber', fieldType: $pb.PbFieldType.OU3)
+    ..aI(23, _omitFieldNames ? '' : 'precisionBits',
+        fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -115,6 +138,66 @@ class Position extends $pb.GeneratedMessage {
   $core.bool hasTime() => $_has(3);
   @$pb.TagNumber(4)
   void clearTime() => $_clearField(4);
+
+  /// GPS accuracy in mm multiplied with DOP
+  @$pb.TagNumber(14)
+  $core.int get gpsAccuracy => $_getIZ(4);
+  @$pb.TagNumber(14)
+  set gpsAccuracy($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(14)
+  $core.bool hasGpsAccuracy() => $_has(4);
+  @$pb.TagNumber(14)
+  void clearGpsAccuracy() => $_clearField(14);
+
+  /// Ground speed in m/s
+  @$pb.TagNumber(15)
+  $core.int get groundSpeed => $_getIZ(5);
+  @$pb.TagNumber(15)
+  set groundSpeed($core.int value) => $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(15)
+  $core.bool hasGroundSpeed() => $_has(5);
+  @$pb.TagNumber(15)
+  void clearGroundSpeed() => $_clearField(15);
+
+  /// True North TRACK in 1/100 degrees
+  @$pb.TagNumber(16)
+  $core.int get groundTrack => $_getIZ(6);
+  @$pb.TagNumber(16)
+  set groundTrack($core.int value) => $_setUnsignedInt32(6, value);
+  @$pb.TagNumber(16)
+  $core.bool hasGroundTrack() => $_has(6);
+  @$pb.TagNumber(16)
+  void clearGroundTrack() => $_clearField(16);
+
+  /// GPS Satellites in View
+  @$pb.TagNumber(19)
+  $core.int get satsInView => $_getIZ(7);
+  @$pb.TagNumber(19)
+  set satsInView($core.int value) => $_setUnsignedInt32(7, value);
+  @$pb.TagNumber(19)
+  $core.bool hasSatsInView() => $_has(7);
+  @$pb.TagNumber(19)
+  void clearSatsInView() => $_clearField(19);
+
+  /// Sequence number
+  @$pb.TagNumber(22)
+  $core.int get seqNumber => $_getIZ(8);
+  @$pb.TagNumber(22)
+  set seqNumber($core.int value) => $_setUnsignedInt32(8, value);
+  @$pb.TagNumber(22)
+  $core.bool hasSeqNumber() => $_has(8);
+  @$pb.TagNumber(22)
+  void clearSeqNumber() => $_clearField(22);
+
+  /// Precision bits
+  @$pb.TagNumber(23)
+  $core.int get precisionBits => $_getIZ(9);
+  @$pb.TagNumber(23)
+  set precisionBits($core.int value) => $_setUnsignedInt32(9, value);
+  @$pb.TagNumber(23)
+  $core.bool hasPrecisionBits() => $_has(9);
+  @$pb.TagNumber(23)
+  void clearPrecisionBits() => $_clearField(23);
 }
 
 /// User information

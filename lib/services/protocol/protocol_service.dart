@@ -250,6 +250,18 @@ class ProtocolService {
         if (_configCompleter != null && !_configCompleter!.isCompleted) {
           _configCompleter!.complete();
         }
+
+        // Log summary of all nodes and their position status
+        _logger.i('=== NODE SUMMARY AFTER CONFIG COMPLETE ===');
+        _logger.i('Total nodes: ${_nodes.length}');
+        for (final node in _nodes.values) {
+          _logger.i(
+            '  Node ${node.nodeNum}: "${node.longName}" hasPosition=${node.hasPosition}, '
+            'lat=${node.latitude}, lng=${node.longitude}',
+          );
+        }
+        _logger.i('==========================================');
+
         // Request LoRa config to get current region
         Future.delayed(const Duration(milliseconds: 100), () {
           getLoRaConfig();
@@ -567,15 +579,15 @@ class ProtocolService {
       final position = pb.Position.fromBuffer(data.payload);
 
       // Check if position has valid coordinates
-      // hasLatitudeI/hasLongitudeI checks if the field was actually set
       // Also verify coordinates are not exactly 0,0 (invalid/unset marker)
+      // Filter Apple Park coordinates (default invalid position)
       final hasValidPosition =
-          position.hasLatitudeI() &&
-          position.hasLongitudeI() &&
-          !(position.latitudeI == 0 && position.longitudeI == 0);
+          (position.latitudeI != 0 || position.longitudeI != 0) &&
+          !(position.latitudeI == 373346000 &&
+              position.longitudeI == -1220090000);
 
       _logger.i(
-        'Position update from ${packet.from}: latI=${position.latitudeI}, lngI=${position.longitudeI}, '
+        '📍 POSITION_APP from ${packet.from}: latI=${position.latitudeI}, lngI=${position.longitudeI}, '
         'lat=${position.latitudeI / 1e7}, lng=${position.longitudeI / 1e7}, valid=$hasValidPosition',
       );
 
@@ -778,18 +790,19 @@ class ProtocolService {
     MeshNode updatedNode;
 
     // Check if NodeInfo has valid position data
+    // iOS app also filters Apple Park coordinates (37.3346, -122.009) which are invalid default
     final hasValidPosition =
         nodeInfo.hasPosition() &&
-        nodeInfo.position.hasLatitudeI() &&
-        nodeInfo.position.hasLongitudeI() &&
-        !(nodeInfo.position.latitudeI == 0 &&
-            nodeInfo.position.longitudeI == 0);
+        (nodeInfo.position.latitudeI != 0 ||
+            nodeInfo.position.longitudeI != 0) &&
+        !(nodeInfo.position.latitudeI == 373346000 &&
+            nodeInfo.position.longitudeI == -1220090000);
 
     if (nodeInfo.hasPosition()) {
-      _logger.d(
-        'NodeInfo ${nodeInfo.num} position: lat=${nodeInfo.position.latitudeI / 1e7}, '
-        'lng=${nodeInfo.position.longitudeI / 1e7}, hasLat=${nodeInfo.position.hasLatitudeI()}, '
-        'hasLng=${nodeInfo.position.hasLongitudeI()}, valid=$hasValidPosition',
+      _logger.i(
+        '📍 NodeInfo ${nodeInfo.num} position check: latI=${nodeInfo.position.latitudeI}, '
+        'lngI=${nodeInfo.position.longitudeI}, lat=${nodeInfo.position.latitudeI / 1e7}, '
+        'lng=${nodeInfo.position.longitudeI / 1e7}, valid=$hasValidPosition',
       );
     }
 
