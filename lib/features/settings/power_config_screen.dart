@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
 class PowerConfigScreen extends ConsumerStatefulWidget {
   const PowerConfigScreen({super.key});
@@ -17,6 +19,57 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
   int _lsSecs = 300; // 5 minutes
   double _minWakeSecs = 10;
   bool _saving = false;
+  bool _loading = false;
+  StreamSubscription<pb.Config_PowerConfig>? _configSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentConfig();
+  }
+
+  @override
+  void dispose() {
+    _configSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _applyConfig(pb.Config_PowerConfig config) {
+    setState(() {
+      _isPowerSaving = config.isPowerSaving;
+      _waitBluetoothSecs = config.waitBluetoothSecs > 0
+          ? config.waitBluetoothSecs
+          : 60;
+      _sdsSecs = config.sdsSecs > 0 ? config.sdsSecs : 3600;
+      _lsSecs = config.lsSecs > 0 ? config.lsSecs : 300;
+      _minWakeSecs = config.minWakeSecs > 0
+          ? config.minWakeSecs.toDouble()
+          : 10;
+    });
+  }
+
+  Future<void> _loadCurrentConfig() async {
+    setState(() => _loading = true);
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+
+      // Apply cached config immediately if available
+      final cached = protocol.currentPowerConfig;
+      if (cached != null) {
+        _applyConfig(cached);
+      }
+
+      // Listen for config response
+      _configSubscription = protocol.powerConfigStream.listen((config) {
+        if (mounted) _applyConfig(config);
+      });
+
+      // Request fresh config from device
+      await protocol.getConfig(pb.AdminMessage_ConfigType.POWER_CONFIG);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   Future<void> _saveConfig() async {
     final protocol = ref.read(protocolServiceProvider);
@@ -108,171 +161,176 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Power saving mode toggle
-          Container(
-            decoration: BoxDecoration(
-              color: AppTheme.darkCard,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: SwitchListTile(
-              title: const Text(
-                'Power Saving Mode',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: 'Inter',
-                ),
-              ),
-              subtitle: const Text(
-                'Reduce power consumption when idle',
-                style: TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 13,
-                  fontFamily: 'Inter',
-                ),
-              ),
-              value: _isPowerSaving,
-              onChanged: (value) => setState(() => _isPowerSaving = value),
-              activeTrackColor: AppTheme.primaryGreen,
-              thumbColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return Colors.white;
-                }
-                return AppTheme.textSecondary;
-              }),
-              secondary: Icon(
-                _isPowerSaving ? Icons.battery_saver : Icons.battery_full,
-                color: _isPowerSaving
-                    ? AppTheme.primaryGreen
-                    : AppTheme.textSecondary,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Sleep Settings Section
-          const Text(
-            'SLEEP SETTINGS',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textTertiary,
-              letterSpacing: 1,
-              fontFamily: 'Inter',
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Container(
-            decoration: BoxDecoration(
-              color: AppTheme.darkCard,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(16),
               children: [
-                // Wait Bluetooth
-                _buildSliderSetting(
-                  title: 'Wait for Bluetooth',
-                  subtitle:
-                      'Time to wait for Bluetooth connection before sleep',
-                  value: _waitBluetoothSecs.toDouble(),
-                  min: 0,
-                  max: 300,
-                  divisions: 30,
-                  formatValue: (v) => _formatDuration(v.toInt()),
-                  onChanged: (value) =>
-                      setState(() => _waitBluetoothSecs = value.toInt()),
-                ),
-                const SizedBox(height: 20),
-                const Divider(height: 1, color: AppTheme.darkBorder),
-                const SizedBox(height: 20),
-
-                // Light Sleep
-                _buildSliderSetting(
-                  title: 'Light Sleep Duration',
-                  subtitle: 'Duration of light sleep before deep sleep',
-                  value: _lsSecs.toDouble(),
-                  min: 0,
-                  max: 3600,
-                  divisions: 36,
-                  formatValue: (v) => _formatDuration(v.toInt()),
-                  onChanged: (value) => setState(() => _lsSecs = value.toInt()),
-                ),
-                const SizedBox(height: 20),
-                const Divider(height: 1, color: AppTheme.darkBorder),
-                const SizedBox(height: 20),
-
-                // Deep Sleep
-                _buildSliderSetting(
-                  title: 'Deep Sleep Duration',
-                  subtitle: 'Duration of deep sleep (SDS)',
-                  value: _sdsSecs.toDouble(),
-                  min: 0,
-                  max: 86400,
-                  divisions: 24,
-                  formatValue: (v) => _formatDuration(v.toInt()),
-                  onChanged: (value) =>
-                      setState(() => _sdsSecs = value.toInt()),
-                ),
-                const SizedBox(height: 20),
-                const Divider(height: 1, color: AppTheme.darkBorder),
-                const SizedBox(height: 20),
-
-                // Min Wake
-                _buildSliderSetting(
-                  title: 'Minimum Wake Time',
-                  subtitle: 'Minimum time device stays awake',
-                  value: _minWakeSecs,
-                  min: 1,
-                  max: 120,
-                  divisions: 119,
-                  formatValue: (v) => '${v.toInt()}s',
-                  onChanged: (value) => setState(() => _minWakeSecs = value),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Info card
-          Container(
-            decoration: BoxDecoration(
-              color: AppTheme.warningYellow.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.warningYellow.withValues(alpha: 0.3),
-              ),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.warning_amber,
-                  color: AppTheme.warningYellow.withValues(alpha: 0.8),
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Power settings affect battery life and device responsiveness. Aggressive sleep settings may cause delays in receiving messages.',
-                    style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 13,
-                      fontFamily: 'Inter',
+                // Power saving mode toggle
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkCard,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: SwitchListTile(
+                    title: const Text(
+                      'Power Saving Mode',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Inter',
+                      ),
                     ),
+                    subtitle: const Text(
+                      'Reduce power consumption when idle',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    value: _isPowerSaving,
+                    onChanged: (value) =>
+                        setState(() => _isPowerSaving = value),
+                    activeTrackColor: AppTheme.primaryGreen,
+                    thumbColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return Colors.white;
+                      }
+                      return AppTheme.textSecondary;
+                    }),
+                    secondary: Icon(
+                      _isPowerSaving ? Icons.battery_saver : Icons.battery_full,
+                      color: _isPowerSaving
+                          ? AppTheme.primaryGreen
+                          : AppTheme.textSecondary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Sleep Settings Section
+                const Text(
+                  'SLEEP SETTINGS',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textTertiary,
+                    letterSpacing: 1,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkCard,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Wait Bluetooth
+                      _buildSliderSetting(
+                        title: 'Wait for Bluetooth',
+                        subtitle:
+                            'Time to wait for Bluetooth connection before sleep',
+                        value: _waitBluetoothSecs.toDouble(),
+                        min: 0,
+                        max: 300,
+                        divisions: 30,
+                        formatValue: (v) => _formatDuration(v.toInt()),
+                        onChanged: (value) =>
+                            setState(() => _waitBluetoothSecs = value.toInt()),
+                      ),
+                      const SizedBox(height: 20),
+                      const Divider(height: 1, color: AppTheme.darkBorder),
+                      const SizedBox(height: 20),
+
+                      // Light Sleep
+                      _buildSliderSetting(
+                        title: 'Light Sleep Duration',
+                        subtitle: 'Duration of light sleep before deep sleep',
+                        value: _lsSecs.toDouble(),
+                        min: 0,
+                        max: 3600,
+                        divisions: 36,
+                        formatValue: (v) => _formatDuration(v.toInt()),
+                        onChanged: (value) =>
+                            setState(() => _lsSecs = value.toInt()),
+                      ),
+                      const SizedBox(height: 20),
+                      const Divider(height: 1, color: AppTheme.darkBorder),
+                      const SizedBox(height: 20),
+
+                      // Deep Sleep
+                      _buildSliderSetting(
+                        title: 'Deep Sleep Duration',
+                        subtitle: 'Duration of deep sleep (SDS)',
+                        value: _sdsSecs.toDouble(),
+                        min: 0,
+                        max: 86400,
+                        divisions: 24,
+                        formatValue: (v) => _formatDuration(v.toInt()),
+                        onChanged: (value) =>
+                            setState(() => _sdsSecs = value.toInt()),
+                      ),
+                      const SizedBox(height: 20),
+                      const Divider(height: 1, color: AppTheme.darkBorder),
+                      const SizedBox(height: 20),
+
+                      // Min Wake
+                      _buildSliderSetting(
+                        title: 'Minimum Wake Time',
+                        subtitle: 'Minimum time device stays awake',
+                        value: _minWakeSecs,
+                        min: 1,
+                        max: 120,
+                        divisions: 119,
+                        formatValue: (v) => '${v.toInt()}s',
+                        onChanged: (value) =>
+                            setState(() => _minWakeSecs = value),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Info card
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.warningYellow.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppTheme.warningYellow.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.warning_amber,
+                        color: AppTheme.warningYellow.withValues(alpha: 0.8),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Power settings affect battery life and device responsiveness. Aggressive sleep settings may cause delays in receiving messages.',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 13,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
 

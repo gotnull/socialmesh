@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_providers.dart';
@@ -18,6 +19,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   bool _serialEnabled = true;
   bool _ledHeartbeatDisabled = false;
   int _nodeInfoBroadcastSecs = 900;
+  StreamSubscription<pb.Config_DeviceConfig>? _configSubscription;
 
   @override
   void initState() {
@@ -25,10 +27,41 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     _loadCurrentConfig();
   }
 
+  @override
+  void dispose() {
+    _configSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _applyConfig(pb.Config_DeviceConfig config) {
+    setState(() {
+      _selectedRole = config.role;
+      _rebroadcastMode = config.rebroadcastMode;
+      _serialEnabled = config.serialEnabled;
+      _ledHeartbeatDisabled = config.ledHeartbeatDisabled;
+      _nodeInfoBroadcastSecs = config.nodeInfoBroadcastSecs > 0
+          ? config.nodeInfoBroadcastSecs
+          : 900;
+    });
+  }
+
   Future<void> _loadCurrentConfig() async {
     setState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+
+      // Apply cached config immediately if available
+      final cached = protocol.currentDeviceConfig;
+      if (cached != null) {
+        _applyConfig(cached);
+      }
+
+      // Listen for config response
+      _configSubscription = protocol.deviceConfigStream.listen((config) {
+        if (mounted) _applyConfig(config);
+      });
+
+      // Request fresh config from device
       await protocol.getConfig(pb.AdminMessage_ConfigType.DEVICE_CONFIG);
     } finally {
       setState(() => _isLoading = false);

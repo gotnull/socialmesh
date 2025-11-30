@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_providers.dart';
@@ -21,6 +22,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
   pb.Config_DisplayConfig_DisplayMode? _displayMode;
   bool _headingBold = false;
   bool _wakeOnTapOrMotion = false;
+  StreamSubscription<pb.Config_DisplayConfig>? _configSubscription;
 
   @override
   void initState() {
@@ -28,10 +30,41 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
     _loadCurrentConfig();
   }
 
+  @override
+  void dispose() {
+    _configSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _applyConfig(pb.Config_DisplayConfig config) {
+    setState(() {
+      _screenOnSecs = config.screenOnSecs > 0 ? config.screenOnSecs : 60;
+      _autoCarouselSecs = config.autoScreenCarouselSecs;
+      _flipScreen = config.flipScreen;
+      _units = config.units;
+      _displayMode = config.displaymode;
+      _headingBold = config.headingBold;
+      _wakeOnTapOrMotion = config.wakeOnTapOrMotion;
+    });
+  }
+
   Future<void> _loadCurrentConfig() async {
     setState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+
+      // Apply cached config immediately if available
+      final cached = protocol.currentDisplayConfig;
+      if (cached != null) {
+        _applyConfig(cached);
+      }
+
+      // Listen for config response
+      _configSubscription = protocol.displayConfigStream.listen((config) {
+        if (mounted) _applyConfig(config);
+      });
+
+      // Request fresh config from device
       await protocol.getConfig(pb.AdminMessage_ConfigType.DISPLAY_CONFIG);
     } finally {
       setState(() => _isLoading = false);

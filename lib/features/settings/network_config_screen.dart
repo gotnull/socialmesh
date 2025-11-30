@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
 class NetworkConfigScreen extends ConsumerStatefulWidget {
   const NetworkConfigScreen({super.key});
@@ -14,9 +16,10 @@ class NetworkConfigScreen extends ConsumerStatefulWidget {
 class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
   bool _wifiEnabled = false;
   bool _ethEnabled = false;
-  final String _ntpServer = 'pool.ntp.org';
   bool _saving = false;
+  bool _loading = false;
   bool _obscurePassword = true;
+  StreamSubscription<pb.Config_NetworkConfig>? _configSubscription;
 
   final _ssidController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -25,15 +28,52 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
   @override
   void initState() {
     super.initState();
-    _ntpController.text = _ntpServer;
+    _ntpController.text = 'pool.ntp.org';
+    _loadCurrentConfig();
   }
 
   @override
   void dispose() {
+    _configSubscription?.cancel();
     _ssidController.dispose();
     _passwordController.dispose();
     _ntpController.dispose();
     super.dispose();
+  }
+
+  void _applyConfig(pb.Config_NetworkConfig config) {
+    setState(() {
+      _wifiEnabled = config.wifiEnabled;
+      _ethEnabled = config.ethEnabled;
+      _ssidController.text = config.wifiSsid;
+      _passwordController.text = config.wifiPsk;
+      if (config.ntpServer.isNotEmpty) {
+        _ntpController.text = config.ntpServer;
+      }
+    });
+  }
+
+  Future<void> _loadCurrentConfig() async {
+    setState(() => _loading = true);
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+
+      // Apply cached config immediately if available
+      final cached = protocol.currentNetworkConfig;
+      if (cached != null) {
+        _applyConfig(cached);
+      }
+
+      // Listen for config response
+      _configSubscription = protocol.networkConfigStream.listen((config) {
+        if (mounted) _applyConfig(config);
+      });
+
+      // Request fresh config from device
+      await protocol.getConfig(pb.AdminMessage_ConfigType.NETWORK_CONFIG);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   Future<void> _saveConfig() async {
@@ -118,7 +158,9 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
           ),
         ],
       ),
-      body: ListView(
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // WiFi Section

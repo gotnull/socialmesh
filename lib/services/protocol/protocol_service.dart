@@ -51,6 +51,13 @@ class ProtocolService {
   final StreamController<MessageDeliveryUpdate> _deliveryController;
   final StreamController<pbenum.RegionCode> _regionController;
   final StreamController<pb.Config_PositionConfig> _positionConfigController;
+  final StreamController<pb.Config_DeviceConfig> _deviceConfigController;
+  final StreamController<pb.Config_DisplayConfig> _displayConfigController;
+  final StreamController<pb.Config_PowerConfig> _powerConfigController;
+  final StreamController<pb.Config_NetworkConfig> _networkConfigController;
+  final StreamController<pb.Config_BluetoothConfig> _bluetoothConfigController;
+  final StreamController<pb.Config_SecurityConfig> _securityConfigController;
+  final StreamController<pb.Config_LoRaConfig> _loraConfigController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   Completer<void>? _configCompleter;
@@ -62,6 +69,13 @@ class ProtocolService {
   double _lastChannelUtil = 0.0;
   pbenum.RegionCode? _currentRegion;
   pb.Config_PositionConfig? _currentPositionConfig;
+  pb.Config_DeviceConfig? _currentDeviceConfig;
+  pb.Config_DisplayConfig? _currentDisplayConfig;
+  pb.Config_PowerConfig? _currentPowerConfig;
+  pb.Config_NetworkConfig? _currentNetworkConfig;
+  pb.Config_BluetoothConfig? _currentBluetoothConfig;
+  pb.Config_SecurityConfig? _currentSecurityConfig;
+  pb.Config_LoRaConfig? _currentLoraConfig;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
   final Random _random = Random();
@@ -84,7 +98,21 @@ class ProtocolService {
       _deliveryController = StreamController<MessageDeliveryUpdate>.broadcast(),
       _regionController = StreamController<pbenum.RegionCode>.broadcast(),
       _positionConfigController =
-          StreamController<pb.Config_PositionConfig>.broadcast();
+          StreamController<pb.Config_PositionConfig>.broadcast(),
+      _deviceConfigController =
+          StreamController<pb.Config_DeviceConfig>.broadcast(),
+      _displayConfigController =
+          StreamController<pb.Config_DisplayConfig>.broadcast(),
+      _powerConfigController =
+          StreamController<pb.Config_PowerConfig>.broadcast(),
+      _networkConfigController =
+          StreamController<pb.Config_NetworkConfig>.broadcast(),
+      _bluetoothConfigController =
+          StreamController<pb.Config_BluetoothConfig>.broadcast(),
+      _securityConfigController =
+          StreamController<pb.Config_SecurityConfig>.broadcast(),
+      _loraConfigController =
+          StreamController<pb.Config_LoRaConfig>.broadcast();
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -107,6 +135,56 @@ class ProtocolService {
 
   /// Current position config
   pb.Config_PositionConfig? get currentPositionConfig => _currentPositionConfig;
+
+  /// Stream of device config updates
+  Stream<pb.Config_DeviceConfig> get deviceConfigStream =>
+      _deviceConfigController.stream;
+
+  /// Current device config
+  pb.Config_DeviceConfig? get currentDeviceConfig => _currentDeviceConfig;
+
+  /// Stream of display config updates
+  Stream<pb.Config_DisplayConfig> get displayConfigStream =>
+      _displayConfigController.stream;
+
+  /// Current display config
+  pb.Config_DisplayConfig? get currentDisplayConfig => _currentDisplayConfig;
+
+  /// Stream of power config updates
+  Stream<pb.Config_PowerConfig> get powerConfigStream =>
+      _powerConfigController.stream;
+
+  /// Current power config
+  pb.Config_PowerConfig? get currentPowerConfig => _currentPowerConfig;
+
+  /// Stream of network config updates
+  Stream<pb.Config_NetworkConfig> get networkConfigStream =>
+      _networkConfigController.stream;
+
+  /// Current network config
+  pb.Config_NetworkConfig? get currentNetworkConfig => _currentNetworkConfig;
+
+  /// Stream of bluetooth config updates
+  Stream<pb.Config_BluetoothConfig> get bluetoothConfigStream =>
+      _bluetoothConfigController.stream;
+
+  /// Current bluetooth config
+  pb.Config_BluetoothConfig? get currentBluetoothConfig =>
+      _currentBluetoothConfig;
+
+  /// Stream of security config updates
+  Stream<pb.Config_SecurityConfig> get securityConfigStream =>
+      _securityConfigController.stream;
+
+  /// Current security config
+  pb.Config_SecurityConfig? get currentSecurityConfig => _currentSecurityConfig;
+
+  /// Stream of LoRa config updates
+  Stream<pb.Config_LoRaConfig> get loraConfigStream =>
+      _loraConfigController.stream;
+
+  /// Current LoRa config
+  pb.Config_LoRaConfig? get currentLoraConfig => _currentLoraConfig;
 
   /// Stream of RSSI updates
   Stream<int> get rssiStream => _rssiController.stream;
@@ -364,13 +442,18 @@ class ProtocolService {
 
       if (adminMsg.hasGetConfigResponse()) {
         final config = adminMsg.getConfigResponse;
+
+        // Handle LoRa config
         if (config.hasLora()) {
           final loraConfig = config.lora;
-          final region = loraConfig.region;
-          _logger.i('Received config - region: ${region.name}');
-          _currentRegion = region;
-          _regionController.add(region);
+          _logger.i('Received LoRa config - region: ${loraConfig.region.name}');
+          _currentRegion = loraConfig.region;
+          _currentLoraConfig = loraConfig;
+          _regionController.add(loraConfig.region);
+          _loraConfigController.add(loraConfig);
         }
+
+        // Handle Position config
         if (config.hasPosition()) {
           final posConfig = config.position;
           debugPrint(
@@ -383,6 +466,62 @@ class ProtocolService {
           );
           _currentPositionConfig = posConfig;
           _positionConfigController.add(posConfig);
+        }
+
+        // Handle Device config
+        if (config.hasDevice()) {
+          final deviceConfig = config.device;
+          _logger.i('Received Device config - role: ${deviceConfig.role.name}');
+          _currentDeviceConfig = deviceConfig;
+          _deviceConfigController.add(deviceConfig);
+        }
+
+        // Handle Display config
+        if (config.hasDisplay()) {
+          final displayConfig = config.display;
+          _logger.i(
+            'Received Display config - screenOnSecs: ${displayConfig.screenOnSecs}',
+          );
+          _currentDisplayConfig = displayConfig;
+          _displayConfigController.add(displayConfig);
+        }
+
+        // Handle Power config
+        if (config.hasPower()) {
+          final powerConfig = config.power;
+          _logger.i(
+            'Received Power config - isPowerSaving: ${powerConfig.isPowerSaving}',
+          );
+          _currentPowerConfig = powerConfig;
+          _powerConfigController.add(powerConfig);
+        }
+
+        // Handle Network config
+        if (config.hasNetwork()) {
+          final networkConfig = config.network;
+          _logger.i(
+            'Received Network config - wifiEnabled: ${networkConfig.wifiEnabled}',
+          );
+          _currentNetworkConfig = networkConfig;
+          _networkConfigController.add(networkConfig);
+        }
+
+        // Handle Bluetooth config
+        if (config.hasBluetooth()) {
+          final btConfig = config.bluetooth;
+          _logger.i('Received Bluetooth config - enabled: ${btConfig.enabled}');
+          _currentBluetoothConfig = btConfig;
+          _bluetoothConfigController.add(btConfig);
+        }
+
+        // Handle Security config
+        if (config.hasSecurity()) {
+          final secConfig = config.security;
+          _logger.i(
+            'Received Security config - isManaged: ${secConfig.isManaged}',
+          );
+          _currentSecurityConfig = secConfig;
+          _securityConfigController.add(secConfig);
         }
       } else if (adminMsg.hasGetChannelResponse()) {
         // Handle channel response - update local channel list
