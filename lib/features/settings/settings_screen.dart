@@ -238,7 +238,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   thumbColor: WidgetStateProperty.all(Colors.white),
                   onChanged: (value) async {
                     await settingsService.setAutoReconnect(value);
-                    ref.read(settingsRefreshProvider.notifier).state++;
+                    setState(() {});
                   },
                 ),
               ),
@@ -258,7 +258,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   thumbColor: WidgetStateProperty.all(Colors.white),
                   onChanged: (value) async {
                     await settingsService.setNotificationsEnabled(value);
-                    ref.read(settingsRefreshProvider.notifier).state++;
+                    setState(() {});
                   },
                 ),
               ),
@@ -276,7 +276,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       await settingsService.setNewNodeNotificationsEnabled(
                         value,
                       );
-                      ref.read(settingsRefreshProvider.notifier).state++;
+                      setState(() {});
                     },
                   ),
                 ),
@@ -292,7 +292,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     onChanged: (value) async {
                       await settingsService
                           .setDirectMessageNotificationsEnabled(value);
-                      ref.read(settingsRefreshProvider.notifier).state++;
+                      setState(() {});
                     },
                   ),
                 ),
@@ -308,7 +308,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     onChanged: (value) async {
                       await settingsService
                           .setChannelMessageNotificationsEnabled(value);
-                      ref.read(settingsRefreshProvider.notifier).state++;
+                      setState(() {});
                     },
                   ),
                 ),
@@ -323,7 +323,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
                       await settingsService.setNotificationSoundEnabled(value);
-                      ref.read(settingsRefreshProvider.notifier).state++;
+                      setState(() {});
                     },
                   ),
                 ),
@@ -340,7 +340,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       await settingsService.setNotificationVibrationEnabled(
                         value,
                       );
-                      ref.read(settingsRefreshProvider.notifier).state++;
+                      setState(() {});
                     },
                   ),
                 ),
