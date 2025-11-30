@@ -996,9 +996,14 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
             Expanded(
               child: FilledButton(
                 onPressed: canProceed
-                    ? (_currentStep == _totalSteps - 1
-                          ? _saveChannel
-                          : _nextStep)
+                    ? () {
+                        FocusScope.of(context).unfocus();
+                        if (_currentStep == _totalSteps - 1) {
+                          _saveChannel();
+                        } else {
+                          _nextStep();
+                        }
+                      }
                     : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.primaryMagenta,
