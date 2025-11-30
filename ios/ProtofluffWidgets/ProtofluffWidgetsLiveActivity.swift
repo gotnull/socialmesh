@@ -104,6 +104,7 @@ struct ProtofluffWidgetsLiveActivity: Widget {
 
 // MARK: - Lock Screen View
 
+@available(iOS 16.2, *)
 struct LockScreenView: View {
     let context: ActivityViewContext<LiveActivitiesAppAttributes>
     
@@ -233,43 +234,5 @@ struct SignalView: View {
                     .frame(width: 3, height: CGFloat(4 + index * 3))
             }
         }
-    }
-}
-
-// MARK: - Preview
-
-@available(iOS 16.2, *)
-struct ProtofluffWidgetsLiveActivity_Previews: PreviewProvider {
-    static let attributes = LiveActivitiesAppAttributes(nodeNum: 123456789)
-    static let state = LiveActivitiesAppAttributes.ContentState(
-        deviceName: "Meshtastic_29A9",
-        shortName: "29A9",
-        batteryLevel: 85,
-        signalStrength: -55,
-        nodesOnline: 12,
-        channelUtilization: 2.5,
-        airtime: 1.2,
-        sentPackets: 156,
-        receivedPackets: 234,
-        lastUpdated: Int(Date().timeIntervalSince1970 * 1000),
-        isConnected: true
-    )
-    
-    static var previews: some View {
-        attributes
-            .previewContext(state, viewKind: .dynamicIsland(.compact))
-            .previewDisplayName("Compact")
-        
-        attributes
-            .previewContext(state, viewKind: .dynamicIsland(.expanded))
-            .previewDisplayName("Expanded")
-        
-        attributes
-            .previewContext(state, viewKind: .dynamicIsland(.minimal))
-            .previewDisplayName("Minimal")
-        
-        attributes
-            .previewContext(state, viewKind: .content)
-            .previewDisplayName("Lock Screen")
     }
 }
