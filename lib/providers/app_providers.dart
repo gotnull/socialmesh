@@ -7,6 +7,7 @@ import '../services/transport/usb_transport.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/storage/storage_service.dart';
 import '../services/notifications/notification_service.dart';
+import '../services/messaging/offline_queue_service.dart';
 import '../models/mesh_models.dart';
 import '../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 
@@ -716,4 +717,76 @@ final needsRegionSetupProvider = Provider<bool>((ref) {
         data: (region) => region == pbenum.RegionCode.UNSET_REGION,
       ) ??
       false;
+});
+
+/// Offline message queue provider
+final offlineQueueProvider = Provider<OfflineQueueService>((ref) {
+  final service = OfflineQueueService();
+  final protocol = ref.watch(protocolServiceProvider);
+
+  // Initialize with send callback
+  service.initialize(
+    sendCallback:
+        ({
+          required String text,
+          required int to,
+          required int channel,
+          required bool wantAck,
+        }) async {
+          return protocol.sendMessage(
+            text: text,
+            to: to,
+            channel: channel,
+            wantAck: wantAck,
+          );
+        },
+    updateCallback:
+        (
+          String messageId,
+          MessageStatus status, {
+          int? packetId,
+          String? errorMessage,
+        }) {
+          final notifier = ref.read(messagesProvider.notifier);
+          final messages = ref.read(messagesProvider);
+          final message = messages.firstWhere(
+            (m) => m.id == messageId,
+            orElse: () => Message(from: 0, to: 0, text: ''),
+          );
+          if (message.text.isNotEmpty) {
+            notifier.updateMessage(
+              messageId,
+              message.copyWith(
+                status: status,
+                packetId: packetId,
+                errorMessage: errorMessage,
+              ),
+            );
+            if (packetId != null) {
+              notifier.trackPacket(packetId, messageId);
+            }
+          }
+        },
+  );
+
+  // Listen to connection state changes
+  ref.listen<AsyncValue<DeviceConnectionState>>(connectionStateProvider, (
+    prev,
+    next,
+  ) {
+    next.whenData((state) {
+      service.setConnectionState(state == DeviceConnectionState.connected);
+    });
+  });
+
+  return service;
+});
+
+/// Pending messages count provider
+final pendingMessagesCountProvider = StreamProvider<int>((ref) async* {
+  final queue = ref.watch(offlineQueueProvider);
+  yield queue.pendingCount;
+  await for (final items in queue.queueStream) {
+    yield items.length;
+  }
 });

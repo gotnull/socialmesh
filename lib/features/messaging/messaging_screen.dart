@@ -7,7 +7,9 @@ import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../../core/transport.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../services/messaging/offline_queue_service.dart';
 import '../channels/channel_form_screen.dart';
 
 /// Conversation type enum
@@ -473,18 +475,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     final myNodeNum = ref.read(myNodeNumProvider);
     final messageId = DateTime.now().millisecondsSinceEpoch.toString();
+    final to = widget.type == ConversationType.channel
+        ? 0xFFFFFFFF
+        : widget.nodeNum!;
+    final channel = widget.type == ConversationType.channel
+        ? widget.channelIndex ?? 0
+        : 0;
+    final wantAck = widget.type != ConversationType.channel;
 
     // Create pending message
     final pendingMessage = Message(
       id: messageId,
       from: myNodeNum ?? 0,
-      to: widget.type == ConversationType.channel
-          ? 0xFFFFFFFF
-          : widget.nodeNum!,
+      to: to,
       text: text,
-      channel: widget.type == ConversationType.channel
-          ? widget.channelIndex ?? 0
-          : 0,
+      channel: channel,
       sent: true,
       status: MessageStatus.pending,
     );
@@ -492,6 +497,40 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // Add to messages immediately for optimistic UI
     ref.read(messagesProvider.notifier).addMessage(pendingMessage);
     _messageController.clear();
+
+    // Haptic feedback for message send
+    HapticFeedback.lightImpact();
+
+    // Check if device is connected
+    final connectionState = ref.read(connectionStateProvider);
+    final isConnected =
+        connectionState.valueOrNull == DeviceConnectionState.connected;
+
+    if (!isConnected) {
+      // Queue message for later sending
+      final offlineQueue = ref.read(offlineQueueProvider);
+      offlineQueue.enqueue(
+        QueuedMessage(
+          id: messageId,
+          text: text,
+          to: to,
+          channel: channel,
+          wantAck: wantAck,
+        ),
+      );
+
+      // Show snackbar that message is queued
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Message queued - will send when connected'),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
 
     try {
       final protocol = ref.read(protocolServiceProvider);
@@ -552,6 +591,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             routingError: null,
           ),
         );
+
+    // Check if device is connected
+    final connectionState = ref.read(connectionStateProvider);
+    final isConnected =
+        connectionState.valueOrNull == DeviceConnectionState.connected;
+
+    if (!isConnected) {
+      // Queue message for later sending
+      final offlineQueue = ref.read(offlineQueueProvider);
+      offlineQueue.enqueue(
+        QueuedMessage(
+          id: message.id,
+          text: message.text,
+          to: message.to,
+          channel: message.channel ?? 0,
+          wantAck: !message.isBroadcast,
+        ),
+      );
+
+      // Show snackbar that message is queued
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Message queued - will send when connected'),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
 
     try {
       final protocol = ref.read(protocolServiceProvider);
@@ -1024,6 +1094,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final messages = ref.watch(messagesProvider);
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
+    final channels = ref.watch(channelsProvider);
+
+    // Determine if messages are encrypted
+    // DMs are always encrypted, channels are encrypted if they have a PSK
+    bool isEncrypted = true;
+    if (widget.type == ConversationType.channel &&
+        widget.channelIndex != null) {
+      final channelIndex = widget.channelIndex!;
+      if (channelIndex < channels.length) {
+        final channel = channels[channelIndex];
+        isEncrypted = channel.psk.isNotEmpty;
+      }
+    }
+
+    // Get queued message IDs
+    final offlineQueue = ref.watch(offlineQueueProvider);
+    final queuedMessageIds = offlineQueue.queue.map((m) => m.id).toSet();
 
     // Filter messages for this conversation
     List<Message> filteredMessages;
@@ -1179,6 +1266,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           showSender:
                               widget.type == ConversationType.channel &&
                               !isFromMe,
+                          isEncrypted: isEncrypted,
+                          isQueued: queuedMessageIds.contains(message.id),
                           onRetry: message.isFailed
                               ? () => _retryMessage(message)
                               : null,
@@ -1268,6 +1357,8 @@ class _MessageBubble extends StatelessWidget {
   final String senderShortName;
   final int? avatarColor;
   final bool showSender;
+  final bool isEncrypted;
+  final bool isQueued;
   final VoidCallback? onRetry;
 
   const _MessageBubble({
@@ -1277,6 +1368,8 @@ class _MessageBubble extends StatelessWidget {
     required this.senderShortName,
     this.avatarColor,
     this.showSender = true,
+    this.isEncrypted = true,
+    this.isQueued = false,
     this.onRetry,
   });
 
@@ -1339,7 +1432,24 @@ class _MessageBubble extends StatelessWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (isPending) ...[
+                            // Encryption indicator
+                            if (isEncrypted) ...[
+                              Icon(
+                                Icons.lock,
+                                size: 11,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                              const SizedBox(width: 3),
+                            ],
+                            // Queued indicator
+                            if (isQueued) ...[
+                              Icon(
+                                Icons.schedule,
+                                size: 12,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                              const SizedBox(width: 4),
+                            ] else if (isPending) ...[
                               SizedBox(
                                 width: 12,
                                 height: 12,
@@ -1360,7 +1470,7 @@ class _MessageBubble extends StatelessWidget {
                                 fontFamily: 'Inter',
                               ),
                             ),
-                            if (!isPending && !isFailed) ...[
+                            if (!isPending && !isFailed && !isQueued) ...[
                               const SizedBox(width: 4),
                               Icon(
                                 isDelivered ? Icons.done_all : Icons.done,
@@ -1506,13 +1616,26 @@ class _MessageBubble extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    timeFormat.format(message.timestamp),
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppTheme.textTertiary,
-                      fontFamily: 'Inter',
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isEncrypted) ...[
+                        const Icon(
+                          Icons.lock,
+                          size: 10,
+                          color: AppTheme.textTertiary,
+                        ),
+                        const SizedBox(width: 3),
+                      ],
+                      Text(
+                        timeFormat.format(message.timestamp),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.textTertiary,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

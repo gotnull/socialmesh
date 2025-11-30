@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/transport.dart';
 import '../../core/theme.dart';
@@ -158,6 +159,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   }
 
   Future<void> _connect(DeviceInfo device) async {
+    HapticFeedback.mediumImpact();
     await _connectToDevice(device, isAutoReconnect: false);
   }
 

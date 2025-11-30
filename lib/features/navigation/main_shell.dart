@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
@@ -6,6 +7,7 @@ import '../../providers/app_providers.dart';
 import '../channels/channels_screen.dart';
 import '../messaging/messaging_screen.dart';
 import '../nodes/nodes_screen.dart';
+import '../map/map_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../scanner/scanner_screen.dart';
 
@@ -31,6 +33,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       activeIcon: Icons.message,
       label: 'Messages',
     ),
+    _NavItem(icon: Icons.map_outlined, activeIcon: Icons.map, label: 'Map'),
     _NavItem(
       icon: Icons.people_outline,
       activeIcon: Icons.people,
@@ -50,8 +53,10 @@ class _MainShellState extends ConsumerState<MainShell> {
       case 1:
         return const MessagingScreen();
       case 2:
-        return const NodesScreen();
+        return const MapScreen();
       case 3:
+        return const NodesScreen();
+      case 4:
         return const DashboardScreen();
       default:
         return const ChannelsScreen();
@@ -121,12 +126,12 @@ class _MainShellState extends ConsumerState<MainShell> {
                 final item = _navItems[index];
                 final isSelected = _currentIndex == index;
 
-                // Show warning badge on Device tab (index 3) when disconnected
-                final showWarningBadge = index == 3 && !isConnected;
+                // Show warning badge on Device tab (index 4) when disconnected
+                final showWarningBadge = index == 4 && !isConnected;
                 // Show reconnecting indicator
-                final showReconnectingBadge = index == 3 && isReconnecting;
-                // Show badge on Nodes tab (index 2) when new nodes discovered
-                final showNodesBadge = index == 2 && _hasNewNodes(ref);
+                final showReconnectingBadge = index == 4 && isReconnecting;
+                // Show badge on Nodes tab (index 3) when new nodes discovered
+                final showNodesBadge = index == 3 && _hasNewNodes(ref);
 
                 return _NavBarItem(
                   icon: isSelected ? item.activeIcon : item.icon,
@@ -137,8 +142,9 @@ class _MainShellState extends ConsumerState<MainShell> {
                   showWarningBadge: showWarningBadge && !showReconnectingBadge,
                   showReconnectingBadge: showReconnectingBadge,
                   onTap: () {
+                    HapticFeedback.selectionClick();
                     // Clear new nodes badge when navigating to Nodes tab
-                    if (index == 2) {
+                    if (index == 3) {
                       ref.read(newNodesCountProvider.notifier).state = 0;
                     }
                     setState(() => _currentIndex = index);

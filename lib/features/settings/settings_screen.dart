@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/subscription_providers.dart';
@@ -237,6 +238,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   inactiveTrackColor: Colors.grey.shade600,
                   thumbColor: WidgetStateProperty.all(Colors.white),
                   onChanged: (value) async {
+                    HapticFeedback.selectionClick();
                     await settingsService.setAutoReconnect(value);
                     setState(() {});
                   },
@@ -257,6 +259,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   inactiveTrackColor: Colors.grey.shade600,
                   thumbColor: WidgetStateProperty.all(Colors.white),
                   onChanged: (value) async {
+                    HapticFeedback.selectionClick();
                     await settingsService.setNotificationsEnabled(value);
                     setState(() {});
                   },
@@ -273,6 +276,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     inactiveTrackColor: Colors.grey.shade600,
                     thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
+                      HapticFeedback.selectionClick();
                       await settingsService.setNewNodeNotificationsEnabled(
                         value,
                       );
@@ -290,6 +294,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     inactiveTrackColor: Colors.grey.shade600,
                     thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
+                      HapticFeedback.selectionClick();
                       await settingsService
                           .setDirectMessageNotificationsEnabled(value);
                       setState(() {});
@@ -306,6 +311,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     inactiveTrackColor: Colors.grey.shade600,
                     thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
+                      HapticFeedback.selectionClick();
                       await settingsService
                           .setChannelMessageNotificationsEnabled(value);
                       setState(() {});
@@ -322,6 +328,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     inactiveTrackColor: Colors.grey.shade600,
                     thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
+                      HapticFeedback.selectionClick();
                       await settingsService.setNotificationSoundEnabled(value);
                       setState(() {});
                     },
@@ -337,6 +344,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     inactiveTrackColor: Colors.grey.shade600,
                     thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
+                      HapticFeedback.selectionClick();
                       await settingsService.setNotificationVibrationEnabled(
                         value,
                       );
