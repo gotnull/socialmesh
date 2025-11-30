@@ -461,7 +461,7 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
       );
       NotificationService().showChannelMessageNotification(
         senderName: senderName,
-        senderId: senderNode?.userId,
+        senderShortName: senderNode?.shortName,
         channelName: channelName,
         message: message.text,
         channelIndex: message.channel!,
@@ -480,7 +480,7 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
       debugPrint('🔔 Showing DM notification from: $senderName');
       NotificationService().showNewMessageNotification(
         senderName: senderName,
-        senderId: senderNode?.userId,
+        senderShortName: senderNode?.shortName,
         message: message.text,
         fromNodeNum: message.from,
         playSound: settings.notificationSoundEnabled,

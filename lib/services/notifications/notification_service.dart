@@ -131,7 +131,13 @@ class NotificationService {
     );
 
     final nodeName = node.displayName;
-    final nodeId = node.userId ?? '!${node.nodeNum.toRadixString(16)}';
+    // Use short name (4-char code) if available, otherwise last 4 hex digits
+    final shortCode =
+        node.shortName ??
+        node.nodeNum
+            .toRadixString(16)
+            .substring(node.nodeNum.toRadixString(16).length - 4)
+            .toUpperCase();
 
     // Use modulo to keep ID within 32-bit signed int range
     final notificationId = (node.nodeNum % 1000000).toInt();
@@ -139,7 +145,7 @@ class NotificationService {
     await _notifications.show(
       notificationId,
       'New Node Discovered',
-      '$nodeName ($nodeId) joined the mesh',
+      '$nodeName ($shortCode) joined the mesh',
       notificationDetails,
       payload: 'node:${node.nodeNum}',
     );
@@ -150,7 +156,7 @@ class NotificationService {
   /// Show notification for new message
   Future<void> showNewMessageNotification({
     required String senderName,
-    required String? senderId,
+    required String? senderShortName,
     required String message,
     required int fromNodeNum,
     bool playSound = true,
@@ -201,11 +207,17 @@ class NotificationService {
       // Offset by 1000000 to avoid collision with node notifications
       final notificationId = (fromNodeNum % 1000000) + 1000000;
 
-      final nodeId = senderId ?? '!${fromNodeNum.toRadixString(16)}';
+      // Use short name (4-char code) if available, otherwise last 4 hex digits
+      final shortCode =
+          senderShortName ??
+          fromNodeNum
+              .toRadixString(16)
+              .substring(fromNodeNum.toRadixString(16).length - 4)
+              .toUpperCase();
 
       await _notifications.show(
         notificationId,
-        'Message from $senderName ($nodeId)',
+        'Message from $senderName ($shortCode)',
         truncatedMessage,
         notificationDetails,
         payload: 'dm:$fromNodeNum',
@@ -220,7 +232,7 @@ class NotificationService {
   /// Show notification for channel message
   Future<void> showChannelMessageNotification({
     required String senderName,
-    required String? senderId,
+    required String? senderShortName,
     required String channelName,
     required String message,
     required int channelIndex,
@@ -259,11 +271,17 @@ class NotificationService {
         ? '${message.substring(0, 100)}...'
         : message;
 
-    final nodeId = senderId ?? '!${fromNodeNum.toRadixString(16)}';
+    // Use short name (4-char code) if available, otherwise last 4 hex digits
+    final shortCode =
+        senderShortName ??
+        fromNodeNum
+            .toRadixString(16)
+            .substring(fromNodeNum.toRadixString(16).length - 4)
+            .toUpperCase();
 
     await _notifications.show(
       channelIndex + 2000000, // Channel indices are small, this is safe
-      '$senderName ($nodeId) in $channelName',
+      '$senderName ($shortCode) in $channelName',
       truncatedMessage,
       notificationDetails,
       payload: 'channel:$channelIndex',

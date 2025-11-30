@@ -576,8 +576,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     debugPrint('🔔 Showing test notification...');
     try {
       await notificationService.showNewMessageNotification(
-        senderName: 'Test User',
-        senderId: '!test123',
+        senderName: 'Gotnull',
+        senderShortName: '45a1',
         message:
             'This is a test notification to verify notifications are working correctly.',
         fromNodeNum: 999999,
