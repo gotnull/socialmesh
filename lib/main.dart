@@ -15,6 +15,8 @@ import 'features/device/device_config_screen.dart';
 import 'features/device/region_selection_screen.dart';
 import 'features/navigation/main_shell.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'features/timeline/timeline_screen.dart';
+import 'features/presence/presence_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,6 +62,8 @@ class _ProtofluffAppState extends ConsumerState<ProtofluffApp> {
             const RegionSelectionScreen(isInitialSetup: true),
         '/main': (context) => const MainShell(),
         '/onboarding': (context) => const OnboardingScreen(),
+        '/timeline': (context) => const TimelineScreen(),
+        '/presence': (context) => const PresenceScreen(),
       },
     );
   }

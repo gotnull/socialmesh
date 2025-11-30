@@ -9,6 +9,7 @@ import '../../core/theme.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../messaging/messaging_screen.dart';
 import 'channel_form_screen.dart';
+import 'channel_wizard_screen.dart';
 
 class ChannelsScreen extends ConsumerWidget {
   const ChannelsScreen({super.key});
@@ -42,10 +43,20 @@ class ChannelsScreen extends ConsumerWidget {
             icon: const Icon(Icons.add),
             tooltip: 'Add channel',
             onPressed: () {
+              // Find next available channel index (1-7, 0 is Primary)
+              final usedIndices = channels.map((c) => c.index).toSet();
+              int nextIndex = 1;
+              for (int i = 1; i <= 7; i++) {
+                if (!usedIndices.contains(i)) {
+                  nextIndex = i;
+                  break;
+                }
+              }
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const ChannelFormScreen(),
+                  builder: (context) =>
+                      ChannelWizardScreen(channelIndex: nextIndex),
                 ),
               );
             },

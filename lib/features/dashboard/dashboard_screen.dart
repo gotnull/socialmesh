@@ -329,6 +329,20 @@ class DashboardScreen extends ConsumerWidget {
                       Navigator.of(context).pushNamed('/device-config'),
                 ),
 
+                _ActionCard(
+                  icon: Icons.timeline_outlined,
+                  title: 'Timeline',
+                  subtitle: 'View all mesh activity',
+                  onTap: () => Navigator.of(context).pushNamed('/timeline'),
+                ),
+
+                _ActionCard(
+                  icon: Icons.people_alt_outlined,
+                  title: 'Presence',
+                  subtitle: 'See who is active on the mesh',
+                  onTap: () => Navigator.of(context).pushNamed('/presence'),
+                ),
+
                 const SizedBox(height: 32),
 
                 // Signal Strength Live
