@@ -1143,8 +1143,9 @@ class ProtocolService {
     try {
       _logger.i('Requesting LoRa config');
 
-      // ConfigType: LORA_CONFIG = 5
-      final adminMsg = pb.AdminMessage()..getConfigRequest = 5;
+      // Use ConfigType enum for LoRa config
+      final adminMsg = pb.AdminMessage()
+        ..getConfigRequest = pb.AdminMessage_ConfigType.LORA_CONFIG;
 
       final data = pb.Data()
         ..portnum = pb.PortNum.ADMIN_APP

@@ -361,6 +361,40 @@ message ModuleSettings {
 
 // Configuration requests
 message AdminMessage {
+  // Config type enum for get_config_request
+  enum ConfigType {
+    DEVICE_CONFIG = 0;
+    POSITION_CONFIG = 1;
+    POWER_CONFIG = 2;
+    NETWORK_CONFIG = 3;
+    DISPLAY_CONFIG = 4;
+    LORA_CONFIG = 5;
+    BLUETOOTH_CONFIG = 6;
+    SECURITY_CONFIG = 7;
+    SESSIONKEY_CONFIG = 8;
+    DEVICEUI_CONFIG = 9;
+  }
+  
+  // Module config type enum for get_module_config_request
+  enum ModuleConfigType {
+    MQTT_CONFIG = 0;
+    SERIAL_CONFIG = 1;
+    EXTNOTIF_CONFIG = 2;
+    STOREFORWARD_CONFIG = 3;
+    RANGETEST_CONFIG = 4;
+    TELEMETRY_CONFIG = 5;
+    CANNEDMSG_CONFIG = 6;
+    AUDIO_CONFIG = 7;
+    REMOTEHARDWARE_CONFIG = 8;
+    NEIGHBORINFO_CONFIG = 9;
+    AMBIENTLIGHTING_CONFIG = 10;
+    DETECTIONSENSOR_CONFIG = 11;
+    PAXCOUNTER_CONFIG = 12;
+  }
+
+  // Session passkey for admin message replay attack prevention
+  bytes session_passkey = 101;
+
   oneof payload_variant {
     // Get channel request (index + 1, so 0 is never sent)
     uint32 get_channel_request = 1;
@@ -374,17 +408,59 @@ message AdminMessage {
     // Get owner response
     User get_owner_response = 4;
     
-    // Get config request
-    uint32 get_config_request = 5;
+    // Get config request - use ConfigType enum value
+    ConfigType get_config_request = 5;
     
     // Get config response
     Config get_config_response = 6;
     
-    // Get module config request
-    uint32 get_module_config_request = 7;
+    // Get module config request - use ModuleConfigType enum value
+    ModuleConfigType get_module_config_request = 7;
     
     // Get module config response
     ModuleConfig get_module_config_response = 8;
+    
+    // Get canned message module messages request
+    bool get_canned_message_module_messages_request = 10;
+    
+    // Get canned message module messages response
+    string get_canned_message_module_messages_response = 11;
+    
+    // Get device metadata request
+    bool get_device_metadata_request = 12;
+    
+    // Get device metadata response
+    DeviceMetadata get_device_metadata_response = 13;
+    
+    // Get ringtone request
+    bool get_ringtone_request = 14;
+    
+    // Get ringtone response
+    string get_ringtone_response = 15;
+    
+    // Get device connection status request
+    bool get_device_connection_status_request = 16;
+    
+    // Get device connection status response
+    DeviceConnectionStatus get_device_connection_status_response = 17;
+    
+    // Setup a node for licensed amateur (ham) radio operation
+    HamParameters set_ham_mode = 18;
+    
+    // Get node remote hardware pins request
+    bool get_node_remote_hardware_pins_request = 19;
+    
+    // Get node remote hardware pins response
+    NodeRemoteHardwarePinsResponse get_node_remote_hardware_pins_response = 20;
+    
+    // Enter DFU mode request (NRF52 only)
+    bool enter_dfu_mode_request = 21;
+    
+    // Delete file by path from device
+    string delete_file_request = 22;
+    
+    // Set zero and offset for scale chips
+    uint32 set_scale = 23;
     
     // Set owner
     User set_owner = 32;
@@ -398,11 +474,44 @@ message AdminMessage {
     // Set module config
     ModuleConfig set_module_config = 35;
     
+    // Set canned message module messages
+    string set_canned_message_module_messages = 36;
+    
+    // Set ringtone for external notification
+    string set_ringtone_message = 37;
+    
+    // Remove node by nodenum from NodeDB
+    uint32 remove_by_nodenum = 38;
+    
+    // Set node as favorite
+    uint32 set_favorite_node = 39;
+    
+    // Remove node from favorites
+    uint32 remove_favorite_node = 40;
+    
+    // Set fixed position
+    Position set_fixed_position = 41;
+    
+    // Remove fixed position
+    bool remove_fixed_position = 42;
+    
+    // Set time only
+    fixed32 set_time_only = 43;
+    
     // Begin edit settings transaction
     bool begin_edit_settings = 64;
     
     // Commit edit settings transaction  
     bool commit_edit_settings = 65;
+    
+    // Factory reset device (including BLE bonds)
+    int32 factory_reset_device = 94;
+    
+    // Reboot to OTA firmware in N seconds
+    int32 reboot_ota_seconds = 95;
+    
+    // Exit simulator (Portduino only)
+    bool exit_simulator = 96;
     
     // Reboot in N seconds
     int32 reboot_seconds = 97;
@@ -410,12 +519,68 @@ message AdminMessage {
     // Shutdown in N seconds
     int32 shutdown_seconds = 98;
     
-    // Factory reset config
+    // Factory reset config (preserves BLE bonds)
     int32 factory_reset_config = 99;
     
-    // Reset nodedb
+    // Reset nodedb (favorites preserved when true)
     bool nodedb_reset = 100;
   }
+}
+
+// Parameters for amateur radio setup
+message HamParameters {
+  string call_sign = 1;
+  int32 tx_power = 2;
+  float frequency = 3;
+  string short_name = 4;
+}
+
+// Device connection status
+message DeviceConnectionStatus {
+  bool wifi_connected = 1;
+  bool ethernet_connected = 2;
+  bool bluetooth_connected = 3;
+  bool serial_connected = 4;
+}
+
+// Device metadata
+message DeviceMetadata {
+  string firmware_version = 1;
+  uint32 device_state_version = 2;
+  bool can_shutdown = 3;
+  bool has_wifi = 4;
+  bool has_bluetooth = 5;
+  bool has_ethernet = 6;
+  Config_DeviceConfig_Role role = 7;
+  uint32 position_flags = 8;
+  HardwareModel hw_model = 9;
+  bool has_remote_hardware = 10;
+  bool has_pkc = 11;
+}
+
+// Node remote hardware pin
+message NodeRemoteHardwarePin {
+  uint32 node_num = 1;
+  RemoteHardwarePin pin = 2;
+}
+
+// Remote hardware pin definition
+message RemoteHardwarePin {
+  uint32 gpio_pin = 1;
+  string name = 2;
+  RemoteHardwarePinType type = 3;
+}
+
+// Remote hardware pin type
+enum RemoteHardwarePinType {
+  UNKNOWN_TYPE = 0;
+  DIGITAL_READ = 1;
+  DIGITAL_WRITE = 2;
+}
+
+// Response for node remote hardware pins
+message NodeRemoteHardwarePinsResponse {
+  repeated NodeRemoteHardwarePin node_remote_hardware_pins = 1;
 }
 
 // Config message wrapper
@@ -429,26 +594,154 @@ message Config {
     LoRaConfig lora = 6;
     BluetoothConfig bluetooth = 7;
     SecurityConfig security = 8;
+    SessionkeyConfig sessionkey = 9;
   }
   
   message DeviceConfig {
-    string role = 1;
+    // Device role on mesh network
+    enum Role {
+      CLIENT = 0;
+      CLIENT_MUTE = 1;
+      ROUTER = 2;
+      ROUTER_CLIENT = 3;
+      REPEATER = 4;
+      TRACKER = 5;
+      SENSOR = 6;
+      TAK = 7;
+      CLIENT_HIDDEN = 8;
+      LOST_AND_FOUND = 9;
+      TAK_TRACKER = 10;
+      ROUTER_LATE = 11;
+      CLIENT_BASE = 12;
+    }
+    
+    // Rebroadcast mode
+    enum RebroadcastMode {
+      ALL = 0;
+      ALL_SKIP_DECODING = 1;
+      LOCAL_ONLY = 2;
+      KNOWN_ONLY = 3;
+      NONE = 4;
+      CORE_PORTNUMS_ONLY = 5;
+    }
+    
+    Role role = 1;
+    bool serial_enabled = 2;
+    uint32 button_gpio = 4;
+    uint32 buzzer_gpio = 5;
+    RebroadcastMode rebroadcast_mode = 6;
+    uint32 node_info_broadcast_secs = 7;
+    bool double_tap_as_button_press = 8;
+    bool is_managed = 9;
+    bool disable_triple_click = 10;
+    string tzdef = 11;
+    bool led_heartbeat_disabled = 12;
   }
   
   message PositionConfig {
-    bool gps_enabled = 1;
+    enum GpsMode {
+      DISABLED = 0;
+      ENABLED = 1;
+      NOT_PRESENT = 2;
+    }
+    
+    uint32 position_broadcast_secs = 1;
+    bool position_broadcast_smart_enabled = 2;
+    bool fixed_position = 3;
+    bool gps_enabled = 4;
+    uint32 gps_update_interval = 5;
+    uint32 gps_attempt_time = 6;
+    uint32 position_flags = 7;
+    uint32 rx_gpio = 8;
+    uint32 tx_gpio = 9;
+    uint32 broadcast_smart_minimum_distance = 10;
+    uint32 broadcast_smart_minimum_interval_secs = 11;
+    uint32 gps_en_gpio = 12;
+    GpsMode gps_mode = 13;
   }
   
   message PowerConfig {
     bool is_power_saving = 1;
+    uint32 on_battery_shutdown_after_secs = 2;
+    float adc_multiplier_override = 3;
+    uint32 wait_bluetooth_secs = 4;
+    uint32 sds_secs = 6;
+    uint32 ls_secs = 7;
+    uint32 min_wake_secs = 8;
+    uint32 device_battery_ina_address = 9;
+    uint64 powermon_enables = 32;
   }
   
   message NetworkConfig {
+    enum AddressMode {
+      DHCP = 0;
+      STATIC = 1;
+    }
+    
+    message IpV4Config {
+      fixed32 ip = 1;
+      fixed32 gateway = 2;
+      fixed32 subnet = 3;
+      fixed32 dns = 4;
+    }
+    
     bool wifi_enabled = 1;
+    string wifi_ssid = 3;
+    string wifi_psk = 4;
+    string ntp_server = 5;
+    bool eth_enabled = 6;
+    AddressMode address_mode = 7;
+    IpV4Config ipv4_config = 8;
+    string rsyslog_server = 9;
+    uint32 enabled_protocols = 10;
+    bool ipv6_enabled = 11;
   }
   
   message DisplayConfig {
+    enum DisplayUnits {
+      METRIC = 0;
+      IMPERIAL = 1;
+    }
+    
+    enum OledType {
+      OLED_AUTO = 0;
+      OLED_SSD1306 = 1;
+      OLED_SH1106 = 2;
+      OLED_SH1107 = 3;
+      OLED_SH1107_128_128 = 4;
+    }
+    
+    enum DisplayMode {
+      DEFAULT = 0;
+      TWOCOLOR = 1;
+      INVERTED = 2;
+      COLOR = 3;
+    }
+    
+    enum CompassOrientation {
+      DEGREES_0 = 0;
+      DEGREES_90 = 1;
+      DEGREES_180 = 2;
+      DEGREES_270 = 3;
+      DEGREES_0_INVERTED = 4;
+      DEGREES_90_INVERTED = 5;
+      DEGREES_180_INVERTED = 6;
+      DEGREES_270_INVERTED = 7;
+    }
+    
     uint32 screen_on_secs = 1;
+    uint32 gps_format = 2;
+    uint32 auto_screen_carousel_secs = 3;
+    bool compass_north_top = 4;
+    bool flip_screen = 5;
+    DisplayUnits units = 6;
+    OledType oled = 7;
+    DisplayMode displaymode = 8;
+    bool heading_bold = 9;
+    bool wake_on_tap_or_motion = 10;
+    CompassOrientation compass_orientation = 11;
+    bool use_12h_clock = 12;
+    bool use_long_node_name = 13;
   }
   
   message LoRaConfig {
@@ -462,15 +755,40 @@ message Config {
     uint32 hop_limit = 8;
     bool tx_enabled = 9;
     int32 tx_power = 10;
+    uint32 channel_num = 11;
+    bool override_duty_cycle = 12;
+    bool sx126x_rx_boosted_gain = 13;
+    float override_frequency = 14;
+    bool pa_fan_disabled = 15;
+    repeated uint32 ignore_incoming = 103;
+    bool ignore_mqtt = 104;
+    bool config_ok_to_mqtt = 105;
   }
   
   message BluetoothConfig {
+    enum PairingMode {
+      RANDOM_PIN = 0;
+      FIXED_PIN = 1;
+      NO_PIN = 2;
+    }
+    
     bool enabled = 1;
+    PairingMode mode = 2;
+    uint32 fixed_pin = 3;
   }
   
   message SecurityConfig {
     bytes public_key = 1;
     bytes private_key = 2;
+    repeated bytes admin_key = 3;
+    bool is_managed = 4;
+    bool serial_enabled = 5;
+    bool debug_log_api_enabled = 6;
+    bool admin_channel_enabled = 8;
+  }
+  
+  message SessionkeyConfig {
+    // Blank config request for getting session key
   }
 }
 
@@ -479,44 +797,224 @@ message ModuleConfig {
   oneof payload_variant {
     MQTTConfig mqtt = 1;
     SerialConfig serial = 2;
-    ExternalNotificationConfig ext_notification = 3;
+    ExternalNotificationConfig external_notification = 3;
     StoreForwardConfig store_forward = 4;
     RangeTestConfig range_test = 5;
     TelemetryConfig telemetry = 6;
     CannedMessageConfig canned_message = 7;
     AudioConfig audio = 8;
+    RemoteHardwareConfig remote_hardware = 9;
+    NeighborInfoConfig neighbor_info = 10;
+    AmbientLightingConfig ambient_lighting = 11;
+    DetectionSensorConfig detection_sensor = 12;
+    PaxcounterConfig paxcounter = 13;
   }
   
   message MQTTConfig {
     bool enabled = 1;
+    string address = 2;
+    string username = 3;
+    string password = 4;
+    bool encryption_enabled = 5;
+    bool json_enabled = 6;
+    bool tls_enabled = 7;
+    string root = 8;
+    bool proxy_to_client_enabled = 9;
+    bool map_reporting_enabled = 10;
+    MapReportSettings map_report_settings = 11;
+  }
+  
+  message MapReportSettings {
+    uint32 publish_interval_secs = 1;
+    uint32 position_precision = 2;
+    bool should_report_location = 3;
   }
   
   message SerialConfig {
+    enum Serial_Baud {
+      BAUD_DEFAULT = 0;
+      BAUD_110 = 1;
+      BAUD_300 = 2;
+      BAUD_600 = 3;
+      BAUD_1200 = 4;
+      BAUD_2400 = 5;
+      BAUD_4800 = 6;
+      BAUD_9600 = 7;
+      BAUD_19200 = 8;
+      BAUD_38400 = 9;
+      BAUD_57600 = 10;
+      BAUD_115200 = 11;
+      BAUD_230400 = 12;
+      BAUD_460800 = 13;
+      BAUD_576000 = 14;
+      BAUD_921600 = 15;
+    }
+    
+    enum Serial_Mode {
+      DEFAULT = 0;
+      SIMPLE = 1;
+      PROTO = 2;
+      TEXTMSG = 3;
+      NMEA = 4;
+      CALTOPO = 5;
+      WS85 = 6;
+      VE_DIRECT = 7;
+      MS_CONFIG = 8;
+    }
+    
     bool enabled = 1;
+    bool echo = 2;
+    uint32 rxd = 3;
+    uint32 txd = 4;
+    Serial_Baud baud = 5;
+    uint32 timeout = 6;
+    Serial_Mode mode = 7;
+    bool override_console_serial_port = 8;
   }
   
   message ExternalNotificationConfig {
     bool enabled = 1;
+    uint32 output_ms = 2;
+    uint32 output = 3;
+    bool active = 4;
+    bool alert_message = 5;
+    bool alert_bell = 6;
+    bool use_pwm = 7;
+    uint32 output_vibra = 8;
+    uint32 output_buzzer = 9;
+    bool alert_message_vibra = 10;
+    bool alert_message_buzzer = 11;
+    bool alert_bell_vibra = 12;
+    bool alert_bell_buzzer = 13;
+    uint32 nag_timeout = 14;
+    bool use_i2s_as_buzzer = 15;
   }
   
   message StoreForwardConfig {
     bool enabled = 1;
+    bool heartbeat = 2;
+    uint32 records = 3;
+    uint32 history_return_max = 4;
+    uint32 history_return_window = 5;
+    bool is_server = 6;
   }
   
   message RangeTestConfig {
     bool enabled = 1;
+    uint32 sender = 2;
+    bool save = 3;
+    bool clear_on_reboot = 4;
   }
   
   message TelemetryConfig {
     uint32 device_update_interval = 1;
+    uint32 environment_update_interval = 2;
+    bool environment_measurement_enabled = 3;
+    bool environment_screen_enabled = 4;
+    bool environment_display_fahrenheit = 5;
+    bool air_quality_enabled = 6;
+    uint32 air_quality_interval = 7;
+    bool power_measurement_enabled = 8;
+    uint32 power_update_interval = 9;
+    bool power_screen_enabled = 10;
+    bool health_measurement_enabled = 11;
+    uint32 health_update_interval = 12;
+    bool health_screen_enabled = 13;
+    bool device_telemetry_enabled = 14;
   }
   
   message CannedMessageConfig {
-    bool enabled = 1;
+    enum InputEventChar {
+      NONE = 0;
+      UP = 17;
+      DOWN = 18;
+      LEFT = 19;
+      RIGHT = 20;
+      SELECT = 10;
+      BACK = 27;
+      CANCEL = 24;
+    }
+    
+    bool rotary1_enabled = 1;
+    uint32 inputbroker_pin_a = 2;
+    uint32 inputbroker_pin_b = 3;
+    uint32 inputbroker_pin_press = 4;
+    InputEventChar inputbroker_event_cw = 5;
+    InputEventChar inputbroker_event_ccw = 6;
+    InputEventChar inputbroker_event_press = 7;
+    bool updown1_enabled = 8;
+    bool enabled = 9;
+    string allow_input_source = 10;
+    bool send_bell = 11;
   }
   
   message AudioConfig {
+    enum Audio_Baud {
+      CODEC2_DEFAULT = 0;
+      CODEC2_3200 = 1;
+      CODEC2_2400 = 2;
+      CODEC2_1600 = 3;
+      CODEC2_1400 = 4;
+      CODEC2_1300 = 5;
+      CODEC2_1200 = 6;
+      CODEC2_700 = 7;
+      CODEC2_700B = 8;
+    }
+    
     bool codec2_enabled = 1;
+    uint32 ptt_pin = 2;
+    Audio_Baud bitrate = 3;
+    uint32 i2s_ws = 4;
+    uint32 i2s_sd = 5;
+    uint32 i2s_din = 6;
+    uint32 i2s_sck = 7;
+  }
+  
+  message RemoteHardwareConfig {
+    bool enabled = 1;
+    bool allow_undefined_pin_access = 2;
+    repeated RemoteHardwarePin available_pins = 3;
+  }
+  
+  message NeighborInfoConfig {
+    bool enabled = 1;
+    uint32 update_interval = 2;
+    bool transmit_over_lora = 3;
+  }
+  
+  message AmbientLightingConfig {
+    bool led_state = 1;
+    uint32 current = 2;
+    uint32 red = 3;
+    uint32 green = 4;
+    uint32 blue = 5;
+  }
+  
+  message DetectionSensorConfig {
+    enum TriggerType {
+      LOGIC_LOW = 0;
+      LOGIC_HIGH = 1;
+      FALLING_EDGE = 2;
+      RISING_EDGE = 3;
+      EITHER_EDGE_ACTIVE_LOW = 4;
+      EITHER_EDGE_ACTIVE_HIGH = 5;
+    }
+    
+    bool enabled = 1;
+    uint32 minimum_broadcast_secs = 2;
+    uint32 state_broadcast_secs = 3;
+    bool send_bell = 4;
+    string name = 5;
+    uint32 monitor_pin = 6;
+    TriggerType detection_trigger_type = 7;
+    bool use_pullup = 8;
+  }
+  
+  message PaxcounterConfig {
+    bool enabled = 1;
+    uint32 paxcounter_update_interval = 2;
+    int32 wifi_threshold = 3;
+    int32 ble_threshold = 4;
   }
 }
 

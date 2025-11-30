@@ -28,7 +28,15 @@ message ToRadio {
     
     // Tell API server we are disconnecting now.
     bool disconnect = 4;
+    
+    // Heartbeat message (keeps serial connections alive)
+    Heartbeat heartbeat = 7;
   }
+}
+
+// Heartbeat message
+message Heartbeat {
+  uint32 nonce = 1;
 }
 
 // Packets received from radio
@@ -46,11 +54,55 @@ message FromRadio {
     // One packet is sent for each node in the on radio DB
     NodeInfo node_info = 4;
     
+    // Include a part of the config
+    Config config = 5;
+    
+    // Debug console output over protobuf stream
+    LogRecord log_record = 6;
+    
     // Sent as true once the device has finished sending all of the
     // responses to want_config - contains the config_id sent in wantConfigId
     uint32 config_complete_id = 7;
     
+    // Sent to tell clients the radio has just rebooted
+    bool rebooted = 8;
+    
+    // Include module config
+    ModuleConfig moduleConfig = 9;
+    
     // One packet is sent for each channel
     Channel channel = 10;
+    
+    // Queue status info
+    QueueStatus queueStatus = 11;
+    
+    // Device metadata
+    DeviceMetadata metadata = 13;
   }
+}
+
+// Log record for debug output
+message LogRecord {
+  enum Level {
+    UNSET = 0;
+    CRITICAL = 50;
+    ERROR = 40;
+    WARNING = 30;
+    INFO = 20;
+    DEBUG = 10;
+    TRACE = 5;
+  }
+  
+  string message = 1;
+  fixed32 time = 2;
+  string source = 3;
+  Level level = 4;
+}
+
+// Queue status
+message QueueStatus {
+  int32 res = 1;
+  uint32 free = 2;
+  uint32 maxlen = 3;
+  uint32 mesh_packet_id = 4;
 }
