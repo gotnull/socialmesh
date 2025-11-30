@@ -321,9 +321,10 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
 class MessagesNotifier extends StateNotifier<List<Message>> {
   final ProtocolService _protocol;
   final MessageStorageService? _storage;
+  final Ref _ref;
   final Map<int, String> _packetToMessageId = {};
 
-  MessagesNotifier(this._protocol, this._storage) : super([]) {
+  MessagesNotifier(this._protocol, this._storage, this._ref) : super([]) {
     _init();
   }
 
@@ -346,10 +347,46 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
       state = [...state, message];
       // Persist the new message
       _storage?.saveMessage(message);
+
+      // Trigger notification for received messages
+      _notifyNewMessage(message);
     });
 
     // Listen for delivery status updates
     _protocol.deliveryStream.listen(_handleDeliveryUpdate);
+  }
+
+  void _notifyNewMessage(Message message) {
+    // Get sender name from nodes
+    final nodes = _ref.read(nodesProvider);
+    final senderNode = nodes[message.from];
+    final senderName = senderNode?.displayName ?? 'Unknown';
+
+    // Check if it's a channel message or direct message
+    final isChannelMessage = message.channel != null && message.channel! > 0;
+
+    if (isChannelMessage) {
+      // Channel message notification
+      final channels = _ref.read(channelsProvider);
+      final channel = channels
+          .where((c) => c.index == message.channel)
+          .firstOrNull;
+      final channelName = channel?.name ?? 'Channel ${message.channel}';
+
+      NotificationService().showChannelMessageNotification(
+        senderName: senderName,
+        channelName: channelName,
+        message: message.text,
+        channelIndex: message.channel!,
+      );
+    } else {
+      // Direct message notification
+      NotificationService().showNewMessageNotification(
+        senderName: senderName,
+        message: message.text,
+        fromNodeNum: message.from,
+      );
+    }
   }
 
   void _handleDeliveryUpdate(MessageDeliveryUpdate update) {
@@ -418,7 +455,7 @@ final messagesProvider = StateNotifierProvider<MessagesNotifier, List<Message>>(
     final protocol = ref.watch(protocolServiceProvider);
     final storageAsync = ref.watch(messageStorageProvider);
     final storage = storageAsync.valueOrNull;
-    return MessagesNotifier(protocol, storage);
+    return MessagesNotifier(protocol, storage, ref);
   },
 );
 

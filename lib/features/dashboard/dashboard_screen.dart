@@ -823,12 +823,18 @@ class _SignalStrengthChartState extends ConsumerState<_SignalStrengthChart> {
                             label: 'SNR',
                             value: '${currentSnr.toStringAsFixed(1)} dB',
                             color: const Color(0xFF2196F3),
+                            tooltip:
+                                'Signal-to-Noise Ratio: Higher is better.\n'
+                                'Good: > 10 dB, Fair: 0-10 dB, Poor: < 0 dB',
                           ),
                           const SizedBox(width: 8),
                           _MetricChip(
                             label: 'Ch Util',
                             value: '${currentChannelUtil.toStringAsFixed(1)}%',
                             color: const Color(0xFFFF9800),
+                            tooltip:
+                                'Channel Utilization: Airtime usage.\n'
+                                'Low: < 25%, Moderate: 25-50%, High: > 50%',
                           ),
                         ],
                       ),
@@ -928,16 +934,18 @@ class _MetricChip extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
+  final String? tooltip;
 
   const _MetricChip({
     required this.label,
     required this.value,
     required this.color,
+    this.tooltip,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final chip = Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
@@ -964,6 +972,11 @@ class _MetricChip extends StatelessWidget {
         ],
       ),
     );
+
+    if (tooltip != null) {
+      return Tooltip(message: tooltip!, preferBelow: false, child: chip);
+    }
+    return chip;
   }
 }
 

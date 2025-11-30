@@ -132,13 +132,13 @@ class NotificationService {
     if (!_initialized) return;
 
     const androidDetails = AndroidNotificationDetails(
-      'messages',
-      'Messages',
-      channelDescription: 'Notifications for new mesh messages',
+      'direct_messages',
+      'Direct Messages',
+      channelDescription: 'Notifications for direct mesh messages',
       importance: Importance.high,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
-      groupKey: 'mesh_messages',
+      groupKey: 'mesh_direct_messages',
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -164,8 +164,58 @@ class NotificationService {
       'Message from $senderName',
       truncatedMessage,
       notificationDetails,
-      payload: 'message:$fromNodeNum',
+      payload: 'dm:$fromNodeNum',
     );
+
+    debugPrint('🔔 Showed DM notification from: $senderName');
+  }
+
+  /// Show notification for channel message
+  Future<void> showChannelMessageNotification({
+    required String senderName,
+    required String channelName,
+    required String message,
+    required int channelIndex,
+  }) async {
+    if (!_initialized) return;
+
+    const androidDetails = AndroidNotificationDetails(
+      'channel_messages',
+      'Channel Messages',
+      channelDescription: 'Notifications for channel mesh messages',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'mesh_channel_messages',
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    // Truncate message if too long
+    final truncatedMessage = message.length > 100
+        ? '${message.substring(0, 100)}...'
+        : message;
+
+    await _notifications.show(
+      channelIndex +
+          2000000, // Offset to avoid collision with other notifications
+      '$senderName in $channelName',
+      truncatedMessage,
+      notificationDetails,
+      payload: 'channel:$channelIndex',
+    );
+
+    debugPrint('🔔 Showed channel notification: $senderName in $channelName');
   }
 
   /// Cancel all notifications
