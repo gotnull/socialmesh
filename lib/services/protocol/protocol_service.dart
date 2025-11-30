@@ -1077,7 +1077,7 @@ class ProtocolService {
 
       // Create an empty position to request the node's position
       final position = pb.Position();
-      
+
       final data = pb.Data()
         ..portnum = pb.PortNum.POSITION_APP
         ..payload = position.writeToBuffer()
