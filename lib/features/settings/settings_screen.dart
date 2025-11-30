@@ -23,10 +23,23 @@ import 'ringtone_screen.dart';
 import 'subscription_screen.dart';
 import 'premium_widgets.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
-  Widget _buildSubscriptionSection(BuildContext context, WidgetRef ref) {
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildSubscriptionSection(BuildContext context) {
     final subscriptionState = ref.watch(subscriptionStateProvider);
     final currentTier = subscriptionState.tier;
 
@@ -145,7 +158,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final settingsServiceAsync = ref.watch(settingsServiceProvider);
 
     return Scaffold(
@@ -204,10 +217,11 @@ class SettingsScreen extends ConsumerWidget {
           );
 
           return ListView(
+            controller: _scrollController,
             padding: const EdgeInsets.symmetric(vertical: 8),
             children: [
               // Subscription Section
-              _buildSubscriptionSection(context, ref),
+              _buildSubscriptionSection(context),
 
               const SizedBox(height: 16),
 
