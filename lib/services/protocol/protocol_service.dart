@@ -587,7 +587,7 @@ class ProtocolService {
           (position.latitudeI != 0 && position.longitudeI != 0) && !isApplePark;
 
       _logger.i(
-        '📍 POSITION_APP from ${packet.from.toRadixString(16)}: '
+        '📍 POSITION_APP from !${packet.from.toRadixString(16)}: '
         'latI=${position.latitudeI}, lngI=${position.longitudeI}, '
         'lat=${position.latitudeI / 1e7}, lng=${position.longitudeI / 1e7}, '
         'isApplePark=$isApplePark, valid=$hasValidPosition',
@@ -595,6 +595,10 @@ class ProtocolService {
 
       final node = _nodes[packet.from];
       if (node != null && hasValidPosition) {
+        _logger.i(
+          '✅ UPDATING NODE ${node.displayName} (!${packet.from.toRadixString(16)}) WITH VALID POSITION: '
+          '${position.latitudeI / 1e7}, ${position.longitudeI / 1e7}',
+        );
         final updatedNode = node.copyWith(
           latitude: position.latitudeI / 1e7,
           longitude: position.longitudeI / 1e7,
@@ -603,6 +607,9 @@ class ProtocolService {
         );
         _nodes[packet.from] = updatedNode;
         _nodeController.add(updatedNode);
+        _logger.i(
+          '✅ Node ${updatedNode.displayName} now hasPosition=${updatedNode.hasPosition}',
+        );
       } else if (node != null) {
         // Update lastHeard even if position is invalid
         final updatedNode = node.copyWith(lastHeard: DateTime.now());

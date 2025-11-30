@@ -61,10 +61,35 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
+    // === MAP DEBUG LOGGING ===
+    debugPrint('🗺️ === MAP SCREEN BUILD ===');
+    debugPrint('🗺️ Total nodes: ${nodes.length}');
+    debugPrint('🗺️ My node num: $myNodeNum');
+
+    // Log ALL nodes with their position status
+    for (final node in nodes.values) {
+      final hasPos = node.hasPosition;
+      final lat = node.latitude;
+      final lng = node.longitude;
+      debugPrint(
+        '🗺️ Node ${node.nodeNum.toRadixString(16)} "${node.longName}": '
+        'hasPosition=$hasPos, lat=$lat, lng=$lng',
+      );
+    }
+
     // Filter nodes with valid positions
     final nodesWithPosition = nodes.values
         .where((node) => node.hasPosition)
         .toList();
+
+    debugPrint('🗺️ Nodes with valid position: ${nodesWithPosition.length}');
+    for (final node in nodesWithPosition) {
+      debugPrint(
+        '🗺️ ✅ Valid: ${node.nodeNum.toRadixString(16)} at '
+        '${node.latitude}, ${node.longitude}',
+      );
+    }
+    debugPrint('🗺️ === END MAP DEBUG ===');
 
     // Calculate center point
     LatLng center = const LatLng(0, 0);
@@ -473,7 +498,7 @@ class _NodeInfoCard extends ConsumerWidget {
 
     try {
       await protocol.requestPosition(node.nodeNum);
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
