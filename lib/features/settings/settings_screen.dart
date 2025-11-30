@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/subscription_providers.dart';
+import '../../models/subscription_models.dart';
 import '../../services/storage/storage_service.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
@@ -17,9 +19,129 @@ import 'network_config_screen.dart';
 import 'power_config_screen.dart';
 import 'security_config_screen.dart';
 import 'ringtone_screen.dart';
+import 'subscription_screen.dart';
+import 'premium_widgets.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
+
+  Widget _buildSubscriptionSection(BuildContext context, WidgetRef ref) {
+    final subscriptionState = ref.watch(subscriptionStateProvider);
+    final currentTier = subscriptionState.tier;
+
+    Color tierColor;
+    String tierName;
+    IconData tierIcon;
+
+    switch (currentTier) {
+      case SubscriptionTier.free:
+        tierColor = AppTheme.textTertiary;
+        tierName = 'Free';
+        tierIcon = Icons.person_outline;
+      case SubscriptionTier.premium:
+        tierColor = AppTheme.primaryGreen;
+        tierName = 'Premium';
+        tierIcon = Icons.star;
+      case SubscriptionTier.pro:
+        tierColor = AppTheme.accentOrange;
+        tierName = 'Pro';
+        tierIcon = Icons.workspace_premium;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeader(title: 'SUBSCRIPTION'),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          decoration: BoxDecoration(
+            color: AppTheme.darkCard,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: InkWell(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+            ),
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: tierColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(tierIcon, color: tierColor, size: 24),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              tierName,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: tierColor,
+                              ),
+                            ),
+                            if (subscriptionState.isTrialing) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.warningYellow.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  '${subscriptionState.trialDaysRemaining}d trial',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.warningYellow,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          currentTier == SubscriptionTier.free
+                              ? 'Upgrade for more features'
+                              : 'Manage subscription',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+                ],
+              ),
+            ),
+          ),
+        ),
+        // Trial banner if applicable
+        if (subscriptionState.isTrialing)
+          const Padding(padding: EdgeInsets.only(top: 8), child: TrialBanner()),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -83,6 +205,11 @@ class SettingsScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.symmetric(vertical: 8),
             children: [
+              // Subscription Section
+              _buildSubscriptionSection(context, ref),
+
+              const SizedBox(height: 16),
+
               // Connection Section
               _SectionHeader(title: 'CONNECTION'),
               _SettingsTile(
@@ -127,6 +254,20 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle:
                     '${settingsService.messageHistoryLimit} messages stored',
                 onTap: () => _showHistoryLimitDialog(context, settingsService),
+              ),
+              // Premium: Cloud Backup
+              _PremiumSettingsTile(
+                feature: PremiumFeature.cloudBackup,
+                icon: Icons.cloud_upload,
+                title: 'Cloud Backup',
+                subtitle: 'Backup messages and settings to cloud',
+              ),
+              // Premium: Message Export
+              _PremiumSettingsTile(
+                feature: PremiumFeature.messageExport,
+                icon: Icons.download,
+                title: 'Export Messages',
+                subtitle: 'Export messages to PDF or CSV',
               ),
               _SettingsTile(
                 icon: Icons.delete_sweep_outlined,
@@ -610,6 +751,119 @@ class _SettingsTile extends StatelessWidget {
                 ? const Icon(Icons.chevron_right, color: AppTheme.textTertiary)
                 : null),
         onTap: onTap,
+      ),
+    );
+  }
+}
+
+/// Settings tile with premium feature gating
+class _PremiumSettingsTile extends ConsumerWidget {
+  final PremiumFeature feature;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _PremiumSettingsTile({
+    required this.feature,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasFeature = ref.watch(hasFeatureProvider(feature));
+    final info = FeatureInfo.getInfo(feature);
+    final tierColor =
+        (info?.minimumTier ?? SubscriptionTier.premium) == SubscriptionTier.pro
+        ? AppTheme.accentOrange
+        : AppTheme.primaryGreen;
+    final tierName =
+        (info?.minimumTier ?? SubscriptionTier.premium) == SubscriptionTier.pro
+        ? 'PRO'
+        : 'PREMIUM';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: Stack(
+          children: [
+            Icon(
+              icon,
+              color: hasFeature
+                  ? AppTheme.textSecondary
+                  : AppTheme.textTertiary.withValues(alpha: 0.5),
+            ),
+            if (!hasFeature)
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: tierColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.lock, size: 8, color: Colors.white),
+                ),
+              ),
+          ],
+        ),
+        title: Row(
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: hasFeature
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.6),
+                fontFamily: 'Inter',
+              ),
+            ),
+            if (!hasFeature) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: tierColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  tierName,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: tierColor,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        subtitle: Text(
+          hasFeature ? subtitle : 'Upgrade to unlock this feature',
+          style: TextStyle(
+            fontSize: 13,
+            color: hasFeature
+                ? AppTheme.textTertiary
+                : AppTheme.textTertiary.withValues(alpha: 0.6),
+            fontFamily: 'Inter',
+          ),
+        ),
+        trailing: const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+        onTap: hasFeature
+            ? null
+            : () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/theme.dart';
 import 'providers/app_providers.dart';
 import 'features/scanner/scanner_screen.dart';
@@ -15,7 +16,9 @@ import 'features/device/region_selection_screen.dart';
 import 'features/navigation/main_shell.dart';
 import 'features/onboarding/onboarding_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
   runApp(const ProviderScope(child: ProtofluffApp()));
 }
 
