@@ -62,6 +62,7 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
 
       // Check for auto-reconnect settings
       final lastDeviceId = settings.lastDeviceId;
+      final lastDeviceName = settings.lastDeviceName;
       final shouldAutoReconnect = settings.autoReconnect;
 
       if (lastDeviceId != null && shouldAutoReconnect) {
@@ -83,6 +84,16 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
           }
 
           if (lastDevice != null) {
+            // Use stored name if scan didn't provide one
+            if (lastDevice.name.isEmpty || lastDevice.name == 'Unknown') {
+              lastDevice = DeviceInfo(
+                id: lastDevice.id,
+                name: lastDeviceName ?? lastDevice.name,
+                type: lastDevice.type,
+                rssi: lastDevice.rssi,
+              );
+            }
+
             _ref.read(autoReconnectStateProvider.notifier).state =
                 AutoReconnectState.connecting;
             await transport.connect(lastDevice);

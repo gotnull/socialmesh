@@ -101,13 +101,21 @@ class SettingsService {
   }
 
   // Last connected device
-  Future<void> setLastDevice(String deviceId, String deviceType) async {
+  Future<void> setLastDevice(
+    String deviceId,
+    String deviceType, {
+    String? deviceName,
+  }) async {
     await _preferences.setString('last_device_id', deviceId);
     await _preferences.setString('last_device_type', deviceType);
+    if (deviceName != null) {
+      await _preferences.setString('last_device_name', deviceName);
+    }
   }
 
   String? get lastDeviceId => _preferences.getString('last_device_id');
   String? get lastDeviceType => _preferences.getString('last_device_type');
+  String? get lastDeviceName => _preferences.getString('last_device_name');
 
   // Auto-reconnect
   Future<void> setAutoReconnect(bool enabled) async {

@@ -57,6 +57,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
     final lastDeviceId = settingsService.lastDeviceId;
     final lastDeviceType = settingsService.lastDeviceType;
+    final lastDeviceName = settingsService.lastDeviceName;
 
     if (lastDeviceId == null || lastDeviceType == null) {
       _startScan();
@@ -85,7 +86,17 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
           '🔄 Auto-reconnect: found ${device.id} - checking if matches',
         );
         if (device.id == lastDeviceId) {
-          lastDevice = device;
+          // Use stored name if scan didn't provide one
+          if (device.name.isEmpty || device.name == 'Unknown') {
+            lastDevice = DeviceInfo(
+              id: device.id,
+              name: lastDeviceName ?? device.name,
+              type: device.type,
+              rssi: device.rssi,
+            );
+          } else {
+            lastDevice = device;
+          }
           break;
         }
       }
@@ -190,7 +201,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       final settingsService = settingsServiceAsync.valueOrNull;
       if (settingsService != null) {
         final deviceType = device.type == TransportType.ble ? 'ble' : 'usb';
-        await settingsService.setLastDevice(device.id, deviceType);
+        await settingsService.setLastDevice(
+          device.id,
+          deviceType,
+          deviceName: device.name,
+        );
       }
 
       // Start protocol service and wait for configuration
