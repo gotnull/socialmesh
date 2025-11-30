@@ -258,26 +258,30 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Column(
-        children: [
-          // Progress indicator
-          _buildProgressIndicator(),
-          // Page content
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _buildNameStep(theme),
-                _buildPrivacyStep(theme),
-                _buildOptionsStep(theme),
-                _buildCompleteStep(theme),
-              ],
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          children: [
+            // Progress indicator
+            _buildProgressIndicator(),
+            // Page content
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _buildNameStep(theme),
+                  _buildPrivacyStep(theme),
+                  _buildOptionsStep(theme),
+                  _buildCompleteStep(theme),
+                ],
+              ),
             ),
-          ),
-          // Navigation buttons
-          if (!_saveComplete) _buildNavigationButtons(),
-        ],
+            // Navigation buttons
+            if (!_saveComplete) _buildNavigationButtons(),
+          ],
+        ),
       ),
     );
   }
@@ -520,6 +524,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                 ],
               ),
             ),
+            const SizedBox(width: 12),
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: 24,
