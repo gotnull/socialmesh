@@ -542,26 +542,45 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Future<void> _testNotification(BuildContext context) async {
+    debugPrint('🔔 Test notification button tapped');
     final notificationService = NotificationService();
 
     // First ensure initialized
+    debugPrint('🔔 Initializing notification service...');
     await notificationService.initialize();
+    debugPrint('🔔 Notification service initialized');
 
     // Show a test DM notification
-    await notificationService.showNewMessageNotification(
-      senderName: 'Test User',
-      message:
-          'This is a test notification to verify notifications are working correctly.',
-      fromNodeNum: 999999,
-      playSound: true,
-      vibrate: true,
-    );
+    debugPrint('🔔 Showing test notification...');
+    try {
+      await notificationService.showNewMessageNotification(
+        senderName: 'Test User',
+        message:
+            'This is a test notification to verify notifications are working correctly.',
+        fromNodeNum: 999999,
+        playSound: true,
+        vibrate: true,
+      );
+      debugPrint('🔔 Test notification show() completed');
+    } catch (e) {
+      debugPrint('🔔 Test notification error: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Notification error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Test notification sent'),
-          duration: Duration(seconds: 2),
+          content: Text('Test notification sent - check notification center'),
+          duration: Duration(seconds: 3),
         ),
       );
     }
@@ -846,31 +865,52 @@ class _SettingsTile extends StatelessWidget {
         color: AppTheme.darkCard,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: ListTile(
-        leading: Icon(icon, color: iconColor ?? AppTheme.textSecondary),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: titleColor ?? Colors.white,
-            fontFamily: 'Inter',
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(icon, color: iconColor ?? AppTheme.textSecondary),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: titleColor ?? Colors.white,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppTheme.textTertiary,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (trailing != null)
+                  trailing!
+                else if (onTap != null)
+                  const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+              ],
+            ),
           ),
         ),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppTheme.textTertiary,
-            fontFamily: 'Inter',
-          ),
-        ),
-        trailing:
-            trailing ??
-            (onTap != null
-                ? const Icon(Icons.chevron_right, color: AppTheme.textTertiary)
-                : null),
-        onTap: onTap,
       ),
     );
   }
@@ -903,87 +943,120 @@ class _PremiumSettingsTile extends ConsumerWidget {
         ? 'PRO'
         : 'PREMIUM';
 
+    final onTap = hasFeature
+        ? null
+        : () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+          );
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: AppTheme.darkCard,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: ListTile(
-        leading: Stack(
-          children: [
-            Icon(
-              icon,
-              color: hasFeature
-                  ? AppTheme.textSecondary
-                  : AppTheme.textTertiary.withValues(alpha: 0.5),
-            ),
-            if (!hasFeature)
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: tierColor,
-                    shape: BoxShape.circle,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Stack(
+                  children: [
+                    Icon(
+                      icon,
+                      color: hasFeature
+                          ? AppTheme.textSecondary
+                          : AppTheme.textTertiary.withValues(alpha: 0.5),
+                    ),
+                    if (!hasFeature)
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: tierColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.lock,
+                            size: 8,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: hasFeature
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.6),
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                          if (!hasFeature) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: tierColor.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                tierName,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: tierColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        hasFeature
+                            ? subtitle
+                            : 'Upgrade to unlock this feature',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: hasFeature
+                              ? AppTheme.textTertiary
+                              : AppTheme.textTertiary.withValues(alpha: 0.6),
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ],
                   ),
-                  child: const Icon(Icons.lock, size: 8, color: Colors.white),
                 ),
-              ),
-          ],
-        ),
-        title: Row(
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: hasFeature
-                    ? Colors.white
-                    : Colors.white.withValues(alpha: 0.6),
-                fontFamily: 'Inter',
-              ),
+                const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+              ],
             ),
-            if (!hasFeature) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: tierColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  tierName,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    color: tierColor,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-        subtitle: Text(
-          hasFeature ? subtitle : 'Upgrade to unlock this feature',
-          style: TextStyle(
-            fontSize: 13,
-            color: hasFeature
-                ? AppTheme.textTertiary
-                : AppTheme.textTertiary.withValues(alpha: 0.6),
-            fontFamily: 'Inter',
           ),
         ),
-        trailing: const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
-        onTap: hasFeature
-            ? null
-            : () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-              ),
       ),
     );
   }

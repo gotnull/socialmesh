@@ -59,11 +59,18 @@ class NotificationService {
 
     // Request permissions on iOS/macOS
     if (Platform.isIOS || Platform.isMacOS) {
-      await _notifications
+      final iosPlugin = _notifications
           .resolvePlatformSpecificImplementation<
             IOSFlutterLocalNotificationsPlugin
-          >()
-          ?.requestPermissions(alert: true, badge: true, sound: true);
+          >();
+      if (iosPlugin != null) {
+        final granted = await iosPlugin.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        debugPrint('🔔 iOS notification permissions granted: $granted');
+      }
     }
 
     // Request permissions on Android 13+
@@ -72,11 +79,12 @@ class NotificationService {
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
           >();
-      await androidPlugin?.requestNotificationsPermission();
+      final granted = await androidPlugin?.requestNotificationsPermission();
+      debugPrint('🔔 Android notification permissions granted: $granted');
     }
 
     _initialized = true;
-    debugPrint('🔔 NotificationService initialized');
+    debugPrint('🔔 NotificationService initialized successfully');
   }
 
   /// Handle notification tap
@@ -144,7 +152,15 @@ class NotificationService {
     bool playSound = true,
     bool vibrate = true,
   }) async {
-    if (!_initialized) return;
+    debugPrint(
+      '🔔 showNewMessageNotification called - initialized: $_initialized',
+    );
+    if (!_initialized) {
+      debugPrint(
+        '🔔 NotificationService not initialized, skipping DM notification',
+      );
+      return;
+    }
 
     final androidDetails = AndroidNotificationDetails(
       'direct_messages',
@@ -175,16 +191,21 @@ class NotificationService {
         ? '${message.substring(0, 100)}...'
         : message;
 
-    await _notifications.show(
-      fromNodeNum +
-          1000000, // Offset to avoid collision with node notifications
-      'Message from $senderName',
-      truncatedMessage,
-      notificationDetails,
-      payload: 'dm:$fromNodeNum',
-    );
-
-    debugPrint('🔔 Showed DM notification from: $senderName');
+    debugPrint('🔔 Calling _notifications.show() for DM from $senderName');
+    try {
+      await _notifications.show(
+        fromNodeNum +
+            1000000, // Offset to avoid collision with node notifications
+        'Message from $senderName',
+        truncatedMessage,
+        notificationDetails,
+        payload: 'dm:$fromNodeNum',
+      );
+      debugPrint('🔔 Successfully showed DM notification from: $senderName');
+    } catch (e) {
+      debugPrint('🔔 Error showing DM notification: $e');
+      rethrow;
+    }
   }
 
   /// Show notification for channel message
