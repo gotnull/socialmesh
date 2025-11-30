@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_providers.dart';
@@ -19,6 +20,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
   bool _fixedPosition = false;
   int _positionBroadcastSecs = 900;
   int _gpsUpdateInterval = 30;
+  StreamSubscription<pb.Config_PositionConfig>? _configSubscription;
 
   // Fixed position values
   final _latController = TextEditingController();
@@ -33,6 +35,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
 
   @override
   void dispose() {
+    _configSubscription?.cancel();
     _latController.dispose();
     _lonController.dispose();
     _altController.dispose();
@@ -43,10 +46,43 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
     setState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+
+      // Check if we already have cached config
+      final cachedConfig = protocol.currentPositionConfig;
+      if (cachedConfig != null) {
+        _applyConfig(cachedConfig);
+      }
+
+      // Listen for config response
+      _configSubscription?.cancel();
+      _configSubscription = protocol.positionConfigStream.listen((config) {
+        if (mounted) {
+          _applyConfig(config);
+        }
+      });
+
+      // Request fresh config from device
       await protocol.getConfig(pb.AdminMessage_ConfigType.POSITION_CONFIG);
+
+      // Wait a bit for response
+      await Future.delayed(const Duration(milliseconds: 500));
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _applyConfig(pb.Config_PositionConfig config) {
+    setState(() {
+      _gpsMode = config.gpsMode;
+      _smartBroadcastEnabled = config.positionBroadcastSmartEnabled;
+      _fixedPosition = config.fixedPosition;
+      _positionBroadcastSecs = config.positionBroadcastSecs > 0
+          ? config.positionBroadcastSecs
+          : 900;
+      _gpsUpdateInterval = config.gpsUpdateInterval > 0
+          ? config.gpsUpdateInterval
+          : 30;
+    });
   }
 
   Future<void> _saveConfig() async {

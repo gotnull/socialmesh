@@ -50,6 +50,7 @@ class ProtocolService {
   final StreamController<double> _channelUtilController;
   final StreamController<MessageDeliveryUpdate> _deliveryController;
   final StreamController<pbenum.RegionCode> _regionController;
+  final StreamController<pb.Config_PositionConfig> _positionConfigController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   Completer<void>? _configCompleter;
@@ -60,6 +61,7 @@ class ProtocolService {
   double _lastSnr = 0.0;
   double _lastChannelUtil = 0.0;
   pbenum.RegionCode? _currentRegion;
+  pb.Config_PositionConfig? _currentPositionConfig;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
   final Random _random = Random();
@@ -80,7 +82,9 @@ class ProtocolService {
       _snrController = StreamController<double>.broadcast(),
       _channelUtilController = StreamController<double>.broadcast(),
       _deliveryController = StreamController<MessageDeliveryUpdate>.broadcast(),
-      _regionController = StreamController<pbenum.RegionCode>.broadcast();
+      _regionController = StreamController<pbenum.RegionCode>.broadcast(),
+      _positionConfigController =
+          StreamController<pb.Config_PositionConfig>.broadcast();
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -96,6 +100,13 @@ class ProtocolService {
 
   /// Current region
   pbenum.RegionCode? get currentRegion => _currentRegion;
+
+  /// Stream of position config updates
+  Stream<pb.Config_PositionConfig> get positionConfigStream =>
+      _positionConfigController.stream;
+
+  /// Current position config
+  pb.Config_PositionConfig? get currentPositionConfig => _currentPositionConfig;
 
   /// Stream of RSSI updates
   Stream<int> get rssiStream => _rssiController.stream;
@@ -370,6 +381,8 @@ class ProtocolService {
             'positionBroadcastSecs=${posConfig.positionBroadcastSecs}, '
             'gpsUpdateInterval=${posConfig.gpsUpdateInterval}',
           );
+          _currentPositionConfig = posConfig;
+          _positionConfigController.add(posConfig);
         }
       } else if (adminMsg.hasGetChannelResponse()) {
         // Handle channel response - update local channel list
@@ -2099,7 +2112,7 @@ class ProtocolService {
     pb.Config_PositionConfig_GpsMode? gpsMode,
     int? gpsUpdateInterval,
   }) async {
-    _logger.i('Setting position config');
+    _logger.i('Setting position config: gpsMode=$gpsMode');
 
     final posConfig = pb.Config_PositionConfig();
     if (positionBroadcastSecs != null) {
@@ -2109,7 +2122,12 @@ class ProtocolService {
       posConfig.positionBroadcastSmartEnabled = positionBroadcastSmartEnabled;
     }
     if (fixedPosition != null) posConfig.fixedPosition = fixedPosition;
-    if (gpsMode != null) posConfig.gpsMode = gpsMode;
+    if (gpsMode != null) {
+      posConfig.gpsMode = gpsMode;
+      // Also set legacy gpsEnabled flag for older firmware compatibility
+      posConfig.gpsEnabled =
+          gpsMode == pb.Config_PositionConfig_GpsMode.ENABLED;
+    }
     if (gpsUpdateInterval != null) {
       posConfig.gpsUpdateInterval = gpsUpdateInterval;
     }
