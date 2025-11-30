@@ -6,10 +6,10 @@ class AppTheme {
   static const primaryMagenta = Color(0xFFE91E8C); // Hot pink/magenta
   static const primaryPurple = Color(0xFF8B5CF6); // Purple
   static const primaryBlue = Color(0xFF4F6AF6); // Blue
-  
+
   // Legacy alias for compatibility
   static const primaryGreen = primaryMagenta;
-  
+
   // Accent colors
   static const secondaryPink = Color(0xFFF97BBD);
   static const accentOrange = Color(0xFFFF9D6E);
@@ -43,7 +43,7 @@ class AppTheme {
       Color(0xFF4F6AF6), // Blue
     ],
   );
-  
+
   // Horizontal brand gradient for buttons
   static const brandGradientHorizontal = LinearGradient(
     begin: Alignment.centerLeft,
