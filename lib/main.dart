@@ -8,7 +8,7 @@ import 'features/dashboard/dashboard_screen.dart';
 import 'features/messaging/messaging_screen.dart';
 import 'features/channels/channels_screen.dart';
 import 'features/nodes/nodes_screen.dart';
-import 'features/nodes/node_map_screen.dart';
+import 'features/map/map_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/settings/qr_import_screen.dart';
 import 'features/device/device_config_screen.dart';
@@ -52,7 +52,7 @@ class _ProtofluffAppState extends ConsumerState<ProtofluffApp> {
         '/messages': (context) => const MessagingScreen(),
         '/channels': (context) => const ChannelsScreen(),
         '/nodes': (context) => const NodesScreen(),
-        '/map': (context) => const NodeMapScreen(),
+        '/map': (context) => const MapScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/qr-import': (context) => const QrImportScreen(),
         '/device-config': (context) => const DeviceConfigScreen(),
