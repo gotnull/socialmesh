@@ -509,6 +509,45 @@ class ProtocolService {
         final updatedNode = node.copyWith(lastHeard: DateTime.now());
         _nodes[packet.from] = updatedNode;
         _nodeController.add(updatedNode);
+      } else if (hasValidPosition) {
+        // Node doesn't exist yet but we have valid position - create placeholder
+        // This handles cases where position arrives before NodeInfo
+        _logger.i(
+          'Creating placeholder node ${packet.from} from position update',
+        );
+        final colors = [
+          0xFF1976D2,
+          0xFFD32F2F,
+          0xFF388E3C,
+          0xFFF57C00,
+          0xFF7B1FA2,
+          0xFF00796B,
+          0xFFC2185B,
+        ];
+        final avatarColor = colors[packet.from % colors.length];
+
+        final newNode = MeshNode(
+          nodeNum: packet.from,
+          longName: '!${packet.from.toRadixString(16)}',
+          shortName: packet.from
+              .toRadixString(16)
+              .substring(
+                packet.from.toRadixString(16).length > 4
+                    ? packet.from.toRadixString(16).length - 4
+                    : 0,
+              )
+              .toUpperCase(),
+          latitude: position.latitudeI / 1e7,
+          longitude: position.longitudeI / 1e7,
+          altitude: position.hasAltitude() ? position.altitude : null,
+          snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
+          lastHeard: DateTime.now(),
+          isOnline: true,
+          avatarColor: avatarColor,
+          isFavorite: false,
+        );
+        _nodes[packet.from] = newNode;
+        _nodeController.add(newNode);
       }
     } catch (e) {
       _logger.e('Error decoding position: $e');
