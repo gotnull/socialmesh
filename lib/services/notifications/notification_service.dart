@@ -1,7 +1,18 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../models/mesh_models.dart';
+
+/// Notification action identifiers
+class NotificationActions {
+  static const String thumbsUp = 'THUMBS_UP';
+  static const String thumbsDown = 'THUMBS_DOWN';
+  static const String messageCategory = 'MESSAGE_CATEGORY';
+}
+
+/// Callback type for sending reaction messages
+typedef ReactionCallback = Future<void> Function(int toNodeNum, String emoji);
 
 /// Service for handling local push notifications
 /// Local notifications do NOT require APNs (Apple Push Notification service)
@@ -16,9 +27,38 @@ class NotificationService {
 
   bool _initialized = false;
 
+  /// Callback to send reaction messages back to senders
+  ReactionCallback? onReactionSelected;
+
   /// Initialize the notification service
   Future<void> initialize() async {
     if (_initialized) return;
+
+    // Define notification actions for iOS
+    final thumbsUpAction = DarwinNotificationAction.plain(
+      NotificationActions.thumbsUp,
+      '👍',
+      options: <DarwinNotificationActionOption>{
+        DarwinNotificationActionOption.foreground,
+      },
+    );
+
+    final thumbsDownAction = DarwinNotificationAction.plain(
+      NotificationActions.thumbsDown,
+      '👎',
+      options: <DarwinNotificationActionOption>{
+        DarwinNotificationActionOption.foreground,
+      },
+    );
+
+    // Define the message category with reaction actions
+    final messageCategory = DarwinNotificationCategory(
+      NotificationActions.messageCategory,
+      actions: <DarwinNotificationAction>[thumbsUpAction, thumbsDownAction],
+      options: <DarwinNotificationCategoryOption>{
+        DarwinNotificationCategoryOption.hiddenPreviewShowTitle,
+      },
+    );
 
     // Android settings
     const androidSettings = AndroidInitializationSettings(
@@ -26,7 +66,7 @@ class NotificationService {
     );
 
     // iOS settings - request permissions and enable foreground presentation
-    const iosSettings = DarwinInitializationSettings(
+    final iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
@@ -34,19 +74,21 @@ class NotificationService {
       defaultPresentAlert: true,
       defaultPresentBadge: true,
       defaultPresentSound: true,
+      notificationCategories: <DarwinNotificationCategory>[messageCategory],
     );
 
     // macOS settings
-    const macOSSettings = DarwinInitializationSettings(
+    final macOSSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
       defaultPresentAlert: true,
       defaultPresentBadge: true,
       defaultPresentSound: true,
+      notificationCategories: <DarwinNotificationCategory>[messageCategory],
     );
 
-    const initSettings = InitializationSettings(
+    final initSettings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
       macOS: macOSSettings,
@@ -54,7 +96,7 @@ class NotificationService {
 
     await _notifications.initialize(
       initSettings,
-      onDidReceiveNotificationResponse: _onNotificationTapped,
+      onDidReceiveNotificationResponse: _onNotificationResponse,
     );
 
     // Request permissions on iOS/macOS
@@ -87,10 +129,64 @@ class NotificationService {
     debugPrint('🔔 NotificationService initialized successfully');
   }
 
-  /// Handle notification tap
-  void _onNotificationTapped(NotificationResponse response) {
-    debugPrint('🔔 Notification tapped: ${response.payload}');
-    // Could navigate to nodes screen or specific node detail
+  /// Handle notification tap or action
+  void _onNotificationResponse(NotificationResponse response) {
+    debugPrint(
+      '🔔 Notification response: action=${response.actionId}, payload=${response.payload}',
+    );
+
+    final actionId = response.actionId;
+    final payload = response.payload;
+
+    // Handle reaction actions
+    if (actionId == NotificationActions.thumbsUp ||
+        actionId == NotificationActions.thumbsDown) {
+      final emoji = actionId == NotificationActions.thumbsUp ? '👍' : '👎';
+      _handleReactionAction(payload, emoji);
+      return;
+    }
+
+    // Handle regular notification tap - could navigate to specific screen
+    if (payload != null) {
+      debugPrint('🔔 Notification tapped with payload: $payload');
+      // Could navigate to nodes screen, message thread, etc.
+    }
+  }
+
+  /// Handle a reaction action from notification
+  void _handleReactionAction(String? payload, String emoji) {
+    if (payload == null) {
+      debugPrint('🔔 Reaction action without payload, ignoring');
+      return;
+    }
+
+    // Parse payload to get node number
+    // Payload format: "dm:nodeNum" or "channel:channelIndex:nodeNum"
+    int? nodeNum;
+
+    if (payload.startsWith('dm:')) {
+      nodeNum = int.tryParse(payload.substring(3));
+    } else if (payload.startsWith('channel:')) {
+      // For channel messages, payload is "channel:index:nodeNum"
+      final parts = payload.split(':');
+      if (parts.length >= 3) {
+        nodeNum = int.tryParse(parts[2]);
+      }
+    }
+
+    if (nodeNum == null) {
+      debugPrint('🔔 Could not parse node number from payload: $payload');
+      return;
+    }
+
+    debugPrint('🔔 Sending $emoji reaction to node $nodeNum');
+
+    // Call the reaction callback if set
+    if (onReactionSelected != null) {
+      onReactionSelected!(nodeNum, emoji);
+    } else {
+      debugPrint('🔔 No reaction callback set, cannot send reaction');
+    }
   }
 
   /// Show notification for new node discovery
@@ -182,12 +278,25 @@ class NotificationService {
       groupKey: 'mesh_direct_messages',
       playSound: playSound,
       enableVibration: vibrate,
+      actions: <AndroidNotificationAction>[
+        const AndroidNotificationAction(
+          NotificationActions.thumbsUp,
+          '👍',
+          showsUserInterface: true,
+        ),
+        const AndroidNotificationAction(
+          NotificationActions.thumbsDown,
+          '👎',
+          showsUserInterface: true,
+        ),
+      ],
     );
 
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: playSound,
+      categoryIdentifier: NotificationActions.messageCategory,
     );
 
     final notificationDetails = NotificationDetails(
@@ -252,12 +361,25 @@ class NotificationService {
       groupKey: 'mesh_channel_messages',
       playSound: playSound,
       enableVibration: vibrate,
+      actions: <AndroidNotificationAction>[
+        const AndroidNotificationAction(
+          NotificationActions.thumbsUp,
+          '👍',
+          showsUserInterface: true,
+        ),
+        const AndroidNotificationAction(
+          NotificationActions.thumbsDown,
+          '👎',
+          showsUserInterface: true,
+        ),
+      ],
     );
 
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: playSound,
+      categoryIdentifier: NotificationActions.messageCategory,
     );
 
     final notificationDetails = NotificationDetails(
@@ -284,7 +406,7 @@ class NotificationService {
       '$senderName ($shortCode) in $channelName',
       truncatedMessage,
       notificationDetails,
-      payload: 'channel:$channelIndex',
+      payload: 'channel:$channelIndex:$fromNodeNum',
     );
 
     debugPrint('🔔 Showed channel notification: $senderName in $channelName');

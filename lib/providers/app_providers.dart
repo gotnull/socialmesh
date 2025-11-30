@@ -351,11 +351,25 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
     '🟢 ProtocolService provider created - instance: ${service.hashCode}',
   );
 
+  // Set up notification reaction callback to send emoji DMs
+  NotificationService().onReactionSelected =
+      (int toNodeNum, String emoji) async {
+        try {
+          debugPrint('🔔 Sending reaction "$emoji" to node $toNodeNum');
+          await service.sendMessage(text: emoji, to: toNodeNum, wantAck: true);
+          debugPrint('🔔 Reaction sent successfully');
+        } catch (e) {
+          debugPrint('🔔 Failed to send reaction: $e');
+        }
+      };
+
   // Keep the service alive for the lifetime of the app
   ref.onDispose(() {
     debugPrint(
       '🔴 ProtocolService being disposed - instance: ${service.hashCode}',
     );
+    // Clear the callback when disposing
+    NotificationService().onReactionSelected = null;
     service.stop();
   });
 
