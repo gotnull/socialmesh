@@ -520,10 +520,28 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                 ],
               ),
             ),
-            Icon(
-              isSelected ? Icons.check_circle : Icons.circle_outlined,
-              color: isSelected ? level.color : AppTheme.textTertiary,
-              size: 24,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? level.color : AppTheme.textTertiary,
+                  width: 2,
+                ),
+              ),
+              child: Center(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: isSelected ? 12 : 0,
+                  height: isSelected ? 12 : 0,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected ? level.color : Colors.transparent,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
