@@ -245,31 +245,49 @@ class ProtocolService {
       } else if (fromRadio.hasChannel()) {
         _handleChannel(fromRadio.channel);
       } else if (fromRadio.hasConfigCompleteId()) {
-        _logger.i('Configuration complete: ${fromRadio.configCompleteId}');
-        _configurationComplete = true;
-        if (_configCompleter != null && !_configCompleter!.isCompleted) {
-          _configCompleter!.complete();
-        }
+        final completeId = fromRadio.configCompleteId;
+        _logger.i('Configuration complete: $completeId');
 
-        // Log summary of all nodes and their position status
-        _logger.i('=== NODE SUMMARY AFTER CONFIG COMPLETE ===');
-        _logger.i('Total nodes: ${_nodes.length}');
-        for (final node in _nodes.values) {
-          _logger.i(
-            '  Node ${node.nodeNum}: "${node.longName}" hasPosition=${node.hasPosition}, '
-            'lat=${node.latitude}, lng=${node.longitude}',
-          );
-        }
-        _logger.i('==========================================');
+        // Match iOS nonce values
+        const nonceOnlyConfig = 69420;
+        const nonceOnlyDb = 69421;
 
-        // Request LoRa config to get current region
-        Future.delayed(const Duration(milliseconds: 100), () {
-          getLoRaConfig();
-          // Request positions from all nodes including ourselves
-          Future.delayed(const Duration(milliseconds: 500), () {
-            requestAllPositions();
+        if (completeId == nonceOnlyConfig) {
+          _logger.i('✅ NONCE_ONLY_CONFIG complete - received device config');
+        } else if (completeId == nonceOnlyDb) {
+          _logger.i('✅ NONCE_ONLY_DB complete - received NodeDB');
+          _configurationComplete = true;
+          if (_configCompleter != null && !_configCompleter!.isCompleted) {
+            _configCompleter!.complete();
+          }
+
+          // Log summary of all nodes and their position status
+          _logger.i('=== NODE SUMMARY AFTER CONFIG COMPLETE ===');
+          _logger.i('Total nodes: ${_nodes.length}');
+          for (final node in _nodes.values) {
+            _logger.i(
+              '  Node ${node.nodeNum}: "${node.longName}" hasPosition=${node.hasPosition}, '
+              'lat=${node.latitude}, lng=${node.longitude}',
+            );
+          }
+          _logger.i('==========================================');
+
+          // Request LoRa config to get current region
+          Future.delayed(const Duration(milliseconds: 100), () {
+            getLoRaConfig();
+            // Request positions from all nodes including ourselves
+            Future.delayed(const Duration(milliseconds: 500), () {
+              requestAllPositions();
+            });
           });
-        });
+        } else {
+          // Unknown config complete ID (legacy or different nonce)
+          _logger.i('Unknown config complete ID: $completeId');
+          _configurationComplete = true;
+          if (_configCompleter != null && !_configCompleter!.isCompleted) {
+            _configCompleter!.complete();
+          }
+        }
       }
     } catch (e, stack) {
       _logger.e('Error processing packet: $e', error: e, stackTrace: stack);
@@ -924,20 +942,36 @@ class ProtocolService {
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
-      // Generate a config ID to track this request
-      final configId = _random.nextInt(0x7FFFFFFF);
+      // Use same nonce values as iOS app for compatibility
+      // NONCE_ONLY_CONFIG = 69420 - Gets config (my_info, channels, radio config)
+      // NONCE_ONLY_DB = 69421 - Gets the NodeDB (node_info with positions!)
+      const nonceOnlyConfig = 69420;
+      const nonceOnlyDb = 69421;
 
-      // wantConfigId is a uint32 per official proto (not a bool!)
-      final toRadio = pn.ToRadio()..wantConfigId = configId;
-      final bytes = toRadio.writeToBuffer();
+      // Step 1: Request config (my_info, channels, etc)
+      _logger.i(
+        'Step 1: Requesting config with NONCE_ONLY_CONFIG ($nonceOnlyConfig)',
+      );
+      final configRequest = pn.ToRadio()..wantConfigId = nonceOnlyConfig;
+      final configBytes = configRequest.writeToBuffer();
+      final sendConfigBytes = _transport.requiresFraming
+          ? PacketFramer.frame(configBytes)
+          : configBytes;
+      await _transport.send(sendConfigBytes);
 
-      // BLE uses raw protobufs, Serial/USB requires framing
-      final sendBytes = _transport.requiresFraming
-          ? PacketFramer.frame(bytes)
-          : bytes;
+      // Wait a bit for config to complete before requesting database
+      await Future.delayed(const Duration(milliseconds: 500));
 
-      await _transport.send(sendBytes);
-      _logger.i('Configuration request sent');
+      // Step 2: Request NodeDB (nodes with positions)
+      _logger.i('Step 2: Requesting NodeDB with NONCE_ONLY_DB ($nonceOnlyDb)');
+      final dbRequest = pn.ToRadio()..wantConfigId = nonceOnlyDb;
+      final dbBytes = dbRequest.writeToBuffer();
+      final sendDbBytes = _transport.requiresFraming
+          ? PacketFramer.frame(dbBytes)
+          : dbBytes;
+      await _transport.send(sendDbBytes);
+
+      _logger.i('Configuration and NodeDB requests sent');
     } catch (e) {
       _logger.e('Error requesting configuration: $e');
     }
