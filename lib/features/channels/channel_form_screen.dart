@@ -57,6 +57,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
   late KeySize _selectedKeySize;
   bool _uplinkEnabled = false;
   bool _downlinkEnabled = false;
+  bool _positionEnabled = false;
   bool _isSaving = false;
   bool _showKey = false;
   bool _isEditingKey = false;
@@ -96,11 +97,13 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
 
       _uplinkEnabled = channel.uplink;
       _downlinkEnabled = channel.downlink;
+      _positionEnabled = channel.positionEnabled;
     } else {
       _selectedKeySize = KeySize.bit256;
-      // Match Meshtastic iOS: uplink disabled, downlink disabled by default
+      // Match Meshtastic iOS: all disabled by default
       _uplinkEnabled = false;
       _downlinkEnabled = false;
+      _positionEnabled = false;
       _generateRandomKey();
     }
   }
@@ -260,6 +263,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         psk: psk,
         uplink: _uplinkEnabled,
         downlink: _downlinkEnabled,
+        positionPrecision: _positionEnabled ? 32 : 0,
         role: role,
       );
 
@@ -1060,6 +1064,19 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
             subtitle: 'Receive messages from MQTT server',
             value: _downlinkEnabled,
             onChanged: (v) => setState(() => _downlinkEnabled = v),
+          ),
+          Container(
+            height: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            color: AppTheme.darkBorder.withValues(alpha: 0.5),
+          ),
+          _buildToggleRow(
+            icon: Icons.location_on_outlined,
+            iconColor: AppTheme.primaryGreen,
+            title: 'Position',
+            subtitle: 'Share position on this channel',
+            value: _positionEnabled,
+            onChanged: (v) => setState(() => _positionEnabled = v),
           ),
         ],
       ),

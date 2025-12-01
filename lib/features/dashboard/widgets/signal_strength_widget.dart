@@ -14,13 +14,28 @@ class SignalStrengthContent extends ConsumerStatefulWidget {
       SignalStrengthContentState();
 }
 
-class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
+class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
+    with SingleTickerProviderStateMixin {
   final List<MultiSignalData> _signalHistory = [];
   Timer? _updateTimer;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  // Smoothed values for animation
+  double _displayRssi = -90.0;
+  double _displaySnr = 0.0;
+  double _displayChannelUtil = 0.0;
 
   @override
   void initState() {
     super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
     _addDataPoint();
     _updateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       if (mounted) _addDataPoint();
@@ -30,6 +45,7 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
   @override
   void dispose() {
     _updateTimer?.cancel();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -52,7 +68,13 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
       ),
     );
     if (_signalHistory.length > 30) _signalHistory.removeAt(0);
-    if (mounted) setState(() {});
+
+    // Update display values for smooth animation
+    setState(() {
+      _displayRssi = rssiValue;
+      _displaySnr = snrValue;
+      _displayChannelUtil = channelUtilValue;
+    });
   }
 
   String _getSignalQuality(double rssi) {
@@ -72,22 +94,37 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
 
   @override
   Widget build(BuildContext context) {
-    final currentRssi = _signalHistory.isNotEmpty
-        ? _signalHistory.last.rssi
-        : -90.0;
-    final currentSnr = _signalHistory.isNotEmpty
-        ? _signalHistory.last.snr
-        : 0.0;
-    final currentChannelUtil = _signalHistory.isNotEmpty
-        ? _signalHistory.last.channelUtil
-        : 0.0;
     final hasData = _signalHistory.isNotEmpty;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Header with current signal info
-        _buildSignalHeader(currentRssi, currentSnr, currentChannelUtil),
+        // Header with current signal info - animated
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: _displayRssi, end: _displayRssi),
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOutCubic,
+          builder: (context, rssi, child) {
+            return TweenAnimationBuilder<double>(
+              tween: Tween(begin: _displaySnr, end: _displaySnr),
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeOutCubic,
+              builder: (context, snr, child) {
+                return TweenAnimationBuilder<double>(
+                  tween: Tween(
+                    begin: _displayChannelUtil,
+                    end: _displayChannelUtil,
+                  ),
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, channelUtil, child) {
+                    return _buildSignalHeader(rssi, snr, channelUtil);
+                  },
+                );
+              },
+            );
+          },
+        ),
         const Divider(color: AppTheme.darkBorder, height: 1),
         // Legend
         _buildLegend(),
@@ -118,38 +155,60 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
   }
 
   Widget _buildSignalHeader(double rssi, double snr, double channelUtil) {
+    final signalColor = _getSignalColor(rssi);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // Signal indicator
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: _getSignalColor(rssi).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.signal_cellular_alt,
-                  color: _getSignalColor(rssi),
-                  size: 24,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${rssi.toInt()}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: _getSignalColor(rssi),
-                    fontFamily: 'Inter',
+          // Animated signal indicator with pulse
+          AnimatedBuilder(
+            animation: _pulseAnimation,
+            builder: (context, child) {
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutCubic,
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: signalColor.withValues(
+                    alpha: 0.15 * _pulseAnimation.value,
                   ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: signalColor.withValues(
+                        alpha: 0.2 * _pulseAnimation.value,
+                      ),
+                      blurRadius: 8,
+                      spreadRadius: 0,
+                    ),
+                  ],
                 ),
-              ],
-            ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _AnimatedSignalIcon(rssi: rssi, color: signalColor),
+                    const SizedBox(height: 2),
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: rssi, end: rssi),
+                      duration: const Duration(milliseconds: 300),
+                      builder: (context, value, child) {
+                        return Text(
+                          '${value.toInt()}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: signalColor,
+                            fontFamily: 'Inter',
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
           const SizedBox(width: 16),
           // Signal stats
@@ -159,17 +218,34 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      _getSignalQuality(rssi),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: _getSignalColor(rssi),
-                        fontFamily: 'Inter',
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 0.2),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Text(
+                        _getSignalQuality(rssi),
+                        key: ValueKey(_getSignalQuality(rssi)),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: signalColor,
+                          fontFamily: 'Inter',
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Container(
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
                         vertical: 2,
@@ -193,15 +269,17 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    _StatChip(
+                    _AnimatedStatChip(
                       label: 'SNR',
-                      value: '${snr.toStringAsFixed(1)} dB',
+                      value: snr,
+                      unit: 'dB',
                       color: AppTheme.graphBlue,
                     ),
                     const SizedBox(width: 8),
-                    _StatChip(
+                    _AnimatedStatChip(
                       label: 'ChUtil',
-                      value: '${channelUtil.toStringAsFixed(1)}%',
+                      value: channelUtil,
+                      unit: '%',
                       color: AppTheme.accentOrange,
                     ),
                   ],
@@ -227,6 +305,83 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
           _LegendItem(color: AppTheme.accentOrange, label: 'Ch Util'),
         ],
       ),
+    );
+  }
+}
+
+/// Animated signal icon that changes based on RSSI value
+class _AnimatedSignalIcon extends StatelessWidget {
+  final double rssi;
+  final Color color;
+
+  const _AnimatedSignalIcon({required this.rssi, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutBack,
+      builder: (context, scale, child) {
+        return Transform.scale(
+          scale: 0.8 + (0.2 * scale),
+          child: Icon(Icons.signal_cellular_alt, color: color, size: 24),
+        );
+      },
+    );
+  }
+}
+
+/// Animated stat chip with smooth value transitions
+class _AnimatedStatChip extends StatelessWidget {
+  final String label;
+  final double value;
+  final String unit;
+  final Color color;
+
+  const _AnimatedStatChip({
+    required this.label,
+    required this.value,
+    required this.unit,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: value, end: value),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+      builder: (context, animatedValue, child) {
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '$label: ${animatedValue.toStringAsFixed(1)} $unit',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -271,49 +426,6 @@ Widget buildLiveIndicator() {
       ],
     ),
   );
-}
-
-class _StatChip extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-
-  const _StatChip({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            '$label: $value',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color,
-              fontFamily: 'monospace',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _LegendItem extends StatelessWidget {

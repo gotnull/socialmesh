@@ -374,11 +374,13 @@ class _NodeCard extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          // Lock icon
-                          const Icon(
-                            Icons.lock,
+                          // Lock icon (locked = has PKI public key)
+                          Icon(
+                            node.hasPublicKey ? Icons.lock : Icons.lock_open,
                             size: 16,
-                            color: AppTheme.primaryGreen,
+                            color: node.hasPublicKey
+                                ? AppTheme.primaryGreen
+                                : AppTheme.textTertiary,
                           ),
                           const SizedBox(width: 8),
                           // Name

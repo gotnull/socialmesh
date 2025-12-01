@@ -1020,6 +1020,7 @@ class ProtocolService {
     String? hwModel;
     String role = 'CLIENT';
     String? userId;
+    bool hasPublicKey = false;
     if (nodeInfo.hasUser()) {
       final user = nodeInfo.user;
       _logger.d(
@@ -1035,6 +1036,8 @@ class ProtocolService {
       if (user.hasId()) {
         userId = user.id;
       }
+      // Check if user has a public key set (for PKI encryption)
+      hasPublicKey = user.hasPublicKey() && user.publicKey.isNotEmpty;
     } else {
       _logger.d('NodeInfo has no user data');
     }
@@ -1086,6 +1089,7 @@ class ProtocolService {
         isOnline: true,
         role: role,
         avatarColor: existingNode.avatarColor,
+        hasPublicKey: hasPublicKey,
       );
     } else {
       updatedNode = MeshNode(
@@ -1108,6 +1112,7 @@ class ProtocolService {
         role: role,
         avatarColor: avatarColor,
         isFavorite: false,
+        hasPublicKey: hasPublicKey,
       );
     }
 
@@ -1138,6 +1143,14 @@ class ProtocolService {
         break;
     }
 
+    // Extract position precision from moduleSettings if present
+    int positionPrecision = 0;
+    if (channel.hasSettings() &&
+        channel.settings.hasModuleSettings() &&
+        channel.settings.moduleSettings.hasPositionPrecision()) {
+      positionPrecision = channel.settings.moduleSettings.positionPrecision;
+    }
+
     final channelConfig = ChannelConfig(
       index: channel.index,
       name: channel.hasSettings() ? channel.settings.name : '',
@@ -1147,6 +1160,7 @@ class ProtocolService {
           ? channel.settings.downlinkEnabled
           : false,
       role: roleStr,
+      positionPrecision: positionPrecision,
     );
 
     // Extend list if needed, but don't add dummy entries to stream
@@ -1492,6 +1506,12 @@ class ProtocolService {
         ..psk = config.psk
         ..uplinkEnabled = config.uplink
         ..downlinkEnabled = config.downlink;
+
+      // Set position precision via moduleSettings
+      if (config.positionPrecision > 0) {
+        channelSettings.moduleSettings = pb.ModuleSettings()
+          ..positionPrecision = config.positionPrecision;
+      }
 
       // Determine channel role from config
       pb.Channel_Role role;
@@ -2308,6 +2328,10 @@ class ProtocolService {
     required bool fixedPosition,
     required pb.Config_PositionConfig_GpsMode gpsMode,
     required int gpsUpdateInterval,
+    int gpsAttemptTime = 30,
+    int broadcastSmartMinimumDistance = 100,
+    int broadcastSmartMinimumIntervalSecs = 30,
+    int positionFlags = 811,
   }) async {
     _logger.i('Setting position config: gpsMode=$gpsMode');
 
@@ -2317,7 +2341,11 @@ class ProtocolService {
       ..fixedPosition = fixedPosition
       ..gpsMode = gpsMode
       ..gpsEnabled = gpsMode == pb.Config_PositionConfig_GpsMode.ENABLED
-      ..gpsUpdateInterval = gpsUpdateInterval;
+      ..gpsUpdateInterval = gpsUpdateInterval
+      ..gpsAttemptTime = gpsAttemptTime
+      ..broadcastSmartMinimumDistance = broadcastSmartMinimumDistance
+      ..broadcastSmartMinimumIntervalSecs = broadcastSmartMinimumIntervalSecs
+      ..positionFlags = positionFlags;
 
     final config = pb.Config()..position = posConfig;
     await setConfig(config);

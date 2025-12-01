@@ -22,6 +22,22 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
   bool _fixedPosition = false;
   int _positionBroadcastSecs = 900;
   int _gpsUpdateInterval = 30;
+  int _gpsAttemptTime = 30;
+  int _smartMinimumDistance = 100;
+  int _smartMinimumIntervalSecs = 30;
+
+  // Position flags (bitmask)
+  bool _includeAltitude = true;
+  bool _includeAltitudeMsl = false;
+  bool _includeGeoidalSeparation = false;
+  bool _includeDop = false;
+  bool _includeHvdop = false;
+  bool _includeSatsinview = false;
+  bool _includeSeqNo = false;
+  bool _includeTimestamp = false;
+  bool _includeHeading = false;
+  bool _includeSpeed = false;
+
   StreamSubscription<pb.Config_PositionConfig>? _configSubscription;
 
   // Fixed position values
@@ -84,7 +100,42 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
       _gpsUpdateInterval = config.gpsUpdateInterval > 0
           ? config.gpsUpdateInterval
           : 30;
+      _gpsAttemptTime = config.gpsAttemptTime > 0 ? config.gpsAttemptTime : 30;
+      _smartMinimumDistance = config.broadcastSmartMinimumDistance > 0
+          ? config.broadcastSmartMinimumDistance
+          : 100;
+      _smartMinimumIntervalSecs = config.broadcastSmartMinimumIntervalSecs > 0
+          ? config.broadcastSmartMinimumIntervalSecs
+          : 30;
+
+      // Parse position flags bitmask
+      final flags = config.positionFlags;
+      _includeAltitude = (flags & 1) != 0;
+      _includeAltitudeMsl = (flags & 2) != 0;
+      _includeGeoidalSeparation = (flags & 4) != 0;
+      _includeDop = (flags & 8) != 0;
+      _includeHvdop = (flags & 16) != 0;
+      _includeSatsinview = (flags & 32) != 0;
+      _includeSeqNo = (flags & 64) != 0;
+      _includeTimestamp = (flags & 128) != 0;
+      _includeHeading = (flags & 256) != 0;
+      _includeSpeed = (flags & 512) != 0;
     });
+  }
+
+  int _buildPositionFlags() {
+    int flags = 0;
+    if (_includeAltitude) flags |= 1;
+    if (_includeAltitudeMsl) flags |= 2;
+    if (_includeGeoidalSeparation) flags |= 4;
+    if (_includeDop) flags |= 8;
+    if (_includeHvdop) flags |= 16;
+    if (_includeSatsinview) flags |= 32;
+    if (_includeSeqNo) flags |= 64;
+    if (_includeTimestamp) flags |= 128;
+    if (_includeHeading) flags |= 256;
+    if (_includeSpeed) flags |= 512;
+    return flags;
   }
 
   Future<void> _saveConfig() async {
@@ -115,6 +166,10 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
         fixedPosition: _fixedPosition,
         gpsMode: _gpsMode ?? pb.Config_PositionConfig_GpsMode.ENABLED,
         gpsUpdateInterval: _gpsUpdateInterval,
+        gpsAttemptTime: _gpsAttemptTime,
+        broadcastSmartMinimumDistance: _smartMinimumDistance,
+        broadcastSmartMinimumIntervalSecs: _smartMinimumIntervalSecs,
+        positionFlags: _buildPositionFlags(),
       );
 
       if (mounted) {
@@ -562,10 +617,377 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 16),
+                  if (_smartBroadcastEnabled) ...[
+                    const _SectionHeader(title: 'SMART BROADCAST SETTINGS'),
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 2,
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkCard,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Minimum Distance',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryGreen.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  '${_smartMinimumDistance}m',
+                                  style: const TextStyle(
+                                    color: AppTheme.primaryGreen,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Minimum distance moved before broadcasting',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SliderTheme(
+                            data: SliderThemeData(
+                              activeTrackColor: AppTheme.primaryGreen,
+                              inactiveTrackColor: AppTheme.darkBorder,
+                              thumbColor: AppTheme.primaryGreen,
+                              overlayColor: AppTheme.primaryGreen.withValues(
+                                alpha: 0.2,
+                              ),
+                              trackHeight: 4,
+                            ),
+                            child: Slider(
+                              value: _smartMinimumDistance.toDouble(),
+                              min: 10,
+                              max: 500,
+                              divisions: 49,
+                              onChanged: (value) {
+                                setState(
+                                  () => _smartMinimumDistance = value.toInt(),
+                                );
+                              },
+                            ),
+                          ),
+                          const Divider(height: 24, color: AppTheme.darkBorder),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Minimum Interval',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryGreen.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  '${_smartMinimumIntervalSecs}s',
+                                  style: const TextStyle(
+                                    color: AppTheme.primaryGreen,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Minimum time between broadcasts',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SliderTheme(
+                            data: SliderThemeData(
+                              activeTrackColor: AppTheme.primaryGreen,
+                              inactiveTrackColor: AppTheme.darkBorder,
+                              thumbColor: AppTheme.primaryGreen,
+                              overlayColor: AppTheme.primaryGreen.withValues(
+                                alpha: 0.2,
+                              ),
+                              trackHeight: 4,
+                            ),
+                            child: Slider(
+                              value: _smartMinimumIntervalSecs.toDouble(),
+                              min: 10,
+                              max: 300,
+                              divisions: 29,
+                              onChanged: (value) {
+                                setState(
+                                  () =>
+                                      _smartMinimumIntervalSecs = value.toInt(),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  const _SectionHeader(title: 'GPS SETTINGS'),
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 2,
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkCard,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'GPS Attempt Time',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryGreen.withValues(
+                                  alpha: 0.15,
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '${_gpsAttemptTime}s',
+                                style: const TextStyle(
+                                  color: AppTheme.primaryGreen,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'How long to wait for GPS lock before giving up',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 13,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SliderTheme(
+                          data: SliderThemeData(
+                            activeTrackColor: AppTheme.primaryGreen,
+                            inactiveTrackColor: AppTheme.darkBorder,
+                            thumbColor: AppTheme.primaryGreen,
+                            overlayColor: AppTheme.primaryGreen.withValues(
+                              alpha: 0.2,
+                            ),
+                            trackHeight: 4,
+                          ),
+                          child: Slider(
+                            value: _gpsAttemptTime.toDouble(),
+                            min: 10,
+                            max: 300,
+                            divisions: 29,
+                            onChanged: (value) {
+                              setState(() => _gpsAttemptTime = value.toInt());
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const _SectionHeader(title: 'POSITION FLAGS'),
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 2,
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkCard,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildFlagToggle(
+                          'Include Altitude',
+                          'Include altitude in position reports',
+                          _includeAltitude,
+                          (v) => setState(() => _includeAltitude = v),
+                        ),
+                        _buildFlagToggle(
+                          'Include Altitude MSL',
+                          'Include altitude above mean sea level',
+                          _includeAltitudeMsl,
+                          (v) => setState(() => _includeAltitudeMsl = v),
+                        ),
+                        _buildFlagToggle(
+                          'Include Geoidal Separation',
+                          'Include geoidal separation value',
+                          _includeGeoidalSeparation,
+                          (v) => setState(() => _includeGeoidalSeparation = v),
+                        ),
+                        _buildFlagToggle(
+                          'Include DOP',
+                          'Include dilution of precision',
+                          _includeDop,
+                          (v) => setState(() => _includeDop = v),
+                        ),
+                        _buildFlagToggle(
+                          'Include HVDOP',
+                          'Include horizontal/vertical DOP',
+                          _includeHvdop,
+                          (v) => setState(() => _includeHvdop = v),
+                        ),
+                        _buildFlagToggle(
+                          'Include Sats in View',
+                          'Include number of satellites visible',
+                          _includeSatsinview,
+                          (v) => setState(() => _includeSatsinview = v),
+                        ),
+                        _buildFlagToggle(
+                          'Include Sequence Number',
+                          'Include position sequence number',
+                          _includeSeqNo,
+                          (v) => setState(() => _includeSeqNo = v),
+                        ),
+                        _buildFlagToggle(
+                          'Include Timestamp',
+                          'Include GPS timestamp',
+                          _includeTimestamp,
+                          (v) => setState(() => _includeTimestamp = v),
+                        ),
+                        _buildFlagToggle(
+                          'Include Heading',
+                          'Include heading/direction of travel',
+                          _includeHeading,
+                          (v) => setState(() => _includeHeading = v),
+                        ),
+                        _buildFlagToggle(
+                          'Include Speed',
+                          'Include ground speed',
+                          _includeSpeed,
+                          (v) => setState(() => _includeSpeed = v),
+                          isLast: true,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 32),
                 ],
               ),
       ),
+    );
+  }
+
+  Widget _buildFlagToggle(
+    String title,
+    String subtitle,
+    bool value,
+    ValueChanged<bool> onChanged, {
+    bool isLast = false,
+  }) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch.adaptive(
+              value: value,
+              activeTrackColor: AppTheme.primaryGreen,
+              inactiveTrackColor: Colors.grey.shade600,
+              thumbColor: WidgetStateProperty.all(Colors.white),
+              onChanged: (v) {
+                HapticFeedback.selectionClick();
+                onChanged(v);
+              },
+            ),
+          ],
+        ),
+        if (!isLast) const Divider(height: 16, color: AppTheme.darkBorder),
+      ],
     );
   }
 

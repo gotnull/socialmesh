@@ -435,6 +435,7 @@ class NodeStorageService {
       'role': node.role,
       'isFavorite': node.isFavorite,
       'distance': node.distance,
+      'hasPublicKey': node.hasPublicKey,
     };
   }
 
@@ -460,6 +461,7 @@ class NodeStorageService {
       role: json['role'] as String?,
       isFavorite: json['isFavorite'] as bool? ?? false,
       distance: (json['distance'] as num?)?.toDouble(),
+      hasPublicKey: json['hasPublicKey'] as bool? ?? false,
     );
   }
 }

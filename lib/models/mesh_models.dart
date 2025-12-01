@@ -161,6 +161,7 @@ class MeshNode {
   final bool isOnline;
   final bool isFavorite;
   final int? avatarColor; // Color value for avatar
+  final bool hasPublicKey; // Whether node has encryption key set
 
   MeshNode({
     required this.nodeNum,
@@ -181,6 +182,7 @@ class MeshNode {
     this.isOnline = false,
     this.isFavorite = false,
     this.avatarColor,
+    this.hasPublicKey = false,
   });
 
   MeshNode copyWith({
@@ -202,6 +204,7 @@ class MeshNode {
     bool? isOnline,
     bool? isFavorite,
     int? avatarColor,
+    bool? hasPublicKey,
   }) {
     return MeshNode(
       nodeNum: nodeNum ?? this.nodeNum,
@@ -222,6 +225,7 @@ class MeshNode {
       isOnline: isOnline ?? this.isOnline,
       isFavorite: isFavorite ?? this.isFavorite,
       avatarColor: avatarColor ?? this.avatarColor,
+      hasPublicKey: hasPublicKey ?? this.hasPublicKey,
     );
   }
 
@@ -256,6 +260,7 @@ class ChannelConfig {
   final bool uplink;
   final bool downlink;
   final String role;
+  final int positionPrecision; // 0 = disabled, 32 = full precision
 
   ChannelConfig({
     required this.index,
@@ -264,7 +269,11 @@ class ChannelConfig {
     this.uplink = false,
     this.downlink = false,
     this.role = 'SECONDARY',
+    this.positionPrecision = 0,
   });
+
+  /// Whether position sharing is enabled for this channel
+  bool get positionEnabled => positionPrecision > 0;
 
   ChannelConfig copyWith({
     int? index,
@@ -273,6 +282,7 @@ class ChannelConfig {
     bool? uplink,
     bool? downlink,
     String? role,
+    int? positionPrecision,
   }) {
     return ChannelConfig(
       index: index ?? this.index,
@@ -281,6 +291,7 @@ class ChannelConfig {
       uplink: uplink ?? this.uplink,
       downlink: downlink ?? this.downlink,
       role: role ?? this.role,
+      positionPrecision: positionPrecision ?? this.positionPrecision,
     );
   }
 

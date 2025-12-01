@@ -120,6 +120,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
   // Step 3: Advanced options (optional)
   bool _uplinkEnabled = false;
   bool _downlinkEnabled = false;
+  bool _positionEnabled = false;
 
   // Generated key
   List<int> _generatedKey = [];
@@ -198,6 +199,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
         role: 'SECONDARY',
         uplink: _uplinkEnabled,
         downlink: _downlinkEnabled,
+        positionPrecision: _positionEnabled ? 32 : 0,
       );
 
       await protocol.setChannel(channel);
@@ -652,6 +654,18 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
               });
             },
           ),
+          const SizedBox(height: 16),
+          _buildToggleOption(
+            theme: theme,
+            title: 'Position Enabled',
+            subtitle: 'Share your position on this channel.',
+            value: _positionEnabled,
+            onChanged: (value) {
+              setState(() {
+                _positionEnabled = value;
+              });
+            },
+          ),
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(12),
@@ -908,6 +922,12 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                   theme,
                   'MQTT Downlink',
                   _downlinkEnabled ? 'Enabled' : 'Disabled',
+                ),
+                Divider(color: AppTheme.darkBorder.withAlpha(128)),
+                _buildSummaryRow(
+                  theme,
+                  'Position Sharing',
+                  _positionEnabled ? 'Enabled' : 'Disabled',
                 ),
               ],
             ),
