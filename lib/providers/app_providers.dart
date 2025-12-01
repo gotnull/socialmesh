@@ -13,6 +13,7 @@ import '../services/notifications/notification_service.dart';
 import '../services/messaging/offline_queue_service.dart';
 import '../services/location/location_service.dart';
 import '../services/live_activity/live_activity_service.dart';
+import '../services/ifttt/ifttt_service.dart';
 import '../models/mesh_models.dart';
 import '../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 
@@ -67,6 +68,9 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
       await _ref.read(settingsServiceProvider.future);
       await _ref.read(messageStorageProvider.future);
       await _ref.read(nodeStorageProvider.future);
+
+      // Initialize IFTTT service
+      await _ref.read(iftttServiceProvider).init();
 
       // Check for onboarding completion
       final settings = await _ref.read(settingsServiceProvider.future);
@@ -630,6 +634,12 @@ final locationServiceProvider = Provider<LocationService>((ref) {
   return service;
 });
 
+// IFTTT service - handles webhook triggers
+final iftttServiceProvider = Provider<IftttService>((ref) {
+  final service = IftttService();
+  return service;
+});
+
 // Live Activity service - shows device status on iOS Lock Screen and Dynamic Island
 final liveActivityServiceProvider = Provider<LiveActivityService>((ref) {
   final service = LiveActivityService();
@@ -891,6 +901,33 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
         vibrate: settings.notificationVibrationEnabled,
       );
     }
+
+    // Trigger IFTTT webhook for message received
+    _triggerIftttForMessage(message, senderName, isChannelMessage);
+  }
+
+  void _triggerIftttForMessage(
+    Message message,
+    String senderName,
+    bool isChannelMessage,
+  ) {
+    final iftttService = _ref.read(iftttServiceProvider);
+    if (!iftttService.isActive) return;
+
+    String? channelName;
+    if (isChannelMessage) {
+      final channels = _ref.read(channelsProvider);
+      final channel = channels
+          .where((c) => c.index == message.channel)
+          .firstOrNull;
+      channelName = channel?.name ?? 'Channel ${message.channel}';
+    }
+
+    iftttService.processMessage(
+      message,
+      senderName: senderName,
+      channelName: channelName,
+    );
   }
 
   void _handleDeliveryUpdate(MessageDeliveryUpdate update) {
@@ -1059,7 +1096,17 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
         // Trigger notification for new node discovery
         _ref.read(nodeDiscoveryNotifierProvider.notifier).notifyNewNode(node);
       }
+
+      // Trigger IFTTT webhook for node updates
+      _triggerIftttForNode(node, existing);
     });
+  }
+
+  void _triggerIftttForNode(MeshNode node, MeshNode? previousNode) {
+    final iftttService = _ref.read(iftttServiceProvider);
+    if (!iftttService.isActive) return;
+
+    iftttService.processNodeUpdate(node, previousNode: previousNode);
   }
 
   void addOrUpdateNode(MeshNode node) {

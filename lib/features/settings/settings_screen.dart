@@ -23,6 +23,7 @@ import 'security_config_screen.dart';
 import 'ringtone_screen.dart';
 import 'subscription_screen.dart';
 import 'premium_widgets.dart';
+import 'ifttt_config_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -533,6 +534,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const MqttConfigScreen()),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.webhook,
+                title: 'IFTTT Integration',
+                subtitle: 'Automate with webhooks and smart triggers',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const IftttConfigScreen()),
                 ),
               ),
               _SettingsTile(
