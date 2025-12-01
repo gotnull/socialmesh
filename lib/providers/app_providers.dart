@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
@@ -401,6 +403,145 @@ final liveActivityServiceProvider = Provider<LiveActivityService>((ref) {
 
   return service;
 });
+
+// Live Activity manager - monitors connection and updates Live Activity
+class LiveActivityManagerNotifier extends StateNotifier<bool> {
+  final LiveActivityService _liveActivityService;
+  final Ref _ref;
+  StreamSubscription<double>? _channelUtilSubscription;
+
+  LiveActivityManagerNotifier(this._liveActivityService, this._ref)
+    : super(false) {
+    _init();
+  }
+
+  void _init() {
+    // Listen for connection state changes
+    _ref.listen<AsyncValue<DeviceConnectionState>>(connectionStateProvider, (
+      previous,
+      current,
+    ) {
+      current.whenData((connectionState) {
+        if (connectionState == DeviceConnectionState.connected && !state) {
+          _startLiveActivity();
+        } else if (connectionState == DeviceConnectionState.disconnected &&
+            state) {
+          _endLiveActivity();
+        }
+      });
+    }, fireImmediately: true);
+
+    // Listen for node updates to refresh battery/signal/online count
+    _ref.listen<Map<int, MeshNode>>(nodesProvider, (previous, current) {
+      if (!state || !_liveActivityService.isActive) return;
+      _updateFromNodes(current);
+    });
+  }
+
+  Future<void> _startLiveActivity() async {
+    final connectedDevice = _ref.read(connectedDeviceProvider);
+    final myNodeNum = _ref.read(myNodeNumProvider);
+    final nodes = _ref.read(nodesProvider);
+    final protocol = _ref.read(protocolServiceProvider);
+
+    // Get my node info for display
+    MeshNode? myNode;
+    if (myNodeNum != null && nodes.containsKey(myNodeNum)) {
+      myNode = nodes[myNodeNum];
+    }
+
+    final deviceName =
+        myNode?.longName ?? connectedDevice?.name ?? 'Meshtastic';
+    final shortName = myNode?.shortName ?? '????';
+    final batteryLevel = myNode?.batteryLevel;
+    final rssi = myNode?.rssi;
+
+    // Count online nodes
+    final onlineCount = nodes.values.where((n) => n.isOnline).length;
+
+    debugPrint(
+      '📱 Starting Live Activity: device=$deviceName, shortName=$shortName, '
+      'battery=$batteryLevel%, rssi=$rssi, nodes=$onlineCount',
+    );
+
+    final success = await _liveActivityService.startMeshActivity(
+      deviceName: deviceName,
+      shortName: shortName,
+      nodeNum: myNodeNum ?? 0,
+      batteryLevel: batteryLevel,
+      signalStrength: rssi,
+      nodesOnline: onlineCount,
+    );
+
+    if (success) {
+      state = true;
+
+      // Set up telemetry listener for channel utilization updates
+      _channelUtilSubscription?.cancel();
+      _channelUtilSubscription = protocol.channelUtilStream.listen((
+        channelUtil,
+      ) {
+        if (!_liveActivityService.isActive) return;
+
+        final currentNodes = _ref.read(nodesProvider);
+        final currentMyNodeNum = _ref.read(myNodeNumProvider);
+        final currentNode = currentMyNodeNum != null
+            ? currentNodes[currentMyNodeNum]
+            : null;
+
+        final currentOnlineCount = currentNodes.values
+            .where((n) => n.isOnline)
+            .length;
+
+        _liveActivityService.updateActivity(
+          batteryLevel: currentNode?.batteryLevel,
+          signalStrength: currentNode?.rssi,
+          nodesOnline: currentOnlineCount,
+          channelUtilization: channelUtil,
+        );
+      });
+    }
+  }
+
+  void _updateFromNodes(Map<int, MeshNode> nodes) {
+    final myNodeNum = _ref.read(myNodeNumProvider);
+    if (myNodeNum == null) return;
+
+    final myNode = nodes[myNodeNum];
+    if (myNode == null) return;
+
+    final onlineCount = nodes.values.where((n) => n.isOnline).length;
+
+    _liveActivityService.updateActivity(
+      deviceName: myNode.longName,
+      shortName: myNode.shortName,
+      batteryLevel: myNode.batteryLevel,
+      signalStrength: myNode.rssi,
+      nodesOnline: onlineCount,
+    );
+  }
+
+  Future<void> _endLiveActivity() async {
+    _channelUtilSubscription?.cancel();
+    _channelUtilSubscription = null;
+    await _liveActivityService.endActivity();
+    state = false;
+    debugPrint('📱 Ended Live Activity - device disconnected');
+  }
+
+  @override
+  void dispose() {
+    _channelUtilSubscription?.cancel();
+    _liveActivityService.endAllActivities();
+    super.dispose();
+  }
+}
+
+final liveActivityManagerProvider =
+    StateNotifierProvider<LiveActivityManagerNotifier, bool>((ref) {
+      final liveActivityService = ref.watch(liveActivityServiceProvider);
+      return LiveActivityManagerNotifier(liveActivityService, ref);
+    });
 
 // Messages with persistence
 class MessagesNotifier extends StateNotifier<List<Message>> {

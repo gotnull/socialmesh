@@ -73,6 +73,9 @@ class _MainShellState extends ConsumerState<MainShell> {
     // Watch the auto-reconnect manager to keep it active
     ref.watch(autoReconnectManagerProvider);
 
+    // Watch the live activity manager to keep it active (iOS Live Activities)
+    ref.watch(liveActivityManagerProvider);
+
     final isConnected = connectionStateAsync.when(
       data: (state) => state == DeviceConnectionState.connected,
       loading: () => false,
