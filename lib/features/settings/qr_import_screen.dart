@@ -136,8 +136,23 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
         }
       }
 
-      // Find next available channel index
+      // Check for duplicate channel (same PSK already exists)
       final channels = ref.read(channelsProvider);
+      final existingChannel = channels.where((c) {
+        if (c.psk.length != psk!.length) return false;
+        for (int i = 0; i < c.psk.length; i++) {
+          if (c.psk[i] != psk[i]) return false;
+        }
+        return true;
+      }).firstOrNull;
+
+      if (existingChannel != null) {
+        throw Exception(
+          'Channel already exists as "${existingChannel.name}" (slot ${existingChannel.index})',
+        );
+      }
+
+      // Find next available channel index
       final usedIndices = channels.map((c) => c.index).toSet();
       int newIndex = 1; // Start from 1 (0 is primary)
       while (usedIndices.contains(newIndex) && newIndex < 8) {

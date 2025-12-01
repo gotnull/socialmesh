@@ -1117,8 +1117,10 @@ class ProtocolService {
 
   /// Handle channel configuration
   void _handleChannel(pb.Channel channel) {
-    _logger.i(
-      'Channel ${channel.index} config received (role: ${channel.role.name})',
+    debugPrint(
+      '📡 Channel ${channel.index} received from device: '
+      'role=${channel.role.name}, name="${channel.hasSettings() ? channel.settings.name : ""}", '
+      'psk=${channel.hasSettings() ? channel.settings.psk.length : 0} bytes',
     );
 
     // Map protobuf role to string
@@ -1452,8 +1454,8 @@ class ProtocolService {
     }
 
     try {
-      _logger.i(
-        'Setting channel ${config.index}: ${config.name} (role: ${config.role})',
+      debugPrint(
+        '📡 Setting channel ${config.index}: "${config.name}" (role: ${config.role})',
       );
 
       // Begin edit transaction
@@ -1485,6 +1487,11 @@ class ProtocolService {
         ..settings = channelSettings
         ..role = role;
 
+      debugPrint(
+        '📡 Channel protobuf: index=${channel.index}, role=${channel.role.name}, '
+        'name="${channel.settings.name}", psk=${channel.settings.psk.length} bytes',
+      );
+
       final adminMsg = pb.AdminMessage()..setChannel = channel;
 
       final data = pb.Data()
@@ -1502,14 +1509,19 @@ class ProtocolService {
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
-      _logger.i('Channel ${config.index} sent to device');
+      debugPrint('📡 Channel ${config.index} sent to device');
 
       // Small delay before commit
       await Future.delayed(const Duration(milliseconds: 200));
 
       // Commit the transaction - this triggers the save to flash
       await _commitEditSettings();
-      _logger.i('Channel settings committed');
+      debugPrint('📡 Channel settings committed to flash');
+
+      // Wait a bit then request the channel back to verify
+      await Future.delayed(const Duration(milliseconds: 500));
+      debugPrint('📡 Verifying channel ${config.index}...');
+      await getChannel(config.index);
     } catch (e) {
       _logger.e('Error setting channel: $e');
       rethrow;
