@@ -2527,36 +2527,30 @@ class ProtocolService {
 
   /// Set MQTT module configuration
   Future<void> setMQTTConfig({
-    bool? enabled,
-    String? address,
-    String? username,
-    String? password,
-    bool? encryptionEnabled,
-    bool? jsonEnabled,
-    bool? tlsEnabled,
-    String? root,
-    bool? proxyToClientEnabled,
-    bool? mapReportingEnabled,
+    required bool enabled,
+    required String address,
+    required String username,
+    required String password,
+    required bool encryptionEnabled,
+    required bool jsonEnabled,
+    required bool tlsEnabled,
+    required String root,
+    required bool proxyToClientEnabled,
+    required bool mapReportingEnabled,
   }) async {
     _logger.i('Setting MQTT config');
 
-    final mqttConfig = pb.ModuleConfig_MQTTConfig();
-    if (enabled != null) mqttConfig.enabled = enabled;
-    if (address != null) mqttConfig.address = address;
-    if (username != null) mqttConfig.username = username;
-    if (password != null) mqttConfig.password = password;
-    if (encryptionEnabled != null) {
-      mqttConfig.encryptionEnabled = encryptionEnabled;
-    }
-    if (jsonEnabled != null) mqttConfig.jsonEnabled = jsonEnabled;
-    if (tlsEnabled != null) mqttConfig.tlsEnabled = tlsEnabled;
-    if (root != null) mqttConfig.root = root;
-    if (proxyToClientEnabled != null) {
-      mqttConfig.proxyToClientEnabled = proxyToClientEnabled;
-    }
-    if (mapReportingEnabled != null) {
-      mqttConfig.mapReportingEnabled = mapReportingEnabled;
-    }
+    final mqttConfig = pb.ModuleConfig_MQTTConfig()
+      ..enabled = enabled
+      ..address = address
+      ..username = username
+      ..password = password
+      ..encryptionEnabled = encryptionEnabled
+      ..jsonEnabled = jsonEnabled
+      ..tlsEnabled = tlsEnabled
+      ..root = root
+      ..proxyToClientEnabled = proxyToClientEnabled
+      ..mapReportingEnabled = mapReportingEnabled;
 
     final moduleConfig = pb.ModuleConfig()..mqtt = mqttConfig;
     await setModuleConfig(moduleConfig);

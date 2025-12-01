@@ -91,19 +91,13 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.setMQTTConfig(
         enabled: _enabled,
-        address: _addressController.text.isNotEmpty
-            ? _addressController.text
-            : null,
-        username: _usernameController.text.isNotEmpty
-            ? _usernameController.text
-            : null,
-        password: _passwordController.text.isNotEmpty
-            ? _passwordController.text
-            : null,
+        address: _addressController.text,
+        username: _usernameController.text,
+        password: _passwordController.text,
         encryptionEnabled: _encryptionEnabled,
         jsonEnabled: _jsonEnabled,
         tlsEnabled: _tlsEnabled,
-        root: _rootController.text.isNotEmpty ? _rootController.text : null,
+        root: _rootController.text,
         proxyToClientEnabled: _proxyToClientEnabled,
         mapReportingEnabled: _mapReportingEnabled,
       );
