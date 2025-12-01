@@ -74,6 +74,21 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
   }
 
   Future<void> _saveConfig() async {
+    // Validate PIN if fixed PIN mode is selected
+    if (_mode == pb.Config_BluetoothConfig_PairingMode.FIXED_PIN) {
+      final pinText = _pinController.text;
+      if (pinText.isEmpty || pinText.length < 6) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter a valid 6-digit PIN'),
+            backgroundColor: AppTheme.errorRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+    }
+
     final protocol = ref.read(protocolServiceProvider);
 
     setState(() => _saving = true);
