@@ -68,32 +68,50 @@ class _DashboardWidgetState extends State<DashboardWidget>
     final info = WidgetRegistry.getInfo(widget.config.type);
     final isFavorite = widget.config.isFavorite;
 
-    Widget content = AnimatedContainer(
+    // Use custom paint for dashed border in edit mode
+    Widget content = widget.isEditMode
+        ? CustomPaint(
+            painter: _DashedBorderPainter(
+              color: AppTheme.primaryGreen.withValues(alpha: 0.6),
+              strokeWidth: 2,
+              dashWidth: 8,
+              dashSpace: 4,
+              borderRadius: 16,
+            ),
+            child: _buildCardContent(info, isFavorite),
+          )
+        : _buildCardContent(info, isFavorite);
+
+    // Apply wobble animation in edit mode
+    if (widget.isEditMode) {
+      return AnimatedBuilder(
+        animation: _wobbleAnimation,
+        builder: (context, child) {
+          return Transform.rotate(angle: _wobbleAnimation.value, child: child);
+        },
+        child: content,
+      );
+    }
+
+    return content;
+  }
+
+  Widget _buildCardContent(WidgetTypeInfo info, bool isFavorite) {
+    return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: AppTheme.darkCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: widget.isEditMode
-              ? AppTheme.primaryGreen.withValues(alpha: 0.5)
+              ? Colors
+                    .transparent // Border handled by CustomPaint
               : isFavorite
               ? AppTheme.warningYellow.withValues(alpha: 0.4)
               : AppTheme.darkBorder,
-          width: widget.isEditMode
-              ? 2
-              : isFavorite
-              ? 1.5
-              : 1,
+          width: isFavorite ? 1.5 : 1,
         ),
-        boxShadow: widget.isEditMode
-            ? [
-                BoxShadow(
-                  color: AppTheme.primaryGreen.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  spreadRadius: 2,
-                ),
-              ]
-            : isFavorite
+        boxShadow: isFavorite && !widget.isEditMode
             ? [
                 BoxShadow(
                   color: AppTheme.warningYellow.withValues(alpha: 0.08),
@@ -118,19 +136,6 @@ class _DashboardWidgetState extends State<DashboardWidget>
         ),
       ),
     );
-
-    // Apply wobble animation in edit mode
-    if (widget.isEditMode) {
-      return AnimatedBuilder(
-        animation: _wobbleAnimation,
-        builder: (context, child) {
-          return Transform.rotate(angle: _wobbleAnimation.value, child: child);
-        },
-        child: content,
-      );
-    }
-
-    return content;
   }
 
   Widget _buildHeader(WidgetTypeInfo info) {
@@ -350,5 +355,64 @@ class WidgetLoadingState extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Custom painter for dashed border in edit mode
+class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double dashWidth;
+  final double dashSpace;
+  final double borderRadius;
+
+  _DashedBorderPainter({
+    required this.color,
+    required this.strokeWidth,
+    required this.dashWidth,
+    required this.dashSpace,
+    required this.borderRadius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(borderRadius),
+    );
+
+    final path = Path()..addRRect(rrect);
+    final dashPath = _createDashedPath(path);
+    canvas.drawPath(dashPath, paint);
+  }
+
+  Path _createDashedPath(Path source) {
+    final dashPath = Path();
+    for (final metric in source.computeMetrics()) {
+      double distance = 0;
+      while (distance < metric.length) {
+        final len = dashWidth.clamp(0, metric.length - distance);
+        dashPath.addPath(
+          metric.extractPath(distance, distance + len),
+          Offset.zero,
+        );
+        distance += dashWidth + dashSpace;
+      }
+    }
+    return dashPath;
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.dashWidth != dashWidth ||
+        oldDelegate.dashSpace != dashSpace ||
+        oldDelegate.borderRadius != borderRadius;
   }
 }

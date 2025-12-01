@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/transport.dart' as transport;
 import '../../core/theme.dart';
@@ -130,13 +131,6 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
           : isReconnecting
           ? _buildReconnectingState(context, autoReconnectState)
           : _buildDashboard(context, widgetConfigs),
-      floatingActionButton: !_editMode && isConnected
-          ? FloatingActionButton(
-              onPressed: () => setState(() => _editMode = true),
-              backgroundColor: AppTheme.primaryGreen,
-              child: const Icon(Icons.edit, color: Colors.black),
-            )
-          : null,
     );
   }
 
@@ -287,7 +281,13 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                   index: index,
                   child: _buildWidgetCard(config),
                 )
-              : _buildWidgetCard(config),
+              : GestureDetector(
+                  onLongPress: () {
+                    HapticFeedback.mediumImpact();
+                    setState(() => _editMode = true);
+                  },
+                  child: _buildWidgetCard(config),
+                ),
         );
       },
     );
