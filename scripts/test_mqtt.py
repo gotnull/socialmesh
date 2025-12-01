@@ -16,10 +16,12 @@ MQTT_PORT = 1883
 MQTT_USERNAME = "meshdev"
 MQTT_PASSWORD = "large4cats"
 
-# Subscribe to ANZ region (Australia/New Zealand)
-# msh/<region>/2/e/<channel>/!<node_id> for encrypted protobuf
-# msh/<region>/2/json/<channel>/!<node_id> for JSON
-TOPIC = "msh/ANZ/2/json/Main/!9c3a29a9"
+# Subscribe ONLY to YOUR node's messages
+# Node: !9c3a29a9, Channel: Main, Region: ANZ
+TOPICS = [
+    "msh/ANZ/2/e/Main/!9c3a29a9",     # Your encrypted messages
+    "msh/ANZ/2/json/Main/!9c3a29a9",  # Your JSON messages
+]
 
 # Message counter
 msg_count = 0
@@ -28,8 +30,9 @@ msg_count = 0
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
         print(f"✅ Connected to {MQTT_HOST}")
-        print(f"📡 Subscribing to: {TOPIC}")
-        client.subscribe(TOPIC)
+        for topic in TOPICS:
+            print(f"📡 Subscribing to: {topic}")
+            client.subscribe(topic)
     else:
         print(f"❌ Connection failed with code: {rc}")
         codes = {
