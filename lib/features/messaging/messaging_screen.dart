@@ -391,7 +391,8 @@ class _ConversationTile extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (conversation.unreadCount > 0)
+                          if (conversation.unreadCount > 0) ...[
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
@@ -411,6 +412,7 @@ class _ConversationTile extends StatelessWidget {
                                 ),
                               ),
                             ),
+                          ],
                         ],
                       ),
                     ],
