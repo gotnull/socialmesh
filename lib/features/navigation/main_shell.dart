@@ -8,7 +8,7 @@ import '../channels/channels_screen.dart';
 import '../messaging/messaging_screen.dart';
 import '../nodes/nodes_screen.dart';
 import '../map/map_screen.dart';
-import '../dashboard/dashboard_screen.dart';
+import '../dashboard/widget_dashboard_screen.dart';
 import '../scanner/scanner_screen.dart';
 
 /// Main navigation shell with bottom navigation bar
@@ -40,9 +40,9 @@ class _MainShellState extends ConsumerState<MainShell> {
       label: 'Nodes',
     ),
     _NavItem(
-      icon: Icons.router_outlined,
-      activeIcon: Icons.router,
-      label: 'Device',
+      icon: Icons.dashboard_outlined,
+      activeIcon: Icons.dashboard,
+      label: 'Dashboard',
     ),
   ];
 
@@ -57,7 +57,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       case 3:
         return const NodesScreen();
       case 4:
-        return const DashboardScreen();
+        return const WidgetDashboardScreen();
       default:
         return const ChannelsScreen();
     }
