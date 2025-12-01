@@ -565,7 +565,11 @@ class _AddWidgetSheet extends ConsumerWidget {
         Expanded(
           child: ListView.builder(
             controller: scrollController,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              bottom: MediaQuery.of(context).padding.bottom + 16,
+            ),
             itemCount: DashboardWidgetType.values.length,
             itemBuilder: (context, index) {
               final type = DashboardWidgetType.values[index];

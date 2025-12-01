@@ -43,124 +43,147 @@ class NodeMapContent extends ConsumerWidget {
       center = LatLng(avgLat, avgLng);
     }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Stack(
-        children: [
-          FlutterMap(
-            options: MapOptions(
-              initialCenter: center,
-              initialZoom: zoom,
-              minZoom: 2,
-              maxZoom: 16,
-              backgroundColor: AppTheme.darkBackground,
-              interactionOptions: const InteractionOptions(
-                flags: InteractiveFlag.none, // Disable interactions in widget
-              ),
-              onTap: (_, __) => _openFullMap(context),
-            ),
-            children: [
-              // Dark map tiles
-              TileLayer(
-                urlTemplate:
-                    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-                subdomains: const ['a', 'b', 'c', 'd'],
-                userAgentPackageName: 'com.protofluff.app',
-                retinaMode: true,
-              ),
-              // Node markers
-              MarkerLayer(
-                markers: nodesWithPosition.map((node) {
-                  final isMyNode = node.nodeNum == myNodeNum;
-                  return Marker(
-                    point: LatLng(node.latitude!, node.longitude!),
-                    width: 24,
-                    height: 24,
-                    child: _MiniNodeMarker(node: node, isMyNode: isMyNode),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-          // Tap overlay with node count
-          Positioned(
-            left: 8,
-            top: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppTheme.darkCard.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppTheme.darkBorder.withValues(alpha: 0.5),
+    // Use LayoutBuilder to get proper bounded constraints from parent
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // If height is unbounded, use aspect ratio instead
+        final height = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : constraints.maxWidth * 0.6; // 5:3 aspect ratio fallback
+
+        return SizedBox(
+          height: height,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              children: [
+                FlutterMap(
+                  options: MapOptions(
+                    initialCenter: center,
+                    initialZoom: zoom,
+                    minZoom: 2,
+                    maxZoom: 16,
+                    backgroundColor: AppTheme.darkBackground,
+                    interactionOptions: const InteractionOptions(
+                      flags: InteractiveFlag
+                          .none, // Disable interactions in widget
+                    ),
+                    onTap: (_, __) => _openFullMap(context),
+                  ),
+                  children: [
+                    // Dark map tiles
+                    TileLayer(
+                      urlTemplate:
+                          'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                      subdomains: const ['a', 'b', 'c', 'd'],
+                      userAgentPackageName: 'com.protofluff.app',
+                      retinaMode: true,
+                    ),
+                    // Node markers
+                    MarkerLayer(
+                      markers: nodesWithPosition.map((node) {
+                        final isMyNode = node.nodeNum == myNodeNum;
+                        return Marker(
+                          point: LatLng(node.latitude!, node.longitude!),
+                          width: 24,
+                          height: 24,
+                          child: _MiniNodeMarker(
+                            node: node,
+                            isMyNode: isMyNode,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: AppTheme.successGreen,
-                      shape: BoxShape.circle,
+                // Tap overlay with node count
+                Positioned(
+                  left: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkCard.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.darkBorder.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.successGreen,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${nodesWithPosition.length}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${nodesWithPosition.length}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                ),
+                // Tap to expand hint
+                Positioned(
+                  right: 8,
+                  bottom: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkCard.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.open_in_full,
+                          size: 12,
+                          color: AppTheme.textTertiary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Tap to expand',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: AppTheme.textTertiary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-          // Tap to expand hint
-          Positioned(
-            right: 8,
-            bottom: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppTheme.darkCard.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.open_in_full,
-                    size: 12,
-                    color: AppTheme.textTertiary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Tap to expand',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: AppTheme.textTertiary,
+                ),
+                // Tap area
+                Positioned.fill(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _openFullMap(context),
+                      splashColor: AppTheme.primaryGreen.withValues(alpha: 0.1),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          // Tap area
-          Positioned.fill(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => _openFullMap(context),
-                splashColor: AppTheme.primaryGreen.withValues(alpha: 0.1),
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
