@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
@@ -120,331 +121,406 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
         backgroundColor: AppTheme.darkBackground,
-        title: const Text(
-          'Network',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-            fontFamily: 'Inter',
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton(
-              onPressed: _saving ? null : _saveConfig,
-              child: _saving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppTheme.primaryGreen,
-                      ),
-                    )
-                  : const Text(
-                      'Save',
-                      style: TextStyle(
-                        color: AppTheme.primaryGreen,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkBackground,
+          title: const Text(
+            'Network',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              fontFamily: 'Inter',
             ),
           ),
-        ],
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                // WiFi Section
-                const Text(
-                  'WI-FI',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textTertiary,
-                    letterSpacing: 1,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-                const SizedBox(height: 12),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton(
+                onPressed: _saving ? null : _saveConfig,
+                child: _saving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppTheme.primaryGreen,
+                        ),
+                      )
+                    : const Text(
+                        'Save',
+                        style: TextStyle(
+                          color: AppTheme.primaryGreen,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  // WiFi Section
+                  const _SectionHeader(title: 'WI-FI'),
 
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(12),
+                  _SettingsTile(
+                    icon: Icons.wifi,
+                    iconColor: _wifiEnabled ? AppTheme.primaryGreen : null,
+                    title: 'WiFi Enabled',
+                    subtitle: 'Connect to a WiFi network',
+                    trailing: Switch.adaptive(
+                      value: _wifiEnabled,
+                      activeTrackColor: AppTheme.primaryGreen,
+                      inactiveTrackColor: Colors.grey.shade600,
+                      thumbColor: WidgetStateProperty.all(Colors.white),
+                      onChanged: (value) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _wifiEnabled = value);
+                      },
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      SwitchListTile(
-                        title: const Text(
-                          'WiFi Enabled',
+                  if (_wifiEnabled)
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 2,
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkCard,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: _ssidController,
+                            textInputAction: TextInputAction.next,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Inter',
+                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Network Name (SSID)',
+                              labelStyle: const TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontFamily: 'Inter',
+                              ),
+                              filled: true,
+                              fillColor: AppTheme.darkBackground,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: AppTheme.darkBorder,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: AppTheme.darkBorder,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: AppTheme.primaryGreen,
+                                ),
+                              ),
+                              prefixIcon: const Icon(
+                                Icons.wifi,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) =>
+                                FocusScope.of(context).unfocus(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Inter',
+                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              labelStyle: const TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontFamily: 'Inter',
+                              ),
+                              filled: true,
+                              fillColor: AppTheme.darkBackground,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: AppTheme.darkBorder,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: AppTheme.darkBorder,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: AppTheme.primaryGreen,
+                                ),
+                              ),
+                              prefixIcon: const Icon(
+                                Icons.lock,
+                                color: AppTheme.textSecondary,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: AppTheme.textSecondary,
+                                ),
+                                onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+
+                  // Ethernet Section
+                  const _SectionHeader(title: 'ETHERNET'),
+
+                  _SettingsTile(
+                    icon: Icons.settings_ethernet,
+                    iconColor: _ethEnabled ? AppTheme.primaryGreen : null,
+                    title: 'Ethernet Enabled',
+                    subtitle: 'Use wired Ethernet connection',
+                    trailing: Switch.adaptive(
+                      value: _ethEnabled,
+                      activeTrackColor: AppTheme.primaryGreen,
+                      inactiveTrackColor: Colors.grey.shade600,
+                      thumbColor: WidgetStateProperty.all(Colors.white),
+                      onChanged: (value) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _ethEnabled = value);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // NTP Server Section
+                  const _SectionHeader(title: 'TIME SYNC'),
+
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkCard,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'NTP Server',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w500,
                             fontFamily: 'Inter',
                           ),
                         ),
-                        subtitle: const Text(
-                          'Connect to a WiFi network',
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _ntpController,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Inter',
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'pool.ntp.org',
+                            hintStyle: const TextStyle(
+                              color: AppTheme.textTertiary,
+                              fontFamily: 'Inter',
+                            ),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: AppTheme.darkBorder,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: AppTheme.darkBorder,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: AppTheme.primaryGreen,
+                              ),
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.access_time,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Server used for time synchronization',
                           style: TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 13,
                             fontFamily: 'Inter',
-                          ),
-                        ),
-                        value: _wifiEnabled,
-                        onChanged: (value) =>
-                            setState(() => _wifiEnabled = value),
-                        activeTrackColor: AppTheme.primaryGreen,
-                        thumbColor: WidgetStateProperty.resolveWith((states) {
-                          if (states.contains(WidgetState.selected)) {
-                            return Colors.white;
-                          }
-                          return AppTheme.textSecondary;
-                        }),
-                      ),
-                      if (_wifiEnabled) ...[
-                        const Divider(
-                          height: 1,
-                          indent: 16,
-                          endIndent: 16,
-                          color: AppTheme.darkBorder,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            children: [
-                              TextField(
-                                controller: _ssidController,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: 'Inter',
-                                ),
-                                decoration: InputDecoration(
-                                  labelText: 'Network Name (SSID)',
-                                  labelStyle: const TextStyle(
-                                    color: AppTheme.textSecondary,
-                                    fontFamily: 'Inter',
-                                  ),
-                                  filled: true,
-                                  fillColor: AppTheme.darkBackground,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  prefixIcon: const Icon(
-                                    Icons.wifi,
-                                    color: AppTheme.textSecondary,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              TextField(
-                                controller: _passwordController,
-                                obscureText: _obscurePassword,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: 'Inter',
-                                ),
-                                decoration: InputDecoration(
-                                  labelText: 'Password',
-                                  labelStyle: const TextStyle(
-                                    color: AppTheme.textSecondary,
-                                    fontFamily: 'Inter',
-                                  ),
-                                  filled: true,
-                                  fillColor: AppTheme.darkBackground,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  prefixIcon: const Icon(
-                                    Icons.lock,
-                                    color: AppTheme.textSecondary,
-                                  ),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscurePassword
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                      color: AppTheme.textSecondary,
-                                    ),
-                                    onPressed: () => setState(
-                                      () =>
-                                          _obscurePassword = !_obscurePassword,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
                           ),
                         ),
                       ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Ethernet Section
-                const Text(
-                  'ETHERNET',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textTertiary,
-                    letterSpacing: 1,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: SwitchListTile(
-                    title: const Text(
-                      'Ethernet Enabled',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    subtitle: const Text(
-                      'Use wired Ethernet connection',
-                      style: TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 13,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    value: _ethEnabled,
-                    onChanged: (value) => setState(() => _ethEnabled = value),
-                    activeTrackColor: AppTheme.primaryGreen,
-                    thumbColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) {
-                        return Colors.white;
-                      }
-                      return AppTheme.textSecondary;
-                    }),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // NTP Server Section
-                const Text(
-                  'TIME SYNC',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textTertiary,
-                    letterSpacing: 1,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'NTP Server',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _ntpController,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: 'Inter',
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'pool.ntp.org',
-                          hintStyle: const TextStyle(
-                            color: AppTheme.textTertiary,
-                            fontFamily: 'Inter',
-                          ),
-                          filled: true,
-                          fillColor: AppTheme.darkBackground,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          prefixIcon: const Icon(
-                            Icons.access_time,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Server used for time synchronization',
-                        style: TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontSize: 13,
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Info card
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.graphBlue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppTheme.graphBlue.withValues(alpha: 0.3),
                     ),
                   ),
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: AppTheme.graphBlue.withValues(alpha: 0.8),
-                        size: 20,
+                  const SizedBox(height: 16),
+
+                  // Info card
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.graphBlue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.graphBlue.withValues(alpha: 0.3),
                       ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Network settings are only available on devices with WiFi or Ethernet hardware support. Changes require a device reboot.',
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 13,
-                            fontFamily: 'Inter',
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: AppTheme.graphBlue.withValues(alpha: 0.8),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'Network settings are only available on devices with WiFi or Ethernet hardware support. Changes require a device reboot.',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                              fontFamily: 'Inter',
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 32),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: AppTheme.textTertiary,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final Color? iconColor;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  const _SettingsTile({
+    required this.icon,
+    this.iconColor,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor ?? AppTheme.textSecondary),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
+              ),
             ),
+            if (trailing != null) trailing!,
+          ],
+        ),
+      ),
     );
   }
 }

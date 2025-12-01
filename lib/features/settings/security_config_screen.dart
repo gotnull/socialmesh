@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
@@ -150,195 +151,90 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
                 // Managed Device
-                const Text(
-                  'DEVICE MANAGEMENT',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textTertiary,
-                    letterSpacing: 1,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-                const SizedBox(height: 12),
+                const _SectionHeader(title: 'DEVICE MANAGEMENT'),
 
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: SwitchListTile(
-                    title: const Text(
-                      'Managed Mode',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    subtitle: const Text(
-                      'Device is managed by an external system',
-                      style: TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 13,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
+                _SettingsTile(
+                  icon: Icons.admin_panel_settings,
+                  iconColor: _isManaged ? AppTheme.primaryGreen : null,
+                  title: 'Managed Mode',
+                  subtitle: 'Device is managed by an external system',
+                  trailing: Switch.adaptive(
                     value: _isManaged,
-                    onChanged: (value) => setState(() => _isManaged = value),
                     activeTrackColor: AppTheme.primaryGreen,
-                    thumbColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) {
-                        return Colors.white;
-                      }
-                      return AppTheme.textSecondary;
-                    }),
-                    secondary: const Icon(
-                      Icons.admin_panel_settings,
-                      color: AppTheme.textSecondary,
-                    ),
+                    inactiveTrackColor: Colors.grey.shade600,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _isManaged = value);
+                    },
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 // Access Controls
-                const Text(
-                  'ACCESS CONTROLS',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textTertiary,
-                    letterSpacing: 1,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-                const SizedBox(height: 12),
+                const _SectionHeader(title: 'ACCESS CONTROLS'),
 
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      SwitchListTile(
-                        title: const Text(
-                          'Serial Console',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        subtitle: const Text(
-                          'Enable USB serial console access',
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 13,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        value: _serialEnabled,
-                        onChanged: (value) =>
-                            setState(() => _serialEnabled = value),
-                        activeTrackColor: AppTheme.primaryGreen,
-                        thumbColor: WidgetStateProperty.resolveWith((states) {
-                          if (states.contains(WidgetState.selected)) {
-                            return Colors.white;
-                          }
-                          return AppTheme.textSecondary;
-                        }),
-                        secondary: const Icon(
-                          Icons.usb,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                      const Divider(
-                        height: 1,
-                        indent: 16,
-                        endIndent: 16,
-                        color: AppTheme.darkBorder,
-                      ),
-                      SwitchListTile(
-                        title: const Text(
-                          'Debug Logging',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        subtitle: const Text(
-                          'Enable verbose debug log output',
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 13,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        value: _debugLogEnabled,
-                        onChanged: (value) =>
-                            setState(() => _debugLogEnabled = value),
-                        activeTrackColor: AppTheme.primaryGreen,
-                        thumbColor: WidgetStateProperty.resolveWith((states) {
-                          if (states.contains(WidgetState.selected)) {
-                            return Colors.white;
-                          }
-                          return AppTheme.textSecondary;
-                        }),
-                        secondary: const Icon(
-                          Icons.bug_report,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                      const Divider(
-                        height: 1,
-                        indent: 16,
-                        endIndent: 16,
-                        color: AppTheme.darkBorder,
-                      ),
-                      SwitchListTile(
-                        title: const Text(
-                          'Admin Channel',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        subtitle: const Text(
-                          'Allow remote admin via admin channel',
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 13,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        value: _adminChannelEnabled,
-                        onChanged: (value) =>
-                            setState(() => _adminChannelEnabled = value),
-                        activeTrackColor: AppTheme.primaryGreen,
-                        thumbColor: WidgetStateProperty.resolveWith((states) {
-                          if (states.contains(WidgetState.selected)) {
-                            return Colors.white;
-                          }
-                          return AppTheme.textSecondary;
-                        }),
-                        secondary: const Icon(
-                          Icons.security,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                    ],
+                _SettingsTile(
+                  icon: Icons.usb,
+                  iconColor: _serialEnabled ? AppTheme.primaryGreen : null,
+                  title: 'Serial Console',
+                  subtitle: 'Enable USB serial console access',
+                  trailing: Switch.adaptive(
+                    value: _serialEnabled,
+                    activeTrackColor: AppTheme.primaryGreen,
+                    inactiveTrackColor: Colors.grey.shade600,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _serialEnabled = value);
+                    },
                   ),
                 ),
-                const SizedBox(height: 24),
+                _SettingsTile(
+                  icon: Icons.bug_report,
+                  iconColor: _debugLogEnabled ? AppTheme.primaryGreen : null,
+                  title: 'Debug Logging',
+                  subtitle: 'Enable verbose debug log output',
+                  trailing: Switch.adaptive(
+                    value: _debugLogEnabled,
+                    activeTrackColor: AppTheme.primaryGreen,
+                    inactiveTrackColor: Colors.grey.shade600,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _debugLogEnabled = value);
+                    },
+                  ),
+                ),
+                _SettingsTile(
+                  icon: Icons.security,
+                  iconColor: _adminChannelEnabled
+                      ? AppTheme.primaryGreen
+                      : null,
+                  title: 'Admin Channel',
+                  subtitle: 'Allow remote admin via admin channel',
+                  trailing: Switch.adaptive(
+                    value: _adminChannelEnabled,
+                    activeTrackColor: AppTheme.primaryGreen,
+                    inactiveTrackColor: Colors.grey.shade600,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _adminChannelEnabled = value);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
 
                 // Warning card
                 Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.errorRed.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -369,8 +265,93 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 32),
               ],
             ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: AppTheme.textTertiary,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final Color? iconColor;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  const _SettingsTile({
+    required this.icon,
+    this.iconColor,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor ?? AppTheme.textSecondary),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (trailing != null) trailing!,
+          ],
+        ),
+      ),
     );
   }
 }

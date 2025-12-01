@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
@@ -112,15 +114,21 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
+        backgroundColor: AppTheme.darkBackground,
         title: const Text('Display Configuration'),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveConfig,
-            child: const Text('Save'),
+            child: Text(
+              'Save',
+              style: TextStyle(
+                color: _isLoading ? Colors.grey : AppTheme.primaryGreen,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -131,41 +139,52 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
               children: [
                 _SectionHeader(title: 'SCREEN'),
                 const SizedBox(height: 8),
-                _buildScreenSettings(theme),
+                _buildScreenSettings(),
                 const SizedBox(height: 24),
                 _SectionHeader(title: 'UNITS & FORMAT'),
                 const SizedBox(height: 8),
-                _buildUnitsSettings(theme),
+                _buildUnitsSettings(),
                 const SizedBox(height: 24),
                 _SectionHeader(title: 'DISPLAY MODE'),
                 const SizedBox(height: 8),
-                _buildDisplayModeSelector(theme),
+                _buildDisplayModeSelector(),
                 const SizedBox(height: 32),
               ],
             ),
     );
   }
 
-  Widget _buildScreenSettings(ThemeData theme) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Screen Timeout: ${_screenOnSecs == 0 ? 'Always On' : '${_screenOnSecs}s'}',
-              style: theme.textTheme.titleSmall,
+  Widget _buildScreenSettings() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Screen Timeout: ${_screenOnSecs == 0 ? 'Always On' : '${_screenOnSecs}s'}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
-            const SizedBox(height: 4),
-            Text(
-              'How long before screen turns off',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'How long before screen turns off',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          ),
+          SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: AppTheme.primaryGreen,
+              inactiveTrackColor: Colors.grey.shade700,
+              thumbColor: AppTheme.primaryGreen,
+              overlayColor: AppTheme.primaryGreen.withAlpha(30),
             ),
-            Slider(
+            child: Slider(
               value: _screenOnSecs.toDouble(),
               min: 0,
               max: 300,
@@ -175,20 +194,30 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                 setState(() => _screenOnSecs = value.toInt());
               },
             ),
-            const Divider(),
-            const SizedBox(height: 8),
-            Text(
-              'Auto Carousel: ${_autoCarouselSecs == 0 ? 'Disabled' : '${_autoCarouselSecs}s'}',
-              style: theme.textTheme.titleSmall,
+          ),
+          Divider(color: AppTheme.darkBorder),
+          const SizedBox(height: 8),
+          Text(
+            'Auto Carousel: ${_autoCarouselSecs == 0 ? 'Disabled' : '${_autoCarouselSecs}s'}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Automatically cycle through screens',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Automatically cycle through screens',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          ),
+          SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: AppTheme.primaryGreen,
+              inactiveTrackColor: Colors.grey.shade700,
+              thumbColor: AppTheme.primaryGreen,
+              overlayColor: AppTheme.primaryGreen.withAlpha(30),
             ),
-            Slider(
+            child: Slider(
               value: _autoCarouselSecs.toDouble(),
               min: 0,
               max: 60,
@@ -198,83 +227,168 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                 setState(() => _autoCarouselSecs = value.toInt());
               },
             ),
-            const Divider(),
-            SwitchListTile(
+          ),
+          Divider(color: AppTheme.darkBorder),
+          const SizedBox(height: 8),
+          _SettingsTile(
+            icon: Icons.screen_rotation,
+            title: 'Flip Screen',
+            subtitle: 'Rotate display 180°',
+            trailing: Switch.adaptive(
               value: _flipScreen,
-              onChanged: (value) => setState(() => _flipScreen = value),
-              title: const Text('Flip Screen'),
-              subtitle: const Text('Rotate display 180°'),
-              contentPadding: EdgeInsets.zero,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                setState(() => _flipScreen = value);
+              },
+              activeTrackColor: AppTheme.primaryGreen,
+              inactiveTrackColor: Colors.grey.shade600,
+              thumbColor: WidgetStateProperty.all(Colors.white),
             ),
-            SwitchListTile(
+          ),
+          const SizedBox(height: 8),
+          _SettingsTile(
+            icon: Icons.touch_app,
+            title: 'Wake on Tap/Motion',
+            subtitle: 'Turn on screen when device is moved',
+            trailing: Switch.adaptive(
               value: _wakeOnTapOrMotion,
-              onChanged: (value) => setState(() => _wakeOnTapOrMotion = value),
-              title: const Text('Wake on Tap/Motion'),
-              subtitle: const Text('Turn on screen when device is moved'),
-              contentPadding: EdgeInsets.zero,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                setState(() => _wakeOnTapOrMotion = value);
+              },
+              activeTrackColor: AppTheme.primaryGreen,
+              inactiveTrackColor: Colors.grey.shade600,
+              thumbColor: WidgetStateProperty.all(Colors.white),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildUnitsSettings(ThemeData theme) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Measurement Units',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+  Widget _buildUnitsSettings() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Measurement Units',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: Icon(
-                _units == pb.Config_DisplayConfig_DisplayUnits.METRIC
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
-                color: _units == pb.Config_DisplayConfig_DisplayUnits.METRIC
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.outline,
-              ),
-              title: const Text('Metric'),
-              subtitle: const Text('Kilometers, Celsius'),
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              onTap: () => setState(
-                () => _units = pb.Config_DisplayConfig_DisplayUnits.METRIC,
-              ),
+          ),
+          const SizedBox(height: 16),
+          _buildUnitOption(
+            icon: Icons.straighten,
+            title: 'Metric',
+            subtitle: 'Kilometers, Celsius',
+            isSelected: _units == pb.Config_DisplayConfig_DisplayUnits.METRIC,
+            onTap: () => setState(
+              () => _units = pb.Config_DisplayConfig_DisplayUnits.METRIC,
             ),
-            ListTile(
-              leading: Icon(
-                _units == pb.Config_DisplayConfig_DisplayUnits.IMPERIAL
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
-                color: _units == pb.Config_DisplayConfig_DisplayUnits.IMPERIAL
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.outline,
-              ),
-              title: const Text('Imperial'),
-              subtitle: const Text('Miles, Fahrenheit'),
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              onTap: () => setState(
-                () => _units = pb.Config_DisplayConfig_DisplayUnits.IMPERIAL,
-              ),
+          ),
+          const SizedBox(height: 8),
+          _buildUnitOption(
+            icon: Icons.square_foot,
+            title: 'Imperial',
+            subtitle: 'Miles, Fahrenheit',
+            isSelected: _units == pb.Config_DisplayConfig_DisplayUnits.IMPERIAL,
+            onTap: () => setState(
+              () => _units = pb.Config_DisplayConfig_DisplayUnits.IMPERIAL,
             ),
-            const Divider(),
-            SwitchListTile(
+          ),
+          const SizedBox(height: 16),
+          Divider(color: AppTheme.darkBorder),
+          const SizedBox(height: 8),
+          _SettingsTile(
+            icon: Icons.format_bold,
+            title: 'Bold Headings',
+            subtitle: 'Show compass headings in bold',
+            trailing: Switch.adaptive(
               value: _headingBold,
-              onChanged: (value) => setState(() => _headingBold = value),
-              title: const Text('Bold Headings'),
-              subtitle: const Text('Show compass headings in bold'),
-              contentPadding: EdgeInsets.zero,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                setState(() => _headingBold = value);
+              },
+              activeTrackColor: AppTheme.primaryGreen,
+              inactiveTrackColor: Colors.grey.shade600,
+              thumbColor: WidgetStateProperty.all(Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUnitOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppTheme.primaryGreen : AppTheme.darkBorder,
+            width: isSelected ? 2 : 1,
+          ),
+          color: isSelected
+              ? AppTheme.primaryGreen.withAlpha(20)
+              : AppTheme.darkBackground,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isSelected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              color: isSelected ? AppTheme.primaryGreen : Colors.grey,
+            ),
+            const SizedBox(width: 12),
+            Icon(
+              icon,
+              color: isSelected
+                  ? AppTheme.primaryGreen
+                  : AppTheme.textSecondary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -282,7 +396,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
     );
   }
 
-  Widget _buildDisplayModeSelector(ThemeData theme) {
+  Widget _buildDisplayModeSelector() {
     final modes = [
       (
         pb.Config_DisplayConfig_DisplayMode.DEFAULT,
@@ -310,92 +424,139 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
       ),
     ];
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Display Mode',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Display Mode',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Choose the display rendering mode',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...modes.map((m) {
-              final isSelected = _displayMode == m.$1;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: InkWell(
-                  onTap: () => setState(() => _displayMode = m.$1),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outline.withAlpha(100),
-                        width: isSelected ? 2 : 1,
-                      ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Choose the display rendering mode',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          ),
+          const SizedBox(height: 16),
+          ...modes.map((m) {
+            final isSelected = _displayMode == m.$1;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _displayMode = m.$1);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
                       color: isSelected
-                          ? theme.colorScheme.primaryContainer.withAlpha(50)
-                          : null,
+                          ? AppTheme.primaryGreen
+                          : AppTheme.darkBorder,
+                      width: isSelected ? 2 : 1,
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          m.$4,
-                          color: isSelected
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                m.$2,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.w500,
-                                ),
+                    color: isSelected
+                        ? AppTheme.primaryGreen.withAlpha(20)
+                        : AppTheme.darkBackground,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        m.$4,
+                        color: isSelected
+                            ? AppTheme.primaryGreen
+                            : AppTheme.textSecondary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              m.$2,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
                               ),
-                              Text(
-                                m.$3,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
+                            ),
+                            Text(
+                              m.$3,
+                              style: TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 12,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        if (isSelected)
-                          Icon(
-                            Icons.check_circle,
-                            color: theme.colorScheme.primary,
-                          ),
-                      ],
-                    ),
+                      ),
+                      if (isSelected)
+                        Icon(Icons.check_circle, color: AppTheme.primaryGreen),
+                    ],
                   ),
                 ),
-              );
-            }),
-          ],
-        ),
+              ),
+            );
+          }),
+        ],
       ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: AppTheme.textSecondary, size: 22),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              if (subtitle != null)
+                Text(
+                  subtitle!,
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                ),
+            ],
+          ),
+        ),
+        if (trailing != null) trailing!,
+      ],
     );
   }
 }
@@ -411,8 +572,9 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
+        style: TextStyle(
+          color: AppTheme.textTertiary,
+          fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
         ),

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
@@ -105,42 +107,227 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        title: const Text('Radio Configuration'),
+        backgroundColor: AppTheme.darkBackground,
+        title: const Text(
+          'Radio',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            fontFamily: 'Inter',
+          ),
+        ),
         actions: [
-          TextButton(
-            onPressed: _isLoading ? null : _saveConfig,
-            child: const Text('Save'),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton(
+              onPressed: _isLoading ? null : _saveConfig,
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppTheme.primaryGreen,
+                      ),
+                    )
+                  : const Text(
+                      'Save',
+                      style: TextStyle(
+                        color: AppTheme.primaryGreen,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+            ),
           ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
-                _SectionHeader(title: 'REGION'),
-                const SizedBox(height: 8),
-                _buildRegionSelector(theme),
-                const SizedBox(height: 24),
-                _SectionHeader(title: 'MODEM PRESET'),
-                const SizedBox(height: 8),
-                _buildModemPresetSelector(theme),
-                const SizedBox(height: 24),
-                _SectionHeader(title: 'TRANSMISSION'),
-                const SizedBox(height: 8),
-                _buildTransmissionSettings(theme),
+                const _SectionHeader(title: 'REGION'),
+                _buildRegionSelector(),
+                const SizedBox(height: 16),
+                const _SectionHeader(title: 'MODEM PRESET'),
+                _buildModemPresetSelector(),
+                const SizedBox(height: 16),
+                const _SectionHeader(title: 'TRANSMISSION'),
+                _SettingsTile(
+                  icon: Icons.cell_tower,
+                  iconColor: _txEnabled ? AppTheme.primaryGreen : null,
+                  title: 'Transmission Enabled',
+                  subtitle: 'Allow device to transmit',
+                  trailing: Switch.adaptive(
+                    value: _txEnabled,
+                    activeTrackColor: AppTheme.primaryGreen,
+                    inactiveTrackColor: Colors.grey.shade600,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _txEnabled = value);
+                    },
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 2,
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkCard,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Hop Limit',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryGreen.withValues(
+                                alpha: 0.15,
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '$_hopLimit',
+                              style: const TextStyle(
+                                color: AppTheme.primaryGreen,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Number of times messages can be relayed',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 13,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SliderTheme(
+                        data: SliderThemeData(
+                          activeTrackColor: AppTheme.primaryGreen,
+                          inactiveTrackColor: AppTheme.darkBorder,
+                          thumbColor: AppTheme.primaryGreen,
+                          overlayColor: AppTheme.primaryGreen.withValues(
+                            alpha: 0.2,
+                          ),
+                          trackHeight: 4,
+                        ),
+                        child: Slider(
+                          value: _hopLimit.toDouble(),
+                          min: 0,
+                          max: 7,
+                          divisions: 7,
+                          onChanged: (value) {
+                            setState(() => _hopLimit = value.toInt());
+                          },
+                        ),
+                      ),
+                      const Divider(height: 24, color: AppTheme.darkBorder),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'TX Power Override',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryGreen.withValues(
+                                alpha: 0.15,
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              _txPower == 0 ? 'Default' : '${_txPower}dBm',
+                              style: const TextStyle(
+                                color: AppTheme.primaryGreen,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Override transmit power (0 = use default)',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 13,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SliderTheme(
+                        data: SliderThemeData(
+                          activeTrackColor: AppTheme.primaryGreen,
+                          inactiveTrackColor: AppTheme.darkBorder,
+                          thumbColor: AppTheme.primaryGreen,
+                          overlayColor: AppTheme.primaryGreen.withValues(
+                            alpha: 0.2,
+                          ),
+                          trackHeight: 4,
+                        ),
+                        child: Slider(
+                          value: _txPower.toDouble(),
+                          min: 0,
+                          max: 30,
+                          divisions: 30,
+                          onChanged: (value) {
+                            setState(() => _txPower = value.toInt());
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildInfoCard(),
                 const SizedBox(height: 32),
-                _buildInfoCard(theme),
               ],
             ),
     );
   }
 
-  Widget _buildRegionSelector(ThemeData theme) {
+  Widget _buildRegionSelector() {
     final regions = [
       (pbenum.RegionCode.UNSET_REGION, 'Unset', 'Not configured'),
       (pbenum.RegionCode.US, 'US', '915MHz'),
@@ -163,58 +350,57 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
       (pbenum.RegionCode.LORA_24, 'LoRa 2.4GHz', '2.4GHz'),
     ];
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Frequency Region',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Select the region that matches your country\'s regulations',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 13,
+              fontFamily: 'Inter',
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Select the region that matches your country\'s regulations',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppTheme.darkBorder),
             ),
-            const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: theme.colorScheme.outline),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: DropdownButton<pbenum.RegionCode>(
-                isExpanded: true,
-                underline: const SizedBox.shrink(),
-                dropdownColor: theme.colorScheme.surface,
-                items: regions.map((r) {
-                  return DropdownMenuItem(
-                    value: r.$1,
-                    child: Text('${r.$2} (${r.$3})'),
-                  );
-                }).toList(),
-                value: _selectedRegion ?? pbenum.RegionCode.UNSET_REGION,
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() => _selectedRegion = value);
-                  }
-                },
-              ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: DropdownButton<pbenum.RegionCode>(
+              isExpanded: true,
+              underline: const SizedBox.shrink(),
+              dropdownColor: AppTheme.darkCard,
+              style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+              items: regions.map((r) {
+                return DropdownMenuItem(
+                  value: r.$1,
+                  child: Text('${r.$2} (${r.$3})'),
+                );
+              }).toList(),
+              value: _selectedRegion ?? pbenum.RegionCode.UNSET_REGION,
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _selectedRegion = value);
+                }
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildModemPresetSelector(ThemeData theme) {
+  Widget _buildModemPresetSelector() {
     final presets = [
       (pb.ModemPreset.LONG_FAST, 'Long Fast', 'Best range with good speed'),
       (pb.ModemPreset.LONG_SLOW, 'Long Slow', 'Maximum range, slower'),
@@ -230,135 +416,109 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
       (pb.ModemPreset.SHORT_SLOW, 'Short Slow', 'Short range, reliable'),
     ];
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Modem Preset',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'All devices in the mesh must use the same preset',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 13,
+              fontFamily: 'Inter',
             ),
-            const SizedBox(height: 4),
-            Text(
-              'All devices in the mesh must use the same preset',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...presets.map((p) {
-              final isSelected = _selectedModemPreset == p.$1;
-              return ListTile(
-                leading: Icon(
-                  isSelected
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
-                  color: isSelected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.outline,
+          ),
+          const SizedBox(height: 16),
+          ...presets.map((p) {
+            final isSelected = _selectedModemPreset == p.$1;
+            return InkWell(
+              onTap: () => setState(() => _selectedModemPreset = p.$1),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      isSelected
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_unchecked,
+                      color: isSelected
+                          ? AppTheme.primaryGreen
+                          : AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            p.$2,
+                            style: TextStyle(
+                              color: isSelected
+                                  ? Colors.white
+                                  : AppTheme.textSecondary,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                          Text(
+                            p.$3,
+                            style: const TextStyle(
+                              color: AppTheme.textTertiary,
+                              fontSize: 13,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                title: Text(p.$2),
-                subtitle: Text(p.$3),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-                onTap: () => setState(() => _selectedModemPreset = p.$1),
-              );
-            }),
-          ],
-        ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
 
-  Widget _buildTransmissionSettings(ThemeData theme) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SwitchListTile(
-              value: _txEnabled,
-              onChanged: (value) => setState(() => _txEnabled = value),
-              title: const Text('Transmission Enabled'),
-              subtitle: const Text('Allow device to transmit'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            const Divider(),
-            const SizedBox(height: 8),
-            Text('Hop Limit: $_hopLimit', style: theme.textTheme.titleSmall),
-            const SizedBox(height: 4),
-            Text(
-              'Number of times messages can be relayed',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            Slider(
-              value: _hopLimit.toDouble(),
-              min: 0,
-              max: 7,
-              divisions: 7,
-              label: _hopLimit.toString(),
-              onChanged: (value) {
-                setState(() => _hopLimit = value.toInt());
-              },
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'TX Power Override: ${_txPower == 0 ? 'Default' : '${_txPower}dBm'}',
-              style: theme.textTheme.titleSmall,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Override transmit power (0 = use default)',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            Slider(
-              value: _txPower.toDouble(),
-              min: 0,
-              max: 30,
-              divisions: 30,
-              label: _txPower == 0 ? 'Default' : '$_txPower dBm',
-              onChanged: (value) {
-                setState(() => _txPower = value.toInt());
-              },
-            ),
-          ],
+  Widget _buildInfoCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppTheme.warningYellow.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.warningYellow.withValues(alpha: 0.3),
         ),
       ),
-    );
-  }
-
-  Widget _buildInfoCard(ThemeData theme) {
-    return Card(
-      margin: EdgeInsets.zero,
-      color: theme.colorScheme.primaryContainer.withAlpha(100),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(Icons.info_outline, color: theme.colorScheme.primary),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                'Changing radio settings will cause the device to reboot. '
-                'All devices in your mesh network must use the same region and modem preset.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onPrimaryContainer,
-                ),
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.warning_amber,
+            color: AppTheme.warningYellow.withValues(alpha: 0.8),
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Changing radio settings will cause the device to reboot. '
+              'All devices in your mesh network must use the same region and modem preset.',
+              style: TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 13,
+                fontFamily: 'Inter',
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -372,13 +532,76 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
+        style: const TextStyle(
+          fontSize: 12,
           fontWeight: FontWeight.bold,
+          color: AppTheme.textTertiary,
           letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final Color? iconColor;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  const _SettingsTile({
+    required this.icon,
+    this.iconColor,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor ?? AppTheme.textSecondary),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (trailing != null) trailing!,
+          ],
         ),
       ),
     );

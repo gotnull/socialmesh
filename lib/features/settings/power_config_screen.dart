@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
@@ -164,65 +165,37 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
                 // Power saving mode toggle
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: SwitchListTile(
-                    title: const Text(
-                      'Power Saving Mode',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    subtitle: const Text(
-                      'Reduce power consumption when idle',
-                      style: TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 13,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
+                _SettingsTile(
+                  icon: _isPowerSaving
+                      ? Icons.battery_saver
+                      : Icons.battery_full,
+                  iconColor: _isPowerSaving ? AppTheme.primaryGreen : null,
+                  title: 'Power Saving Mode',
+                  subtitle: 'Reduce power consumption when idle',
+                  trailing: Switch.adaptive(
                     value: _isPowerSaving,
-                    onChanged: (value) =>
-                        setState(() => _isPowerSaving = value),
                     activeTrackColor: AppTheme.primaryGreen,
-                    thumbColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) {
-                        return Colors.white;
-                      }
-                      return AppTheme.textSecondary;
-                    }),
-                    secondary: Icon(
-                      _isPowerSaving ? Icons.battery_saver : Icons.battery_full,
-                      color: _isPowerSaving
-                          ? AppTheme.primaryGreen
-                          : AppTheme.textSecondary,
-                    ),
+                    inactiveTrackColor: Colors.grey.shade600,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _isPowerSaving = value);
+                    },
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 // Sleep Settings Section
-                const Text(
-                  'SLEEP SETTINGS',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textTertiary,
-                    letterSpacing: 1,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-                const SizedBox(height: 12),
+                const _SectionHeader(title: 'SLEEP SETTINGS'),
 
                 Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.darkCard,
                     borderRadius: BorderRadius.circular(12),
@@ -295,10 +268,14 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 // Info card
                 Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.warningYellow.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -329,6 +306,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 32),
               ],
             ),
     );
@@ -403,6 +381,90 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: AppTheme.textTertiary,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final Color? iconColor;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  const _SettingsTile({
+    required this.icon,
+    this.iconColor,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor ?? AppTheme.textSecondary),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (trailing != null) trailing!,
+          ],
+        ),
+      ),
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
@@ -107,41 +109,180 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        title: const Text('Device Configuration'),
+        backgroundColor: AppTheme.darkBackground,
+        title: const Text(
+          'Device',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            fontFamily: 'Inter',
+          ),
+        ),
         actions: [
-          TextButton(
-            onPressed: _isLoading ? null : _saveConfig,
-            child: const Text('Save'),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton(
+              onPressed: _isLoading ? null : _saveConfig,
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppTheme.primaryGreen,
+                      ),
+                    )
+                  : const Text(
+                      'Save',
+                      style: TextStyle(
+                        color: AppTheme.primaryGreen,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+            ),
           ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
-                _SectionHeader(title: 'DEVICE ROLE'),
-                const SizedBox(height: 8),
-                _buildRoleSelector(theme),
-                const SizedBox(height: 24),
-                _SectionHeader(title: 'REBROADCAST'),
-                const SizedBox(height: 8),
-                _buildRebroadcastSelector(theme),
-                const SizedBox(height: 24),
-                _SectionHeader(title: 'SETTINGS'),
-                const SizedBox(height: 8),
-                _buildSettings(theme),
+                const _SectionHeader(title: 'DEVICE ROLE'),
+                _buildRoleSelector(),
+                const SizedBox(height: 16),
+                const _SectionHeader(title: 'REBROADCAST'),
+                _buildRebroadcastSelector(),
+                const SizedBox(height: 16),
+                const _SectionHeader(title: 'SETTINGS'),
+                _SettingsTile(
+                  icon: Icons.terminal,
+                  iconColor: _serialEnabled ? AppTheme.primaryGreen : null,
+                  title: 'Serial Console',
+                  subtitle: 'Enable serial port for debugging',
+                  trailing: Switch.adaptive(
+                    value: _serialEnabled,
+                    activeTrackColor: AppTheme.primaryGreen,
+                    inactiveTrackColor: Colors.grey.shade600,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _serialEnabled = value);
+                    },
+                  ),
+                ),
+                _SettingsTile(
+                  icon: Icons.lightbulb_outline,
+                  iconColor: !_ledHeartbeatDisabled
+                      ? AppTheme.primaryGreen
+                      : null,
+                  title: 'LED Heartbeat',
+                  subtitle: 'Flash LED to indicate device is running',
+                  trailing: Switch.adaptive(
+                    value: !_ledHeartbeatDisabled,
+                    activeTrackColor: AppTheme.primaryGreen,
+                    inactiveTrackColor: Colors.grey.shade600,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _ledHeartbeatDisabled = !value);
+                    },
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 2,
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkCard,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Node Info Broadcast',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryGreen.withValues(
+                                alpha: 0.15,
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              _formatDuration(_nodeInfoBroadcastSecs),
+                              style: const TextStyle(
+                                color: AppTheme.primaryGreen,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'How often to broadcast device info',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 13,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SliderTheme(
+                        data: SliderThemeData(
+                          activeTrackColor: AppTheme.primaryGreen,
+                          inactiveTrackColor: AppTheme.darkBorder,
+                          thumbColor: AppTheme.primaryGreen,
+                          overlayColor: AppTheme.primaryGreen.withValues(
+                            alpha: 0.2,
+                          ),
+                          trackHeight: 4,
+                        ),
+                        child: Slider(
+                          value: _nodeInfoBroadcastSecs.toDouble(),
+                          min: 300,
+                          max: 86400,
+                          divisions: 20,
+                          onChanged: (value) {
+                            setState(
+                              () => _nodeInfoBroadcastSecs = value.toInt(),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 32),
               ],
             ),
     );
   }
 
-  Widget _buildRoleSelector(ThemeData theme) {
+  Widget _buildRoleSelector() {
     final roles = [
       (
         pb.Config_DeviceConfig_Role_.CLIENT,
@@ -211,92 +352,99 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       ),
     ];
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Select how this device should behave in the mesh',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Select how this device should behave in the mesh',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 13,
+              fontFamily: 'Inter',
             ),
-            const SizedBox(height: 16),
-            ...roles.map((r) {
-              final isSelected = _selectedRole == r.$1;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: InkWell(
-                  onTap: () => setState(() => _selectedRole = r.$1),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outline.withAlpha(100),
-                        width: isSelected ? 2 : 1,
-                      ),
+          ),
+          const SizedBox(height: 16),
+          ...roles.map((r) {
+            final isSelected = _selectedRole == r.$1;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: InkWell(
+                onTap: () => setState(() => _selectedRole = r.$1),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
                       color: isSelected
-                          ? theme.colorScheme.primaryContainer.withAlpha(50)
-                          : null,
+                          ? AppTheme.primaryGreen
+                          : AppTheme.darkBorder,
+                      width: isSelected ? 2 : 1,
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          r.$4,
-                          color: isSelected
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                r.$2,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.w500,
-                                  color: isSelected
-                                      ? theme.colorScheme.primary
-                                      : null,
-                                ),
+                    color: isSelected
+                        ? AppTheme.primaryGreen.withValues(alpha: 0.1)
+                        : null,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        r.$4,
+                        color: isSelected
+                            ? AppTheme.primaryGreen
+                            : AppTheme.textSecondary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              r.$2,
+                              style: TextStyle(
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                                color: isSelected
+                                    ? AppTheme.primaryGreen
+                                    : Colors.white,
+                                fontFamily: 'Inter',
                               ),
-                              Text(
-                                r.$3,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
+                            ),
+                            Text(
+                              r.$3,
+                              style: const TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 13,
+                                fontFamily: 'Inter',
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        if (isSelected)
-                          Icon(
-                            Icons.check_circle,
-                            color: theme.colorScheme.primary,
-                          ),
-                      ],
-                    ),
+                      ),
+                      if (isSelected)
+                        const Icon(
+                          Icons.check_circle,
+                          color: AppTheme.primaryGreen,
+                        ),
+                    ],
                   ),
                 ),
-              );
-            }),
-          ],
-        ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
 
-  Widget _buildRebroadcastSelector(ThemeData theme) {
+  Widget _buildRebroadcastSelector() {
     final modes = [
       (
         pb.Config_DeviceConfig_RebroadcastMode.ALL,
@@ -325,110 +473,73 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       ),
     ];
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Rebroadcast Mode',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Controls which messages this device will relay',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...modes.map((m) {
-              final isSelected = _rebroadcastMode == m.$1;
-              return ListTile(
-                leading: Icon(
-                  isSelected
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
-                  color: isSelected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.outline,
-                ),
-                title: Text(m.$2),
-                subtitle: Text(m.$3),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-                onTap: () => setState(() => _rebroadcastMode = m.$1),
-              );
-            }),
-          ],
-        ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
       ),
-    );
-  }
-
-  Widget _buildSettings(ThemeData theme) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            SwitchListTile(
-              value: _serialEnabled,
-              onChanged: (value) => setState(() => _serialEnabled = value),
-              title: const Text('Serial Console'),
-              subtitle: const Text('Enable serial port for debugging'),
-              contentPadding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Controls which messages this device will relay',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 13,
+              fontFamily: 'Inter',
             ),
-            const Divider(),
-            SwitchListTile(
-              value: !_ledHeartbeatDisabled,
-              onChanged: (value) =>
-                  setState(() => _ledHeartbeatDisabled = !value),
-              title: const Text('LED Heartbeat'),
-              subtitle: const Text('Flash LED to indicate device is running'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            const Divider(),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Node Info Broadcast',
-                        style: theme.textTheme.titleSmall,
+          ),
+          const SizedBox(height: 16),
+          ...modes.map((m) {
+            final isSelected = _rebroadcastMode == m.$1;
+            return InkWell(
+              onTap: () => setState(() => _rebroadcastMode = m.$1),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      isSelected
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_unchecked,
+                      color: isSelected
+                          ? AppTheme.primaryGreen
+                          : AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            m.$2,
+                            style: TextStyle(
+                              color: isSelected
+                                  ? Colors.white
+                                  : AppTheme.textSecondary,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                          Text(
+                            m.$3,
+                            style: const TextStyle(
+                              color: AppTheme.textTertiary,
+                              fontSize: 13,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'How often to broadcast device info (${_formatDuration(_nodeInfoBroadcastSecs)})',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            Slider(
-              value: _nodeInfoBroadcastSecs.toDouble(),
-              min: 300,
-              max: 86400,
-              divisions: 20,
-              label: _formatDuration(_nodeInfoBroadcastSecs),
-              onChanged: (value) {
-                setState(() => _nodeInfoBroadcastSecs = value.toInt());
-              },
-            ),
-          ],
-        ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -449,13 +560,76 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
+        style: const TextStyle(
+          fontSize: 12,
           fontWeight: FontWeight.bold,
+          color: AppTheme.textTertiary,
           letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final Color? iconColor;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  const _SettingsTile({
+    required this.icon,
+    this.iconColor,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor ?? AppTheme.textSecondary),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (trailing != null) trailing!,
+          ],
         ),
       ),
     );

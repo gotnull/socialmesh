@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../services/ifttt/ifttt_service.dart';
 
@@ -95,14 +97,12 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   }
 
   Future<void> _testWebhook() async {
-    final theme = Theme.of(context);
-
     if (_webhookKeyController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Please enter your Webhook Key first'),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: theme.colorScheme.error,
+          backgroundColor: AppTheme.errorRed,
         ),
       );
       return;
@@ -110,7 +110,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
 
     setState(() => _isTesting = true);
 
-    // Save config first so test uses current key
     final iftttService = ref.read(iftttServiceProvider);
     final tempConfig = IftttConfig(
       enabled: true,
@@ -144,9 +143,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                 : 'Failed to send test webhook. Check your key.',
           ),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: success
-              ? theme.colorScheme.primary
-              : theme.colorScheme.error,
+          backgroundColor: success ? AppTheme.primaryGreen : AppTheme.errorRed,
         ),
       );
     }
@@ -165,350 +162,521 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('IFTTT Integration'),
-        actions: [
-          TextButton(onPressed: _saveConfig, child: const Text('Save')),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildEnableCard(theme),
-          const SizedBox(height: 24),
-          if (_enabled) ...[
-            _SectionHeader(title: 'WEBHOOK'),
-            const SizedBox(height: 8),
-            _buildWebhookSettings(theme),
-            const SizedBox(height: 24),
-            _SectionHeader(title: 'MESSAGE TRIGGERS'),
-            const SizedBox(height: 8),
-            _buildMessageTriggers(theme),
-            const SizedBox(height: 24),
-            _SectionHeader(title: 'NODE STATUS TRIGGERS'),
-            const SizedBox(height: 8),
-            _buildNodeTriggers(theme),
-            const SizedBox(height: 24),
-            _SectionHeader(title: 'TELEMETRY TRIGGERS'),
-            const SizedBox(height: 8),
-            _buildTelemetryTriggers(theme),
-            const SizedBox(height: 24),
-            _SectionHeader(title: 'GEOFENCING'),
-            const SizedBox(height: 8),
-            _buildGeofenceSettings(theme),
-            const SizedBox(height: 24),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: AppTheme.darkBackground,
+        appBar: AppBar(
+          title: const Text('IFTTT Integration'),
+          actions: [
+            TextButton(onPressed: _saveConfig, child: const Text('Save')),
           ],
-          _buildInfoCard(theme),
-          const SizedBox(height: 16),
-          _buildEventNamesCard(theme),
-          const SizedBox(height: 32),
-        ],
+        ),
+        body: ListView(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          children: [
+            _buildEnableTile(),
+            if (_enabled) ...[
+              const SizedBox(height: 16),
+              const _SectionHeader(title: 'WEBHOOK'),
+              _buildWebhookSection(),
+              const SizedBox(height: 16),
+              const _SectionHeader(title: 'MESSAGE TRIGGERS'),
+              _buildMessageTriggers(),
+              const SizedBox(height: 16),
+              const _SectionHeader(title: 'NODE STATUS TRIGGERS'),
+              _buildNodeTriggers(),
+              const SizedBox(height: 16),
+              const _SectionHeader(title: 'TELEMETRY TRIGGERS'),
+              _buildTelemetryTriggers(),
+              const SizedBox(height: 16),
+              const _SectionHeader(title: 'GEOFENCING'),
+              _buildGeofenceSettings(),
+            ],
+            const SizedBox(height: 16),
+            _buildInfoCard(),
+            const SizedBox(height: 8),
+            _buildEventNamesCard(),
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildEnableCard(ThemeData theme) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: SwitchListTile(
+  Widget _buildEnableTile() {
+    return _SettingsTile(
+      icon: Icons.webhook,
+      iconColor: _enabled ? AppTheme.primaryGreen : null,
+      title: 'Enable IFTTT',
+      subtitle: 'Send events to IFTTT Webhooks service',
+      trailing: Switch.adaptive(
         value: _enabled,
-        onChanged: (value) => setState(() => _enabled = value),
-        title: const Text('Enable IFTTT'),
-        subtitle: const Text('Send events to IFTTT Webhooks service'),
-        secondary: Container(
-          width: 48,
-          height: 48,
+        activeTrackColor: AppTheme.primaryGreen,
+        inactiveTrackColor: Colors.grey.shade600,
+        thumbColor: WidgetStateProperty.all(Colors.white),
+        onChanged: (value) {
+          HapticFeedback.selectionClick();
+          setState(() => _enabled = value);
+        },
+      ),
+    );
+  }
+
+  Widget _buildWebhookSection() {
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: _enabled
-                ? theme.colorScheme.primary.withAlpha(25)
-                : theme.colorScheme.surfaceContainerHighest,
+            color: AppTheme.darkCard,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            Icons.webhook,
-            color: _enabled
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurfaceVariant,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _webhookKeyController,
+                autocorrect: false,
+                enableSuggestions: false,
+                keyboardType: TextInputType.text,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Webhook Key',
+                  labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                  hintText: 'e.g., cMcOnB_zaJTrZwsVvzVTHY',
+                  hintStyle: TextStyle(color: Colors.grey.shade600),
+                  helperText: 'Copy from IFTTT Webhooks URL after /use/',
+                  helperStyle: const TextStyle(color: AppTheme.textTertiary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: AppTheme.darkBorder),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: AppTheme.darkBorder),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: AppTheme.primaryGreen),
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.key,
+                    color: AppTheme.textSecondary,
+                  ),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _isTesting ? null : _testWebhook,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.primaryGreen.withAlpha(30),
+                    foregroundColor: AppTheme.primaryGreen,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  icon: _isTesting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppTheme.primaryGreen,
+                          ),
+                        )
+                      : const Icon(Icons.send, size: 18),
+                  label: Text(_isTesting ? 'Testing...' : 'Test Connection'),
+                ),
+              ),
+            ],
           ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildWebhookSettings(ThemeData theme) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _webhookKeyController,
-              autocorrect: false,
-              enableSuggestions: false,
-              keyboardType: TextInputType.text,
-              decoration: const InputDecoration(
-                labelText: 'Webhook Key',
-                hintText: 'e.g., cMcOnB_zaJTrZwsVvzVTHY',
-                helperText: 'Copy from IFTTT Webhooks URL after /use/',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.key),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.tonalIcon(
-                onPressed: _isTesting ? null : _testWebhook,
-                icon: _isTesting
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: theme.colorScheme.primary,
-                        ),
-                      )
-                    : const Icon(Icons.send),
-                label: Text(_isTesting ? 'Testing...' : 'Test Connection'),
-              ),
-            ),
-          ],
+  Widget _buildMessageTriggers() {
+    return Column(
+      children: [
+        _SettingsTile(
+          icon: Icons.message_outlined,
+          title: 'Message Received',
+          subtitle: 'Trigger when a message is received',
+          trailing: Switch.adaptive(
+            value: _messageReceived,
+            activeTrackColor: AppTheme.primaryGreen,
+            inactiveTrackColor: Colors.grey.shade600,
+            thumbColor: WidgetStateProperty.all(Colors.white),
+            onChanged: (value) {
+              HapticFeedback.selectionClick();
+              setState(() => _messageReceived = value);
+            },
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildMessageTriggers(ThemeData theme) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            SwitchListTile(
-              value: _messageReceived,
-              onChanged: (value) => setState(() => _messageReceived = value),
-              title: const Text('Message Received'),
-              subtitle: const Text('Trigger when a message is received'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            const Divider(),
-            SwitchListTile(
-              value: _sosEmergency,
-              onChanged: (value) => setState(() => _sosEmergency = value),
-              title: const Text('SOS / Emergency'),
-              subtitle: const Text(
-                'Trigger on SOS, emergency, help, mayday keywords',
-              ),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ],
+        _SettingsTile(
+          icon: Icons.sos_outlined,
+          title: 'SOS / Emergency',
+          subtitle: 'Trigger on SOS, emergency, help, mayday keywords',
+          trailing: Switch.adaptive(
+            value: _sosEmergency,
+            activeTrackColor: AppTheme.primaryGreen,
+            inactiveTrackColor: Colors.grey.shade600,
+            thumbColor: WidgetStateProperty.all(Colors.white),
+            onChanged: (value) {
+              HapticFeedback.selectionClick();
+              setState(() => _sosEmergency = value);
+            },
+          ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildNodeTriggers(ThemeData theme) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            SwitchListTile(
-              value: _nodeOnline,
-              onChanged: (value) => setState(() => _nodeOnline = value),
-              title: const Text('Node Online'),
-              subtitle: const Text('Trigger when a node comes online'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            const Divider(),
-            SwitchListTile(
-              value: _nodeOffline,
-              onChanged: (value) => setState(() => _nodeOffline = value),
-              title: const Text('Node Offline'),
-              subtitle: const Text('Trigger when a node goes offline'),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ],
+  Widget _buildNodeTriggers() {
+    return Column(
+      children: [
+        _SettingsTile(
+          icon: Icons.wifi_tethering,
+          title: 'Node Online',
+          subtitle: 'Trigger when a node comes online',
+          trailing: Switch.adaptive(
+            value: _nodeOnline,
+            activeTrackColor: AppTheme.primaryGreen,
+            inactiveTrackColor: Colors.grey.shade600,
+            thumbColor: WidgetStateProperty.all(Colors.white),
+            onChanged: (value) {
+              HapticFeedback.selectionClick();
+              setState(() => _nodeOnline = value);
+            },
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTelemetryTriggers(ThemeData theme) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SwitchListTile(
-              value: _batteryLow,
-              onChanged: (value) => setState(() => _batteryLow = value),
-              title: const Text('Battery Low'),
-              subtitle: const Text(
-                'Trigger when battery drops below threshold',
-              ),
-              contentPadding: EdgeInsets.zero,
-            ),
-            if (_batteryLow) ...[
-              const SizedBox(height: 16),
-              TextField(
-                controller: _batteryThresholdController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Battery Threshold',
-                  hintText: '20',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.battery_3_bar),
-                  suffixText: '%',
-                ),
-              ),
-            ],
-            const Divider(),
-            SwitchListTile(
-              value: _temperatureAlert,
-              onChanged: (value) => setState(() => _temperatureAlert = value),
-              title: const Text('Temperature Alert'),
-              subtitle: const Text(
-                'Trigger when temperature exceeds threshold',
-              ),
-              contentPadding: EdgeInsets.zero,
-            ),
-            if (_temperatureAlert) ...[
-              const SizedBox(height: 16),
-              TextField(
-                controller: _temperatureThresholdController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: const InputDecoration(
-                  labelText: 'Temperature Threshold',
-                  hintText: '40.0',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.device_thermostat),
-                  suffixText: '°C',
-                ),
-              ),
-            ],
-          ],
+        _SettingsTile(
+          icon: Icons.wifi_off_outlined,
+          title: 'Node Offline',
+          subtitle: 'Trigger when a node goes offline',
+          trailing: Switch.adaptive(
+            value: _nodeOffline,
+            activeTrackColor: AppTheme.primaryGreen,
+            inactiveTrackColor: Colors.grey.shade600,
+            thumbColor: WidgetStateProperty.all(Colors.white),
+            onChanged: (value) {
+              HapticFeedback.selectionClick();
+              setState(() => _nodeOffline = value);
+            },
+          ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildGeofenceSettings(ThemeData theme) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SwitchListTile(
-              value: _positionUpdate,
-              onChanged: (value) => setState(() => _positionUpdate = value),
-              title: const Text('Position Updates'),
-              subtitle: const Text('Trigger when node exits geofence area'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            if (_positionUpdate) ...[
-              const SizedBox(height: 16),
-              TextField(
-                controller: _geofenceRadiusController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Geofence Radius',
-                  hintText: '1000',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.radar),
-                  suffixText: 'm',
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _geofenceLatController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                  signed: true,
-                ),
-                decoration: const InputDecoration(
-                  labelText: 'Center Latitude',
-                  hintText: '-33.8688',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.my_location),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _geofenceLonController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                  signed: true,
-                ),
-                decoration: const InputDecoration(
-                  labelText: 'Center Longitude',
-                  hintText: '151.2093',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.my_location),
-                ),
-              ),
-            ],
-          ],
+  Widget _buildTelemetryTriggers() {
+    return Column(
+      children: [
+        _SettingsTile(
+          icon: Icons.battery_3_bar,
+          title: 'Battery Low',
+          subtitle: 'Trigger when battery drops below threshold',
+          trailing: Switch.adaptive(
+            value: _batteryLow,
+            activeTrackColor: AppTheme.primaryGreen,
+            inactiveTrackColor: Colors.grey.shade600,
+            thumbColor: WidgetStateProperty.all(Colors.white),
+            onChanged: (value) {
+              HapticFeedback.selectionClick();
+              setState(() => _batteryLow = value);
+            },
+          ),
         ),
-      ),
+        if (_batteryLow)
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkCard,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TextField(
+              controller: _batteryThresholdController,
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => FocusScope.of(context).unfocus(),
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Battery Threshold',
+                labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                hintText: '20',
+                hintStyle: TextStyle(color: Colors.grey.shade600),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppTheme.darkBorder),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppTheme.darkBorder),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppTheme.primaryGreen),
+                ),
+                prefixIcon: const Icon(
+                  Icons.battery_3_bar,
+                  color: AppTheme.textSecondary,
+                ),
+                suffixText: '%',
+                suffixStyle: const TextStyle(color: AppTheme.textSecondary),
+                filled: true,
+                fillColor: AppTheme.darkBackground,
+              ),
+            ),
+          ),
+        _SettingsTile(
+          icon: Icons.device_thermostat,
+          title: 'Temperature Alert',
+          subtitle: 'Trigger when temperature exceeds threshold',
+          trailing: Switch.adaptive(
+            value: _temperatureAlert,
+            activeTrackColor: AppTheme.primaryGreen,
+            inactiveTrackColor: Colors.grey.shade600,
+            thumbColor: WidgetStateProperty.all(Colors.white),
+            onChanged: (value) {
+              HapticFeedback.selectionClick();
+              setState(() => _temperatureAlert = value);
+            },
+          ),
+        ),
+        if (_temperatureAlert)
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkCard,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TextField(
+              controller: _temperatureThresholdController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => FocusScope.of(context).unfocus(),
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Temperature Threshold',
+                labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                hintText: '40.0',
+                hintStyle: TextStyle(color: Colors.grey.shade600),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppTheme.darkBorder),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppTheme.darkBorder),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppTheme.primaryGreen),
+                ),
+                prefixIcon: const Icon(
+                  Icons.device_thermostat,
+                  color: AppTheme.textSecondary,
+                ),
+                suffixText: '°C',
+                suffixStyle: const TextStyle(color: AppTheme.textSecondary),
+                filled: true,
+                fillColor: AppTheme.darkBackground,
+              ),
+            ),
+          ),
+      ],
     );
   }
 
-  Widget _buildInfoCard(ThemeData theme) {
-    return Card(
-      margin: EdgeInsets.zero,
-      color: theme.colorScheme.primaryContainer.withAlpha(100),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+  Widget _buildGeofenceSettings() {
+    return Column(
+      children: [
+        _SettingsTile(
+          icon: Icons.radar,
+          title: 'Position Updates',
+          subtitle: 'Trigger when node exits geofence area',
+          trailing: Switch.adaptive(
+            value: _positionUpdate,
+            activeTrackColor: AppTheme.primaryGreen,
+            inactiveTrackColor: Colors.grey.shade600,
+            thumbColor: WidgetStateProperty.all(Colors.white),
+            onChanged: (value) {
+              HapticFeedback.selectionClick();
+              setState(() => _positionUpdate = value);
+            },
+          ),
+        ),
+        if (_positionUpdate)
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkCard,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
               children: [
-                Icon(Icons.info_outline, color: theme.colorScheme.primary),
-                const SizedBox(width: 12),
-                Text(
-                  'Setup Guide',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: theme.colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.bold,
+                TextField(
+                  controller: _geofenceRadiusController,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Geofence Radius',
+                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                    hintText: '1000',
+                    hintStyle: TextStyle(color: Colors.grey.shade600),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppTheme.darkBorder),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppTheme.darkBorder),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: AppTheme.primaryGreen,
+                      ),
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.radar,
+                      color: AppTheme.textSecondary,
+                    ),
+                    suffixText: 'm',
+                    suffixStyle: const TextStyle(color: AppTheme.textSecondary),
+                    filled: true,
+                    fillColor: AppTheme.darkBackground,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _geofenceLatController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  ),
+                  textInputAction: TextInputAction.next,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Center Latitude',
+                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                    hintText: '-33.8688',
+                    hintStyle: TextStyle(color: Colors.grey.shade600),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppTheme.darkBorder),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppTheme.darkBorder),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: AppTheme.primaryGreen,
+                      ),
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.my_location,
+                      color: AppTheme.textSecondary,
+                    ),
+                    filled: true,
+                    fillColor: AppTheme.darkBackground,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _geofenceLonController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  ),
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Center Longitude',
+                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                    hintText: '151.2093',
+                    hintStyle: TextStyle(color: Colors.grey.shade600),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppTheme.darkBorder),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppTheme.darkBorder),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: AppTheme.primaryGreen,
+                      ),
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.my_location,
+                      color: AppTheme.textSecondary,
+                    ),
+                    filled: true,
+                    fillColor: AppTheme.darkBackground,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            _buildStep(theme, '1', 'Create an account at ifttt.com'),
-            _buildStep(
-              theme,
-              '2',
-              'Search for "Webhooks" service and connect it',
-            ),
-            _buildStep(theme, '3', 'Go to Webhooks settings to find your key'),
-            _buildStep(
-              theme,
-              '4',
-              'Create applets with Webhooks as the trigger',
-            ),
-          ],
-        ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildInfoCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryGreen.withAlpha(20),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.primaryGreen.withAlpha(50)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.info_outline, color: AppTheme.primaryGreen, size: 20),
+              SizedBox(width: 12),
+              Text(
+                'Setup Guide',
+                style: TextStyle(
+                  color: AppTheme.primaryGreen,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildStep('1', 'Create an account at ifttt.com'),
+          _buildStep('2', 'Search for "Webhooks" service and connect it'),
+          _buildStep('3', 'Go to Webhooks settings to find your key'),
+          _buildStep('4', 'Create applets with Webhooks as the trigger'),
+        ],
       ),
     );
   }
 
-  Widget _buildStep(ThemeData theme, String number, String text) {
+  Widget _buildStep(String number, String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -518,16 +686,16 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             width: 20,
             height: 20,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha(50),
+              color: AppTheme.primaryGreen.withAlpha(50),
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 number,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
+                  color: AppTheme.primaryGreen,
                 ),
               ),
             ),
@@ -536,8 +704,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           Expanded(
             child: Text(
               text,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppTheme.textSecondary,
               ),
             ),
           ),
@@ -546,54 +715,73 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
     );
   }
 
-  Widget _buildEventNamesCard(ThemeData theme) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: ExpansionTile(
-        leading: Icon(Icons.code, color: theme.colorScheme.primary),
-        title: const Text('Event Names Reference'),
-        subtitle: const Text('Use these names in your IFTTT applets'),
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Column(
-              children: [
-                _buildEventRow(
-                  'meshtastic_message',
-                  'value1=sender, value2=message, value3=channel',
-                ),
-                _buildEventRow(
-                  'meshtastic_node_online',
-                  'value1=name, value2=nodeId, value3=timestamp',
-                ),
-                _buildEventRow(
-                  'meshtastic_node_offline',
-                  'value1=name, value2=nodeId, value3=timestamp',
-                ),
-                _buildEventRow(
-                  'meshtastic_battery_low',
-                  'value1=name, value2=level%, value3=threshold%',
-                ),
-                _buildEventRow(
-                  'meshtastic_temperature',
-                  'value1=name, value2=temp°C, value3=threshold°C',
-                ),
-                _buildEventRow(
-                  'meshtastic_position',
-                  'value1=name, value2=lat,lon, value3=distance',
-                ),
-                _buildEventRow(
-                  'meshtastic_sos',
-                  'value1=name, value2=nodeId, value3=location',
-                ),
-                _buildEventRow(
-                  'meshtastic_test',
-                  'value1=app, value2=message, value3=timestamp',
-                ),
-              ],
+  Widget _buildEventNamesCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+        ),
+        child: ExpansionTile(
+          leading: const Icon(Icons.code, color: AppTheme.textSecondary),
+          title: const Text(
+            'Event Names Reference',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
             ),
           ),
-        ],
+          subtitle: const Text(
+            'Use these names in your IFTTT applets',
+            style: TextStyle(fontSize: 13, color: AppTheme.textTertiary),
+          ),
+          iconColor: AppTheme.textSecondary,
+          collapsedIconColor: AppTheme.textSecondary,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: [
+                  _buildEventRow(
+                    'meshtastic_message',
+                    'sender, message, channel',
+                  ),
+                  _buildEventRow(
+                    'meshtastic_node_online',
+                    'name, nodeId, timestamp',
+                  ),
+                  _buildEventRow(
+                    'meshtastic_node_offline',
+                    'name, nodeId, timestamp',
+                  ),
+                  _buildEventRow(
+                    'meshtastic_battery_low',
+                    'name, level%, threshold%',
+                  ),
+                  _buildEventRow(
+                    'meshtastic_temperature',
+                    'name, temp°C, threshold°C',
+                  ),
+                  _buildEventRow(
+                    'meshtastic_position',
+                    'name, lat/lon, distance',
+                  ),
+                  _buildEventRow('meshtastic_sos', 'name, nodeId, location'),
+                  _buildEventRow('meshtastic_test', 'app, message, timestamp'),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -611,18 +799,19 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
               style: const TextStyle(
                 fontFamily: 'monospace',
                 fontWeight: FontWeight.w600,
-                fontSize: 12,
+                fontSize: 11,
+                color: AppTheme.primaryGreen,
               ),
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
-            flex: 3,
+            flex: 2,
             child: Text(
               params,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 11,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: AppTheme.textTertiary,
               ),
             ),
           ),
@@ -640,13 +829,76 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
+        style: const TextStyle(
+          fontSize: 12,
           fontWeight: FontWeight.bold,
+          color: AppTheme.textTertiary,
           letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final Color? iconColor;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  const _SettingsTile({
+    required this.icon,
+    this.iconColor,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor ?? AppTheme.textSecondary),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (trailing != null) trailing!,
+          ],
         ),
       ),
     );

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
@@ -141,158 +142,111 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
       pb.Config_BluetoothConfig_PairingMode.NO_PIN,
     ];
 
-    return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
         backgroundColor: AppTheme.darkBackground,
-        title: const Text(
-          'Bluetooth',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-            fontFamily: 'Inter',
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton(
-              onPressed: _saving ? null : _saveConfig,
-              child: _saving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppTheme.primaryGreen,
-                      ),
-                    )
-                  : const Text(
-                      'Save',
-                      style: TextStyle(
-                        color: AppTheme.primaryGreen,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkBackground,
+          title: const Text(
+            'Bluetooth',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              fontFamily: 'Inter',
             ),
           ),
-        ],
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                // Bluetooth enabled toggle
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: SwitchListTile(
-                    title: const Text(
-                      'Bluetooth Enabled',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'Inter',
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton(
+                onPressed: _saving ? null : _saveConfig,
+                child: _saving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppTheme.primaryGreen,
+                        ),
+                      )
+                    : const Text(
+                        'Save',
+                        style: TextStyle(
+                          color: AppTheme.primaryGreen,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Inter',
+                        ),
                       ),
+              ),
+            ),
+          ],
+        ),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // Bluetooth enabled toggle
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkCard,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    subtitle: const Text(
-                      'Enable Bluetooth connectivity',
-                      style: TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 13,
-                        fontFamily: 'Inter',
-                      ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
-                    value: _enabled,
-                    onChanged: (value) => setState(() => _enabled = value),
-                    activeTrackColor: AppTheme.primaryGreen,
-                    thumbColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) {
-                        return Colors.white;
-                      }
-                      return AppTheme.textSecondary;
-                    }),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Pairing mode section
-                const Text(
-                  'PAIRING MODE',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textTertiary,
-                    letterSpacing: 1,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: modes.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final mode = entry.value;
-                      final isSelected = _mode == mode;
-                      return Column(
-                        children: [
-                          ListTile(
-                            title: Text(
-                              _getModeLabel(mode),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                                fontFamily: 'Inter',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.bluetooth,
+                          color: AppTheme.textSecondary,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                'Bluetooth Enabled',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Inter',
+                                ),
                               ),
-                            ),
-                            subtitle: Text(
-                              _getModeDescription(mode),
-                              style: const TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 13,
-                                fontFamily: 'Inter',
+                              Text(
+                                'Enable Bluetooth connectivity',
+                                style: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 13,
+                                  fontFamily: 'Inter',
+                                ),
                               ),
-                            ),
-                            leading: Icon(
-                              isSelected
-                                  ? Icons.radio_button_checked
-                                  : Icons.radio_button_unchecked,
-                              color: isSelected
-                                  ? AppTheme.primaryGreen
-                                  : AppTheme.textTertiary,
-                            ),
-                            selected: isSelected,
-                            onTap: () => setState(() => _mode = mode),
+                            ],
                           ),
-                          if (index < modes.length - 1)
-                            const Divider(
-                              height: 1,
-                              indent: 16,
-                              endIndent: 16,
-                              color: AppTheme.darkBorder,
-                            ),
-                        ],
-                      );
-                    }).toList(),
+                        ),
+                        Switch.adaptive(
+                          value: _enabled,
+                          onChanged: (value) {
+                            HapticFeedback.selectionClick();
+                            setState(() => _enabled = value);
+                          },
+                          activeTrackColor: AppTheme.primaryGreen,
+                          inactiveTrackColor: Colors.grey.shade600,
+                          thumbColor: WidgetStateProperty.all(Colors.white),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // Fixed PIN (only show when mode is Fixed PIN)
-                if (_mode ==
-                    pb.Config_BluetoothConfig_PairingMode.FIXED_PIN) ...[
+                  // Pairing mode section
                   const Text(
-                    'FIXED PIN',
+                    'PAIRING MODE',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -302,104 +256,177 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
+
                   Container(
                     decoration: BoxDecoration(
                       color: AppTheme.darkCard,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: const EdgeInsets.all(16),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextField(
-                          keyboardType: TextInputType.number,
-                          maxLength: 6,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 8,
-                            fontFamily: 'monospace',
-                          ),
-                          textAlign: TextAlign.center,
-                          decoration: InputDecoration(
-                            counterText: '',
-                            hintText: '123456',
-                            hintStyle: TextStyle(
-                              color: AppTheme.textTertiary.withValues(
-                                alpha: 0.5,
+                      children: modes.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final mode = entry.value;
+                        final isSelected = _mode == mode;
+                        return Column(
+                          children: [
+                            ListTile(
+                              title: Text(
+                                _getModeLabel(mode),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Inter',
+                                ),
                               ),
+                              subtitle: Text(
+                                _getModeDescription(mode),
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 13,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                              leading: Icon(
+                                isSelected
+                                    ? Icons.radio_button_checked
+                                    : Icons.radio_button_unchecked,
+                                color: isSelected
+                                    ? AppTheme.primaryGreen
+                                    : AppTheme.textTertiary,
+                              ),
+                              selected: isSelected,
+                              onTap: () => setState(() => _mode = mode),
+                            ),
+                            if (index < modes.length - 1)
+                              const Divider(
+                                height: 1,
+                                indent: 16,
+                                endIndent: 16,
+                                color: AppTheme.darkBorder,
+                              ),
+                          ],
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Fixed PIN (only show when mode is Fixed PIN)
+                  if (_mode ==
+                      pb.Config_BluetoothConfig_PairingMode.FIXED_PIN) ...[
+                    const Text(
+                      'FIXED PIN',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textTertiary,
+                        letterSpacing: 1,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkCard,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextField(
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) =>
+                                FocusScope.of(context).unfocus(),
+                            maxLength: 6,
+                            style: const TextStyle(
+                              color: Colors.white,
                               fontSize: 24,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 8,
                               fontFamily: 'monospace',
                             ),
-                            filled: true,
-                            fillColor: AppTheme.darkBackground,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide.none,
+                            textAlign: TextAlign.center,
+                            decoration: InputDecoration(
+                              counterText: '',
+                              hintText: '123456',
+                              hintStyle: TextStyle(
+                                color: AppTheme.textTertiary.withValues(
+                                  alpha: 0.5,
+                                ),
+                                fontSize: 24,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 8,
+                                fontFamily: 'monospace',
+                              ),
+                              filled: true,
+                              fillColor: AppTheme.darkBackground,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            controller: TextEditingController(
+                              text: _fixedPin.toString().padLeft(6, '0'),
+                            ),
+                            onChanged: (value) {
+                              final pin = int.tryParse(value);
+                              if (pin != null) {
+                                setState(() => _fixedPin = pin);
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Enter a 6-digit PIN code for Bluetooth pairing',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                              fontFamily: 'Inter',
                             ),
                           ),
-                          controller: TextEditingController(
-                            text: _fixedPin.toString().padLeft(6, '0'),
-                          ),
-                          onChanged: (value) {
-                            final pin = int.tryParse(value);
-                            if (pin != null) {
-                              setState(() => _fixedPin = pin);
-                            }
-                          },
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+
+                  // Info card
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.graphBlue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.graphBlue.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: AppTheme.graphBlue.withValues(alpha: 0.8),
+                          size: 20,
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Enter a 6-digit PIN code for Bluetooth pairing',
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 13,
-                            fontFamily: 'Inter',
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'Bluetooth settings control how your device pairs with phones and other devices. Changes require a device reboot to take effect.',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                              fontFamily: 'Inter',
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
                 ],
-
-                // Info card
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.graphBlue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppTheme.graphBlue.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: AppTheme.graphBlue.withValues(alpha: 0.8),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Bluetooth settings control how your device pairs with phones and other devices. Changes require a device reboot to take effect.',
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 13,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+      ),
     );
   }
 }
