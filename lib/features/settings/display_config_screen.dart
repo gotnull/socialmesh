@@ -79,8 +79,9 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
         screenOnSecs: _screenOnSecs,
         autoScreenCarouselSecs: _autoCarouselSecs,
         flipScreen: _flipScreen,
-        units: _units,
-        displayMode: _displayMode,
+        units: _units ?? pb.Config_DisplayConfig_DisplayUnits.METRIC,
+        displayMode:
+            _displayMode ?? pb.Config_DisplayConfig_DisplayMode.DEFAULT,
         headingBold: _headingBold,
         wakeOnTapOrMotion: _wakeOnTapOrMotion,
       );

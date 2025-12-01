@@ -2257,24 +2257,22 @@ class ProtocolService {
 
   /// Set LoRa configuration (region, modem preset, TX power, etc.)
   Future<void> setLoRaConfig({
-    pbenum.RegionCode? region,
-    pb.ModemPreset? modemPreset,
-    int? hopLimit,
-    bool? txEnabled,
-    int? txPower,
-    bool? overrideDutyCycle,
+    required pbenum.RegionCode region,
+    required pb.ModemPreset modemPreset,
+    required int hopLimit,
+    required bool txEnabled,
+    required int txPower,
+    bool overrideDutyCycle = false,
   }) async {
     _logger.i('Setting LoRa config');
 
-    final loraConfig = pb.Config_LoRaConfig();
-    if (region != null) loraConfig.region = region;
-    if (modemPreset != null) loraConfig.modemPreset = modemPreset;
-    if (hopLimit != null) loraConfig.hopLimit = hopLimit;
-    if (txEnabled != null) loraConfig.txEnabled = txEnabled;
-    if (txPower != null) loraConfig.txPower = txPower;
-    if (overrideDutyCycle != null) {
-      loraConfig.overrideDutyCycle = overrideDutyCycle;
-    }
+    final loraConfig = pb.Config_LoRaConfig()
+      ..region = region
+      ..modemPreset = modemPreset
+      ..hopLimit = hopLimit
+      ..txEnabled = txEnabled
+      ..txPower = txPower
+      ..overrideDutyCycle = overrideDutyCycle;
 
     final config = pb.Config()..lora = loraConfig;
     await setConfig(config);
@@ -2282,28 +2280,22 @@ class ProtocolService {
 
   /// Set device configuration (role, serial, etc.)
   Future<void> setDeviceConfig({
-    pb.Config_DeviceConfig_Role_? role,
-    pb.Config_DeviceConfig_RebroadcastMode? rebroadcastMode,
-    bool? serialEnabled,
-    int? nodeInfoBroadcastSecs,
-    bool? doubleTapAsButtonPress,
-    bool? ledHeartbeatDisabled,
+    required pb.Config_DeviceConfig_Role_ role,
+    required pb.Config_DeviceConfig_RebroadcastMode rebroadcastMode,
+    required bool serialEnabled,
+    required int nodeInfoBroadcastSecs,
+    required bool ledHeartbeatDisabled,
+    bool doubleTapAsButtonPress = false,
   }) async {
     _logger.i('Setting device config');
 
-    final deviceConfig = pb.Config_DeviceConfig();
-    if (role != null) deviceConfig.role = role;
-    if (rebroadcastMode != null) deviceConfig.rebroadcastMode = rebroadcastMode;
-    if (serialEnabled != null) deviceConfig.serialEnabled = serialEnabled;
-    if (nodeInfoBroadcastSecs != null) {
-      deviceConfig.nodeInfoBroadcastSecs = nodeInfoBroadcastSecs;
-    }
-    if (doubleTapAsButtonPress != null) {
-      deviceConfig.doubleTapAsButtonPress = doubleTapAsButtonPress;
-    }
-    if (ledHeartbeatDisabled != null) {
-      deviceConfig.ledHeartbeatDisabled = ledHeartbeatDisabled;
-    }
+    final deviceConfig = pb.Config_DeviceConfig()
+      ..role = role
+      ..rebroadcastMode = rebroadcastMode
+      ..serialEnabled = serialEnabled
+      ..nodeInfoBroadcastSecs = nodeInfoBroadcastSecs
+      ..doubleTapAsButtonPress = doubleTapAsButtonPress
+      ..ledHeartbeatDisabled = ledHeartbeatDisabled;
 
     final config = pb.Config()..device = deviceConfig;
     await setConfig(config);
@@ -2311,31 +2303,21 @@ class ProtocolService {
 
   /// Set position configuration
   Future<void> setPositionConfig({
-    int? positionBroadcastSecs,
-    bool? positionBroadcastSmartEnabled,
-    bool? fixedPosition,
-    pb.Config_PositionConfig_GpsMode? gpsMode,
-    int? gpsUpdateInterval,
+    required int positionBroadcastSecs,
+    required bool positionBroadcastSmartEnabled,
+    required bool fixedPosition,
+    required pb.Config_PositionConfig_GpsMode gpsMode,
+    required int gpsUpdateInterval,
   }) async {
     _logger.i('Setting position config: gpsMode=$gpsMode');
 
-    final posConfig = pb.Config_PositionConfig();
-    if (positionBroadcastSecs != null) {
-      posConfig.positionBroadcastSecs = positionBroadcastSecs;
-    }
-    if (positionBroadcastSmartEnabled != null) {
-      posConfig.positionBroadcastSmartEnabled = positionBroadcastSmartEnabled;
-    }
-    if (fixedPosition != null) posConfig.fixedPosition = fixedPosition;
-    if (gpsMode != null) {
-      posConfig.gpsMode = gpsMode;
-      // Also set legacy gpsEnabled flag for older firmware compatibility
-      posConfig.gpsEnabled =
-          gpsMode == pb.Config_PositionConfig_GpsMode.ENABLED;
-    }
-    if (gpsUpdateInterval != null) {
-      posConfig.gpsUpdateInterval = gpsUpdateInterval;
-    }
+    final posConfig = pb.Config_PositionConfig()
+      ..positionBroadcastSecs = positionBroadcastSecs
+      ..positionBroadcastSmartEnabled = positionBroadcastSmartEnabled
+      ..fixedPosition = fixedPosition
+      ..gpsMode = gpsMode
+      ..gpsEnabled = gpsMode == pb.Config_PositionConfig_GpsMode.ENABLED
+      ..gpsUpdateInterval = gpsUpdateInterval;
 
     final config = pb.Config()..position = posConfig;
     await setConfig(config);
@@ -2343,26 +2325,22 @@ class ProtocolService {
 
   /// Set power configuration
   Future<void> setPowerConfig({
-    bool? isPowerSaving,
-    int? onBatteryShutdownAfterSecs,
-    int? waitBluetoothSecs,
-    int? sdsSecs,
-    int? lsSecs,
-    int? minWakeSecs,
+    required bool isPowerSaving,
+    required int waitBluetoothSecs,
+    required int sdsSecs,
+    required int lsSecs,
+    required int minWakeSecs,
+    int onBatteryShutdownAfterSecs = 0,
   }) async {
     _logger.i('Setting power config');
 
-    final powerConfig = pb.Config_PowerConfig();
-    if (isPowerSaving != null) powerConfig.isPowerSaving = isPowerSaving;
-    if (onBatteryShutdownAfterSecs != null) {
-      powerConfig.onBatteryShutdownAfterSecs = onBatteryShutdownAfterSecs;
-    }
-    if (waitBluetoothSecs != null) {
-      powerConfig.waitBluetoothSecs = waitBluetoothSecs;
-    }
-    if (sdsSecs != null) powerConfig.sdsSecs = sdsSecs;
-    if (lsSecs != null) powerConfig.lsSecs = lsSecs;
-    if (minWakeSecs != null) powerConfig.minWakeSecs = minWakeSecs;
+    final powerConfig = pb.Config_PowerConfig()
+      ..isPowerSaving = isPowerSaving
+      ..onBatteryShutdownAfterSecs = onBatteryShutdownAfterSecs
+      ..waitBluetoothSecs = waitBluetoothSecs
+      ..sdsSecs = sdsSecs
+      ..lsSecs = lsSecs
+      ..minWakeSecs = minWakeSecs;
 
     final config = pb.Config()..power = powerConfig;
     await setConfig(config);
@@ -2370,30 +2348,26 @@ class ProtocolService {
 
   /// Set display configuration
   Future<void> setDisplayConfig({
-    int? screenOnSecs,
-    int? gpsFormat,
-    int? autoScreenCarouselSecs,
-    bool? flipScreen,
-    pb.Config_DisplayConfig_DisplayUnits? units,
-    pb.Config_DisplayConfig_DisplayMode? displayMode,
-    bool? headingBold,
-    bool? wakeOnTapOrMotion,
+    required int screenOnSecs,
+    required int autoScreenCarouselSecs,
+    required bool flipScreen,
+    required pb.Config_DisplayConfig_DisplayUnits units,
+    required pb.Config_DisplayConfig_DisplayMode displayMode,
+    required bool headingBold,
+    required bool wakeOnTapOrMotion,
+    int gpsFormat = 0,
   }) async {
     _logger.i('Setting display config');
 
-    final displayConfig = pb.Config_DisplayConfig();
-    if (screenOnSecs != null) displayConfig.screenOnSecs = screenOnSecs;
-    if (gpsFormat != null) displayConfig.gpsFormat = gpsFormat;
-    if (autoScreenCarouselSecs != null) {
-      displayConfig.autoScreenCarouselSecs = autoScreenCarouselSecs;
-    }
-    if (flipScreen != null) displayConfig.flipScreen = flipScreen;
-    if (units != null) displayConfig.units = units;
-    if (displayMode != null) displayConfig.displaymode = displayMode;
-    if (headingBold != null) displayConfig.headingBold = headingBold;
-    if (wakeOnTapOrMotion != null) {
-      displayConfig.wakeOnTapOrMotion = wakeOnTapOrMotion;
-    }
+    final displayConfig = pb.Config_DisplayConfig()
+      ..screenOnSecs = screenOnSecs
+      ..gpsFormat = gpsFormat
+      ..autoScreenCarouselSecs = autoScreenCarouselSecs
+      ..flipScreen = flipScreen
+      ..units = units
+      ..displaymode = displayMode
+      ..headingBold = headingBold
+      ..wakeOnTapOrMotion = wakeOnTapOrMotion;
 
     final config = pb.Config()..display = displayConfig;
     await setConfig(config);
@@ -2401,16 +2375,16 @@ class ProtocolService {
 
   /// Set Bluetooth configuration
   Future<void> setBluetoothConfig({
-    bool? enabled,
-    pb.Config_BluetoothConfig_PairingMode? mode,
-    int? fixedPin,
+    required bool enabled,
+    required pb.Config_BluetoothConfig_PairingMode mode,
+    required int fixedPin,
   }) async {
     _logger.i('Setting Bluetooth config');
 
-    final btConfig = pb.Config_BluetoothConfig();
-    if (enabled != null) btConfig.enabled = enabled;
-    if (mode != null) btConfig.mode = mode;
-    if (fixedPin != null) btConfig.fixedPin = fixedPin;
+    final btConfig = pb.Config_BluetoothConfig()
+      ..enabled = enabled
+      ..mode = mode
+      ..fixedPin = fixedPin;
 
     final config = pb.Config()..bluetooth = btConfig;
     await setConfig(config);
@@ -2439,20 +2413,18 @@ class ProtocolService {
 
   /// Set security configuration
   Future<void> setSecurityConfig({
-    bool? isManaged,
-    bool? serialEnabled,
-    bool? debugLogEnabled,
-    bool? adminChannelEnabled,
+    required bool isManaged,
+    required bool serialEnabled,
+    required bool debugLogEnabled,
+    required bool adminChannelEnabled,
   }) async {
     _logger.i('Setting security config');
 
-    final secConfig = pb.Config_SecurityConfig();
-    if (isManaged != null) secConfig.isManaged = isManaged;
-    if (serialEnabled != null) secConfig.serialEnabled = serialEnabled;
-    if (debugLogEnabled != null) secConfig.debugLogApiEnabled = debugLogEnabled;
-    if (adminChannelEnabled != null) {
-      secConfig.adminChannelEnabled = adminChannelEnabled;
-    }
+    final secConfig = pb.Config_SecurityConfig()
+      ..isManaged = isManaged
+      ..serialEnabled = serialEnabled
+      ..debugLogApiEnabled = debugLogEnabled
+      ..adminChannelEnabled = adminChannelEnabled;
 
     final config = pb.Config()..security = secConfig;
     await setConfig(config);

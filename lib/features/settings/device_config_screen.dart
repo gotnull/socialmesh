@@ -73,8 +73,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     try {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.setDeviceConfig(
-        role: _selectedRole,
-        rebroadcastMode: _rebroadcastMode,
+        role: _selectedRole ?? pb.Config_DeviceConfig_Role_.CLIENT,
+        rebroadcastMode:
+            _rebroadcastMode ?? pb.Config_DeviceConfig_RebroadcastMode.ALL,
         serialEnabled: _serialEnabled,
         nodeInfoBroadcastSecs: _nodeInfoBroadcastSecs,
         ledHeartbeatDisabled: _ledHeartbeatDisabled,

@@ -111,7 +111,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
         positionBroadcastSecs: _positionBroadcastSecs,
         positionBroadcastSmartEnabled: _smartBroadcastEnabled,
         fixedPosition: _fixedPosition,
-        gpsMode: _gpsMode,
+        gpsMode: _gpsMode ?? pb.Config_PositionConfig_GpsMode.ENABLED,
         gpsUpdateInterval: _gpsUpdateInterval,
       );
 

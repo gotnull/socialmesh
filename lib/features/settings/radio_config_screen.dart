@@ -72,11 +72,11 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
     try {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.setLoRaConfig(
-        region: _selectedRegion,
-        modemPreset: _selectedModemPreset,
+        region: _selectedRegion ?? pbenum.RegionCode.UNSET_REGION,
+        modemPreset: _selectedModemPreset ?? pb.ModemPreset.LONG_FAST,
         hopLimit: _hopLimit,
         txEnabled: _txEnabled,
-        txPower: _txPower > 0 ? _txPower : null,
+        txPower: _txPower,
       );
 
       if (mounted) {
