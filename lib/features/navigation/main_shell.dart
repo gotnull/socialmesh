@@ -70,11 +70,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     final autoReconnectState = ref.watch(autoReconnectStateProvider);
     final settingsAsync = ref.watch(settingsServiceProvider);
 
-    // Watch the auto-reconnect manager to keep it active
-    ref.watch(autoReconnectManagerProvider);
-
-    // Watch the live activity manager to keep it active (iOS Live Activities)
-    ref.watch(liveActivityManagerProvider);
+    // Auto-reconnect and live activity managers are now watched at app level in main.dart
 
     final isConnected = connectionStateAsync.when(
       data: (state) => state == DeviceConnectionState.connected,

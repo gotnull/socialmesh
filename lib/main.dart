@@ -42,6 +42,11 @@ class _ProtofluffAppState extends ConsumerState<ProtofluffApp> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch auto-reconnect and live activity managers at app level
+    // so they stay active regardless of which screen is shown
+    ref.watch(autoReconnectManagerProvider);
+    ref.watch(liveActivityManagerProvider);
+
     return MaterialApp(
       title: 'Protofluff',
       debugShowCheckedModeBanner: false,
