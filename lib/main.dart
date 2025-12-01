@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/theme.dart';
 import 'providers/app_providers.dart';
+import 'models/mesh_models.dart';
 import 'features/scanner/scanner_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/messaging/messaging_screen.dart';
@@ -17,6 +18,7 @@ import 'features/navigation/main_shell.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/timeline/timeline_screen.dart';
 import 'features/presence/presence_screen.dart';
+import 'features/discovery/node_discovery_overlay.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -105,6 +107,14 @@ class _SplashScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final autoReconnectState = ref.watch(autoReconnectStateProvider);
+    final discoveredNodes = ref.watch(discoveredNodesQueueProvider);
+
+    // Listen for new node discoveries during splash
+    ref.listen<MeshNode?>(nodeDiscoveryNotifierProvider, (previous, next) {
+      if (next != null) {
+        ref.read(discoveredNodesQueueProvider.notifier).addNode(next);
+      }
+    });
 
     String statusText;
     switch (autoReconnectState) {
@@ -120,49 +130,273 @@ class _SplashScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: SafeArea(
+        child: Stack(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: Image.asset(
-                'assets/app_icons/source/protofluff_icon_1024.png',
-                width: 120,
-                height: 120,
+            // Main centered content - unaffected by node cards
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.asset(
+                      'assets/app_icons/source/protofluff_icon_1024.png',
+                      width: 120,
+                      height: 120,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'Protofluff',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Privacy-first mesh social',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppTheme.primaryMagenta,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    statusText,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 32),
-            const Text(
-              'Protofluff',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Privacy-first mesh social',
-              style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
-            ),
-            const SizedBox(height: 48),
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  AppTheme.primaryMagenta,
+            // Node discovery cards - absolutely positioned at bottom
+            if (discoveredNodes.isNotEmpty)
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 24,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: discoveredNodes.take(4).map((entry) {
+                    return _SplashNodeCard(
+                      key: ValueKey(entry.id),
+                      entry: entry,
+                      onDismiss: () {
+                        ref
+                            .read(discoveredNodesQueueProvider.notifier)
+                            .removeNode(entry.id);
+                      },
+                    );
+                  }).toList(),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Animated node card for splash screen
+class _SplashNodeCard extends StatefulWidget {
+  final DiscoveredNodeEntry entry;
+  final VoidCallback onDismiss;
+
+  const _SplashNodeCard({
+    super.key,
+    required this.entry,
+    required this.onDismiss,
+  });
+
+  @override
+  State<_SplashNodeCard> createState() => _SplashNodeCardState();
+}
+
+class _SplashNodeCardState extends State<_SplashNodeCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    _slideAnimation = Tween<double>(
+      begin: 50,
+      end: 0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+
+    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.9,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+
+    _controller.forward();
+
+    // Start fade out after delay
+    Future.delayed(const Duration(milliseconds: 3500), () {
+      if (mounted) {
+        _controller.reverse().then((_) {
+          if (mounted) widget.onDismiss();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final node = widget.entry.node;
+    final longName = node.longName ?? '';
+    final shortName = node.shortName ?? '';
+    final displayName = longName.isNotEmpty
+        ? longName
+        : shortName.isNotEmpty
+        ? shortName
+        : 'Unknown Node';
+    final nodeId = node.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0');
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, _slideAnimation.value),
+          child: Opacity(
+            opacity: _fadeAnimation.value,
+            child: Transform.scale(scale: _scaleAnimation.value, child: child),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppTheme.darkCard.withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-            const SizedBox(height: 16),
-            Text(
-              statusText,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppTheme.textSecondary,
+          ],
+        ),
+        child: Row(
+          children: [
+            // Node icon
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: shortName.isNotEmpty
+                    ? Text(
+                        shortName.substring(0, shortName.length.clamp(0, 2)),
+                        style: const TextStyle(
+                          color: AppTheme.primaryGreen,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Inter',
+                        ),
+                      )
+                    : const Icon(
+                        Icons.person,
+                        color: AppTheme.primaryGreen,
+                        size: 18,
+                      ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Node info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    displayName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Inter',
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    '!$nodeId',
+                    style: const TextStyle(
+                      color: AppTheme.textTertiary,
+                      fontSize: 11,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Discovered badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.radar, size: 12, color: AppTheme.primaryGreen),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Found',
+                    style: TextStyle(
+                      color: AppTheme.primaryGreen,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
