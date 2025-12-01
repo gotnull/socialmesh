@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/subscription_providers.dart';
 import '../../services/ifttt/ifttt_service.dart';
-import 'premium_widgets.dart';
 
 /// Screen for configuring IFTTT Webhooks integration
 class IftttConfigScreen extends ConsumerStatefulWidget {
@@ -169,63 +166,47 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hasWebhooks = ref.watch(
-      hasFeatureProvider(PremiumFeature.webhookIntegrations),
-    );
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('IFTTT Integration'),
         actions: [
-          if (hasWebhooks)
-            TextButton(onPressed: _saveConfig, child: const Text('Save')),
+          TextButton(onPressed: _saveConfig, child: const Text('Save')),
         ],
       ),
-      body: hasWebhooks
-          ? _buildContent(theme)
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: PremiumFeatureGate(
-                feature: PremiumFeature.webhookIntegrations,
-                child: const SizedBox.shrink(),
-              ),
-            ),
-    );
-  }
-
-  Widget _buildContent(ThemeData theme) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildEnableCard(theme),
-        const SizedBox(height: 24),
-        if (_enabled) ...[
-          _SectionHeader(title: 'WEBHOOK'),
-          const SizedBox(height: 8),
-          _buildWebhookSettings(theme),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildEnableCard(theme),
           const SizedBox(height: 24),
-          _SectionHeader(title: 'MESSAGE TRIGGERS'),
-          const SizedBox(height: 8),
-          _buildMessageTriggers(theme),
-          const SizedBox(height: 24),
-          _SectionHeader(title: 'NODE STATUS TRIGGERS'),
-          const SizedBox(height: 8),
-          _buildNodeTriggers(theme),
-          const SizedBox(height: 24),
-          _SectionHeader(title: 'TELEMETRY TRIGGERS'),
-          const SizedBox(height: 8),
-          _buildTelemetryTriggers(theme),
-          const SizedBox(height: 24),
-          _SectionHeader(title: 'GEOFENCING'),
-          const SizedBox(height: 8),
-          _buildGeofenceSettings(theme),
-          const SizedBox(height: 24),
+          if (_enabled) ...[
+            _SectionHeader(title: 'WEBHOOK'),
+            const SizedBox(height: 8),
+            _buildWebhookSettings(theme),
+            const SizedBox(height: 24),
+            _SectionHeader(title: 'MESSAGE TRIGGERS'),
+            const SizedBox(height: 8),
+            _buildMessageTriggers(theme),
+            const SizedBox(height: 24),
+            _SectionHeader(title: 'NODE STATUS TRIGGERS'),
+            const SizedBox(height: 8),
+            _buildNodeTriggers(theme),
+            const SizedBox(height: 24),
+            _SectionHeader(title: 'TELEMETRY TRIGGERS'),
+            const SizedBox(height: 8),
+            _buildTelemetryTriggers(theme),
+            const SizedBox(height: 24),
+            _SectionHeader(title: 'GEOFENCING'),
+            const SizedBox(height: 8),
+            _buildGeofenceSettings(theme),
+            const SizedBox(height: 24),
+          ],
+          _buildInfoCard(theme),
+          const SizedBox(height: 16),
+          _buildEventNamesCard(theme),
+          const SizedBox(height: 32),
         ],
-        _buildInfoCard(theme),
-        const SizedBox(height: 16),
-        _buildEventNamesCard(theme),
-        const SizedBox(height: 32),
-      ],
+      ),
     );
   }
 
