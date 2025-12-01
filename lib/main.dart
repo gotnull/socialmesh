@@ -90,6 +90,8 @@ class _AppRouter extends ConsumerWidget {
         return const _ErrorScreen();
       case AppInitState.needsOnboarding:
         return const OnboardingScreen();
+      case AppInitState.needsScanner:
+        return const ScannerScreen();
       case AppInitState.initialized:
         return const MainShell();
     }

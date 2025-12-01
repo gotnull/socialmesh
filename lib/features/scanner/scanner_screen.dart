@@ -39,6 +39,17 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   }
 
   Future<void> _tryAutoReconnect() async {
+    // Check if auto-reconnect already failed (e.g., user cancelled PIN during app init)
+    // In that case, don't retry - just show the scanner
+    final autoReconnectState = ref.read(autoReconnectStateProvider);
+    if (autoReconnectState == AutoReconnectState.failed) {
+      debugPrint(
+        '🔄 Auto-reconnect: skipping - already failed during app init',
+      );
+      _startScan();
+      return;
+    }
+
     // Wait for settings service to initialize
     final SettingsService settingsService;
     try {
@@ -213,6 +224,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       debugPrint('🟡 Scanner screen - protocol instance: ${protocol.hashCode}');
       await protocol.start();
 
+      // Verify protocol actually received configuration from device
+      // If PIN was cancelled or authentication failed, myNodeNum will be null
+      if (protocol.myNodeNum == null) {
+        debugPrint(
+          '🔴 Scanner: No config received - authentication may have failed',
+        );
+        await transport.disconnect();
+        throw Exception(
+          'Connection failed - please try again and enter the PIN when prompted',
+        );
+      }
+
       // Start phone GPS location updates (like iOS app does)
       // This sends phone GPS to mesh for devices without GPS hardware
       final locationService = ref.read(locationServiceProvider);
@@ -234,11 +257,19 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       if (!mounted) return;
 
+      // Check current app state - if we're shown from needsScanner, update provider
+      final appState = ref.read(appInitProvider);
+      final isFromNeedsScanner = appState == AppInitState.needsScanner;
+
       // Check if region is unset - need to configure before using
       final region = protocol.currentRegion;
       if (region == null || region.value == 0) {
         // Navigate to region selection (initial setup mode)
         Navigator.of(context).pushReplacementNamed('/region-setup');
+      } else if (isFromNeedsScanner) {
+        // We're at the root level from needsScanner - update app state to initialized
+        // This will cause _AppRouter to show MainShell
+        ref.read(appInitProvider.notifier).setInitialized();
       } else if (!widget.isInline) {
         // Navigate to main app (only if not inline - inline will auto-rebuild)
         Navigator.of(context).pushReplacementNamed('/main');
@@ -297,26 +328,22 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         actions: widget.isOnboarding
             ? null
             : [
-                IconButton(
-                  icon: Icon(
-                    Icons.bluetooth,
-                    color: _connecting
-                        ? AppTheme.textTertiary
-                        : AppTheme.textSecondary,
+                // Only show settings if we have a verified connection
+                // (Don't show settings from scanner - device config requires connection)
+                if (_connecting)
+                  const SizedBox(
+                    width: 48,
+                    child: Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppTheme.textTertiary,
+                        ),
+                      ),
+                    ),
                   ),
-                  onPressed: _connecting ? null : () {},
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.settings,
-                    color: _connecting ? AppTheme.textTertiary : Colors.white,
-                  ),
-                  onPressed: _connecting
-                      ? null
-                      : () {
-                          Navigator.of(context).pushNamed('/settings');
-                        },
-                ),
               ],
       ),
       body: _connecting

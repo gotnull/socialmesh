@@ -370,7 +370,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
             decoration: InputDecoration(
               labelText: 'Channel Name',
               labelStyle: const TextStyle(color: AppTheme.textSecondary),
-              hintText: 'e.g., Family, Hiking',
+              hintText: 'e.g., Family, Friends, Hiking',
               hintStyle: TextStyle(
                 color: AppTheme.textSecondary.withAlpha(128),
               ),

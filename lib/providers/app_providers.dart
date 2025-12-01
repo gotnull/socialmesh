@@ -36,6 +36,7 @@ enum AppInitState {
   initializing,
   initialized,
   needsOnboarding,
+  needsScanner, // Auto-reconnect failed or no saved device
   error,
 }
 
@@ -43,6 +44,16 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
   final Ref _ref;
 
   AppInitNotifier(this._ref) : super(AppInitState.uninitialized);
+
+  /// Manually set state to initialized (e.g., after successful connection from scanner)
+  void setInitialized() {
+    state = AppInitState.initialized;
+  }
+
+  /// Set state to needsScanner (e.g., user skipped auto-reconnect)
+  void setNeedsScanner() {
+    state = AppInitState.needsScanner;
+  }
 
   Future<void> initialize() async {
     if (state == AppInitState.initializing) return;
@@ -102,9 +113,26 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
                 AutoReconnectState.connecting;
             await transport.connect(lastDevice);
 
+            // Verify connection was successful at BLE level
+            if (transport.state != DeviceConnectionState.connected) {
+              throw Exception('Connection failed');
+            }
+
             // Start protocol service
             final protocol = _ref.read(protocolServiceProvider);
             await protocol.start();
+
+            // Verify protocol actually received configuration from device
+            // If PIN was cancelled or authentication failed, myNodeNum will be null
+            if (protocol.myNodeNum == null) {
+              debugPrint(
+                'Auto-reconnect: No config received - authentication may have failed',
+              );
+              await transport.disconnect();
+              throw Exception(
+                'Authentication failed - no configuration received',
+              );
+            }
 
             // Start phone GPS location updates
             final locationService = _ref.read(locationServiceProvider);
@@ -114,13 +142,19 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
             _ref.read(autoReconnectStateProvider.notifier).state =
                 AutoReconnectState.success;
           } else {
+            // Device not found during scan - go to scanner
             _ref.read(autoReconnectStateProvider.notifier).state =
                 AutoReconnectState.idle;
+            state = AppInitState.needsScanner;
+            return;
           }
         } catch (e) {
           debugPrint('Auto-reconnect failed: $e');
           _ref.read(autoReconnectStateProvider.notifier).state =
               AutoReconnectState.failed;
+          // Connection failed (user cancelled PIN, timeout, etc.) - go to scanner
+          state = AppInitState.needsScanner;
+          return;
         }
       }
 
