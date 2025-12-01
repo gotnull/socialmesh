@@ -107,19 +107,10 @@ class _DashboardWidgetState extends State<DashboardWidget>
               ? Colors
                     .transparent // Border handled by CustomPaint
               : isFavorite
-              ? AppTheme.warningYellow.withValues(alpha: 0.4)
+              ? AppTheme.warningYellow
               : AppTheme.darkBorder,
-          width: isFavorite ? 1.5 : 1,
+          width: 1,
         ),
-        boxShadow: isFavorite && !widget.isEditMode
-            ? [
-                BoxShadow(
-                  color: AppTheme.warningYellow.withValues(alpha: 0.08),
-                  blurRadius: 6,
-                  spreadRadius: 1,
-                ),
-              ]
-            : null,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(15),
