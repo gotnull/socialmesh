@@ -1390,6 +1390,24 @@ class _MessageBubble extends StatelessWidget {
     return colors[message.from % colors.length];
   }
 
+  /// Get a display-safe short name (replaces unrenderable chars with node ID hex)
+  String _getSafeShortName() {
+    // Filter to only printable ASCII characters (space through tilde)
+    final sanitized = senderShortName.replaceAll(RegExp(r'[^\x20-\x7E]'), '');
+    if (sanitized.isEmpty) {
+      // Fallback to last 4 hex digits of node number
+      return message.from
+          .toRadixString(16)
+          .padLeft(4, '0')
+          .substring(
+            message.from.toRadixString(16).length > 4
+                ? message.from.toRadixString(16).length - 4
+                : 0,
+          );
+    }
+    return sanitized.length > 4 ? sanitized.substring(0, 4) : sanitized;
+  }
+
   @override
   Widget build(BuildContext context) {
     final timeFormat = DateFormat('h:mm a');
@@ -1576,9 +1594,7 @@ class _MessageBubble extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  senderShortName.length > 4
-                      ? senderShortName.substring(0, 4)
-                      : senderShortName,
+                  _getSafeShortName(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
