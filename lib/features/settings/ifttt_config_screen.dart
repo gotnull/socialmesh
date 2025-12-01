@@ -250,9 +250,13 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             TextField(
               controller: _webhookKeyController,
               obscureText: _obscureKey,
+              enableInteractiveSelection: true,
+              autocorrect: false,
+              enableSuggestions: false,
               decoration: InputDecoration(
                 labelText: 'Webhook Key',
-                hintText: 'Your IFTTT Webhook key',
+                hintText: 'e.g., cMcOnB_zaJTrZwsVvzVTHY',
+                helperText: 'Copy from IFTTT Webhooks URL after /use/',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.key),
                 suffixIcon: IconButton(
