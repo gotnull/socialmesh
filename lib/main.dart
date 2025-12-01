@@ -102,11 +102,39 @@ class _AppRouter extends ConsumerWidget {
 }
 
 /// Splash screen shown during app initialization
-class _SplashScreen extends ConsumerWidget {
+class _SplashScreen extends ConsumerStatefulWidget {
   const _SplashScreen();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends ConsumerState<_SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final autoReconnectState = ref.watch(autoReconnectStateProvider);
     final connectionState = ref.watch(connectionStateProvider);
     final discoveredNodes = ref.watch(discoveredNodesQueueProvider);
@@ -118,31 +146,8 @@ class _SplashScreen extends ConsumerWidget {
       }
     });
 
-    // Determine status text based on current state
-    String statusText;
-    switch (autoReconnectState) {
-      case AutoReconnectState.idle:
-        statusText = 'Initializing...';
-        break;
-      case AutoReconnectState.scanning:
-        statusText = 'Scanning for device...';
-        break;
-      case AutoReconnectState.connecting:
-        // Check if actually connected but still configuring
-        final isConnected =
-            connectionState.whenOrNull(
-              data: (state) => state == DeviceConnectionState.connected,
-            ) ??
-            false;
-        statusText = isConnected ? 'Configuring device...' : 'Connecting...';
-        break;
-      case AutoReconnectState.success:
-        statusText = 'Connected!';
-        break;
-      case AutoReconnectState.failed:
-        statusText = 'Connection failed';
-        break;
-    }
+    // Determine status info based on current state
+    final statusInfo = _getStatusInfo(autoReconnectState, connectionState);
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
@@ -180,24 +185,8 @@ class _SplashScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 48),
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppTheme.primaryMagenta,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    statusText,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
+                  // Animated status indicator
+                  _buildStatusIndicator(statusInfo),
                 ],
               ),
             ),
@@ -225,6 +214,209 @@ class _SplashScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  _StatusInfo _getStatusInfo(
+    AutoReconnectState autoState,
+    AsyncValue<DeviceConnectionState> connState,
+  ) {
+    switch (autoState) {
+      case AutoReconnectState.idle:
+        return _StatusInfo(
+          text: 'Initializing',
+          icon: Icons.hourglass_empty_rounded,
+          color: AppTheme.textSecondary,
+          showSpinner: true,
+        );
+      case AutoReconnectState.scanning:
+        return _StatusInfo(
+          text: 'Scanning for device',
+          icon: Icons.bluetooth_searching_rounded,
+          color: AppTheme.primaryBlue,
+          showSpinner: true,
+        );
+      case AutoReconnectState.connecting:
+        final isConnected =
+            connState.whenOrNull(
+              data: (state) => state == DeviceConnectionState.connected,
+            ) ??
+            false;
+        if (isConnected) {
+          return _StatusInfo(
+            text: 'Configuring device',
+            icon: Icons.settings_rounded,
+            color: AppTheme.primaryGreen,
+            showSpinner: true,
+          );
+        }
+        return _StatusInfo(
+          text: 'Connecting',
+          icon: Icons.bluetooth_connected_rounded,
+          color: AppTheme.primaryMagenta,
+          showSpinner: true,
+        );
+      case AutoReconnectState.success:
+        return _StatusInfo(
+          text: 'Connected',
+          icon: Icons.check_circle_rounded,
+          color: AppTheme.primaryGreen,
+          showSpinner: false,
+        );
+      case AutoReconnectState.failed:
+        return _StatusInfo(
+          text: 'Connection failed',
+          icon: Icons.error_outline_rounded,
+          color: Colors.redAccent,
+          showSpinner: false,
+        );
+    }
+  }
+
+  Widget _buildStatusIndicator(_StatusInfo info) {
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon with optional spinner ring
+            SizedBox(
+              width: 48,
+              height: 48,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Spinner ring behind icon
+                  if (info.showSpinner)
+                    SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          info.color.withValues(alpha: 0.4),
+                        ),
+                      ),
+                    ),
+                  // Pulsing icon
+                  Transform.scale(
+                    scale: info.showSpinner ? _pulseAnimation.value : 1.0,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Icon(
+                        info.icon,
+                        key: ValueKey(info.icon),
+                        color: info.color,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Animated text with dots
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Row(
+                key: ValueKey(info.text),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    info.text,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: info.color,
+                      fontFamily: 'Inter',
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  if (info.showSpinner) _AnimatedDots(color: info.color),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _StatusInfo {
+  final String text;
+  final IconData icon;
+  final Color color;
+  final bool showSpinner;
+
+  const _StatusInfo({
+    required this.text,
+    required this.icon,
+    required this.color,
+    required this.showSpinner,
+  });
+}
+
+/// Animated dots that cycle through visibility
+class _AnimatedDots extends StatefulWidget {
+  final Color color;
+
+  const _AnimatedDots({required this.color});
+
+  @override
+  State<_AnimatedDots> createState() => _AnimatedDotsState();
+}
+
+class _AnimatedDotsState extends State<_AnimatedDots>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final progress = _controller.value;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(3, (index) {
+            // Stagger the animation for each dot
+            final dotProgress = ((progress * 3) - index).clamp(0.0, 1.0);
+            final opacity = dotProgress < 0.5
+                ? dotProgress * 2
+                : 2 - (dotProgress * 2);
+            return Padding(
+              padding: const EdgeInsets.only(left: 1),
+              child: Text(
+                '.',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: widget.color.withValues(
+                    alpha: opacity.clamp(0.3, 1.0),
+                  ),
+                ),
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 }
