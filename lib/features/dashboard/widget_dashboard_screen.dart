@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/transport.dart' as transport;
@@ -12,6 +13,8 @@ import 'widgets/nearby_nodes_widget.dart';
 import 'widgets/battery_status_widget.dart';
 import 'widgets/quick_actions_widget.dart';
 import 'widgets/signal_strength_widget.dart';
+import 'widgets/channel_activity_widget.dart';
+import 'widgets/mesh_health_widget.dart';
 
 /// Customizable widget dashboard with drag/reorder/favorites
 class WidgetDashboardScreen extends ConsumerStatefulWidget {
@@ -89,12 +92,6 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                   ],
                 ),
               ),
-            // Edit button
-            IconButton(
-              icon: const Icon(Icons.edit_outlined, color: Colors.white),
-              onPressed: () => setState(() => _editMode = true),
-              tooltip: 'Edit Dashboard',
-            ),
             // Device button
             _DeviceButton(
               isConnected: isConnected,
@@ -133,6 +130,13 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
           : isReconnecting
           ? _buildReconnectingState(context, autoReconnectState)
           : _buildDashboard(context, widgetConfigs),
+      floatingActionButton: !_editMode && isConnected
+          ? FloatingActionButton(
+              onPressed: () => setState(() => _editMode = true),
+              backgroundColor: AppTheme.primaryGreen,
+              child: const Icon(Icons.edit, color: Colors.black),
+            )
+          : null,
     );
   }
 
@@ -249,6 +253,21 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
     return ReorderableListView.builder(
       padding: const EdgeInsets.all(16),
       buildDefaultDragHandles: false,
+      proxyDecorator: (child, index, animation) {
+        return AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) {
+            final elevation = lerpDouble(0, 8, animation.value) ?? 0;
+            return Material(
+              elevation: elevation,
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+              child: child,
+            );
+          },
+          child: child,
+        );
+      },
       itemCount: enabledWidgets.length,
       onReorder: (oldIndex, newIndex) {
         ref.read(dashboardWidgetsProvider.notifier).reorder(oldIndex, newIndex);
@@ -314,17 +333,13 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
         return const BatteryStatusContent();
       case DashboardWidgetType.quickCompose:
         return const QuickActionsContent();
+      case DashboardWidgetType.channelActivity:
+        return const ChannelActivityContent();
+      case DashboardWidgetType.meshHealth:
+        return const MeshHealthContent();
       case DashboardWidgetType.signalStrength:
         // Handled separately in _buildWidgetCard
         return const SizedBox.shrink();
-      default:
-        final info = WidgetRegistry.getInfo(type);
-        return Center(
-          child: Text(
-            '${info.name} coming soon',
-            style: const TextStyle(color: AppTheme.textTertiary),
-          ),
-        );
     }
   }
 
@@ -384,12 +399,6 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
   }
 
   void _showAddWidgetSheet(BuildContext context) {
-    final currentConfigs = ref.read(dashboardWidgetsProvider);
-    final enabledTypes = currentConfigs
-        .where((c) => c.isVisible)
-        .map((c) => c.type)
-        .toSet();
-
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.darkSurface,
@@ -404,11 +413,8 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
         expand: false,
         builder: (context, scrollController) => _AddWidgetSheet(
           scrollController: scrollController,
-          enabledTypes: enabledTypes,
-          onAdd: (type) {
-            ref.read(dashboardWidgetsProvider.notifier).addWidget(type);
-            Navigator.pop(context);
-          },
+          widgetsNotifier: ref.read(dashboardWidgetsProvider.notifier),
+          widgetsProvider: dashboardWidgetsProvider,
         ),
       ),
     );
@@ -482,20 +488,30 @@ class _DeviceButton extends StatelessWidget {
   }
 }
 
-/// Bottom sheet to add new widgets
-class _AddWidgetSheet extends StatelessWidget {
+/// Bottom sheet to add/remove widgets - stays open for multiple operations
+class _AddWidgetSheet extends ConsumerWidget {
   final ScrollController scrollController;
-  final Set<DashboardWidgetType> enabledTypes;
-  final void Function(DashboardWidgetType) onAdd;
+  final DashboardWidgetsNotifier widgetsNotifier;
+  final StateNotifierProvider<
+    DashboardWidgetsNotifier,
+    List<DashboardWidgetConfig>
+  >
+  widgetsProvider;
 
   const _AddWidgetSheet({
     required this.scrollController,
-    required this.enabledTypes,
-    required this.onAdd,
+    required this.widgetsNotifier,
+    required this.widgetsProvider,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentConfigs = ref.watch(widgetsProvider);
+    final enabledTypes = currentConfigs
+        .where((c) => c.isVisible)
+        .map((c) => c.type)
+        .toSet();
+
     return Column(
       children: [
         // Handle
@@ -510,13 +526,14 @@ class _AddWidgetSheet extends StatelessWidget {
             ),
           ),
         ),
-        // Title
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
+        // Header with title and done button
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Add Widget',
+              const Text(
+                'Manage Widgets',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -524,7 +541,29 @@ class _AddWidgetSheet extends StatelessWidget {
                   fontFamily: 'Inter',
                 ),
               ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Done',
+                  style: TextStyle(
+                    color: AppTheme.primaryGreen,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
             ],
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Tap to add or remove widgets from your dashboard',
+            style: TextStyle(
+              fontSize: 13,
+              color: AppTheme.textSecondary,
+              fontFamily: 'Inter',
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -543,7 +582,17 @@ class _AddWidgetSheet extends StatelessWidget {
                 child: _WidgetOption(
                   type: type,
                   isAdded: isAdded,
-                  onTap: isAdded ? null : () => onAdd(type),
+                  onTap: () {
+                    if (isAdded) {
+                      // Find the config and remove it
+                      final config = currentConfigs.firstWhere(
+                        (c) => c.type == type && c.isVisible,
+                      );
+                      widgetsNotifier.removeWidget(config.id);
+                    } else {
+                      widgetsNotifier.addWidget(type);
+                    }
+                  },
                 ),
               );
             },
@@ -557,7 +606,7 @@ class _AddWidgetSheet extends StatelessWidget {
 class _WidgetOption extends StatelessWidget {
   final DashboardWidgetType type;
   final bool isAdded;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
   const _WidgetOption({
     required this.type,
@@ -591,10 +640,18 @@ class _WidgetOption extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                  color: isAdded
+                      ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                      : AppTheme.darkSurface,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(info.icon, color: AppTheme.primaryGreen, size: 22),
+                child: Icon(
+                  info.icon,
+                  color: isAdded
+                      ? AppTheme.primaryGreen
+                      : AppTheme.textSecondary,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -603,10 +660,10 @@ class _WidgetOption extends StatelessWidget {
                   children: [
                     Text(
                       info.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: isAdded ? Colors.white : AppTheme.textSecondary,
                         fontFamily: 'Inter',
                       ),
                     ),
@@ -622,32 +679,20 @@ class _WidgetOption extends StatelessWidget {
                   ],
                 ),
               ),
-              if (isAdded)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text(
-                    'Added',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.primaryGreen,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                )
-              else
-                Icon(
-                  Icons.add_circle_outline,
-                  color: AppTheme.primaryGreen,
-                  size: 24,
+              // Toggle switch style indicator
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: isAdded ? AppTheme.primaryGreen : AppTheme.darkBorder,
+                  shape: BoxShape.circle,
                 ),
+                child: Icon(
+                  isAdded ? Icons.check : Icons.add,
+                  color: isAdded ? Colors.black : AppTheme.textTertiary,
+                  size: 18,
+                ),
+              ),
             ],
           ),
         ),
