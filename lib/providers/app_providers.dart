@@ -1258,6 +1258,10 @@ class NodeDiscoveryNotifier extends StateNotifier<MeshNode?> {
   NodeDiscoveryNotifier(this._notificationService, this._ref) : super(null);
 
   Future<void> notifyNewNode(MeshNode node) async {
+    // Only show notifications when app is fully initialized (not during startup/connecting)
+    final appState = _ref.read(appInitProvider);
+    if (appState != AppInitState.initialized) return;
+
     // Check master notification toggle and new node setting
     final settingsAsync = _ref.read(settingsServiceProvider);
     final settings = settingsAsync.valueOrNull;
