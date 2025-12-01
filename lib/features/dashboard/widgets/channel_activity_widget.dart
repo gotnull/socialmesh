@@ -76,29 +76,55 @@ class _ChannelTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
-          // Channel indicator
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: isPrimary
-                  ? AppTheme.primaryGreen.withValues(alpha: 0.15)
-                  : AppTheme.darkBackground,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: Text(
-                '$index',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+          // Channel indicator with activity dot
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
                   color: isPrimary
-                      ? AppTheme.primaryGreen
-                      : AppTheme.textSecondary,
-                  fontFamily: 'Inter',
+                      ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                      : AppTheme.darkBackground,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(
+                    '$index',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: isPrimary
+                          ? AppTheme.primaryGreen
+                          : AppTheme.textSecondary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
                 ),
               ),
-            ),
+              // Activity indicator at top-right
+              if (messageCount > 0)
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreen,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppTheme.darkCard, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primaryGreen.withValues(alpha: 0.5),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(width: 10),
           // Channel info
@@ -160,22 +186,6 @@ class _ChannelTile extends StatelessWidget {
               ],
             ),
           ),
-          // Activity indicator
-          if (messageCount > 0)
-            Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryGreen,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.5),
-                    blurRadius: 4,
-                  ),
-                ],
-              ),
-            ),
         ],
       ),
     );

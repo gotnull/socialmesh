@@ -278,43 +278,44 @@ class WidgetEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 32,
-            color: AppTheme.textTertiary.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            message,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppTheme.textTertiary,
-              fontFamily: 'Inter',
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 32,
+              color: AppTheme.textTertiary.withValues(alpha: 0.5),
             ),
-            textAlign: TextAlign.center,
-          ),
-          if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 12),
-            TextButton(
-              onPressed: onAction,
-              child: Text(
-                actionLabel!,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.primaryGreen,
-                  fontFamily: 'Inter',
+            Text(
+              message,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppTheme.textTertiary,
+                fontFamily: 'Inter',
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: onAction,
+                child: Text(
+                  actionLabel!,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.primaryGreen,
+                    fontFamily: 'Inter',
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

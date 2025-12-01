@@ -865,11 +865,14 @@ class _NodeDetailsSheet extends ConsumerWidget {
 
   void _toggleFavorite(BuildContext context, WidgetRef ref) async {
     final protocol = ref.read(protocolServiceProvider);
+    final nodesNotifier = ref.read(nodesProvider.notifier);
     Navigator.pop(context);
 
     try {
       if (node.isFavorite) {
         await protocol.removeFavoriteNode(node.nodeNum);
+        // Update local state
+        nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: false));
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -881,6 +884,8 @@ class _NodeDetailsSheet extends ConsumerWidget {
         }
       } else {
         await protocol.setFavoriteNode(node.nodeNum);
+        // Update local state
+        nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: true));
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -902,6 +907,164 @@ class _NodeDetailsSheet extends ConsumerWidget {
         );
       }
     }
+  }
+
+  void _showRebootConfirmation(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.restart_alt, color: AppTheme.warningYellow, size: 24),
+            SizedBox(width: 12),
+            Text(
+              'Reboot Device',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'This will reboot your Meshtastic device. The app will automatically reconnect once the device restarts.',
+          style: TextStyle(color: AppTheme.textSecondary, fontFamily: 'Inter'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              Navigator.pop(context);
+
+              final protocol = ref.read(protocolServiceProvider);
+
+              try {
+                await protocol.reboot();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Device is rebooting...'),
+                      backgroundColor: AppTheme.darkCard,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to reboot: $e'),
+                      backgroundColor: AppTheme.errorRed,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.warningYellow,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Reboot',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showShutdownConfirmation(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.power_settings_new, color: AppTheme.errorRed, size: 24),
+            SizedBox(width: 12),
+            Text(
+              'Shutdown Device',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'This will turn off your Meshtastic device. You will need to physically power it back on to reconnect.',
+          style: TextStyle(color: AppTheme.textSecondary, fontFamily: 'Inter'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              Navigator.pop(context);
+
+              final protocol = ref.read(protocolServiceProvider);
+
+              try {
+                await protocol.shutdown();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Device is shutting down...'),
+                      backgroundColor: AppTheme.darkCard,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to shutdown: $e'),
+                      backgroundColor: AppTheme.errorRed,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorRed,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Shutdown',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _removeNode(BuildContext context, WidgetRef ref) {
@@ -1433,9 +1596,11 @@ class _NodeDetailsSheet extends ConsumerWidget {
               ],
             )
           else
-            Row(
+            Column(
               children: [
-                Expanded(
+                // Primary action
+                SizedBox(
+                  width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () => _showNodeQrCode(context),
                     style: ElevatedButton.styleFrom(
@@ -1456,6 +1621,64 @@ class _NodeDetailsSheet extends ConsumerWidget {
                       ),
                     ),
                   ),
+                ),
+                const SizedBox(height: 12),
+                // Device power controls
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showRebootConfirmation(context, ref),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.warningYellow,
+                          side: BorderSide(
+                            color: AppTheme.warningYellow.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: const Icon(Icons.restart_alt, size: 20),
+                        label: const Text(
+                          'Reboot',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () =>
+                            _showShutdownConfirmation(context, ref),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.errorRed,
+                          side: BorderSide(
+                            color: AppTheme.errorRed.withValues(alpha: 0.5),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: const Icon(Icons.power_settings_new, size: 20),
+                        label: const Text(
+                          'Shutdown',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

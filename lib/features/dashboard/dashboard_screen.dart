@@ -88,7 +88,7 @@ class DashboardScreen extends ConsumerWidget {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
+            icon: const Icon(Icons.settings_outlined, color: Colors.white),
             onPressed: () {
               Navigator.of(context).pushNamed('/settings');
             },
