@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
 import '../../../core/transport.dart';
+import '../../../models/mesh_models.dart';
+
+/// Broadcast address for mesh-wide messages
+const int broadcastAddress = 0xFFFFFFFF;
 
 /// Quick Actions Widget - Common mesh actions at a glance
 class QuickActionsContent extends ConsumerWidget {
@@ -26,7 +30,7 @@ class QuickActionsContent extends ConsumerWidget {
             icon: Icons.send,
             label: 'Quick\nMessage',
             enabled: isConnected,
-            onTap: () => _sendQuickMessage(context),
+            onTap: () => _showQuickMessageDialog(context, ref),
           ),
           _ActionButton(
             icon: Icons.location_on,
@@ -35,10 +39,10 @@ class QuickActionsContent extends ConsumerWidget {
             onTap: () => _shareLocation(context, ref),
           ),
           _ActionButton(
-            icon: Icons.notifications,
+            icon: Icons.route,
             label: 'Traceroute',
             enabled: isConnected,
-            onTap: () => _sendTraceroute(context),
+            onTap: () => _showTracerouteDialog(context, ref),
           ),
           _ActionButton(
             icon: Icons.refresh,
@@ -51,42 +55,86 @@ class QuickActionsContent extends ConsumerWidget {
     );
   }
 
-  void _sendQuickMessage(BuildContext context) {
-    _showQuickMessageDialog(context);
-  }
-
-  void _shareLocation(BuildContext context, WidgetRef ref) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Sharing current location...'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _sendTraceroute(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Select a node for traceroute'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _requestPositions(BuildContext context, WidgetRef ref) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Requesting positions from nearby nodes...'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _showQuickMessageDialog(BuildContext context) {
+  void _showQuickMessageDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (context) => const _QuickMessageDialog(),
+      builder: (context) => _QuickMessageDialog(ref: ref),
     );
+  }
+
+  void _shareLocation(BuildContext context, WidgetRef ref) async {
+    try {
+      final locationService = ref.read(locationServiceProvider);
+      await locationService.sendPositionOnce();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location shared with mesh'),
+            backgroundColor: AppTheme.primaryGreen,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to share location: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showTracerouteDialog(BuildContext context, WidgetRef ref) {
+    final nodes = ref.read(nodesProvider);
+    final myNodeNum = ref.read(myNodeNumProvider);
+
+    // Filter out own node
+    final otherNodes = nodes.values
+        .where((n) => n.nodeNum != myNodeNum)
+        .toList();
+
+    if (otherNodes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No other nodes available for traceroute'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => _TracerouteDialog(nodes: otherNodes, ref: ref),
+    );
+  }
+
+  void _requestPositions(BuildContext context, WidgetRef ref) async {
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      await protocol.requestAllPositions();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Position requests sent to all nodes'),
+            backgroundColor: AppTheme.primaryGreen,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to request positions: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    }
   }
 }
 
@@ -151,7 +199,9 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _QuickMessageDialog extends StatefulWidget {
-  const _QuickMessageDialog();
+  final WidgetRef ref;
+
+  const _QuickMessageDialog({required this.ref});
 
   @override
   State<_QuickMessageDialog> createState() => _QuickMessageDialogState();
@@ -160,6 +210,7 @@ class _QuickMessageDialog extends StatefulWidget {
 class _QuickMessageDialogState extends State<_QuickMessageDialog> {
   final _controller = TextEditingController();
   int _selectedPreset = -1;
+  bool _isSending = false;
 
   static const _presets = [
     'On my way',
@@ -176,13 +227,51 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
     super.dispose();
   }
 
+  Future<void> _sendMessage() async {
+    if (_controller.text.isEmpty) return;
+
+    setState(() => _isSending = true);
+
+    try {
+      final protocol = widget.ref.read(protocolServiceProvider);
+      await protocol.sendMessage(
+        text: _controller.text,
+        to: broadcastAddress,
+        channel: 0,
+        wantAck: true,
+        messageId: 'quick_${DateTime.now().millisecondsSinceEpoch}',
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sent: ${_controller.text}'),
+            backgroundColor: AppTheme.primaryGreen,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isSending = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to send: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: AppTheme.darkSurface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: const Text(
-        'Quick Message',
+        'Quick Broadcast',
         style: TextStyle(
           color: Colors.white,
           fontSize: 18,
@@ -194,6 +283,15 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Text(
+            'Send to all nodes on primary channel',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppTheme.textSecondary,
+              fontFamily: 'Inter',
+            ),
+          ),
+          const SizedBox(height: 12),
           Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -271,12 +369,13 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
               ),
             ),
             maxLength: 200,
+            onChanged: (_) => setState(() {}),
           ),
         ],
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: _isSending ? null : () => Navigator.pop(context),
           child: Text(
             'Cancel',
             style: TextStyle(
@@ -286,16 +385,8 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
           ),
         ),
         ElevatedButton(
-          onPressed: _controller.text.isNotEmpty
-              ? () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Sent: ${_controller.text}'),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
+          onPressed: _controller.text.isNotEmpty && !_isSending
+              ? _sendMessage
               : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.primaryGreen,
@@ -304,10 +395,255 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: const Text(
-            'Send',
-            style: TextStyle(fontWeight: FontWeight.w600, fontFamily: 'Inter'),
+          child: _isSending
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.black,
+                  ),
+                )
+              : const Text(
+                  'Send',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TracerouteDialog extends StatefulWidget {
+  final List<MeshNode> nodes;
+  final WidgetRef ref;
+
+  const _TracerouteDialog({required this.nodes, required this.ref});
+
+  @override
+  State<_TracerouteDialog> createState() => _TracerouteDialogState();
+}
+
+class _TracerouteDialogState extends State<_TracerouteDialog> {
+  int? _selectedNodeNum;
+  bool _isSending = false;
+
+  Future<void> _sendTraceroute() async {
+    if (_selectedNodeNum == null) return;
+
+    setState(() => _isSending = true);
+
+    try {
+      final protocol = widget.ref.read(protocolServiceProvider);
+      await protocol.sendTraceroute(_selectedNodeNum!);
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Traceroute sent - check messages for response'),
+            backgroundColor: AppTheme.primaryGreen,
+            duration: Duration(seconds: 3),
           ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isSending = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to send traceroute: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppTheme.darkSurface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text(
+        'Traceroute',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'Inter',
+        ),
+      ),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Select a node to trace the route to:',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppTheme.textSecondary,
+                fontFamily: 'Inter',
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              constraints: const BoxConstraints(maxHeight: 200),
+              decoration: BoxDecoration(
+                color: AppTheme.darkBackground,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.darkBorder),
+              ),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: widget.nodes.length,
+                itemBuilder: (context, index) {
+                  final node = widget.nodes[index];
+                  final isSelected = _selectedNodeNum == node.nodeNum;
+                  final displayName =
+                      node.longName ??
+                      node.shortName ??
+                      '!${node.nodeNum.toRadixString(16)}';
+
+                  return InkWell(
+                    onTap: () {
+                      setState(() => _selectedNodeNum = node.nodeNum);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                            : Colors.transparent,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: index < widget.nodes.length - 1
+                                ? AppTheme.darkBorder.withValues(alpha: 0.5)
+                                : Colors.transparent,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppTheme.primaryGreen
+                                  : AppTheme.darkBorder,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Center(
+                              child: Text(
+                                node.shortName?.substring(0, 1).toUpperCase() ??
+                                    '?',
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? Colors.black
+                                      : Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  displayName,
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? AppTheme.primaryGreen
+                                        : Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                                if (node.shortName != null &&
+                                    node.longName != null)
+                                  Text(
+                                    node.shortName!,
+                                    style: TextStyle(
+                                      color: AppTheme.textTertiary,
+                                      fontSize: 11,
+                                      fontFamily: 'Inter',
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          if (node.isOnline)
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: AppTheme.primaryGreen,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isSending ? null : () => Navigator.pop(context),
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontFamily: 'Inter',
+            ),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: _selectedNodeNum != null && !_isSending
+              ? _sendTraceroute
+              : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.primaryGreen,
+            foregroundColor: Colors.black,
+            disabledBackgroundColor: AppTheme.darkBorder,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: _isSending
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.black,
+                  ),
+                )
+              : const Text(
+                  'Trace',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Inter',
+                  ),
+                ),
         ),
       ],
     );

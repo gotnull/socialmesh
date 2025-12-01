@@ -1397,6 +1397,32 @@ class ProtocolService {
     }
   }
 
+  /// Send a traceroute request to a specific node
+  /// Returns immediately - results come via mesh packet responses
+  Future<void> sendTraceroute(int nodeNum) async {
+    _logger.i('Sending traceroute to node $nodeNum');
+
+    // Create an empty RouteDiscovery for the request
+    final routeDiscovery = pb.RouteDiscovery();
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.TRACEROUTE_APP
+      ..payload = routeDiscovery.writeToBuffer()
+      ..wantResponse = true;
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum ?? 0
+      ..to = nodeNum
+      ..decoded = data
+      ..id = _generatePacketId()
+      ..wantAck = true;
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    final bytes = toRadio.writeToBuffer();
+
+    await _transport.send(_prepareForSend(bytes));
+  }
+
   /// Begin edit settings transaction
   Future<void> _beginEditSettings() async {
     _logger.d('Beginning edit settings transaction');
