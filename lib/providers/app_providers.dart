@@ -678,6 +678,16 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
     }
 
     final message = state[messageIndex];
+
+    // If message is already delivered, ignore subsequent updates (especially failures)
+    // This handles the case where we get ACK followed by a timeout/error packet
+    if (message.status == MessageStatus.delivered) {
+      debugPrint(
+        '📨 ⏭️ Ignoring update for already-delivered message: $messageId',
+      );
+      return;
+    }
+
     final updatedMessage = message.copyWith(
       status: update.isSuccess ? MessageStatus.delivered : MessageStatus.failed,
       routingError: update.error,
@@ -691,10 +701,13 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
     ];
     _storage?.saveMessage(updatedMessage);
 
-    debugPrint(
-      '📨 Message ${update.isSuccess ? "delivered" : "failed"}: $messageId'
-      '${update.error != null ? " - ${update.error!.message}" : ""}',
-    );
+    // Stop tracking after successful delivery to ignore future error packets
+    if (update.isSuccess) {
+      _packetToMessageId.remove(update.packetId);
+      debugPrint('📨 ✅ Message delivered, stopped tracking: $messageId');
+    } else {
+      debugPrint('📨 ❌ Message failed: $messageId - ${update.error?.message}');
+    }
   }
 
   void trackPacket(int packetId, String messageId) {
