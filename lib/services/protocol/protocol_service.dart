@@ -2418,20 +2418,20 @@ class ProtocolService {
 
   /// Set network configuration
   Future<void> setNetworkConfig({
-    bool? wifiEnabled,
-    String? wifiSsid,
-    String? wifiPsk,
-    bool? ethEnabled,
-    String? ntpServer,
+    required bool wifiEnabled,
+    required String wifiSsid,
+    required String wifiPsk,
+    required bool ethEnabled,
+    required String ntpServer,
   }) async {
     _logger.i('Setting network config');
 
-    final networkConfig = pb.Config_NetworkConfig();
-    if (wifiEnabled != null) networkConfig.wifiEnabled = wifiEnabled;
-    if (wifiSsid != null) networkConfig.wifiSsid = wifiSsid;
-    if (wifiPsk != null) networkConfig.wifiPsk = wifiPsk;
-    if (ethEnabled != null) networkConfig.ethEnabled = ethEnabled;
-    if (ntpServer != null) networkConfig.ntpServer = ntpServer;
+    final networkConfig = pb.Config_NetworkConfig()
+      ..wifiEnabled = wifiEnabled
+      ..wifiSsid = wifiSsid
+      ..wifiPsk = wifiPsk
+      ..ethEnabled = ethEnabled
+      ..ntpServer = ntpServer;
 
     final config = pb.Config()..network = networkConfig;
     await setConfig(config);

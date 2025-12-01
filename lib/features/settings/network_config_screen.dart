@@ -47,9 +47,8 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
       _ethEnabled = config.ethEnabled;
       _ssidController.text = config.wifiSsid;
       _passwordController.text = config.wifiPsk;
-      if (config.ntpServer.isNotEmpty) {
-        _ntpController.text = config.ntpServer;
-      }
+      _ntpController.text =
+          config.ntpServer.isNotEmpty ? config.ntpServer : 'pool.ntp.org';
     });
   }
 
