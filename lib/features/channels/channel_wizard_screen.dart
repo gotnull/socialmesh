@@ -623,12 +623,45 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
           Text('Advanced Options', style: theme.textTheme.headlineMedium),
           const SizedBox(height: 8),
           Text(
-            'Configure optional MQTT settings for internet connectivity.',
+            'Configure optional channel settings.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppTheme.textSecondary,
             ),
           ),
           const SizedBox(height: 32),
+          // Position setting (doesn't require MQTT)
+          _buildToggleOption(
+            theme: theme,
+            title: 'Position Enabled',
+            subtitle: 'Share your position on this channel.',
+            value: _positionEnabled,
+            onChanged: (value) {
+              setState(() {
+                _positionEnabled = value;
+              });
+            },
+          ),
+          const SizedBox(height: 24),
+          // MQTT section header
+          Row(
+            children: [
+              const Icon(
+                Icons.cloud_outlined,
+                size: 16,
+                color: AppTheme.textTertiary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'MQTT Settings',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: AppTheme.textTertiary,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           _buildToggleOption(
             theme: theme,
             title: 'Uplink Enabled',
@@ -654,44 +687,35 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
               });
             },
           ),
-          const SizedBox(height: 16),
-          _buildToggleOption(
-            theme: theme,
-            title: 'Position Enabled',
-            subtitle: 'Share your position on this channel.',
-            value: _positionEnabled,
-            onChanged: (value) {
-              setState(() {
-                _positionEnabled = value;
-              });
-            },
-          ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.info_outline,
-                  color: AppTheme.textSecondary,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'These settings require MQTT to be configured on your device.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
+          if (_uplinkEnabled || _downlinkEnabled) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.warningYellow.withAlpha(26),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.warningYellow.withAlpha(77)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    color: AppTheme.warningYellow,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'MQTT must be configured on your device for uplink/downlink to work.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppTheme.warningYellow,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
