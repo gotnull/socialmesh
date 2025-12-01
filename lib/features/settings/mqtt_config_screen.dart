@@ -49,9 +49,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
       _addressController.text = config.address;
       _usernameController.text = config.username;
       _passwordController.text = config.password;
-      if (config.root.isNotEmpty) {
-        _rootController.text = config.root;
-      }
+      _rootController.text = config.root.isNotEmpty ? config.root : 'msh';
       _encryptionEnabled = config.encryptionEnabled;
       _jsonEnabled = config.jsonEnabled;
       _tlsEnabled = config.tlsEnabled;
@@ -89,6 +87,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
     setState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final root = _rootController.text.trim();
       await protocol.setMQTTConfig(
         enabled: _enabled,
         address: _addressController.text,
@@ -97,7 +96,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
         encryptionEnabled: _encryptionEnabled,
         jsonEnabled: _jsonEnabled,
         tlsEnabled: _tlsEnabled,
-        root: _rootController.text,
+        root: root.isNotEmpty ? root : 'msh',
         proxyToClientEnabled: _proxyToClientEnabled,
         mapReportingEnabled: _mapReportingEnabled,
       );
