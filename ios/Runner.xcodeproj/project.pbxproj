@@ -87,7 +87,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		BD61F0472EDD022F00456D75 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		BD61F0472EDD022F00456D75 /* Exceptions for "ProtofluffWidgets" folder in "ProtofluffWidgetsExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -97,7 +97,18 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		BD61F0342EDD022E00456D75 /* ProtofluffWidgets */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (BD61F0472EDD022F00456D75 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ProtofluffWidgets; sourceTree = "<group>"; };
+		BD61F0342EDD022E00456D75 /* ProtofluffWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BD61F0472EDD022F00456D75 /* Exceptions for "ProtofluffWidgets" folder in "ProtofluffWidgetsExtension" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = ProtofluffWidgets;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -274,8 +285,6 @@
 				BD61F0342EDD022E00456D75 /* ProtofluffWidgets */,
 			);
 			name = ProtofluffWidgetsExtension;
-			packageProductDependencies = (
-			);
 			productName = ProtofluffWidgetsExtension;
 			productReference = BD61F02F2EDD022E00456D75 /* ProtofluffWidgetsExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -399,13 +408,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -420,13 +425,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

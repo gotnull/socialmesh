@@ -1,0 +1,5 @@
+source 'https://rubygems.org'
+
+# Use xcodeproj from GitHub main branch which has Xcode 26 support
+gem 'xcodeproj', git: 'https://github.com/CocoaPods/Xcodeproj.git', branch: 'master'
+gem 'cocoapods', '~> 1.16'
