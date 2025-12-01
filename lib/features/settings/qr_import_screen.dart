@@ -237,6 +237,37 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
             _buildInfoRow('Slot', '${channel.index}'),
             const SizedBox(height: 8),
             _buildInfoRow('Encryption', '${channel.psk.length * 8}-bit AES'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.accentOrange.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppTheme.accentOrange.withValues(alpha: 0.3),
+                ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.restart_alt,
+                    color: AppTheme.accentOrange,
+                    size: 18,
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Device will reboot after import. The app will automatically reconnect.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.accentOrange,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
         actions: [

@@ -232,8 +232,13 @@ final _lastConnectedDeviceIdProvider = StateProvider<String?>((ref) => null);
 
 // Auto-reconnect manager - monitors connection and attempts to reconnect on unexpected disconnect
 final autoReconnectManagerProvider = Provider<void>((ref) {
+  debugPrint('🔄 AUTO-RECONNECT MANAGER INITIALIZED');
+
   // Track the last connected device ID when we connect
   ref.listen<DeviceInfo?>(connectedDeviceProvider, (previous, next) {
+    debugPrint(
+      '🔄 connectedDeviceProvider changed: ${previous?.id} -> ${next?.id}',
+    );
     if (next != null) {
       debugPrint('🔄 Storing device ID for reconnect: ${next.id}');
       ref.read(_lastConnectedDeviceIdProvider.notifier).state = next.id;
@@ -245,12 +250,14 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
     previous,
     next,
   ) {
-    next.whenData((state) async {
+    debugPrint('🔄 connectionStateProvider changed: $previous -> $next');
+
+    next.whenData((state) {
       final lastDeviceId = ref.read(_lastConnectedDeviceIdProvider);
       final autoReconnectState = ref.read(autoReconnectStateProvider);
 
       debugPrint(
-        '🔄 Connection changed: $state (lastDeviceId: $lastDeviceId, '
+        '🔄 Connection state: $state (lastDeviceId: $lastDeviceId, '
         'reconnectState: $autoReconnectState)',
       );
 
@@ -260,111 +267,199 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
           autoReconnectState == AutoReconnectState.idle ||
           autoReconnectState == AutoReconnectState.success;
 
+      debugPrint('🔄 Can attempt reconnect: $canAttemptReconnect');
+
       if (state == DeviceConnectionState.disconnected &&
           lastDeviceId != null &&
           canAttemptReconnect) {
-        debugPrint('🔄 Device disconnected, will attempt reconnect in 4s...');
+        debugPrint('🔄 🚀 Device disconnected, STARTING reconnect...');
 
         // Set state to scanning immediately to prevent duplicate triggers
         ref.read(autoReconnectStateProvider.notifier).state =
             AutoReconnectState.scanning;
 
-        // Wait for device to reboot (Meshtastic devices take ~3-5 seconds)
-        await Future.delayed(const Duration(seconds: 4));
-
-        // Check settings for auto-reconnect preference
-        final settings = await ref.read(settingsServiceProvider.future);
-        if (!settings.autoReconnect) {
-          debugPrint('🔄 Auto-reconnect disabled in settings');
-          ref.read(autoReconnectStateProvider.notifier).state =
-              AutoReconnectState.idle;
-          return;
-        }
-
-        final transport = ref.read(transportProvider);
-
-        // Try up to 3 times to find and connect to the device
-        const maxRetries = 3;
-        for (int attempt = 1; attempt <= maxRetries; attempt++) {
-          debugPrint(
-            '🔄 Scan attempt $attempt/$maxRetries for device: $lastDeviceId',
-          );
-
-          try {
-            DeviceInfo? foundDevice;
-
-            // Scan for the device
-            await for (final device in transport.scan(
-              timeout: const Duration(seconds: 8),
-            )) {
-              debugPrint(
-                '🔄 Found device: ${device.id} (looking for $lastDeviceId)',
-              );
-              if (device.id == lastDeviceId) {
-                foundDevice = device;
-                break;
-              }
-            }
-
-            if (foundDevice != null) {
-              debugPrint('🔄 Device found, connecting...');
-              ref.read(autoReconnectStateProvider.notifier).state =
-                  AutoReconnectState.connecting;
-
-              await transport.connect(foundDevice);
-
-              // Update connected device
-              ref.read(connectedDeviceProvider.notifier).state = foundDevice;
-
-              // Restart protocol service
-              final protocol = ref.read(protocolServiceProvider);
-              await protocol.start();
-
-              // Restart phone GPS location updates
-              final locationService = ref.read(locationServiceProvider);
-              await locationService.startLocationUpdates();
-
-              ref.read(autoReconnectStateProvider.notifier).state =
-                  AutoReconnectState.success;
-              debugPrint('🔄 Reconnection successful!');
-
-              // Reset to idle after showing success
-              await Future.delayed(const Duration(seconds: 2));
-              ref.read(autoReconnectStateProvider.notifier).state =
-                  AutoReconnectState.idle;
-              return; // Success - exit the retry loop
-            } else {
-              debugPrint('🔄 Device not found in scan attempt $attempt');
-              if (attempt < maxRetries) {
-                // Wait before next retry
-                await Future.delayed(const Duration(seconds: 2));
-              }
-            }
-          } catch (e) {
-            debugPrint('🔄 Scan/connect error on attempt $attempt: $e');
-            if (attempt < maxRetries) {
-              await Future.delayed(const Duration(seconds: 2));
-            }
-          }
-        }
-
-        // All retries exhausted
-        debugPrint('🔄 Failed to reconnect after $maxRetries attempts');
-        ref.read(autoReconnectStateProvider.notifier).state =
-            AutoReconnectState.failed;
-
-        // Clear last device ID since we couldn't reconnect
-        ref.read(_lastConnectedDeviceIdProvider.notifier).state = null;
-        ref.read(connectedDeviceProvider.notifier).state = null;
-
-        // Reset to idle after showing failure
-        await Future.delayed(const Duration(seconds: 3));
-        ref.read(autoReconnectStateProvider.notifier).state =
-            AutoReconnectState.idle;
+        // Run reconnect in a separate async function to avoid listener issues
+        _performReconnect(ref, lastDeviceId);
+      } else {
+        debugPrint('🔄 NOT attempting reconnect - conditions not met');
       }
     });
   });
 });
+
+/// Performs the actual reconnection logic
+Future<void> _performReconnect(Ref ref, String deviceId) async {
+  debugPrint('🔄 _performReconnect STARTED for device: $deviceId');
+
+  try {
+    // Wait for device to reboot (Meshtastic devices take ~5-8 seconds)
+    debugPrint('🔄 Waiting 8s for device to reboot...');
+    await Future.delayed(const Duration(seconds: 8));
+
+    // Check if cancelled
+    final currentState = ref.read(autoReconnectStateProvider);
+    debugPrint('🔄 After delay, reconnect state is: $currentState');
+    if (currentState == AutoReconnectState.idle) {
+      debugPrint('🔄 Reconnect cancelled (state is idle)');
+      return;
+    }
+
+    // Check settings for auto-reconnect preference
+    debugPrint('🔄 Checking settings...');
+    final settings = await ref.read(settingsServiceProvider.future);
+    debugPrint('🔄 Auto-reconnect setting: ${settings.autoReconnect}');
+    if (!settings.autoReconnect) {
+      debugPrint('🔄 Auto-reconnect disabled in settings');
+      ref.read(autoReconnectStateProvider.notifier).state =
+          AutoReconnectState.idle;
+      return;
+    }
+
+    final transport = ref.read(transportProvider);
+    debugPrint('🔄 Got transport, current state: ${transport.state}');
+
+    // Try up to 5 times (device may take a while to become discoverable after reboot)
+    const maxRetries = 5;
+    for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      // Check if cancelled
+      if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
+        debugPrint('🔄 Reconnect cancelled');
+        return;
+      }
+
+      debugPrint('🔄 Scan attempt $attempt/$maxRetries for device: $deviceId');
+
+      DeviceInfo? foundDevice;
+
+      try {
+        // Scan for devices
+        final scanStream = transport.scan(timeout: const Duration(seconds: 10));
+
+        await for (final device in scanStream) {
+          // Check if cancelled during scan
+          if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
+            debugPrint('🔄 Reconnect cancelled during scan');
+            return;
+          }
+          debugPrint('🔄 Found device: ${device.id} (looking for $deviceId)');
+          if (device.id == deviceId) {
+            foundDevice = device;
+            debugPrint('🔄 ✓ Target device found!');
+            break;
+          }
+        }
+
+        debugPrint('🔄 Scan complete. Device found: ${foundDevice != null}');
+      } catch (e) {
+        debugPrint('🔄 Scan error: $e');
+        // Continue to next attempt
+      }
+
+      if (foundDevice != null) {
+        debugPrint('🔄 Device found! Connecting...');
+        ref.read(autoReconnectStateProvider.notifier).state =
+            AutoReconnectState.connecting;
+
+        try {
+          await transport.connect(foundDevice);
+
+          // Wait a moment for connection to stabilize
+          debugPrint('🔄 Waiting for connection to stabilize...');
+          await Future.delayed(const Duration(seconds: 2));
+
+          // Check if still connected
+          if (transport.state != DeviceConnectionState.connected) {
+            debugPrint('🔄 ❌ Connection dropped after connect, retrying...');
+            if (attempt < maxRetries) {
+              ref.read(autoReconnectStateProvider.notifier).state =
+                  AutoReconnectState.scanning;
+              await Future.delayed(const Duration(seconds: 3));
+              continue; // Try again
+            }
+            throw Exception('Connection dropped after connect');
+          }
+
+          // Update connected device
+          ref.read(connectedDeviceProvider.notifier).state = foundDevice;
+
+          // Restart protocol service
+          final protocol = ref.read(protocolServiceProvider);
+          await protocol.start();
+
+          // Check again if still connected after protocol start
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (transport.state != DeviceConnectionState.connected) {
+            debugPrint(
+              '🔄 ❌ Connection dropped after protocol start, retrying...',
+            );
+            if (attempt < maxRetries) {
+              ref.read(autoReconnectStateProvider.notifier).state =
+                  AutoReconnectState.scanning;
+              await Future.delayed(const Duration(seconds: 3));
+              continue; // Try again
+            }
+            throw Exception('Connection dropped after protocol start');
+          }
+
+          // Restart phone GPS location updates
+          final locationService = ref.read(locationServiceProvider);
+          await locationService.startLocationUpdates();
+
+          // Final check - if we're still connected, declare success
+          if (transport.state == DeviceConnectionState.connected) {
+            ref.read(autoReconnectStateProvider.notifier).state =
+                AutoReconnectState.success;
+            debugPrint('🔄 ✅ Reconnection successful and stable!');
+
+            // Reset to idle
+            await Future.delayed(const Duration(milliseconds: 500));
+            ref.read(autoReconnectStateProvider.notifier).state =
+                AutoReconnectState.idle;
+            return; // Success!
+          } else {
+            debugPrint('🔄 ❌ Connection dropped at final check');
+            if (attempt < maxRetries) {
+              ref.read(autoReconnectStateProvider.notifier).state =
+                  AutoReconnectState.scanning;
+              await Future.delayed(const Duration(seconds: 3));
+              continue;
+            }
+          }
+        } catch (e) {
+          debugPrint('🔄 ❌ Connect error: $e');
+          if (attempt < maxRetries) {
+            ref.read(autoReconnectStateProvider.notifier).state =
+                AutoReconnectState.scanning;
+            await Future.delayed(const Duration(seconds: 3));
+            continue;
+          }
+        }
+      } else {
+        debugPrint('🔄 Device not found in attempt $attempt, waiting 5s...');
+        if (attempt < maxRetries) {
+          // Wait longer before next retry - device may still be rebooting
+          await Future.delayed(const Duration(seconds: 5));
+        }
+      }
+    }
+
+    // All retries exhausted
+    debugPrint('🔄 ❌ Failed to reconnect after $maxRetries attempts');
+    ref.read(autoReconnectStateProvider.notifier).state =
+        AutoReconnectState.failed;
+
+    // Don't clear the device ID - user might want to manually reconnect
+    // Just reset to idle after showing failure
+    await Future.delayed(const Duration(seconds: 2));
+    ref.read(autoReconnectStateProvider.notifier).state =
+        AutoReconnectState.idle;
+  } catch (e, stackTrace) {
+    debugPrint('🔄 ❌ Unexpected error during reconnect: $e');
+    debugPrint('🔄 Stack trace: $stackTrace');
+    ref.read(autoReconnectStateProvider.notifier).state =
+        AutoReconnectState.idle;
+  }
+}
 
 // Current RSSI stream from protocol service
 final currentRssiProvider = StreamProvider<int>((ref) async* {

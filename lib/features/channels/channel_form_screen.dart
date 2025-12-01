@@ -395,6 +395,9 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                 const SizedBox(height: 20),
                 _buildPrimaryChannelNote(),
               ],
+
+              const SizedBox(height: 20),
+              _buildRebootWarning(),
             ],
           ),
         ),
@@ -1165,6 +1168,60 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                 SizedBox(height: 4),
                 Text(
                   'This is the main channel for device communication. Changes may affect connectivity.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRebootWarning() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.accentOrange.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.accentOrange.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppTheme.accentOrange.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.restart_alt,
+              color: AppTheme.accentOrange,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Device Will Reboot',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.accentOrange,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Saving this channel will cause your device to reboot. The app will automatically reconnect.',
                   style: TextStyle(
                     fontSize: 12,
                     color: AppTheme.textSecondary,
