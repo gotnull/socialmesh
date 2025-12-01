@@ -68,7 +68,7 @@ class NodeMapContent extends ConsumerWidget {
                       flags: InteractiveFlag
                           .none, // Disable interactions in widget
                     ),
-                    onTap: (_, __) => _openFullMap(context),
+                    onTap: (_, _) => _openFullMap(context),
                   ),
                   children: [
                     // Dark map tiles

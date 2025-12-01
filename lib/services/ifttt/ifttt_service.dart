@@ -273,8 +273,9 @@ class IftttService {
     required double longitude,
   }) async {
     if (!_config.positionUpdate) return false;
-    if (_config.geofenceLat == null || _config.geofenceLon == null)
+    if (_config.geofenceLat == null || _config.geofenceLon == null) {
       return false;
+    }
 
     // Calculate distance from geofence center
     final distance = _calculateDistance(
@@ -493,8 +494,12 @@ class IftttService {
   double _taylor(double x, bool isSin) {
     // Normalize x to [-pi, pi]
     const pi = 3.141592653589793;
-    while (x > pi) x -= 2 * pi;
-    while (x < -pi) x += 2 * pi;
+    while (x > pi) {
+      x -= 2 * pi;
+    }
+    while (x < -pi) {
+      x += 2 * pi;
+    }
 
     double result = isSin ? x : 1;
     double term = isSin ? x : 1;
