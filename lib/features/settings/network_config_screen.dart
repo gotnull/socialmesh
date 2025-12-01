@@ -47,8 +47,9 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
       _ethEnabled = config.ethEnabled;
       _ssidController.text = config.wifiSsid;
       _passwordController.text = config.wifiPsk;
-      _ntpController.text =
-          config.ntpServer.isNotEmpty ? config.ntpServer : 'pool.ntp.org';
+      _ntpController.text = config.ntpServer.isNotEmpty
+          ? config.ntpServer
+          : 'pool.ntp.org';
     });
   }
 
@@ -81,12 +82,13 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
     setState(() => _saving = true);
 
     try {
+      final ntp = _ntpController.text.trim();
       await protocol.setNetworkConfig(
         wifiEnabled: _wifiEnabled,
         wifiSsid: _ssidController.text,
         wifiPsk: _passwordController.text,
         ethEnabled: _ethEnabled,
-        ntpServer: _ntpController.text,
+        ntpServer: ntp.isNotEmpty ? ntp : 'pool.ntp.org',
       );
 
       if (mounted) {
