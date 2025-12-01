@@ -10,6 +10,7 @@ enum DashboardWidgetType {
   channelActivity,
   meshHealth,
   quickCompose,
+  nodeMap,
 }
 
 /// Size options for widgets
@@ -169,6 +170,14 @@ class WidgetRegistry {
       icon: Icons.edit_note,
       defaultSize: WidgetSize.medium,
       supportedSizes: [WidgetSize.medium],
+    ),
+    WidgetTypeInfo(
+      type: DashboardWidgetType.nodeMap,
+      name: 'Node Map',
+      description: 'Map showing nodes with GPS positions',
+      icon: Icons.map,
+      defaultSize: WidgetSize.large,
+      supportedSizes: [WidgetSize.medium, WidgetSize.large],
     ),
   ];
 

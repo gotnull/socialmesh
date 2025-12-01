@@ -16,6 +16,7 @@ import 'widgets/quick_actions_widget.dart';
 import 'widgets/signal_strength_widget.dart';
 import 'widgets/channel_activity_widget.dart';
 import 'widgets/mesh_health_widget.dart';
+import 'widgets/node_map_widget.dart';
 
 /// Customizable widget dashboard with drag/reorder/favorites
 class WidgetDashboardScreen extends ConsumerStatefulWidget {
@@ -331,6 +332,8 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
         return const MeshHealthContent();
       case DashboardWidgetType.signalStrength:
         return const SignalStrengthContent();
+      case DashboardWidgetType.nodeMap:
+        return const NodeMapContent();
     }
   }
 
