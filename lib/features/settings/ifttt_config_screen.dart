@@ -29,7 +29,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   bool _temperatureAlert = false;
   bool _sosEmergency = true;
   bool _isTesting = false;
-  bool _obscureKey = true;
 
   @override
   void initState() {
@@ -249,24 +248,15 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           children: [
             TextField(
               controller: _webhookKeyController,
-              obscureText: _obscureKey,
-              enableInteractiveSelection: true,
               autocorrect: false,
               enableSuggestions: false,
-              decoration: InputDecoration(
+              keyboardType: TextInputType.text,
+              decoration: const InputDecoration(
                 labelText: 'Webhook Key',
                 hintText: 'e.g., cMcOnB_zaJTrZwsVvzVTHY',
                 helperText: 'Copy from IFTTT Webhooks URL after /use/',
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.key),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureKey ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() => _obscureKey = !_obscureKey);
-                  },
-                ),
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.key),
               ),
             ),
             const SizedBox(height: 16),
