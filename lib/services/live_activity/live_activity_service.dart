@@ -84,11 +84,14 @@ class LiveActivityService {
     }
 
     if (!_initialized) {
+      debugPrint('📱 Initializing LiveActivityService...');
       await initialize();
+      debugPrint('📱 LiveActivityService initialized: $_initialized');
     }
 
     // Check if activities are enabled
     final enabled = await areActivitiesEnabled();
+    debugPrint('📱 Live Activities enabled by user: $enabled');
     if (!enabled) {
       debugPrint('📱 Live Activities are disabled by user');
       return false;
@@ -96,6 +99,7 @@ class LiveActivityService {
 
     // End any existing activity first
     if (_currentActivityId != null) {
+      debugPrint('📱 Ending existing activity: $_currentActivityId');
       await endActivity();
     }
 
@@ -113,6 +117,8 @@ class LiveActivityService {
         receivedPackets: receivedPackets,
       );
 
+      debugPrint('📱 Creating Live Activity with data: $activityData');
+
       _currentActivityId = await _liveActivitiesPlugin.createActivity(
         _activityId,
         activityData,
@@ -120,12 +126,19 @@ class LiveActivityService {
         staleIn: const Duration(hours: 1),
       );
 
+      debugPrint('📱 createActivity returned: $_currentActivityId');
+
       if (_currentActivityId != null) {
-        debugPrint('📱 Started Live Activity: $_currentActivityId');
+        debugPrint('📱 ✅ Started Live Activity: $_currentActivityId');
         return true;
+      } else {
+        debugPrint(
+          '📱 ❌ createActivity returned null - activity was not created',
+        );
       }
-    } catch (e) {
-      debugPrint('📱 Failed to start Live Activity: $e');
+    } catch (e, stackTrace) {
+      debugPrint('📱 ❌ Failed to start Live Activity: $e');
+      debugPrint('📱 Stack trace: $stackTrace');
     }
 
     return false;

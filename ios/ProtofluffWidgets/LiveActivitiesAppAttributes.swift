@@ -11,24 +11,22 @@ import ActivityKit
 import WidgetKit
 import SwiftUI
 
-struct LiveActivitiesAppAttributes: ActivityAttributes {
-    public typealias MeshActivityStatus = ContentState
+struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
+    public typealias LiveDeliveryData = ContentState
     
     public struct ContentState: Codable, Hashable {
-        // Dynamic stateful properties - passed from Flutter via UserDefaults
-        var deviceName: String
-        var shortName: String
-        var batteryLevel: Int
-        var signalStrength: Int
-        var nodesOnline: Int
-        var channelUtilization: Double
-        var airtime: Double
-        var sentPackets: Int
-        var receivedPackets: Int
-        var lastUpdated: Int
-        var isConnected: Bool
+        // ContentState is required by ActivityKit but we read actual data from UserDefaults
+        // The live_activities package stores data there with prefixed keys
+        var dummy: Int = 0
     }
     
-    // Fixed non-changing properties
-    var nodeNum: Int
+    // Required by Identifiable - used for prefixed keys in UserDefaults
+    var id = UUID()
+}
+
+// Extension to generate prefixed keys for UserDefaults access
+extension LiveActivitiesAppAttributes {
+    func prefixedKey(_ key: String) -> String {
+        return "\(id)_\(key)"
+    }
 }

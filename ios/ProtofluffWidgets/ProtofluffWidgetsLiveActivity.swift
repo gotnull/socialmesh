@@ -10,6 +10,9 @@ import ActivityKit
 import WidgetKit
 import SwiftUI
 
+// Shared UserDefaults for reading Flutter data
+let sharedDefault = UserDefaults(suiteName: "group.protofluff.liveactivities")!
+
 @available(iOS 16.2, *)
 struct ProtofluffWidgetsLiveActivity: Widget {
     var body: some WidgetConfiguration {
@@ -25,7 +28,7 @@ struct ProtofluffWidgetsLiveActivity: Widget {
                     HStack(spacing: 4) {
                         Image(systemName: "antenna.radiowaves.left.and.right")
                             .foregroundColor(.green)
-                        Text(context.state.shortName)
+                        Text(sharedDefault.string(forKey: context.attributes.prefixedKey("shortName")) ?? "????")
                             .font(.caption)
                             .fontWeight(.medium)
                     }
@@ -33,24 +36,30 @@ struct ProtofluffWidgetsLiveActivity: Widget {
                 
                 DynamicIslandExpandedRegion(.trailing) {
                     HStack(spacing: 4) {
-                        BatteryView(level: context.state.batteryLevel)
-                        SignalView(strength: context.state.signalStrength)
+                        BatteryView(level: sharedDefault.integer(forKey: context.attributes.prefixedKey("batteryLevel")))
+                        SignalView(strength: sharedDefault.integer(forKey: context.attributes.prefixedKey("signalStrength")))
                     }
                 }
                 
                 DynamicIslandExpandedRegion(.center) {
-                    Text(context.state.deviceName)
+                    Text(sharedDefault.string(forKey: context.attributes.prefixedKey("deviceName")) ?? "Meshtastic")
                         .font(.headline)
                         .lineLimit(1)
                 }
                 
                 DynamicIslandExpandedRegion(.bottom) {
+                    let channelUtil = sharedDefault.double(forKey: context.attributes.prefixedKey("channelUtilization"))
+                    let airtime = sharedDefault.double(forKey: context.attributes.prefixedKey("airtime"))
+                    let sentPackets = sharedDefault.integer(forKey: context.attributes.prefixedKey("sentPackets"))
+                    let receivedPackets = sharedDefault.integer(forKey: context.attributes.prefixedKey("receivedPackets"))
+                    let nodesOnline = sharedDefault.integer(forKey: context.attributes.prefixedKey("nodesOnline"))
+                    
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Ch. Util: \(String(format: "%.1f", context.state.channelUtilization))%")
+                            Text("Ch. Util: \(String(format: "%.1f", channelUtil))%")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
-                            Text("Airtime: \(String(format: "%.1f", context.state.airtime))%")
+                            Text("Airtime: \(String(format: "%.1f", airtime))%")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                         }
@@ -58,10 +67,10 @@ struct ProtofluffWidgetsLiveActivity: Widget {
                         Spacer()
                         
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text("TX: \(context.state.sentPackets)")
+                            Text("TX: \(sentPackets)")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
-                            Text("RX: \(context.state.receivedPackets)")
+                            Text("RX: \(receivedPackets)")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                         }
@@ -72,7 +81,7 @@ struct ProtofluffWidgetsLiveActivity: Widget {
                             HStack(spacing: 2) {
                                 Image(systemName: "person.2.fill")
                                     .font(.caption2)
-                                Text("\(context.state.nodesOnline)")
+                                Text("\(nodesOnline)")
                                     .font(.caption2)
                             }
                             .foregroundColor(.green)
@@ -85,17 +94,19 @@ struct ProtofluffWidgetsLiveActivity: Widget {
                 }
             } compactLeading: {
                 // Compact leading - show connection status
+                let isConnected = sharedDefault.bool(forKey: context.attributes.prefixedKey("isConnected"))
                 HStack(spacing: 4) {
-                    Image(systemName: context.state.isConnected ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
-                        .foregroundColor(context.state.isConnected ? .green : .red)
+                    Image(systemName: isConnected ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
+                        .foregroundColor(isConnected ? .green : .red)
                 }
             } compactTrailing: {
                 // Compact trailing - show battery
-                BatteryView(level: context.state.batteryLevel, compact: true)
+                BatteryView(level: sharedDefault.integer(forKey: context.attributes.prefixedKey("batteryLevel")), compact: true)
             } minimal: {
                 // Minimal - just show connection indicator
-                Image(systemName: context.state.isConnected ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
-                    .foregroundColor(context.state.isConnected ? .green : .red)
+                let isConnected = sharedDefault.bool(forKey: context.attributes.prefixedKey("isConnected"))
+                Image(systemName: isConnected ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
+                    .foregroundColor(isConnected ? .green : .red)
             }
             .widgetURL(URL(string: "protofluff://connect"))
         }
@@ -108,19 +119,51 @@ struct ProtofluffWidgetsLiveActivity: Widget {
 struct LockScreenView: View {
     let context: ActivityViewContext<LiveActivitiesAppAttributes>
     
+    var deviceName: String {
+        sharedDefault.string(forKey: context.attributes.prefixedKey("deviceName")) ?? "Meshtastic"
+    }
+    
+    var isConnected: Bool {
+        sharedDefault.bool(forKey: context.attributes.prefixedKey("isConnected"))
+    }
+    
+    var batteryLevel: Int {
+        sharedDefault.integer(forKey: context.attributes.prefixedKey("batteryLevel"))
+    }
+    
+    var signalStrength: Int {
+        sharedDefault.integer(forKey: context.attributes.prefixedKey("signalStrength"))
+    }
+    
+    var channelUtilization: Double {
+        sharedDefault.double(forKey: context.attributes.prefixedKey("channelUtilization"))
+    }
+    
+    var nodesOnline: Int {
+        sharedDefault.integer(forKey: context.attributes.prefixedKey("nodesOnline"))
+    }
+    
+    var sentPackets: Int {
+        sharedDefault.integer(forKey: context.attributes.prefixedKey("sentPackets"))
+    }
+    
+    var receivedPackets: Int {
+        sharedDefault.integer(forKey: context.attributes.prefixedKey("receivedPackets"))
+    }
+    
     var body: some View {
         HStack(spacing: 12) {
             // Left: Connection status icon
             VStack {
-                Image(systemName: context.state.isConnected ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
+                Image(systemName: isConnected ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
                     .font(.title2)
-                    .foregroundColor(context.state.isConnected ? .green : .red)
+                    .foregroundColor(isConnected ? .green : .red)
             }
             .frame(width: 44)
             
             // Center: Device info
             VStack(alignment: .leading, spacing: 4) {
-                Text(context.state.deviceName)
+                Text(deviceName)
                     .font(.headline)
                     .lineLimit(1)
                 
@@ -129,7 +172,7 @@ struct LockScreenView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "waveform")
                             .font(.caption2)
-                        Text("\(String(format: "%.1f", context.state.channelUtilization))%")
+                        Text("\(String(format: "%.1f", channelUtilization))%")
                             .font(.caption)
                     }
                     .foregroundColor(.secondary)
@@ -138,7 +181,7 @@ struct LockScreenView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "person.2.fill")
                             .font(.caption2)
-                        Text("\(context.state.nodesOnline)")
+                        Text("\(nodesOnline)")
                             .font(.caption)
                     }
                     .foregroundColor(.green)
@@ -147,7 +190,7 @@ struct LockScreenView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "arrow.up.arrow.down")
                             .font(.caption2)
-                        Text("\(context.state.sentPackets)/\(context.state.receivedPackets)")
+                        Text("\(sentPackets)/\(receivedPackets)")
                             .font(.caption)
                     }
                     .foregroundColor(.secondary)
@@ -158,8 +201,8 @@ struct LockScreenView: View {
             
             // Right: Battery and signal
             VStack(alignment: .trailing, spacing: 4) {
-                BatteryView(level: context.state.batteryLevel)
-                SignalView(strength: context.state.signalStrength)
+                BatteryView(level: batteryLevel)
+                SignalView(strength: signalStrength)
             }
         }
         .padding()
