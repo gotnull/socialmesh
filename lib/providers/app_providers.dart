@@ -1258,7 +1258,10 @@ class NodeDiscoveryNotifier extends StateNotifier<MeshNode?> {
   NodeDiscoveryNotifier(this._notificationService, this._ref) : super(null);
 
   Future<void> notifyNewNode(MeshNode node) async {
-    // Only show notifications when app is fully initialized (not during startup/connecting)
+    // Always update state to trigger UI animations (discovery cards)
+    state = node;
+
+    // Only show local notifications when app is fully initialized (not during startup/connecting)
     final appState = _ref.read(appInitProvider);
     if (appState != AppInitState.initialized) return;
 
@@ -1269,7 +1272,6 @@ class NodeDiscoveryNotifier extends StateNotifier<MeshNode?> {
     if (!settings.notificationsEnabled) return;
     if (!settings.newNodeNotificationsEnabled) return;
 
-    state = node;
     await _notificationService.showNewNodeNotification(
       node,
       playSound: settings.notificationSoundEnabled,

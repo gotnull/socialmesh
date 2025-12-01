@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/theme.dart';
+import 'core/transport.dart';
 import 'providers/app_providers.dart';
 import 'models/mesh_models.dart';
 import 'features/scanner/scanner_screen.dart';
@@ -107,6 +108,7 @@ class _SplashScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final autoReconnectState = ref.watch(autoReconnectStateProvider);
+    final connectionState = ref.watch(connectionStateProvider);
     final discoveredNodes = ref.watch(discoveredNodesQueueProvider);
 
     // Listen for new node discoveries during splash
@@ -116,16 +118,30 @@ class _SplashScreen extends ConsumerWidget {
       }
     });
 
+    // Determine status text based on current state
     String statusText;
     switch (autoReconnectState) {
+      case AutoReconnectState.idle:
+        statusText = 'Initializing...';
+        break;
       case AutoReconnectState.scanning:
         statusText = 'Scanning for device...';
         break;
       case AutoReconnectState.connecting:
-        statusText = 'Connecting...';
+        // Check if actually connected but still configuring
+        final isConnected =
+            connectionState.whenOrNull(
+              data: (state) => state == DeviceConnectionState.connected,
+            ) ??
+            false;
+        statusText = isConnected ? 'Configuring device...' : 'Connecting...';
         break;
-      default:
-        statusText = 'Initializing...';
+      case AutoReconnectState.success:
+        statusText = 'Connected!';
+        break;
+      case AutoReconnectState.failed:
+        statusText = 'Connection failed';
+        break;
     }
 
     return Scaffold(
