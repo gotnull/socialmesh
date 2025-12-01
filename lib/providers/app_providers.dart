@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import '../core/transport.dart';
@@ -292,9 +293,9 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
   debugPrint('🔄 _performReconnect STARTED for device: $deviceId');
 
   try {
-    // Wait for device to reboot (Meshtastic devices take ~5-8 seconds)
-    debugPrint('🔄 Waiting 8s for device to reboot...');
-    await Future.delayed(const Duration(seconds: 8));
+    // Wait for device to reboot (Meshtastic devices take ~8-15 seconds)
+    debugPrint('🔄 Waiting 10s for device to reboot...');
+    await Future.delayed(const Duration(seconds: 10));
 
     // Check if cancelled
     final currentState = ref.read(autoReconnectStateProvider);
@@ -318,8 +319,8 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
     final transport = ref.read(transportProvider);
     debugPrint('🔄 Got transport, current state: ${transport.state}');
 
-    // Try up to 5 times (device may take a while to become discoverable after reboot)
-    const maxRetries = 5;
+    // Try up to 8 times (device may take a while to become discoverable after reboot)
+    const maxRetries = 8;
     for (int attempt = 1; attempt <= maxRetries; attempt++) {
       // Check if cancelled
       if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
@@ -332,28 +333,89 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
       DeviceInfo? foundDevice;
 
       try {
-        // Scan for devices
-        final scanStream = transport.scan(timeout: const Duration(seconds: 10));
+        debugPrint('🔄 Stopping any existing scan...');
+        await FlutterBluePlus.stopScan();
+        await Future.delayed(const Duration(milliseconds: 500));
 
-        await for (final device in scanStream) {
-          // Check if cancelled during scan
-          if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
-            debugPrint('🔄 Reconnect cancelled during scan');
-            return;
-          }
-          debugPrint('🔄 Found device: ${device.id} (looking for $deviceId)');
-          if (device.id == deviceId) {
-            foundDevice = device;
-            debugPrint('🔄 ✓ Target device found!');
-            break;
-          }
-        }
+        debugPrint('🔄 Starting fresh BLE scan...');
 
-        debugPrint('🔄 Scan complete. Device found: ${foundDevice != null}');
-      } catch (e) {
+        // Use FlutterBluePlus directly for more control
+        final completer = Completer<DeviceInfo?>();
+        StreamSubscription? subscription;
+
+        // Meshtastic service UUID
+        const serviceUuid = '6ba1b218-15a8-461f-9fa8-5dcae273eafd';
+
+        // Start scan with 15 second timeout
+        await FlutterBluePlus.startScan(
+          timeout: const Duration(seconds: 15),
+          withServices: [Guid(serviceUuid)],
+        );
+
+        debugPrint('🔄 Scan started, listening for results...');
+
+        // Listen to scan results
+        subscription = FlutterBluePlus.scanResults.listen(
+          (results) {
+            for (final r in results) {
+              final foundId = r.device.remoteId.toString();
+              debugPrint('🔄 Found device: $foundId (looking for $deviceId)');
+
+              if (foundId == deviceId && !completer.isCompleted) {
+                debugPrint('🔄 ✓ Target device found!');
+                final deviceInfo = DeviceInfo(
+                  id: foundId,
+                  name: r.device.platformName.isNotEmpty
+                      ? r.device.platformName
+                      : 'Meshtastic Device',
+                  type: TransportType.ble,
+                  address: foundId,
+                  rssi: r.rssi,
+                );
+                completer.complete(deviceInfo);
+              }
+            }
+          },
+          onError: (e) {
+            debugPrint('🔄 Scan stream error: $e');
+            if (!completer.isCompleted) {
+              completer.complete(null);
+            }
+          },
+        );
+
+        // Also listen for scan completion
+        FlutterBluePlus.isScanning.listen((isScanning) {
+          if (!isScanning && !completer.isCompleted) {
+            debugPrint('🔄 Scan completed (isScanning = false)');
+            completer.complete(null);
+          }
+        });
+
+        // Wait for result or scan completion
+        debugPrint('🔄 Waiting for scan result (15s timeout)...');
+        foundDevice = await completer.future.timeout(
+          const Duration(seconds: 16),
+          onTimeout: () {
+            debugPrint('🔄 Completer timeout reached');
+            return null;
+          },
+        );
+        debugPrint('🔄 Got scan result: ${foundDevice?.id}');
+
+        // Clean up
+        await FlutterBluePlus.stopScan();
+        subscription.cancel();
+        debugPrint('🔄 Cleanup done');
+      } catch (e, stack) {
         debugPrint('🔄 Scan error: $e');
-        // Continue to next attempt
+        debugPrint('🔄 Stack: $stack');
+        try {
+          await FlutterBluePlus.stopScan();
+        } catch (_) {}
       }
+
+      debugPrint('🔄 After scan. foundDevice: ${foundDevice != null}');
 
       if (foundDevice != null) {
         debugPrint('🔄 Device found! Connecting...');
