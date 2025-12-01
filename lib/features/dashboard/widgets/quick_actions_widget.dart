@@ -21,34 +21,43 @@ class QuickActionsContent extends ConsumerWidget {
     );
 
     return Padding(
-      padding: const EdgeInsets.all(8),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
         children: [
-          _ActionButton(
-            icon: Icons.send,
-            label: 'Quick\nMessage',
-            enabled: isConnected,
-            onTap: () => _showQuickMessageDialog(context, ref),
+          Expanded(
+            child: _ActionButton(
+              icon: Icons.send,
+              label: 'Quick\nMessage',
+              enabled: isConnected,
+              onTap: () => _showQuickMessageDialog(context, ref),
+            ),
           ),
-          _ActionButton(
-            icon: Icons.location_on,
-            label: 'Share\nLocation',
-            enabled: isConnected,
-            onTap: () => _shareLocation(context, ref),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _ActionButton(
+              icon: Icons.location_on,
+              label: 'Share\nLocation',
+              enabled: isConnected,
+              onTap: () => _shareLocation(context, ref),
+            ),
           ),
-          _ActionButton(
-            icon: Icons.route,
-            label: 'Traceroute',
-            enabled: isConnected,
-            onTap: () => _showTracerouteDialog(context, ref),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _ActionButton(
+              icon: Icons.route,
+              label: 'Traceroute',
+              enabled: isConnected,
+              onTap: () => _showTracerouteDialog(context, ref),
+            ),
           ),
-          _ActionButton(
-            icon: Icons.refresh,
-            label: 'Request\nPositions',
-            enabled: isConnected,
-            onTap: () => _requestPositions(context, ref),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _ActionButton(
+              icon: Icons.refresh,
+              label: 'Request\nPositions',
+              enabled: isConnected,
+              onTap: () => _requestPositions(context, ref),
+            ),
           ),
         ],
       ),
@@ -161,7 +170,6 @@ class _ActionButton extends StatelessWidget {
         onTap: enabled ? onTap : null,
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          width: 72,
           height: 72,
           decoration: BoxDecoration(
             color: enabled
