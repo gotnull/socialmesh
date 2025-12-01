@@ -211,8 +211,17 @@ class IftttService {
     required String message,
     String? channelName,
   }) async {
-    if (!_config.messageReceived) return false;
+    debugPrint(
+      'IFTTT: triggerMessageReceived called - messageReceived=${_config.messageReceived}',
+    );
+    if (!_config.messageReceived) {
+      debugPrint('IFTTT: Message trigger disabled in config');
+      return false;
+    }
 
+    debugPrint(
+      'IFTTT: Sending message webhook - sender=$senderName, msg=$message',
+    );
     return _triggerWebhook(
       eventName: 'meshtastic_message',
       value1: senderName,

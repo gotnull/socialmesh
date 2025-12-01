@@ -912,7 +912,13 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
     bool isChannelMessage,
   ) {
     final iftttService = _ref.read(iftttServiceProvider);
-    if (!iftttService.isActive) return;
+    debugPrint(
+      'IFTTT: Checking message trigger - isActive=${iftttService.isActive}',
+    );
+    if (!iftttService.isActive) {
+      debugPrint('IFTTT: Not active, skipping message trigger');
+      return;
+    }
 
     String? channelName;
     if (isChannelMessage) {
