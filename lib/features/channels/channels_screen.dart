@@ -668,7 +668,43 @@ class _ChannelTile extends ConsumerWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Channel'),
-        content: Text('Delete channel "${channel.name}"?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Delete channel "${channel.name}"?'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.accentOrange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppTheme.accentOrange.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: AppTheme.accentOrange,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Your device will reboot after this change. The app will automatically reconnect.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.accentOrange,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
@@ -698,15 +734,7 @@ class _ChannelTile extends ConsumerWidget {
                     .read(channelsProvider.notifier)
                     .removeChannel(channel.index);
 
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Channel deleted'),
-                      backgroundColor: AppTheme.darkCard,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
+                // Don't show snackbar - the reconnecting overlay will handle UX
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
