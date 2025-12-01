@@ -66,6 +66,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
   @override
   Widget build(BuildContext context) {
     final info = WidgetRegistry.getInfo(widget.config.type);
+    final isFavorite = widget.config.isFavorite;
 
     Widget content = AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -75,8 +76,14 @@ class _DashboardWidgetState extends State<DashboardWidget>
         border: Border.all(
           color: widget.isEditMode
               ? AppTheme.primaryGreen.withValues(alpha: 0.5)
+              : isFavorite
+              ? AppTheme.warningYellow.withValues(alpha: 0.4)
               : AppTheme.darkBorder,
-          width: widget.isEditMode ? 2 : 1,
+          width: widget.isEditMode
+              ? 2
+              : isFavorite
+              ? 1.5
+              : 1,
         ),
         boxShadow: widget.isEditMode
             ? [
@@ -84,6 +91,14 @@ class _DashboardWidgetState extends State<DashboardWidget>
                   color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                   blurRadius: 8,
                   spreadRadius: 2,
+                ),
+              ]
+            : isFavorite
+            ? [
+                BoxShadow(
+                  color: AppTheme.warningYellow.withValues(alpha: 0.08),
+                  blurRadius: 6,
+                  spreadRadius: 1,
                 ),
               ]
             : null,

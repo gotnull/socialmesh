@@ -244,7 +244,12 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
     List<DashboardWidgetConfig> widgetConfigs,
   ) {
     final enabledWidgets = widgetConfigs.where((w) => w.isVisible).toList()
-      ..sort((a, b) => a.order.compareTo(b.order));
+      ..sort((a, b) {
+        // Favorites first, then by order
+        if (a.isFavorite && !b.isFavorite) return -1;
+        if (!a.isFavorite && b.isFavorite) return 1;
+        return a.order.compareTo(b.order);
+      });
 
     if (enabledWidgets.isEmpty && !_editMode) {
       return _buildEmptyDashboard(context);
