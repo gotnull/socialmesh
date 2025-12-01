@@ -11,7 +11,7 @@ import 'widgets/recent_messages_widget.dart';
 import 'widgets/nearby_nodes_widget.dart';
 import 'widgets/battery_status_widget.dart';
 import 'widgets/quick_actions_widget.dart';
-import 'widgets/signal_chart_widget.dart';
+import 'widgets/signal_strength_widget.dart';
 
 /// Customizable widget dashboard with drag/reorder/favorites
 class WidgetDashboardScreen extends ConsumerStatefulWidget {
@@ -270,6 +270,23 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
   }
 
   Widget _buildWidgetCard(DashboardWidgetConfig config) {
+    // SignalStrength has its own complete widget design with header
+    if (config.type == DashboardWidgetType.signalStrength) {
+      return SignalStrengthWidget(
+        isFavorite: config.isFavorite,
+        onFavorite: () {
+          ref.read(dashboardWidgetsProvider.notifier).toggleFavorite(config.id);
+        },
+        onRemove: _editMode
+            ? () {
+                ref
+                    .read(dashboardWidgetsProvider.notifier)
+                    .removeWidget(config.id);
+              }
+            : null,
+      );
+    }
+
     final content = _getWidgetContent(config.type);
 
     return DashboardWidget(
@@ -298,7 +315,8 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
       case DashboardWidgetType.quickCompose:
         return const QuickActionsContent();
       case DashboardWidgetType.signalStrength:
-        return const SignalChartContent();
+        // Handled separately in _buildWidgetCard
+        return const SizedBox.shrink();
       default:
         final info = WidgetRegistry.getInfo(type);
         return Center(
