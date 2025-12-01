@@ -23,16 +23,19 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
   bool _saving = false;
   bool _loading = false;
   StreamSubscription<pb_config.Config_BluetoothConfig>? _configSubscription;
+  final _pinController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _pinController.text = _fixedPin.toString().padLeft(6, '0');
     _loadCurrentConfig();
   }
 
   @override
   void dispose() {
     _configSubscription?.cancel();
+    _pinController.dispose();
     super.dispose();
   }
 
@@ -41,6 +44,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
       _enabled = config.enabled;
       _mode = config.mode;
       _fixedPin = config.fixedPin > 0 ? config.fixedPin : 123456;
+      _pinController.text = _fixedPin.toString().padLeft(6, '0');
     });
   }
 
@@ -335,11 +339,15 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           TextField(
+                            controller: _pinController,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) =>
                                 FocusScope.of(context).unfocus(),
                             maxLength: 6,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 24,
@@ -367,13 +375,12 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                                 borderSide: BorderSide.none,
                               ),
                             ),
-                            controller: TextEditingController(
-                              text: _fixedPin.toString().padLeft(6, '0'),
-                            ),
                             onChanged: (value) {
                               final pin = int.tryParse(value);
                               if (pin != null) {
-                                setState(() => _fixedPin = pin);
+                                _fixedPin = pin;
+                              } else if (value.isEmpty) {
+                                _fixedPin = 0;
                               }
                             },
                           ),
