@@ -289,28 +289,15 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
   }
 
   Widget _buildWidgetCard(DashboardWidgetConfig config) {
-    // SignalStrength has its own complete widget design with header
-    if (config.type == DashboardWidgetType.signalStrength) {
-      return SignalStrengthWidget(
-        isFavorite: config.isFavorite,
-        onFavorite: () {
-          ref.read(dashboardWidgetsProvider.notifier).toggleFavorite(config.id);
-        },
-        onRemove: _editMode
-            ? () {
-                ref
-                    .read(dashboardWidgetsProvider.notifier)
-                    .removeWidget(config.id);
-              }
-            : null,
-      );
-    }
-
     final content = _getWidgetContent(config.type);
+    final trailing = config.type == DashboardWidgetType.signalStrength
+        ? buildLiveIndicator()
+        : null;
 
     return DashboardWidget(
       config: config,
       isEditMode: _editMode,
+      trailing: trailing,
       onFavorite: () {
         ref.read(dashboardWidgetsProvider.notifier).toggleFavorite(config.id);
       },
@@ -338,8 +325,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
       case DashboardWidgetType.meshHealth:
         return const MeshHealthContent();
       case DashboardWidgetType.signalStrength:
-        // Handled separately in _buildWidgetCard
-        return const SizedBox.shrink();
+        return const SignalStrengthContent();
     }
   }
 

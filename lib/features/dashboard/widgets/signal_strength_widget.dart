@@ -3,27 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
-import 'dashboard_widget_base.dart';
 
-/// Signal strength live chart widget - extracted from dashboard
-class SignalStrengthWidget extends ConsumerStatefulWidget {
-  final VoidCallback? onRemove;
-  final VoidCallback? onFavorite;
-  final bool isFavorite;
-
-  const SignalStrengthWidget({
-    super.key,
-    this.onRemove,
-    this.onFavorite,
-    this.isFavorite = false,
-  });
+/// Signal strength content widget - just the content without header wrapper
+/// Used by DashboardWidget for consistent styling
+class SignalStrengthContent extends ConsumerStatefulWidget {
+  const SignalStrengthContent({super.key});
 
   @override
-  ConsumerState<SignalStrengthWidget> createState() =>
-      _SignalStrengthWidgetState();
+  ConsumerState<SignalStrengthContent> createState() =>
+      SignalStrengthContentState();
 }
 
-class _SignalStrengthWidgetState extends ConsumerState<SignalStrengthWidget> {
+class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
   final List<MultiSignalData> _signalHistory = [];
   Timer? _updateTimer;
 
@@ -92,89 +83,41 @@ class _SignalStrengthWidgetState extends ConsumerState<SignalStrengthWidget> {
         : 0.0;
     final hasData = _signalHistory.isNotEmpty;
 
-    return DashboardWidgetBase(
-      title: 'Signal Strength',
-      icon: Icons.signal_cellular_alt,
-      isFavorite: widget.isFavorite,
-      onRemove: widget.onRemove,
-      onFavorite: widget.onFavorite,
-      trailing: _buildLiveIndicator(),
-      child: Column(
-        children: [
-          // Header with current signal info
-          _buildHeader(currentRssi, currentSnr, currentChannelUtil),
-          const Divider(color: AppTheme.darkBorder, height: 1),
-          // Legend
-          _buildLegend(),
-          // Chart
-          SizedBox(
-            height: 180,
-            child: hasData
-                ? Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 16, 8),
-                    child: CustomPaint(
-                      painter: MultiLineChartPainter(_signalHistory),
-                      child: Container(),
-                    ),
-                  )
-                : const Center(
-                    child: Text(
-                      'Waiting for signal data...',
-                      style: TextStyle(
-                        color: AppTheme.textTertiary,
-                        fontSize: 14,
-                        fontFamily: 'Inter',
-                      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Header with current signal info
+        _buildSignalHeader(currentRssi, currentSnr, currentChannelUtil),
+        const Divider(color: AppTheme.darkBorder, height: 1),
+        // Legend
+        _buildLegend(),
+        // Chart
+        SizedBox(
+          height: 180,
+          child: hasData
+              ? Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 16, 8),
+                  child: CustomPaint(
+                    painter: MultiLineChartPainter(_signalHistory),
+                    child: Container(),
+                  ),
+                )
+              : const Center(
+                  child: Text(
+                    'Waiting for signal data...',
+                    style: TextStyle(
+                      color: AppTheme.textTertiary,
+                      fontSize: 14,
+                      fontFamily: 'Inter',
                     ),
                   ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLiveIndicator() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppTheme.errorRed.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: AppTheme.errorRed,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.errorRed.withValues(alpha: 0.5),
-                  blurRadius: 4,
-                  spreadRadius: 1,
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 6),
-          const Text(
-            'LIVE',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.errorRed,
-              fontFamily: 'Inter',
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildHeader(double rssi, double snr, double channelUtil) {
+  Widget _buildSignalHeader(double rssi, double snr, double channelUtil) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -250,16 +193,16 @@ class _SignalStrengthWidgetState extends ConsumerState<SignalStrengthWidget> {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    _MetricChip(
+                    _StatChip(
                       label: 'SNR',
                       value: '${snr.toStringAsFixed(1)} dB',
-                      color: const Color(0xFF2196F3),
+                      color: AppTheme.graphBlue,
                     ),
                     const SizedBox(width: 8),
-                    _MetricChip(
-                      label: 'Ch Util',
+                    _StatChip(
+                      label: 'ChUtil',
                       value: '${channelUtil.toStringAsFixed(1)}%',
-                      color: const Color(0xFFFF9800),
+                      color: AppTheme.accentOrange,
                     ),
                   ],
                 ),
@@ -273,26 +216,69 @@ class _SignalStrengthWidgetState extends ConsumerState<SignalStrengthWidget> {
 
   Widget _buildLegend() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _LegendItem(color: AppTheme.primaryGreen, label: 'RSSI (dBm)'),
+          _LegendItem(color: AppTheme.primaryGreen, label: 'RSSI'),
           const SizedBox(width: 16),
-          _LegendItem(color: const Color(0xFF2196F3), label: 'SNR (dB)'),
+          _LegendItem(color: AppTheme.graphBlue, label: 'SNR'),
           const SizedBox(width: 16),
-          _LegendItem(color: const Color(0xFFFF9800), label: 'Ch Util (%)'),
+          _LegendItem(color: AppTheme.accentOrange, label: 'Ch Util'),
         ],
       ),
     );
   }
 }
 
-class _MetricChip extends StatelessWidget {
+/// Static LIVE indicator builder for use with DashboardWidget trailing
+Widget buildLiveIndicator() {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: AppTheme.errorRed.withValues(alpha: 0.15),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: AppTheme.errorRed,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.errorRed.withValues(alpha: 0.5),
+                blurRadius: 4,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 6),
+        const Text(
+          'LIVE',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.errorRed,
+            fontFamily: 'Inter',
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _StatChip extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
 
-  const _MetricChip({
+  const _StatChip({
     required this.label,
     required this.value,
     required this.color,
@@ -383,8 +369,8 @@ class MultiLineChartPainter extends CustomPainter {
   final List<MultiSignalData> data;
 
   static const Color rssiColor = AppTheme.primaryGreen;
-  static const Color snrColor = Color(0xFF2196F3);
-  static const Color channelUtilColor = Color(0xFFFF9800);
+  static const Color snrColor = AppTheme.graphBlue;
+  static const Color channelUtilColor = AppTheme.accentOrange;
 
   MultiLineChartPainter(this.data);
 
