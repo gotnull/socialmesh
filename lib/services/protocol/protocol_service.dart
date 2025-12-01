@@ -583,6 +583,11 @@ class ProtocolService {
       // If requestId is set, it references the original packet that this is a response to
       final requestId = data.requestId;
 
+      _logger.d(
+        'Routing message received: requestId=$requestId, from=${packet.from}, '
+        'to=${packet.to}, packetId=${packet.id}',
+      );
+
       if (requestId == 0) {
         _logger.d('Routing message with no requestId, ignoring');
         return;
@@ -591,6 +596,8 @@ class ProtocolService {
       // Parse the Routing protobuf message
       final routing = pb.Routing.fromBuffer(data.payload);
       final variant = routing.whichVariant();
+
+      _logger.d('Routing variant: $variant');
 
       RoutingError routingError;
       bool delivered;
@@ -602,7 +609,7 @@ class ProtocolService {
           routingError = RoutingError.fromCode(errorCode);
           delivered = routingError.isSuccess;
           _logger.i(
-            'Routing error for packet $requestId: ${routingError.message} (${routing.errorReason.name})',
+            'Routing error for packet $requestId: ${routingError.message} (code=$errorCode, name=${routing.errorReason.name})',
           );
           break;
 

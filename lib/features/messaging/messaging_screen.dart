@@ -542,6 +542,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           to: 0xFFFFFFFF, // Broadcast to channel
           channel: widget.channelIndex ?? 0,
           wantAck: false,
+          messageId: messageId,
         );
       } else {
         packetId = await protocol.sendMessage(
@@ -549,6 +550,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           to: widget.nodeNum!,
           channel: 0,
           wantAck: true,
+          messageId: messageId,
         );
       }
 
@@ -633,6 +635,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           to: 0xFFFFFFFF,
           channel: message.channel ?? 0,
           wantAck: false,
+          messageId: message.id,
         );
       } else {
         packetId = await protocol.sendMessage(
@@ -640,6 +643,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           to: message.to,
           channel: 0,
           wantAck: true,
+          messageId: message.id,
         );
       }
 

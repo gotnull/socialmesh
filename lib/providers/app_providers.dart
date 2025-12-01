@@ -657,15 +657,23 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
   }
 
   void _handleDeliveryUpdate(MessageDeliveryUpdate update) {
+    debugPrint(
+      '📨 Delivery update received: packetId=${update.packetId}, '
+      'delivered=${update.delivered}, error=${update.error?.message}',
+    );
+    debugPrint(
+      '📨 Currently tracking packets: ${_packetToMessageId.keys.toList()}',
+    );
+
     final messageId = _packetToMessageId[update.packetId];
     if (messageId == null) {
-      debugPrint('📨 Delivery update for unknown packet ${update.packetId}');
+      debugPrint('📨 ❌ Delivery update for unknown packet ${update.packetId}');
       return;
     }
 
     final messageIndex = state.indexWhere((m) => m.id == messageId);
     if (messageIndex == -1) {
-      debugPrint('📨 Delivery update for message not in state: $messageId');
+      debugPrint('📨 ❌ Delivery update for message not in state: $messageId');
       return;
     }
 
@@ -691,6 +699,10 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
 
   void trackPacket(int packetId, String messageId) {
     _packetToMessageId[packetId] = messageId;
+    debugPrint('📨 Tracking packet $packetId -> message $messageId');
+    debugPrint(
+      '📨 Current tracked packets: ${_packetToMessageId.keys.toList()}',
+    );
   }
 
   void addMessage(Message message) {
