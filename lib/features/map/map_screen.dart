@@ -506,16 +506,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     _measureEnd = null;
                   });
                   break;
-                case 'center':
-                  _centerOnMyNode(nodesWithPosition, myNodeNum);
-                  break;
-                case 'north':
-                  _animatedMove(
-                    _mapController.camera.center,
-                    _currentZoom,
-                    rotation: 0,
-                  );
-                  break;
               }
             },
             itemBuilder: (context) => [
@@ -586,35 +576,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     Text(
                       _measureMode ? 'Exit measure mode' : 'Measure distance',
                     ),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
-              const PopupMenuItem(
-                value: 'center',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.my_location,
-                      size: 18,
-                      color: AppTheme.textSecondary,
-                    ),
-                    SizedBox(width: 8),
-                    Text('Center on me'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'north',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.navigation,
-                      size: 18,
-                      color: AppTheme.textSecondary,
-                    ),
-                    SizedBox(width: 8),
-                    Text('Reset to north'),
                   ],
                 ),
               ),
@@ -884,7 +845,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 if (_showFilters)
                   Positioned(
                     left: 16,
-                    right: 16,
+                    right: 72,
                     top: 16,
                     child: _FilterBar(
                       currentFilter: _nodeFilter,
@@ -894,14 +855,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       filteredCount: nodesWithPosition.length,
                     ),
                   ),
-                // Measurement info
+                // Measurement card (shown at bottom when measurement complete)
                 if (_measureMode &&
                     _measureStart != null &&
                     _measureEnd != null)
                   Positioned(
                     left: 16,
                     right: 16,
-                    top: _showFilters ? 72 : 16,
+                    bottom: _selectedNode != null ? 200 : 16,
                     child: _MeasurementCard(
                       start: _measureStart!,
                       end: _measureEnd!,
@@ -916,12 +877,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ),
                     ),
                   ),
-                // Mode indicator
-                if (_measureMode)
+                // Mode indicator (centered at top)
+                if (_measureMode &&
+                    (_measureStart == null || _measureEnd == null))
                   Positioned(
-                    top: _showFilters ? 72 : 16,
-                    left: 0,
-                    right: 0,
+                    top: 16,
+                    left: 80,
+                    right: 80,
                     child: Center(
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -944,9 +906,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             Text(
                               _measureStart == null
                                   ? 'Tap to set start point'
-                                  : _measureEnd == null
-                                  ? 'Tap to set end point'
-                                  : 'Measurement complete',
+                                  : 'Tap to set end point',
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -1083,7 +1043,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 // Compass
                 Positioned(
                   right: 16,
-                  top: _showFilters ? 72 : 16,
+                  top: 16,
                   child: _Compass(
                     rotation: _mapRotation,
                     onPressed: () => _animatedMove(
@@ -1096,7 +1056,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 // Zoom controls
                 Positioned(
                   right: 16,
-                  top: (_showFilters ? 72 : 16) + 56,
+                  top: 16 + 56,
                   child: _ZoomControls(
                     currentZoom: _currentZoom,
                     minZoom: 4,
@@ -1112,6 +1072,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       HapticFeedback.selectionClick();
                     },
                     onFitAll: () => _fitAllNodes(nodesWithPosition),
+                  ),
+                ),
+                // Navigation buttons (center on me, reset north)
+                Positioned(
+                  right: 16,
+                  top: 16 + 56 + 140 + 8,
+                  child: _NavigationControls(
+                    onCenterOnMe: () =>
+                        _centerOnMyNode(nodesWithPosition, myNodeNum),
+                    onResetNorth: () => _animatedMove(
+                      _mapController.camera.center,
+                      _currentZoom,
+                      rotation: 0,
+                    ),
+                    hasMyNode: nodesWithPosition.any(
+                      (n) => n.node.nodeNum == myNodeNum,
+                    ),
                   ),
                 ),
               ],
@@ -2712,6 +2689,95 @@ class _ZoomButton extends StatelessWidget {
       return Tooltip(message: tooltip!, child: button);
     }
     return button;
+  }
+}
+
+/// Navigation control buttons (center on me, reset north)
+class _NavigationControls extends StatelessWidget {
+  final VoidCallback onCenterOnMe;
+  final VoidCallback onResetNorth;
+  final bool hasMyNode;
+
+  const _NavigationControls({
+    required this.onCenterOnMe,
+    required this.onResetNorth,
+    required this.hasMyNode,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Center on me
+          Tooltip(
+            message: 'Center on my location',
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: hasMyNode ? onCenterOnMe : null,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.my_location,
+                    size: 20,
+                    color: hasMyNode
+                        ? AppTheme.primaryMagenta
+                        : AppTheme.textTertiary.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Container(
+            height: 1,
+            width: 32,
+            color: AppTheme.darkBorder.withValues(alpha: 0.3),
+          ),
+          // Reset to north
+          Tooltip(
+            message: 'Reset to north',
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onResetNorth,
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(12),
+                ),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.explore,
+                    size: 20,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
