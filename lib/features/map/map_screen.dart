@@ -444,24 +444,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
           ),
         ),
         actions: [
-          // Search toggle
-          IconButton(
-            icon: Icon(
-              _searchQuery.isNotEmpty ? Icons.search_off : Icons.search,
-              color: _searchQuery.isNotEmpty
-                  ? AppTheme.primaryMagenta
-                  : AppTheme.textSecondary,
-            ),
-            onPressed: () => _showSearchDialog(),
-            tooltip: 'Search nodes',
-          ),
           // Filter toggle
           IconButton(
             icon: Icon(
-              _nodeFilter != NodeFilter.all
+              _nodeFilter != NodeFilter.all || _showFilters
                   ? Icons.filter_alt
                   : Icons.filter_alt_outlined,
-              color: _nodeFilter != NodeFilter.all
+              color: _nodeFilter != NodeFilter.all || _showFilters
                   ? AppTheme.primaryMagenta
                   : AppTheme.textSecondary,
             ),
@@ -714,6 +703,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ),
                     // Waypoint markers
                     MarkerLayer(
+                      rotate: true,
                       markers: _waypoints.map((w) {
                         return Marker(
                           point: w.position,
@@ -761,6 +751,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     ),
                     // Node markers
                     MarkerLayer(
+                      rotate: true,
                       markers: nodesWithPosition.map((n) {
                         final isMyNode = n.node.nodeNum == myNodeNum;
                         final isSelected =
@@ -787,6 +778,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     // Measurement markers
                     if (_measureStart != null)
                       MarkerLayer(
+                        rotate: true,
                         markers: [
                           Marker(
                             point: _measureStart!,
@@ -841,6 +833,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ),
                     // Distance labels layer
                     MarkerLayer(
+                      rotate: true,
                       markers: _buildDistanceLabels(
                         nodesWithPosition,
                         myNodeNum,
@@ -882,6 +875,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         label:
                             'Distance: ${_formatDistance(_calculateDistance(_measureStart!.latitude, _measureStart!.longitude, _measureEnd!.latitude, _measureEnd!.longitude))}',
                       ),
+                      onExitMeasureMode: () => setState(() {
+                        _measureMode = false;
+                        _measureStart = null;
+                        _measureEnd = null;
+                      }),
                     ),
                   ),
                 // Mode indicator (centered at top)
@@ -893,9 +891,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     right: _mapPadding + _controlSize + _controlSpacing,
                     child: Center(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                        padding: const EdgeInsets.only(
+                          left: 16,
+                          top: 4,
+                          bottom: 4,
+                          right: 4,
                         ),
                         decoration: BoxDecoration(
                           color: AppTheme.warningYellow,
@@ -918,6 +918,27 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () => setState(() {
+                                _measureMode = false;
+                                _measureStart = null;
+                                _measureEnd = null;
+                              }),
+                              child: Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
                           ],
@@ -1121,62 +1142,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     });
     HapticFeedback.selectionClick();
-  }
-
-  void _showSearchDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text(
-          'Search Nodes',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: TextField(
-          controller: _searchController,
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: 'Enter node name or ID...',
-            hintStyle: TextStyle(color: AppTheme.textTertiary),
-            prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
-            suffixIcon: _searchQuery.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(
-                      Icons.clear,
-                      color: AppTheme.textSecondary,
-                    ),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() => _searchQuery = '');
-                    },
-                  )
-                : null,
-            filled: true,
-            fillColor: AppTheme.darkBackground,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
-          onChanged: (value) => setState(() => _searchQuery = value),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _searchController.clear();
-              setState(() => _searchQuery = '');
-              Navigator.pop(context);
-            },
-            child: const Text('Clear'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Done'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showWaypointMenu(LatLng point) {
@@ -1843,138 +1808,143 @@ class _NodeListPanel extends StatelessWidget {
       return a.node.displayName.compareTo(b.node.displayName);
     });
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.darkCard,
-        border: Border(
-          right: BorderSide(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.darkCard,
+          border: Border(
+            right: BorderSide(
+              color: AppTheme.darkBorder.withValues(alpha: 0.5),
+            ),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 16,
+              offset: const Offset(4, 0),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(4, 0),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: AppTheme.darkBorder.withValues(alpha: 0.5),
-                ),
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.list,
-                  size: 20,
-                  color: AppTheme.primaryMagenta,
-                ),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    'Nodes',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: AppTheme.darkBorder.withValues(alpha: 0.5),
                   ),
                 ),
-                Text(
-                  '${sortedNodes.length}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textTertiary,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 20),
-                  color: AppTheme.textTertiary,
-                  onPressed: onClose,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
-            ),
-          ),
-          // Search field
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: TextField(
-              controller: searchController,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              decoration: InputDecoration(
-                hintText: 'Search nodes...',
-                hintStyle: TextStyle(
-                  color: AppTheme.textTertiary,
-                  fontSize: 14,
-                ),
-                prefixIcon: const Icon(
-                  Icons.search,
-                  size: 20,
-                  color: AppTheme.textSecondary,
-                ),
-                suffixIcon: searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 18),
-                        color: AppTheme.textSecondary,
-                        onPressed: () {
-                          searchController.clear();
-                          onSearchChanged('');
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: AppTheme.darkBackground,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none,
-                ),
               ),
-              onChanged: onSearchChanged,
-            ),
-          ),
-          // Node list
-          Expanded(
-            child: sortedNodes.isEmpty
-                ? Center(
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.list,
+                    size: 20,
+                    color: AppTheme.primaryMagenta,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
                     child: Text(
-                      'No nodes found',
-                      style: TextStyle(color: AppTheme.textTertiary),
+                      'Nodes',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    itemCount: sortedNodes.length,
-                    itemBuilder: (context, index) {
-                      final nodeWithPos = sortedNodes[index];
-                      final isMyNode = nodeWithPos.node.nodeNum == myNodeNum;
-                      final isSelected =
-                          selectedNode?.nodeNum == nodeWithPos.node.nodeNum;
-                      final distance = calculateDistanceFromMe(nodeWithPos);
-
-                      return _NodeListItem(
-                        nodeWithPos: nodeWithPos,
-                        isMyNode: isMyNode,
-                        isSelected: isSelected,
-                        distance: distance,
-                        onTap: () => onNodeSelected(nodeWithPos),
-                      );
-                    },
                   ),
-          ),
-        ],
+                  Text(
+                    '${sortedNodes.length}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textTertiary,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    color: AppTheme.textTertiary,
+                    onPressed: onClose,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+            ),
+            // Search field
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: TextField(
+                controller: searchController,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'Search nodes...',
+                  hintStyle: TextStyle(
+                    color: AppTheme.textTertiary,
+                    fontSize: 14,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    size: 20,
+                    color: AppTheme.textSecondary,
+                  ),
+                  suffixIcon: searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          color: AppTheme.textSecondary,
+                          onPressed: () {
+                            searchController.clear();
+                            onSearchChanged('');
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: AppTheme.darkBackground,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                onChanged: onSearchChanged,
+              ),
+            ),
+            // Node list
+            Expanded(
+              child: sortedNodes.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No nodes found',
+                        style: TextStyle(color: AppTheme.textTertiary),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      itemCount: sortedNodes.length,
+                      itemBuilder: (context, index) {
+                        final nodeWithPos = sortedNodes[index];
+                        final isMyNode = nodeWithPos.node.nodeNum == myNodeNum;
+                        final isSelected =
+                            selectedNode?.nodeNum == nodeWithPos.node.nodeNum;
+                        final distance = calculateDistanceFromMe(nodeWithPos);
+
+                        return _NodeListItem(
+                          nodeWithPos: nodeWithPos,
+                          isMyNode: isMyNode,
+                          isSelected: isSelected,
+                          distance: distance,
+                          onTap: () => onNodeSelected(nodeWithPos),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2290,7 +2260,9 @@ class _NodeInfoCard extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header row with close button
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Node avatar
               Container(
@@ -2355,7 +2327,7 @@ class _NodeInfoCard extends ConsumerWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
                         Text(
@@ -2400,50 +2372,17 @@ class _NodeInfoCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              // Action buttons (compact)
-              Column(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 20),
-                    color: AppTheme.textTertiary,
-                    onPressed: onClose,
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
-                    ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.share, size: 18),
-                        color: AppTheme.textSecondary,
-                        onPressed: onShareLocation,
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
-                        ),
-                        tooltip: 'Share location',
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.copy, size: 18),
-                        color: AppTheme.textSecondary,
-                        onPressed: onCopyCoordinates,
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
-                        ),
-                        tooltip: 'Copy coordinates',
-                      ),
-                    ],
-                  ),
-                ],
+              const SizedBox(width: 8),
+              // Close button
+              SizedBox(
+                width: 32,
+                height: 32,
+                child: IconButton(
+                  icon: const Icon(Icons.close, size: 20),
+                  color: AppTheme.textTertiary,
+                  onPressed: onClose,
+                  padding: EdgeInsets.zero,
+                ),
               ),
             ],
           ),
@@ -2487,47 +2426,96 @@ class _NodeInfoCard extends ConsumerWidget {
               ),
             ],
           ),
-          if (!isMyNode) ...[
-            const SizedBox(height: 12),
-            // Action buttons row
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _exchangePositions(context, ref),
-                    icon: const Icon(Icons.swap_horiz, size: 18),
-                    label: const Text('Position'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.primaryMagenta,
-                      side: BorderSide(
-                        color: AppTheme.primaryMagenta.withValues(alpha: 0.5),
+          const SizedBox(height: 12),
+          // Action buttons row
+          Row(
+            children: [
+              // Share and copy buttons
+              SizedBox(
+                width: 40,
+                height: 40,
+                child: Material(
+                  color: AppTheme.darkBackground,
+                  borderRadius: BorderRadius.circular(8),
+                  child: InkWell(
+                    onTap: onShareLocation,
+                    borderRadius: BorderRadius.circular(8),
+                    child: const Center(
+                      child: Icon(
+                        Icons.share,
+                        size: 18,
+                        color: AppTheme.textSecondary,
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 40,
+                height: 40,
+                child: Material(
+                  color: AppTheme.darkBackground,
+                  borderRadius: BorderRadius.circular(8),
+                  child: InkWell(
+                    onTap: onCopyCoordinates,
+                    borderRadius: BorderRadius.circular(8),
+                    child: const Center(
+                      child: Icon(
+                        Icons.copy,
+                        size: 18,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Main action buttons
+              if (!isMyNode) ...[
+                Expanded(
+                  child: SizedBox(
+                    height: 40,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _exchangePositions(context, ref),
+                      icon: const Icon(Icons.swap_horiz, size: 18),
+                      label: const Text('Position'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.primaryMagenta,
+                        side: BorderSide(
+                          color: AppTheme.primaryMagenta.withValues(alpha: 0.5),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: onMessage,
-                    icon: const Icon(Icons.message, size: 18),
-                    label: const Text('Message'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryMagenta,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    height: 40,
+                    child: ElevatedButton.icon(
+                      onPressed: onMessage,
+                      icon: const Icon(Icons.message, size: 18),
+                      label: const Text('Message'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryMagenta,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
-          ],
+              ] else
+                const Spacer(),
+            ],
+          ),
         ],
       ),
     );
@@ -2976,12 +2964,14 @@ class _MeasurementCard extends StatelessWidget {
   final LatLng end;
   final VoidCallback onClear;
   final VoidCallback onShare;
+  final VoidCallback onExitMeasureMode;
 
   const _MeasurementCard({
     required this.start,
     required this.end,
     required this.onClear,
     required this.onShare,
+    required this.onExitMeasureMode,
   });
 
   String _formatDistance(double km) {
@@ -3065,10 +3055,16 @@ class _MeasurementCard extends StatelessWidget {
             tooltip: 'Share',
           ),
           IconButton(
-            icon: const Icon(Icons.clear, size: 20),
+            icon: const Icon(Icons.refresh, size: 20),
             color: AppTheme.textTertiary,
             onPressed: onClear,
-            tooltip: 'Clear',
+            tooltip: 'New measurement',
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 20),
+            color: AppTheme.errorRed,
+            onPressed: onExitMeasureMode,
+            tooltip: 'Exit measure mode',
           ),
         ],
       ),
