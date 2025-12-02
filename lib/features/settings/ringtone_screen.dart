@@ -646,7 +646,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                 return;
                               }
 
-                              final validation = _validateRtttl(rtttlController.text);
+                              final validation = _validateRtttl(
+                                rtttlController.text,
+                              );
                               if (validation != null) {
                                 setDialogState(() {
                                   dialogError = validation;
@@ -660,7 +662,8 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                     RingtonePreset(
                                       name: nameController.text.trim(),
                                       rtttl: rtttlController.text.trim(),
-                                      description: descController.text.trim().isEmpty
+                                      description:
+                                          descController.text.trim().isEmpty
                                           ? 'Custom ringtone'
                                           : descController.text.trim(),
                                     ),
