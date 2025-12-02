@@ -1834,26 +1834,18 @@ class _QuickResponseTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (response.emoji != null) ...[
-                Text(response.emoji!, style: const TextStyle(fontSize: 16)),
-                const SizedBox(width: 6),
-              ],
-              Flexible(
-                child: Text(
-                  response.text,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+          child: Center(
+            child: Text(
+              response.text,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
               ),
-            ],
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
       ),

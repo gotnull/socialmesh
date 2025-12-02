@@ -433,153 +433,264 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     final descController = TextEditingController();
     String? dialogError;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: AppTheme.darkCard,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+        builder: (context, setDialogState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          title: const Text(
-            'Add Custom Ringtone',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontFamily: 'Inter',
+          child: Container(
+            decoration: const BoxDecoration(
+              color: AppTheme.darkCard,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: nameController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Inter',
-                  ),
-                  decoration: InputDecoration(
-                    labelText: 'Name',
-                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
-                    filled: true,
-                    fillColor: AppTheme.darkBackground,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: rtttlController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'monospace',
-                    fontSize: 12,
-                  ),
-                  maxLines: 3,
-                  onChanged: (value) {
-                    setDialogState(() {
-                      dialogError = value.isEmpty
-                          ? null
-                          : _validateRtttl(value);
-                    });
-                  },
-                  decoration: InputDecoration(
-                    labelText: 'RTTTL String',
-                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
-                    hintText: '24:d=4,o=5,b=120:c,e,g',
-                    hintStyle: TextStyle(
-                      color: AppTheme.textTertiary.withValues(alpha: 0.5),
-                      fontFamily: 'monospace',
-                      fontSize: 12,
-                    ),
-                    filled: true,
-                    fillColor: AppTheme.darkBackground,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    errorText: dialogError,
-                    errorMaxLines: 2,
-                    errorStyle: const TextStyle(fontSize: 11),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Inter',
-                  ),
-                  decoration: InputDecoration(
-                    labelText: 'Description (optional)',
-                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
-                    filled: true,
-                    fillColor: AppTheme.darkBackground,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: AppTheme.textSecondary),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.trim().isEmpty) {
-                  setDialogState(() {
-                    dialogError = 'Name is required';
-                  });
-                  return;
-                }
-
-                final validation = _validateRtttl(rtttlController.text);
-                if (validation != null) {
-                  setDialogState(() {
-                    dialogError = validation;
-                  });
-                  return;
-                }
-
-                ref
-                    .read(customRingtonesProvider.notifier)
-                    .addPreset(
-                      RingtonePreset(
-                        name: nameController.text.trim(),
-                        rtttl: rtttlController.text.trim(),
-                        description: descController.text.trim().isEmpty
-                            ? 'Custom ringtone'
-                            : descController.text.trim(),
+            child: SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 24),
+                        decoration: BoxDecoration(
+                          color: AppTheme.textTertiary,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
-                    );
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Custom ringtone added'),
-                    backgroundColor: AppTheme.darkCard,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGreen,
-                foregroundColor: Colors.white,
+                    ),
+                    const Text(
+                      'Add Custom Ringtone',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Create a custom RTTTL ringtone preset',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.textSecondary,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Name',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textSecondary,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.darkBorder),
+                      ),
+                      child: TextField(
+                        controller: nameController,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontFamily: 'Inter',
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'e.g., My Ringtone',
+                          hintStyle: TextStyle(color: AppTheme.textTertiary),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.all(16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'RTTTL String',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textSecondary,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: dialogError != null
+                              ? AppTheme.errorRed
+                              : AppTheme.darkBorder,
+                        ),
+                      ),
+                      child: TextField(
+                        controller: rtttlController,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'monospace',
+                          fontSize: 13,
+                        ),
+                        maxLines: 3,
+                        onChanged: (value) {
+                          setDialogState(() {
+                            dialogError = value.isEmpty
+                                ? null
+                                : _validateRtttl(value);
+                          });
+                        },
+                        decoration: const InputDecoration(
+                          hintText: '24:d=4,o=5,b=120:c,e,g',
+                          hintStyle: TextStyle(
+                            color: AppTheme.textTertiary,
+                            fontFamily: 'monospace',
+                            fontSize: 13,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.all(16),
+                        ),
+                      ),
+                    ),
+                    if (dialogError != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            size: 14,
+                            color: AppTheme.errorRed,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              dialogError!,
+                              style: const TextStyle(
+                                color: AppTheme.errorRed,
+                                fontSize: 12,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Description (optional)',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textSecondary,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.darkBorder),
+                      ),
+                      child: TextField(
+                        controller: descController,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontFamily: 'Inter',
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'e.g., Classic beep melody',
+                          hintStyle: TextStyle(color: AppTheme.textTertiary),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.all(16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              side: BorderSide(color: Colors.grey.shade700),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              if (nameController.text.trim().isEmpty) {
+                                setDialogState(() {
+                                  dialogError = 'Name is required';
+                                });
+                                return;
+                              }
+
+                              final validation = _validateRtttl(rtttlController.text);
+                              if (validation != null) {
+                                setDialogState(() {
+                                  dialogError = validation;
+                                });
+                                return;
+                              }
+
+                              ref
+                                  .read(customRingtonesProvider.notifier)
+                                  .addPreset(
+                                    RingtonePreset(
+                                      name: nameController.text.trim(),
+                                      rtttl: rtttlController.text.trim(),
+                                      description: descController.text.trim().isEmpty
+                                          ? 'Custom ringtone'
+                                          : descController.text.trim(),
+                                    ),
+                                  );
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Custom ringtone added'),
+                                  backgroundColor: AppTheme.darkCard,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: AppTheme.primaryGreen,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text('Add'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              child: const Text('Add'),
             ),
-          ],
+          ),
         ),
       ),
     );
