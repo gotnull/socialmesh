@@ -1794,9 +1794,9 @@ class _QuickResponsesSheet extends StatelessWidget {
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 2.5,
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                          childAspectRatio: 3.5,
                         ),
                     itemCount: responses.length,
                     itemBuilder: (context, index) {
@@ -1833,14 +1833,15 @@ class _QuickResponseTile extends StatelessWidget {
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (response.emoji != null) ...[
-                Text(response.emoji!, style: const TextStyle(fontSize: 20)),
-                const SizedBox(width: 8),
+                Text(response.emoji!, style: const TextStyle(fontSize: 16)),
+                const SizedBox(width: 6),
               ],
-              Expanded(
+              Flexible(
                 child: Text(
                   response.text,
                   style: const TextStyle(
@@ -1848,7 +1849,7 @@ class _QuickResponseTile extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                     fontSize: 14,
                   ),
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
