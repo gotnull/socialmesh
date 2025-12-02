@@ -149,11 +149,95 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   bool _playing = false;
   int _selectedPresetIndex = -1;
   bool _showingCustom = false;
+  int _playingPresetIndex = -1;
+  bool _playingCustomPreset = false;
+  String? _validationError;
+
+  /// Validate RTTTL format
+  /// Returns null if valid, error message if invalid
+  String? _validateRtttl(String rtttl) {
+    if (rtttl.trim().isEmpty) {
+      return 'RTTTL string cannot be empty';
+    }
+
+    final trimmed = rtttl.trim();
+
+    // Must have at least 2 colons (name:defaults:notes or defaults:notes)
+    final colonCount = ':'.allMatches(trimmed).length;
+    if (colonCount < 1) {
+      return 'Invalid format: missing colons. Expected format: name:d=4,o=5,b=120:notes';
+    }
+
+    final parts = trimmed.split(':');
+
+    // Get defaults section
+    String defaults;
+    String notesSection;
+
+    if (parts.length >= 3) {
+      defaults = parts[1].toLowerCase();
+      notesSection = parts.sublist(2).join(':');
+    } else if (parts.length == 2) {
+      defaults = parts[0].toLowerCase();
+      notesSection = parts[1];
+    } else {
+      return 'Invalid format: expected name:defaults:notes';
+    }
+
+    // Validate defaults section has proper key=value pairs
+    bool hasValidDefaults = false;
+    for (final part in defaults.split(',')) {
+      final kv = part.trim().split('=');
+      if (kv.length == 2) {
+        final key = kv[0].trim();
+        final value = kv[1].trim();
+        if (['d', 'o', 'b'].contains(key) && int.tryParse(value) != null) {
+          hasValidDefaults = true;
+        }
+      }
+    }
+
+    if (!hasValidDefaults) {
+      return 'Invalid defaults: expected d=duration, o=octave, b=bpm';
+    }
+
+    // Validate notes section has valid note characters
+    if (notesSection.trim().isEmpty) {
+      return 'No notes found in RTTTL string';
+    }
+
+    final validNotePattern = RegExp(
+      r'^[0-9]*[a-gp]#?[0-9]*\.?$',
+      caseSensitive: false,
+    );
+    final notes = notesSection.split(',');
+
+    for (final note in notes) {
+      final trimmedNote = note.trim();
+      if (trimmedNote.isEmpty) continue;
+      if (!validNotePattern.hasMatch(trimmedNote)) {
+        return 'Invalid note: "$trimmedNote". Notes should be like c, 8e6, f#, 4p';
+      }
+    }
+
+    if (notes.where((n) => n.trim().isNotEmpty).isEmpty) {
+      return 'No valid notes found';
+    }
+
+    return null; // Valid
+  }
+
+  void _onRtttlChanged(String value) {
+    setState(() {
+      _validationError = value.isEmpty ? null : _validateRtttl(value);
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _loadCurrentRingtone();
+    _rtttlController.addListener(() => _onRtttlChanged(_rtttlController.text));
   }
 
   @override
@@ -164,10 +248,20 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   }
 
   Future<void> _playPreview() async {
-    if (_rtttlController.text.trim().isEmpty) {
+    // Stop any preset playback
+    if (_playingPresetIndex >= 0) {
+      await _rtttlPlayer.stop();
+      setState(() {
+        _playingPresetIndex = -1;
+        _playingCustomPreset = false;
+      });
+    }
+
+    final validation = _validateRtttl(_rtttlController.text);
+    if (validation != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Enter an RTTTL string to preview'),
+        SnackBar(
+          content: Text(validation),
           backgroundColor: AppTheme.errorRed,
           behavior: SnackBarBehavior.floating,
         ),
@@ -208,6 +302,57 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     }
   }
 
+  Future<void> _playPreset(
+    RingtonePreset preset,
+    int index, {
+    bool isCustom = false,
+  }) async {
+    // Stop main preview if playing
+    if (_playing) {
+      await _rtttlPlayer.stop();
+      setState(() => _playing = false);
+    }
+
+    // If this preset is already playing, stop it
+    if (_playingPresetIndex == index && _playingCustomPreset == isCustom) {
+      await _rtttlPlayer.stop();
+      setState(() {
+        _playingPresetIndex = -1;
+        _playingCustomPreset = false;
+      });
+      return;
+    }
+
+    // Stop any other preset
+    if (_playingPresetIndex >= 0) {
+      await _rtttlPlayer.stop();
+    }
+
+    setState(() {
+      _playingPresetIndex = index;
+      _playingCustomPreset = isCustom;
+    });
+
+    try {
+      await _rtttlPlayer.play(preset.rtttl);
+
+      // Wait for playback to complete
+      while (_rtttlPlayer.isPlaying) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted) break;
+      }
+    } catch (e) {
+      // Ignore errors during preset playback
+    } finally {
+      if (mounted) {
+        setState(() {
+          _playingPresetIndex = -1;
+          _playingCustomPreset = false;
+        });
+      }
+    }
+  }
+
   Future<void> _loadCurrentRingtone() async {
     setState(() => _loading = true);
     try {
@@ -225,10 +370,11 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   }
 
   Future<void> _saveRingtone() async {
-    if (_rtttlController.text.trim().isEmpty) {
+    final validation = _validateRtttl(_rtttlController.text);
+    if (validation != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter an RTTTL ringtone string'),
+        SnackBar(
+          content: Text(validation),
           backgroundColor: AppTheme.errorRed,
           behavior: SnackBarBehavior.floating,
         ),
@@ -284,137 +430,156 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     final nameController = TextEditingController();
     final rtttlController = TextEditingController();
     final descController = TextEditingController();
+    String? dialogError;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Add Custom Ringtone',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Inter',
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppTheme.darkCard,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Inter',
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  labelStyle: const TextStyle(color: AppTheme.textSecondary),
-                  filled: true,
-                  fillColor: AppTheme.darkBackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
+          title: const Text(
+            'Add Custom Ringtone',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Inter',
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: nameController,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'Inter',
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Name',
+                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                    filled: true,
+                    fillColor: AppTheme.darkBackground,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: rtttlController,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'monospace',
-                  fontSize: 12,
-                ),
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: 'RTTTL String',
-                  labelStyle: const TextStyle(color: AppTheme.textSecondary),
-                  hintText: '24:d=4,o=5,b=120:c,e,g',
-                  hintStyle: TextStyle(
-                    color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: rtttlController,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontFamily: 'monospace',
                     fontSize: 12,
                   ),
-                  filled: true,
-                  fillColor: AppTheme.darkBackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
+                  maxLines: 3,
+                  onChanged: (value) {
+                    setDialogState(() {
+                      dialogError = value.isEmpty
+                          ? null
+                          : _validateRtttl(value);
+                    });
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'RTTTL String',
+                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                    hintText: '24:d=4,o=5,b=120:c,e,g',
+                    hintStyle: TextStyle(
+                      color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                    ),
+                    filled: true,
+                    fillColor: AppTheme.darkBackground,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                    errorText: dialogError,
+                    errorMaxLines: 2,
+                    errorStyle: const TextStyle(fontSize: 11),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: descController,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Inter',
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Description (optional)',
-                  labelStyle: const TextStyle(color: AppTheme.textSecondary),
-                  filled: true,
-                  fillColor: AppTheme.darkBackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descController,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'Inter',
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Description (optional)',
+                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                    filled: true,
+                    fillColor: AppTheme.darkBackground,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppTheme.textSecondary),
+              ],
             ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.trim().isEmpty ||
-                  rtttlController.text.trim().isEmpty) {
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: AppTheme.textSecondary),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (nameController.text.trim().isEmpty) {
+                  setDialogState(() {
+                    dialogError = 'Name is required';
+                  });
+                  return;
+                }
+
+                final validation = _validateRtttl(rtttlController.text);
+                if (validation != null) {
+                  setDialogState(() {
+                    dialogError = validation;
+                  });
+                  return;
+                }
+
+                ref
+                    .read(customRingtonesProvider.notifier)
+                    .addPreset(
+                      RingtonePreset(
+                        name: nameController.text.trim(),
+                        rtttl: rtttlController.text.trim(),
+                        description: descController.text.trim().isEmpty
+                            ? 'Custom ringtone'
+                            : descController.text.trim(),
+                      ),
+                    );
+                Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Name and RTTTL string are required'),
-                    backgroundColor: AppTheme.errorRed,
+                    content: Text('Custom ringtone added'),
+                    backgroundColor: AppTheme.darkCard,
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
-                return;
-              }
-
-              ref
-                  .read(customRingtonesProvider.notifier)
-                  .addPreset(
-                    RingtonePreset(
-                      name: nameController.text.trim(),
-                      rtttl: rtttlController.text.trim(),
-                      description: descController.text.trim().isEmpty
-                          ? 'Custom ringtone'
-                          : descController.text.trim(),
-                    ),
-                  );
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Custom ringtone added'),
-                  backgroundColor: AppTheme.darkCard,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryGreen,
-              foregroundColor: Colors.white,
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGreen,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Add'),
             ),
-            child: const Text('Add'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -650,11 +815,57 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           fillColor: AppTheme.darkBackground,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
+                            borderSide: _validationError != null
+                                ? const BorderSide(
+                                    color: AppTheme.errorRed,
+                                    width: 1,
+                                  )
+                                : BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: _validationError != null
+                                ? const BorderSide(
+                                    color: AppTheme.errorRed,
+                                    width: 1,
+                                  )
+                                : BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: _validationError != null
+                                  ? AppTheme.errorRed
+                                  : AppTheme.primaryGreen,
+                              width: 1,
+                            ),
                           ),
                           contentPadding: const EdgeInsets.all(12),
                         ),
                       ),
+                      if (_validationError != null) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              size: 14,
+                              color: AppTheme.errorRed,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                _validationError!,
+                                style: const TextStyle(
+                                  color: AppTheme.errorRed,
+                                  fontSize: 12,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 12),
                       Row(
                         children: [
@@ -686,6 +897,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                               _rtttlController.clear();
                               setState(() {
                                 _selectedPresetIndex = -1;
+                                _validationError = null;
                               });
                             },
                             icon: const Icon(Icons.clear, size: 16),
@@ -736,66 +948,134 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       final preset = entry.value;
                       final isSelected =
                           !_showingCustom && _selectedPresetIndex == index;
+                      final isPlaying =
+                          !_playingCustomPreset && _playingPresetIndex == index;
 
                       return Column(
                         children: [
-                          ListTile(
-                            leading: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppTheme.primaryGreen.withValues(
-                                        alpha: 0.15,
-                                      )
-                                    : AppTheme.darkBackground,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                isSelected
-                                    ? Icons.music_note
-                                    : Icons.music_note_outlined,
-                                color: isSelected
-                                    ? AppTheme.primaryGreen
-                                    : AppTheme.textSecondary,
-                                size: 20,
-                              ),
-                            ),
-                            title: Text(
-                              preset.name,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? AppTheme.primaryGreen
-                                    : Colors.white,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                                fontFamily: 'Inter',
-                              ),
-                            ),
-                            subtitle: Text(
-                              preset.description,
-                              style: const TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 12,
-                                fontFamily: 'Inter',
-                              ),
-                            ),
-                            trailing: isSelected
-                                ? const Icon(
-                                    Icons.check_circle,
-                                    color: AppTheme.primaryGreen,
-                                  )
-                                : const Icon(
-                                    Icons.chevron_right,
-                                    color: AppTheme.textTertiary,
-                                  ),
+                          InkWell(
                             onTap: () => _selectPreset(preset, index),
+                            borderRadius: index == 0
+                                ? const BorderRadius.vertical(
+                                    top: Radius.circular(12),
+                                  )
+                                : index == _builtInPresets.length - 1
+                                ? const BorderRadius.vertical(
+                                    bottom: Radius.circular(12),
+                                  )
+                                : BorderRadius.zero,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              child: Row(
+                                children: [
+                                  // Music icon
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? AppTheme.primaryGreen.withValues(
+                                              alpha: 0.15,
+                                            )
+                                          : AppTheme.darkBackground,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      isSelected
+                                          ? Icons.music_note
+                                          : Icons.music_note_outlined,
+                                      color: isSelected
+                                          ? AppTheme.primaryGreen
+                                          : AppTheme.textSecondary,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  // Title and description
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          preset.name,
+                                          style: TextStyle(
+                                            color: isSelected
+                                                ? AppTheme.primaryGreen
+                                                : Colors.white,
+                                            fontWeight: isSelected
+                                                ? FontWeight.w600
+                                                : FontWeight.w500,
+                                            fontFamily: 'Inter',
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          preset.description,
+                                          style: const TextStyle(
+                                            color: AppTheme.textSecondary,
+                                            fontSize: 12,
+                                            fontFamily: 'Inter',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  // Play button
+                                  SizedBox(
+                                    width: 40,
+                                    height: 40,
+                                    child: Material(
+                                      color: isPlaying
+                                          ? AppTheme.errorRed.withValues(
+                                              alpha: 0.15,
+                                            )
+                                          : AppTheme.darkBackground,
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: InkWell(
+                                        onTap: () => _playPreset(preset, index),
+                                        borderRadius: BorderRadius.circular(20),
+                                        child: Icon(
+                                          isPlaying
+                                              ? Icons.stop
+                                              : Icons.play_arrow,
+                                          color: isPlaying
+                                              ? AppTheme.errorRed
+                                              : AppTheme.textSecondary,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  // Selected indicator
+                                  SizedBox(
+                                    width: 24,
+                                    child: isSelected
+                                        ? const Icon(
+                                            Icons.check_circle,
+                                            color: AppTheme.primaryGreen,
+                                            size: 22,
+                                          )
+                                        : const Icon(
+                                            Icons.chevron_right,
+                                            color: AppTheme.textTertiary,
+                                            size: 22,
+                                          ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                           if (index < _builtInPresets.length - 1)
                             const Divider(
                               height: 1,
-                              indent: 72,
+                              indent: 68,
                               color: AppTheme.darkBorder,
                             ),
                         ],
@@ -879,92 +1159,182 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                         final preset = entry.value;
                         final isSelected =
                             _showingCustom && _selectedPresetIndex == index;
+                        final isPlaying =
+                            _playingCustomPreset &&
+                            _playingPresetIndex == index;
 
                         return Column(
                           children: [
-                            ListTile(
-                              leading: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppTheme.primaryGreen.withValues(
-                                          alpha: 0.15,
-                                        )
-                                      : AppTheme.darkBackground,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  isSelected
-                                      ? Icons.music_note
-                                      : Icons.music_note_outlined,
-                                  color: isSelected
-                                      ? AppTheme.primaryGreen
-                                      : AppTheme.textSecondary,
-                                  size: 20,
-                                ),
-                              ),
-                              title: Text(
-                                preset.name,
-                                style: TextStyle(
-                                  color: isSelected
-                                      ? AppTheme.primaryGreen
-                                      : Colors.white,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.w500,
-                                  fontFamily: 'Inter',
-                                ),
-                              ),
-                              subtitle: Text(
-                                preset.description,
-                                style: const TextStyle(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: 12,
-                                  fontFamily: 'Inter',
-                                ),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (isSelected)
-                                    const Icon(
-                                      Icons.check_circle,
-                                      color: AppTheme.primaryGreen,
-                                    )
-                                  else
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete_outline,
-                                        color: AppTheme.textTertiary,
-                                        size: 20,
-                                      ),
-                                      onPressed: () {
-                                        ref
-                                            .read(
-                                              customRingtonesProvider.notifier,
-                                            )
-                                            .removePreset(index);
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('Preset removed'),
-                                            backgroundColor: AppTheme.darkCard,
-                                            behavior: SnackBarBehavior.floating,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                ],
-                              ),
+                            InkWell(
                               onTap: () =>
                                   _selectPreset(preset, index, isCustom: true),
+                              borderRadius: index == 0
+                                  ? const BorderRadius.vertical(
+                                      top: Radius.circular(12),
+                                    )
+                                  : index == customRingtones.length - 1
+                                  ? const BorderRadius.vertical(
+                                      bottom: Radius.circular(12),
+                                    )
+                                  : BorderRadius.zero,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                child: Row(
+                                  children: [
+                                    // Music icon
+                                    Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? AppTheme.primaryGreen.withValues(
+                                                alpha: 0.15,
+                                              )
+                                            : AppTheme.darkBackground,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        isSelected
+                                            ? Icons.music_note
+                                            : Icons.music_note_outlined,
+                                        color: isSelected
+                                            ? AppTheme.primaryGreen
+                                            : AppTheme.textSecondary,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    // Title and description
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            preset.name,
+                                            style: TextStyle(
+                                              color: isSelected
+                                                  ? AppTheme.primaryGreen
+                                                  : Colors.white,
+                                              fontWeight: isSelected
+                                                  ? FontWeight.w600
+                                                  : FontWeight.w500,
+                                              fontFamily: 'Inter',
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            preset.description,
+                                            style: const TextStyle(
+                                              color: AppTheme.textSecondary,
+                                              fontSize: 12,
+                                              fontFamily: 'Inter',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    // Play button
+                                    SizedBox(
+                                      width: 40,
+                                      height: 40,
+                                      child: Material(
+                                        color: isPlaying
+                                            ? AppTheme.errorRed.withValues(
+                                                alpha: 0.15,
+                                              )
+                                            : AppTheme.darkBackground,
+                                        borderRadius: BorderRadius.circular(20),
+                                        child: InkWell(
+                                          onTap: () => _playPreset(
+                                            preset,
+                                            index,
+                                            isCustom: true,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          child: Icon(
+                                            isPlaying
+                                                ? Icons.stop
+                                                : Icons.play_arrow,
+                                            color: isPlaying
+                                                ? AppTheme.errorRed
+                                                : AppTheme.textSecondary,
+                                            size: 20,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    // Delete button (only if not selected)
+                                    if (!isSelected)
+                                      SizedBox(
+                                        width: 40,
+                                        height: 40,
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          child: InkWell(
+                                            onTap: () {
+                                              ref
+                                                  .read(
+                                                    customRingtonesProvider
+                                                        .notifier,
+                                                  )
+                                                  .removePreset(index);
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    'Preset removed',
+                                                  ),
+                                                  backgroundColor:
+                                                      AppTheme.darkCard,
+                                                  behavior:
+                                                      SnackBarBehavior.floating,
+                                                ),
+                                              );
+                                            },
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                            child: const Icon(
+                                              Icons.delete_outline,
+                                              color: AppTheme.textTertiary,
+                                              size: 20,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    // Selected indicator (only if selected)
+                                    if (isSelected)
+                                      const SizedBox(
+                                        width: 40,
+                                        child: Center(
+                                          child: Icon(
+                                            Icons.check_circle,
+                                            color: AppTheme.primaryGreen,
+                                            size: 22,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ),
                             if (index < customRingtones.length - 1)
                               const Divider(
                                 height: 1,
-                                indent: 72,
+                                indent: 68,
                                 color: AppTheme.darkBorder,
                               ),
                           ],

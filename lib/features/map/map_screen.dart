@@ -91,6 +91,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // Search controller
   final TextEditingController _searchController = TextEditingController();
 
+  // Layout constants for consistent spacing
+  static const double _mapPadding = 16.0;
+  static const double _controlSpacing = 8.0;
+  static const double _controlSize = 44.0;
+  static const double _zoomControlsHeight =
+      136.0; // 3 buttons × 44 + 2 dividers
+
   @override
   void dispose() {
     _animationController?.dispose();
@@ -844,9 +851,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 // Filter bar
                 if (_showFilters)
                   Positioned(
-                    left: 16,
-                    right: 72,
-                    top: 16,
+                    left: _mapPadding,
+                    right: _mapPadding + _controlSize + _controlSpacing,
+                    top: _mapPadding,
                     child: _FilterBar(
                       currentFilter: _nodeFilter,
                       onFilterChanged: (filter) =>
@@ -860,9 +867,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     _measureStart != null &&
                     _measureEnd != null)
                   Positioned(
-                    left: 16,
-                    right: 16,
-                    bottom: _selectedNode != null ? 200 : 16,
+                    left: _mapPadding,
+                    right: _mapPadding,
+                    bottom: _selectedNode != null ? 220 : _mapPadding,
                     child: _MeasurementCard(
                       start: _measureStart!,
                       end: _measureEnd!,
@@ -881,9 +888,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 if (_measureMode &&
                     (_measureStart == null || _measureEnd == null))
                   Positioned(
-                    top: 16,
-                    left: 80,
-                    right: 80,
+                    top: _mapPadding,
+                    left: _mapPadding + 140, // Leave room for node count badge
+                    right: _mapPadding + _controlSize + _controlSpacing,
                     child: Center(
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -921,9 +928,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 // Node info card
                 if (_selectedNode != null)
                   Positioned(
-                    left: 16,
-                    right: 16,
-                    bottom: 16,
+                    left: _mapPadding,
+                    right: _mapPadding,
+                    bottom: _mapPadding,
                     child: _NodeInfoCard(
                       node: _selectedNode!,
                       isMyNode: _selectedNode!.nodeNum == myNodeNum,
@@ -993,8 +1000,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 // Node count indicator
                 if (!_showNodeList && !_showFilters)
                   Positioned(
-                    left: 16,
-                    top: 16,
+                    left: _mapPadding,
+                    top: _mapPadding,
                     child: GestureDetector(
                       onTap: () => setState(() => _showNodeList = true),
                       child: Container(
@@ -1042,8 +1049,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   ),
                 // Compass
                 Positioned(
-                  right: 16,
-                  top: 16,
+                  right: _mapPadding,
+                  top: _mapPadding,
                   child: _Compass(
                     rotation: _mapRotation,
                     onPressed: () => _animatedMove(
@@ -1055,8 +1062,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 ),
                 // Zoom controls
                 Positioned(
-                  right: 16,
-                  top: 16 + 56,
+                  right: _mapPadding,
+                  top: _mapPadding + _controlSize + _controlSpacing,
                   child: _ZoomControls(
                     currentZoom: _currentZoom,
                     minZoom: 4,
@@ -1076,8 +1083,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 ),
                 // Navigation buttons (center on me, reset north)
                 Positioned(
-                  right: 16,
-                  top: 16 + 56 + 140 + 8,
+                  right: _mapPadding,
+                  top:
+                      _mapPadding +
+                      _controlSize +
+                      _controlSpacing +
+                      _zoomControlsHeight +
+                      _controlSpacing,
                   child: _NavigationControls(
                     onCenterOnMe: () =>
                         _centerOnMyNode(nodesWithPosition, myNodeNum),
