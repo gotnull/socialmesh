@@ -44,7 +44,9 @@ enum NodeFilter {
 
 /// Map screen showing all mesh nodes with GPS positions
 class MapScreen extends ConsumerStatefulWidget {
-  const MapScreen({super.key});
+  final int? initialNodeNum;
+
+  const MapScreen({super.key, this.initialNodeNum});
 
   @override
   ConsumerState<MapScreen> createState() => _MapScreenState();
@@ -90,6 +92,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   // Search controller
   final TextEditingController _searchController = TextEditingController();
+
+  // Track if initial node centering has been done
+  bool _initialCenteringDone = false;
 
   // Layout constants for consistent spacing
   static const double _mapPadding = 16.0;
@@ -400,6 +405,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // Get nodes with positions (current or cached)
     final allNodesWithPosition = _getNodesWithPositions(nodes);
     final nodesWithPosition = _filterNodes(allNodesWithPosition, myNodeNum);
+
+    // Handle initial node centering from navigation
+    if (!_initialCenteringDone && widget.initialNodeNum != null) {
+      _initialCenteringDone = true;
+      final targetNode = nodesWithPosition
+          .where((n) => n.node.nodeNum == widget.initialNodeNum)
+          .firstOrNull;
+      if (targetNode != null) {
+        // Schedule centering after the map is built
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _animatedMove(
+            LatLng(targetNode.latitude, targetNode.longitude),
+            15.0,
+          );
+          setState(() => _selectedNode = targetNode.node);
+        });
+      }
+    }
 
     // Calculate center point
     LatLng center = const LatLng(0, 0);

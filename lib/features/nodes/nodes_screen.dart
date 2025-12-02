@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
@@ -10,6 +11,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animated_list_item.dart';
 import '../messaging/messaging_screen.dart';
+import '../map/map_screen.dart';
 
 // Battery helper functions
 // Meshtastic uses 101 for charging, 100 for plugged in fully charged
@@ -176,6 +178,15 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                             isMyNode: isMyNode,
                             onTap: () =>
                                 _showNodeDetails(context, node, isMyNode),
+                            onMapTap: node.hasPosition
+                                ? () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => MapScreen(
+                                          initialNodeNum: node.nodeNum,
+                                        ),
+                                      ),
+                                    )
+                                : null,
                           ),
                         );
                       },
@@ -200,11 +211,13 @@ class _NodeCard extends StatelessWidget {
   final MeshNode node;
   final bool isMyNode;
   final VoidCallback onTap;
+  final VoidCallback? onMapTap;
 
   const _NodeCard({
     required this.node,
     required this.isMyNode,
     required this.onTap,
+    this.onMapTap,
   });
 
   Color _getAvatarColor() {
@@ -631,7 +644,7 @@ class _NodeCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Favorite star & chevron
+                // Favorite star, map button & chevron
                 Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -639,7 +652,30 @@ class _NodeCard extends StatelessWidget {
                       const Icon(Icons.star, color: Color(0xFFFFD700), size: 24)
                     else
                       const SizedBox(height: 24),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 8),
+                    // Map button - only show if node has GPS
+                    if (node.hasPosition && onMapTap != null)
+                      GestureDetector(
+                        onTap: onMapTap,
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryMagenta.withValues(
+                              alpha: 0.15,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.map,
+                            color: AppTheme.primaryMagenta,
+                            size: 18,
+                          ),
+                        ),
+                      )
+                    else
+                      const SizedBox(height: 32),
+                    const SizedBox(height: 8),
                     const Icon(
                       Icons.chevron_right,
                       color: AppTheme.textTertiary,
