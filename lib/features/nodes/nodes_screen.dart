@@ -91,6 +91,16 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
               fontFamily: 'Inter',
             ),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(
+                Icons.qr_code_scanner,
+                color: AppTheme.primaryGreen,
+              ),
+              tooltip: 'Scan Node QR',
+              onPressed: () => Navigator.pushNamed(context, '/node-qr-scanner'),
+            ),
+          ],
         ),
         body: Column(
           children: [

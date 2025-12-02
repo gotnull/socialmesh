@@ -5,6 +5,7 @@ import '../../core/transport.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
+import 'widgets/connecting_animation.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
   final bool isOnboarding;
@@ -347,39 +348,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
               ],
       ),
       body: _connecting
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const CircularProgressIndicator(color: AppTheme.primaryGreen),
-                  const SizedBox(height: 16),
-                  Text(
-                    _autoReconnecting
-                        ? 'Auto-reconnecting...'
-                        : 'Connecting...',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                  if (_autoReconnecting) ...[
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _connecting = false;
-                          _autoReconnecting = false;
-                        });
-                        _startScan();
-                      },
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(color: AppTheme.textTertiary),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+          ? ConnectingAnimation(
+              statusText: _autoReconnecting
+                  ? 'Auto-reconnecting'
+                  : 'Connecting',
+              showCancel: _autoReconnecting,
+              onCancel: () {
+                setState(() {
+                  _connecting = false;
+                  _autoReconnecting = false;
+                });
+                _startScan();
+              },
             )
           : ListView(
               padding: const EdgeInsets.all(16),

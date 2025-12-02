@@ -6,10 +6,12 @@ import 'core/transport.dart';
 import 'providers/app_providers.dart';
 import 'models/mesh_models.dart';
 import 'features/scanner/scanner_screen.dart';
+import 'features/scanner/widgets/connecting_animation.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/messaging/messaging_screen.dart';
 import 'features/channels/channels_screen.dart';
 import 'features/nodes/nodes_screen.dart';
+import 'features/nodes/node_qr_scanner_screen.dart';
 import 'features/map/map_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/settings/qr_import_screen.dart';
@@ -62,9 +64,11 @@ class _ProtofluffAppState extends ConsumerState<ProtofluffApp> {
         '/messages': (context) => const MessagingScreen(),
         '/channels': (context) => const ChannelsScreen(),
         '/nodes': (context) => const NodesScreen(),
+        '/node-qr-scanner': (context) => const NodeQrScannerScreen(),
         '/map': (context) => const MapScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/qr-import': (context) => const QrImportScreen(),
+        '/channel-qr-scanner': (context) => const QrImportScreen(),
         '/device-config': (context) => const DeviceConfigScreen(),
         '/region-setup': (context) =>
             const RegionSelectionScreen(isInitialSetup: true),
@@ -154,6 +158,8 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
       body: SafeArea(
         child: Stack(
           children: [
+            // Beautiful parallax floating icons background
+            const Positioned.fill(child: ConnectingAnimationBackground()),
             // Main centered content - unaffected by node cards
             Center(
               child: Column(
