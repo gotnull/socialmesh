@@ -1,12 +1,46 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../messaging/messaging_screen.dart';
+
+/// Map tile style options
+enum MapTileStyle {
+  dark('Dark', 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'),
+  satellite(
+    'Satellite',
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  ),
+  terrain('Terrain', 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'),
+  light(
+    'Light',
+    'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  );
+
+  final String label;
+  final String url;
+  const MapTileStyle(this.label, this.url);
+}
+
+/// Node filter options
+enum NodeFilter {
+  all('All'),
+  online('Online'),
+  offline('Offline'),
+  withGps('With GPS'),
+  inRange('In Range');
+
+  final String label;
+  const NodeFilter(this.label);
+}
 
 /// Map screen showing all mesh nodes with GPS positions
 class MapScreen extends ConsumerStatefulWidget {
@@ -24,22 +58,49 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _isRefreshing = false;
   double _currentZoom = 14.0;
   bool _showNodeList = false;
+  bool _showFilters = false;
+  bool _measureMode = false;
+  bool _showRangeCircles = false;
+  String _searchQuery = '';
+
+  // Map style
+  MapTileStyle _mapStyle = MapTileStyle.dark;
+
+  // Filtering
+  NodeFilter _nodeFilter = NodeFilter.all;
+
+  // Measurement points
+  LatLng? _measureStart;
+  LatLng? _measureEnd;
+
+  // Waypoints dropped by user
+  final List<_Waypoint> _waypoints = [];
 
   // Animation controller for smooth camera movements
   AnimationController? _animationController;
 
+  // Compass rotation
+  double _mapRotation = 0.0;
+
   // Track last known positions for nodes (to handle GPS loss gracefully)
   final Map<int, _CachedPosition> _positionCache = {};
+
+  // Trail history for moving nodes
+  final Map<int, List<_TrailPoint>> _nodeTrails = {};
+
+  // Search controller
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void dispose() {
     _animationController?.dispose();
     _mapController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
   /// Animate camera to a specific location with smooth easing
-  void _animatedMove(LatLng destLocation, double destZoom) {
+  void _animatedMove(LatLng destLocation, double destZoom, {double? rotation}) {
     _animationController?.dispose();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 500),
@@ -48,6 +109,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     final startZoom = _mapController.camera.zoom;
     final startCenter = _mapController.camera.center;
+    final startRotation = _mapController.camera.rotation;
 
     final latTween = Tween<double>(
       begin: startCenter.latitude,
@@ -58,6 +120,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
       end: destLocation.longitude,
     );
     final zoomTween = Tween<double>(begin: startZoom, end: destZoom);
+    final rotationTween = Tween<double>(
+      begin: startRotation,
+      end: rotation ?? startRotation,
+    );
 
     final animation = CurvedAnimation(
       parent: _animationController!,
@@ -65,9 +131,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
 
     _animationController!.addListener(() {
-      _mapController.move(
+      _mapController.moveAndRotate(
         LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
         zoomTween.evaluate(animation),
+        rotationTween.evaluate(animation),
       );
     });
 
@@ -79,12 +146,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final result = <_NodeWithPosition>[];
     final now = DateTime.now();
 
-    // Position considered stale after 30 minutes of no updates
     const staleThreshold = Duration(minutes: 30);
 
     for (final node in nodes.values) {
       if (node.hasPosition) {
-        // Node has current GPS - update cache and use it
+        // Update trail history
+        _updateNodeTrail(node.nodeNum, node.latitude!, node.longitude!);
+
         _positionCache[node.nodeNum] = _CachedPosition(
           latitude: node.latitude!,
           longitude: node.longitude!,
@@ -100,12 +168,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
           ),
         );
       } else if (_positionCache.containsKey(node.nodeNum)) {
-        // Node lost GPS but we have cached position
         final cached = _positionCache[node.nodeNum]!;
         final age = now.difference(cached.timestamp);
         final isStale = age > staleThreshold;
 
-        // Keep showing if node is still online, even if stale
         if (node.isOnline || !isStale) {
           result.add(
             _NodeWithPosition(
@@ -119,13 +185,92 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     }
 
-    // Clean up cache for nodes that no longer exist
     _positionCache.removeWhere((nodeNum, _) => !nodes.containsKey(nodeNum));
 
     return result;
   }
 
-  /// Calculate distance between two nodes in km
+  /// Update trail history for a node
+  void _updateNodeTrail(int nodeNum, double lat, double lng) {
+    final trails = _nodeTrails[nodeNum] ?? [];
+    final now = DateTime.now();
+
+    // Only add if position changed significantly (> 10 meters)
+    if (trails.isEmpty ||
+        const Distance().as(
+              LengthUnit.Meter,
+              LatLng(trails.last.latitude, trails.last.longitude),
+              LatLng(lat, lng),
+            ) >
+            10) {
+      trails.add(_TrailPoint(latitude: lat, longitude: lng, timestamp: now));
+
+      // Keep only last 50 points (or last hour)
+      while (trails.length > 50 ||
+          (trails.isNotEmpty &&
+              now.difference(trails.first.timestamp) >
+                  const Duration(hours: 1))) {
+        trails.removeAt(0);
+      }
+
+      _nodeTrails[nodeNum] = trails;
+    }
+  }
+
+  /// Filter nodes based on current filter
+  List<_NodeWithPosition> _filterNodes(
+    List<_NodeWithPosition> nodes,
+    int? myNodeNum,
+  ) {
+    var filtered = nodes;
+
+    // Apply search filter
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((n) {
+        final name = n.node.displayName.toLowerCase();
+        final id = n.node.userId?.toLowerCase() ?? '';
+        final query = _searchQuery.toLowerCase();
+        return name.contains(query) || id.contains(query);
+      }).toList();
+    }
+
+    // Apply node filter
+    switch (_nodeFilter) {
+      case NodeFilter.all:
+        break;
+      case NodeFilter.online:
+        filtered = filtered.where((n) => n.node.isOnline).toList();
+        break;
+      case NodeFilter.offline:
+        filtered = filtered.where((n) => !n.node.isOnline).toList();
+        break;
+      case NodeFilter.withGps:
+        filtered = filtered.where((n) => !n.isStale).toList();
+        break;
+      case NodeFilter.inRange:
+        if (myNodeNum != null) {
+          final myNode = nodes
+              .where((n) => n.node.nodeNum == myNodeNum)
+              .firstOrNull;
+          if (myNode != null) {
+            filtered = filtered.where((n) {
+              if (n.node.nodeNum == myNodeNum) return true;
+              final dist = _calculateDistance(
+                myNode.latitude,
+                myNode.longitude,
+                n.latitude,
+                n.longitude,
+              );
+              return dist <= 15.0; // Within 15km
+            }).toList();
+          }
+        }
+        break;
+    }
+
+    return filtered;
+  }
+
   double _calculateDistance(
     double lat1,
     double lng1,
@@ -139,7 +284,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
   }
 
-  /// Format distance for display
   String _formatDistance(double km) {
     if (km < 1) {
       return '${(km * 1000).round()}m';
@@ -148,6 +292,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
     } else {
       return '${km.round()}km';
     }
+  }
+
+  /// Calculate bearing from one point to another
+  double _calculateBearing(double lat1, double lng1, double lat2, double lng2) {
+    final dLng = (lng2 - lng1) * math.pi / 180;
+    final lat1Rad = lat1 * math.pi / 180;
+    final lat2Rad = lat2 * math.pi / 180;
+
+    final x = math.sin(dLng) * math.cos(lat2Rad);
+    final y =
+        math.cos(lat1Rad) * math.sin(lat2Rad) -
+        math.sin(lat1Rad) * math.cos(lat2Rad) * math.cos(dLng);
+
+    final bearing = math.atan2(x, y) * 180 / math.pi;
+    return (bearing + 360) % 360;
   }
 
   Future<void> _refreshPositions() async {
@@ -185,13 +344,55 @@ class _MapScreenState extends ConsumerState<MapScreen>
     HapticFeedback.selectionClick();
   }
 
+  void _addWaypoint(LatLng point) {
+    setState(() {
+      _waypoints.add(
+        _Waypoint(
+          id: DateTime.now().millisecondsSinceEpoch,
+          position: point,
+          label: 'WP ${_waypoints.length + 1}',
+        ),
+      );
+    });
+    HapticFeedback.mediumImpact();
+  }
+
+  void _removeWaypoint(int id) {
+    setState(() {
+      _waypoints.removeWhere((w) => w.id == id);
+    });
+  }
+
+  void _shareLocation(LatLng point, {String? label}) {
+    final lat = point.latitude.toStringAsFixed(6);
+    final lng = point.longitude.toStringAsFixed(6);
+    final text = label != null
+        ? '$label\nhttps://maps.google.com/?q=$lat,$lng'
+        : 'https://maps.google.com/?q=$lat,$lng';
+    Share.share(text);
+  }
+
+  void _copyCoordinates(LatLng point) {
+    final lat = point.latitude.toStringAsFixed(6);
+    final lng = point.longitude.toStringAsFixed(6);
+    Clipboard.setData(ClipboardData(text: '$lat, $lng'));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Coordinates copied to clipboard'),
+        duration: Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
     // Get nodes with positions (current or cached)
-    final nodesWithPosition = _getNodesWithPositions(nodes);
+    final allNodesWithPosition = _getNodesWithPositions(nodes);
+    final nodesWithPosition = _filterNodes(allNodesWithPosition, myNodeNum);
 
     // Calculate center point
     LatLng center = const LatLng(0, 0);
@@ -236,54 +437,192 @@ class _MapScreenState extends ConsumerState<MapScreen>
           ),
         ),
         actions: [
-          // Node list toggle
+          // Search toggle
           IconButton(
             icon: Icon(
-              _showNodeList ? Icons.view_list : Icons.view_list_outlined,
-              color: _showNodeList
+              _searchQuery.isNotEmpty ? Icons.search_off : Icons.search,
+              color: _searchQuery.isNotEmpty
                   ? AppTheme.primaryMagenta
                   : AppTheme.textSecondary,
             ),
-            onPressed: nodesWithPosition.isEmpty
-                ? null
-                : () => setState(() => _showNodeList = !_showNodeList),
-            tooltip: 'Node list',
+            onPressed: () => _showSearchDialog(),
+            tooltip: 'Search nodes',
           ),
-          // Refresh positions
+          // Filter toggle
           IconButton(
-            icon: _isRefreshing
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
+            icon: Icon(
+              _nodeFilter != NodeFilter.all
+                  ? Icons.filter_alt
+                  : Icons.filter_alt_outlined,
+              color: _nodeFilter != NodeFilter.all
+                  ? AppTheme.primaryMagenta
+                  : AppTheme.textSecondary,
+            ),
+            onPressed: () => setState(() => _showFilters = !_showFilters),
+            tooltip: 'Filter nodes',
+          ),
+          // Map style
+          PopupMenuButton<MapTileStyle>(
+            icon: const Icon(Icons.map, color: AppTheme.textSecondary),
+            tooltip: 'Map style',
+            onSelected: (style) => setState(() => _mapStyle = style),
+            itemBuilder: (context) => MapTileStyle.values.map((style) {
+              return PopupMenuItem(
+                value: style,
+                child: Row(
+                  children: [
+                    Icon(
+                      _mapStyle == style ? Icons.check : Icons.map_outlined,
+                      size: 18,
+                      color: _mapStyle == style
+                          ? AppTheme.primaryMagenta
+                          : AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(style.label),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          // More options menu
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: AppTheme.textSecondary),
+            onSelected: (value) {
+              switch (value) {
+                case 'refresh':
+                  _refreshPositions();
+                  break;
+                case 'heatmap':
+                  setState(() => _showHeatmap = !_showHeatmap);
+                  break;
+                case 'range':
+                  setState(() => _showRangeCircles = !_showRangeCircles);
+                  break;
+                case 'measure':
+                  setState(() {
+                    _measureMode = !_measureMode;
+                    _measureStart = null;
+                    _measureEnd = null;
+                  });
+                  break;
+                case 'center':
+                  _centerOnMyNode(nodesWithPosition, myNodeNum);
+                  break;
+                case 'north':
+                  _animatedMove(
+                    _mapController.camera.center,
+                    _currentZoom,
+                    rotation: 0,
+                  );
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'refresh',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.refresh,
+                      size: 18,
+                      color: _isRefreshing
+                          ? AppTheme.textTertiary
+                          : AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(_isRefreshing ? 'Refreshing...' : 'Refresh positions'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'heatmap',
+                child: Row(
+                  children: [
+                    Icon(
+                      _showHeatmap ? Icons.layers : Icons.layers_outlined,
+                      size: 18,
+                      color: _showHeatmap
+                          ? AppTheme.primaryMagenta
+                          : AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(_showHeatmap ? 'Hide heatmap' : 'Show heatmap'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'range',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.radio_button_unchecked,
+                      size: 18,
+                      color: _showRangeCircles
+                          ? AppTheme.primaryMagenta
+                          : AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _showRangeCircles
+                          ? 'Hide range circles'
+                          : 'Show range circles',
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'measure',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.straighten,
+                      size: 18,
+                      color: _measureMode
+                          ? AppTheme.primaryMagenta
+                          : AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _measureMode ? 'Exit measure mode' : 'Measure distance',
+                    ),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'center',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.my_location,
+                      size: 18,
                       color: AppTheme.textSecondary,
                     ),
-                  )
-                : const Icon(Icons.refresh, color: AppTheme.textSecondary),
-            onPressed: _isRefreshing ? null : _refreshPositions,
-            tooltip: 'Request positions from nodes',
-          ),
-          // Heatmap toggle
-          IconButton(
-            icon: Icon(
-              _showHeatmap ? Icons.layers : Icons.layers_outlined,
-              color: _showHeatmap
-                  ? AppTheme.primaryMagenta
-                  : AppTheme.textSecondary,
-            ),
-            onPressed: () => setState(() => _showHeatmap = !_showHeatmap),
-            tooltip: 'Toggle coverage heatmap',
-          ),
-          // Center on my location
-          IconButton(
-            icon: const Icon(Icons.my_location, color: AppTheme.textSecondary),
-            onPressed: () => _centerOnMyNode(nodesWithPosition, myNodeNum),
-            tooltip: 'Center on my node',
+                    SizedBox(width: 8),
+                    Text('Center on me'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'north',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.navigation,
+                      size: 18,
+                      color: AppTheme.textSecondary,
+                    ),
+                    SizedBox(width: 8),
+                    Text('Reset to north'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
-      body: nodesWithPosition.isEmpty
+      body: allNodesWithPosition.isEmpty
           ? _buildEmptyState()
           : Stack(
               children: [
@@ -296,28 +635,42 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     maxZoom: 18,
                     backgroundColor: AppTheme.darkBackground,
                     interactionOptions: const InteractionOptions(
-                      flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                      flags: InteractiveFlag.all,
                       pinchZoomThreshold: 0.5,
                       scrollWheelVelocity: 0.005,
                     ),
                     onPositionChanged: (position, hasGesture) {
                       if (hasGesture) {
-                        setState(() => _currentZoom = position.zoom);
+                        setState(() {
+                          _currentZoom = position.zoom;
+                          _mapRotation = position.rotation;
+                        });
                       }
                     },
-                    onTap: (tapPos, point) => setState(() {
-                      _selectedNode = null;
-                      _showNodeList = false;
-                    }),
+                    onTap: (tapPos, point) {
+                      if (_measureMode) {
+                        _handleMeasureTap(point);
+                      } else {
+                        setState(() {
+                          _selectedNode = null;
+                          _showNodeList = false;
+                          _showFilters = false;
+                        });
+                      }
+                    },
+                    onLongPress: (tapPos, point) {
+                      if (!_measureMode) {
+                        _showWaypointMenu(point);
+                      }
+                    },
                   ),
                   children: [
-                    // Dark map tiles
+                    // Map tiles
                     TileLayer(
-                      urlTemplate:
-                          'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                      urlTemplate: _mapStyle.url,
                       subdomains: const ['a', 'b', 'c', 'd'],
                       userAgentPackageName: 'com.protofluff.app',
-                      retinaMode: true,
+                      retinaMode: _mapStyle != MapTileStyle.satellite,
                       tileBuilder: (context, tileWidget, tile) {
                         return AnimatedOpacity(
                           opacity: 1.0,
@@ -326,6 +679,29 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         );
                       },
                     ),
+                    // Range circles (theoretical coverage)
+                    if (_showRangeCircles)
+                      CircleLayer(
+                        circles: nodesWithPosition.map((n) {
+                          final isMyNode = n.node.nodeNum == myNodeNum;
+                          return CircleMarker(
+                            point: LatLng(n.latitude, n.longitude),
+                            radius: 5000, // 5km range circle
+                            useRadiusInMeter: true,
+                            color:
+                                (isMyNode
+                                        ? AppTheme.primaryMagenta
+                                        : AppTheme.primaryPurple)
+                                    .withValues(alpha: 0.08),
+                            borderColor:
+                                (isMyNode
+                                        ? AppTheme.primaryMagenta
+                                        : AppTheme.primaryPurple)
+                                    .withValues(alpha: 0.2),
+                            borderStrokeWidth: 1,
+                          );
+                        }).toList(),
+                      ),
                     // Heatmap layer
                     if (_showHeatmap)
                       CircleLayer(
@@ -343,12 +719,77 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           );
                         }).toList(),
                       ),
-                    // Connection lines with distance labels
+                    // Node trails (movement history)
+                    PolylineLayer(
+                      polylines: _buildNodeTrails(nodesWithPosition, myNodeNum),
+                    ),
+                    // Connection lines
                     PolylineLayer(
                       polylines: _buildConnectionLines(
                         nodesWithPosition,
                         myNodeNum,
                       ),
+                    ),
+                    // Measurement line
+                    if (_measureStart != null && _measureEnd != null)
+                      PolylineLayer(
+                        polylines: [
+                          Polyline(
+                            points: [_measureStart!, _measureEnd!],
+                            color: AppTheme.warningYellow,
+                            strokeWidth: 3,
+                            pattern: const StrokePattern.dotted(
+                              spacingFactor: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    // Waypoint markers
+                    MarkerLayer(
+                      markers: _waypoints.map((w) {
+                        return Marker(
+                          point: w.position,
+                          width: 32,
+                          height: 40,
+                          child: GestureDetector(
+                            onTap: () => _showWaypointDetails(w),
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.warningYellow,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                        blurRadius: 4,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.place,
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Container(
+                                  width: 2,
+                                  height: 12,
+                                  color: AppTheme.warningYellow,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                     // Node markers
                     MarkerLayer(
@@ -375,6 +816,61 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         );
                       }).toList(),
                     ),
+                    // Measurement markers
+                    if (_measureStart != null)
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: _measureStart!,
+                            width: 20,
+                            height: 20,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppTheme.warningYellow,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'A',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (_measureEnd != null)
+                            Marker(
+                              point: _measureEnd!,
+                              width: 20,
+                              height: 20,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppTheme.warningYellow,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    'B',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     // Distance labels layer
                     MarkerLayer(
                       markers: _buildDistanceLabels(
@@ -384,6 +880,84 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     ),
                   ],
                 ),
+                // Filter bar
+                if (_showFilters)
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    top: 16,
+                    child: _FilterBar(
+                      currentFilter: _nodeFilter,
+                      onFilterChanged: (filter) =>
+                          setState(() => _nodeFilter = filter),
+                      totalCount: allNodesWithPosition.length,
+                      filteredCount: nodesWithPosition.length,
+                    ),
+                  ),
+                // Measurement info
+                if (_measureMode &&
+                    _measureStart != null &&
+                    _measureEnd != null)
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    top: _showFilters ? 72 : 16,
+                    child: _MeasurementCard(
+                      start: _measureStart!,
+                      end: _measureEnd!,
+                      onClear: () => setState(() {
+                        _measureStart = null;
+                        _measureEnd = null;
+                      }),
+                      onShare: () => _shareLocation(
+                        _measureStart!,
+                        label:
+                            'Distance: ${_formatDistance(_calculateDistance(_measureStart!.latitude, _measureStart!.longitude, _measureEnd!.latitude, _measureEnd!.longitude))}',
+                      ),
+                    ),
+                  ),
+                // Mode indicator
+                if (_measureMode)
+                  Positioned(
+                    top: _showFilters ? 72 : 16,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.warningYellow,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.straighten,
+                              size: 16,
+                              color: Colors.black,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _measureStart == null
+                                  ? 'Tap to set start point'
+                                  : _measureEnd == null
+                                  ? 'Tap to set end point'
+                                  : 'Measurement complete',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 // Node info card
                 if (_selectedNode != null)
                   Positioned(
@@ -400,16 +974,46 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         nodesWithPosition,
                         myNodeNum,
                       ),
+                      bearingFromMe: _getBearingFromMyNode(
+                        _selectedNode!,
+                        nodesWithPosition,
+                        myNodeNum,
+                      ),
+                      onShareLocation: () {
+                        final nodeWithPos = nodesWithPosition
+                            .where(
+                              (n) => n.node.nodeNum == _selectedNode!.nodeNum,
+                            )
+                            .firstOrNull;
+                        if (nodeWithPos != null) {
+                          _shareLocation(
+                            LatLng(nodeWithPos.latitude, nodeWithPos.longitude),
+                            label: _selectedNode!.displayName,
+                          );
+                        }
+                      },
+                      onCopyCoordinates: () {
+                        final nodeWithPos = nodesWithPosition
+                            .where(
+                              (n) => n.node.nodeNum == _selectedNode!.nodeNum,
+                            )
+                            .firstOrNull;
+                        if (nodeWithPos != null) {
+                          _copyCoordinates(
+                            LatLng(nodeWithPos.latitude, nodeWithPos.longitude),
+                          );
+                        }
+                      },
                     ),
                   ),
-                // Node list panel (sliding from left)
+                // Node list panel
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeOutCubic,
-                  left: _showNodeList ? 0 : -280,
+                  left: _showNodeList ? 0 : -300,
                   top: 0,
                   bottom: 0,
-                  width: 280,
+                  width: 300,
                   child: _NodeListPanel(
                     nodesWithPosition: nodesWithPosition,
                     myNodeNum: myNodeNum,
@@ -421,10 +1025,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       nodesWithPosition,
                       myNodeNum,
                     ),
+                    searchController: _searchController,
+                    onSearchChanged: (query) =>
+                        setState(() => _searchQuery = query),
                   ),
                 ),
-                // Node count indicator (hide when list is shown)
-                if (!_showNodeList)
+                // Node count indicator
+                if (!_showNodeList && !_showFilters)
                   Positioned(
                     left: 16,
                     top: 16,
@@ -455,7 +1062,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              '${nodesWithPosition.length} nodes',
+                              '${nodesWithPosition.length}${nodesWithPosition.length != allNodesWithPosition.length ? '/${allNodesWithPosition.length}' : ''} nodes',
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
@@ -473,10 +1080,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ),
                     ),
                   ),
+                // Compass
+                Positioned(
+                  right: 16,
+                  top: _showFilters ? 72 : 16,
+                  child: _Compass(
+                    rotation: _mapRotation,
+                    onPressed: () => _animatedMove(
+                      _mapController.camera.center,
+                      _currentZoom,
+                      rotation: 0,
+                    ),
+                  ),
+                ),
                 // Zoom controls
                 Positioned(
                   right: 16,
-                  top: 16,
+                  top: (_showFilters ? 72 : 16) + 56,
                   child: _ZoomControls(
                     currentZoom: _currentZoom,
                     minZoom: 4,
@@ -496,6 +1116,260 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 ),
               ],
             ),
+    );
+  }
+
+  void _handleMeasureTap(LatLng point) {
+    setState(() {
+      if (_measureStart == null) {
+        _measureStart = point;
+        _measureEnd = null;
+      } else if (_measureEnd == null) {
+        _measureEnd = point;
+      } else {
+        _measureStart = point;
+        _measureEnd = null;
+      }
+    });
+    HapticFeedback.selectionClick();
+  }
+
+  void _showSearchDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        title: const Text(
+          'Search Nodes',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: TextField(
+          controller: _searchController,
+          autofocus: true,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'Enter node name or ID...',
+            hintStyle: TextStyle(color: AppTheme.textTertiary),
+            prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+            suffixIcon: _searchQuery.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(
+                      Icons.clear,
+                      color: AppTheme.textSecondary,
+                    ),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                  )
+                : null,
+            filled: true,
+            fillColor: AppTheme.darkBackground,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          onChanged: (value) => setState(() => _searchQuery = value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _searchController.clear();
+              setState(() => _searchQuery = '');
+              Navigator.pop(context);
+            },
+            child: const Text('Clear'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showWaypointMenu(LatLng point) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.textTertiary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(
+                  Icons.add_location,
+                  color: AppTheme.warningYellow,
+                ),
+                title: const Text(
+                  'Drop Waypoint',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _addWaypoint(point);
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.share,
+                  color: AppTheme.primaryMagenta,
+                ),
+                title: const Text(
+                  'Share Location',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _shareLocation(point);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.copy, color: AppTheme.textSecondary),
+                title: const Text(
+                  'Copy Coordinates',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _copyCoordinates(point);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showWaypointDetails(_Waypoint waypoint) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.textTertiary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                waypoint.label,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${waypoint.position.latitude.toStringAsFixed(6)}, ${waypoint.position.longitude.toStringAsFixed(6)}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(
+                  Icons.share,
+                  color: AppTheme.primaryMagenta,
+                ),
+                title: const Text(
+                  'Share',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _shareLocation(waypoint.position, label: waypoint.label);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.copy, color: AppTheme.textSecondary),
+                title: const Text(
+                  'Copy Coordinates',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _copyCoordinates(waypoint.position);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete, color: AppTheme.errorRed),
+                title: const Text(
+                  'Delete',
+                  style: TextStyle(color: AppTheme.errorRed),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _removeWaypoint(waypoint.id);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  double? _getBearingFromMyNode(
+    MeshNode node,
+    List<_NodeWithPosition> nodesWithPosition,
+    int? myNodeNum,
+  ) {
+    if (myNodeNum == null || node.nodeNum == myNodeNum) return null;
+
+    final myNodeWithPos = nodesWithPosition
+        .where((n) => n.node.nodeNum == myNodeNum)
+        .firstOrNull;
+    if (myNodeWithPos == null) return null;
+
+    final nodeWithPos = nodesWithPosition
+        .where((n) => n.node.nodeNum == node.nodeNum)
+        .firstOrNull;
+    if (nodeWithPos == null) return null;
+
+    return _calculateBearing(
+      myNodeWithPos.latitude,
+      myNodeWithPos.longitude,
+      nodeWithPos.latitude,
+      nodeWithPos.longitude,
     );
   }
 
@@ -640,6 +1514,34 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
   }
 
+  /// Build node movement trails
+  List<Polyline> _buildNodeTrails(
+    List<_NodeWithPosition> nodes,
+    int? myNodeNum,
+  ) {
+    final trails = <Polyline>[];
+
+    for (final node in nodes) {
+      final trail = _nodeTrails[node.node.nodeNum];
+      if (trail == null || trail.length < 2) continue;
+
+      final isMyNode = node.node.nodeNum == myNodeNum;
+      final points = trail.map((t) => LatLng(t.latitude, t.longitude)).toList();
+
+      trails.add(
+        Polyline(
+          points: points,
+          color: (isMyNode ? AppTheme.primaryMagenta : AppTheme.primaryPurple)
+              .withValues(alpha: 0.4),
+          strokeWidth: 2,
+          pattern: const StrokePattern.dotted(spacingFactor: 1.5),
+        ),
+      );
+    }
+
+    return trails;
+  }
+
   /// Build connection lines with visual distinction for uncertain connections
   List<Polyline> _buildConnectionLines(
     List<_NodeWithPosition> nodes,
@@ -666,7 +1568,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
               node2.node.nodeNum == myNodeNum;
           final hasStaleNode = node1.isStale || node2.isStale;
 
-          // Use pattern for stale connections (visually indicates uncertainty)
           final pattern = hasStaleNode
               ? const StrokePattern.dotted(spacingFactor: 2.5)
               : const StrokePattern.solid();
@@ -719,7 +1620,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
       );
 
       if (distance <= maxDistanceKm) {
-        // Position label at midpoint
         final midLat = (myNode.latitude + node.latitude) / 2;
         final midLng = (myNode.longitude + node.longitude) / 2;
 
@@ -775,6 +1675,28 @@ class _MapScreenState extends ConsumerState<MapScreen>
       ),
     );
   }
+}
+
+/// Trail point for node movement history
+class _TrailPoint {
+  final double latitude;
+  final double longitude;
+  final DateTime timestamp;
+
+  _TrailPoint({
+    required this.latitude,
+    required this.longitude,
+    required this.timestamp,
+  });
+}
+
+/// Waypoint dropped by user
+class _Waypoint {
+  final int id;
+  final LatLng position;
+  final String label;
+
+  _Waypoint({required this.id, required this.position, required this.label});
 }
 
 /// Cached position for nodes that lose GPS
@@ -899,6 +1821,8 @@ class _NodeListPanel extends StatelessWidget {
   final void Function(_NodeWithPosition) onNodeSelected;
   final VoidCallback onClose;
   final double? Function(_NodeWithPosition) calculateDistanceFromMe;
+  final TextEditingController searchController;
+  final void Function(String) onSearchChanged;
 
   const _NodeListPanel({
     required this.nodesWithPosition,
@@ -907,6 +1831,8 @@ class _NodeListPanel extends StatelessWidget {
     required this.onNodeSelected,
     required this.onClose,
     required this.calculateDistanceFromMe,
+    required this.searchController,
+    required this.onSearchChanged,
   });
 
   @override
@@ -914,11 +1840,9 @@ class _NodeListPanel extends StatelessWidget {
     // Sort: my node first, then by distance from me, then alphabetically
     final sortedNodes = List<_NodeWithPosition>.from(nodesWithPosition);
     sortedNodes.sort((a, b) {
-      // My node always first
       if (a.node.nodeNum == myNodeNum) return -1;
       if (b.node.nodeNum == myNodeNum) return 1;
 
-      // Then by distance from me
       final distA = calculateDistanceFromMe(a);
       final distB = calculateDistanceFromMe(b);
       if (distA != null && distB != null) {
@@ -927,7 +1851,6 @@ class _NodeListPanel extends StatelessWidget {
       if (distA != null) return -1;
       if (distB != null) return 1;
 
-      // Finally alphabetically
       return a.node.displayName.compareTo(b.node.displayName);
     });
 
@@ -992,27 +1915,75 @@ class _NodeListPanel extends StatelessWidget {
               ],
             ),
           ),
+          // Search field
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: TextField(
+              controller: searchController,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'Search nodes...',
+                hintStyle: TextStyle(
+                  color: AppTheme.textTertiary,
+                  fontSize: 14,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  size: 20,
+                  color: AppTheme.textSecondary,
+                ),
+                suffixIcon: searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        color: AppTheme.textSecondary,
+                        onPressed: () {
+                          searchController.clear();
+                          onSearchChanged('');
+                        },
+                      )
+                    : null,
+                filled: true,
+                fillColor: AppTheme.darkBackground,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: onSearchChanged,
+            ),
+          ),
           // Node list
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              itemCount: sortedNodes.length,
-              itemBuilder: (context, index) {
-                final nodeWithPos = sortedNodes[index];
-                final isMyNode = nodeWithPos.node.nodeNum == myNodeNum;
-                final isSelected =
-                    selectedNode?.nodeNum == nodeWithPos.node.nodeNum;
-                final distance = calculateDistanceFromMe(nodeWithPos);
+            child: sortedNodes.isEmpty
+                ? Center(
+                    child: Text(
+                      'No nodes found',
+                      style: TextStyle(color: AppTheme.textTertiary),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    itemCount: sortedNodes.length,
+                    itemBuilder: (context, index) {
+                      final nodeWithPos = sortedNodes[index];
+                      final isMyNode = nodeWithPos.node.nodeNum == myNodeNum;
+                      final isSelected =
+                          selectedNode?.nodeNum == nodeWithPos.node.nodeNum;
+                      final distance = calculateDistanceFromMe(nodeWithPos);
 
-                return _NodeListItem(
-                  nodeWithPos: nodeWithPos,
-                  isMyNode: isMyNode,
-                  isSelected: isSelected,
-                  distance: distance,
-                  onTap: () => onNodeSelected(nodeWithPos),
-                );
-              },
-            ),
+                      return _NodeListItem(
+                        nodeWithPos: nodeWithPos,
+                        isMyNode: isMyNode,
+                        isSelected: isSelected,
+                        distance: distance,
+                        onTap: () => onNodeSelected(nodeWithPos),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -1252,6 +2223,9 @@ class _NodeInfoCard extends ConsumerWidget {
   final VoidCallback onClose;
   final VoidCallback onMessage;
   final double? distanceFromMe;
+  final double? bearingFromMe;
+  final VoidCallback onShareLocation;
+  final VoidCallback onCopyCoordinates;
 
   const _NodeInfoCard({
     required this.node,
@@ -1259,16 +2233,25 @@ class _NodeInfoCard extends ConsumerWidget {
     required this.onClose,
     required this.onMessage,
     this.distanceFromMe,
+    this.bearingFromMe,
+    required this.onShareLocation,
+    required this.onCopyCoordinates,
   });
 
   String _formatDistance(double km) {
     if (km < 1) {
-      return '${(km * 1000).round()}m away';
+      return '${(km * 1000).round()}m';
     } else if (km < 10) {
-      return '${km.toStringAsFixed(1)}km away';
+      return '${km.toStringAsFixed(1)}km';
     } else {
-      return '${km.round()}km away';
+      return '${km.round()}km';
     }
+  }
+
+  String _formatBearing(double bearing) {
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    final index = ((bearing + 22.5) / 45).floor() % 8;
+    return '${bearing.round()}° ${directions[index]}';
   }
 
   Future<void> _exchangePositions(BuildContext context, WidgetRef ref) async {
@@ -1413,45 +2396,106 @@ class _NodeInfoCard extends ConsumerWidget {
                             ),
                           ),
                         ],
+                        if (bearingFromMe != null) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            _formatBearing(bearingFromMe!),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ],
                 ),
               ),
-              // Close button
-              IconButton(
-                icon: const Icon(Icons.close, size: 20),
-                color: AppTheme.textTertiary,
-                onPressed: onClose,
+              // Action buttons (compact)
+              Column(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    color: AppTheme.textTertiary,
+                    onPressed: onClose,
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.share, size: 18),
+                        color: AppTheme.textSecondary,
+                        onPressed: onShareLocation,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                        tooltip: 'Share location',
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.copy, size: 18),
+                        color: AppTheme.textSecondary,
+                        onPressed: onCopyCoordinates,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                        tooltip: 'Copy coordinates',
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 12),
           // Stats row
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              if (node.batteryLevel != null) ...[
+              if (node.batteryLevel != null)
                 _StatChip(
                   icon: Icons.battery_full,
                   value: '${node.batteryLevel}%',
                   color: _getBatteryColor(node.batteryLevel!),
                 ),
-                const SizedBox(width: 8),
-              ],
-              if (node.snr != null) ...[
+              if (node.snr != null)
                 _StatChip(
                   icon: Icons.signal_cellular_alt,
                   value: '${node.snr} dB',
                   color: AppTheme.textSecondary,
                 ),
-                const SizedBox(width: 8),
-              ],
               if (node.altitude != null)
                 _StatChip(
                   icon: Icons.terrain,
                   value: '${node.altitude}m',
                   color: AppTheme.textSecondary,
                 ),
+              if (node.hardwareModel != null)
+                _StatChip(
+                  icon: Icons.memory,
+                  value: node.hardwareModel!,
+                  color: AppTheme.textSecondary,
+                ),
+              // Last heard
+              _StatChip(
+                icon: Icons.access_time,
+                value: _formatLastHeard(node.lastHeard),
+                color: node.isOnline
+                    ? AppTheme.successGreen
+                    : AppTheme.textTertiary,
+              ),
             ],
           ),
           if (!isMyNode) ...[
@@ -1459,7 +2503,6 @@ class _NodeInfoCard extends ConsumerWidget {
             // Action buttons row
             Row(
               children: [
-                // Exchange position button
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _exchangePositions(context, ref),
@@ -1478,7 +2521,6 @@ class _NodeInfoCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Message button
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: onMessage,
@@ -1506,6 +2548,15 @@ class _NodeInfoCard extends ConsumerWidget {
     if (level > 50) return AppTheme.successGreen;
     if (level > 20) return AppTheme.warningYellow;
     return AppTheme.errorRed;
+  }
+
+  String _formatLastHeard(DateTime? lastHeard) {
+    if (lastHeard == null) return 'Never';
+    final diff = DateTime.now().difference(lastHeard);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
   }
 }
 
@@ -1661,5 +2712,288 @@ class _ZoomButton extends StatelessWidget {
       return Tooltip(message: tooltip!, child: button);
     }
     return button;
+  }
+}
+
+/// Compass widget showing map rotation
+class _Compass extends StatelessWidget {
+  final double rotation;
+  final VoidCallback onPressed;
+
+  const _Compass({required this.rotation, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: AppTheme.darkCard.withValues(alpha: 0.95),
+          shape: BoxShape.circle,
+          border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Transform.rotate(
+          angle: -rotation * (3.14159 / 180),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // North indicator (red)
+              Positioned(
+                top: 6,
+                child: Container(
+                  width: 3,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: AppTheme.errorRed,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // South indicator (white)
+              Positioned(
+                bottom: 6,
+                child: Container(
+                  width: 3,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: AppTheme.textSecondary,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // Center dot
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: AppTheme.textSecondary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Filter bar for node filtering
+class _FilterBar extends StatelessWidget {
+  final NodeFilter currentFilter;
+  final void Function(NodeFilter) onFilterChanged;
+  final int totalCount;
+  final int filteredCount;
+
+  const _FilterBar({
+    required this.currentFilter,
+    required this.onFilterChanged,
+    required this.totalCount,
+    required this.filteredCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.filter_alt,
+                size: 16,
+                color: AppTheme.primaryMagenta,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Filter Nodes',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '$filteredCount / $totalCount',
+                style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: NodeFilter.values.map((filter) {
+              final isSelected = filter == currentFilter;
+              return GestureDetector(
+                onTap: () => onFilterChanged(filter),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppTheme.primaryMagenta.withValues(alpha: 0.2)
+                        : AppTheme.darkBackground,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isSelected
+                          ? AppTheme.primaryMagenta
+                          : AppTheme.darkBorder,
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Text(
+                    filter.label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      color: isSelected
+                          ? AppTheme.primaryMagenta
+                          : AppTheme.textSecondary,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Measurement card showing distance between two points
+class _MeasurementCard extends StatelessWidget {
+  final LatLng start;
+  final LatLng end;
+  final VoidCallback onClear;
+  final VoidCallback onShare;
+
+  const _MeasurementCard({
+    required this.start,
+    required this.end,
+    required this.onClear,
+    required this.onShare,
+  });
+
+  String _formatDistance(double km) {
+    if (km < 1) {
+      return '${(km * 1000).round()} meters';
+    } else if (km < 10) {
+      return '${km.toStringAsFixed(2)} km';
+    } else {
+      return '${km.toStringAsFixed(1)} km';
+    }
+  }
+
+  double _calculateDistance() {
+    return const Distance().as(LengthUnit.Kilometer, start, end);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final distance = _calculateDistance();
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.warningYellow.withValues(alpha: 0.5),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppTheme.warningYellow.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.straighten,
+              size: 18,
+              color: AppTheme.warningYellow,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _formatDistance(distance),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.warningYellow,
+                  ),
+                ),
+                Text(
+                  'A: ${start.latitude.toStringAsFixed(4)}, ${start.longitude.toStringAsFixed(4)}',
+                  style: TextStyle(fontSize: 10, color: AppTheme.textTertiary),
+                ),
+                Text(
+                  'B: ${end.latitude.toStringAsFixed(4)}, ${end.longitude.toStringAsFixed(4)}',
+                  style: TextStyle(fontSize: 10, color: AppTheme.textTertiary),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.share, size: 20),
+            color: AppTheme.textSecondary,
+            onPressed: onShare,
+            tooltip: 'Share',
+          ),
+          IconButton(
+            icon: const Icon(Icons.clear, size: 20),
+            color: AppTheme.textTertiary,
+            onPressed: onClear,
+            tooltip: 'Clear',
+          ),
+        ],
+      ),
+    );
   }
 }
