@@ -1287,32 +1287,6 @@ class _NodeDetailsSheet extends ConsumerWidget {
             ),
             if (node.hasPosition)
               ListTile(
-                leading: const Icon(Icons.map, color: AppTheme.primaryMagenta),
-                title: const Text(
-                  'View on Map',
-                  style: TextStyle(color: Colors.white, fontFamily: 'Inter'),
-                ),
-                subtitle: const Text(
-                  'Center map on this node',
-                  style: TextStyle(
-                    color: AppTheme.textTertiary,
-                    fontSize: 12,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => MapScreen(initialNodeNum: node.nodeNum),
-                    ),
-                  );
-                },
-              ),
-            if (node.hasPosition)
-              ListTile(
                 leading: const Icon(
                   Icons.location_on,
                   color: AppTheme.textSecondary,
@@ -1431,11 +1405,24 @@ class _NodeDetailsSheet extends ConsumerWidget {
                   ],
                 ),
               ),
+              // Map button (if node has GPS)
+              if (node.hasPosition)
+                IconButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MapScreen(initialNodeNum: node.nodeNum),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.map, color: AppTheme.primaryMagenta),
+                ),
               // QR code button
               IconButton(
                 onPressed: () => _showNodeQrCode(context),
                 icon: const Icon(Icons.qr_code, color: AppTheme.textSecondary),
-                tooltip: 'Show QR Code',
               ),
             ],
           ),
