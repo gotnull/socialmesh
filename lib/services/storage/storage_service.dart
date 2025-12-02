@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:logger/logger.dart';
 import 'dart:convert';
 import '../../models/mesh_models.dart';
+import '../../models/canned_response.dart';
 
 /// Secure storage service for sensitive data
 class SecureStorageService {
@@ -200,6 +201,74 @@ class SettingsService {
 
   bool get onboardingComplete =>
       _preferences.getBool('onboarding_complete') ?? false;
+
+  // Canned responses
+  Future<void> setCannedResponses(List<CannedResponse> responses) async {
+    final jsonList = responses.map((r) => r.toJson()).toList();
+    await _preferences.setString('canned_responses', jsonEncode(jsonList));
+  }
+
+  List<CannedResponse> get cannedResponses {
+    final jsonString = _preferences.getString('canned_responses');
+    if (jsonString == null) {
+      return DefaultCannedResponses.all;
+    }
+    try {
+      final jsonList = jsonDecode(jsonString) as List;
+      final responses = jsonList
+          .map((j) => CannedResponse.fromJson(j))
+          .toList();
+      responses.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      return responses;
+    } catch (e) {
+      _logger.e('Error parsing canned responses: $e');
+      return DefaultCannedResponses.all;
+    }
+  }
+
+  Future<void> addCannedResponse(CannedResponse response) async {
+    final responses = cannedResponses;
+    final newResponse = response.copyWith(sortOrder: responses.length);
+    responses.add(newResponse);
+    await setCannedResponses(responses);
+  }
+
+  Future<void> updateCannedResponse(CannedResponse response) async {
+    final responses = cannedResponses;
+    final index = responses.indexWhere((r) => r.id == response.id);
+    if (index >= 0) {
+      responses[index] = response;
+      await setCannedResponses(responses);
+    }
+  }
+
+  Future<void> deleteCannedResponse(String id) async {
+    final responses = cannedResponses;
+    responses.removeWhere((r) => r.id == id);
+    // Reorder
+    for (int i = 0; i < responses.length; i++) {
+      responses[i] = responses[i].copyWith(sortOrder: i);
+    }
+    await setCannedResponses(responses);
+  }
+
+  Future<void> reorderCannedResponses(int oldIndex, int newIndex) async {
+    final responses = cannedResponses;
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    final item = responses.removeAt(oldIndex);
+    responses.insert(newIndex, item);
+    // Update sort orders
+    for (int i = 0; i < responses.length; i++) {
+      responses[i] = responses[i].copyWith(sortOrder: i);
+    }
+    await setCannedResponses(responses);
+  }
+
+  Future<void> resetCannedResponsesToDefaults() async {
+    await _preferences.remove('canned_responses');
+  }
 }
 
 /// Message storage service - persists messages locally

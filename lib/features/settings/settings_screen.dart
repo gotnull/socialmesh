@@ -24,6 +24,7 @@ import 'ringtone_screen.dart';
 import 'subscription_screen.dart';
 import 'premium_widgets.dart';
 import 'ifttt_config_screen.dart';
+import 'canned_responses_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -360,6 +361,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onTap: () => _testNotification(context),
                 ),
               ],
+
+              const SizedBox(height: 16),
+
+              // Messaging Section
+              _SectionHeader(title: 'MESSAGING'),
+              _SettingsTile(
+                icon: Icons.bolt,
+                title: 'Quick responses',
+                subtitle: 'Manage canned responses for fast messaging',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const CannedResponsesScreen(),
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 16),
 

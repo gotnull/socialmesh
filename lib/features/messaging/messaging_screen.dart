@@ -7,6 +7,7 @@ import 'dart:async';
 import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
+import '../../models/canned_response.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animated_list_item.dart';
@@ -474,6 +475,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _messageController.dispose();
     _messageFocusNode.dispose();
     super.dispose();
+  }
+
+  void _showQuickResponses() async {
+    HapticFeedback.selectionClick();
+    final settingsService = await ref.read(settingsServiceProvider.future);
+    final responses = settingsService.cannedResponses;
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _QuickResponsesSheet(
+        responses: responses,
+        onSelect: (text) {
+          Navigator.pop(context);
+          _messageController.text = text;
+          _sendMessage();
+        },
+      ),
+    );
   }
 
   Future<void> _sendMessage() async {
@@ -1302,6 +1324,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 top: false,
                 child: Row(
                   children: [
+                    // Quick responses button
+                    GestureDetector(
+                      onTap: () => _showQuickResponses(),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkBackground,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.bolt,
+                          color: AppTheme.textSecondary,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
@@ -1671,6 +1711,150 @@ class _MessageBubble extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Quick responses bottom sheet
+class _QuickResponsesSheet extends StatelessWidget {
+  final List<CannedResponse> responses;
+  final void Function(String text) onSelect;
+
+  const _QuickResponsesSheet({required this.responses, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.5,
+      ),
+      decoration: const BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppTheme.textTertiary,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.bolt,
+                    color: AppTheme.primaryGreen,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Quick Responses',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(color: AppTheme.darkBorder, height: 1),
+          // Responses grid
+          Flexible(
+            child: responses.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Text(
+                      'No quick responses configured.\nAdd some in Settings → Quick responses.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppTheme.textSecondary),
+                    ),
+                  )
+                : GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    shrinkWrap: true,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 2.5,
+                        ),
+                    itemCount: responses.length,
+                    itemBuilder: (context, index) {
+                      final response = responses[index];
+                      return _QuickResponseTile(
+                        response: response,
+                        onTap: () => onSelect(response.text),
+                      );
+                    },
+                  ),
+          ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickResponseTile extends StatelessWidget {
+  final CannedResponse response;
+  final VoidCallback onTap;
+
+  const _QuickResponseTile({required this.response, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppTheme.darkBackground,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              if (response.emoji != null) ...[
+                Text(response.emoji!, style: const TextStyle(fontSize: 20)),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: Text(
+                  response.text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
