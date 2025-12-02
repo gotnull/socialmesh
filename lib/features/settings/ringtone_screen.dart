@@ -545,6 +545,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           fontSize: 13,
                         ),
                         maxLines: 3,
+                        maxLength: 230,
                         onChanged: (value) {
                           setDialogState(() {
                             dialogError = value.isEmpty
@@ -561,6 +562,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           ),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.all(16),
+                          counterStyle: TextStyle(color: AppTheme.textSecondary),
                         ),
                       ),
                     ),

@@ -229,36 +229,35 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Text(
-                    'Message',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
+                  TextField(
+                    controller: textController,
+                    autofocus: true,
+                    maxLength: 100,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppTheme.darkBackground,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.darkBorder),
-                    ),
-                    child: TextField(
-                      controller: textController,
-                      autofocus: true,
-                      maxLength: 100,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
+                    decoration: InputDecoration(
+                      labelText: 'Message',
+                      labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                      hintText: 'e.g., On my way',
+                      hintStyle: TextStyle(
+                        color: AppTheme.textSecondary.withAlpha(128),
                       ),
-                      decoration: const InputDecoration(
-                        hintText: 'e.g., On my way',
-                        hintStyle: TextStyle(color: AppTheme.textTertiary),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.all(16),
-                        counterStyle: TextStyle(color: AppTheme.textTertiary),
+                      filled: true,
+                      fillColor: AppTheme.darkBackground,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: AppTheme.primaryMagenta,
+                          width: 2,
+                        ),
+                      ),
+                      counterStyle: const TextStyle(color: AppTheme.textSecondary),
                     ),
                   ),
                   const SizedBox(height: 24),
