@@ -259,6 +259,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
 
     final validation = _validateRtttl(_rtttlController.text);
     if (validation != null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(validation),

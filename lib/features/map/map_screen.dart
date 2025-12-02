@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:share_plus/share_plus.dart';
@@ -773,88 +772,31 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         );
                       }).toList(),
                     ),
-                    // Node markers with clustering
-                    MarkerClusterLayerWidget(
-                      options: MarkerClusterLayerOptions(
-                        maxClusterRadius: 120,
-                        disableClusteringAtZoom: 19,
-                        size: const Size(48, 48),
-                        rotate: true,
-                        spiderfyCircleRadius: 60,
-                        spiderfySpiralDistanceMultiplier: 2,
-                        circleSpiralSwitchover: 9,
-                        zoomToBoundsOnClick: true,
-                        showPolygon: false,
-                        markers: nodesWithPosition.map((n) {
-                          final isMyNode = n.node.nodeNum == myNodeNum;
-                          final isSelected =
-                              _selectedNode?.nodeNum == n.node.nodeNum;
-                          return Marker(
-                            point: LatLng(n.latitude, n.longitude),
-                            width: isSelected ? 56 : 44,
-                            height: isSelected ? 56 : 44,
-                            child: GestureDetector(
-                              onTap: () {
-                                HapticFeedback.selectionClick();
-                                setState(() => _selectedNode = n.node);
-                              },
-                              child: _NodeMarker(
-                                node: n.node,
-                                isMyNode: isMyNode,
-                                isSelected: isSelected,
-                                isStale: n.isStale,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                        builder: (context, markers) {
-                          return GestureDetector(
+                    // Node markers
+                    MarkerLayer(
+                      rotate: true,
+                      markers: nodesWithPosition.map((n) {
+                        final isMyNode = n.node.nodeNum == myNodeNum;
+                        final isSelected =
+                            _selectedNode?.nodeNum == n.node.nodeNum;
+                        return Marker(
+                          point: LatLng(n.latitude, n.longitude),
+                          width: isSelected ? 56 : 44,
+                          height: isSelected ? 56 : 44,
+                          child: GestureDetector(
                             onTap: () {
-                              // Zoom in when cluster is tapped
-                              if (markers.isNotEmpty) {
-                                final bounds = LatLngBounds.fromPoints(
-                                  markers.map((m) => m.point).toList(),
-                                );
-                                _mapController.fitCamera(
-                                  CameraFit.bounds(
-                                    bounds: bounds,
-                                    padding: const EdgeInsets.all(50),
-                                  ),
-                                );
-                              }
+                              HapticFeedback.selectionClick();
+                              setState(() => _selectedNode = n.node);
                             },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryMagenta,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 3,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppTheme.primaryMagenta.withValues(
-                                      alpha: 0.5,
-                                    ),
-                                    blurRadius: 12,
-                                    spreadRadius: 4,
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '${markers.length}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
+                            child: _NodeMarker(
+                              node: n.node,
+                              isMyNode: isMyNode,
+                              isSelected: isSelected,
+                              isStale: n.isStale,
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                     // Measurement markers
                     if (_measureStart != null)

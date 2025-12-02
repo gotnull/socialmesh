@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'dart:async';
 import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
@@ -1333,6 +1334,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
+                    // Voice messaging not practical over LoRa due to bandwidth limits
+                    // Show send button always
                     GestureDetector(
                       onTap: _sendMessage,
                       child: Container(
