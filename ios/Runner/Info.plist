@@ -52,7 +52,8 @@
 		<key>NSCameraUsageDescription</key>
 		<string>This app needs camera access to scan QR codes for channel configuration</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>This app needs location access to show your position on the map and share it with mesh nodes</string>
+		<string>This app needs location access to show your position on the map and share it with mesh
+			nodes</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 		<string>This app needs location access to show your position on the map and share it with mesh
 			nodes even when in background</string>
