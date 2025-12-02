@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 
@@ -557,57 +558,46 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   }
 
   void _showFilterDialog() {
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: AppTheme.darkCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppTheme.darkBorder,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Filter Events',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                fontFamily: 'Inter',
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Filter Events',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 16),
-              ...TimelineFilter.values.map((filter) {
-                return ListTile(
-                  leading: Icon(
-                    filter.icon,
-                    color: _filter == filter
-                        ? AppTheme.primaryMagenta
-                        : AppTheme.textSecondary,
-                  ),
-                  title: Text(filter.label),
-                  trailing: _filter == filter
-                      ? const Icon(Icons.check, color: AppTheme.primaryMagenta)
-                      : null,
-                  onTap: () {
-                    setState(() {
-                      _filter = filter;
-                    });
-                    Navigator.pop(context);
-                  },
-                );
-              }),
-              const SizedBox(height: 16),
-            ],
+            ),
           ),
-        );
-      },
+          ...TimelineFilter.values.map((filter) {
+            return ListTile(
+              leading: Icon(
+                filter.icon,
+                color: _filter == filter
+                    ? AppTheme.primaryMagenta
+                    : AppTheme.textSecondary,
+              ),
+              title: Text(filter.label),
+              trailing: _filter == filter
+                  ? const Icon(Icons.check, color: AppTheme.primaryMagenta)
+                  : null,
+              onTap: () {
+                setState(() {
+                  _filter = filter;
+                });
+                Navigator.pop(context);
+              },
+            );
+          }),
+        ],
+      ),
     );
   }
 }

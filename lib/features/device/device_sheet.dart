@@ -2,22 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/transport.dart' as transport;
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/info_table.dart';
 import '../../providers/app_providers.dart';
 
 /// Shows the device sheet as a modal bottom sheet
 void showDeviceSheet(BuildContext context) {
-  showModalBottomSheet(
+  AppBottomSheet.showScrollable(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => const DeviceSheet(),
+    initialChildSize: 0.9,
+    minChildSize: 0.5,
+    maxChildSize: 0.95,
+    builder: (scrollController) =>
+        _DeviceSheetContent(scrollController: scrollController),
   );
 }
 
-/// Device information and controls sheet
-class DeviceSheet extends ConsumerWidget {
-  const DeviceSheet({super.key});
+/// Device information and controls sheet content
+class _DeviceSheetContent extends ConsumerWidget {
+  final ScrollController scrollController;
+
+  const _DeviceSheetContent({required this.scrollController});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,189 +47,158 @@ class DeviceSheet extends ConsumerWidget {
         autoReconnectState == AutoReconnectState.scanning ||
         autoReconnectState == AutoReconnectState.connecting;
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.9,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: AppTheme.darkCard,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-          ),
-          child: Column(
+    return Column(
+      children: [
+        const DragPill(),
+        // Header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          child: Row(
             children: [
-              // Handle bar
               Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: AppTheme.darkBorder,
-                  borderRadius: BorderRadius.circular(2),
+                  color: isConnected
+                      ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                      : AppTheme.darkBackground,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.router,
+                  color: isConnected
+                      ? AppTheme.primaryGreen
+                      : AppTheme.textTertiary,
+                  size: 24,
                 ),
               ),
-              // Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: isConnected
-                            ? AppTheme.primaryGreen.withValues(alpha: 0.15)
-                            : AppTheme.darkBackground,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.router,
-                        color: isConnected
-                            ? AppTheme.primaryGreen
-                            : AppTheme.textTertiary,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            connectedDevice?.name ?? 'No Device',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              fontFamily: 'Inter',
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: isConnected
-                                      ? AppTheme.primaryGreen
-                                      : isReconnecting
-                                      ? AppTheme.warningYellow
-                                      : AppTheme.textTertiary,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                _getStatusText(
-                                  connectionState,
-                                  autoReconnectState,
-                                ),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: isConnected
-                                      ? AppTheme.primaryGreen
-                                      : isReconnecting
-                                      ? AppTheme.warningYellow
-                                      : AppTheme.textTertiary,
-                                  fontFamily: 'Inter',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.close,
-                        color: AppTheme.textTertiary,
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(color: AppTheme.darkBorder, height: 1),
-              // Content
+              const SizedBox(width: 16),
               Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Connection Details
-                    _buildSectionTitle('Connection Details'),
-                    const SizedBox(height: 12),
-                    _DeviceInfoCard(
-                      device: connectedDevice,
-                      connectionState: connectionState,
-                      batteryLevel: batteryLevel,
+                    Text(
+                      connectedDevice?.name ?? 'No Device',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontFamily: 'Inter',
+                      ),
                     ),
-                    const SizedBox(height: 24),
-
-                    // Quick Actions
-                    _buildSectionTitle('Quick Actions'),
-                    const SizedBox(height: 12),
-                    _ActionTile(
-                      icon: Icons.tune_outlined,
-                      title: 'Device Config',
-                      subtitle: 'Configure device role and settings',
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).pushNamed('/device-config');
-                      },
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: isConnected
+                                ? AppTheme.primaryGreen
+                                : isReconnecting
+                                ? AppTheme.warningYellow
+                                : AppTheme.textTertiary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _getStatusText(connectionState, autoReconnectState),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isConnected
+                                ? AppTheme.primaryGreen
+                                : isReconnecting
+                                ? AppTheme.warningYellow
+                                : AppTheme.textTertiary,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ],
                     ),
-                    _ActionTile(
-                      icon: Icons.wifi_tethering_outlined,
-                      title: 'Channels',
-                      subtitle: 'Manage communication channels',
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).pushNamed('/channels');
-                      },
-                    ),
-                    _ActionTile(
-                      icon: Icons.qr_code_scanner,
-                      title: 'Scan Channel QR',
-                      subtitle: 'Import channel from QR code',
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).pushNamed('/channel-qr-scanner');
-                      },
-                    ),
-                    _ActionTile(
-                      icon: Icons.settings_outlined,
-                      title: 'App Settings',
-                      subtitle: 'Notifications, theme, preferences',
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).pushNamed('/settings');
-                      },
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Connection Actions
-                    if (isConnected) ...[
-                      _buildSectionTitle('Connection'),
-                      const SizedBox(height: 12),
-                      _buildDisconnectButton(context, ref),
-                    ] else if (!isReconnecting) ...[
-                      _buildSectionTitle('Connection'),
-                      const SizedBox(height: 12),
-                      _buildScanButton(context),
-                    ],
-                    const SizedBox(height: 32),
                   ],
                 ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, color: AppTheme.textTertiary),
+                onPressed: () => Navigator.pop(context),
               ),
             ],
           ),
-        );
-      },
+        ),
+        const Divider(color: AppTheme.darkBorder, height: 1),
+        // Content
+        Expanded(
+          child: ListView(
+            controller: scrollController,
+            padding: const EdgeInsets.all(20),
+            children: [
+              // Connection Details
+              _buildSectionTitle('Connection Details'),
+              const SizedBox(height: 12),
+              _DeviceInfoCard(
+                device: connectedDevice,
+                connectionState: connectionState,
+                batteryLevel: batteryLevel,
+              ),
+              const SizedBox(height: 24),
+
+              // Quick Actions
+              _buildSectionTitle('Quick Actions'),
+              const SizedBox(height: 12),
+              _ActionTile(
+                icon: Icons.tune_outlined,
+                title: 'Device Config',
+                subtitle: 'Configure device role and settings',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).pushNamed('/device-config');
+                },
+              ),
+              _ActionTile(
+                icon: Icons.wifi_tethering_outlined,
+                title: 'Channels',
+                subtitle: 'Manage communication channels',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).pushNamed('/channels');
+                },
+              ),
+              _ActionTile(
+                icon: Icons.qr_code_scanner,
+                title: 'Scan Channel QR',
+                subtitle: 'Import channel from QR code',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).pushNamed('/channel-qr-scanner');
+                },
+              ),
+              _ActionTile(
+                icon: Icons.settings_outlined,
+                title: 'App Settings',
+                subtitle: 'Notifications, theme, preferences',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).pushNamed('/settings');
+                },
+              ),
+              const SizedBox(height: 24),
+
+              // Connection Actions
+              if (isConnected) ...[
+                _buildSectionTitle('Connection'),
+                const SizedBox(height: 12),
+                _buildDisconnectButton(context, ref),
+              ] else if (!isReconnecting) ...[
+                _buildSectionTitle('Connection'),
+                const SizedBox(height: 12),
+                _buildScanButton(context),
+              ],
+              const SizedBox(height: 32),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

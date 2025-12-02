@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/transport.dart' as transport;
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/info_table.dart';
 import '../../providers/app_providers.dart';
 
@@ -341,85 +342,45 @@ class DashboardScreen extends ConsumerWidget {
     transport.DeviceInfo? device,
     transport.DeviceConnectionState state,
   ) {
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppTheme.darkCard,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(top: 12, bottom: 16),
-              decoration: BoxDecoration(
-                color: AppTheme.darkBorder,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Title
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: AppTheme.primaryGreen,
-                    size: 24,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const BottomSheetHeader(
+            icon: Icons.info_outline,
+            title: 'Connection Details',
+          ),
+          const SizedBox(height: 16),
+          _DeviceDetailsTable(device: device, state: state),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            child: SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.darkBackground,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: AppTheme.darkBorder),
                   ),
-                  SizedBox(width: 12),
-                  Text(
-                    'Connection Details',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Zebra table
-            _DeviceDetailsTable(device: device, state: state),
-            // Close button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.darkBackground,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: const BorderSide(color: AppTheme.darkBorder),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Close',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Inter',
-                    ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Close',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Inter',
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/transport.dart' as transport;
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../providers/app_providers.dart';
 import 'models/dashboard_widget_config.dart';
 import 'providers/dashboard_providers.dart';
@@ -393,23 +394,15 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
   }
 
   void _showAddWidgetSheet(BuildContext context) {
-    showModalBottomSheet(
+    AppBottomSheet.showScrollable(
       context: context,
-      backgroundColor: AppTheme.darkSurface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        minChildSize: 0.3,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (context, scrollController) => _AddWidgetSheet(
-          scrollController: scrollController,
-          widgetsNotifier: ref.read(dashboardWidgetsProvider.notifier),
-          widgetsProvider: dashboardWidgetsProvider,
-        ),
+      initialChildSize: 0.6,
+      minChildSize: 0.3,
+      maxChildSize: 0.9,
+      builder: (scrollController) => _AddWidgetSheet(
+        scrollController: scrollController,
+        widgetsNotifier: ref.read(dashboardWidgetsProvider.notifier),
+        widgetsProvider: dashboardWidgetsProvider,
       ),
     );
   }
@@ -508,18 +501,7 @@ class _AddWidgetSheet extends ConsumerWidget {
 
     return Column(
       children: [
-        // Handle
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppTheme.darkBorder,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ),
+        const DragPill(),
         // Header with title and done button
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),

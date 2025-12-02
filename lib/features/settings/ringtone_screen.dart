@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../providers/app_providers.dart';
 import '../../services/audio/rtttl_player.dart';
 
@@ -428,382 +429,105 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   }
 
   void _showAddCustomDialog() {
-    final nameController = TextEditingController();
-    final rtttlController = TextEditingController();
-    final descController = TextEditingController();
-    String? dialogError;
-
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: AppTheme.darkCard,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      child: _AddCustomRingtoneContent(
+        validateRtttl: _validateRtttl,
+        onAdd: (preset) {
+          ref.read(customRingtonesProvider.notifier).addPreset(preset);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Custom ringtone added'),
+              backgroundColor: AppTheme.darkCard,
+              behavior: SnackBarBehavior.floating,
             ),
-            child: SafeArea(
-              top: false,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        margin: const EdgeInsets.only(bottom: 24),
-                        decoration: BoxDecoration(
-                          color: AppTheme.textTertiary,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const Text(
-                      'Add Custom Ringtone',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Create a custom RTTTL ringtone preset',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppTheme.textSecondary,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Name',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textSecondary,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.darkBackground,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppTheme.darkBorder),
-                      ),
-                      child: TextField(
-                        controller: nameController,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontFamily: 'Inter',
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: 'e.g., My Ringtone',
-                          hintStyle: TextStyle(color: AppTheme.textTertiary),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.all(16),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'RTTTL String',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textSecondary,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.darkBackground,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: dialogError != null
-                              ? AppTheme.errorRed
-                              : AppTheme.darkBorder,
-                        ),
-                      ),
-                      child: TextField(
-                        controller: rtttlController,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: 'monospace',
-                          fontSize: 13,
-                        ),
-                        maxLines: 3,
-                        maxLength: 230,
-                        onChanged: (value) {
-                          setDialogState(() {
-                            dialogError = value.isEmpty
-                                ? null
-                                : _validateRtttl(value);
-                          });
-                        },
-                        decoration: const InputDecoration(
-                          hintText: '24:d=4,o=5,b=120:c,e,g',
-                          hintStyle: TextStyle(
-                            color: AppTheme.textTertiary,
-                            fontFamily: 'monospace',
-                            fontSize: 13,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.all(16),
-                          counterStyle: TextStyle(color: AppTheme.textSecondary),
-                        ),
-                      ),
-                    ),
-                    if (dialogError != null) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.error_outline,
-                            size: 14,
-                            color: AppTheme.errorRed,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              dialogError!,
-                              style: const TextStyle(
-                                color: AppTheme.errorRed,
-                                fontSize: 12,
-                                fontFamily: 'Inter',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Description (optional)',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textSecondary,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.darkBackground,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppTheme.darkBorder),
-                      ),
-                      child: TextField(
-                        controller: descController,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontFamily: 'Inter',
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: 'e.g., Classic beep melody',
-                          hintStyle: TextStyle(color: AppTheme.textTertiary),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.all(16),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              side: BorderSide(color: Colors.grey.shade700),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text('Cancel'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: FilledButton(
-                            onPressed: () {
-                              if (nameController.text.trim().isEmpty) {
-                                setDialogState(() {
-                                  dialogError = 'Name is required';
-                                });
-                                return;
-                              }
-
-                              final validation = _validateRtttl(
-                                rtttlController.text,
-                              );
-                              if (validation != null) {
-                                setDialogState(() {
-                                  dialogError = validation;
-                                });
-                                return;
-                              }
-
-                              ref
-                                  .read(customRingtonesProvider.notifier)
-                                  .addPreset(
-                                    RingtonePreset(
-                                      name: nameController.text.trim(),
-                                      rtttl: rtttlController.text.trim(),
-                                      description:
-                                          descController.text.trim().isEmpty
-                                          ? 'Custom ringtone'
-                                          : descController.text.trim(),
-                                    ),
-                                  );
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Custom ringtone added'),
-                                  backgroundColor: AppTheme.darkCard,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            },
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              backgroundColor: AppTheme.primaryGreen,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text('Add'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 
   void _showRtttlHelp() {
-    showModalBottomSheet(
+    AppBottomSheet.showScrollable(
       context: context,
-      backgroundColor: AppTheme.darkCard,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppTheme.textTertiary.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
+      initialChildSize: 0.7,
+      minChildSize: 0.5,
+      maxChildSize: 0.9,
+      builder: (scrollController) => SingleChildScrollView(
+        controller: scrollController,
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'RTTTL Format Guide',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                fontFamily: 'Inter',
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildHelpSection(
+              'What is RTTTL?',
+              'Ring Tone Text Transfer Language (RTTTL) is a format for creating musical output with simple text strings.',
+            ),
+            _buildHelpSection('Format', 'name:d=duration,o=octave,b=bpm:notes'),
+            _buildHelpSection(
+              'Header',
+              '• Name: Identifier (often ignored)\n'
+                  '• d=N: Default note duration (1,2,4,8,16,32)\n'
+                  '• o=N: Default octave (4,5,6,7)\n'
+                  '• b=N: Beats per minute',
+            ),
+            _buildHelpSection(
+              'Notes',
+              '• c, c#, d, d#, e, f, f#, g, g#, a, a#, b\n'
+                  '• p = pause/rest\n'
+                  '• Optional duration prefix (4c = quarter note C)\n'
+                  '• Optional octave suffix (c6 = C in octave 6)\n'
+                  '• Optional dot for 1.5x duration (c.)',
+            ),
+            _buildHelpSection(
+              'Example',
+              '24:d=4,o=5,b=120:c,e,g,c6\n\n'
+                  'Plays C, E, G, high C at 120 BPM\n'
+                  'Default quarter notes in octave 5',
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.graphBlue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppTheme.graphBlue.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.link,
+                    color: AppTheme.graphBlue.withValues(alpha: 0.8),
+                    size: 20,
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'RTTTL Format Guide',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  fontFamily: 'Inter',
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildHelpSection(
-                'What is RTTTL?',
-                'Ring Tone Text Transfer Language (RTTTL) is a format for creating musical output with simple text strings.',
-              ),
-              _buildHelpSection(
-                'Format',
-                'name:d=duration,o=octave,b=bpm:notes',
-              ),
-              _buildHelpSection(
-                'Header',
-                '• Name: Identifier (often ignored)\n'
-                    '• d=N: Default note duration (1,2,4,8,16,32)\n'
-                    '• o=N: Default octave (4,5,6,7)\n'
-                    '• b=N: Beats per minute',
-              ),
-              _buildHelpSection(
-                'Notes',
-                '• c, c#, d, d#, e, f, f#, g, g#, a, a#, b\n'
-                    '• p = pause/rest\n'
-                    '• Optional duration prefix (4c = quarter note C)\n'
-                    '• Optional octave suffix (c6 = C in octave 6)\n'
-                    '• Optional dot for 1.5x duration (c.)',
-              ),
-              _buildHelpSection(
-                'Example',
-                '24:d=4,o=5,b=120:c,e,g,c6\n\n'
-                    'Plays C, E, G, high C at 120 BPM\n'
-                    'Default quarter notes in octave 5',
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.graphBlue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: AppTheme.graphBlue.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.link,
-                      color: AppTheme.graphBlue.withValues(alpha: 0.8),
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'Try Nokia Composer online to create and preview RTTTL strings',
-                        style: TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontSize: 13,
-                          fontFamily: 'Inter',
-                        ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Try Nokia Composer online to create and preview RTTTL strings',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                        fontFamily: 'Inter',
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 32),
-            ],
-          ),
+            ),
+            const SizedBox(height: 32),
+          ],
         ),
       ),
     );
@@ -1529,6 +1253,108 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                   const SizedBox(height: 32),
                 ],
               ),
+      ),
+    );
+  }
+}
+
+class _AddCustomRingtoneContent extends StatefulWidget {
+  final String? Function(String) validateRtttl;
+  final void Function(RingtonePreset) onAdd;
+
+  const _AddCustomRingtoneContent({
+    required this.validateRtttl,
+    required this.onAdd,
+  });
+
+  @override
+  State<_AddCustomRingtoneContent> createState() =>
+      _AddCustomRingtoneContentState();
+}
+
+class _AddCustomRingtoneContentState extends State<_AddCustomRingtoneContent> {
+  final _nameController = TextEditingController();
+  final _rtttlController = TextEditingController();
+  final _descController = TextEditingController();
+  String? _error;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _rtttlController.dispose();
+    _descController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (_nameController.text.trim().isEmpty) {
+      setState(() => _error = 'Name is required');
+      return;
+    }
+
+    final validation = widget.validateRtttl(_rtttlController.text);
+    if (validation != null) {
+      setState(() => _error = validation);
+      return;
+    }
+
+    widget.onAdd(
+      RingtonePreset(
+        name: _nameController.text.trim(),
+        rtttl: _rtttlController.text.trim(),
+        description: _descController.text.trim().isEmpty
+            ? 'Custom ringtone'
+            : _descController.text.trim(),
+      ),
+    );
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const BottomSheetHeader(
+            title: 'Add Custom Ringtone',
+            subtitle: 'Create a custom RTTTL ringtone preset',
+          ),
+          const SizedBox(height: 24),
+          BottomSheetTextField(
+            controller: _nameController,
+            label: 'Name',
+            hint: 'e.g., My Ringtone',
+          ),
+          const SizedBox(height: 16),
+          BottomSheetTextField(
+            controller: _rtttlController,
+            label: 'RTTTL String',
+            hint: '24:d=4,o=5,b=120:c,e,g',
+            maxLines: 3,
+            maxLength: 230,
+            monospace: true,
+            errorText: _error,
+            onChanged: (value) {
+              setState(() {
+                _error = value.isEmpty ? null : widget.validateRtttl(value);
+              });
+            },
+          ),
+          const SizedBox(height: 16),
+          BottomSheetTextField(
+            controller: _descController,
+            label: 'Description (optional)',
+            hint: 'e.g., Classic beep melody',
+          ),
+          const SizedBox(height: 24),
+          BottomSheetButtons(
+            onCancel: () => Navigator.pop(context),
+            onConfirm: _submit,
+            confirmLabel: 'Add',
+          ),
+        ],
       ),
     );
   }

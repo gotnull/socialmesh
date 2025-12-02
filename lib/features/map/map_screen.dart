@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../messaging/messaging_screen.dart';
@@ -1168,159 +1169,74 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   void _showWaypointMenu(LatLng point) {
-    showModalBottomSheet(
+    AppBottomSheet.showActions(
       context: context,
-      backgroundColor: AppTheme.darkCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppTheme.textTertiary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(
-                  Icons.add_location,
-                  color: AppTheme.warningYellow,
-                ),
-                title: const Text(
-                  'Drop Waypoint',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _addWaypoint(point);
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.share,
-                  color: AppTheme.primaryMagenta,
-                ),
-                title: const Text(
-                  'Share Location',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _shareLocation(point);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.copy, color: AppTheme.textSecondary),
-                title: const Text(
-                  'Copy Coordinates',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _copyCoordinates(point);
-                },
-              ),
-            ],
-          ),
+      actions: [
+        BottomSheetAction(
+          icon: Icons.add_location,
+          iconColor: AppTheme.warningYellow,
+          label: 'Drop Waypoint',
+          onTap: () => _addWaypoint(point),
         ),
+        BottomSheetAction(
+          icon: Icons.share,
+          iconColor: AppTheme.primaryMagenta,
+          label: 'Share Location',
+          onTap: () => _shareLocation(point),
+        ),
+        BottomSheetAction(
+          icon: Icons.copy,
+          iconColor: AppTheme.textSecondary,
+          label: 'Copy Coordinates',
+          onTap: () => _copyCoordinates(point),
+        ),
+      ],
+      header: Text(
+        '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}',
+        style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
       ),
     );
   }
 
   void _showWaypointDetails(_Waypoint waypoint) {
-    showModalBottomSheet(
+    AppBottomSheet.showActions(
       context: context,
-      backgroundColor: AppTheme.darkCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppTheme.textTertiary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                waypoint.label,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${waypoint.position.latitude.toStringAsFixed(6)}, ${waypoint.position.longitude.toStringAsFixed(6)}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(
-                  Icons.share,
-                  color: AppTheme.primaryMagenta,
-                ),
-                title: const Text(
-                  'Share',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _shareLocation(waypoint.position, label: waypoint.label);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.copy, color: AppTheme.textSecondary),
-                title: const Text(
-                  'Copy Coordinates',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _copyCoordinates(waypoint.position);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete, color: AppTheme.errorRed),
-                title: const Text(
-                  'Delete',
-                  style: TextStyle(color: AppTheme.errorRed),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _removeWaypoint(waypoint.id);
-                },
-              ),
-            ],
-          ),
+      actions: [
+        BottomSheetAction(
+          icon: Icons.share,
+          iconColor: AppTheme.primaryMagenta,
+          label: 'Share',
+          onTap: () => _shareLocation(waypoint.position, label: waypoint.label),
         ),
+        BottomSheetAction(
+          icon: Icons.copy,
+          iconColor: AppTheme.textSecondary,
+          label: 'Copy Coordinates',
+          onTap: () => _copyCoordinates(waypoint.position),
+        ),
+        BottomSheetAction(
+          icon: Icons.delete,
+          label: 'Delete',
+          isDestructive: true,
+          onTap: () => _removeWaypoint(waypoint.id),
+        ),
+      ],
+      header: Column(
+        children: [
+          Text(
+            waypoint.label,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${waypoint.position.latitude.toStringAsFixed(6)}, ${waypoint.position.longitude.toStringAsFixed(6)}',
+            style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+          ),
+        ],
       ),
     );
   }

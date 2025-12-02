@@ -8,6 +8,7 @@ import '../../services/storage/storage_service.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import '../device/region_selection_screen.dart';
 import 'device_management_screen.dart';
@@ -642,60 +643,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   ) {
     final limits = [50, 100, 200, 500, 1000];
 
-    showModalBottomSheet(
+    AppBottomSheet.showPicker<int>(
       context: context,
-      backgroundColor: AppTheme.darkCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'Message History Limit',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  fontFamily: 'Inter',
-                ),
-              ),
-            ),
-            Container(
-              height: 1,
-              color: AppTheme.darkBorder.withValues(alpha: 0.3),
-            ),
-            for (final limit in limits)
-              ListTile(
-                leading: Icon(
-                  settingsService.messageHistoryLimit == limit
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
-                  color: settingsService.messageHistoryLimit == limit
-                      ? AppTheme.primaryGreen
-                      : AppTheme.textTertiary,
-                ),
-                title: Text(
-                  '$limit messages',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-                onTap: () {
-                  settingsService.setMessageHistoryLimit(limit);
-                  Navigator.pop(context);
-                },
-              ),
-            const SizedBox(height: 8),
-          ],
+      title: 'Message History Limit',
+      items: limits,
+      selectedItem: settingsService.messageHistoryLimit,
+      itemBuilder: (limit, isSelected) => ListTile(
+        leading: Icon(
+          isSelected
+              ? Icons.radio_button_checked
+              : Icons.radio_button_unchecked,
+          color: isSelected ? AppTheme.primaryGreen : AppTheme.textTertiary,
+        ),
+        title: Text(
+          '$limit messages',
+          style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
         ),
       ),
-    );
+    ).then((selectedLimit) {
+      if (selectedLimit != null) {
+        settingsService.setMessageHistoryLimit(selectedLimit);
+      }
+    });
   }
 
   Future<void> _confirmClearMessages(
@@ -794,72 +763,63 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final nodes = ref.read(nodesProvider);
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
 
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: AppTheme.darkCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Device Information',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  fontFamily: 'Inter',
-                ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Device Information',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              fontFamily: 'Inter',
+            ),
+          ),
+          const SizedBox(height: 24),
+          InfoTable(
+            rows: [
+              InfoTableRow(
+                label: 'Device Name',
+                value: connectedDevice?.name ?? 'Not connected',
+                icon: Icons.bluetooth,
               ),
-              const SizedBox(height: 24),
-              InfoTable(
-                rows: [
-                  InfoTableRow(
-                    label: 'Device Name',
-                    value: connectedDevice?.name ?? 'Not connected',
-                    icon: Icons.bluetooth,
-                  ),
-                  InfoTableRow(
-                    label: 'Connection',
-                    value: connectedDevice?.type.name.toUpperCase() ?? 'None',
-                    icon: Icons.wifi,
-                  ),
-                  InfoTableRow(
-                    label: 'Node Number',
-                    value: myNodeNum?.toString() ?? 'Unknown',
-                    icon: Icons.tag,
-                  ),
-                  InfoTableRow(
-                    label: 'Long Name',
-                    value: myNode?.longName ?? 'Unknown',
-                    icon: Icons.badge_outlined,
-                  ),
-                  InfoTableRow(
-                    label: 'Short Name',
-                    value: myNode?.shortName ?? 'Unknown',
-                    icon: Icons.short_text,
-                  ),
-                  InfoTableRow(
-                    label: 'Hardware',
-                    value: myNode?.hardwareModel ?? 'Unknown',
-                    icon: Icons.memory_outlined,
-                  ),
-                  InfoTableRow(
-                    label: 'User ID',
-                    value: myNode?.userId ?? 'Unknown',
-                    icon: Icons.fingerprint,
-                  ),
-                ],
+              InfoTableRow(
+                label: 'Connection',
+                value: connectedDevice?.type.name.toUpperCase() ?? 'None',
+                icon: Icons.wifi,
               ),
-              const SizedBox(height: 16),
+              InfoTableRow(
+                label: 'Node Number',
+                value: myNodeNum?.toString() ?? 'Unknown',
+                icon: Icons.tag,
+              ),
+              InfoTableRow(
+                label: 'Long Name',
+                value: myNode?.longName ?? 'Unknown',
+                icon: Icons.badge_outlined,
+              ),
+              InfoTableRow(
+                label: 'Short Name',
+                value: myNode?.shortName ?? 'Unknown',
+                icon: Icons.short_text,
+              ),
+              InfoTableRow(
+                label: 'Hardware',
+                value: myNode?.hardwareModel ?? 'Unknown',
+                icon: Icons.memory_outlined,
+              ),
+              InfoTableRow(
+                label: 'User ID',
+                value: myNode?.userId ?? 'Unknown',
+                icon: Icons.fingerprint,
+              ),
             ],
           ),
-        ),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }

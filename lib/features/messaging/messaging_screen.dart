@@ -11,6 +11,7 @@ import '../../models/canned_response.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animated_list_item.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../services/messaging/offline_queue_service.dart';
 import '../channels/channel_form_screen.dart';
@@ -167,112 +168,106 @@ class MessagingScreen extends ConsumerWidget {
         .where((n) => n.nodeNum != myNodeNum)
         .toList();
 
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: AppTheme.darkCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'New Message',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  fontFamily: 'Inter',
-                ),
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(24, 0, 24, 16),
+            child: Text(
+              'New Message',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                fontFamily: 'Inter',
               ),
             ),
-            Container(
-              height: 1,
-              color: AppTheme.darkBorder.withValues(alpha: 0.3),
-            ),
+          ),
+          Container(
+            height: 1,
+            color: AppTheme.darkBorder.withValues(alpha: 0.3),
+          ),
 
-            // Nodes section
-            if (otherNodes.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(
-                  child: Text(
-                    'No other nodes in range',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.textTertiary,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                ),
-              )
-            else ...[
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+          // Nodes section
+          if (otherNodes.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
                 child: Text(
-                  'NEARBY NODES',
+                  'No other nodes in range',
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
                     color: AppTheme.textTertiary,
                     fontFamily: 'Inter',
-                    letterSpacing: 0.5,
                   ),
                 ),
               ),
-              for (final node in otherNodes.take(10))
-                ListTile(
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: node.avatarColor != null
-                          ? Color(node.avatarColor!)
-                          : AppTheme.graphPurple,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        node.shortName ??
-                            node.nodeNum.toRadixString(16).substring(0, 2),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-                    ),
-                  ),
-                  title: Text(
-                    node.displayName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ChatScreen(
-                          type: ConversationType.directMessage,
-                          nodeNum: node.nodeNum,
-                          title: node.displayName,
-                        ),
-                      ),
-                    );
-                  },
+            )
+          else ...[
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(
+                'NEARBY NODES',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textTertiary,
+                  fontFamily: 'Inter',
+                  letterSpacing: 0.5,
                 ),
-            ],
-            const SizedBox(height: 16),
+              ),
+            ),
+            for (final node in otherNodes.take(10))
+              ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: node.avatarColor != null
+                        ? Color(node.avatarColor!)
+                        : AppTheme.graphPurple,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      node.shortName ??
+                          node.nodeNum.toRadixString(16).substring(0, 2),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ),
+                ),
+                title: Text(
+                  node.displayName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatScreen(
+                        type: ConversationType.directMessage,
+                        nodeNum: node.nodeNum,
+                        title: node.displayName,
+                      ),
+                    ),
+                  );
+                },
+              ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -483,11 +478,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final responses = settingsService.cannedResponses;
     if (!mounted) return;
 
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => _QuickResponsesSheet(
+      padding: EdgeInsets.zero,
+      child: _QuickResponsesSheet(
         responses: responses,
         onSelect: (text) {
           Navigator.pop(context);
@@ -711,290 +705,94 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ChannelConfig(index: widget.channelIndex ?? 0, name: '', psk: []),
     );
 
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: AppTheme.darkCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.darkBorder,
-                borderRadius: BorderRadius.circular(2),
-              ),
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+            child: BottomSheetHeader(
+              icon: Icons.wifi_tethering,
+              title: widget.title,
+              subtitle: channel.psk.isNotEmpty ? 'Encrypted' : 'No encryption',
             ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.wifi_tethering,
-                      color: AppTheme.primaryGreen,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          channel.psk.isNotEmpty
-                              ? 'Encrypted'
-                              : 'No encryption',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.textTertiary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.edit, color: Colors.white),
+            title: const Text(
+              'Edit Channel',
+              style: TextStyle(color: Colors.white),
             ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.edit, color: Colors.white),
-              title: const Text(
-                'Edit Channel',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChannelFormScreen(
-                      existingChannel: channel,
-                      channelIndex: channel.index,
-                    ),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChannelFormScreen(
+                    existingChannel: channel,
+                    channelIndex: channel.index,
                   ),
-                );
-              },
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.key,
+              color: channel.psk.isNotEmpty
+                  ? Colors.white
+                  : AppTheme.textTertiary,
             ),
-            ListTile(
-              leading: Icon(
-                Icons.key,
+            title: Text(
+              'View Encryption Key',
+              style: TextStyle(
                 color: channel.psk.isNotEmpty
                     ? Colors.white
                     : AppTheme.textTertiary,
               ),
-              title: Text(
-                'View Encryption Key',
-                style: TextStyle(
-                  color: channel.psk.isNotEmpty
-                      ? Colors.white
-                      : AppTheme.textTertiary,
-                ),
-              ),
-              enabled: channel.psk.isNotEmpty,
-              onTap: channel.psk.isNotEmpty
-                  ? () {
-                      Navigator.pop(context);
-                      _showEncryptionKey(context, channel);
-                    }
-                  : null,
             ),
-            ListTile(
-              leading: Icon(
-                Icons.qr_code,
+            enabled: channel.psk.isNotEmpty,
+            onTap: channel.psk.isNotEmpty
+                ? () {
+                    Navigator.pop(context);
+                    _showEncryptionKey(context, channel);
+                  }
+                : null,
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.qr_code,
+              color: channel.psk.isNotEmpty
+                  ? Colors.white
+                  : AppTheme.textTertiary,
+            ),
+            title: Text(
+              'Show QR Code',
+              style: TextStyle(
                 color: channel.psk.isNotEmpty
                     ? Colors.white
                     : AppTheme.textTertiary,
               ),
-              title: Text(
-                'Show QR Code',
-                style: TextStyle(
-                  color: channel.psk.isNotEmpty
-                      ? Colors.white
-                      : AppTheme.textTertiary,
-                ),
-              ),
-              enabled: channel.psk.isNotEmpty,
-              onTap: channel.psk.isNotEmpty
-                  ? () {
-                      Navigator.pop(context);
-                      _showQrCode(context, channel);
-                    }
-                  : null,
             ),
-            const SizedBox(height: 16),
-          ],
-        ),
+            enabled: channel.psk.isNotEmpty,
+            onTap: channel.psk.isNotEmpty
+                ? () {
+                    Navigator.pop(context);
+                    _showQrCode(context, channel);
+                  }
+                : null,
+          ),
+        ],
       ),
     );
   }
 
   void _showEncryptionKey(BuildContext context, ChannelConfig channel) {
-    final base64Key = base64Encode(channel.psk);
-    final keyBits = channel.psk.length * 8;
-    bool showKey = false;
-
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: AppTheme.darkCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.key,
-                        color: AppTheme.primaryGreen,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Encryption Key',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$keyBits-bit · ${channel.psk.length} bytes',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppTheme.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkBackground,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.darkBorder),
-                  ),
-                  child: showKey
-                      ? SelectableText(
-                          base64Key,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppTheme.primaryGreen,
-                            fontFamily: 'monospace',
-                          ),
-                        )
-                      : Text(
-                          '•' * 32,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppTheme.textTertiary.withValues(alpha: 0.5),
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          setModalState(() => showKey = !showKey);
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: AppTheme.darkBorder),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: Icon(
-                          showKey ? Icons.visibility_off : Icons.visibility,
-                          size: 20,
-                        ),
-                        label: Text(showKey ? 'Hide' : 'Show'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: showKey
-                            ? () {
-                                Clipboard.setData(
-                                  ClipboardData(text: base64Key),
-                                );
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Key copied to clipboard'),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryGreen,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: AppTheme.darkBackground,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: const Icon(Icons.copy, size: 20),
-                        label: const Text('Copy'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      child: _EncryptionKeyContent(channel: channel),
     );
   }
 
@@ -1013,111 +811,65 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final channelUrl =
         'https://meshtastic.org/e/#${Uri.encodeComponent(base64Data)}';
 
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: AppTheme.darkCard,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        minimum: const EdgeInsets.only(bottom: 24),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.qr_code,
-                      color: AppTheme.primaryGreen,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const Text(
-                          'Scan to join this channel',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.textTertiary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: QrImageView(
-                  data: channelUrl,
-                  version: QrVersions.auto,
-                  size: 200,
-                  backgroundColor: Colors.white,
-                  eyeStyle: const QrEyeStyle(
-                    eyeShape: QrEyeShape.square,
-                    color: Color(0xFF1F2633),
-                  ),
-                  dataModuleStyle: const QrDataModuleStyle(
-                    dataModuleShape: QrDataModuleShape.square,
-                    color: Color(0xFF1F2633),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: channelUrl));
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Channel URL copied to clipboard'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryGreen,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  icon: const Icon(Icons.share, size: 20),
-                  label: const Text('Copy Channel URL'),
-                ),
-              ),
-            ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          BottomSheetHeader(
+            icon: Icons.qr_code,
+            title: widget.title,
+            subtitle: 'Scan to join this channel',
           ),
-        ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: QrImageView(
+              data: channelUrl,
+              version: QrVersions.auto,
+              size: 200,
+              backgroundColor: Colors.white,
+              eyeStyle: const QrEyeStyle(
+                eyeShape: QrEyeShape.square,
+                color: Color(0xFF1F2633),
+              ),
+              dataModuleStyle: const QrDataModuleStyle(
+                dataModuleShape: QrDataModuleShape.square,
+                color: Color(0xFF1F2633),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: channelUrl));
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Channel URL copied to clipboard'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.share, size: 20),
+              label: const Text('Copy Channel URL'),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1849,6 +1601,115 @@ class _QuickResponseTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _EncryptionKeyContent extends StatefulWidget {
+  final ChannelConfig channel;
+
+  const _EncryptionKeyContent({required this.channel});
+
+  @override
+  State<_EncryptionKeyContent> createState() => _EncryptionKeyContentState();
+}
+
+class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
+  bool _showKey = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final base64Key = base64Encode(widget.channel.psk);
+    final keyBits = widget.channel.psk.length * 8;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        BottomSheetHeader(
+          icon: Icons.key,
+          title: 'Encryption Key',
+          subtitle: '$keyBits-bit · ${widget.channel.psk.length} bytes',
+        ),
+        const SizedBox(height: 20),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.darkBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppTheme.darkBorder),
+          ),
+          child: _showKey
+              ? SelectableText(
+                  base64Key,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.primaryGreen,
+                    fontFamily: 'monospace',
+                  ),
+                )
+              : Text(
+                  '•' * 32,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                    fontFamily: 'monospace',
+                  ),
+                ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => setState(() => _showKey = !_showKey),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: AppTheme.darkBorder),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: Icon(
+                  _showKey ? Icons.visibility_off : Icons.visibility,
+                  size: 20,
+                ),
+                label: Text(_showKey ? 'Hide' : 'Show'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _showKey
+                    ? () {
+                        Clipboard.setData(ClipboardData(text: base64Key));
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Key copied to clipboard'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryGreen,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppTheme.darkBackground,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.copy, size: 20),
+                label: const Text('Copy'),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../providers/app_providers.dart';
 import '../../../core/transport.dart';
 import '../../../models/mesh_models.dart';
@@ -601,34 +602,19 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
   }
 
   void _showNodePicker(BuildContext context, List<MeshNode> nodes) {
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => Container(
+      padding: EdgeInsets.zero,
+      child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.6,
-        ),
-        decoration: const BoxDecoration(
-          color: AppTheme.darkSurface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          maxHeight: MediaQuery.of(context).size.height * 0.5,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.darkBorder,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
             // Header
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
               child: Row(
                 children: [
                   const Text(
@@ -728,6 +714,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                 },
               ),
             ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
           ],
         ),
       ),

@@ -9,6 +9,7 @@ import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animated_list_item.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
 
@@ -189,10 +190,10 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
   }
 
   void _showNodeDetails(BuildContext context, MeshNode node, bool isMyNode) {
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: AppTheme.darkCard,
-      builder: (context) => _NodeDetailsSheet(node: node, isMyNode: isMyNode),
+      padding: EdgeInsets.zero,
+      child: _NodeDetailsSheet(node: node, isMyNode: isMyNode),
     );
   }
 }
@@ -697,161 +698,107 @@ class _NodeDetailsSheet extends ConsumerWidget {
     final nodeJson = jsonEncode(nodeInfo);
     final nodeUrl = 'meshtastic://node/${base64Encode(utf8.encode(nodeJson))}';
 
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: AppTheme.darkCard,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        minimum: const EdgeInsets.only(bottom: 24),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.qr_code,
-                      color: AppTheme.primaryGreen,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          node.displayName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Scan to add this node',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.textTertiary,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // QR Code
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: QrImageView(
-                  data: nodeUrl,
-                  version: QrVersions.auto,
-                  size: 200,
-                  backgroundColor: Colors.white,
-                  eyeStyle: const QrEyeStyle(
-                    eyeShape: QrEyeShape.square,
-                    color: Color(0xFF1F2633),
-                  ),
-                  dataModuleStyle: const QrDataModuleStyle(
-                    dataModuleShape: QrDataModuleShape.square,
-                    color: Color(0xFF1F2633),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Node ID info
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.darkBackground,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.tag,
-                      size: 16,
-                      color: AppTheme.textTertiary,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Node ID: ${node.nodeNum.toRadixString(16).toUpperCase()}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppTheme.textSecondary,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Copy button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Clipboard.setData(
-                      ClipboardData(
-                        text:
-                            '${node.displayName}\nNode: !${node.nodeNum.toRadixString(16)}',
-                      ),
-                    );
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Node info copied'),
-                        backgroundColor: AppTheme.darkCard,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryGreen,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  icon: const Icon(Icons.copy, size: 20),
-                  label: const Text(
-                    'Copy Node Info',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                ),
-              ),
-            ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          BottomSheetHeader(
+            icon: Icons.qr_code,
+            title: node.displayName,
+            subtitle: 'Scan to add this node',
           ),
-        ),
+          const SizedBox(height: 24),
+
+          // QR Code
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: QrImageView(
+              data: nodeUrl,
+              version: QrVersions.auto,
+              size: 200,
+              backgroundColor: Colors.white,
+              eyeStyle: const QrEyeStyle(
+                eyeShape: QrEyeShape.square,
+                color: Color(0xFF1F2633),
+              ),
+              dataModuleStyle: const QrDataModuleStyle(
+                dataModuleShape: QrDataModuleShape.square,
+                color: Color(0xFF1F2633),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Node ID info
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.tag, size: 16, color: AppTheme.textTertiary),
+                const SizedBox(width: 8),
+                Text(
+                  'Node ID: ${node.nodeNum.toRadixString(16).toUpperCase()}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Copy button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Clipboard.setData(
+                  ClipboardData(
+                    text:
+                        '${node.displayName}\nNode: !${node.nodeNum.toRadixString(16)}',
+                  ),
+                );
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Node info copied'),
+                    backgroundColor: AppTheme.darkCard,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.copy, size: 20),
+              label: const Text(
+                'Copy Node Info',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Inter',
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1223,99 +1170,74 @@ class _NodeDetailsSheet extends ConsumerWidget {
   }
 
   void _showMoreOptions(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: AppTheme.darkCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetContext) => SafeArea(
-        minimum: const EdgeInsets.only(bottom: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.textTertiary.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.swap_horiz, color: AppTheme.primaryGreen),
+            title: const Text(
+              'Exchange Positions',
+              style: TextStyle(color: Colors.white, fontFamily: 'Inter'),
+            ),
+            subtitle: const Text(
+              'Request GPS position from this node',
+              style: TextStyle(
+                color: AppTheme.textTertiary,
+                fontSize: 12,
+                fontFamily: 'Inter',
               ),
             ),
-            const SizedBox(height: 16),
+            onTap: () {
+              Navigator.pop(context);
+              _exchangePositions(context, ref);
+            },
+          ),
+          ListTile(
+            leading: Icon(
+              node.isFavorite ? Icons.star : Icons.star_border,
+              color: node.isFavorite
+                  ? AppTheme.warningYellow
+                  : AppTheme.textSecondary,
+            ),
+            title: Text(
+              node.isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
+              style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              _toggleFavorite(context, ref);
+            },
+          ),
+          if (node.hasPosition)
             ListTile(
               leading: const Icon(
-                Icons.swap_horiz,
-                color: AppTheme.primaryGreen,
+                Icons.location_on,
+                color: AppTheme.textSecondary,
               ),
               title: const Text(
-                'Exchange Positions',
+                'Set as Fixed Position',
                 style: TextStyle(color: Colors.white, fontFamily: 'Inter'),
               ),
-              subtitle: const Text(
-                'Request GPS position from this node',
-                style: TextStyle(
-                  color: AppTheme.textTertiary,
-                  fontSize: 12,
-                  fontFamily: 'Inter',
-                ),
-              ),
               onTap: () {
-                Navigator.pop(sheetContext);
-                _exchangePositions(context, ref);
+                Navigator.pop(context);
+                _setFixedPosition(context, ref);
               },
             ),
-            ListTile(
-              leading: Icon(
-                node.isFavorite ? Icons.star : Icons.star_border,
-                color: node.isFavorite
-                    ? AppTheme.warningYellow
-                    : AppTheme.textSecondary,
-              ),
-              title: Text(
-                node.isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Inter',
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _toggleFavorite(context, ref);
-              },
+          ListTile(
+            leading: const Icon(Icons.delete_outline, color: AppTheme.errorRed),
+            title: const Text(
+              'Remove Node',
+              style: TextStyle(color: AppTheme.errorRed, fontFamily: 'Inter'),
             ),
-            if (node.hasPosition)
-              ListTile(
-                leading: const Icon(
-                  Icons.location_on,
-                  color: AppTheme.textSecondary,
-                ),
-                title: const Text(
-                  'Set as Fixed Position',
-                  style: TextStyle(color: Colors.white, fontFamily: 'Inter'),
-                ),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _setFixedPosition(context, ref);
-                },
-              ),
-            ListTile(
-              leading: const Icon(
-                Icons.delete_outline,
-                color: AppTheme.errorRed,
-              ),
-              title: const Text(
-                'Remove Node',
-                style: TextStyle(color: AppTheme.errorRed, fontFamily: 'Inter'),
-              ),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _removeNode(context, ref);
-              },
-            ),
-          ],
-        ),
+            onTap: () {
+              Navigator.pop(context);
+              _removeNode(context, ref);
+            },
+          ),
+        ],
       ),
     );
   }
