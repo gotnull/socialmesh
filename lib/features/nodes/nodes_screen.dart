@@ -8,6 +8,7 @@ import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
+import '../../core/widgets/animated_list_item.dart';
 import '../messaging/messaging_screen.dart';
 
 // Battery helper functions
@@ -168,11 +169,14 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                         final node = nodesList[index];
                         final isMyNode = node.nodeNum == myNodeNum;
 
-                        return _NodeCard(
-                          node: node,
-                          isMyNode: isMyNode,
-                          onTap: () =>
-                              _showNodeDetails(context, node, isMyNode),
+                        return AnimatedListItem(
+                          index: index,
+                          child: _NodeCard(
+                            node: node,
+                            isMyNode: isMyNode,
+                            onTap: () =>
+                                _showNodeDetails(context, node, isMyNode),
+                          ),
                         );
                       },
                     ),

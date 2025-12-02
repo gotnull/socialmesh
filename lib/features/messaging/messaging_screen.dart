@@ -8,6 +8,7 @@ import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
+import '../../core/widgets/animated_list_item.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../services/messaging/offline_queue_service.dart';
 import '../channels/channel_form_screen.dart';
@@ -132,20 +133,23 @@ class MessagingScreen extends ConsumerWidget {
               itemCount: conversations.length,
               itemBuilder: (context, index) {
                 final conv = conversations[index];
-                return _ConversationTile(
-                  conversation: conv,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ChatScreen(
-                          type: conv.type,
-                          nodeNum: conv.nodeNum,
-                          title: conv.name,
+                return AnimatedListItem(
+                  index: index,
+                  child: _ConversationTile(
+                    conversation: conv,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                            type: conv.type,
+                            nodeNum: conv.nodeNum,
+                            title: conv.name,
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 );
               },
             ),

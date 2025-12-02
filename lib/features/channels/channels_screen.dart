@@ -6,6 +6,7 @@ import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animated_list_item.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../messaging/messaging_screen.dart';
 import 'channel_form_screen.dart';
@@ -109,7 +110,10 @@ class ChannelsScreen extends ConsumerWidget {
               itemCount: channels.length,
               itemBuilder: (context, index) {
                 final channel = channels[index];
-                return _ChannelTile(channel: channel);
+                return AnimatedListItem(
+                  index: index,
+                  child: _ChannelTile(channel: channel),
+                );
               },
             ),
     );
