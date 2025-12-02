@@ -16,16 +16,58 @@ class MapScreen extends ConsumerStatefulWidget {
   ConsumerState<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends ConsumerState<MapScreen> {
+class _MapScreenState extends ConsumerState<MapScreen>
+    with TickerProviderStateMixin {
   final MapController _mapController = MapController();
   MeshNode? _selectedNode;
   bool _showHeatmap = false;
   bool _isRefreshing = false;
+  double _currentZoom = 14.0;
+
+  // Animation controller for smooth camera movements
+  AnimationController? _animationController;
 
   @override
   void dispose() {
+    _animationController?.dispose();
     _mapController.dispose();
     super.dispose();
+  }
+
+  /// Animate camera to a specific location with smooth easing
+  void _animatedMove(LatLng destLocation, double destZoom) {
+    _animationController?.dispose();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    final startZoom = _mapController.camera.zoom;
+    final startCenter = _mapController.camera.center;
+
+    final latTween = Tween<double>(
+      begin: startCenter.latitude,
+      end: destLocation.latitude,
+    );
+    final lngTween = Tween<double>(
+      begin: startCenter.longitude,
+      end: destLocation.longitude,
+    );
+    final zoomTween = Tween<double>(begin: startZoom, end: destZoom);
+
+    final animation = CurvedAnimation(
+      parent: _animationController!,
+      curve: Curves.easeOutCubic,
+    );
+
+    _animationController!.addListener(() {
+      _mapController.move(
+        LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
+        zoomTween.evaluate(animation),
+      );
+    });
+
+    _animationController!.forward();
   }
 
   Future<void> _refreshPositions() async {
@@ -178,19 +220,36 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   options: MapOptions(
                     initialCenter: center,
                     initialZoom: zoom,
-                    minZoom: 2,
+                    minZoom: 4, // Prevent zooming out too far
                     maxZoom: 18,
                     backgroundColor: AppTheme.darkBackground,
-                    onTap: (_, _) => setState(() => _selectedNode = null),
+                    interactionOptions: const InteractionOptions(
+                      flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                      pinchZoomThreshold: 0.5,
+                      scrollWheelVelocity: 0.005,
+                    ),
+                    onPositionChanged: (position, hasGesture) {
+                      if (hasGesture) {
+                        setState(() => _currentZoom = position.zoom);
+                      }
+                    },
+                    onTap: (_, __) => setState(() => _selectedNode = null),
                   ),
                   children: [
-                    // Dark map tiles
+                    // Dark map tiles with smooth fade
                     TileLayer(
                       urlTemplate:
                           'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
                       subdomains: const ['a', 'b', 'c', 'd'],
                       userAgentPackageName: 'com.protofluff.app',
                       retinaMode: true,
+                      tileBuilder: (context, tileWidget, tile) {
+                        return AnimatedOpacity(
+                          opacity: 1.0,
+                          duration: const Duration(milliseconds: 300),
+                          child: tileWidget,
+                        );
+                      },
                     ),
                     // Heatmap layer (simplified as circles with opacity)
                     if (_showHeatmap)
@@ -292,9 +351,66 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     ),
                   ),
                 ),
+                // Zoom controls
+                Positioned(
+                  right: 16,
+                  top: 16,
+                  child: _ZoomControls(
+                    currentZoom: _currentZoom,
+                    minZoom: 4,
+                    maxZoom: 18,
+                    onZoomIn: () {
+                      final newZoom = (_currentZoom + 1).clamp(4.0, 18.0);
+                      _animatedMove(_mapController.camera.center, newZoom);
+                      HapticFeedback.selectionClick();
+                    },
+                    onZoomOut: () {
+                      final newZoom = (_currentZoom - 1).clamp(4.0, 18.0);
+                      _animatedMove(_mapController.camera.center, newZoom);
+                      HapticFeedback.selectionClick();
+                    },
+                    onFitAll: () => _fitAllNodes(nodesWithPosition),
+                  ),
+                ),
               ],
             ),
     );
+  }
+
+  void _fitAllNodes(List<MeshNode> nodes) {
+    if (nodes.isEmpty) return;
+
+    // Calculate bounds
+    double minLat = nodes.first.latitude!;
+    double maxLat = nodes.first.latitude!;
+    double minLng = nodes.first.longitude!;
+    double maxLng = nodes.first.longitude!;
+
+    for (final node in nodes) {
+      if (node.latitude! < minLat) minLat = node.latitude!;
+      if (node.latitude! > maxLat) maxLat = node.latitude!;
+      if (node.longitude! < minLng) minLng = node.longitude!;
+      if (node.longitude! > maxLng) maxLng = node.longitude!;
+    }
+
+    // Add padding
+    final latPadding = (maxLat - minLat) * 0.15;
+    final lngPadding = (maxLng - minLng) * 0.15;
+
+    final bounds = LatLngBounds(
+      LatLng(minLat - latPadding, minLng - lngPadding),
+      LatLng(maxLat + latPadding, maxLng + lngPadding),
+    );
+
+    final cameraFit = CameraFit.bounds(
+      bounds: bounds,
+      padding: const EdgeInsets.all(50),
+    );
+
+    // Get the fitted camera
+    final camera = cameraFit.fit(_mapController.camera);
+    _animatedMove(camera.center, camera.zoom.clamp(4.0, 16.0));
+    HapticFeedback.lightImpact();
   }
 
   Widget _buildEmptyState() {
@@ -418,7 +534,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     if (myNodeNum == null) return;
     final myNode = nodes[myNodeNum];
     if (myNode?.hasPosition == true) {
-      _mapController.move(LatLng(myNode!.latitude!, myNode.longitude!), 14.0);
+      _animatedMove(LatLng(myNode!.latitude!, myNode.longitude!), 14.0);
       HapticFeedback.lightImpact();
     }
   }
@@ -749,5 +865,122 @@ class _StatChip extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Zoom control buttons widget
+class _ZoomControls extends StatelessWidget {
+  final double currentZoom;
+  final double minZoom;
+  final double maxZoom;
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
+  final VoidCallback onFitAll;
+
+  const _ZoomControls({
+    required this.currentZoom,
+    required this.minZoom,
+    required this.maxZoom,
+    required this.onZoomIn,
+    required this.onZoomOut,
+    required this.onFitAll,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Zoom in
+          _ZoomButton(
+            icon: Icons.add,
+            onPressed: currentZoom < maxZoom ? onZoomIn : null,
+            isTop: true,
+          ),
+          Container(
+            height: 1,
+            width: 32,
+            color: AppTheme.darkBorder.withValues(alpha: 0.3),
+          ),
+          // Zoom out
+          _ZoomButton(
+            icon: Icons.remove,
+            onPressed: currentZoom > minZoom ? onZoomOut : null,
+          ),
+          Container(
+            height: 1,
+            width: 32,
+            color: AppTheme.darkBorder.withValues(alpha: 0.3),
+          ),
+          // Fit all nodes
+          _ZoomButton(
+            icon: Icons.fit_screen,
+            onPressed: onFitAll,
+            isBottom: true,
+            tooltip: 'Fit all nodes',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ZoomButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final bool isTop;
+  final bool isBottom;
+  final String? tooltip;
+
+  const _ZoomButton({
+    required this.icon,
+    required this.onPressed,
+    this.isTop = false,
+    this.isBottom = false,
+    this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final button = Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.vertical(
+          top: isTop ? const Radius.circular(12) : Radius.zero,
+          bottom: isBottom ? const Radius.circular(12) : Radius.zero,
+        ),
+        child: Container(
+          width: 44,
+          height: 44,
+          alignment: Alignment.center,
+          child: Icon(
+            icon,
+            size: 20,
+            color: onPressed != null
+                ? AppTheme.textSecondary
+                : AppTheme.textTertiary.withValues(alpha: 0.5),
+          ),
+        ),
+      ),
+    );
+
+    if (tooltip != null) {
+      return Tooltip(message: tooltip!, child: button);
+    }
+    return button;
   }
 }

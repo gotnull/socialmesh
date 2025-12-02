@@ -57,7 +57,7 @@ dependencies:
   live_activities: ^2.4.3
   
   # Animations
-  animations: ^2.1.1
+ nod  animations: ^2.1.1
 
 dev_dependencies:
   flutter_test:
