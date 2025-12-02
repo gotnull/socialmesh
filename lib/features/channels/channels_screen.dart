@@ -178,7 +178,9 @@ class _ChannelTile extends ConsumerWidget {
                     children: [
                       Text(
                         channel.name.isEmpty
-                            ? 'Channel ${channel.index}'
+                            ? (isPrimary
+                                  ? 'Primary Channel'
+                                  : 'Channel ${channel.index}')
                             : channel.name,
                         style: const TextStyle(
                           fontSize: 16,
