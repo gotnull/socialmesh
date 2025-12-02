@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:share_plus/share_plus.dart';
@@ -772,31 +773,64 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         );
                       }).toList(),
                     ),
-                    // Node markers
-                    MarkerLayer(
-                      rotate: true,
-                      markers: nodesWithPosition.map((n) {
-                        final isMyNode = n.node.nodeNum == myNodeNum;
-                        final isSelected =
-                            _selectedNode?.nodeNum == n.node.nodeNum;
-                        return Marker(
-                          point: LatLng(n.latitude, n.longitude),
-                          width: isSelected ? 56 : 44,
-                          height: isSelected ? 56 : 44,
-                          child: GestureDetector(
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              setState(() => _selectedNode = n.node);
-                            },
-                            child: _NodeMarker(
-                              node: n.node,
-                              isMyNode: isMyNode,
-                              isSelected: isSelected,
-                              isStale: n.isStale,
+                    // Node markers with clustering
+                    MarkerClusterLayerWidget(
+                      options: MarkerClusterLayerOptions(
+                        maxClusterRadius: 80,
+                        disableClusteringAtZoom: 16,
+                        size: const Size(44, 44),
+                        rotate: true,
+                        markers: nodesWithPosition.map((n) {
+                          final isMyNode = n.node.nodeNum == myNodeNum;
+                          final isSelected =
+                              _selectedNode?.nodeNum == n.node.nodeNum;
+                          return Marker(
+                            point: LatLng(n.latitude, n.longitude),
+                            width: isSelected ? 56 : 44,
+                            height: isSelected ? 56 : 44,
+                            child: GestureDetector(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                setState(() => _selectedNode = n.node);
+                              },
+                              child: _NodeMarker(
+                                node: n.node,
+                                isMyNode: isMyNode,
+                                isSelected: isSelected,
+                                isStale: n.isStale,
+                              ),
                             ),
-                          ),
-                        );
-                      }).toList(),
+                          );
+                        }).toList(),
+                        builder: (context, markers) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryMagenta,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.primaryMagenta.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  blurRadius: 8,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${markers.length}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                     // Measurement markers
                     if (_measureStart != null)
