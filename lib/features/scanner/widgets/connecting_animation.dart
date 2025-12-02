@@ -23,7 +23,6 @@ class _ConnectingAnimationState extends State<ConnectingAnimation>
     with TickerProviderStateMixin {
   late final AnimationController _floatController;
   late final AnimationController _pulseController;
-  late final AnimationController _rotateController;
   late final List<_FloatingIcon> _icons;
 
   @override
@@ -39,11 +38,6 @@ class _ConnectingAnimationState extends State<ConnectingAnimation>
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
-
-    _rotateController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 30),
-    )..repeat();
 
     // Initialize floating icons with mesh/radio themed icons
     _icons = [
@@ -154,7 +148,6 @@ class _ConnectingAnimationState extends State<ConnectingAnimation>
   void dispose() {
     _floatController.dispose();
     _pulseController.dispose();
-    _rotateController.dispose();
     super.dispose();
   }
 
@@ -188,80 +181,11 @@ class _ConnectingAnimationState extends State<ConnectingAnimation>
         // Floating icons with parallax effect
         ..._icons.map((iconData) => _buildFloatingIcon(iconData, size)),
 
-        // Connection lines animation
-        AnimatedBuilder(
-          animation: _rotateController,
-          builder: (context, child) {
-            return CustomPaint(
-              size: size,
-              painter: _ConnectionLinesPainter(
-                progress: _rotateController.value,
-                color: AppTheme.primaryGreen.withValues(alpha: 0.15),
-              ),
-            );
-          },
-        ),
-
         // Center content
         Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Pulsing center logo/icon
-              AnimatedBuilder(
-                animation: _pulseController,
-                builder: (context, child) {
-                  final scale = 1.0 + (_pulseController.value * 0.15);
-                  return Transform.scale(
-                    scale: scale,
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            AppTheme.primaryGreen.withValues(alpha: 0.3),
-                            AppTheme.primaryGreen.withValues(alpha: 0.1),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                      child: Center(
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppTheme.darkCard,
-                            border: Border.all(
-                              color: AppTheme.primaryGreen.withValues(
-                                alpha: 0.5,
-                              ),
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primaryGreen.withValues(
-                                  alpha: 0.3,
-                                ),
-                                blurRadius: 20,
-                                spreadRadius: 5,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.router,
-                            size: 40,
-                            color: AppTheme.primaryGreen,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 40),
               // Status text
               Text(
                 widget.statusText,
@@ -405,61 +329,6 @@ class _AnimatedDotsState extends State<_AnimatedDots>
   }
 }
 
-class _ConnectionLinesPainter extends CustomPainter {
-  final double progress;
-  final Color color;
-
-  _ConnectionLinesPainter({required this.progress, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
-
-    final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = size.width * 0.6;
-
-    // Draw expanding circles
-    for (var i = 0; i < 3; i++) {
-      final circleProgress = (progress + i * 0.33) % 1.0;
-      final radius = maxRadius * circleProgress;
-      final opacity = (1.0 - circleProgress) * 0.5;
-
-      paint.color = color.withValues(alpha: opacity);
-      canvas.drawCircle(center, radius, paint);
-    }
-
-    // Draw radiating lines
-    final numLines = 8;
-    for (var i = 0; i < numLines; i++) {
-      final angle = (i / numLines) * 2 * math.pi + (progress * math.pi);
-      final lineLength = maxRadius * 0.8;
-      final startOffset = 60.0;
-
-      final start = Offset(
-        center.dx + math.cos(angle) * startOffset,
-        center.dy + math.sin(angle) * startOffset,
-      );
-      final end = Offset(
-        center.dx + math.cos(angle) * lineLength,
-        center.dy + math.sin(angle) * lineLength,
-      );
-
-      // Gradient effect on lines
-      final lineProgress = (progress * 2 + i / numLines) % 1.0;
-      paint.color = color.withValues(alpha: 0.1 + lineProgress * 0.2);
-
-      canvas.drawLine(start, end, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ConnectionLinesPainter oldDelegate) =>
-      oldDelegate.progress != progress;
-}
-
 /// Background-only version with floating icons (no center content)
 /// Use this as a background layer behind other content
 class ConnectingAnimationBackground extends StatefulWidget {
@@ -475,7 +344,6 @@ class _ConnectingAnimationBackgroundState
     with TickerProviderStateMixin {
   late final AnimationController _floatController;
   late final AnimationController _pulseController;
-  late final AnimationController _rotateController;
   late final List<_FloatingIcon> _icons;
 
   @override
@@ -491,11 +359,6 @@ class _ConnectingAnimationBackgroundState
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
-
-    _rotateController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 30),
-    )..repeat();
 
     // Initialize floating icons with mesh/radio themed icons
     _icons = [
@@ -606,7 +469,6 @@ class _ConnectingAnimationBackgroundState
   void dispose() {
     _floatController.dispose();
     _pulseController.dispose();
-    _rotateController.dispose();
     super.dispose();
   }
 
@@ -639,20 +501,6 @@ class _ConnectingAnimationBackgroundState
 
         // Floating icons with parallax effect
         ..._icons.map((iconData) => _buildFloatingIcon(iconData, size)),
-
-        // Connection lines animation
-        AnimatedBuilder(
-          animation: _rotateController,
-          builder: (context, child) {
-            return CustomPaint(
-              size: size,
-              painter: _ConnectionLinesPainter(
-                progress: _rotateController.value,
-                color: AppTheme.primaryGreen.withValues(alpha: 0.15),
-              ),
-            );
-          },
-        ),
       ],
     );
   }

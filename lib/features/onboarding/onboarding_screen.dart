@@ -498,7 +498,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
         // Calculate transforms for parallax effect
         final translateX = value * 100;
-        final scale = 1.0 - (value.abs() * 0.2);
+        final scaleValue = (1.0 - (value.abs() * 0.2)).clamp(0.8, 1.0);
         final opacity = 1.0 - (value.abs() * 0.5);
 
         return Opacity(
@@ -506,8 +506,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           child: Transform(
             transform: Matrix4.identity()
               ..setEntry(3, 2, 0.001) // perspective
-              ..translate(translateX)
-              ..scale(scale.clamp(0.8, 1.0)),
+              ..setTranslationRaw(translateX, 0, 0)
+              ..scaleByDouble(scaleValue, scaleValue, 1.0, 1.0),
             alignment: Alignment.center,
             child: _buildPageContent(page, index),
           ),
