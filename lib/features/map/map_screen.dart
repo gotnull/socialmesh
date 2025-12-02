@@ -23,9 +23,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _showHeatmap = false;
   bool _isRefreshing = false;
   double _currentZoom = 14.0;
+  bool _showNodeList = false;
 
   // Animation controller for smooth camera movements
   AnimationController? _animationController;
+
+  // Track last known positions for nodes (to handle GPS loss gracefully)
+  final Map<int, _CachedPosition> _positionCache = {};
 
   @override
   void dispose() {
@@ -70,6 +74,82 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _animationController!.forward();
   }
 
+  /// Update position cache and return nodes with valid (current or cached) positions
+  List<_NodeWithPosition> _getNodesWithPositions(Map<int, MeshNode> nodes) {
+    final result = <_NodeWithPosition>[];
+    final now = DateTime.now();
+
+    // Position considered stale after 30 minutes of no updates
+    const staleThreshold = Duration(minutes: 30);
+
+    for (final node in nodes.values) {
+      if (node.hasPosition) {
+        // Node has current GPS - update cache and use it
+        _positionCache[node.nodeNum] = _CachedPosition(
+          latitude: node.latitude!,
+          longitude: node.longitude!,
+          timestamp: now,
+          isStale: false,
+        );
+        result.add(
+          _NodeWithPosition(
+            node: node,
+            latitude: node.latitude!,
+            longitude: node.longitude!,
+            isStale: false,
+          ),
+        );
+      } else if (_positionCache.containsKey(node.nodeNum)) {
+        // Node lost GPS but we have cached position
+        final cached = _positionCache[node.nodeNum]!;
+        final age = now.difference(cached.timestamp);
+        final isStale = age > staleThreshold;
+
+        // Keep showing if node is still online, even if stale
+        if (node.isOnline || !isStale) {
+          result.add(
+            _NodeWithPosition(
+              node: node,
+              latitude: cached.latitude,
+              longitude: cached.longitude,
+              isStale: true,
+            ),
+          );
+        }
+      }
+    }
+
+    // Clean up cache for nodes that no longer exist
+    _positionCache.removeWhere((nodeNum, _) => !nodes.containsKey(nodeNum));
+
+    return result;
+  }
+
+  /// Calculate distance between two nodes in km
+  double _calculateDistance(
+    double lat1,
+    double lng1,
+    double lat2,
+    double lng2,
+  ) {
+    return const Distance().as(
+      LengthUnit.Kilometer,
+      LatLng(lat1, lng1),
+      LatLng(lat2, lng2),
+    );
+  }
+
+  /// Format distance for display
+  String _formatDistance(double km) {
+    if (km < 1) {
+      return '${(km * 1000).round()}m';
+    } else if (km < 10) {
+      return '${km.toStringAsFixed(1)}km';
+    } else {
+      return '${km.round()}km';
+    }
+  }
+
   Future<void> _refreshPositions() async {
     if (_isRefreshing) return;
 
@@ -79,7 +159,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
       final protocol = ref.read(protocolServiceProvider);
       await protocol.requestAllPositions();
 
-      // Show feedback
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -90,7 +169,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
         );
       }
     } finally {
-      // Wait a bit before allowing another refresh
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) {
         setState(() => _isRefreshing = false);
@@ -98,63 +176,44 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
   }
 
-  // Debug flag for map logging
-  static const bool _debugMapLogging = false;
+  void _selectNodeAndCenter(_NodeWithPosition nodeWithPos) {
+    setState(() {
+      _selectedNode = nodeWithPos.node;
+      _showNodeList = false;
+    });
+    _animatedMove(LatLng(nodeWithPos.latitude, nodeWithPos.longitude), 15.0);
+    HapticFeedback.selectionClick();
+  }
 
   @override
   Widget build(BuildContext context) {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
-    // === MAP DEBUG LOGGING (controlled by flag) ===
-    if (_debugMapLogging) {
-      debugPrint('🗺️ === MAP SCREEN BUILD ===');
-      debugPrint('🗺️ Total nodes: ${nodes.length}');
-      debugPrint('🗺️ My node num: $myNodeNum');
-
-      // Log ALL nodes with their position status
-      for (final node in nodes.values) {
-        final hasPos = node.hasPosition;
-        final lat = node.latitude;
-        final lng = node.longitude;
-        debugPrint(
-          '🗺️ Node ${node.nodeNum.toRadixString(16)} "${node.longName}": '
-          'hasPosition=$hasPos, lat=$lat, lng=$lng',
-        );
-      }
-    }
-
-    // Filter nodes with valid positions
-    final nodesWithPosition = nodes.values
-        .where((node) => node.hasPosition)
-        .toList();
-
-    if (_debugMapLogging) {
-      debugPrint('🗺️ Nodes with valid position: ${nodesWithPosition.length}');
-      for (final node in nodesWithPosition) {
-        debugPrint(
-          '🗺️ ✅ Valid: ${node.nodeNum.toRadixString(16)} at '
-          '${node.latitude}, ${node.longitude}',
-        );
-      }
-      debugPrint('🗺️ === END MAP DEBUG ===');
-    }
+    // Get nodes with positions (current or cached)
+    final nodesWithPosition = _getNodesWithPositions(nodes);
 
     // Calculate center point
     LatLng center = const LatLng(0, 0);
     double zoom = 2.0;
 
     if (nodesWithPosition.isNotEmpty) {
-      // Center on my node if available, otherwise average of all nodes
       final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
-      if (myNode?.hasPosition == true) {
+      final myNodeWithPos = nodesWithPosition
+          .where((n) => n.node.nodeNum == myNodeNum)
+          .firstOrNull;
+
+      if (myNodeWithPos != null) {
+        center = LatLng(myNodeWithPos.latitude, myNodeWithPos.longitude);
+        zoom = 14.0;
+      } else if (myNode?.hasPosition == true) {
         center = LatLng(myNode!.latitude!, myNode.longitude!);
         zoom = 14.0;
       } else {
         double avgLat = 0, avgLng = 0;
-        for (final node in nodesWithPosition) {
-          avgLat += node.latitude!;
-          avgLng += node.longitude!;
+        for (final n in nodesWithPosition) {
+          avgLat += n.latitude;
+          avgLng += n.longitude;
         }
         avgLat /= nodesWithPosition.length;
         avgLng /= nodesWithPosition.length;
@@ -177,6 +236,19 @@ class _MapScreenState extends ConsumerState<MapScreen>
           ),
         ),
         actions: [
+          // Node list toggle
+          IconButton(
+            icon: Icon(
+              _showNodeList ? Icons.view_list : Icons.view_list_outlined,
+              color: _showNodeList
+                  ? AppTheme.primaryMagenta
+                  : AppTheme.textSecondary,
+            ),
+            onPressed: nodesWithPosition.isEmpty
+                ? null
+                : () => setState(() => _showNodeList = !_showNodeList),
+            tooltip: 'Node list',
+          ),
           // Refresh positions
           IconButton(
             icon: _isRefreshing
@@ -206,7 +278,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           // Center on my location
           IconButton(
             icon: const Icon(Icons.my_location, color: AppTheme.textSecondary),
-            onPressed: () => _centerOnMyNode(nodes, myNodeNum),
+            onPressed: () => _centerOnMyNode(nodesWithPosition, myNodeNum),
             tooltip: 'Center on my node',
           ),
         ],
@@ -220,7 +292,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   options: MapOptions(
                     initialCenter: center,
                     initialZoom: zoom,
-                    minZoom: 4, // Prevent zooming out too far
+                    minZoom: 4,
                     maxZoom: 18,
                     backgroundColor: AppTheme.darkBackground,
                     interactionOptions: const InteractionOptions(
@@ -233,10 +305,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         setState(() => _currentZoom = position.zoom);
                       }
                     },
-                    onTap: (_, __) => setState(() => _selectedNode = null),
+                    onTap: (tapPos, point) => setState(() {
+                      _selectedNode = null;
+                      _showNodeList = false;
+                    }),
                   ),
                   children: [
-                    // Dark map tiles with smooth fade
+                    // Dark map tiles
                     TileLayer(
                       urlTemplate:
                           'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
@@ -251,12 +326,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         );
                       },
                     ),
-                    // Heatmap layer (simplified as circles with opacity)
+                    // Heatmap layer
                     if (_showHeatmap)
                       CircleLayer(
-                        circles: nodesWithPosition.map((node) {
+                        circles: nodesWithPosition.map((n) {
                           return CircleMarker(
-                            point: LatLng(node.latitude!, node.longitude!),
+                            point: LatLng(n.latitude, n.longitude),
                             radius: 50,
                             color: AppTheme.primaryMagenta.withValues(
                               alpha: 0.15,
@@ -268,33 +343,44 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           );
                         }).toList(),
                       ),
-                    // Connection lines between nodes
+                    // Connection lines with distance labels
                     PolylineLayer(
-                      polylines: _buildConnectionLines(nodesWithPosition),
+                      polylines: _buildConnectionLines(
+                        nodesWithPosition,
+                        myNodeNum,
+                      ),
                     ),
                     // Node markers
                     MarkerLayer(
-                      markers: nodesWithPosition.map((node) {
-                        final isMyNode = node.nodeNum == myNodeNum;
+                      markers: nodesWithPosition.map((n) {
+                        final isMyNode = n.node.nodeNum == myNodeNum;
                         final isSelected =
-                            _selectedNode?.nodeNum == node.nodeNum;
+                            _selectedNode?.nodeNum == n.node.nodeNum;
                         return Marker(
-                          point: LatLng(node.latitude!, node.longitude!),
+                          point: LatLng(n.latitude, n.longitude),
                           width: isSelected ? 56 : 44,
                           height: isSelected ? 56 : 44,
                           child: GestureDetector(
                             onTap: () {
                               HapticFeedback.selectionClick();
-                              setState(() => _selectedNode = node);
+                              setState(() => _selectedNode = n.node);
                             },
                             child: _NodeMarker(
-                              node: node,
+                              node: n.node,
                               isMyNode: isMyNode,
                               isSelected: isSelected,
+                              isStale: n.isStale,
                             ),
                           ),
                         );
                       }).toList(),
+                    ),
+                    // Distance labels layer
+                    MarkerLayer(
+                      markers: _buildDistanceLabels(
+                        nodesWithPosition,
+                        myNodeNum,
+                      ),
                     ),
                   ],
                 ),
@@ -309,48 +395,84 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       isMyNode: _selectedNode!.nodeNum == myNodeNum,
                       onClose: () => setState(() => _selectedNode = null),
                       onMessage: () => _openDM(_selectedNode!),
-                    ),
-                  ),
-                // Node count indicator
-                Positioned(
-                  left: 16,
-                  top: 16,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.darkCard.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: AppTheme.darkBorder.withValues(alpha: 0.5),
+                      distanceFromMe: _getDistanceFromMyNode(
+                        _selectedNode!,
+                        nodesWithPosition,
+                        myNodeNum,
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.successGreen,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${nodesWithPosition.length} nodes on map',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
+                  ),
+                // Node list panel (sliding from left)
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutCubic,
+                  left: _showNodeList ? 0 : -280,
+                  top: 0,
+                  bottom: 0,
+                  width: 280,
+                  child: _NodeListPanel(
+                    nodesWithPosition: nodesWithPosition,
+                    myNodeNum: myNodeNum,
+                    selectedNode: _selectedNode,
+                    onNodeSelected: _selectNodeAndCenter,
+                    onClose: () => setState(() => _showNodeList = false),
+                    calculateDistanceFromMe: (node) => _getDistanceFromMyNode(
+                      node.node,
+                      nodesWithPosition,
+                      myNodeNum,
                     ),
                   ),
                 ),
+                // Node count indicator (hide when list is shown)
+                if (!_showNodeList)
+                  Positioned(
+                    left: 16,
+                    top: 16,
+                    child: GestureDetector(
+                      onTap: () => setState(() => _showNodeList = true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkCard.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppTheme.darkBorder.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: AppTheme.successGreen,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${nodesWithPosition.length} nodes',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.chevron_right,
+                              size: 16,
+                              color: AppTheme.textTertiary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 // Zoom controls
                 Positioned(
                   right: 16,
@@ -377,23 +499,46 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
   }
 
-  void _fitAllNodes(List<MeshNode> nodes) {
+  double? _getDistanceFromMyNode(
+    MeshNode node,
+    List<_NodeWithPosition> nodesWithPosition,
+    int? myNodeNum,
+  ) {
+    if (myNodeNum == null || node.nodeNum == myNodeNum) return null;
+
+    final myNodeWithPos = nodesWithPosition
+        .where((n) => n.node.nodeNum == myNodeNum)
+        .firstOrNull;
+    if (myNodeWithPos == null) return null;
+
+    final nodeWithPos = nodesWithPosition
+        .where((n) => n.node.nodeNum == node.nodeNum)
+        .firstOrNull;
+    if (nodeWithPos == null) return null;
+
+    return _calculateDistance(
+      myNodeWithPos.latitude,
+      myNodeWithPos.longitude,
+      nodeWithPos.latitude,
+      nodeWithPos.longitude,
+    );
+  }
+
+  void _fitAllNodes(List<_NodeWithPosition> nodes) {
     if (nodes.isEmpty) return;
 
-    // Calculate bounds
-    double minLat = nodes.first.latitude!;
-    double maxLat = nodes.first.latitude!;
-    double minLng = nodes.first.longitude!;
-    double maxLng = nodes.first.longitude!;
+    double minLat = nodes.first.latitude;
+    double maxLat = nodes.first.latitude;
+    double minLng = nodes.first.longitude;
+    double maxLng = nodes.first.longitude;
 
-    for (final node in nodes) {
-      if (node.latitude! < minLat) minLat = node.latitude!;
-      if (node.latitude! > maxLat) maxLat = node.latitude!;
-      if (node.longitude! < minLng) minLng = node.longitude!;
-      if (node.longitude! > maxLng) maxLng = node.longitude!;
+    for (final n in nodes) {
+      if (n.latitude < minLat) minLat = n.latitude;
+      if (n.latitude > maxLat) maxLat = n.latitude;
+      if (n.longitude < minLng) minLng = n.longitude;
+      if (n.longitude > maxLng) maxLng = n.longitude;
     }
 
-    // Add padding
     final latPadding = (maxLat - minLat) * 0.15;
     final lngPadding = (maxLng - minLng) * 0.15;
 
@@ -407,7 +552,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
       padding: const EdgeInsets.all(50),
     );
 
-    // Get the fitted camera
     final camera = cameraFit.fit(_mapController.camera);
     _animatedMove(camera.center, camera.zoom.clamp(4.0, 16.0));
     HapticFeedback.lightImpact();
@@ -496,31 +640,52 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
   }
 
-  List<Polyline> _buildConnectionLines(List<MeshNode> nodes) {
-    // Create lines between nearby nodes to visualize the mesh
+  /// Build connection lines with visual distinction for uncertain connections
+  List<Polyline> _buildConnectionLines(
+    List<_NodeWithPosition> nodes,
+    int? myNodeNum,
+  ) {
     final lines = <Polyline>[];
-    const maxDistanceKm = 10.0; // Only show connections within 10km
+    const maxDistanceKm = 15.0;
 
     for (int i = 0; i < nodes.length; i++) {
       for (int j = i + 1; j < nodes.length; j++) {
         final node1 = nodes[i];
         final node2 = nodes[j];
 
-        final distance = const Distance().as(
-          LengthUnit.Kilometer,
-          LatLng(node1.latitude!, node1.longitude!),
-          LatLng(node2.latitude!, node2.longitude!),
+        final distance = _calculateDistance(
+          node1.latitude,
+          node1.longitude,
+          node2.latitude,
+          node2.longitude,
         );
 
         if (distance <= maxDistanceKm) {
+          final isMyConnection =
+              node1.node.nodeNum == myNodeNum ||
+              node2.node.nodeNum == myNodeNum;
+          final hasStaleNode = node1.isStale || node2.isStale;
+
+          // Use pattern for stale connections (visually indicates uncertainty)
+          final pattern = hasStaleNode
+              ? const StrokePattern.dotted(spacingFactor: 2.5)
+              : const StrokePattern.solid();
+
           lines.add(
             Polyline(
               points: [
-                LatLng(node1.latitude!, node1.longitude!),
-                LatLng(node2.latitude!, node2.longitude!),
+                LatLng(node1.latitude, node1.longitude),
+                LatLng(node2.latitude, node2.longitude),
               ],
-              color: AppTheme.primaryPurple.withValues(alpha: 0.3),
-              strokeWidth: 1.5,
+              color: isMyConnection
+                  ? AppTheme.primaryMagenta.withValues(
+                      alpha: hasStaleNode ? 0.25 : 0.5,
+                    )
+                  : AppTheme.primaryPurple.withValues(
+                      alpha: hasStaleNode ? 0.2 : 0.35,
+                    ),
+              strokeWidth: isMyConnection ? 2.0 : 1.5,
+              pattern: pattern,
             ),
           );
         }
@@ -530,11 +695,71 @@ class _MapScreenState extends ConsumerState<MapScreen>
     return lines;
   }
 
-  void _centerOnMyNode(Map<int, MeshNode> nodes, int? myNodeNum) {
+  /// Build distance label markers for connections from my node
+  List<Marker> _buildDistanceLabels(
+    List<_NodeWithPosition> nodes,
+    int? myNodeNum,
+  ) {
+    if (myNodeNum == null || _currentZoom < 10) return [];
+
+    final myNode = nodes.where((n) => n.node.nodeNum == myNodeNum).firstOrNull;
+    if (myNode == null) return [];
+
+    final labels = <Marker>[];
+    const maxDistanceKm = 15.0;
+
+    for (final node in nodes) {
+      if (node.node.nodeNum == myNodeNum) continue;
+
+      final distance = _calculateDistance(
+        myNode.latitude,
+        myNode.longitude,
+        node.latitude,
+        node.longitude,
+      );
+
+      if (distance <= maxDistanceKm) {
+        // Position label at midpoint
+        final midLat = (myNode.latitude + node.latitude) / 2;
+        final midLng = (myNode.longitude + node.longitude) / 2;
+
+        labels.add(
+          Marker(
+            point: LatLng(midLat, midLng),
+            width: 60,
+            height: 20,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppTheme.darkCard.withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppTheme.primaryMagenta.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Text(
+                _formatDistance(distance),
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.primaryMagenta,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    return labels;
+  }
+
+  void _centerOnMyNode(List<_NodeWithPosition> nodes, int? myNodeNum) {
     if (myNodeNum == null) return;
-    final myNode = nodes[myNodeNum];
-    if (myNode?.hasPosition == true) {
-      _animatedMove(LatLng(myNode!.latitude!, myNode.longitude!), 14.0);
+    final myNode = nodes.where((n) => n.node.nodeNum == myNodeNum).firstOrNull;
+    if (myNode != null) {
+      _animatedMove(LatLng(myNode.latitude, myNode.longitude), 14.0);
       HapticFeedback.lightImpact();
     }
   }
@@ -552,23 +777,56 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 }
 
+/// Cached position for nodes that lose GPS
+class _CachedPosition {
+  final double latitude;
+  final double longitude;
+  final DateTime timestamp;
+  final bool isStale;
+
+  _CachedPosition({
+    required this.latitude,
+    required this.longitude,
+    required this.timestamp,
+    required this.isStale,
+  });
+}
+
+/// Node with resolved position (current or cached)
+class _NodeWithPosition {
+  final MeshNode node;
+  final double latitude;
+  final double longitude;
+  final bool isStale;
+
+  _NodeWithPosition({
+    required this.node,
+    required this.latitude,
+    required this.longitude,
+    required this.isStale,
+  });
+}
+
 /// Custom marker widget for nodes
 class _NodeMarker extends StatelessWidget {
   final MeshNode node;
   final bool isMyNode;
   final bool isSelected;
+  final bool isStale;
 
   const _NodeMarker({
     required this.node,
     required this.isMyNode,
     required this.isSelected,
+    this.isStale = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = isMyNode
+    final baseColor = isMyNode
         ? AppTheme.primaryMagenta
         : (node.isOnline ? AppTheme.primaryPurple : AppTheme.textTertiary);
+    final color = isStale ? baseColor.withValues(alpha: 0.5) : baseColor;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -578,23 +836,408 @@ class _NodeMarker extends StatelessWidget {
         border: Border.all(
           color: isSelected ? Colors.white : color,
           width: isSelected ? 3 : 2,
+          strokeAlign: isStale
+              ? BorderSide.strokeAlignOutside
+              : BorderSide.strokeAlignCenter,
         ),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.4),
+            color: color.withValues(alpha: isStale ? 0.2 : 0.4),
             blurRadius: isSelected ? 12 : 6,
             spreadRadius: isSelected ? 2 : 0,
           ),
         ],
       ),
-      child: Center(
-        child: Text(
-          node.shortName?.substring(0, 1).toUpperCase() ??
-              node.nodeNum.toString().substring(0, 1),
-          style: TextStyle(
-            fontSize: isSelected ? 16 : 14,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Text(
+            node.shortName?.substring(0, 1).toUpperCase() ??
+                node.nodeNum.toString().substring(0, 1),
+            style: TextStyle(
+              fontSize: isSelected ? 16 : 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.white.withValues(alpha: isStale ? 0.7 : 1.0),
+            ),
+          ),
+          // Stale indicator (small question mark overlay)
+          if (isStale)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                width: 14,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: AppTheme.warningYellow,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppTheme.darkCard, width: 1.5),
+                ),
+                child: const Center(
+                  child: Text(
+                    '?',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Node list panel sliding from left
+class _NodeListPanel extends StatelessWidget {
+  final List<_NodeWithPosition> nodesWithPosition;
+  final int? myNodeNum;
+  final MeshNode? selectedNode;
+  final void Function(_NodeWithPosition) onNodeSelected;
+  final VoidCallback onClose;
+  final double? Function(_NodeWithPosition) calculateDistanceFromMe;
+
+  const _NodeListPanel({
+    required this.nodesWithPosition,
+    required this.myNodeNum,
+    required this.selectedNode,
+    required this.onNodeSelected,
+    required this.onClose,
+    required this.calculateDistanceFromMe,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Sort: my node first, then by distance from me, then alphabetically
+    final sortedNodes = List<_NodeWithPosition>.from(nodesWithPosition);
+    sortedNodes.sort((a, b) {
+      // My node always first
+      if (a.node.nodeNum == myNodeNum) return -1;
+      if (b.node.nodeNum == myNodeNum) return 1;
+
+      // Then by distance from me
+      final distA = calculateDistanceFromMe(a);
+      final distB = calculateDistanceFromMe(b);
+      if (distA != null && distB != null) {
+        return distA.compareTo(distB);
+      }
+      if (distA != null) return -1;
+      if (distB != null) return 1;
+
+      // Finally alphabetically
+      return a.node.displayName.compareTo(b.node.displayName);
+    });
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        border: Border(
+          right: BorderSide(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 16,
+            offset: const Offset(4, 0),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: AppTheme.darkBorder.withValues(alpha: 0.5),
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.list,
+                  size: 20,
+                  color: AppTheme.primaryMagenta,
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Nodes',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${sortedNodes.length}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textTertiary,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 20),
+                  color: AppTheme.textTertiary,
+                  onPressed: onClose,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
+            ),
+          ),
+          // Node list
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              itemCount: sortedNodes.length,
+              itemBuilder: (context, index) {
+                final nodeWithPos = sortedNodes[index];
+                final isMyNode = nodeWithPos.node.nodeNum == myNodeNum;
+                final isSelected =
+                    selectedNode?.nodeNum == nodeWithPos.node.nodeNum;
+                final distance = calculateDistanceFromMe(nodeWithPos);
+
+                return _NodeListItem(
+                  nodeWithPos: nodeWithPos,
+                  isMyNode: isMyNode,
+                  isSelected: isSelected,
+                  distance: distance,
+                  onTap: () => onNodeSelected(nodeWithPos),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Individual node item in the list
+class _NodeListItem extends StatelessWidget {
+  final _NodeWithPosition nodeWithPos;
+  final bool isMyNode;
+  final bool isSelected;
+  final double? distance;
+  final VoidCallback onTap;
+
+  const _NodeListItem({
+    required this.nodeWithPos,
+    required this.isMyNode,
+    required this.isSelected,
+    required this.distance,
+    required this.onTap,
+  });
+
+  String _formatDistance(double km) {
+    if (km < 1) {
+      return '${(km * 1000).round()}m';
+    } else if (km < 10) {
+      return '${km.toStringAsFixed(1)}km';
+    } else {
+      return '${km.round()}km';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final node = nodeWithPos.node;
+    final baseColor = isMyNode
+        ? AppTheme.primaryMagenta
+        : (node.isOnline ? AppTheme.primaryPurple : AppTheme.textTertiary);
+
+    return Material(
+      color: isSelected
+          ? AppTheme.primaryMagenta.withValues(alpha: 0.15)
+          : Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              // Node indicator
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: baseColor.withValues(
+                    alpha: nodeWithPos.isStale ? 0.3 : 0.2,
+                  ),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: baseColor.withValues(
+                      alpha: nodeWithPos.isStale ? 0.4 : 0.6,
+                    ),
+                    width: 1.5,
+                  ),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Text(
+                      node.shortName?.substring(0, 1).toUpperCase() ??
+                          node.nodeNum.toString().substring(0, 1),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: baseColor,
+                      ),
+                    ),
+                    if (nodeWithPos.isStale)
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: AppTheme.warningYellow,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppTheme.darkCard,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              '?',
+                              style: TextStyle(
+                                fontSize: 7,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Node info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            node.displayName,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: isSelected
+                                  ? Colors.white
+                                  : (node.isOnline
+                                        ? Colors.white
+                                        : AppTheme.textSecondary),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isMyNode) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryMagenta.withValues(
+                                alpha: 0.2,
+                              ),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: const Text(
+                              'YOU',
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryMagenta,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        // Online/offline status
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: node.isOnline
+                                ? AppTheme.successGreen
+                                : AppTheme.textTertiary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          node.isOnline ? 'Online' : 'Offline',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppTheme.textTertiary,
+                          ),
+                        ),
+                        if (nodeWithPos.isStale) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            '• Last known',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.warningYellow.withValues(
+                                alpha: 0.8,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Distance badge
+              if (distance != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkBackground,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _formatDistance(distance!),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 4),
+              // Arrow indicator
+              Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: isSelected
+                    ? AppTheme.primaryMagenta
+                    : AppTheme.textTertiary.withValues(alpha: 0.5),
+              ),
+            ],
           ),
         ),
       ),
@@ -608,13 +1251,25 @@ class _NodeInfoCard extends ConsumerWidget {
   final bool isMyNode;
   final VoidCallback onClose;
   final VoidCallback onMessage;
+  final double? distanceFromMe;
 
   const _NodeInfoCard({
     required this.node,
     required this.isMyNode,
     required this.onClose,
     required this.onMessage,
+    this.distanceFromMe,
   });
+
+  String _formatDistance(double km) {
+    if (km < 1) {
+      return '${(km * 1000).round()}m away';
+    } else if (km < 10) {
+      return '${km.toStringAsFixed(1)}km away';
+    } else {
+      return '${km.round()}km away';
+    }
+  }
 
   Future<void> _exchangePositions(BuildContext context, WidgetRef ref) async {
     final protocol = ref.read(protocolServiceProvider);
@@ -729,12 +1384,36 @@ class _NodeInfoCard extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      node.userId ?? '!${node.nodeNum.toRadixString(16)}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textTertiary,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          node.userId ?? '!${node.nodeNum.toRadixString(16)}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textTertiary,
+                          ),
+                        ),
+                        if (distanceFromMe != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 3,
+                            height: 3,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.textTertiary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _formatDistance(distanceFromMe!),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.primaryMagenta,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),
