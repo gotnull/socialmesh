@@ -776,10 +776,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     // Node markers with clustering
                     MarkerClusterLayerWidget(
                       options: MarkerClusterLayerOptions(
-                        maxClusterRadius: 80,
-                        disableClusteringAtZoom: 16,
-                        size: const Size(44, 44),
+                        maxClusterRadius: 120,
+                        disableClusteringAtZoom: 19,
+                        size: const Size(48, 48),
                         rotate: true,
+                        spiderfyCircleRadius: 60,
+                        spiderfySpiralDistanceMultiplier: 2,
+                        circleSpiralSwitchover: 9,
+                        zoomToBoundsOnClick: true,
+                        showPolygon: false,
                         markers: nodesWithPosition.map((n) {
                           final isMyNode = n.node.nodeNum == myNodeNum;
                           final isSelected =
@@ -803,28 +808,47 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           );
                         }).toList(),
                         builder: (context, markers) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryMagenta,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.primaryMagenta.withValues(
-                                    alpha: 0.4,
+                          return GestureDetector(
+                            onTap: () {
+                              // Zoom in when cluster is tapped
+                              if (markers.isNotEmpty) {
+                                final bounds = LatLngBounds.fromPoints(
+                                  markers.map((m) => m.point).toList(),
+                                );
+                                _mapController.fitCamera(
+                                  CameraFit.bounds(
+                                    bounds: bounds,
+                                    padding: const EdgeInsets.all(50),
                                   ),
-                                  blurRadius: 8,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${markers.length}',
-                                style: const TextStyle(
+                                );
+                              }
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryMagenta,
+                                shape: BoxShape.circle,
+                                border: Border.all(
                                   color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                                  width: 3,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.primaryMagenta.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                    blurRadius: 12,
+                                    spreadRadius: 4,
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '${markers.length}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
