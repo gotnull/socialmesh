@@ -726,7 +726,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                   },
                 ),
                 // Monitored node indicator
-                if (_geofenceNodeName != null) ...[
+                if (_geofenceNodeNum != null) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
