@@ -75,8 +75,8 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
   String? _monitoredNodeName;
   int? _selectedNodeNum; // For visual selection highlight
 
-  // For calculating drag distance
-  LatLng? _dragStart;
+  // Threshold for starting edge drag (in screen pixels)
+  static const double _edgeDragThreshold = 40.0;
 
   @override
   void initState() {
@@ -207,18 +207,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
   }
 
   void _onMapLongPress(TapPosition tapPosition, LatLng point) {
-    // Don't start drag if no center set yet
-    if (_center == null) return;
-
-    HapticFeedback.mediumImpact();
-    setState(() {
-      // Keep center locked if we have a monitored node
-      if (_monitoredNodeNum == null) {
-        _center = point;
-      }
-      _isDraggingRadius = true;
-      _dragStart = point;
-    });
+    // Long press no longer used for radius - use edge drag instead
   }
 
   double _calculateDistance(LatLng from, LatLng to) {
@@ -226,8 +215,67 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
     return distance.as(LengthUnit.Meter, from, to);
   }
 
+  /// Check if a screen point is near the geofence edge
+  bool _isNearGeofenceEdge(Offset screenPoint) {
+    if (_center == null) return false;
+
+    // Get center screen position
+    final centerScreen = _mapController.camera.latLngToScreenPoint(_center!);
+
+    // Calculate the radius in screen pixels
+    // Use a point at the edge of the geofence to find screen radius
+    final edgePoint = _calculatePointAtDistance(
+      _center!,
+      _radiusMeters,
+      90, // Due east
+    );
+    final edgeScreen = _mapController.camera.latLngToScreenPoint(edgePoint);
+    final screenRadius = (edgeScreen.x - centerScreen.x).abs();
+
+    // Distance from touch to center
+    final dx = screenPoint.dx - centerScreen.x;
+    final dy = screenPoint.dy - centerScreen.y;
+    final distanceFromCenter = math.sqrt(dx * dx + dy * dy);
+
+    // Check if within threshold of the edge
+    return (distanceFromCenter - screenRadius).abs() < _edgeDragThreshold;
+  }
+
+  /// Calculate a point at a given distance and bearing from origin
+  LatLng _calculatePointAtDistance(
+    LatLng origin,
+    double distanceMeters,
+    double bearingDegrees,
+  ) {
+    const double earthRadius = 6371000; // meters
+    final lat1 = origin.latitude * math.pi / 180;
+    final lon1 = origin.longitude * math.pi / 180;
+    final bearing = bearingDegrees * math.pi / 180;
+    final angularDistance = distanceMeters / earthRadius;
+
+    final lat2 = math.asin(
+      math.sin(lat1) * math.cos(angularDistance) +
+          math.cos(lat1) * math.sin(angularDistance) * math.cos(bearing),
+    );
+    final lon2 =
+        lon1 +
+        math.atan2(
+          math.sin(bearing) * math.sin(angularDistance) * math.cos(lat1),
+          math.cos(angularDistance) - math.sin(lat1) * math.sin(lat2),
+        );
+
+    return LatLng(lat2 * 180 / math.pi, lon2 * 180 / math.pi);
+  }
+
+  void _onPointerDown(PointerDownEvent event) {
+    if (_center != null && _isNearGeofenceEdge(event.localPosition)) {
+      HapticFeedback.mediumImpact();
+      setState(() => _isDraggingRadius = true);
+    }
+  }
+
   void _onPointerMove(PointerMoveEvent event) {
-    if (_isDraggingRadius && _center != null && _dragStart != null) {
+    if (_isDraggingRadius && _center != null) {
       // Convert screen position to map position
       final point = _mapController.camera.pointToLatLng(
         math.Point(event.localPosition.dx, event.localPosition.dy),
@@ -246,7 +294,6 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
     if (_isDraggingRadius) {
       setState(() {
         _isDraggingRadius = false;
-        _dragStart = null;
       });
     }
   }
@@ -312,6 +359,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
         children: [
           // Map
           Listener(
+            onPointerDown: _onPointerDown,
             onPointerMove: _onPointerMove,
             onPointerUp: _onPointerUp,
             child: FlutterMap(
@@ -429,10 +477,12 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                           size: 20,
                         ),
                         const SizedBox(width: 8),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Tap to set center • Long press and drag to adjust radius',
-                            style: TextStyle(
+                            _center == null
+                                ? 'Tap to set geofence center'
+                                : 'Drag the circle edge to adjust radius',
+                            style: const TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 13,
                             ),
@@ -546,6 +596,73 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Monitored node indicator
+                  if (_monitoredNodeNum != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryGreen.withAlpha(26),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppTheme.primaryGreen.withAlpha(77),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.radar,
+                            size: 18,
+                            color: AppTheme.primaryGreen,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Monitored Node',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppTheme.textTertiary,
+                                  ),
+                                ),
+                                Text(
+                                  _monitoredNodeName ??
+                                      '!${_monitoredNodeNum!.toRadixString(16)}',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() {
+                                _monitoredNodeNum = null;
+                                _monitoredNodeName = null;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              child: const Icon(
+                                Icons.close,
+                                size: 18,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   // Radius slider
                   if (_center != null) ...[
                     Row(
