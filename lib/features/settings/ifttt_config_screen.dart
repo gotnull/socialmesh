@@ -35,6 +35,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   bool _temperatureAlert = false;
   bool _sosEmergency = true;
   bool _isTesting = false;
+  int? _geofenceNodeNum;
+  String? _geofenceNodeName;
 
   @override
   void initState() {
@@ -63,6 +65,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       _batteryLow = config.batteryLow;
       _temperatureAlert = config.temperatureAlert;
       _sosEmergency = config.sosEmergency;
+      _geofenceNodeNum = config.geofenceNodeNum;
+      _geofenceNodeName = config.geofenceNodeName;
     });
   }
 
@@ -85,6 +89,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       geofenceRadius: double.tryParse(_geofenceRadiusController.text) ?? 1000.0,
       geofenceLat: double.tryParse(_geofenceLatController.text),
       geofenceLon: double.tryParse(_geofenceLonController.text),
+      geofenceNodeNum: _geofenceNodeNum,
+      geofenceNodeName: _geofenceNodeName,
     );
 
     await iftttService.saveConfig(config);
@@ -131,6 +137,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       geofenceRadius: double.tryParse(_geofenceRadiusController.text) ?? 1000.0,
       geofenceLat: double.tryParse(_geofenceLatController.text),
       geofenceLon: double.tryParse(_geofenceLonController.text),
+      geofenceNodeNum: _geofenceNodeNum,
+      geofenceNodeName: _geofenceNodeName,
     );
     await iftttService.saveConfig(tempConfig);
 
@@ -713,6 +721,93 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     return const SizedBox.shrink();
                   },
                 ),
+                // Monitored node indicator
+                if (_geofenceNodeName != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreen.withAlpha(20),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppTheme.primaryGreen.withAlpha(50),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.radar,
+                          color: AppTheme.primaryGreen,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Monitored Node',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.textTertiary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _geofenceNodeName!,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 18),
+                          color: AppTheme.textTertiary,
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () => setState(() {
+                            _geofenceNodeNum = null;
+                            _geofenceNodeName = null;
+                          }),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ] else ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.warningYellow.withAlpha(20),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppTheme.warningYellow.withAlpha(50),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: AppTheme.warningYellow,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'No node selected. All nodes will be monitored.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 // Pick on Map button
                 SizedBox(
                   width: double.infinity,
@@ -757,6 +852,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           initialLon: double.tryParse(_geofenceLonController.text),
           initialRadius:
               double.tryParse(_geofenceRadiusController.text) ?? 1000.0,
+          initialMonitoredNodeNum: _geofenceNodeNum,
         ),
       ),
     );
@@ -766,6 +862,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
         _geofenceLatController.text = result.latitude.toStringAsFixed(6);
         _geofenceLonController.text = result.longitude.toStringAsFixed(6);
         _geofenceRadiusController.text = result.radiusMeters.toStringAsFixed(0);
+        _geofenceNodeNum = result.monitoredNodeNum;
+        _geofenceNodeName = result.monitoredNodeName;
       });
     }
   }

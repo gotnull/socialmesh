@@ -4,48 +4,75 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../models/mesh_models.dart';
+import '../../providers/app_providers.dart';
 
 /// Result from the geofence picker
 class GeofenceResult {
   final double latitude;
   final double longitude;
   final double radiusMeters;
+  final int? monitoredNodeNum;
+  final String? monitoredNodeName;
 
   const GeofenceResult({
     required this.latitude,
     required this.longitude,
     required this.radiusMeters,
+    this.monitoredNodeNum,
+    this.monitoredNodeName,
   });
 }
 
 /// Screen for visually picking a geofence location and radius on a map
-class GeofencePickerScreen extends StatefulWidget {
+class GeofencePickerScreen extends ConsumerStatefulWidget {
   final double? initialLat;
   final double? initialLon;
   final double initialRadius;
+  final int? initialMonitoredNodeNum;
 
   const GeofencePickerScreen({
     super.key,
     this.initialLat,
     this.initialLon,
     this.initialRadius = 1000.0,
+    this.initialMonitoredNodeNum,
   });
 
   @override
-  State<GeofencePickerScreen> createState() => _GeofencePickerScreenState();
+  ConsumerState<GeofencePickerScreen> createState() =>
+      _GeofencePickerScreenState();
 }
 
-class _GeofencePickerScreenState extends State<GeofencePickerScreen> {
+/// Helper class for nodes with GPS positions
+class _NodeWithPosition {
+  final MeshNode node;
+  final double latitude;
+  final double longitude;
+
+  _NodeWithPosition({
+    required this.node,
+    required this.latitude,
+    required this.longitude,
+  });
+}
+
+class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
   late final MapController _mapController;
   LatLng? _center;
   double _radiusMeters = 1000.0;
   bool _isDraggingRadius = false;
   bool _isLoadingLocation = false;
+  bool _showNodeList = false;
+  final TextEditingController _searchController = TextEditingController();
+  int? _monitoredNodeNum;
+  String? _monitoredNodeName;
 
   // For calculating drag distance
   LatLng? _dragStart;
@@ -55,6 +82,7 @@ class _GeofencePickerScreenState extends State<GeofencePickerScreen> {
     super.initState();
     _mapController = MapController();
     _radiusMeters = widget.initialRadius;
+    _monitoredNodeNum = widget.initialMonitoredNodeNum;
 
     if (widget.initialLat != null && widget.initialLon != null) {
       _center = LatLng(widget.initialLat!, widget.initialLon!);
@@ -64,7 +92,53 @@ class _GeofencePickerScreenState extends State<GeofencePickerScreen> {
   @override
   void dispose() {
     _mapController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  /// Get nodes with GPS positions
+  List<_NodeWithPosition> _getNodesWithPositions(Map<int, MeshNode> nodes) {
+    final result = <_NodeWithPosition>[];
+    for (final node in nodes.values) {
+      if (node.hasPosition) {
+        result.add(
+          _NodeWithPosition(
+            node: node,
+            latitude: node.latitude!,
+            longitude: node.longitude!,
+          ),
+        );
+      }
+    }
+    return result;
+  }
+
+  /// Filter nodes by search query
+  List<_NodeWithPosition> _filterNodes(List<_NodeWithPosition> nodes) {
+    if (_searchController.text.isEmpty) return nodes;
+    final query = _searchController.text.toLowerCase();
+    return nodes.where((n) {
+      return n.node.displayName.toLowerCase().contains(query) ||
+          (n.node.shortName?.toLowerCase().contains(query) ?? false) ||
+          n.node.nodeNum.toString().contains(query);
+    }).toList();
+  }
+
+  void _selectNode(
+    _NodeWithPosition nodeWithPos, {
+    bool setAsMonitored = false,
+  }) {
+    HapticFeedback.selectionClick();
+    final point = LatLng(nodeWithPos.latitude, nodeWithPos.longitude);
+    setState(() {
+      _center = point;
+      _showNodeList = false;
+      if (setAsMonitored) {
+        _monitoredNodeNum = nodeWithPos.node.nodeNum;
+        _monitoredNodeName = nodeWithPos.node.displayName;
+      }
+    });
+    _mapController.move(point, 14.0);
   }
 
   Future<void> _getCurrentLocation() async {
@@ -175,12 +249,27 @@ class _GeofencePickerScreenState extends State<GeofencePickerScreen> {
         latitude: _center!.latitude,
         longitude: _center!.longitude,
         radiusMeters: _radiusMeters,
+        monitoredNodeNum: _monitoredNodeNum,
+        monitoredNodeName: _monitoredNodeName,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final nodes = ref.watch(nodesProvider);
+    final myNodeNum = ref.watch(myNodeNumProvider);
+    final allNodesWithPosition = _getNodesWithPositions(nodes);
+    final filteredNodes = _filterNodes(allNodesWithPosition);
+
+    // Look up monitored node name if we have a nodeNum but no name yet
+    if (_monitoredNodeNum != null && _monitoredNodeName == null) {
+      final monitoredNode = nodes[_monitoredNodeNum];
+      if (monitoredNode != null) {
+        _monitoredNodeName = monitoredNode.displayName;
+      }
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
@@ -238,7 +327,23 @@ class _GeofencePickerScreenState extends State<GeofencePickerScreen> {
                       ),
                     ],
                   ),
-                // Center marker
+                // Node markers
+                MarkerLayer(
+                  rotate: true,
+                  markers: allNodesWithPosition.map((n) {
+                    final isMyNode = n.node.nodeNum == myNodeNum;
+                    return Marker(
+                      point: LatLng(n.latitude, n.longitude),
+                      width: 44,
+                      height: 44,
+                      child: GestureDetector(
+                        onTap: () => _selectNode(n),
+                        child: _NodeMarker(node: n.node, isMyNode: isMyNode),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                // Center marker (geofence center)
                 if (_center != null)
                   MarkerLayer(
                     markers: [
@@ -275,51 +380,125 @@ class _GeofencePickerScreenState extends State<GeofencePickerScreen> {
           // Instructions overlay
           Positioned(
             top: 16,
-            left: 16,
+            left: _showNodeList ? 316 : 16,
             right: 16,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.darkCard.withAlpha(230),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.darkBorder),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.touch_app,
-                        color: AppTheme.primaryGreen,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Text(
-                          'Tap to set center • Long press and drag to adjust radius',
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 13,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: _showNodeList ? 0.0 : 1.0,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkCard.withAlpha(230),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.darkBorder),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.touch_app,
+                          color: AppTheme.primaryGreen,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'Tap to set center • Long press and drag to adjust radius',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                            ),
                           ),
+                        ),
+                      ],
+                    ),
+                    if (_center != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Radius: ${_radiusMeters >= 1000 ? '${(_radiusMeters / 1000).toStringAsFixed(1)} km' : '${_radiusMeters.toStringAsFixed(0)} m'}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
-                  ),
-                  if (_center != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      'Radius: ${_radiusMeters >= 1000 ? '${(_radiusMeters / 1000).toStringAsFixed(1)} km' : '${_radiusMeters.toStringAsFixed(0)} m'}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ],
-                ],
+                ),
               ),
+            ),
+          ),
+
+          // Node list toggle button
+          if (!_showNodeList && allNodesWithPosition.isNotEmpty)
+            Positioned(
+              left: 16,
+              top: 120,
+              child: GestureDetector(
+                onTap: () => setState(() => _showNodeList = true),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkCard.withAlpha(230),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppTheme.darkBorder.withAlpha(128),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppTheme.successGreen,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${allNodesWithPosition.length} nodes',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.chevron_right,
+                        size: 16,
+                        color: AppTheme.textTertiary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+          // Node list panel
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            left: _showNodeList ? 0 : -300,
+            top: 0,
+            bottom: 0,
+            width: 300,
+            child: _NodeListPanel(
+              nodesWithPosition: filteredNodes,
+              myNodeNum: myNodeNum,
+              monitoredNodeNum: _monitoredNodeNum,
+              onNodeSelected: _selectNode,
+              onClose: () => setState(() => _showNodeList = false),
+              searchController: _searchController,
+              onSearchChanged: (query) => setState(() {}),
             ),
           ),
 
@@ -445,6 +624,380 @@ class _GeofencePickerScreenState extends State<GeofencePickerScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Custom marker widget for nodes
+class _NodeMarker extends StatelessWidget {
+  final MeshNode node;
+  final bool isMyNode;
+
+  const _NodeMarker({required this.node, required this.isMyNode});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isMyNode
+        ? AppTheme.primaryMagenta
+        : (node.isOnline ? AppTheme.primaryPurple : AppTheme.textTertiary);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: color, width: 2),
+        boxShadow: [BoxShadow(color: color.withAlpha(102), blurRadius: 6)],
+      ),
+      child: Center(
+        child: Text(
+          node.shortName?.substring(0, 1).toUpperCase() ??
+              node.nodeNum.toString().substring(0, 1),
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Node list panel sliding from left
+class _NodeListPanel extends StatelessWidget {
+  final List<_NodeWithPosition> nodesWithPosition;
+  final int? myNodeNum;
+  final int? monitoredNodeNum;
+  final void Function(_NodeWithPosition, {bool setAsMonitored}) onNodeSelected;
+  final VoidCallback onClose;
+  final TextEditingController searchController;
+  final void Function(String) onSearchChanged;
+
+  const _NodeListPanel({
+    required this.nodesWithPosition,
+    required this.myNodeNum,
+    required this.monitoredNodeNum,
+    required this.onNodeSelected,
+    required this.onClose,
+    required this.searchController,
+    required this.onSearchChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Sort: my node first, then alphabetically
+    final sortedNodes = List<_NodeWithPosition>.from(nodesWithPosition);
+    sortedNodes.sort((a, b) {
+      if (a.node.nodeNum == myNodeNum) return -1;
+      if (b.node.nodeNum == myNodeNum) return 1;
+      return a.node.displayName.compareTo(b.node.displayName);
+    });
+
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.darkCard,
+          border: Border(
+            right: BorderSide(color: AppTheme.darkBorder.withAlpha(128)),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(77),
+              blurRadius: 16,
+              offset: const Offset(4, 0),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: AppTheme.darkBorder.withAlpha(128)),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.list,
+                    size: 20,
+                    color: AppTheme.primaryMagenta,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Select Node',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${sortedNodes.length}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textTertiary,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    color: AppTheme.textTertiary,
+                    onPressed: onClose,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+            ),
+            // Search field
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: TextField(
+                controller: searchController,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'Search nodes...',
+                  hintStyle: const TextStyle(
+                    color: AppTheme.textTertiary,
+                    fontSize: 14,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    size: 20,
+                    color: AppTheme.textSecondary,
+                  ),
+                  suffixIcon: searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          color: AppTheme.textSecondary,
+                          onPressed: () {
+                            searchController.clear();
+                            onSearchChanged('');
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: AppTheme.darkBackground,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                onChanged: onSearchChanged,
+              ),
+            ),
+            // Node list
+            Expanded(
+              child: sortedNodes.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No nodes with GPS',
+                        style: TextStyle(color: AppTheme.textTertiary),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      itemCount: sortedNodes.length,
+                      itemBuilder: (context, index) {
+                        final nodeWithPos = sortedNodes[index];
+                        final isMyNode = nodeWithPos.node.nodeNum == myNodeNum;
+                        final isMonitored =
+                            nodeWithPos.node.nodeNum == monitoredNodeNum;
+
+                        return _NodeListItem(
+                          nodeWithPos: nodeWithPos,
+                          isMyNode: isMyNode,
+                          isMonitored: isMonitored,
+                          onTap: () => onNodeSelected(
+                            nodeWithPos,
+                            setAsMonitored: false,
+                          ),
+                          onSetMonitored: () =>
+                              onNodeSelected(nodeWithPos, setAsMonitored: true),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Individual node item in the list
+class _NodeListItem extends StatelessWidget {
+  final _NodeWithPosition nodeWithPos;
+  final bool isMyNode;
+  final bool isMonitored;
+  final VoidCallback onTap;
+  final VoidCallback onSetMonitored;
+
+  const _NodeListItem({
+    required this.nodeWithPos,
+    required this.isMyNode,
+    required this.isMonitored,
+    required this.onTap,
+    required this.onSetMonitored,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final node = nodeWithPos.node;
+    final baseColor = isMyNode
+        ? AppTheme.primaryMagenta
+        : (node.isOnline ? AppTheme.primaryPurple : AppTheme.textTertiary);
+
+    return Material(
+      color: isMonitored
+          ? AppTheme.primaryGreen.withAlpha(26)
+          : Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              // Node indicator
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: baseColor.withAlpha(51),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: baseColor.withAlpha(153),
+                    width: 1.5,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    node.shortName?.substring(0, 1).toUpperCase() ??
+                        node.nodeNum.toString().substring(0, 1),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: baseColor,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Node info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            node.displayName,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isMyNode)
+                          Container(
+                            margin: const EdgeInsets.only(left: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryMagenta.withAlpha(51),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'Me',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryMagenta,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      node.shortName ??
+                          '!${node.nodeNum.toRadixString(16).toUpperCase()}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Monitor button or indicator
+              if (isMonitored)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryGreen.withAlpha(51),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.radar, size: 12, color: AppTheme.primaryGreen),
+                      const SizedBox(width: 4),
+                      const Text(
+                        'Monitored',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryGreen,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                GestureDetector(
+                  onTap: onSetMonitored,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkBorder.withAlpha(100),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'Monitor',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

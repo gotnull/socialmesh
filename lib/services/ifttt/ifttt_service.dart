@@ -31,6 +31,8 @@ class IftttConfig {
   final double geofenceRadius; // in meters
   final double? geofenceLat;
   final double? geofenceLon;
+  final int? geofenceNodeNum; // Node to monitor for geofencing
+  final String? geofenceNodeName; // Display name of monitored node
 
   const IftttConfig({
     this.enabled = false,
@@ -47,6 +49,8 @@ class IftttConfig {
     this.geofenceRadius = 1000.0,
     this.geofenceLat,
     this.geofenceLon,
+    this.geofenceNodeNum,
+    this.geofenceNodeName,
   });
 
   IftttConfig copyWith({
@@ -64,6 +68,8 @@ class IftttConfig {
     double? geofenceRadius,
     double? geofenceLat,
     double? geofenceLon,
+    int? geofenceNodeNum,
+    String? geofenceNodeName,
   }) {
     return IftttConfig(
       enabled: enabled ?? this.enabled,
@@ -80,6 +86,8 @@ class IftttConfig {
       geofenceRadius: geofenceRadius ?? this.geofenceRadius,
       geofenceLat: geofenceLat ?? this.geofenceLat,
       geofenceLon: geofenceLon ?? this.geofenceLon,
+      geofenceNodeNum: geofenceNodeNum ?? this.geofenceNodeNum,
+      geofenceNodeName: geofenceNodeName ?? this.geofenceNodeName,
     );
   }
 
@@ -98,6 +106,8 @@ class IftttConfig {
     'geofenceRadius': geofenceRadius,
     'geofenceLat': geofenceLat,
     'geofenceLon': geofenceLon,
+    'geofenceNodeNum': geofenceNodeNum,
+    'geofenceNodeName': geofenceNodeName,
   };
 
   factory IftttConfig.fromJson(Map<String, dynamic> json) {
@@ -117,6 +127,8 @@ class IftttConfig {
       geofenceRadius: (json['geofenceRadius'] as num?)?.toDouble() ?? 1000.0,
       geofenceLat: (json['geofenceLat'] as num?)?.toDouble(),
       geofenceLon: (json['geofenceLon'] as num?)?.toDouble(),
+      geofenceNodeNum: json['geofenceNodeNum'] as int?,
+      geofenceNodeName: json['geofenceNodeName'] as String?,
     );
   }
 }
@@ -283,6 +295,11 @@ class IftttService {
   }) async {
     if (!_config.positionUpdate) return false;
     if (_config.geofenceLat == null || _config.geofenceLon == null) {
+      return false;
+    }
+
+    // Only trigger for the monitored node if one is specified
+    if (_config.geofenceNodeNum != null && _config.geofenceNodeNum != nodeNum) {
       return false;
     }
 
