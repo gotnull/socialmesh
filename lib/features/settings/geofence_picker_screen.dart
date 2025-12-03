@@ -73,6 +73,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
   final TextEditingController _searchController = TextEditingController();
   int? _monitoredNodeNum;
   String? _monitoredNodeName;
+  int? _selectedNodeNum; // For visual selection highlight
 
   // For calculating drag distance
   LatLng? _dragStart;
@@ -131,6 +132,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
     HapticFeedback.selectionClick();
     final point = LatLng(nodeWithPos.latitude, nodeWithPos.longitude);
     setState(() {
+      _selectedNodeNum = nodeWithPos.node.nodeNum;
       _center = point;
       _showNodeList = false;
       if (setAsMonitored) {
@@ -188,16 +190,32 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
   }
 
   void _onMapTap(TapPosition tapPosition, LatLng point) {
+    // Close sidebar if open
+    if (_showNodeList) {
+      setState(() => _showNodeList = false);
+      return;
+    }
+
     HapticFeedback.selectionClick();
     setState(() {
-      _center = point;
+      _selectedNodeNum = null; // Clear node selection
+      // Only move center if not locked to a monitored node
+      if (_monitoredNodeNum == null) {
+        _center = point;
+      }
     });
   }
 
   void _onMapLongPress(TapPosition tapPosition, LatLng point) {
+    // Don't start drag if no center set yet
+    if (_center == null) return;
+
     HapticFeedback.mediumImpact();
     setState(() {
-      _center = point;
+      // Keep center locked if we have a monitored node
+      if (_monitoredNodeNum == null) {
+        _center = point;
+      }
       _isDraggingRadius = true;
       _dragStart = point;
     });
@@ -332,13 +350,20 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                   rotate: true,
                   markers: allNodesWithPosition.map((n) {
                     final isMyNode = n.node.nodeNum == myNodeNum;
+                    final isSelected = n.node.nodeNum == _selectedNodeNum;
+                    final isMonitored = n.node.nodeNum == _monitoredNodeNum;
                     return Marker(
                       point: LatLng(n.latitude, n.longitude),
-                      width: 44,
-                      height: 44,
+                      width: isSelected ? 52 : 44,
+                      height: isSelected ? 52 : 44,
                       child: GestureDetector(
                         onTap: () => _selectNode(n),
-                        child: _NodeMarker(node: n.node, isMyNode: isMyNode),
+                        child: _NodeMarker(
+                          node: n.node,
+                          isMyNode: isMyNode,
+                          isSelected: isSelected,
+                          isMonitored: isMonitored,
+                        ),
                       ),
                     );
                   }).toList(),
@@ -633,28 +658,52 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
 class _NodeMarker extends StatelessWidget {
   final MeshNode node;
   final bool isMyNode;
+  final bool isSelected;
+  final bool isMonitored;
 
-  const _NodeMarker({required this.node, required this.isMyNode});
+  const _NodeMarker({
+    required this.node,
+    required this.isMyNode,
+    this.isSelected = false,
+    this.isMonitored = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final color = isMyNode
+    final baseColor = isMyNode
         ? AppTheme.primaryMagenta
         : (node.isOnline ? AppTheme.primaryPurple : AppTheme.textTertiary);
 
-    return Container(
+    // Use green border if monitored, white if selected
+    final borderColor = isMonitored
+        ? AppTheme.primaryGreen
+        : (isSelected ? Colors.white : baseColor);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: color,
+        color: baseColor,
         shape: BoxShape.circle,
-        border: Border.all(color: color, width: 2),
-        boxShadow: [BoxShadow(color: color.withAlpha(102), blurRadius: 6)],
+        border: Border.all(
+          color: borderColor,
+          width: isSelected || isMonitored ? 3 : 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (isMonitored ? AppTheme.primaryGreen : baseColor).withAlpha(
+              isSelected ? 150 : 102,
+            ),
+            blurRadius: isSelected ? 12 : 6,
+            spreadRadius: isSelected ? 2 : 0,
+          ),
+        ],
       ),
       child: Center(
         child: Text(
           node.shortName?.substring(0, 1).toUpperCase() ??
               node.nodeNum.toString().substring(0, 1),
-          style: const TextStyle(
-            fontSize: 14,
+          style: TextStyle(
+            fontSize: isSelected ? 16 : 14,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
@@ -900,7 +949,7 @@ class _NodeListItem extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Expanded(
+                        Flexible(
                           child: Text(
                             node.displayName,
                             style: const TextStyle(
@@ -912,26 +961,27 @@ class _NodeListItem extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (isMyNode)
+                        if (isMyNode) ...[
+                          const SizedBox(width: 6),
                           Container(
-                            margin: const EdgeInsets.only(left: 8),
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
+                              horizontal: 4,
+                              vertical: 1,
                             ),
                             decoration: BoxDecoration(
                               color: AppTheme.primaryMagenta.withAlpha(51),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(3),
                             ),
                             child: const Text(
-                              'Me',
+                              'YOU',
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 8,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.primaryMagenta,
                               ),
                             ),
                           ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 2),
