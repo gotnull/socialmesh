@@ -145,6 +145,10 @@ class IftttService {
   final Map<int, DateTime> _lastBatteryAlert = {};
   // Track last temperature alerts per node
   final Map<int, DateTime> _lastTemperatureAlert = {};
+  // Track last geofence alerts per node to avoid spamming
+  final Map<int, DateTime> _lastGeofenceAlert = {};
+  // Track if node was previously inside geofence (only alert on transition)
+  final Map<int, bool> _wasInsideGeofence = {};
   // Track node online status for online/offline transitions
   final Map<int, bool> _previousOnlineStatus = {};
 
@@ -311,8 +315,25 @@ class IftttService {
       _config.geofenceLon!,
     );
 
-    // Only trigger if outside geofence radius
-    if (distance <= _config.geofenceRadius) return false;
+    final isInsideGeofence = distance <= _config.geofenceRadius;
+    final wasInside =
+        _wasInsideGeofence[nodeNum] ?? true; // Assume inside initially
+
+    // Update tracking
+    _wasInsideGeofence[nodeNum] = isInsideGeofence;
+
+    // Only trigger when transitioning from inside to outside
+    if (isInsideGeofence || !wasInside) {
+      return false;
+    }
+
+    // Throttle: only alert once per 30 minutes per node (even on transitions)
+    final lastAlert = _lastGeofenceAlert[nodeNum];
+    if (lastAlert != null &&
+        DateTime.now().difference(lastAlert).inMinutes < 30) {
+      return false;
+    }
+    _lastGeofenceAlert[nodeNum] = DateTime.now();
 
     return _triggerWebhook(
       eventName: 'meshtastic_position',
