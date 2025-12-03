@@ -61,6 +61,7 @@ class ProtocolService {
   final StreamController<pb.ModuleConfig_MQTTConfig> _mqttConfigController;
 
   StreamSubscription<List<int>>? _dataSubscription;
+  StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
   Completer<void>? _configCompleter;
   Timer? _rssiTimer;
 
@@ -239,6 +240,7 @@ class ProtocolService {
 
   /// Start listening to transport and wait for configuration
   Future<void> start() async {
+    debugPrint('🔵 Protocol.start() called - instance: $hashCode');
     _logger.i('Starting protocol service');
 
     _configCompleter = Completer<void>();
@@ -249,6 +251,19 @@ class ProtocolService {
         _logger.e('Transport error: $error');
       },
     );
+
+    // Listen for transport disconnection to fail fast
+    _transportStateSubscription = _transport.stateStream.listen((state) {
+      if (state == DeviceConnectionState.disconnected ||
+          state == DeviceConnectionState.error) {
+        _logger.w('Transport disconnected/error during config wait');
+        if (_configCompleter != null && !_configCompleter!.isCompleted) {
+          _configCompleter!.completeError(
+            Exception('Device disconnected during configuration'),
+          );
+        }
+      }
+    });
 
     // Enable notifications FIRST - device needs this to respond to config request
     await _transport.enableNotifications();
@@ -263,20 +278,10 @@ class ProtocolService {
     // Notifications should work, but poll as backup
     _pollForConfigurationAsync();
 
-    // Wait for config with timeout
-    final configFuture = _configCompleter!.future;
-    final timeoutFuture = Future.delayed(const Duration(seconds: 15));
-
-    _logger.i('Waiting for config or timeout...');
-    await Future.any([configFuture, timeoutFuture]);
-
-    if (!_configCompleter!.isCompleted) {
-      _logger.i('Configuration not received, proceeding anyway');
-      _configurationComplete = true;
-      _configCompleter!.complete();
-    } else {
-      _logger.i('Configuration was received');
-    }
+    // Wait for config to complete
+    debugPrint('⏳ Protocol: Waiting for configCompleteId...');
+    await _configCompleter!.future;
+    debugPrint('✅ Protocol: Configuration was received');
 
     // Start RSSI polling timer (every 2 seconds)
     _startRssiPolling();
@@ -322,6 +327,8 @@ class ProtocolService {
     _logger.i('Stopping protocol service');
     _rssiTimer?.cancel();
     _rssiTimer = null;
+    _transportStateSubscription?.cancel();
+    _transportStateSubscription = null;
     if (_configCompleter != null && !_configCompleter!.isCompleted) {
       _configCompleter!.completeError('Service stopped');
     }
@@ -358,6 +365,10 @@ class ProtocolService {
 
       final fromRadio = pn.FromRadio.fromBuffer(packet);
 
+      // Debug: log which payload variant we got
+      final variant = fromRadio.whichPayloadVariant();
+      debugPrint('📦 Protocol: FromRadio payload variant: $variant');
+
       if (fromRadio.hasPacket()) {
         _handleMeshPacket(fromRadio.packet);
       } else if (fromRadio.hasMyInfo()) {
@@ -367,6 +378,9 @@ class ProtocolService {
       } else if (fromRadio.hasChannel()) {
         _handleChannel(fromRadio.channel);
       } else if (fromRadio.hasConfigCompleteId()) {
+        debugPrint(
+          '🎉 Protocol: Configuration complete! ID: ${fromRadio.configCompleteId}',
+        );
         _logger.i('Configuration complete: ${fromRadio.configCompleteId}');
         _configurationComplete = true;
         if (_configCompleter != null && !_configCompleter!.isCompleted) {
@@ -955,6 +969,7 @@ class ProtocolService {
   /// Handle my node info
   void _handleMyNodeInfo(pb.MyNodeInfo myInfo) {
     _myNodeNum = myInfo.myNodeNum;
+    debugPrint('🔢 Protocol: My node number set to: $_myNodeNum');
     _logger.i('My node number: $_myNodeNum');
     _myNodeNumController.add(_myNodeNum!);
 

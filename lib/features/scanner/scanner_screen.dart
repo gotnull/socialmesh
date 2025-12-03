@@ -306,8 +306,108 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     }
   }
 
+  Widget _buildConnectingContent() {
+    final statusText = _autoReconnecting ? 'Auto-reconnecting' : 'Connecting';
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Image.asset(
+            'assets/app_icons/source/protofluff_icon_1024.png',
+            width: 120,
+            height: 120,
+          ),
+        ),
+        const SizedBox(height: 32),
+        const Text(
+          'Protofluff',
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Privacy-first mesh social',
+          style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
+        ),
+        const SizedBox(height: 48),
+        // Status indicator
+        SizedBox(
+          width: 48,
+          height: 48,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppTheme.primaryMagenta.withValues(alpha: 0.4),
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.bluetooth_connected_rounded,
+                color: AppTheme.primaryMagenta,
+                size: 24,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          statusText,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.primaryMagenta,
+            fontFamily: 'Inter',
+            letterSpacing: 0.3,
+          ),
+        ),
+        if (_autoReconnecting) ...[
+          const SizedBox(height: 24),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _connecting = false;
+                _autoReconnecting = false;
+              });
+              _startScan();
+            },
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppTheme.textTertiary, fontSize: 16),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // When connecting, use EXACT same structure as onboarding
+    if (_connecting) {
+      return Scaffold(
+        backgroundColor: AppTheme.darkBackground,
+        body: Stack(
+          children: [
+            // Background - EXACT same as onboarding
+            Positioned.fill(child: FloatingIconsBackground()),
+            // Content in SafeArea - EXACT same as onboarding
+            SafeArea(child: Center(child: _buildConnectingContent())),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
@@ -326,229 +426,198 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
             color: Colors.white,
           ),
         ),
-        actions: widget.isOnboarding
-            ? null
-            : [
-                // Only show settings if we have a verified connection
-                // (Don't show settings from scanner - device config requires connection)
-                if (_connecting)
-                  const SizedBox(
-                    width: 48,
-                    child: Center(
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppTheme.textTertiary,
-                        ),
-                      ),
+        actions: [
+          if (_scanning)
+            const SizedBox(
+              width: 48,
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppTheme.textTertiary,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          if (_errorMessage != null)
+            Container(
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: AppTheme.errorRed.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppTheme.errorRed.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: AppTheme.errorRed),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: AppTheme.errorRed),
                     ),
                   ),
-              ],
-      ),
-      body: _connecting
-          ? ConnectingAnimation(
-              statusText: _autoReconnecting
-                  ? 'Auto-reconnecting'
-                  : 'Connecting',
-              showCancel: _autoReconnecting,
-              onCancel: () {
-                setState(() {
-                  _connecting = false;
-                  _autoReconnecting = false;
-                });
-                _startScan();
-              },
-            )
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                if (_errorMessage != null)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.errorRed.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppTheme.errorRed.withValues(alpha: 0.5),
-                      ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: AppTheme.errorRed),
+                    onPressed: () => setState(() => _errorMessage = null),
+                    iconSize: 20,
+                  ),
+                ],
+              ),
+            ),
+
+          if (_scanning)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: AppTheme.primaryGreen,
+                      strokeWidth: 2,
                     ),
-                    child: Row(
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: AppTheme.errorRed,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _errorMessage!,
-                            style: const TextStyle(color: AppTheme.errorRed),
+                        const Text(
+                          'Scanning for nearby devices',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Inter',
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.close,
-                            color: AppTheme.errorRed,
+                        const SizedBox(height: 2),
+                        Text(
+                          _devices.isEmpty
+                              ? 'Looking for Meshtastic devices...'
+                              : '${_devices.length} ${_devices.length == 1 ? 'device' : 'devices'} found so far',
+                          style: const TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 12,
+                            fontFamily: 'Inter',
                           ),
-                          onPressed: () => setState(() => _errorMessage = null),
-                          iconSize: 20,
                         ),
                       ],
                     ),
                   ),
+                ],
+              ),
+            ),
 
-                if (_scanning)
+          if (_devices.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  const Text(
+                    'Available Devices',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textSecondary,
+                      fontFamily: 'Inter',
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
+                      horizontal: 8,
+                      vertical: 2,
                     ),
-                    margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${_devices.length}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primaryGreen,
+                        fontFamily: 'Inter',
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: AppTheme.primaryGreen,
-                            strokeWidth: 2,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Scanning for nearby devices',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  fontFamily: 'Inter',
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                _devices.isEmpty
-                                    ? 'Looking for Meshtastic devices...'
-                                    : '${_devices.length} ${_devices.length == 1 ? 'device' : 'devices'} found so far',
-                                style: const TextStyle(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: 12,
-                                  fontFamily: 'Inter',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
-
-                if (_devices.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        const Text(
-                          'Available Devices',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textSecondary,
-                            fontFamily: 'Inter',
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '${_devices.length}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.primaryGreen,
-                              fontFamily: 'Inter',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                if (_devices.isEmpty && !_scanning)
-                  Center(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 100),
-                        const Icon(
-                          Icons.bluetooth_searching,
-                          size: 80,
-                          color: AppTheme.textTertiary,
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'No devices found',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.textSecondary,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Make sure Bluetooth is enabled and\nyour Meshtastic device is powered on',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppTheme.textTertiary,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton.icon(
-                          onPressed: _startScan,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Scan Again'),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  ..._devices.map(
-                    (device) => Column(
-                      children: [
-                        _DeviceCard(
-                          device: device,
-                          onTap: () => _connect(device),
-                        ),
-                        if (device.rssi != null)
-                          _DeviceDetailsTable(device: device),
-                      ],
-                    ),
-                  ),
-              ],
+                ],
+              ),
             ),
+
+          if (_devices.isEmpty && !_scanning)
+            Center(
+              child: Column(
+                children: [
+                  const SizedBox(height: 100),
+                  const Icon(
+                    Icons.bluetooth_searching,
+                    size: 80,
+                    color: AppTheme.textTertiary,
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'No devices found',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textSecondary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Make sure Bluetooth is enabled and\nyour Meshtastic device is powered on',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.textTertiary,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: _startScan,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Scan Again'),
+                  ),
+                ],
+              ),
+            )
+          else
+            ..._devices.map(
+              (device) => Column(
+                children: [
+                  _DeviceCard(device: device, onTap: () => _connect(device)),
+                  if (device.rssi != null) _DeviceDetailsTable(device: device),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -184,18 +184,15 @@ class BleTransport implements DeviceTransport {
         if (_device!.isConnected) {
           _logger.w('Device already connected, forcing disconnect...');
           await _device!.disconnect();
-          await Future.delayed(const Duration(seconds: 1));
+          await Future.delayed(const Duration(milliseconds: 500));
         }
       } catch (e) {
         _device = BluetoothDevice.fromId(device.id);
       }
 
-      // Connect (this will trigger PIN dialog if needed)
+      // Connect to device - simple and reliable
       _logger.d('Initiating BLE connection...');
-      await _device!.connect(
-        timeout: const Duration(seconds: 30),
-        autoConnect: false,
-      );
+      await _device!.connect(autoConnect: false);
 
       // Device is now connected, discover services immediately
       _logger.i('Connection established, discovering services...');

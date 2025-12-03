@@ -124,14 +124,16 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
 
             // Start protocol service
             final protocol = _ref.read(protocolServiceProvider);
+            debugPrint('🔵 AppInit: Calling protocol.start()...');
             await protocol.start();
+            debugPrint(
+              '🔵 AppInit: protocol.start() returned, myNodeNum=${protocol.myNodeNum}',
+            );
 
             // Verify protocol actually received configuration from device
             // If PIN was cancelled or authentication failed, myNodeNum will be null
             if (protocol.myNodeNum == null) {
-              debugPrint(
-                'Auto-reconnect: No config received - authentication may have failed',
-              );
+              debugPrint('❌ AppInit: myNodeNum is NULL - throwing exception');
               await transport.disconnect();
               throw Exception(
                 'Authentication failed - no configuration received',
@@ -143,6 +145,9 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
             await locationService.startLocationUpdates();
 
             _ref.read(connectedDeviceProvider.notifier).state = lastDevice;
+            debugPrint(
+              '🎯 Auto-reconnect: Setting autoReconnectState to success',
+            );
             _ref.read(autoReconnectStateProvider.notifier).state =
                 AutoReconnectState.success;
           } else {
@@ -162,6 +167,7 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
         }
       }
 
+      debugPrint('🎯 AppInitNotifier: Setting state to initialized');
       state = AppInitState.initialized;
     } catch (e) {
       debugPrint('App initialization failed: $e');
@@ -483,8 +489,10 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           ref.read(connectedDeviceProvider.notifier).state = foundDevice;
 
           // Restart protocol service
+          debugPrint('🔄 Starting protocol service...');
           final protocol = ref.read(protocolServiceProvider);
           await protocol.start();
+          debugPrint('🔄 Protocol service started!');
 
           // Check again if still connected after protocol start
           await Future.delayed(const Duration(milliseconds: 500));
