@@ -33,6 +33,7 @@ class IftttConfig {
   final double? geofenceLon;
   final int? geofenceNodeNum; // Node to monitor for geofencing
   final String? geofenceNodeName; // Display name of monitored node
+  final int geofenceThrottleMinutes; // Minimum minutes between geofence alerts
 
   const IftttConfig({
     this.enabled = false,
@@ -51,6 +52,7 @@ class IftttConfig {
     this.geofenceLon,
     this.geofenceNodeNum,
     this.geofenceNodeName,
+    this.geofenceThrottleMinutes = 30,
   });
 
   IftttConfig copyWith({
@@ -70,6 +72,7 @@ class IftttConfig {
     double? geofenceLon,
     int? geofenceNodeNum,
     String? geofenceNodeName,
+    int? geofenceThrottleMinutes,
   }) {
     return IftttConfig(
       enabled: enabled ?? this.enabled,
@@ -88,6 +91,8 @@ class IftttConfig {
       geofenceLon: geofenceLon ?? this.geofenceLon,
       geofenceNodeNum: geofenceNodeNum ?? this.geofenceNodeNum,
       geofenceNodeName: geofenceNodeName ?? this.geofenceNodeName,
+      geofenceThrottleMinutes:
+          geofenceThrottleMinutes ?? this.geofenceThrottleMinutes,
     );
   }
 
@@ -108,6 +113,7 @@ class IftttConfig {
     'geofenceLon': geofenceLon,
     'geofenceNodeNum': geofenceNodeNum,
     'geofenceNodeName': geofenceNodeName,
+    'geofenceThrottleMinutes': geofenceThrottleMinutes,
   };
 
   factory IftttConfig.fromJson(Map<String, dynamic> json) {
@@ -129,6 +135,7 @@ class IftttConfig {
       geofenceLon: (json['geofenceLon'] as num?)?.toDouble(),
       geofenceNodeNum: json['geofenceNodeNum'] as int?,
       geofenceNodeName: json['geofenceNodeName'] as String?,
+      geofenceThrottleMinutes: json['geofenceThrottleMinutes'] as int? ?? 30,
     );
   }
 }
@@ -327,10 +334,11 @@ class IftttService {
       return false;
     }
 
-    // Throttle: only alert once per 30 minutes per node (even on transitions)
+    // Throttle: only alert once per configured interval per node
     final lastAlert = _lastGeofenceAlert[nodeNum];
     if (lastAlert != null &&
-        DateTime.now().difference(lastAlert).inMinutes < 30) {
+        DateTime.now().difference(lastAlert).inMinutes <
+            _config.geofenceThrottleMinutes) {
       return false;
     }
     _lastGeofenceAlert[nodeNum] = DateTime.now();

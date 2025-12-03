@@ -37,6 +37,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   bool _isTesting = false;
   int? _geofenceNodeNum;
   String? _geofenceNodeName;
+  int _geofenceThrottleMinutes = 30;
 
   @override
   void initState() {
@@ -67,6 +68,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       _sosEmergency = config.sosEmergency;
       _geofenceNodeNum = config.geofenceNodeNum;
       _geofenceNodeName = config.geofenceNodeName;
+      _geofenceThrottleMinutes = config.geofenceThrottleMinutes;
     });
   }
 
@@ -91,6 +93,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       geofenceLon: double.tryParse(_geofenceLonController.text),
       geofenceNodeNum: _geofenceNodeNum,
       geofenceNodeName: _geofenceNodeName,
+      geofenceThrottleMinutes: _geofenceThrottleMinutes,
     );
 
     await iftttService.saveConfig(config);
@@ -139,6 +142,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       geofenceLon: double.tryParse(_geofenceLonController.text),
       geofenceNodeNum: _geofenceNodeNum,
       geofenceNodeName: _geofenceNodeName,
+      geofenceThrottleMinutes: _geofenceThrottleMinutes,
     );
     await iftttService.saveConfig(tempConfig);
 
@@ -808,6 +812,68 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
+                // Throttle setting
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.timer_outlined,
+                      color: AppTheme.textSecondary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Alert Cooldown',
+                        style: TextStyle(fontSize: 14, color: Colors.white),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkBackground,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppTheme.darkBorder),
+                      ),
+                      child: DropdownButton<int>(
+                        value: _geofenceThrottleMinutes,
+                        dropdownColor: AppTheme.darkCard,
+                        underline: const SizedBox.shrink(),
+                        isDense: true,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 5, child: Text('5 min')),
+                          DropdownMenuItem(value: 15, child: Text('15 min')),
+                          DropdownMenuItem(value: 30, child: Text('30 min')),
+                          DropdownMenuItem(value: 60, child: Text('1 hour')),
+                          DropdownMenuItem(value: 120, child: Text('2 hours')),
+                          DropdownMenuItem(value: 240, child: Text('4 hours')),
+                          DropdownMenuItem(value: 480, child: Text('8 hours')),
+                          DropdownMenuItem(
+                            value: 1440,
+                            child: Text('24 hours'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => _geofenceThrottleMinutes = value);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Minimum time between geofence alerts for the same node',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+                ),
+                const SizedBox(height: 16),
                 // Pick on Map button
                 SizedBox(
                   width: double.infinity,
