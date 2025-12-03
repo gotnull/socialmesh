@@ -298,6 +298,15 @@ class BleTransport implements DeviceTransport {
     }
   }
 
+  /// Check if an error indicates BLE authentication/pairing failure
+  bool _isAuthenticationError(dynamic error) {
+    final errorStr = error.toString().toLowerCase();
+    return errorStr.contains('authentication') ||
+        errorStr.contains('encryption') ||
+        errorStr.contains('insufficient') ||
+        errorStr.contains('pairing');
+  }
+
   /// Enable fromNum notifications after initial config download
   /// Per Meshtastic docs, this should be called AFTER config is received
   @override
@@ -335,16 +344,33 @@ class BleTransport implements DeviceTransport {
               }
             } catch (e) {
               _logger.e('Error reading fromRadio: $e');
+              if (_isAuthenticationError(e)) {
+                _logger.e('Authentication error - PIN may have been cancelled');
+                _updateState(DeviceConnectionState.error);
+              }
             }
           }
         },
         onError: (error) {
           _logger.e('fromNum error: $error');
+          if (_isAuthenticationError(error)) {
+            _logger.e(
+              'Authentication error in notification - PIN may have been cancelled',
+            );
+            _updateState(DeviceConnectionState.error);
+          }
         },
       );
       _logger.i('fromNum notifications enabled');
     } catch (e) {
       _logger.e('Error enabling notifications: $e');
+      if (_isAuthenticationError(e)) {
+        _logger.e(
+          'Authentication error enabling notifications - PIN cancelled',
+        );
+        _updateState(DeviceConnectionState.error);
+        rethrow;
+      }
     }
   }
 
@@ -373,6 +399,9 @@ class BleTransport implements DeviceTransport {
     });
   }
 
+  /// Track consecutive auth errors for polling
+  int _consecutiveAuthErrors = 0;
+
   @override
   Future<void> pollOnce() async {
     if (_rxCharacteristic == null ||
@@ -382,12 +411,26 @@ class BleTransport implements DeviceTransport {
 
     try {
       final value = await _rxCharacteristic!.read();
+      _consecutiveAuthErrors = 0; // Reset on success
       if (value.isNotEmpty) {
         _logger.d('Polled ${value.length} bytes');
         _dataController.add(value);
       }
     } catch (e) {
       _logger.e('Polling error: $e');
+      if (_isAuthenticationError(e)) {
+        _consecutiveAuthErrors++;
+        _logger.e(
+          'Authentication error during poll (count: $_consecutiveAuthErrors)',
+        );
+        // After 3 consecutive auth errors, assume PIN was cancelled
+        if (_consecutiveAuthErrors >= 3) {
+          _logger.e(
+            'Multiple auth errors - PIN likely cancelled, transitioning to error state',
+          );
+          _updateState(DeviceConnectionState.error);
+        }
+      }
     }
   }
 

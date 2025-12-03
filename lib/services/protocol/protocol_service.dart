@@ -244,6 +244,7 @@ class ProtocolService {
     _logger.i('Starting protocol service');
 
     _configCompleter = Completer<void>();
+    var waitingForConfig = false; // Track if we're past initial setup
 
     _dataSubscription = _transport.dataStream.listen(
       _handleData,
@@ -257,31 +258,61 @@ class ProtocolService {
       if (state == DeviceConnectionState.disconnected ||
           state == DeviceConnectionState.error) {
         _logger.w('Transport disconnected/error during config wait');
-        if (_configCompleter != null && !_configCompleter!.isCompleted) {
+        // Only complete with error if we're actually waiting for config
+        // This prevents double-errors when enableNotifications throws directly
+        if (waitingForConfig &&
+            _configCompleter != null &&
+            !_configCompleter!.isCompleted) {
           _configCompleter!.completeError(
-            Exception('Device disconnected during configuration'),
+            Exception(
+              'Connection failed - please try again and enter the PIN when prompted',
+            ),
           );
         }
       }
     });
 
-    // Enable notifications FIRST - device needs this to respond to config request
-    await _transport.enableNotifications();
+    try {
+      // Enable notifications FIRST - device needs this to respond to config request
+      await _transport.enableNotifications();
 
-    // Short delay to let notifications settle
-    await Future.delayed(const Duration(milliseconds: 200));
+      // Short delay to let notifications settle
+      await Future.delayed(const Duration(milliseconds: 200));
 
-    // NOW request configuration - device will respond via notifications
-    await _requestConfiguration();
+      // NOW request configuration - device will respond via notifications
+      await _requestConfiguration();
 
-    // Start polling for configuration response
-    // Notifications should work, but poll as backup
-    _pollForConfigurationAsync();
+      // Start polling for configuration response
+      // Notifications should work, but poll as backup
+      _pollForConfigurationAsync();
 
-    // Wait for config to complete
-    debugPrint('⏳ Protocol: Waiting for configCompleteId...');
-    await _configCompleter!.future;
-    debugPrint('✅ Protocol: Configuration was received');
+      // Now we're waiting for config - enable the listener to complete on error
+      waitingForConfig = true;
+
+      // Wait for config to complete with timeout
+      debugPrint('⏳ Protocol: Waiting for configCompleteId...');
+      await _configCompleter!.future.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw TimeoutException(
+            'Configuration timed out - device may require pairing or PIN was cancelled',
+          );
+        },
+      );
+      debugPrint('✅ Protocol: Configuration was received');
+    } catch (e) {
+      debugPrint('❌ Protocol: Configuration failed: $e');
+      // Convert FlutterBluePlus auth errors to user-friendly message
+      final errorStr = e.toString().toLowerCase();
+      if (errorStr.contains('authentication') ||
+          errorStr.contains('encryption') ||
+          errorStr.contains('insufficient')) {
+        throw Exception(
+          'Connection failed - please try again and enter the PIN when prompted',
+        );
+      }
+      rethrow;
+    }
 
     // Start RSSI polling timer (every 2 seconds)
     _startRssiPolling();
