@@ -277,6 +277,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       }
       // If inline (shown within MainShell), don't navigate - just let the
       // connection state change trigger MainShell to rebuild and show main content
+
+      // Success - don't reset _connecting, let navigation handle the transition
+      return;
     } catch (e) {
       if (!mounted) return;
 
@@ -291,17 +294,16 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
           ),
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _connecting = false;
-          _autoReconnecting = false;
-        });
 
-        // If auto-reconnect failed, start regular scan
-        if (isAutoReconnect) {
-          _startScan();
-        }
+      // Only reset connecting state on error
+      setState(() {
+        _connecting = false;
+        _autoReconnecting = false;
+      });
+
+      // If auto-reconnect failed, start regular scan
+      if (isAutoReconnect) {
+        _startScan();
       }
     }
   }
