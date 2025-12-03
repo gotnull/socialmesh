@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
+import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../services/ifttt/ifttt_service.dart';
+import 'geofence_picker_screen.dart';
 
 /// Screen for configuring IFTTT Webhooks integration
 class IftttConfigScreen extends ConsumerStatefulWidget {
@@ -633,11 +637,137 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     fillColor: AppTheme.darkBackground,
                   ),
                 ),
+                const SizedBox(height: 16),
+                // Mini map preview when coordinates are set
+                Builder(
+                  builder: (context) {
+                    final lat = double.tryParse(_geofenceLatController.text);
+                    final lon = double.tryParse(_geofenceLonController.text);
+                    final radius =
+                        double.tryParse(_geofenceRadiusController.text) ??
+                        1000.0;
+
+                    if (lat != null && lon != null) {
+                      return Column(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: SizedBox(
+                              height: 150,
+                              child: IgnorePointer(
+                                child: FlutterMap(
+                                  options: MapOptions(
+                                    initialCenter: LatLng(lat, lon),
+                                    initialZoom: _calculateZoomForRadius(
+                                      radius,
+                                    ),
+                                  ),
+                                  children: [
+                                    MapConfig.darkTileLayer(),
+                                    CircleLayer(
+                                      circles: [
+                                        CircleMarker(
+                                          point: LatLng(lat, lon),
+                                          radius: radius,
+                                          useRadiusInMeter: true,
+                                          color: AppTheme.primaryGreen
+                                              .withAlpha(40),
+                                          borderColor: AppTheme.primaryGreen,
+                                          borderStrokeWidth: 2,
+                                        ),
+                                      ],
+                                    ),
+                                    MarkerLayer(
+                                      markers: [
+                                        Marker(
+                                          point: LatLng(lat, lon),
+                                          width: 24,
+                                          height: 24,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.primaryGreen,
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: Colors.white,
+                                                width: 2,
+                                              ),
+                                            ),
+                                            child: const Icon(
+                                              Icons.location_on,
+                                              color: Colors.white,
+                                              size: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+                // Pick on Map button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _openGeofencePicker,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.primaryGreen,
+                      side: BorderSide(
+                        color: AppTheme.primaryGreen.withAlpha(100),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    icon: const Icon(Icons.map_outlined, size: 18),
+                    label: const Text('Pick on Map'),
+                  ),
+                ),
               ],
             ),
           ),
       ],
     );
+  }
+
+  /// Calculate appropriate zoom level for a given radius
+  double _calculateZoomForRadius(double radiusMeters) {
+    // Approximate zoom levels for different radii
+    if (radiusMeters <= 100) return 17;
+    if (radiusMeters <= 250) return 16;
+    if (radiusMeters <= 500) return 15;
+    if (radiusMeters <= 1000) return 14;
+    if (radiusMeters <= 2000) return 13;
+    if (radiusMeters <= 5000) return 12;
+    if (radiusMeters <= 10000) return 11;
+    return 10;
+  }
+
+  Future<void> _openGeofencePicker() async {
+    final result = await Navigator.of(context).push<GeofenceResult>(
+      MaterialPageRoute(
+        builder: (context) => GeofencePickerScreen(
+          initialLat: double.tryParse(_geofenceLatController.text),
+          initialLon: double.tryParse(_geofenceLonController.text),
+          initialRadius:
+              double.tryParse(_geofenceRadiusController.text) ?? 1000.0,
+        ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _geofenceLatController.text = result.latitude.toStringAsFixed(6);
+        _geofenceLonController.text = result.longitude.toStringAsFixed(6);
+        _geofenceRadiusController.text = result.radiusMeters.toStringAsFixed(0);
+      });
+    }
   }
 
   Widget _buildInfoCard() {

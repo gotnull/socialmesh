@@ -7,29 +7,12 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../messaging/messaging_screen.dart';
-
-/// Map tile style options
-enum MapTileStyle {
-  dark('Dark', 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'),
-  satellite(
-    'Satellite',
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  ),
-  terrain('Terrain', 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'),
-  light(
-    'Light',
-    'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-  );
-
-  final String label;
-  final String url;
-  const MapTileStyle(this.label, this.url);
-}
 
 /// Node filter options
 enum NodeFilter {
@@ -649,8 +632,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     // Map tiles
                     TileLayer(
                       urlTemplate: _mapStyle.url,
-                      subdomains: const ['a', 'b', 'c', 'd'],
-                      userAgentPackageName: 'com.protofluff.app',
+                      subdomains: _mapStyle.subdomains,
+                      userAgentPackageName: MapConfig.userAgentPackageName,
                       retinaMode: _mapStyle != MapTileStyle.satellite,
                       tileBuilder: (context, tileWidget, tile) {
                         return AnimatedOpacity(

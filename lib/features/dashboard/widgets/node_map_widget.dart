@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+import '../../../core/map_config.dart';
 import '../../../core/theme.dart';
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
@@ -72,13 +73,7 @@ class NodeMapContent extends ConsumerWidget {
                   ),
                   children: [
                     // Dark map tiles
-                    TileLayer(
-                      urlTemplate:
-                          'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-                      subdomains: const ['a', 'b', 'c', 'd'],
-                      userAgentPackageName: 'com.protofluff.app',
-                      retinaMode: true,
-                    ),
+                    MapConfig.darkTileLayer(),
                     // Node markers
                     MarkerLayer(
                       markers: nodesWithPosition.map((node) {
