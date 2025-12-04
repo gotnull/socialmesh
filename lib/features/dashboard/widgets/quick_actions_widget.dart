@@ -1198,90 +1198,111 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
                       node.longName ??
                       node.shortName ??
                       '!${node.nodeNum.toRadixString(16)}';
+                  final isFirst = index == 0;
+                  final isLast = index == widget.nodes.length - 1;
 
-                  return InkWell(
-                    onTap: () {
-                      setState(() => _selectedNodeNum = node.nodeNum);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
+                  return Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.vertical(
+                        top: isFirst ? const Radius.circular(10) : Radius.zero,
+                        bottom: isLast
+                            ? const Radius.circular(10)
+                            : Radius.zero,
                       ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppTheme.primaryGreen.withValues(alpha: 0.15)
-                            : Colors.transparent,
-                        border: Border(
-                          bottom: BorderSide(
-                            color: index < widget.nodes.length - 1
-                                ? AppTheme.darkBorder.withValues(alpha: 0.5)
-                                : Colors.transparent,
+                      onTap: () {
+                        setState(() => _selectedNodeNum = node.nodeNum);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.vertical(
+                            top: isFirst
+                                ? const Radius.circular(10)
+                                : Radius.zero,
+                            bottom: isLast
+                                ? const Radius.circular(10)
+                                : Radius.zero,
+                          ),
+                          border: Border(
+                            bottom: BorderSide(
+                              color: index < widget.nodes.length - 1
+                                  ? AppTheme.darkBorder.withValues(alpha: 0.5)
+                                  : Colors.transparent,
+                            ),
                           ),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? AppTheme.primaryGreen
-                                  : AppTheme.darkBorder,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(
-                                node.shortName?.substring(0, 1).toUpperCase() ??
-                                    '?',
-                                style: TextStyle(
-                                  color: isSelected
-                                      ? Colors.black
-                                      : Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppTheme.primaryGreen
+                                    : AppTheme.darkBorder,
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  displayName,
+                              child: Center(
+                                child: Text(
+                                  node.shortName
+                                          ?.substring(0, 1)
+                                          .toUpperCase() ??
+                                      '?',
                                   style: TextStyle(
                                     color: isSelected
-                                        ? AppTheme.primaryGreen
+                                        ? Colors.black
                                         : Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                if (node.shortName != null &&
-                                    node.longName != null)
-                                  Text(
-                                    node.shortName!,
-                                    style: TextStyle(
-                                      color: AppTheme.textTertiary,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          if (node.isOnline)
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: AppTheme.primaryGreen,
-                                shape: BoxShape.circle,
                               ),
                             ),
-                        ],
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    displayName,
+                                    style: TextStyle(
+                                      color: isSelected
+                                          ? AppTheme.primaryGreen
+                                          : Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  if (node.shortName != null &&
+                                      node.longName != null)
+                                    Text(
+                                      node.shortName!,
+                                      style: TextStyle(
+                                        color: AppTheme.textTertiary,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            if (node.isOnline)
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: AppTheme.primaryGreen,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   );
