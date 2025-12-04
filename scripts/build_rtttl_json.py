@@ -241,6 +241,63 @@ def main():
     # Sort by display name
     tones.sort(key=lambda x: x['displayName'].lower())
 
+    # Deduplicate by RTTTL content (keep the one with the best/shortest name)
+    seen_rtttl = {}
+    for tone in tones:
+        rtttl = tone['rtttl'].strip()
+        if rtttl not in seen_rtttl:
+            seen_rtttl[rtttl] = tone
+        else:
+            # Keep the one with shorter/cleaner name (less likely to have version suffix)
+            existing = seen_rtttl[rtttl]
+            existing_name = existing['displayName']
+            new_name = tone['displayName']
+            # Prefer names without version indicators (V2, v2, 2, etc.)
+            existing_has_version = bool(re.search(r'[vV]?\d+$', existing_name))
+            new_has_version = bool(re.search(r'[vV]?\d+$', new_name))
+            if existing_has_version and not new_has_version:
+                seen_rtttl[rtttl] = tone
+            elif not existing_has_version and new_has_version:
+                pass  # Keep existing
+            elif len(new_name) < len(existing_name):
+                seen_rtttl[rtttl] = tone
+    
+    tones = list(seen_rtttl.values())
+    
+    # Second pass: deduplicate by normalized display name
+    # This catches "Indiana Jones" vs "IndianaJones", "Super Mario" vs "SuperMario", etc.
+    def normalize_name(name: str) -> str:
+        """Normalize a name for deduplication - lowercase, no spaces, no special chars."""
+        # Remove common suffixes/prefixes that indicate variations
+        name = re.sub(r'\s*[\(\[].*?[\)\]]', '', name)  # Remove (variations) and [variations]
+        name = re.sub(r'\s*[-_]\s*\d+$', '', name)  # Remove trailing -1, _2, etc.
+        name = re.sub(r'\s*[vV]\d+$', '', name)  # Remove trailing v1, V2, etc.
+        # Normalize: lowercase, remove all non-alphanumeric
+        return re.sub(r'[^a-z0-9]', '', name.lower())
+    
+    seen_names = {}
+    for tone in tones:
+        normalized = normalize_name(tone['displayName'])
+        if normalized not in seen_names:
+            seen_names[normalized] = tone
+        else:
+            # Keep the one with the shortest RTTTL (simpler/cleaner version)
+            existing = seen_names[normalized]
+            existing_rtttl_len = len(existing['rtttl'])
+            new_rtttl_len = len(tone['rtttl'])
+            # Prefer shorter RTTTL (simpler version)
+            if new_rtttl_len < existing_rtttl_len:
+                seen_names[normalized] = tone
+            # If same length, prefer name with proper spacing (looks cleaner)
+            elif new_rtttl_len == existing_rtttl_len:
+                existing_has_spaces = ' ' in existing['displayName']
+                new_has_spaces = ' ' in tone['displayName']
+                if new_has_spaces and not existing_has_spaces:
+                    seen_names[normalized] = tone
+    
+    tones = list(seen_names.values())
+    tones.sort(key=lambda x: x['displayName'].lower())
+
     # Add built-in presets at the beginning
     # Meshtastic Default is first, then other built-ins, then the rest
     builtin_tones = list(BUILTIN_PRESETS)

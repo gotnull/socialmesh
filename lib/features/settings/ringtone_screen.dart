@@ -573,6 +573,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   String? _selectedDescription;
   String? _selectedSource; // 'library', 'builtin', 'custom'
   bool _playingSelected = false;
+  int _libraryToneCount = 0; // Total tones in the library
 
   /// Maximum RTTTL string length supported by Meshtastic devices
   static const int _maxRtttlLength = 230;
@@ -671,7 +672,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   @override
   void initState() {
     super.initState();
-    _loadCurrentRingtone();
+    _loadSavedRingtone();
     _rtttlController.addListener(() => _onRtttlChanged(_rtttlController.text));
   }
 
@@ -680,6 +681,52 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     _rtttlController.dispose();
     _rtttlPlayer.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadSavedRingtone() async {
+    setState(() => _loading = true);
+    try {
+      // Load tone count
+      final count = await _libraryService.getToneCount();
+
+      final settings = await ref.read(settingsServiceProvider.future);
+      final rtttl = settings.selectedRingtoneRtttl;
+      final name = settings.selectedRingtoneName;
+
+      if (mounted) {
+        setState(() {
+          _libraryToneCount = count;
+          if (rtttl != null && name != null) {
+            _rtttlController.text = rtttl;
+            _selectedName = name;
+            _selectedDescription = settings.selectedRingtoneDescription;
+            _selectedSource = settings.selectedRingtoneSource;
+          }
+        });
+      }
+    } catch (e) {
+      // Ignore - will use defaults
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  Future<void> _saveSelectedRingtone() async {
+    if (_selectedName == null) return;
+
+    try {
+      final settings = await ref.read(settingsServiceProvider.future);
+      await settings.setSelectedRingtone(
+        rtttl: _rtttlController.text.trim(),
+        name: _selectedName!,
+        description: _selectedDescription,
+        source: _selectedSource,
+      );
+    } catch (e) {
+      // Ignore save errors
+    }
   }
 
   Future<void> _playPreview() async {
@@ -833,22 +880,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     }
   }
 
-  Future<void> _loadCurrentRingtone() async {
-    setState(() => _loading = true);
-    try {
-      final protocol = ref.read(protocolServiceProvider);
-      await protocol.getRingtone();
-      // The response will come via the admin message handler
-      // For now we'll just show the text field
-    } catch (e) {
-      // Ignore - device may not support ringtone
-    } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
-    }
-  }
-
   Future<void> _saveRingtone() async {
     final validation = _validateRtttl(_rtttlController.text);
     if (validation != null) {
@@ -899,6 +930,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     int index, {
     bool isCustom = false,
   }) {
+    final source = isCustom ? 'custom' : 'builtin';
     setState(() {
       _rtttlController.text = preset.rtttl;
       _selectedPresetIndex = index;
@@ -907,8 +939,10 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
       // Update unified selection
       _selectedName = preset.name;
       _selectedDescription = preset.description;
-      _selectedSource = isCustom ? 'custom' : 'builtin';
+      _selectedSource = source;
     });
+    // Persist the selection
+    _saveSelectedRingtone();
   }
 
   void _showAddCustomDialog() {
@@ -951,6 +985,8 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
             _selectedDescription = item.artist;
             _selectedSource = 'library';
           });
+          // Persist the selection
+          _saveSelectedRingtone();
           Navigator.pop(context);
         },
       ),
@@ -975,7 +1011,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
-                
               ),
             ),
             const SizedBox(height: 16),
@@ -1029,7 +1064,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       style: TextStyle(
                         color: AppTheme.textSecondary,
                         fontSize: 13,
-                        
                       ),
                     ),
                   ),
@@ -1055,7 +1089,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: AppTheme.primaryGreen,
-              
             ),
           ),
           const SizedBox(height: 4),
@@ -1064,7 +1097,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
             style: const TextStyle(
               fontSize: 13,
               color: AppTheme.textSecondary,
-              
+
               height: 1.5,
             ),
           ),
@@ -1087,7 +1120,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            
           ),
         ),
         actions: [
@@ -1114,7 +1146,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       style: TextStyle(
                         color: AppTheme.primaryGreen,
                         fontWeight: FontWeight.w600,
-                        
                       ),
                     ),
             ),
@@ -1137,7 +1168,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textTertiary,
                       letterSpacing: 1,
-                      
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1215,7 +1245,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                   style: const TextStyle(
                                     color: AppTheme.errorRed,
                                     fontSize: 12,
-                                    
                                   ),
                                 ),
                               ),
@@ -1278,7 +1307,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                     alpha: 0.7,
                                   ),
                                   fontSize: 12,
-                                  
                                 ),
                               ),
                             ),
@@ -1296,7 +1324,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                     fontWeight: isTooLong
                                         ? FontWeight.w600
                                         : FontWeight.normal,
-                                    
                                   ),
                                 );
                               },
@@ -1316,7 +1343,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textTertiary,
                       letterSpacing: 1,
-                      
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1352,13 +1378,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Browse 11,000+ Ringtones',
-                                  style: TextStyle(
+                                Text(
+                                  'Browse ${_libraryToneCount > 0 ? '${(_libraryToneCount / 1000).toStringAsFixed(1).replaceAll('.0', '')}k+' : ''} Ringtones',
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -1369,7 +1394,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                       alpha: 0.8,
                                     ),
                                     fontSize: 13,
-                                    
                                   ),
                                 ),
                               ],
@@ -1396,7 +1420,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textTertiary,
                         letterSpacing: 1,
-                        
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1447,7 +1470,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                     style: const TextStyle(
                                       color: AppTheme.primaryGreen,
                                       fontWeight: FontWeight.w600,
-                                      
+
                                       fontSize: 15,
                                     ),
                                   ),
@@ -1457,7 +1480,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                       style: const TextStyle(
                                         color: AppTheme.textSecondary,
                                         fontSize: 13,
-                                        
                                       ),
                                     ),
                                 ],
@@ -1491,7 +1513,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                             const SizedBox(width: 8),
                             // Clear button
                             GestureDetector(
-                              onTap: () {
+                              onTap: () async {
                                 setState(() {
                                   _selectedName = null;
                                   _selectedDescription = null;
@@ -1499,6 +1521,15 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                   _selectedPresetIndex = -1;
                                   _showingCustom = false;
                                 });
+                                // Clear from persistent storage
+                                try {
+                                  final settings = await ref.read(
+                                    settingsServiceProvider.future,
+                                  );
+                                  await settings.clearSelectedRingtone();
+                                } catch (e) {
+                                  // Ignore
+                                }
                               },
                               child: Container(
                                 width: 36,
@@ -1529,7 +1560,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textTertiary,
                       letterSpacing: 1,
-                      
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1606,7 +1636,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                               fontWeight: isSelected
                                                   ? FontWeight.w600
                                                   : FontWeight.w500,
-                                              
+
                                               fontSize: 15,
                                             ),
                                           ),
@@ -1616,7 +1646,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                             style: const TextStyle(
                                               color: AppTheme.textSecondary,
                                               fontSize: 12,
-                                              
                                             ),
                                           ),
                                         ],
@@ -1696,7 +1725,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           fontWeight: FontWeight.w600,
                           color: AppTheme.textTertiary,
                           letterSpacing: 1,
-                          
                         ),
                       ),
                       TextButton.icon(
@@ -1732,7 +1760,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                             style: TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 14,
-                              
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -1743,7 +1770,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                 alpha: 0.7,
                               ),
                               fontSize: 12,
-                              
                             ),
                           ),
                         ],
@@ -1829,7 +1855,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                                     fontWeight: isSelected
                                                         ? FontWeight.w600
                                                         : FontWeight.w500,
-                                                    
+
                                                     fontSize: 15,
                                                   ),
                                                 ),
@@ -1840,7 +1866,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                                     color:
                                                         AppTheme.textSecondary,
                                                     fontSize: 12,
-                                                    
                                                   ),
                                                 ),
                                               ],
@@ -1944,7 +1969,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                   color: Colors.white,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  
                                 ),
                               ),
                               SizedBox(height: 4),
@@ -1953,7 +1977,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                 style: TextStyle(
                                   color: AppTheme.textSecondary,
                                   fontSize: 13,
-                                  
                                 ),
                               ),
                             ],
@@ -2200,7 +2223,6 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
-                  
                 ),
               ),
               const SizedBox(height: 4),
@@ -2211,7 +2233,6 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                 style: const TextStyle(
                   fontSize: 14,
                   color: AppTheme.textSecondary,
-                  
                 ),
               ),
             ],
@@ -2225,17 +2246,12 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
           child: TextField(
             controller: _searchController,
             focusNode: _searchFocus,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-              
-            ),
+            style: const TextStyle(color: Colors.white, fontSize: 15),
             decoration: InputDecoration(
               hintText: 'Search by song, artist, or theme...',
               hintStyle: TextStyle(
                 color: AppTheme.textTertiary.withValues(alpha: 0.6),
                 fontSize: 15,
-                
               ),
               prefixIcon: const Icon(
                 Icons.search,
@@ -2291,7 +2307,6 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textTertiary,
                   letterSpacing: 1,
-                  
                 ),
               ),
               if (_loading) ...[
@@ -2336,7 +2351,6 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                         style: const TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 14,
-                          
                         ),
                       ),
                       if (hasSearch) ...[
@@ -2346,7 +2360,6 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                           style: TextStyle(
                             color: AppTheme.textTertiary.withValues(alpha: 0.7),
                             fontSize: 12,
-                            
                           ),
                         ),
                       ],
@@ -2401,7 +2414,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w500,
-                                        
+
                                         fontSize: 15,
                                       ),
                                       maxLines: 1,
@@ -2414,7 +2427,6 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                                       style: const TextStyle(
                                         color: AppTheme.textSecondary,
                                         fontSize: 12,
-                                        
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,

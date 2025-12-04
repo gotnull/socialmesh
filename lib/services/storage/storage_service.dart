@@ -269,6 +269,41 @@ class SettingsService {
   Future<void> resetCannedResponsesToDefaults() async {
     await _preferences.remove('canned_responses');
   }
+
+  // Ringtone settings
+  Future<void> setSelectedRingtone({
+    required String rtttl,
+    required String name,
+    String? description,
+    String? source,
+  }) async {
+    await _preferences.setString('ringtone_rtttl', rtttl);
+    await _preferences.setString('ringtone_name', name);
+    if (description != null) {
+      await _preferences.setString('ringtone_description', description);
+    } else {
+      await _preferences.remove('ringtone_description');
+    }
+    if (source != null) {
+      await _preferences.setString('ringtone_source', source);
+    } else {
+      await _preferences.remove('ringtone_source');
+    }
+  }
+
+  String? get selectedRingtoneRtttl => _preferences.getString('ringtone_rtttl');
+  String? get selectedRingtoneName => _preferences.getString('ringtone_name');
+  String? get selectedRingtoneDescription =>
+      _preferences.getString('ringtone_description');
+  String? get selectedRingtoneSource =>
+      _preferences.getString('ringtone_source');
+
+  Future<void> clearSelectedRingtone() async {
+    await _preferences.remove('ringtone_rtttl');
+    await _preferences.remove('ringtone_name');
+    await _preferences.remove('ringtone_description');
+    await _preferences.remove('ringtone_source');
+  }
 }
 
 /// Message storage service - persists messages locally
