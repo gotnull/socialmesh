@@ -207,8 +207,14 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
       return 'No notes found in RTTTL string';
     }
 
+    // RTTTL note format: [duration]note[#][.][octave][.]
+    // Duration: 1, 2, 4, 8, 16, 32, 64
+    // Note: a-g or p (pause)
+    // Optional sharp: #
+    // Optional dot (can appear before OR after octave)
+    // Octave: 4-7
     final validNotePattern = RegExp(
-      r'^[0-9]*[a-gp]#?[0-9]*\.?$',
+      r'^\d*[a-gp]#?\.?\d?\.?$',
       caseSensitive: false,
     );
     final notes = notesSection.split(',');

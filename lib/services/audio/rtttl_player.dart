@@ -124,49 +124,39 @@ class RtttlPlayer {
   _Note? _parseNote(String noteStr, int defaultDuration, int defaultOctave) {
     if (noteStr.isEmpty) return null;
 
-    // Note format: [duration]note[#][octave][.]
-    // Examples: 8e6, c#, 2p, 4a5.
+    // RTTTL note format: [duration]note[#][.][octave]
+    // Examples: 8e6, c#, 2p, 4a.5, 8f#.6, 32p
+    // The dot (for dotted notes) can appear before or after the octave
 
-    int i = 0;
+    // Use regex to parse - matches the working JavaScript implementation
+    // Pattern: optional duration, required note (a-g or p), optional sharp,
+    // optional dot, optional octave
+    final pattern = RegExp(
+      r'^(\d+)?([a-gp])(\#)?(\.)?([\d])?(\.)?\s*$',
+      caseSensitive: false,
+    );
 
-    // Parse optional duration prefix
-    String durationStr = '';
-    while (i < noteStr.length && noteStr[i].contains(RegExp(r'[0-9]'))) {
-      durationStr += noteStr[i];
-      i++;
-    }
-    final duration = durationStr.isEmpty
-        ? defaultDuration
-        : int.tryParse(durationStr) ?? defaultDuration;
+    final match = pattern.firstMatch(noteStr.toLowerCase());
+    if (match == null) return null;
 
-    if (i >= noteStr.length) return null;
+    final durationStr = match.group(1);
+    final noteLetter = match.group(2);
+    final isSharp = match.group(3) != null;
+    final dotBefore = match.group(4) != null;
+    final octaveStr = match.group(5);
+    final dotAfter = match.group(6) != null;
 
-    // Parse note letter
-    final noteLetter = noteStr[i].toLowerCase();
-    i++;
+    if (noteLetter == null) return null;
 
-    // Check for sharp
-    bool isSharp = false;
-    if (i < noteStr.length && noteStr[i] == '#') {
-      isSharp = true;
-      i++;
-    }
+    final duration = durationStr != null
+        ? int.tryParse(durationStr) ?? defaultDuration
+        : defaultDuration;
 
-    // Parse optional octave suffix
-    String octaveStr = '';
-    while (i < noteStr.length && noteStr[i].contains(RegExp(r'[0-9]'))) {
-      octaveStr += noteStr[i];
-      i++;
-    }
-    final octave = octaveStr.isEmpty
-        ? defaultOctave
-        : int.tryParse(octaveStr) ?? defaultOctave;
+    final octave = octaveStr != null
+        ? int.tryParse(octaveStr) ?? defaultOctave
+        : defaultOctave;
 
-    // Check for dot (extends duration by 50%)
-    bool isDotted = false;
-    if (i < noteStr.length && noteStr[i] == '.') {
-      isDotted = true;
-    }
+    final isDotted = dotBefore || dotAfter;
 
     // Calculate frequency
     final frequency = _noteToFrequency(noteLetter, isSharp, octave);
@@ -175,29 +165,32 @@ class RtttlPlayer {
   }
 
   /// Convert note letter to frequency in Hz
+  /// Uses middle C (C4 = 261.63 Hz) as reference, matching standard RTTTL
   double _noteToFrequency(String note, bool isSharp, int octave) {
     // Pause/rest
     if (note == 'p') return 0;
 
-    // Note frequencies relative to A4 = 440 Hz
-    final noteMap = {
-      'c': -9,
-      'd': -7,
-      'e': -5,
-      'f': -4,
-      'g': -2,
-      'a': 0,
-      'b': 2,
+    // Chromatic scale note indices (C = 0)
+    const noteIndices = {
+      'c': 0,
+      'd': 2,
+      'e': 4,
+      'f': 5,
+      'g': 7,
+      'a': 9,
+      'b': 11,
     };
 
-    final semitone = noteMap[note];
-    if (semitone == null) return 0;
+    final noteIndex = noteIndices[note];
+    if (noteIndex == null) return 0;
 
-    // Calculate semitones from A4
-    int semitonesFromA4 = semitone + (isSharp ? 1 : 0) + (octave - 4) * 12;
+    // Middle C (C4) = 261.63 Hz
+    const middleC = 261.63;
 
-    // A4 = 440 Hz, each semitone multiplies by 2^(1/12)
-    return 440.0 * pow(2, semitonesFromA4 / 12.0);
+    // Calculate frequency: middleC * 2^((octave - 4) + noteIndex/12)
+    // This matches the JavaScript reference implementation
+    final semitoneOffset = noteIndex + (isSharp ? 1 : 0);
+    return middleC * pow(2, (octave - 4) + semitoneOffset / 12.0);
   }
 
   /// Generate WAV audio data from parsed RTTTL
