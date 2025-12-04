@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "571509151050",
+    "project_id": "social-mesh-app",
+    "storage_bucket": "social-mesh-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:571509151050:android:2a721a4583af281f515db3",
+        "android_client_info": {
+          "package_name": "com.gotnull.protofluff"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCw_mJqrlJNTAjQDLIknLphzEcmGdAN-wg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
