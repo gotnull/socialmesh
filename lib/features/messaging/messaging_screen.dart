@@ -15,6 +15,7 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../services/messaging/offline_queue_service.dart';
 import '../channels/channel_form_screen.dart';
+import '../settings/canned_responses_screen.dart';
 
 /// Conversation type enum
 enum ConversationType { channel, directMessage }
@@ -82,7 +83,6 @@ class MessagingScreen extends ConsumerWidget {
             fontSize: 28,
             fontWeight: FontWeight.w700,
             color: Colors.white,
-            
           ),
         ),
         actions: [
@@ -117,7 +117,6 @@ class MessagingScreen extends ConsumerWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       color: AppTheme.textSecondary,
-                      
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -126,7 +125,6 @@ class MessagingScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.textTertiary,
-                      
                     ),
                   ),
                 ],
@@ -183,7 +181,6 @@ class MessagingScreen extends ConsumerWidget {
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
-                
               ),
             ),
           ),
@@ -199,11 +196,7 @@ class MessagingScreen extends ConsumerWidget {
               child: Center(
                 child: Text(
                   'No other nodes in range',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.textTertiary,
-                    
-                  ),
+                  style: TextStyle(fontSize: 14, color: AppTheme.textTertiary),
                 ),
               ),
             )
@@ -216,7 +209,7 @@ class MessagingScreen extends ConsumerWidget {
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textTertiary,
-                  
+
                   letterSpacing: 0.5,
                 ),
               ),
@@ -240,17 +233,13 @@ class MessagingScreen extends ConsumerWidget {
                         color: Colors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        
                       ),
                     ),
                   ),
                 ),
                 title: Text(
                   node.displayName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    
-                  ),
+                  style: const TextStyle(color: Colors.white),
                 ),
                 onTap: () {
                   Navigator.pop(context);
@@ -339,7 +328,6 @@ class _ConversationTile extends StatelessWidget {
                         color: Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        
                       ),
                     ),
                   ),
@@ -359,7 +347,6 @@ class _ConversationTile extends StatelessWidget {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
-                                
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -371,7 +358,6 @@ class _ConversationTile extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppTheme.textTertiary,
-                                
                               ),
                             ),
                         ],
@@ -386,7 +372,6 @@ class _ConversationTile extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: AppTheme.textSecondary,
-                                
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -409,7 +394,6 @@ class _ConversationTile extends StatelessWidget {
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
-                                  
                                 ),
                               ),
                             ),
@@ -950,7 +934,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             color: Colors.white,
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            
                           ),
                         ),
                 ),
@@ -966,7 +949,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
-                        
                       ),
                     ),
                     Text(
@@ -976,7 +958,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppTheme.textTertiary,
-                        
                       ),
                     ),
                   ],
@@ -1016,7 +997,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             style: const TextStyle(
                               fontSize: 14,
                               color: AppTheme.textTertiary,
-                              
                             ),
                           ),
                         ],
@@ -1103,16 +1083,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         child: TextField(
                           controller: _messageController,
                           focusNode: _messageFocusNode,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            
-                          ),
+                          style: const TextStyle(color: Colors.white),
                           decoration: const InputDecoration(
                             hintText: 'Message...',
-                            hintStyle: TextStyle(
-                              color: AppTheme.textTertiary,
-                              
-                            ),
+                            hintStyle: TextStyle(color: AppTheme.textTertiary),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 20,
@@ -1248,7 +1222,6 @@ class _MessageBubble extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 15,
                             color: Colors.white,
-                            
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -1290,7 +1263,6 @@ class _MessageBubble extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Colors.white.withValues(alpha: 0.7),
-                                
                               ),
                             ),
                             if (!isPending && !isFailed && !isQueued) ...[
@@ -1328,7 +1300,6 @@ class _MessageBubble extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 11,
                           color: AppTheme.errorRed,
-                          
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -1362,7 +1333,6 @@ class _MessageBubble extends StatelessWidget {
                                   fontSize: 11,
                                   color: AppTheme.primaryGreen,
                                   fontWeight: FontWeight.w600,
-                                  
                                 ),
                               ),
                             ],
@@ -1400,7 +1370,6 @@ class _MessageBubble extends StatelessWidget {
                     color: Colors.white,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    
                   ),
                 ),
               ),
@@ -1423,18 +1392,13 @@ class _MessageBubble extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: _getAvatarColor(),
-                        
                       ),
                     ),
                     const SizedBox(height: 2),
                   ],
                   Text(
                     message.text,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Colors.white,
-                      
-                    ),
+                    style: const TextStyle(fontSize: 15, color: Colors.white),
                   ),
                   const SizedBox(height: 2),
                   Row(
@@ -1453,7 +1417,6 @@ class _MessageBubble extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 11,
                           color: AppTheme.textTertiary,
-                          
                         ),
                       ),
                     ],
@@ -1545,6 +1508,46 @@ class _QuickResponsesSheet extends StatelessWidget {
                       );
                     },
                   ),
+          ),
+          // Footer with settings link
+          const Divider(color: AppTheme.darkBorder, height: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CannedResponsesScreen(),
+                  ),
+                );
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.settings,
+                    size: 16,
+                    color: AppTheme.textSecondary.withValues(alpha: 0.8),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Configure quick responses in Settings',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary.withValues(alpha: 0.8),
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 12,
+                    color: AppTheme.textSecondary.withValues(alpha: 0.6),
+                  ),
+                ],
+              ),
+            ),
           ),
           SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
         ],
