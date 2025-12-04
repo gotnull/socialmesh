@@ -86,9 +86,9 @@ const _builtInPresets = [
     description: '7 Days melody',
   ),
   RingtonePreset(
-    name: 'Adams Family',
+    name: 'Addams Family',
     rtttl:
-        'Adams Family:d=8,o=5,b=160:c,4f,a,4f,c,4b4,2g,f,4e,g,4e,g4,4c,2f,c,4f,a,4f,c,4b4,2g,f,4e,c,4d,e,1f,c,d,e,f,1p,d,e,f#,g,1p,d,e,f#,g,4p,d,e,f#,g,4p,c,d,e,f',
+        'Addams Family:d=8,o=5,b=160:c,4f,a,4f,c,4b4,2g,f,4e,g,4e,g4,4c,2f,c,4f,a,4f,c,4b4,2g,f,4e,c,4d,e,1f,c,d,e,f,1p,d,e,f#,g,1p,d,e,f#,g,4p,d,e,f#,g,4p,c,d,e,f',
     description: 'The Addams Family theme',
   ),
   RingtonePreset(
@@ -567,6 +567,11 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   int _playingPresetIndex = -1;
   bool _playingCustomPreset = false;
   String? _validationError;
+  RtttlLibraryItem? _selectedLibraryItem;
+  bool _playingLibraryItem = false;
+
+  /// Maximum RTTTL string length supported by Meshtastic devices
+  static const int _maxRtttlLength = 230;
 
   /// Validate RTTTL format
   /// Returns null if valid, error message if invalid
@@ -576,6 +581,11 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     }
 
     final trimmed = rtttl.trim();
+
+    // Check length first
+    if (trimmed.length > _maxRtttlLength) {
+      return 'Too long: ${trimmed.length}/$_maxRtttlLength characters. Ringtone will be truncated.';
+    }
 
     // Must have at least 2 colons (name:defaults:notes or defaults:notes)
     final colonCount = ':'.allMatches(trimmed).length;
@@ -775,6 +785,50 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     }
   }
 
+  Future<void> _playLibraryItem() async {
+    if (_selectedLibraryItem == null) return;
+
+    // Stop main preview if playing
+    if (_playing) {
+      await _rtttlPlayer.stop();
+      setState(() => _playing = false);
+    }
+
+    // Stop any preset if playing
+    if (_playingPresetIndex >= 0) {
+      await _rtttlPlayer.stop();
+      setState(() {
+        _playingPresetIndex = -1;
+        _playingCustomPreset = false;
+      });
+    }
+
+    // If library item is already playing, stop it
+    if (_playingLibraryItem) {
+      await _rtttlPlayer.stop();
+      setState(() => _playingLibraryItem = false);
+      return;
+    }
+
+    setState(() => _playingLibraryItem = true);
+
+    try {
+      await _rtttlPlayer.play(_selectedLibraryItem!.rtttl);
+
+      // Wait for playback to complete
+      while (_rtttlPlayer.isPlaying) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted) break;
+      }
+    } catch (e) {
+      // Ignore errors during playback
+    } finally {
+      if (mounted) {
+        setState(() => _playingLibraryItem = false);
+      }
+    }
+  }
+
   Future<void> _loadCurrentRingtone() async {
     setState(() => _loading = true);
     try {
@@ -883,15 +937,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
             _selectedPresetIndex = -1;
             _showingCustom = false;
             _validationError = null;
+            _selectedLibraryItem = item;
           });
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Selected: ${item.formattedTitle}'),
-              backgroundColor: AppTheme.darkCard,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
         },
       ),
     );
@@ -1208,15 +1256,40 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          'Tap Preview to hear how it sounds, then Save to device',
-                          style: TextStyle(
-                            color: AppTheme.textSecondary.withValues(
-                              alpha: 0.7,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Tap Preview to hear, then Save to device',
+                                style: TextStyle(
+                                  color: AppTheme.textSecondary.withValues(
+                                    alpha: 0.7,
+                                  ),
+                                  fontSize: 12,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
                             ),
-                            fontSize: 12,
-                            fontFamily: 'Inter',
-                          ),
+                            Builder(
+                              builder: (context) {
+                                final len = _rtttlController.text.trim().length;
+                                final isTooLong = len > _maxRtttlLength;
+                                return Text(
+                                  '$len/$_maxRtttlLength',
+                                  style: TextStyle(
+                                    color: isTooLong
+                                        ? AppTheme.warningYellow
+                                        : AppTheme.textTertiary,
+                                    fontSize: 12,
+                                    fontWeight: isTooLong
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                                    fontFamily: 'Inter',
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -1301,6 +1374,143 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  // Selected library item section
+                  if (_selectedLibraryItem != null) ...[
+                    const Text(
+                      'SELECTED FROM LIBRARY',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textTertiary,
+                        letterSpacing: 1,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkCard,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _rtttlController.text = _selectedLibraryItem!.rtttl;
+                            _selectedPresetIndex = -1;
+                            _showingCustom = false;
+                            _validationError = null;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            children: [
+                              // Library icon
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryGreen.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.library_music,
+                                  color: AppTheme.primaryGreen,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              // Title and artist
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _selectedLibraryItem!.displayName,
+                                      style: const TextStyle(
+                                        color: AppTheme.primaryGreen,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: 'Inter',
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    if (_selectedLibraryItem!.artist != null)
+                                      Text(
+                                        _selectedLibraryItem!.artist!,
+                                        style: const TextStyle(
+                                          color: AppTheme.textSecondary,
+                                          fontSize: 13,
+                                          fontFamily: 'Inter',
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              // Play button
+                              GestureDetector(
+                                onTap: () => _playLibraryItem(),
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: _playingLibraryItem
+                                        ? AppTheme.primaryGreen.withValues(
+                                            alpha: 0.15,
+                                          )
+                                        : AppTheme.darkBackground,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    _playingLibraryItem
+                                        ? Icons.stop
+                                        : Icons.play_arrow,
+                                    color: _playingLibraryItem
+                                        ? AppTheme.primaryGreen
+                                        : AppTheme.textSecondary,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Clear button
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedLibraryItem = null;
+                                  });
+                                },
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.darkBackground,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: AppTheme.textSecondary,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
 
                   // Built-in presets section
                   const Text(
@@ -2188,19 +2398,18 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    if (item.subtitle != null) ...[
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        item.subtitle!,
-                                        style: const TextStyle(
-                                          color: AppTheme.textSecondary,
-                                          fontSize: 12,
-                                          fontFamily: 'Inter',
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      item.subtitle ??
+                                          '${item.rtttl.length} chars',
+                                      style: const TextStyle(
+                                        color: AppTheme.textSecondary,
+                                        fontSize: 12,
+                                        fontFamily: 'Inter',
                                       ),
-                                    ],
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ],
                                 ),
                               ),

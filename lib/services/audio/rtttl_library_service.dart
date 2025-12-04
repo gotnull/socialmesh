@@ -68,6 +68,7 @@ class RtttlLibraryItem {
 /// Service for loading and searching RTTTL tones from the JSON library
 class RtttlLibraryService {
   static const _jsonPath = 'assets/rtttl_library.json';
+  static const int maxRtttlLength = 230;
 
   List<RtttlLibraryItem>? _cachedTones;
   bool _loaded = false;
@@ -92,25 +93,31 @@ class RtttlLibraryService {
     }
   }
 
-  /// Get all tones in the library
+  /// Get all tones in the library (filtered to compatible length)
   Future<List<RtttlLibraryItem>> getAllTones() async {
     await _ensureLoaded();
-    return _cachedTones ?? [];
+    return (_cachedTones ?? [])
+        .where((t) => t.rtttl.length <= maxRtttlLength)
+        .toList();
   }
 
   /// Get only built-in tones
   Future<List<RtttlLibraryItem>> getBuiltinTones() async {
     await _ensureLoaded();
-    return (_cachedTones ?? []).where((t) => t.isBuiltin).toList();
+    return (_cachedTones ?? [])
+        .where((t) => t.isBuiltin && t.rtttl.length <= maxRtttlLength)
+        .toList();
   }
 
-  /// Search for RTTTL tones by query
+  /// Search for RTTTL tones by query (only compatible length)
   /// Searches display name, artist, and tone name
   Future<List<RtttlLibraryItem>> search(String query, {int limit = 50}) async {
     if (query.trim().isEmpty) return [];
 
     await _ensureLoaded();
-    final tones = _cachedTones ?? [];
+    final tones = (_cachedTones ?? []).where(
+      (t) => t.rtttl.length <= maxRtttlLength,
+    );
     final queryLower = query.toLowerCase();
 
     // Score-based results for better relevance
@@ -165,10 +172,12 @@ class RtttlLibraryService {
   /// Get popular/suggested RTTTL items (built-ins first, then some popular ones)
   Future<List<RtttlLibraryItem>> getSuggestions() async {
     await _ensureLoaded();
-    final tones = _cachedTones ?? [];
+    final compatibleTones = (_cachedTones ?? []).where(
+      (t) => t.rtttl.length <= maxRtttlLength,
+    );
 
     // Return built-in tones as suggestions
-    final builtins = tones.where((t) => t.isBuiltin).toList();
+    final builtins = compatibleTones.where((t) => t.isBuiltin).toList();
 
     // Add some popular non-builtin tones
     final popularNames = {
@@ -182,7 +191,7 @@ class RtttlLibraryService {
       'ghostbusters',
     };
 
-    final popular = tones
+    final popular = compatibleTones
         .where(
           (t) =>
               !t.isBuiltin &&
@@ -201,11 +210,14 @@ class RtttlLibraryService {
   /// Get a random selection of RTTTL items for discovery
   Future<List<RtttlLibraryItem>> getRandomSelection({int count = 20}) async {
     await _ensureLoaded();
-    final tones = _cachedTones ?? [];
-    if (tones.isEmpty) return [];
+    final compatibleTones = (_cachedTones ?? [])
+        .where((t) => t.rtttl.length <= maxRtttlLength)
+        .toList();
+    if (compatibleTones.isEmpty) return [];
 
     // Shuffle and take a sample (excluding built-ins for variety)
-    final nonBuiltins = tones.where((t) => !t.isBuiltin).toList()..shuffle();
+    final nonBuiltins = compatibleTones.where((t) => !t.isBuiltin).toList()
+      ..shuffle();
     return nonBuiltins.take(count).toList();
   }
 
