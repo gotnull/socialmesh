@@ -567,8 +567,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   int _playingPresetIndex = -1;
   bool _playingCustomPreset = false;
   String? _validationError;
-  RtttlLibraryItem? _selectedLibraryItem;
-  bool _playingLibraryItem = false;
+
+  // Currently selected ringtone info (unified across all sources)
+  String? _selectedName;
+  String? _selectedDescription;
+  String? _selectedSource; // 'library', 'builtin', 'custom'
+  bool _playingSelected = false;
 
   /// Maximum RTTTL string length supported by Meshtastic devices
   static const int _maxRtttlLength = 230;
@@ -785,8 +789,8 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     }
   }
 
-  Future<void> _playLibraryItem() async {
-    if (_selectedLibraryItem == null) return;
+  Future<void> _playSelectedRingtone() async {
+    if (_selectedName == null) return;
 
     // Stop main preview if playing
     if (_playing) {
@@ -803,17 +807,17 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
       });
     }
 
-    // If library item is already playing, stop it
-    if (_playingLibraryItem) {
+    // If selected item is already playing, stop it
+    if (_playingSelected) {
       await _rtttlPlayer.stop();
-      setState(() => _playingLibraryItem = false);
+      setState(() => _playingSelected = false);
       return;
     }
 
-    setState(() => _playingLibraryItem = true);
+    setState(() => _playingSelected = true);
 
     try {
-      await _rtttlPlayer.play(_selectedLibraryItem!.rtttl);
+      await _rtttlPlayer.play(_rtttlController.text.trim());
 
       // Wait for playback to complete
       while (_rtttlPlayer.isPlaying) {
@@ -824,7 +828,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
       // Ignore errors during playback
     } finally {
       if (mounted) {
-        setState(() => _playingLibraryItem = false);
+        setState(() => _playingSelected = false);
       }
     }
   }
@@ -899,6 +903,11 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
       _rtttlController.text = preset.rtttl;
       _selectedPresetIndex = index;
       _showingCustom = isCustom;
+      _validationError = null;
+      // Update unified selection
+      _selectedName = preset.name;
+      _selectedDescription = preset.description;
+      _selectedSource = isCustom ? 'custom' : 'builtin';
     });
   }
 
@@ -937,7 +946,10 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
             _selectedPresetIndex = -1;
             _showingCustom = false;
             _validationError = null;
-            _selectedLibraryItem = item;
+            // Update unified selection
+            _selectedName = item.displayName;
+            _selectedDescription = item.artist;
+            _selectedSource = 'library';
           });
           Navigator.pop(context);
         },
@@ -1375,16 +1387,16 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Selected library item section
-                  if (_selectedLibraryItem != null) ...[
+                  // Selected ringtone section (unified across all sources)
+                  if (_selectedName != null) ...[
                     const Text(
-                      'SELECTED FROM LIBRARY',
+                      'SELECTED RINGTONE',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textTertiary,
                         letterSpacing: 1,
-                        fontFamily: 'Inter',
+                        fontFamily: 'JetBrainsMono',
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1397,115 +1409,112 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           width: 1,
                         ),
                       ),
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            _rtttlController.text = _selectedLibraryItem!.rtttl;
-                            _selectedPresetIndex = -1;
-                            _showingCustom = false;
-                            _validationError = null;
-                          });
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          child: Row(
-                            children: [
-                              // Library icon
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primaryGreen.withValues(
-                                    alpha: 0.15,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          children: [
+                            // Icon based on source
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryGreen.withValues(
+                                  alpha: 0.15,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                _selectedSource == 'library'
+                                    ? Icons.library_music
+                                    : _selectedSource == 'custom'
+                                    ? Icons.star
+                                    : Icons.music_note,
+                                color: AppTheme.primaryGreen,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            // Title and description
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _selectedName!,
+                                    style: const TextStyle(
+                                      color: AppTheme.primaryGreen,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'JetBrainsMono',
+                                      fontSize: 15,
+                                    ),
                                   ),
+                                  if (_selectedDescription != null)
+                                    Text(
+                                      _selectedDescription!,
+                                      style: const TextStyle(
+                                        color: AppTheme.textSecondary,
+                                        fontSize: 13,
+                                        fontFamily: 'JetBrainsMono',
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            // Play button
+                            GestureDetector(
+                              onTap: () => _playSelectedRingtone(),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: _playingSelected
+                                      ? AppTheme.primaryGreen.withValues(
+                                          alpha: 0.15,
+                                        )
+                                      : AppTheme.darkBackground,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: const Icon(
-                                  Icons.library_music,
-                                  color: AppTheme.primaryGreen,
+                                child: Icon(
+                                  _playingSelected
+                                      ? Icons.stop
+                                      : Icons.play_arrow,
+                                  color: _playingSelected
+                                      ? AppTheme.primaryGreen
+                                      : AppTheme.textSecondary,
                                   size: 20,
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              // Title and artist
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      _selectedLibraryItem!.displayName,
-                                      style: const TextStyle(
-                                        color: AppTheme.primaryGreen,
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: 'Inter',
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                    if (_selectedLibraryItem!.artist != null)
-                                      Text(
-                                        _selectedLibraryItem!.artist!,
-                                        style: const TextStyle(
-                                          color: AppTheme.textSecondary,
-                                          fontSize: 13,
-                                          fontFamily: 'Inter',
-                                        ),
-                                      ),
-                                  ],
+                            ),
+                            const SizedBox(width: 8),
+                            // Clear button
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _selectedName = null;
+                                  _selectedDescription = null;
+                                  _selectedSource = null;
+                                  _selectedPresetIndex = -1;
+                                  _showingCustom = false;
+                                });
+                              },
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.darkBackground,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: AppTheme.textSecondary,
+                                  size: 20,
                                 ),
                               ),
-                              // Play button
-                              GestureDetector(
-                                onTap: () => _playLibraryItem(),
-                                child: Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: _playingLibraryItem
-                                        ? AppTheme.primaryGreen.withValues(
-                                            alpha: 0.15,
-                                          )
-                                        : AppTheme.darkBackground,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(
-                                    _playingLibraryItem
-                                        ? Icons.stop
-                                        : Icons.play_arrow,
-                                    color: _playingLibraryItem
-                                        ? AppTheme.primaryGreen
-                                        : AppTheme.textSecondary,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              // Clear button
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedLibraryItem = null;
-                                  });
-                                },
-                                child: Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.darkBackground,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    Icons.close,
-                                    color: AppTheme.textSecondary,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AppTheme {
+  // Font families
+  static const fontFamily = 'JetBrainsMono';
+  static const fontFamilyFallback = 'Inter';
+
   // Brand colors - extracted from app icon gradient
   static const primaryMagenta = Color(0xFFE91E8C); // Hot pink/magenta
   static const primaryPurple = Color(0xFF8B5CF6); // Purple
@@ -98,6 +102,7 @@ class AppTheme {
           color: textPrimary,
           fontSize: 24,
           fontWeight: FontWeight.w600,
+          fontFamily: fontFamily,
         ),
         iconTheme: IconThemeData(color: textPrimary, size: 24),
       ),
@@ -111,81 +116,103 @@ class AppTheme {
       ),
 
       // Text theme
+      fontFamily: fontFamily,
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textPrimary,
+          fontFamily: fontFamily,
+          letterSpacing: -0.5,
         ),
         displayMedium: TextStyle(
           fontSize: 28,
           fontWeight: FontWeight.bold,
           color: textPrimary,
+          fontFamily: fontFamily,
+          letterSpacing: -0.5,
         ),
         displaySmall: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: textPrimary,
+          fontFamily: fontFamily,
+          letterSpacing: -0.25,
         ),
         headlineLarge: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimary,
+          fontFamily: fontFamily,
         ),
         headlineMedium: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textPrimary,
+          fontFamily: fontFamily,
         ),
         headlineSmall: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: textPrimary,
+          fontFamily: fontFamily,
         ),
         titleLarge: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w500,
           color: textPrimary,
+          fontFamily: fontFamily,
         ),
         titleMedium: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
           color: textPrimary,
+          fontFamily: fontFamily,
         ),
         titleSmall: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: textPrimary,
+          fontFamily: fontFamily,
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: textPrimary,
+          fontFamily: fontFamily,
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: textSecondary,
+          fontFamily: fontFamily,
         ),
         bodySmall: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.normal,
           color: textTertiary,
+          fontFamily: fontFamily,
         ),
         labelLarge: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: textPrimary,
+          fontFamily: fontFamily,
+          letterSpacing: 0.5,
         ),
         labelMedium: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
           color: textSecondary,
+          fontFamily: fontFamily,
+          letterSpacing: 0.5,
         ),
         labelSmall: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w500,
           color: textTertiary,
+          fontFamily: fontFamily,
+          letterSpacing: 0.5,
         ),
       ),
 
@@ -223,7 +250,11 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            fontFamily: fontFamily,
+          ),
         ),
       ),
 
@@ -237,7 +268,11 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            fontFamily: fontFamily,
+          ),
         ),
       ),
 
@@ -250,7 +285,11 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            fontFamily: fontFamily,
+          ),
         ),
       ),
 
@@ -259,7 +298,11 @@ class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: primaryGreen,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            fontFamily: fontFamily,
+          ),
         ),
       ),
 
@@ -288,8 +331,13 @@ class AppTheme {
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimary,
+          fontFamily: fontFamily,
         ),
-        contentTextStyle: const TextStyle(fontSize: 14, color: textSecondary),
+        contentTextStyle: const TextStyle(
+          fontSize: 14,
+          color: textSecondary,
+          fontFamily: fontFamily,
+        ),
       ),
 
       // Bottom sheet
@@ -308,6 +356,7 @@ class AppTheme {
           color: Colors.white,
           fontSize: 14,
           fontWeight: FontWeight.w500,
+          fontFamily: fontFamily,
         ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
