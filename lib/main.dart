@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,30 +30,46 @@ import 'features/presence/presence_screen.dart';
 import 'features/discovery/node_discovery_overlay.dart';
 
 Future<void> main() async {
-  await runZonedGuarded(
-    () async {
-      WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
 
-      // Load environment variables
-      await dotenv.load(fileName: '.env');
+  // Load environment variables
+  await dotenv.load(fileName: '.env');
 
-      // Initialize Firebase
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
+  // Initialize Firebase in background - don't block app startup
+  // This ensures the app works fully offline
+  _initializeFirebaseInBackground();
 
-      // Configure Crashlytics
-      // Pass all uncaught "fatal" errors from Flutter to Crashlytics
-      FlutterError.onError =
-          FirebaseCrashlytics.instance.recordFlutterFatalError;
+  runApp(const ProviderScope(child: ProtofluffApp()));
+}
 
-      runApp(const ProviderScope(child: ProtofluffApp()));
-    },
-    (error, stack) {
-      // Pass all uncaught asynchronous errors to Crashlytics
+/// Initialize Firebase without blocking the main app.
+/// Firebase/Crashlytics are nice-to-have for error reporting but
+/// should never prevent the app from working offline.
+Future<void> _initializeFirebaseInBackground() async {
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        debugPrint('Firebase init timed out - continuing offline');
+        throw TimeoutException('Firebase initialization timed out');
+      },
+    );
+
+    // Configure Crashlytics only if Firebase initialized successfully
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+    // Set up async error handler
+    PlatformDispatcher.instance.onError = (error, stack) {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    },
-  );
+      return true;
+    };
+  } catch (e) {
+    // Firebase failed to initialize (no internet, timeout, etc.)
+    // App continues working fully offline - this is expected behavior
+    debugPrint('Firebase unavailable: $e - app running in offline mode');
+  }
 }
 
 class ProtofluffApp extends ConsumerStatefulWidget {
