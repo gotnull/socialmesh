@@ -1002,203 +1002,167 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       ),
                     )
                   else
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.darkCard,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: customRingtones.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final preset = entry.value;
-                          final isSelected =
-                              _showingCustom && _selectedPresetIndex == index;
-                          final isPlaying =
-                              _playingCustomPreset &&
-                              _playingPresetIndex == index;
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkCard,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          children: customRingtones.asMap().entries.map((
+                            entry,
+                          ) {
+                            final index = entry.key;
+                            final preset = entry.value;
+                            final isSelected =
+                                _showingCustom && _selectedPresetIndex == index;
+                            final isPlaying =
+                                _playingCustomPreset &&
+                                _playingPresetIndex == index;
+                            final isFirst = index == 0;
+                            final isLast = index == customRingtones.length - 1;
 
-                          return Column(
-                            children: [
-                              InkWell(
-                                onTap: () => _selectPreset(
-                                  preset,
-                                  index,
-                                  isCustom: true,
-                                ),
-                                borderRadius: index == 0
-                                    ? const BorderRadius.vertical(
-                                        top: Radius.circular(12),
-                                      )
-                                    : index == customRingtones.length - 1
-                                    ? const BorderRadius.vertical(
-                                        bottom: Radius.circular(12),
-                                      )
-                                    : BorderRadius.zero,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      // Music icon
-                                      Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          color: isSelected
-                                              ? AppTheme.primaryGreen
-                                                    .withValues(alpha: 0.15)
-                                              : AppTheme.darkBackground,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          isSelected
-                                              ? Icons.music_note
-                                              : Icons.music_note_outlined,
-                                          color: isSelected
-                                              ? AppTheme.primaryGreen
-                                              : AppTheme.textSecondary,
-                                          size: 20,
-                                        ),
+                            return Column(
+                              children: [
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () => _selectPreset(
+                                      preset,
+                                      index,
+                                      isCustom: true,
+                                    ),
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                        left: 16,
+                                        right: 16,
+                                        top: isFirst ? 12 : 12,
+                                        bottom: isLast ? 12 : 12,
                                       ),
-                                      const SizedBox(width: 12),
-                                      // Title and description
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              preset.name,
-                                              style: TextStyle(
-                                                color: isSelected
-                                                    ? AppTheme.primaryGreen
-                                                    : Colors.white,
-                                                fontWeight: isSelected
-                                                    ? FontWeight.w600
-                                                    : FontWeight.w500,
-                                                fontFamily: 'Inter',
-                                                fontSize: 15,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              preset.description,
-                                              style: const TextStyle(
-                                                color: AppTheme.textSecondary,
-                                                fontSize: 12,
-                                                fontFamily: 'Inter',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      // Play button
-                                      SizedBox(
-                                        width: 40,
-                                        height: 40,
-                                        child: Material(
-                                          color: isPlaying
-                                              ? AppTheme.errorRed.withValues(
-                                                  alpha: 0.15,
-                                                )
-                                              : AppTheme.darkBackground,
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          child: InkWell(
-                                            onTap: () => _playPreset(
-                                              preset,
-                                              index,
-                                              isCustom: true,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              20,
+                                      child: Row(
+                                        children: [
+                                          // Music icon
+                                          Container(
+                                            width: 40,
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                              color: isSelected
+                                                  ? AppTheme.primaryMagenta
+                                                        .withValues(alpha: 0.15)
+                                                  : AppTheme.darkBackground,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                             ),
                                             child: Icon(
-                                              isPlaying
-                                                  ? Icons.stop
-                                                  : Icons.play_arrow,
-                                              color: isPlaying
-                                                  ? AppTheme.errorRed
+                                              isSelected
+                                                  ? Icons.music_note
+                                                  : Icons.music_note_outlined,
+                                              color: isSelected
+                                                  ? AppTheme.primaryMagenta
                                                   : AppTheme.textSecondary,
                                               size: 20,
                                             ),
                                           ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      // Delete button (only if not selected)
-                                      if (!isSelected)
-                                        SizedBox(
-                                          width: 40,
-                                          height: 40,
-                                          child: Material(
-                                            color: Colors.transparent,
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                            child: InkWell(
-                                              onTap: () {
-                                                ref
-                                                    .read(
-                                                      customRingtonesProvider
-                                                          .notifier,
-                                                    )
-                                                    .removePreset(index);
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text(
-                                                      'Preset removed',
-                                                    ),
-                                                    backgroundColor:
-                                                        AppTheme.darkCard,
-                                                    behavior: SnackBarBehavior
-                                                        .floating,
+                                          const SizedBox(width: 12),
+                                          // Title and description
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  preset.name,
+                                                  style: TextStyle(
+                                                    color: isSelected
+                                                        ? AppTheme
+                                                              .primaryMagenta
+                                                        : Colors.white,
+                                                    fontWeight: isSelected
+                                                        ? FontWeight.w600
+                                                        : FontWeight.w500,
+                                                    fontFamily: 'Inter',
+                                                    fontSize: 15,
                                                   ),
-                                                );
-                                              },
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  preset.description,
+                                                  style: const TextStyle(
+                                                    color:
+                                                        AppTheme.textSecondary,
+                                                    fontSize: 12,
+                                                    fontFamily: 'Inter',
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          // Play button
+                                          SizedBox(
+                                            width: 40,
+                                            height: 40,
+                                            child: Material(
+                                              color: isPlaying
+                                                  ? AppTheme.errorRed
+                                                        .withValues(alpha: 0.15)
+                                                  : AppTheme.darkBackground,
                                               borderRadius:
                                                   BorderRadius.circular(20),
-                                              child: const Icon(
-                                                Icons.delete_outline,
-                                                color: AppTheme.textTertiary,
-                                                size: 20,
+                                              child: InkWell(
+                                                onTap: () => _playPreset(
+                                                  preset,
+                                                  index,
+                                                  isCustom: true,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                child: Icon(
+                                                  isPlaying
+                                                      ? Icons.stop
+                                                      : Icons.play_arrow,
+                                                  color: isPlaying
+                                                      ? AppTheme.errorRed
+                                                      : AppTheme.textSecondary,
+                                                  size: 20,
+                                                ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                      // Selected indicator (only if selected)
-                                      if (isSelected)
-                                        const SizedBox(
-                                          width: 40,
-                                          child: Center(
-                                            child: Icon(
-                                              Icons.check_circle,
-                                              color: AppTheme.primaryGreen,
-                                              size: 22,
-                                            ),
+                                          const SizedBox(width: 8),
+                                          // Selected indicator
+                                          SizedBox(
+                                            width: 24,
+                                            child: isSelected
+                                                ? const Icon(
+                                                    Icons.check_circle,
+                                                    color:
+                                                        AppTheme.primaryMagenta,
+                                                    size: 22,
+                                                  )
+                                                : const Icon(
+                                                    Icons.chevron_right,
+                                                    color:
+                                                        AppTheme.textTertiary,
+                                                    size: 22,
+                                                  ),
                                           ),
-                                        ),
-                                    ],
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                              if (index < customRingtones.length - 1)
-                                const Divider(
-                                  height: 1,
-                                  indent: 68,
-                                  color: AppTheme.darkBorder,
-                                ),
-                            ],
-                          );
-                        }).toList(),
+                                if (!isLast)
+                                  const Divider(
+                                    height: 1,
+                                    indent: 68,
+                                    color: AppTheme.darkBorder,
+                                  ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ),
                   const SizedBox(height: 24),

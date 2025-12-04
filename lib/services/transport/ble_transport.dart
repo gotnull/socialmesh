@@ -467,6 +467,11 @@ class BleTransport implements DeviceTransport {
     }
   }
 
+  /// Maximum BLE write size per chunk (conservative, works on all devices)
+  /// The actual MTU may be higher (512 requested) but characteristic writes
+  /// are often limited to ~244 bytes on iOS/Android even with higher MTU.
+  static const int _maxWriteChunkSize = 240;
+
   @override
   Future<void> send(List<int> data) async {
     if (_state != DeviceConnectionState.connected) {
@@ -480,11 +485,32 @@ class BleTransport implements DeviceTransport {
     try {
       _logger.d('Sending ${data.length} bytes');
 
-      // Meshtastic BLE expects complete protobufs in a single write.
-      // MTU should be 512 after negotiation. If data is larger, we need to chunk,
-      // but typically config requests are small.
-      // For BLE, we write the complete protobuf in one go (within MTU limits)
-      await _txCharacteristic!.write(data, withoutResponse: false);
+      // Check if data fits in a single write
+      if (data.length <= _maxWriteChunkSize) {
+        // Small data - single write
+        await _txCharacteristic!.write(data, withoutResponse: false);
+      } else {
+        // Large data - use chunked writes
+        // Note: flutter_blue_plus handles this internally with allowLongWrite,
+        // but we explicitly chunk for better compatibility
+        _logger.d('Data exceeds chunk size, using chunked write');
+
+        int offset = 0;
+        while (offset < data.length) {
+          final end = (offset + _maxWriteChunkSize).clamp(0, data.length);
+          final chunk = data.sublist(offset, end);
+
+          _logger.d('Writing chunk: offset=$offset, size=${chunk.length}');
+          await _txCharacteristic!.write(chunk, withoutResponse: false);
+
+          offset = end;
+
+          // Small delay between chunks for reliability
+          if (offset < data.length) {
+            await Future.delayed(const Duration(milliseconds: 20));
+          }
+        }
+      }
 
       _logger.d('Sent successfully');
     } catch (e) {

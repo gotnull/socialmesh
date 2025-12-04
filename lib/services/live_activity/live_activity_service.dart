@@ -123,7 +123,6 @@ class LiveActivityService {
         _activityId,
         activityData,
         removeWhenAppIsKilled: false,
-        staleIn: const Duration(hours: 1),
       );
 
       debugPrint('📱 createActivity returned: $_currentActivityId');
@@ -139,6 +138,14 @@ class LiveActivityService {
     } catch (e, stackTrace) {
       debugPrint('📱 ❌ Failed to start Live Activity: $e');
       debugPrint('📱 Stack trace: $stackTrace');
+      // Common causes:
+      // - ActivityInput error 0: App Group mismatch or provisioning issue
+      // - No Dynamic Island on device (still works on Lock Screen)
+      // - Widget extension not properly installed
+      debugPrint(
+        '📱 💡 Tip: Ensure App Group "group.protofluff.liveactivities" '
+        'is configured in both main app and widget extension provisioning profiles',
+      );
     }
 
     return false;
@@ -241,6 +248,7 @@ class LiveActivityService {
   }
 
   /// Build activity data map
+  /// Note: live_activities package stores these in UserDefaults with the activity ID prefix
   Map<String, dynamic> _buildActivityData({
     required String deviceName,
     required String shortName,
@@ -253,7 +261,9 @@ class LiveActivityService {
     int sentPackets = 0,
     int receivedPackets = 0,
   }) {
-    return {
+    // All values must be UserDefaults-compatible types
+    // Integers should stay as integers, not converted to strings
+    return <String, dynamic>{
       'deviceName': deviceName,
       'shortName': shortName,
       'nodeNum': nodeNum,
