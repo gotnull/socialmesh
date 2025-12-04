@@ -144,6 +144,15 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
+  // Taglines to cycle through
+  static const _taglines = [
+    'Privacy-first mesh social',
+    'Off-grid communication',
+    'Decentralized by design',
+    'No internet required',
+    'Community-powered network',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -209,13 +218,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Privacy-first mesh social',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
+                  _AnimatedTagline(taglines: _taglines),
                   const SizedBox(height: 48),
                   // Animated status indicator
                   _buildStatusIndicator(statusInfo),
@@ -696,6 +699,100 @@ class _ErrorScreen extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Animated tagline that cycles through different phrases with fade+slide
+class _AnimatedTagline extends StatefulWidget {
+  final List<String> taglines;
+
+  const _AnimatedTagline({required this.taglines});
+
+  /// Duration each tagline is displayed
+  static const displayDuration = Duration(seconds: 3);
+
+  /// Duration of the fade/slide animation
+  static const animationDuration = Duration(milliseconds: 400);
+
+  @override
+  State<_AnimatedTagline> createState() => _AnimatedTaglineState();
+}
+
+class _AnimatedTaglineState extends State<_AnimatedTagline>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: _AnimatedTagline.animationDuration,
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+
+    // Start with the first tagline visible
+    _controller.forward();
+
+    // Start cycling
+    _startCycling();
+  }
+
+  void _startCycling() {
+    Future.delayed(_AnimatedTagline.displayDuration, () {
+      if (!mounted) return;
+      _cycleToNext();
+    });
+  }
+
+  Future<void> _cycleToNext() async {
+    // Fade out
+    await _controller.reverse();
+    if (!mounted) return;
+
+    // Change text
+    setState(() {
+      _currentIndex = (_currentIndex + 1) % widget.taglines.length;
+    });
+
+    // Fade in
+    await _controller.forward();
+    if (!mounted) return;
+
+    // Schedule next cycle
+    _startCycling();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Text(
+          widget.taglines[_currentIndex],
+          style: const TextStyle(fontSize: 16, color: AppTheme.textSecondary),
         ),
       ),
     );
