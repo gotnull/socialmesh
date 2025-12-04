@@ -9,6 +9,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "85.0.0"
+  _flutterfire_internals:
+    dependency: transitive
+    description:
+      name: _flutterfire_internals
+      sha256: "8a1f5f3020ef2a74fb93f7ab3ef127a8feea33a7a2276279113660784ee7516a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.64"
   analyzer:
     dependency: transitive
     description:
@@ -297,6 +305,46 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
+  firebase_core:
+    dependency: "direct main"
+    description:
+      name: firebase_core
+      sha256: "1f2dfd9f535d81f8b06d7a50ecda6eac1e6922191ed42e09ca2c84bd2288927c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.2.1"
+  firebase_core_platform_interface:
+    dependency: transitive
+    description:
+      name: firebase_core_platform_interface
+      sha256: cccb4f572325dc14904c02fcc7db6323ad62ba02536833dddb5c02cac7341c64
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.2"
+  firebase_core_web:
+    dependency: transitive
+    description:
+      name: firebase_core_web
+      sha256: ff18fabb0ad0ed3595d2f2c85007ecc794aadecdff5b3bb1460b7ee47cded398
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.3.0"
+  firebase_crashlytics:
+    dependency: "direct main"
+    description:
+      name: firebase_crashlytics
+      sha256: bd4eadd620071ae48ef0e3617499be2a0ea4062d6d5c6fea6c1cec41ebbb2435
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.5"
+  firebase_crashlytics_platform_interface:
+    dependency: transitive
+    description:
+      name: firebase_crashlytics_platform_interface
+      sha256: a8ca502fe3aa48b4f0b9e6e3bc0019085a247b5d1214cd342a189457975662db
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.8.15"
   fixnum:
     dependency: "direct main"
     description:
@@ -804,10 +852,10 @@ packages:
     dependency: "direct main"
     description:
       name: mobile_scanner
-      sha256: d234581c090526676fd8fab4ada92f35c6746e3fb4f05a399665d75a399fb760
+      sha256: "023a71afb4d7cfb5529d0f2636aa8b43db66257905b9486d702085989769c5f2"
       url: "https://pub.dev"
     source: hosted
-    version: "5.2.3"
+    version: "7.1.3"
   nested:
     dependency: transitive
     description:

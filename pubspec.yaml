@@ -34,7 +34,7 @@ dependencies:
   
   # QR Code
   qr_flutter: ^4.1.0
-  mobile_scanner: ^5.1.1
+  mobile_scanner: ^7.0.0
   
   # UI/UX
   cupertino_icons: ^1.0.8
@@ -60,6 +60,8 @@ dependencies:
   # Animations
   animations: ^2.1.1
   flutter_map_marker_cluster: ^1.4.0
+  firebase_crashlytics: ^5.0.5
+  firebase_core: ^4.2.1
 
 dev_dependencies:
   flutter_test:

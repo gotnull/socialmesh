@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'firebase_options.dart';
 import 'core/theme.dart';
 import 'core/transport.dart';
 import 'providers/app_providers.dart';
@@ -24,9 +29,30 @@ import 'features/presence/presence_screen.dart';
 import 'features/discovery/node_discovery_overlay.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
-  runApp(const ProviderScope(child: ProtofluffApp()));
+  await runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+
+      // Load environment variables
+      await dotenv.load(fileName: '.env');
+
+      // Initialize Firebase
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      // Configure Crashlytics
+      // Pass all uncaught "fatal" errors from Flutter to Crashlytics
+      FlutterError.onError =
+          FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+      runApp(const ProviderScope(child: ProtofluffApp()));
+    },
+    (error, stack) {
+      // Pass all uncaught asynchronous errors to Crashlytics
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    },
+  );
 }
 
 class ProtofluffApp extends ConsumerStatefulWidget {
