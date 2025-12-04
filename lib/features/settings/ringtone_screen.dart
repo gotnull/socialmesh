@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../providers/app_providers.dart';
+import '../../services/audio/rtttl_library_service.dart';
 import '../../services/audio/rtttl_player.dart';
 
 /// Preset ringtones with name and RTTTL string
@@ -557,6 +558,7 @@ class RingtoneScreen extends ConsumerStatefulWidget {
 class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   final _rtttlController = TextEditingController();
   final _rtttlPlayer = RtttlPlayer();
+  final _libraryService = RtttlLibraryService();
   bool _saving = false;
   bool _loading = false;
   bool _playing = false;
@@ -856,6 +858,36 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Custom ringtone added'),
+              backgroundColor: AppTheme.darkCard,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showLibraryBrowser() {
+    AppBottomSheet.showScrollable(
+      context: context,
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (scrollController) => _LibraryBrowserContent(
+        scrollController: scrollController,
+        libraryService: _libraryService,
+        rtttlPlayer: _rtttlPlayer,
+        onSelect: (item) {
+          setState(() {
+            _rtttlController.text = item.rtttl;
+            _selectedPresetIndex = -1;
+            _showingCustom = false;
+            _validationError = null;
+          });
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Selected: ${item.formattedTitle}'),
               backgroundColor: AppTheme.darkCard,
               behavior: SnackBarBehavior.floating,
             ),
@@ -1187,6 +1219,85 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Browse Library section
+                  const Text(
+                    'RINGTONE LIBRARY',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textTertiary,
+                      letterSpacing: 1,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: _showLibraryBrowser,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkCard,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppTheme.graphBlue.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: AppTheme.graphBlue.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.library_music,
+                              color: AppTheme.graphBlue,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Browse 11,000+ Ringtones',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Search classic tunes, TV themes, movie soundtracks, and more',
+                                  style: TextStyle(
+                                    color: AppTheme.textSecondary.withValues(
+                                      alpha: 0.8,
+                                    ),
+                                    fontSize: 13,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.arrow_forward_ios,
+                            color: AppTheme.graphBlue,
+                            size: 18,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -1738,6 +1849,405 @@ class _AddCustomRingtoneContentState extends State<_AddCustomRingtoneContent> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Library browser content for searching and selecting RTTTL ringtones
+class _LibraryBrowserContent extends StatefulWidget {
+  final ScrollController scrollController;
+  final RtttlLibraryService libraryService;
+  final RtttlPlayer rtttlPlayer;
+  final void Function(RtttlLibraryItem) onSelect;
+
+  const _LibraryBrowserContent({
+    required this.scrollController,
+    required this.libraryService,
+    required this.rtttlPlayer,
+    required this.onSelect,
+  });
+
+  @override
+  State<_LibraryBrowserContent> createState() => _LibraryBrowserContentState();
+}
+
+class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
+  final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
+  List<RtttlLibraryItem> _results = [];
+  List<RtttlLibraryItem> _suggestions = [];
+  bool _loading = false;
+  bool _loadingSuggestions = true;
+  String? _playingFilename;
+  int _totalCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSuggestions();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocus.dispose();
+    widget.rtttlPlayer.stop();
+    super.dispose();
+  }
+
+  Future<void> _loadSuggestions() async {
+    final suggestions = await widget.libraryService.getSuggestions();
+    final total = await widget.libraryService.getTotalCount();
+    if (mounted) {
+      setState(() {
+        _suggestions = suggestions;
+        _totalCount = total;
+        _loadingSuggestions = false;
+      });
+    }
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) {
+      setState(() {
+        _results = [];
+        _loading = false;
+      });
+      return;
+    }
+
+    setState(() => _loading = true);
+    _performSearch(query);
+  }
+
+  Future<void> _performSearch(String query) async {
+    final results = await widget.libraryService.search(query, limit: 50);
+    if (mounted && _searchController.text.trim() == query) {
+      setState(() {
+        _results = results;
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _playItem(RtttlLibraryItem item) async {
+    if (_playingFilename == item.filename) {
+      await widget.rtttlPlayer.stop();
+      setState(() => _playingFilename = null);
+      return;
+    }
+
+    if (_playingFilename != null) {
+      await widget.rtttlPlayer.stop();
+    }
+
+    setState(() => _playingFilename = item.filename);
+
+    try {
+      await widget.rtttlPlayer.play(item.rtttl);
+
+      while (widget.rtttlPlayer.isPlaying) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted) break;
+      }
+    } catch (e) {
+      // Ignore playback errors
+    } finally {
+      if (mounted) {
+        setState(() => _playingFilename = null);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasSearch = _searchController.text.trim().isNotEmpty;
+    final displayList = hasSearch ? _results : _suggestions;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Ringtone Library',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  fontFamily: 'Inter',
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _totalCount > 0
+                    ? 'Search ${_totalCount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')} available tones'
+                    : 'Search thousands of available tones',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
+                  fontFamily: 'Inter',
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Search field
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: TextField(
+            controller: _searchController,
+            focusNode: _searchFocus,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontFamily: 'Inter',
+            ),
+            decoration: InputDecoration(
+              hintText: 'Search by song, artist, or theme...',
+              hintStyle: TextStyle(
+                color: AppTheme.textTertiary.withValues(alpha: 0.6),
+                fontSize: 15,
+                fontFamily: 'Inter',
+              ),
+              prefixIcon: const Icon(
+                Icons.search,
+                color: AppTheme.textSecondary,
+                size: 22,
+              ),
+              suffixIcon: hasSearch
+                  ? IconButton(
+                      onPressed: () {
+                        _searchController.clear();
+                        _searchFocus.unfocus();
+                      },
+                      icon: const Icon(
+                        Icons.clear,
+                        color: AppTheme.textSecondary,
+                        size: 20,
+                      ),
+                    )
+                  : null,
+              filled: true,
+              fillColor: AppTheme.darkCard,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: AppTheme.graphBlue,
+                  width: 1,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Results header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            children: [
+              Text(
+                hasSearch
+                    ? '${_results.length} result${_results.length == 1 ? '' : 's'}'
+                    : 'Popular Picks',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textTertiary,
+                  letterSpacing: 1,
+                  fontFamily: 'Inter',
+                ),
+              ),
+              if (_loading) ...[
+                const SizedBox(width: 8),
+                const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppTheme.graphBlue,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Results list
+        Expanded(
+          child: _loadingSuggestions && !hasSearch
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppTheme.graphBlue),
+                )
+              : displayList.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        hasSearch
+                            ? Icons.search_off
+                            : Icons.library_music_outlined,
+                        size: 48,
+                        color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        hasSearch
+                            ? 'No results found'
+                            : 'Start typing to search',
+                        style: const TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 14,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      if (hasSearch) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Try a different search term',
+                          style: TextStyle(
+                            color: AppTheme.textTertiary.withValues(alpha: 0.7),
+                            fontSize: 12,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  controller: widget.scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  itemCount: displayList.length,
+                  itemBuilder: (context, index) {
+                    final item = displayList[index];
+                    final isPlaying = _playingFilename == item.filename;
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkCard,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: InkWell(
+                        onTap: () => widget.onSelect(item),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              // Music icon
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.graphBlue.withValues(
+                                    alpha: 0.12,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.music_note,
+                                  color: AppTheme.graphBlue,
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              // Title and subtitle
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.formattedTitle,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                        fontFamily: 'Inter',
+                                        fontSize: 15,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    if (item.subtitle != null) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        item.subtitle!,
+                                        style: const TextStyle(
+                                          color: AppTheme.textSecondary,
+                                          fontSize: 12,
+                                          fontFamily: 'Inter',
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Play button
+                              SizedBox(
+                                width: 40,
+                                height: 40,
+                                child: Material(
+                                  color: isPlaying
+                                      ? AppTheme.errorRed.withValues(
+                                          alpha: 0.15,
+                                        )
+                                      : AppTheme.darkBackground,
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: InkWell(
+                                    onTap: () => _playItem(item),
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: Icon(
+                                      isPlaying ? Icons.stop : Icons.play_arrow,
+                                      color: isPlaying
+                                          ? AppTheme.errorRed
+                                          : AppTheme.textSecondary,
+                                      size: 22,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              // Select indicator
+                              const Icon(
+                                Icons.chevron_right,
+                                color: AppTheme.textTertiary,
+                                size: 22,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+
+        // Bottom safe area
+        const SizedBox(height: 16),
+      ],
     );
   }
 }

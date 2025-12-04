@@ -29,7 +29,6 @@
 - Button padding: 16 vertical, 24 horizontal.
 - Dialogs place the primary action on the right with equal button sizes.
 - Display existing data and allow inline editing.
-- Use pushReplacement when it reduces unnecessary back navigation.
 - Ensure interactions are polished, intuitive, and responsive.
 
 ## Restrictions
