@@ -484,8 +484,12 @@ class BleTransport implements DeviceTransport {
       // Meshtastic expects complete ToRadio protobuf messages in a single
       // logical write operation. The BLE stack handles ATT-layer chunking
       // via the "Prepare Write" / "Execute Write" protocol when needed.
-      // allowLongWrite: true (default) enables this behavior.
-      await _txCharacteristic!.write(data, withoutResponse: false);
+      // allowLongWrite: true enables this for data > MTU size.
+      await _txCharacteristic!.write(
+        data,
+        withoutResponse: false,
+        allowLongWrite: true,
+      );
 
       _logger.d('Sent successfully');
     } catch (e) {
