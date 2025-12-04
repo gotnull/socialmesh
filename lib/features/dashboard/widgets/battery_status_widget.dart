@@ -48,7 +48,7 @@ class BatteryStatusContent extends ConsumerWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: AppTheme.textTertiary,
-                fontFamily: 'Inter',
+                
               ),
             ),
             const SizedBox(height: 8),
@@ -68,7 +68,7 @@ class BatteryStatusContent extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 12,
                 color: AppTheme.textSecondary,
-                fontFamily: 'Inter',
+                
               ),
             ),
           ],
@@ -117,7 +117,7 @@ class _DeviceBatteryCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   color: AppTheme.textSecondary,
-                  fontFamily: 'Inter',
+                  
                 ),
               ),
               const SizedBox(height: 2),
@@ -132,7 +132,7 @@ class _DeviceBatteryCard extends StatelessWidget {
                       color: displayLevel != null
                           ? Colors.white
                           : AppTheme.textTertiary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   if (isCharging) ...[
@@ -160,7 +160,7 @@ class _DeviceBatteryCard extends StatelessWidget {
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                               color: AppTheme.primaryGreen,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                         ],
@@ -290,7 +290,7 @@ class _NodeBatteryRow extends StatelessWidget {
             style: const TextStyle(
               fontSize: 12,
               color: Colors.white,
-              fontFamily: 'Inter',
+              
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -302,7 +302,7 @@ class _NodeBatteryRow extends StatelessWidget {
             fontSize: 12,
             fontWeight: FontWeight.w600,
             color: color,
-            fontFamily: 'Inter',
+            
           ),
         ),
       ],

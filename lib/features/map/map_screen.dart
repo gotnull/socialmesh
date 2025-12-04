@@ -447,7 +447,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
             fontSize: 28,
             fontWeight: FontWeight.w700,
             color: Colors.white,
-            fontFamily: 'Inter',
+            
           ),
         ),
         actions: [

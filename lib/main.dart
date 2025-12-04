@@ -381,7 +381,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: info.color,
-                      fontFamily: 'Inter',
+                      
                       letterSpacing: 0.3,
                     ),
                   ),
@@ -596,7 +596,7 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
                           color: AppTheme.primaryGreen,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Inter',
+                          
                         ),
                       )
                     : const Icon(
@@ -619,7 +619,7 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
                       color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      fontFamily: 'Inter',
+                      
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -653,7 +653,7 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
                       color: AppTheme.primaryGreen,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ],

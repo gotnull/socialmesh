@@ -172,7 +172,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
-                fontFamily: 'Inter',
+                
               ),
             ),
           ),
@@ -286,7 +286,7 @@ class WidgetEmptyState extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 13,
                 color: AppTheme.textTertiary,
-                fontFamily: 'Inter',
+                
               ),
               textAlign: TextAlign.center,
             ),
@@ -300,7 +300,7 @@ class WidgetEmptyState extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.primaryGreen,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
               ),
@@ -340,7 +340,7 @@ class WidgetLoadingState extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 13,
                 color: AppTheme.textTertiary,
-                fontFamily: 'Inter',
+                
               ),
             ),
           ],

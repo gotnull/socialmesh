@@ -83,7 +83,7 @@ class DashboardWidgetBase extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
-                fontFamily: 'Inter',
+                
               ),
             ),
           ),
@@ -165,7 +165,7 @@ class StatCardWidget extends StatelessWidget {
                     fontSize: 36,
                     fontWeight: FontWeight.w600,
                     color: valueColor ?? Colors.white,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -174,7 +174,7 @@ class StatCardWidget extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14,
                     color: AppTheme.textSecondary,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
               ],
@@ -241,7 +241,7 @@ class ActionCardWidget extends StatelessWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -250,7 +250,7 @@ class ActionCardWidget extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppTheme.textSecondary,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                     ],

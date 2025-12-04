@@ -173,7 +173,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              fontFamily: 'Inter',
+              
             ),
           ),
           actions: [
@@ -195,7 +195,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                         style: TextStyle(
                           color: AppTheme.primaryGreen,
                           fontWeight: FontWeight.w600,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
               ),
@@ -234,7 +234,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w500,
-                                  fontFamily: 'Inter',
+                                  
                                 ),
                               ),
                               Text(
@@ -242,7 +242,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                                 style: TextStyle(
                                   color: AppTheme.textSecondary,
                                   fontSize: 13,
-                                  fontFamily: 'Inter',
+                                  
                                 ),
                               ),
                             ],
@@ -271,7 +271,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textTertiary,
                       letterSpacing: 1,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -294,7 +294,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w500,
-                                  fontFamily: 'Inter',
+                                  
                                 ),
                               ),
                               subtitle: Text(
@@ -302,7 +302,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                                 style: const TextStyle(
                                   color: AppTheme.textSecondary,
                                   fontSize: 13,
-                                  fontFamily: 'Inter',
+                                  
                                 ),
                               ),
                               leading: Icon(
@@ -340,7 +340,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textTertiary,
                         letterSpacing: 1,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -405,7 +405,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                             style: TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 13,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                         ],
@@ -439,7 +439,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                             style: TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 13,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                         ),

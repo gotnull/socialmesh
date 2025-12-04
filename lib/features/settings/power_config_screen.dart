@@ -133,7 +133,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            fontFamily: 'Inter',
+            
           ),
         ),
         actions: [
@@ -155,7 +155,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                       style: TextStyle(
                         color: AppTheme.primaryGreen,
                         fontWeight: FontWeight.w600,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
             ),
@@ -299,7 +299,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                           style: TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 13,
-                            fontFamily: 'Inter',
+                            
                           ),
                         ),
                       ),
@@ -333,7 +333,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w500,
-                fontFamily: 'Inter',
+                
               ),
             ),
             Container(
@@ -348,7 +348,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                   color: AppTheme.primaryGreen,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
-                  fontFamily: 'Inter',
+                  
                 ),
               ),
             ),
@@ -360,7 +360,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
           style: const TextStyle(
             color: AppTheme.textSecondary,
             fontSize: 13,
-            fontFamily: 'Inter',
+            
           ),
         ),
         const SizedBox(height: 8),
@@ -446,7 +446,7 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -455,7 +455,7 @@ class _SettingsTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppTheme.textTertiary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ],

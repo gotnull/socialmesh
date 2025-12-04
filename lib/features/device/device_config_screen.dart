@@ -211,7 +211,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            fontFamily: 'Inter',
+            
           ),
         ),
         actions: [
@@ -229,7 +229,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                       style: TextStyle(
                         color: AppTheme.primaryGreen,
                         fontWeight: FontWeight.w600,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
             ),
@@ -274,7 +274,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               style: TextStyle(
                 fontSize: 12,
                 color: AppTheme.textTertiary,
-                fontFamily: 'Inter',
+                
               ),
             ),
           ),
@@ -390,7 +390,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                         color: isSelected
                                             ? Colors.white
                                             : AppTheme.textSecondary,
-                                        fontFamily: 'Inter',
+                                        
                                       ),
                                     ),
                                     const SizedBox(height: 2),
@@ -399,7 +399,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: AppTheme.textTertiary,
-                                        fontFamily: 'Inter',
+                                        
                                       ),
                                     ),
                                   ],
@@ -443,7 +443,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                     style: TextStyle(
                       fontSize: 13,
                       color: AppTheme.warningYellow.withValues(alpha: 0.9),
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ),
@@ -466,7 +466,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: AppTheme.textSecondary,
-          fontFamily: 'Inter',
+          
         ),
       ),
     );
@@ -524,7 +524,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -533,7 +533,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppTheme.textTertiary,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                     ],
@@ -558,7 +558,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                       color: controller.text.length >= maxLength
                           ? AppTheme.warningYellow
                           : AppTheme.textTertiary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ),
@@ -584,7 +584,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               style: const TextStyle(
                 fontSize: 15,
                 color: Colors.white,
-                fontFamily: 'Inter',
+                
                 fontWeight: FontWeight.w500,
               ),
               decoration: InputDecoration(

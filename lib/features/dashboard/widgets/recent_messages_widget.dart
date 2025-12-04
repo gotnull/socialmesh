@@ -113,7 +113,7 @@ class _MessageTile extends StatelessWidget {
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          fontFamily: 'Inter',
+                          
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -125,7 +125,7 @@ class _MessageTile extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppTheme.textTertiary,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ],
@@ -136,7 +136,7 @@ class _MessageTile extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppTheme.textSecondary,
-                    fontFamily: 'Inter',
+                    
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

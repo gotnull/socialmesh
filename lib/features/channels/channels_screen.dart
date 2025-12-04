@@ -30,7 +30,7 @@ class ChannelsScreen extends ConsumerWidget {
             fontSize: 22,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            fontFamily: 'Inter',
+            
           ),
         ),
         actions: [
@@ -90,7 +90,7 @@ class ChannelsScreen extends ConsumerWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       color: AppTheme.textSecondary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -99,7 +99,7 @@ class ChannelsScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.textTertiary,
-                      fontFamily: 'Inter',
+                      
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -166,7 +166,7 @@ class _ChannelTile extends ConsumerWidget {
                             : AppTheme.textSecondary,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ),
@@ -186,7 +186,7 @@ class _ChannelTile extends ConsumerWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -205,7 +205,7 @@ class _ChannelTile extends ConsumerWidget {
                             style: const TextStyle(
                               fontSize: 13,
                               color: AppTheme.textSecondary,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                           if (isPrimary) ...[
@@ -227,7 +227,7 @@ class _ChannelTile extends ConsumerWidget {
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   color: AppTheme.primaryGreen,
-                                  fontFamily: 'Inter',
+                                  
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -416,7 +416,7 @@ class _ChannelTile extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  fontFamily: 'Inter',
+                  
                 ),
               ),
             ),
@@ -605,7 +605,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
               ),
@@ -646,7 +646,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
               ),

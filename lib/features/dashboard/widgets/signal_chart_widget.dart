@@ -176,7 +176,7 @@ class _MetricCard extends StatelessWidget {
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: color,
-              fontFamily: 'Inter',
+              
             ),
           ),
           const SizedBox(height: 2),
@@ -185,7 +185,7 @@ class _MetricCard extends StatelessWidget {
             style: const TextStyle(
               fontSize: 10,
               color: AppTheme.textTertiary,
-              fontFamily: 'Inter',
+              
             ),
           ),
         ],

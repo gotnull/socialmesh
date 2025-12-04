@@ -117,7 +117,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            fontFamily: 'Inter',
+            
           ),
         ),
         actions: [
@@ -139,7 +139,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                       style: TextStyle(
                         color: AppTheme.primaryGreen,
                         fontWeight: FontWeight.w600,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
             ),
@@ -195,7 +195,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w500,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                           Container(
@@ -215,7 +215,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                                 color: AppTheme.primaryGreen,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
-                                fontFamily: 'Inter',
+                                
                               ),
                             ),
                           ),
@@ -227,7 +227,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                         style: TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 13,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -260,7 +260,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w500,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                           Container(
@@ -280,7 +280,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                                 color: AppTheme.primaryGreen,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
-                                fontFamily: 'Inter',
+                                
                               ),
                             ),
                           ),
@@ -292,7 +292,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                         style: TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 13,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -365,7 +365,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
             style: TextStyle(
               color: AppTheme.textSecondary,
               fontSize: 13,
-              fontFamily: 'Inter',
+              
             ),
           ),
           const SizedBox(height: 16),
@@ -380,7 +380,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
               isExpanded: true,
               underline: const SizedBox.shrink(),
               dropdownColor: AppTheme.darkCard,
-              style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+              style: const TextStyle(color: Colors.white, fontFamily: 'JetBrainsMono'),
               items: regions.map((r) {
                 return DropdownMenuItem(
                   value: r.$1,
@@ -431,7 +431,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
             style: TextStyle(
               color: AppTheme.textSecondary,
               fontSize: 13,
-              fontFamily: 'Inter',
+              
             ),
           ),
           const SizedBox(height: 16),
@@ -463,7 +463,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                                   ? Colors.white
                                   : AppTheme.textSecondary,
                               fontWeight: FontWeight.w500,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                           Text(
@@ -471,7 +471,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                             style: const TextStyle(
                               color: AppTheme.textTertiary,
                               fontSize: 13,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                         ],
@@ -514,7 +514,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
               style: TextStyle(
                 color: AppTheme.textSecondary,
                 fontSize: 13,
-                fontFamily: 'Inter',
+                
               ),
             ),
           ),
@@ -585,7 +585,7 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -594,7 +594,7 @@ class _SettingsTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppTheme.textTertiary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ],

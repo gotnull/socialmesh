@@ -337,7 +337,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              fontFamily: 'Inter',
+              
             ),
           ),
           centerTitle: true,
@@ -361,7 +361,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           color: AppTheme.primaryGreen,
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
               ),
@@ -416,7 +416,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         fontSize: 13,
         fontWeight: FontWeight.w600,
         color: AppTheme.textSecondary,
-        fontFamily: 'Inter',
+        
         letterSpacing: 0.3,
       ),
     );
@@ -461,7 +461,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                       SizedBox(height: 2),
@@ -470,7 +470,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           color: AppTheme.textTertiary,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                     ],
@@ -495,7 +495,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                       color: _nameController.text.length > 9
                           ? AppTheme.warningYellow
                           : AppTheme.textTertiary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ),
@@ -519,7 +519,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
               style: const TextStyle(
                 fontSize: 15,
                 color: Colors.white,
-                fontFamily: 'Inter',
+                
                 fontWeight: FontWeight.w500,
               ),
               decoration: const InputDecoration(
@@ -630,7 +630,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                                   color: isSelected
                                       ? Colors.white
                                       : AppTheme.textSecondary,
-                                  fontFamily: 'Inter',
+                                  
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -643,7 +643,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: AppTheme.textTertiary,
-                                  fontFamily: 'Inter',
+                                  
                                 ),
                               ),
                             ],
@@ -745,7 +745,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -760,7 +760,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           color: hasValidKey
                               ? AppTheme.primaryGreen
                               : AppTheme.textTertiary,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                     ],
@@ -783,7 +783,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.primaryGreen,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ),
@@ -903,7 +903,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppTheme.errorRed,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ],
@@ -1024,7 +1024,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                     color: isEnabled
                         ? AppTheme.textSecondary
                         : AppTheme.textTertiary.withValues(alpha: 0.4),
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
               ],
@@ -1115,7 +1115,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                     color: Colors.white,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1124,7 +1124,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppTheme.textTertiary,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
               ],
@@ -1179,7 +1179,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.warningYellow,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
                 SizedBox(height: 4),
@@ -1188,7 +1188,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   style: TextStyle(
                     fontSize: 12,
                     color: AppTheme.textSecondary,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
               ],
@@ -1233,7 +1233,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.accentOrange,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
                 SizedBox(height: 4),
@@ -1242,7 +1242,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   style: TextStyle(
                     fontSize: 12,
                     color: AppTheme.textSecondary,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
               ],

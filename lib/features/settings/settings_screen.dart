@@ -175,7 +175,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             fontSize: 28,
             fontWeight: FontWeight.w700,
             color: Colors.white,
-            fontFamily: 'Inter',
+            
           ),
         ),
       ),
@@ -657,7 +657,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         title: Text(
           '$limit messages',
-          style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+          style: const TextStyle(color: Colors.white, fontFamily: 'JetBrainsMono'),
         ),
       ),
     ).then((selectedLimit) {
@@ -775,7 +775,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               fontSize: 20,
               fontWeight: FontWeight.w700,
               color: Colors.white,
-              fontFamily: 'Inter',
+              
             ),
           ),
           const SizedBox(height: 24),
@@ -840,7 +840,7 @@ class _SectionHeader extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: AppTheme.textTertiary,
-          fontFamily: 'Inter',
+          
           letterSpacing: 0.5,
         ),
       ),
@@ -898,7 +898,7 @@ class _SettingsTile extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
                           color: titleColor ?? Colors.white,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -907,7 +907,7 @@ class _SettingsTile extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppTheme.textTertiary,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                     ],
@@ -1020,7 +1020,7 @@ class _PremiumSettingsTile extends ConsumerWidget {
                               color: hasFeature
                                   ? Colors.white
                                   : Colors.white.withValues(alpha: 0.6),
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                           if (!hasFeature) ...[
@@ -1056,7 +1056,7 @@ class _PremiumSettingsTile extends ConsumerWidget {
                           color: hasFeature
                               ? AppTheme.textTertiary
                               : AppTheme.textTertiary.withValues(alpha: 0.6),
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                     ],

@@ -83,7 +83,7 @@ class _NodeTile extends StatelessWidget {
                     fontSize: 8,
                     fontWeight: FontWeight.w700,
                     color: signalColor,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
               ],
@@ -113,7 +113,7 @@ class _NodeTile extends StatelessWidget {
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          fontFamily: 'Inter',
+                          
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -133,7 +133,7 @@ class _NodeTile extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppTheme.textTertiary,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ],
@@ -193,7 +193,7 @@ class _RoleChip extends StatelessWidget {
           fontSize: 9,
           fontWeight: FontWeight.w600,
           color: isRouter ? AppTheme.primaryGreen : AppTheme.textTertiary,
-          fontFamily: 'Inter',
+          
         ),
       ),
     );
@@ -237,7 +237,7 @@ class _BatteryIndicator extends StatelessWidget {
               fontSize: 10,
               fontWeight: FontWeight.w600,
               color: color,
-              fontFamily: 'Inter',
+              
             ),
           ),
       ],

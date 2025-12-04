@@ -139,7 +139,7 @@ class _StatItem extends StatelessWidget {
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: Colors.white,
-            fontFamily: 'Inter',
+            
           ),
         ),
         const SizedBox(height: 2),
@@ -148,7 +148,7 @@ class _StatItem extends StatelessWidget {
           style: const TextStyle(
             fontSize: 11,
             color: AppTheme.textTertiary,
-            fontFamily: 'Inter',
+            
           ),
         ),
       ],

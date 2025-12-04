@@ -119,7 +119,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            fontFamily: 'Inter',
+            
           ),
         ),
         actions: [
@@ -141,7 +141,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                       style: TextStyle(
                         color: AppTheme.primaryGreen,
                         fontWeight: FontWeight.w600,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
             ),
@@ -215,7 +215,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w500,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                           Container(
@@ -235,7 +235,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                 color: AppTheme.primaryGreen,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
-                                fontFamily: 'Inter',
+                                
                               ),
                             ),
                           ),
@@ -247,7 +247,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                         style: TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 13,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -367,7 +367,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             style: TextStyle(
               color: AppTheme.textSecondary,
               fontSize: 13,
-              fontFamily: 'Inter',
+              
             ),
           ),
           const SizedBox(height: 16),
@@ -414,7 +414,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                 color: isSelected
                                     ? AppTheme.primaryGreen
                                     : Colors.white,
-                                fontFamily: 'Inter',
+                                
                               ),
                             ),
                             Text(
@@ -422,7 +422,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                               style: const TextStyle(
                                 color: AppTheme.textSecondary,
                                 fontSize: 13,
-                                fontFamily: 'Inter',
+                                
                               ),
                             ),
                           ],
@@ -488,7 +488,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             style: TextStyle(
               color: AppTheme.textSecondary,
               fontSize: 13,
-              fontFamily: 'Inter',
+              
             ),
           ),
           const SizedBox(height: 16),
@@ -520,7 +520,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                   ? Colors.white
                                   : AppTheme.textSecondary,
                               fontWeight: FontWeight.w500,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                           Text(
@@ -528,7 +528,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                             style: const TextStyle(
                               color: AppTheme.textTertiary,
                               fontSize: 13,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                         ],
@@ -613,7 +613,7 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -622,7 +622,7 @@ class _SettingsTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppTheme.textTertiary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ],

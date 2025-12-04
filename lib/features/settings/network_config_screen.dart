@@ -133,7 +133,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              fontFamily: 'Inter',
+              
             ),
           ),
           actions: [
@@ -155,7 +155,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                         style: TextStyle(
                           color: AppTheme.primaryGreen,
                           fontWeight: FontWeight.w600,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
               ),
@@ -204,13 +204,13 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                             textInputAction: TextInputAction.next,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontFamily: 'Inter',
+                              
                             ),
                             decoration: InputDecoration(
                               labelText: 'Network Name (SSID)',
                               labelStyle: const TextStyle(
                                 color: AppTheme.textSecondary,
-                                fontFamily: 'Inter',
+                                
                               ),
                               filled: true,
                               fillColor: AppTheme.darkBackground,
@@ -247,13 +247,13 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                                 FocusScope.of(context).unfocus(),
                             style: const TextStyle(
                               color: Colors.white,
-                              fontFamily: 'Inter',
+                              
                             ),
                             decoration: InputDecoration(
                               labelText: 'Password',
                               labelStyle: const TextStyle(
                                 color: AppTheme.textSecondary,
-                                fontFamily: 'Inter',
+                                
                               ),
                               filled: true,
                               fillColor: AppTheme.darkBackground,
@@ -339,7 +339,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w500,
-                            fontFamily: 'Inter',
+                            
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -349,13 +349,13 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                           onSubmitted: (_) => FocusScope.of(context).unfocus(),
                           style: const TextStyle(
                             color: Colors.white,
-                            fontFamily: 'Inter',
+                            
                           ),
                           decoration: InputDecoration(
                             hintText: 'pool.ntp.org',
                             hintStyle: const TextStyle(
                               color: AppTheme.textTertiary,
-                              fontFamily: 'Inter',
+                              
                             ),
                             filled: true,
                             fillColor: AppTheme.darkBackground,
@@ -389,7 +389,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                           style: TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 13,
-                            fontFamily: 'Inter',
+                            
                           ),
                         ),
                       ],
@@ -426,7 +426,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                             style: TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 13,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                         ),
@@ -502,7 +502,7 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -511,7 +511,7 @@ class _SettingsTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppTheme.textTertiary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ],

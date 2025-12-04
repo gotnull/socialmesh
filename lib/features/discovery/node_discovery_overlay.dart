@@ -139,7 +139,7 @@ class _ConnectingIndicator extends StatelessWidget {
               color: AppTheme.primaryGreen,
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              fontFamily: 'Inter',
+              
             ),
           ),
         ],
@@ -292,7 +292,7 @@ class _AnimatedNodeCardState extends State<_AnimatedNodeCard>
                           color: AppTheme.primaryGreen,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          fontFamily: 'Inter',
+                          
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -305,7 +305,7 @@ class _AnimatedNodeCardState extends State<_AnimatedNodeCard>
                       color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      fontFamily: 'Inter',
+                      
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -430,7 +430,7 @@ class _PulsingNodeIconState extends State<_PulsingNodeIcon>
                       color: AppTheme.primaryGreen,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Inter',
+                      
                     ),
                   )
                 : const Icon(

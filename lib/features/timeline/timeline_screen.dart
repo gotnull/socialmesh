@@ -572,7 +572,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
-                fontFamily: 'Inter',
+                
               ),
             ),
           ),

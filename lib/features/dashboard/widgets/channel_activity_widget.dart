@@ -98,7 +98,7 @@ class _ChannelTile extends StatelessWidget {
                       color: isPrimary
                           ? AppTheme.primaryGreen
                           : AppTheme.textSecondary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ),
@@ -141,7 +141,7 @@ class _ChannelTile extends StatelessWidget {
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          fontFamily: 'Inter',
+                          
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -164,7 +164,7 @@ class _ChannelTile extends StatelessWidget {
                             fontSize: 8,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.primaryGreen,
-                            fontFamily: 'Inter',
+                            
                           ),
                         ),
                       ),
@@ -180,7 +180,7 @@ class _ChannelTile extends StatelessWidget {
                     color: messageCount > 0
                         ? AppTheme.textSecondary
                         : AppTheme.textTertiary,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
               ],

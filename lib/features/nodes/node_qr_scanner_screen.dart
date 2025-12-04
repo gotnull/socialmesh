@@ -170,7 +170,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppTheme.primaryGreen,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                     ),
@@ -246,7 +246,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
                       style: TextStyle(
                         fontSize: 12,
                         color: AppTheme.primaryGreen,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ),
@@ -376,7 +376,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            fontFamily: 'Inter',
+            
           ),
         ),
         actions: [
@@ -444,7 +444,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14,
-                      fontFamily: 'Inter',
+                      
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -454,7 +454,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
                     style: TextStyle(
                       color: AppTheme.textSecondary,
                       fontSize: 12,
-                      fontFamily: 'Inter',
+                      
                     ),
                     textAlign: TextAlign.center,
                   ),

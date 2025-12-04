@@ -82,7 +82,7 @@ class MessagingScreen extends ConsumerWidget {
             fontSize: 28,
             fontWeight: FontWeight.w700,
             color: Colors.white,
-            fontFamily: 'Inter',
+            
           ),
         ),
         actions: [
@@ -117,7 +117,7 @@ class MessagingScreen extends ConsumerWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       color: AppTheme.textSecondary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -126,7 +126,7 @@ class MessagingScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.textTertiary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ],
@@ -183,7 +183,7 @@ class MessagingScreen extends ConsumerWidget {
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
-                fontFamily: 'Inter',
+                
               ),
             ),
           ),
@@ -202,7 +202,7 @@ class MessagingScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 14,
                     color: AppTheme.textTertiary,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
               ),
@@ -216,7 +216,7 @@ class MessagingScreen extends ConsumerWidget {
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textTertiary,
-                  fontFamily: 'Inter',
+                  
                   letterSpacing: 0.5,
                 ),
               ),
@@ -240,7 +240,7 @@ class MessagingScreen extends ConsumerWidget {
                         color: Colors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ),
@@ -249,7 +249,7 @@ class MessagingScreen extends ConsumerWidget {
                   node.displayName,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
                 onTap: () {
@@ -339,7 +339,7 @@ class _ConversationTile extends StatelessWidget {
                         color: Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ),
@@ -359,7 +359,7 @@ class _ConversationTile extends StatelessWidget {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
-                                fontFamily: 'Inter',
+                                
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -371,7 +371,7 @@ class _ConversationTile extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppTheme.textTertiary,
-                                fontFamily: 'Inter',
+                                
                               ),
                             ),
                         ],
@@ -386,7 +386,7 @@ class _ConversationTile extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: AppTheme.textSecondary,
-                                fontFamily: 'Inter',
+                                
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -409,7 +409,7 @@ class _ConversationTile extends StatelessWidget {
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
-                                  fontFamily: 'Inter',
+                                  
                                 ),
                               ),
                             ),
@@ -950,7 +950,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             color: Colors.white,
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            fontFamily: 'Inter',
+                            
                           ),
                         ),
                 ),
@@ -966,7 +966,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                     Text(
@@ -976,7 +976,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppTheme.textTertiary,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ],
@@ -1016,7 +1016,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             style: const TextStyle(
                               fontSize: 14,
                               color: AppTheme.textTertiary,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                         ],
@@ -1105,13 +1105,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           focusNode: _messageFocusNode,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontFamily: 'Inter',
+                            
                           ),
                           decoration: const InputDecoration(
                             hintText: 'Message...',
                             hintStyle: TextStyle(
                               color: AppTheme.textTertiary,
-                              fontFamily: 'Inter',
+                              
                             ),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.symmetric(
@@ -1248,7 +1248,7 @@ class _MessageBubble extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 15,
                             color: Colors.white,
-                            fontFamily: 'Inter',
+                            
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -1290,7 +1290,7 @@ class _MessageBubble extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Colors.white.withValues(alpha: 0.7),
-                                fontFamily: 'Inter',
+                                
                               ),
                             ),
                             if (!isPending && !isFailed && !isQueued) ...[
@@ -1328,7 +1328,7 @@ class _MessageBubble extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 11,
                           color: AppTheme.errorRed,
-                          fontFamily: 'Inter',
+                          
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -1362,7 +1362,7 @@ class _MessageBubble extends StatelessWidget {
                                   fontSize: 11,
                                   color: AppTheme.primaryGreen,
                                   fontWeight: FontWeight.w600,
-                                  fontFamily: 'Inter',
+                                  
                                 ),
                               ),
                             ],
@@ -1400,7 +1400,7 @@ class _MessageBubble extends StatelessWidget {
                     color: Colors.white,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
               ),
@@ -1423,7 +1423,7 @@ class _MessageBubble extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: _getAvatarColor(),
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -1433,7 +1433,7 @@ class _MessageBubble extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 15,
                       color: Colors.white,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -1453,7 +1453,7 @@ class _MessageBubble extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 11,
                           color: AppTheme.textTertiary,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                     ],

@@ -119,7 +119,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            fontFamily: 'Inter',
+            
           ),
         ),
         actions: [
@@ -141,7 +141,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                       style: TextStyle(
                         color: AppTheme.primaryGreen,
                         fontWeight: FontWeight.w600,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
             ),
@@ -258,7 +258,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                           style: TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 13,
-                            fontFamily: 'Inter',
+                            
                           ),
                         ),
                       ),
@@ -333,7 +333,7 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -342,7 +342,7 @@ class _SettingsTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppTheme.textTertiary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ],

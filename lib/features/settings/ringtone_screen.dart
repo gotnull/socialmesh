@@ -975,7 +975,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
-                fontFamily: 'Inter',
+                
               ),
             ),
             const SizedBox(height: 16),
@@ -1029,7 +1029,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       style: TextStyle(
                         color: AppTheme.textSecondary,
                         fontSize: 13,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ),
@@ -1055,7 +1055,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: AppTheme.primaryGreen,
-              fontFamily: 'Inter',
+              
             ),
           ),
           const SizedBox(height: 4),
@@ -1064,7 +1064,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
             style: const TextStyle(
               fontSize: 13,
               color: AppTheme.textSecondary,
-              fontFamily: 'Inter',
+              
               height: 1.5,
             ),
           ),
@@ -1087,7 +1087,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            fontFamily: 'Inter',
+            
           ),
         ),
         actions: [
@@ -1114,7 +1114,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       style: TextStyle(
                         color: AppTheme.primaryGreen,
                         fontWeight: FontWeight.w600,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
             ),
@@ -1137,7 +1137,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textTertiary,
                       letterSpacing: 1,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1215,7 +1215,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                   style: const TextStyle(
                                     color: AppTheme.errorRed,
                                     fontSize: 12,
-                                    fontFamily: 'Inter',
+                                    
                                   ),
                                 ),
                               ),
@@ -1278,7 +1278,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                     alpha: 0.7,
                                   ),
                                   fontSize: 12,
-                                  fontFamily: 'Inter',
+                                  
                                 ),
                               ),
                             ),
@@ -1296,7 +1296,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                     fontWeight: isTooLong
                                         ? FontWeight.w600
                                         : FontWeight.normal,
-                                    fontFamily: 'Inter',
+                                    
                                   ),
                                 );
                               },
@@ -1316,7 +1316,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textTertiary,
                       letterSpacing: 1,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1358,7 +1358,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                     color: Colors.white,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    fontFamily: 'Inter',
+                                    
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -1369,7 +1369,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                       alpha: 0.8,
                                     ),
                                     fontSize: 13,
-                                    fontFamily: 'Inter',
+                                    
                                   ),
                                 ),
                               ],
@@ -1396,7 +1396,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textTertiary,
                         letterSpacing: 1,
-                        fontFamily: 'JetBrainsMono',
+                        
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1447,7 +1447,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                     style: const TextStyle(
                                       color: AppTheme.primaryGreen,
                                       fontWeight: FontWeight.w600,
-                                      fontFamily: 'JetBrainsMono',
+                                      
                                       fontSize: 15,
                                     ),
                                   ),
@@ -1457,7 +1457,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                       style: const TextStyle(
                                         color: AppTheme.textSecondary,
                                         fontSize: 13,
-                                        fontFamily: 'JetBrainsMono',
+                                        
                                       ),
                                     ),
                                 ],
@@ -1529,7 +1529,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textTertiary,
                       letterSpacing: 1,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1606,7 +1606,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                               fontWeight: isSelected
                                                   ? FontWeight.w600
                                                   : FontWeight.w500,
-                                              fontFamily: 'Inter',
+                                              
                                               fontSize: 15,
                                             ),
                                           ),
@@ -1616,7 +1616,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                             style: const TextStyle(
                                               color: AppTheme.textSecondary,
                                               fontSize: 12,
-                                              fontFamily: 'Inter',
+                                              
                                             ),
                                           ),
                                         ],
@@ -1696,7 +1696,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           fontWeight: FontWeight.w600,
                           color: AppTheme.textTertiary,
                           letterSpacing: 1,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                       TextButton.icon(
@@ -1732,7 +1732,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                             style: TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 14,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -1743,7 +1743,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                 alpha: 0.7,
                               ),
                               fontSize: 12,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                         ],
@@ -1829,7 +1829,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                                     fontWeight: isSelected
                                                         ? FontWeight.w600
                                                         : FontWeight.w500,
-                                                    fontFamily: 'Inter',
+                                                    
                                                     fontSize: 15,
                                                   ),
                                                 ),
@@ -1840,7 +1840,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                                     color:
                                                         AppTheme.textSecondary,
                                                     fontSize: 12,
-                                                    fontFamily: 'Inter',
+                                                    
                                                   ),
                                                 ),
                                               ],
@@ -1944,7 +1944,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                   color: Colors.white,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  fontFamily: 'Inter',
+                                  
                                 ),
                               ),
                               SizedBox(height: 4),
@@ -1953,7 +1953,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                 style: TextStyle(
                                   color: AppTheme.textSecondary,
                                   fontSize: 13,
-                                  fontFamily: 'Inter',
+                                  
                                 ),
                               ),
                             ],
@@ -2200,7 +2200,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
-                  fontFamily: 'Inter',
+                  
                 ),
               ),
               const SizedBox(height: 4),
@@ -2211,7 +2211,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                 style: const TextStyle(
                   fontSize: 14,
                   color: AppTheme.textSecondary,
-                  fontFamily: 'Inter',
+                  
                 ),
               ),
             ],
@@ -2228,14 +2228,14 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
             style: const TextStyle(
               color: Colors.white,
               fontSize: 15,
-              fontFamily: 'Inter',
+              
             ),
             decoration: InputDecoration(
               hintText: 'Search by song, artist, or theme...',
               hintStyle: TextStyle(
                 color: AppTheme.textTertiary.withValues(alpha: 0.6),
                 fontSize: 15,
-                fontFamily: 'Inter',
+                
               ),
               prefixIcon: const Icon(
                 Icons.search,
@@ -2291,7 +2291,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textTertiary,
                   letterSpacing: 1,
-                  fontFamily: 'Inter',
+                  
                 ),
               ),
               if (_loading) ...[
@@ -2336,7 +2336,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                         style: const TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 14,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                       if (hasSearch) ...[
@@ -2346,7 +2346,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                           style: TextStyle(
                             color: AppTheme.textTertiary.withValues(alpha: 0.7),
                             fontSize: 12,
-                            fontFamily: 'Inter',
+                            
                           ),
                         ),
                       ],
@@ -2401,7 +2401,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w500,
-                                        fontFamily: 'Inter',
+                                        
                                         fontSize: 15,
                                       ),
                                       maxLines: 1,
@@ -2414,7 +2414,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                                       style: const TextStyle(
                                         color: AppTheme.textSecondary,
                                         fontSize: 12,
-                                        fontFamily: 'Inter',
+                                        
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,

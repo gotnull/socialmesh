@@ -369,7 +369,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: AppTheme.primaryMagenta,
-            fontFamily: 'Inter',
+            
             letterSpacing: 0.3,
           ),
         ),
@@ -510,7 +510,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                             color: Colors.white,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            fontFamily: 'Inter',
+                            
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -521,7 +521,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                           style: const TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 12,
-                            fontFamily: 'Inter',
+                            
                           ),
                         ),
                       ],
@@ -542,7 +542,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textSecondary,
-                      fontFamily: 'Inter',
+                      
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -562,7 +562,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.primaryGreen,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ),
@@ -587,7 +587,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                       color: AppTheme.textSecondary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -597,7 +597,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.textTertiary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -797,7 +797,7 @@ class _DeviceDetailsTable extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 14,
                             color: AppTheme.textTertiary,
-                            fontFamily: 'Inter',
+                            
                             fontWeight: FontWeight.w400,
                           ),
                         ),
@@ -816,7 +816,7 @@ class _DeviceDetailsTable extends StatelessWidget {
                             fontSize: 14,
                             color: Colors.white,
                             fontWeight: FontWeight.w500,
-                            fontFamily: 'Inter',
+                            
                           ),
                           textAlign: TextAlign.right,
                         ),

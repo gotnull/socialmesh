@@ -67,7 +67,7 @@ class DashboardScreen extends ConsumerWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: _getBatteryColor(batteryLevel),
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ],
@@ -219,7 +219,7 @@ class DashboardScreen extends ConsumerWidget {
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.white,
-                                      fontFamily: 'Inter',
+                                      
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -231,7 +231,7 @@ class DashboardScreen extends ConsumerWidget {
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: AppTheme.textTertiary,
-                                      fontFamily: 'Inter',
+                                      
                                     ),
                                   ),
                                 ],
@@ -260,7 +260,7 @@ class DashboardScreen extends ConsumerWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textSecondary,
-                      fontFamily: 'Inter',
+                      
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -374,7 +374,7 @@ class DashboardScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
               ),
@@ -471,7 +471,7 @@ class _ActionCard extends StatelessWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -480,7 +480,7 @@ class _ActionCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppTheme.textSecondary,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                     ],

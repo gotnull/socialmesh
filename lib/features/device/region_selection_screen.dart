@@ -232,7 +232,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            fontFamily: 'Inter',
+            
           ),
         ),
       ),
@@ -268,7 +268,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                               color: Colors.white,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -277,7 +277,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 12,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                         ],
@@ -300,13 +300,13 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
               child: TextField(
                 style: const TextStyle(
                   color: Colors.white,
-                  fontFamily: 'Inter',
+                  
                 ),
                 decoration: InputDecoration(
                   hintText: 'Search regions...',
                   hintStyle: const TextStyle(
                     color: AppTheme.textTertiary,
-                    fontFamily: 'Inter',
+                    
                   ),
                   prefixIcon: const Icon(
                     Icons.search,
@@ -392,7 +392,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                                       color: isSelected
                                           ? Colors.white
                                           : AppTheme.textSecondary,
-                                      fontFamily: 'Inter',
+                                      
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -401,7 +401,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                                     style: const TextStyle(
                                       fontSize: 13,
                                       color: AppTheme.textTertiary,
-                                      fontFamily: 'Inter',
+                                      
                                     ),
                                   ),
                                 ],
@@ -426,7 +426,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                                   color: isSelected
                                       ? Colors.white
                                       : AppTheme.textTertiary,
-                                  fontFamily: 'Inter',
+                                  
                                 ),
                               ),
                             ),
@@ -451,7 +451,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
                                     color: AppTheme.graphBlue,
-                                    fontFamily: 'Inter',
+                                    
                                   ),
                                 ),
                               ),
@@ -510,7 +510,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            fontFamily: 'Inter',
+                            
                           ),
                         ),
                 ),

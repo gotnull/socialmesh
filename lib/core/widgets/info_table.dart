@@ -83,7 +83,7 @@ class InfoTable extends StatelessWidget {
                                 style: const TextStyle(
                                   fontSize: 14,
                                   color: AppTheme.textTertiary,
-                                  fontFamily: 'Inter',
+                                  
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
@@ -105,7 +105,7 @@ class InfoTable extends StatelessWidget {
                             fontSize: 14,
                             color: Colors.white,
                             fontWeight: FontWeight.w500,
-                            fontFamily: 'Inter',
+                            
                           ),
                           textAlign: TextAlign.right,
                         ),

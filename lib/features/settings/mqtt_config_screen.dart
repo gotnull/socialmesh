@@ -141,7 +141,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              fontFamily: 'Inter',
+              
             ),
           ),
           actions: [
@@ -163,7 +163,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                         style: TextStyle(
                           color: AppTheme.primaryGreen,
                           fontWeight: FontWeight.w600,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
               ),
@@ -213,7 +213,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                             textInputAction: TextInputAction.next,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontFamily: 'Inter',
+                              
                             ),
                             decoration: InputDecoration(
                               labelText: 'Server Address',
@@ -256,7 +256,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                                 FocusScope.of(context).unfocus(),
                             style: const TextStyle(
                               color: Colors.white,
-                              fontFamily: 'Inter',
+                              
                             ),
                             decoration: InputDecoration(
                               labelText: 'Topic Root',
@@ -330,7 +330,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                             textInputAction: TextInputAction.next,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontFamily: 'Inter',
+                              
                             ),
                             decoration: InputDecoration(
                               labelText: 'Username',
@@ -374,7 +374,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                                 FocusScope.of(context).unfocus(),
                             style: const TextStyle(
                               color: Colors.white,
-                              fontFamily: 'Inter',
+                              
                             ),
                             decoration: InputDecoration(
                               labelText: 'Password',
@@ -533,7 +533,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
               style: TextStyle(
                 color: AppTheme.textSecondary,
                 fontSize: 13,
-                fontFamily: 'Inter',
+                
               ),
             ),
           ),
@@ -604,7 +604,7 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -613,7 +613,7 @@ class _SettingsTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppTheme.textTertiary,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ],

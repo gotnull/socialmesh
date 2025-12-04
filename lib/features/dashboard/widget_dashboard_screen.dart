@@ -88,7 +88,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: _getBatteryColor(batteryLevel),
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                     ],
@@ -162,7 +162,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
-                fontFamily: 'Inter',
+                
               ),
             ),
             const SizedBox(height: 8),
@@ -173,7 +173,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               style: const TextStyle(
                 fontSize: 14,
                 color: AppTheme.textSecondary,
-                fontFamily: 'Inter',
+                
               ),
               textAlign: TextAlign.center,
             ),
@@ -218,7 +218,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              fontFamily: 'Inter',
+              
             ),
           ),
           const SizedBox(height: 8),
@@ -227,7 +227,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
             style: TextStyle(
               fontSize: 14,
               color: AppTheme.textSecondary,
-              fontFamily: 'Inter',
+              
             ),
           ),
         ],
@@ -357,7 +357,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
-                fontFamily: 'Inter',
+                
               ),
             ),
             const SizedBox(height: 8),
@@ -366,7 +366,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               style: TextStyle(
                 fontSize: 14,
                 color: AppTheme.textSecondary,
-                fontFamily: 'Inter',
+                
               ),
               textAlign: TextAlign.center,
             ),
@@ -514,7 +514,7 @@ class _AddWidgetSheet extends ConsumerWidget {
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
-                  fontFamily: 'Inter',
+                  
                 ),
               ),
               TextButton(
@@ -538,7 +538,7 @@ class _AddWidgetSheet extends ConsumerWidget {
             style: TextStyle(
               fontSize: 13,
               color: AppTheme.textSecondary,
-              fontFamily: 'Inter',
+              
             ),
           ),
         ),
@@ -644,7 +644,7 @@ class _WidgetOption extends StatelessWidget {
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: isAdded ? Colors.white : AppTheme.textSecondary,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -653,7 +653,7 @@ class _WidgetOption extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppTheme.textSecondary,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ],

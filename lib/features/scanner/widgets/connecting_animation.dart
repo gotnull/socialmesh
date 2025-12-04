@@ -39,7 +39,7 @@ class ConnectingAnimation extends StatelessWidget {
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
-                  fontFamily: 'Inter',
+                  
                 ),
               ),
               const SizedBox(height: 12),

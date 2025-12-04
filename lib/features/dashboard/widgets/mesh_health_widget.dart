@@ -80,7 +80,7 @@ class MeshHealthContent extends ConsumerWidget {
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
                         color: healthColor,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                     Text(
@@ -89,7 +89,7 @@ class MeshHealthContent extends ConsumerWidget {
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: healthColor,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ],
@@ -211,7 +211,7 @@ class _HealthFactor extends StatelessWidget {
             fontSize: 12,
             fontWeight: FontWeight.w600,
             color: isGood ? Colors.white : AppTheme.textSecondary,
-            fontFamily: 'Inter',
+            
           ),
         ),
         Text(
@@ -219,7 +219,7 @@ class _HealthFactor extends StatelessWidget {
           style: const TextStyle(
             fontSize: 10,
             color: AppTheme.textTertiary,
-            fontFamily: 'Inter',
+            
           ),
         ),
       ],

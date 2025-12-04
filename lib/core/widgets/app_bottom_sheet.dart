@@ -121,7 +121,7 @@ class AppBottomSheet extends StatelessWidget {
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              fontFamily: 'Inter',
+              
             ),
           ),
           const SizedBox(height: 12),
@@ -131,7 +131,7 @@ class AppBottomSheet extends StatelessWidget {
             style: const TextStyle(
               fontSize: 15,
               color: AppTheme.textSecondary,
-              fontFamily: 'Inter',
+              
             ),
           ),
           const SizedBox(height: 24),
@@ -196,7 +196,7 @@ class AppBottomSheet extends StatelessWidget {
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
-                fontFamily: 'Inter',
+                
               ),
             ),
           ),
@@ -244,7 +244,7 @@ class AppBottomSheet extends StatelessWidget {
                   color: action.isDestructive
                       ? AppTheme.errorRed
                       : Colors.white,
-                  fontFamily: 'Inter',
+                  
                 ),
               ),
               subtitle: action.subtitle != null
@@ -253,7 +253,7 @@ class AppBottomSheet extends StatelessWidget {
                       style: const TextStyle(
                         color: AppTheme.textTertiary,
                         fontSize: 12,
-                        fontFamily: 'Inter',
+                        
                       ),
                     )
                   : null,
@@ -365,7 +365,7 @@ class BottomSheetHeader extends StatelessWidget {
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              fontFamily: 'Inter',
+              
             ),
           ),
           if (subtitle != null) ...[
@@ -375,7 +375,7 @@ class BottomSheetHeader extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 14,
                 color: AppTheme.textSecondary,
-                fontFamily: 'Inter',
+                
               ),
             ),
           ],
@@ -410,7 +410,7 @@ class BottomSheetHeader extends StatelessWidget {
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
-                  fontFamily: 'Inter',
+                  
                 ),
               ),
               if (subtitle != null) ...[
@@ -420,7 +420,7 @@ class BottomSheetHeader extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppTheme.textTertiary,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
               ],

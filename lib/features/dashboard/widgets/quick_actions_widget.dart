@@ -194,7 +194,7 @@ class _ActionButton extends StatelessWidget {
                   fontSize: 9,
                   fontWeight: FontWeight.w600,
                   color: color,
-                  fontFamily: 'Inter',
+                  
                   height: 1.1,
                 ),
                 textAlign: TextAlign.center,
@@ -351,7 +351,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ),
@@ -374,7 +374,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                 fontWeight: FontWeight.w600,
                 color: AppTheme.textTertiary,
                 letterSpacing: 1,
-                fontFamily: 'Inter',
+                
               ),
             ),
             const SizedBox(height: 8),
@@ -422,7 +422,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                               color: Colors.white,
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                           Text(
@@ -432,7 +432,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                             style: TextStyle(
                               color: AppTheme.textTertiary,
                               fontSize: 11,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                         ],
@@ -457,7 +457,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                 fontWeight: FontWeight.w600,
                 color: AppTheme.textTertiary,
                 letterSpacing: 1,
-                fontFamily: 'Inter',
+                
               ),
             ),
             const SizedBox(height: 8),
@@ -497,7 +497,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                         color: isSelected
                             ? AppTheme.primaryGreen
                             : AppTheme.textSecondary,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ),
@@ -513,14 +513,14 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 14,
-                fontFamily: 'Inter',
+                
               ),
               decoration: InputDecoration(
                 hintText: 'Type a message...',
                 hintStyle: TextStyle(
                   color: AppTheme.textTertiary,
                   fontSize: 14,
-                  fontFamily: 'Inter',
+                  
                 ),
                 filled: true,
                 fillColor: AppTheme.darkBackground,
@@ -588,7 +588,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              fontFamily: 'Inter',
+                              
                             ),
                           ),
                         ],
@@ -623,7 +623,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                   const Spacer(),
@@ -634,7 +634,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                       style: TextStyle(
                         color: AppTheme.primaryGreen,
                         fontWeight: FontWeight.w600,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ),
@@ -670,7 +670,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textTertiary,
                         letterSpacing: 1,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                     const Spacer(),
@@ -679,7 +679,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                       style: TextStyle(
                         fontSize: 11,
                         color: AppTheme.textTertiary,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ],
@@ -784,7 +784,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                             : Colors.white,
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                     Text(
@@ -792,7 +792,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                       style: TextStyle(
                         color: AppTheme.textTertiary,
                         fontSize: 12,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ],
@@ -869,7 +869,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
           color: Colors.white,
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          fontFamily: 'Inter',
+          
         ),
       ),
       content: SizedBox(
@@ -883,7 +883,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
               style: TextStyle(
                 fontSize: 12,
                 color: AppTheme.textSecondary,
-                fontFamily: 'Inter',
+                
               ),
             ),
             const SizedBox(height: 12),
@@ -947,7 +947,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
                                       : Colors.white,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  fontFamily: 'Inter',
+                                  
                                 ),
                               ),
                             ),
@@ -965,7 +965,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
                                         : Colors.white,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w500,
-                                    fontFamily: 'Inter',
+                                    
                                   ),
                                 ),
                                 if (node.shortName != null &&
@@ -975,7 +975,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
                                     style: TextStyle(
                                       color: AppTheme.textTertiary,
                                       fontSize: 11,
-                                      fontFamily: 'Inter',
+                                      
                                     ),
                                   ),
                               ],
@@ -1007,7 +1007,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
             'Cancel',
             style: TextStyle(
               color: AppTheme.textSecondary,
-              fontFamily: 'Inter',
+              
             ),
           ),
         ),
@@ -1036,7 +1036,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
                   'Trace',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontFamily: 'Inter',
+                    
                   ),
                 ),
         ),

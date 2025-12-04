@@ -261,7 +261,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
                       style: TextStyle(
                         fontSize: 12,
                         color: AppTheme.accentOrange,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                   ),
@@ -371,7 +371,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            fontFamily: 'Inter',
+            
           ),
         ),
         actions: [
@@ -439,7 +439,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14,
-                      fontFamily: 'Inter',
+                      
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -449,7 +449,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
                     style: TextStyle(
                       color: AppTheme.textSecondary,
                       fontSize: 12,
-                      fontFamily: 'Inter',
+                      
                     ),
                     textAlign: TextAlign.center,
                   ),

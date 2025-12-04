@@ -83,7 +83,7 @@ class _DeviceSheetContent extends ConsumerWidget {
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
-                        fontFamily: 'Inter',
+                        
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -111,7 +111,7 @@ class _DeviceSheetContent extends ConsumerWidget {
                                 : isReconnecting
                                 ? AppTheme.warningYellow
                                 : AppTheme.textTertiary,
-                            fontFamily: 'Inter',
+                            
                           ),
                         ),
                       ],
@@ -209,7 +209,7 @@ class _DeviceSheetContent extends ConsumerWidget {
         fontSize: 12,
         fontWeight: FontWeight.w600,
         color: AppTheme.textTertiary,
-        fontFamily: 'Inter',
+        
         letterSpacing: 1,
       ),
     );
@@ -493,7 +493,7 @@ class _ActionTile extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -502,7 +502,7 @@ class _ActionTile extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppTheme.textSecondary,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                     ],

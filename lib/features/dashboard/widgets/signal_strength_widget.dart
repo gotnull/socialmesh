@@ -145,7 +145,7 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
                     style: TextStyle(
                       color: AppTheme.textTertiary,
                       fontSize: 14,
-                      fontFamily: 'Inter',
+                      
                     ),
                   ),
                 ),
@@ -200,7 +200,7 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: signalColor,
-                            fontFamily: 'Inter',
+                            
                           ),
                         );
                       },
@@ -239,7 +239,7 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           color: signalColor,
-                          fontFamily: 'Inter',
+                          
                         ),
                       ),
                     ),
@@ -419,7 +419,7 @@ Widget buildLiveIndicator() {
             fontSize: 11,
             fontWeight: FontWeight.w700,
             color: AppTheme.errorRed,
-            fontFamily: 'Inter',
+            
             letterSpacing: 0.5,
           ),
         ),
@@ -453,7 +453,7 @@ class _LegendItem extends StatelessWidget {
           style: const TextStyle(
             fontSize: 10,
             color: AppTheme.textTertiary,
-            fontFamily: 'Inter',
+            
           ),
         ),
       ],
@@ -527,7 +527,7 @@ class MultiLineChartPainter extends CustomPainter {
         style: const TextStyle(
           color: AppTheme.textTertiary,
           fontSize: 9,
-          fontFamily: 'Inter',
+          
           fontWeight: FontWeight.w500,
         ),
       );
@@ -544,7 +544,7 @@ class MultiLineChartPainter extends CustomPainter {
         style: const TextStyle(
           color: channelUtilColor,
           fontSize: 9,
-          fontFamily: 'Inter',
+          
           fontWeight: FontWeight.w500,
         ),
       );
