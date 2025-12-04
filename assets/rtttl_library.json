@@ -1,7 +1,5 @@
 {
   "version": 1,
-  "count": 11106,
-  "builtinCount": 11,
   "tones": [
     {
       "filename": "_builtin_meshtastic_default",

@@ -70,8 +70,6 @@ class RtttlLibraryService {
   static const _jsonPath = 'assets/rtttl_library.json';
 
   List<RtttlLibraryItem>? _cachedTones;
-  int _totalCount = 0;
-  int _builtinCount = 0;
   bool _loaded = false;
 
   /// Load the library from JSON
@@ -81,9 +79,6 @@ class RtttlLibraryService {
     try {
       final jsonString = await rootBundle.loadString(_jsonPath);
       final data = json.decode(jsonString) as Map<String, dynamic>;
-
-      _totalCount = data['count'] as int? ?? 0;
-      _builtinCount = data['builtinCount'] as int? ?? 0;
 
       final tonesList = data['tones'] as List<dynamic>? ?? [];
       _cachedTones = tonesList
@@ -217,20 +212,18 @@ class RtttlLibraryService {
   /// Get total count of available tones
   Future<int> getTotalCount() async {
     await _ensureLoaded();
-    return _totalCount;
+    return _cachedTones?.length ?? 0;
   }
 
   /// Get count of built-in tones
   Future<int> getBuiltinCount() async {
     await _ensureLoaded();
-    return _builtinCount;
+    return (_cachedTones ?? []).where((t) => t.isBuiltin).length;
   }
 
   /// Clear the cache and force reload
   void clearCache() {
     _cachedTones = null;
     _loaded = false;
-    _totalCount = 0;
-    _builtinCount = 0;
   }
 }
