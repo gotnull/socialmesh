@@ -422,14 +422,20 @@ class IftttService {
   }
 
   /// Test webhook configuration
+  /// Sends a sample geofence alert so you can test your notification format
   Future<bool> testWebhook() async {
     if (_config.webhookKey.isEmpty) return false;
 
+    // Use configured geofence center or default Sydney coordinates
+    final testLat = _config.geofenceLat ?? -33.8688;
+    final testLon = _config.geofenceLon ?? 151.2093;
+    final testNodeName = _config.geofenceNodeName ?? 'Test Node';
+
     return _triggerWebhook(
-      eventName: 'meshtastic_test',
-      value1: 'Protofluff Test',
-      value2: 'IFTTT integration is working!',
-      value3: DateTime.now().toIso8601String(),
+      eventName: 'meshtastic_position',
+      value1: testNodeName,
+      value2: '$testLat,$testLon',
+      value3: '1250m from center',
     );
   }
 
