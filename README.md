@@ -2,6 +2,48 @@
 
 A **privacy-first social network** built on Meshtastic mesh radios. Communicate without internet - messages hop between nearby devices, creating a truly decentralized network.
 
+## Feature Overview
+
+| Category | Feature | Status | Description |
+|----------|---------|--------|-------------|
+| **Messaging** | Text Messages | ✅ | Send/receive messages over mesh |
+| | Channel Support | ✅ | Multi-channel messaging |
+| | Direct Messages | ✅ | Private node-to-node messages |
+| | Quick Responses | ✅ | Pre-configured canned messages |
+| | Message Search | ✅ | Search through message history |
+| | Offline Queue | ✅ | Messages queued when disconnected |
+| **Network** | Node Discovery | ✅ | Track all mesh nodes |
+| | Traceroute | ✅ | Trace path to any node |
+| | Network Topology | ✅ | Visual mesh network graph |
+| | Signal Charts | ✅ | Real-time signal strength history |
+| | Store & Forward | ✅ | Configure message store & forward |
+| | Range Test | ✅ | Run and log range tests |
+| **Map & Location** | Node Map | ✅ | View nodes on interactive map |
+| | Waypoints | ✅ | Drop and share waypoints |
+| | Location Sharing | ✅ | Share your position to mesh |
+| | Offline Maps | 🔒 | Download maps for offline use |
+| **Safety** | Emergency SOS | ✅ | One-tap emergency broadcast |
+| | Geofence Alerts | ✅ | IFTTT alerts when nodes leave area |
+| | Battery Alerts | ✅ | Low battery notifications |
+| **Device Config** | LoRa Settings | ✅ | Region, modem preset, frequency |
+| | Power Settings | ✅ | Sleep, shutdown, power saving |
+| | Display Settings | ✅ | Screen timeout, brightness |
+| | Position Settings | ✅ | GPS, smart position, intervals |
+| | Bluetooth Settings | ✅ | Pairing mode, PIN, power |
+| | Network/WiFi | ✅ | WiFi, Ethernet, NTP |
+| | Security | ✅ | Admin key, managed mode |
+| | Detection Sensor | ✅ | Configure motion/door sensors |
+| **Audio** | Ringtone Library | ✅ | 7,000+ RTTTL ringtones |
+| | Ringtone Preview | ✅ | Play before setting |
+| | Custom Ringtones | ✅ | Create and save custom RTTTL |
+| **Integrations** | IFTTT Webhooks | ✅ | Trigger automations |
+| | MQTT | ✅ | Configure MQTT bridge |
+| | QR Import | ✅ | Import channels via QR code |
+| **Data** | Cloud Backup | 🔒 | Backup to cloud |
+| | Export Messages | 🔒 | Export to PDF/CSV |
+
+**Legend:** ✅ Available | 🔒 Premium Feature
+
 ## Features
 
 ### Social Features

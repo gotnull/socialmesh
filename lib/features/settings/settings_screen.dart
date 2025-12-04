@@ -26,6 +26,10 @@ import 'subscription_screen.dart';
 import 'premium_widgets.dart';
 import 'ifttt_config_screen.dart';
 import 'canned_responses_screen.dart';
+import 'range_test_screen.dart';
+import 'store_forward_config_screen.dart';
+import 'detection_sensor_config_screen.dart';
+import '../map/offline_maps_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -175,7 +179,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             fontSize: 28,
             fontWeight: FontWeight.w700,
             color: Colors.white,
-            
           ),
         ),
       ),
@@ -397,6 +400,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 title: 'Cloud Backup',
                 subtitle: 'Backup messages and settings to cloud',
               ),
+              // Premium: Offline Maps
+              _PremiumSettingsTile(
+                feature: PremiumFeature.offlineMaps,
+                icon: Icons.map,
+                title: 'Offline Maps',
+                subtitle: 'Download map regions for offline use',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const OfflineMapsScreen()),
+                ),
+              ),
               // Premium: Message Export
               _PremiumSettingsTile(
                 feature: PremiumFeature.messageExport,
@@ -564,6 +578,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
               _SettingsTile(
+                icon: Icons.radar,
+                title: 'Range Test',
+                subtitle: 'Test signal range with other nodes',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RangeTestScreen()),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.storage,
+                title: 'Store & Forward',
+                subtitle: 'Store and relay messages for offline nodes',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const StoreForwardConfigScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.sensors,
+                title: 'Detection Sensor',
+                subtitle: 'Configure GPIO-based motion/door sensors',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DetectionSensorConfigScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
                 icon: Icons.music_note,
                 title: 'Ringtone',
                 subtitle: 'Customize notification sound (RTTTL)',
@@ -657,7 +702,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         title: Text(
           '$limit messages',
-          style: const TextStyle(color: Colors.white, fontFamily: 'JetBrainsMono'),
+          style: const TextStyle(
+            color: Colors.white,
+            fontFamily: 'JetBrainsMono',
+          ),
         ),
       ),
     ).then((selectedLimit) {
@@ -775,7 +823,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               fontSize: 20,
               fontWeight: FontWeight.w700,
               color: Colors.white,
-              
             ),
           ),
           const SizedBox(height: 24),
@@ -840,7 +887,7 @@ class _SectionHeader extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: AppTheme.textTertiary,
-          
+
           letterSpacing: 0.5,
         ),
       ),
@@ -898,7 +945,6 @@ class _SettingsTile extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
                           color: titleColor ?? Colors.white,
-                          
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -907,7 +953,6 @@ class _SettingsTile extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppTheme.textTertiary,
-                          
                         ),
                       ),
                     ],
@@ -932,12 +977,14 @@ class _PremiumSettingsTile extends ConsumerWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   const _PremiumSettingsTile({
     required this.feature,
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   @override
@@ -953,8 +1000,8 @@ class _PremiumSettingsTile extends ConsumerWidget {
         ? 'PRO'
         : 'PREMIUM';
 
-    final onTap = hasFeature
-        ? null
+    final effectiveOnTap = hasFeature
+        ? onTap
         : () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
@@ -971,7 +1018,7 @@ class _PremiumSettingsTile extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: onTap,
+          onTap: effectiveOnTap,
           borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1020,7 +1067,6 @@ class _PremiumSettingsTile extends ConsumerWidget {
                               color: hasFeature
                                   ? Colors.white
                                   : Colors.white.withValues(alpha: 0.6),
-                              
                             ),
                           ),
                           if (!hasFeature) ...[
@@ -1056,7 +1102,6 @@ class _PremiumSettingsTile extends ConsumerWidget {
                           color: hasFeature
                               ? AppTheme.textTertiary
                               : AppTheme.textTertiary.withValues(alpha: 0.6),
-                          
                         ),
                       ),
                     ],

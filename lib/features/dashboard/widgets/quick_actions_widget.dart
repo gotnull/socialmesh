@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -23,45 +24,63 @@ class QuickActionsContent extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: _ActionButton(
-              icon: Icons.send,
-              label: 'Quick\nMessage',
-              enabled: isConnected,
-              onTap: () => _showQuickMessageDialog(context, ref),
-            ),
+          // First row: Quick actions
+          Row(
+            children: [
+              Expanded(
+                child: _ActionButton(
+                  icon: Icons.send,
+                  label: 'Quick\nMessage',
+                  enabled: isConnected,
+                  onTap: () => _showQuickMessageDialog(context, ref),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ActionButton(
+                  icon: Icons.location_on,
+                  label: 'Share\nLocation',
+                  enabled: isConnected,
+                  onTap: () => _shareLocation(context, ref),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ActionButton(
+                  icon: Icons.route,
+                  label: 'Traceroute',
+                  enabled: isConnected,
+                  onTap: () => _showTracerouteDialog(context, ref),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ActionButton(
+                  icon: Icons.refresh,
+                  label: 'Request\nPositions',
+                  enabled: isConnected,
+                  onTap: () => _requestPositions(context, ref),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _ActionButton(
-              icon: Icons.location_on,
-              label: 'Share\nLocation',
-              enabled: isConnected,
-              onTap: () => _shareLocation(context, ref),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _ActionButton(
-              icon: Icons.route,
-              label: 'Traceroute',
-              enabled: isConnected,
-              onTap: () => _showTracerouteDialog(context, ref),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _ActionButton(
-              icon: Icons.refresh,
-              label: 'Request\nPositions',
-              enabled: isConnected,
-              onTap: () => _requestPositions(context, ref),
-            ),
+          const SizedBox(height: 8),
+          // Second row: SOS button
+          _SosButton(
+            enabled: isConnected,
+            onTap: () => _showSosConfirmation(context, ref),
           ),
         ],
       ),
+    );
+  }
+
+  void _showSosConfirmation(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => _SosConfirmationDialog(ref: ref),
     );
   }
 
@@ -194,7 +213,7 @@ class _ActionButton extends StatelessWidget {
                   fontSize: 9,
                   fontWeight: FontWeight.w600,
                   color: color,
-                  
+
                   height: 1.1,
                 ),
                 textAlign: TextAlign.center,
@@ -203,6 +222,304 @@ class _ActionButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Emergency SOS button widget - prominently displayed
+class _SosButton extends StatelessWidget {
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _SosButton({required this.enabled, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          height: 48,
+          decoration: BoxDecoration(
+            color: enabled
+                ? AppTheme.errorRed.withValues(alpha: 0.15)
+                : AppTheme.darkBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: enabled
+                  ? AppTheme.errorRed.withValues(alpha: 0.4)
+                  : AppTheme.darkBorder,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.emergency,
+                size: 20,
+                color: enabled ? AppTheme.errorRed : AppTheme.textTertiary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Emergency SOS',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: enabled ? AppTheme.errorRed : AppTheme.textTertiary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// SOS confirmation dialog with safety checks
+class _SosConfirmationDialog extends StatefulWidget {
+  final WidgetRef ref;
+
+  const _SosConfirmationDialog({required this.ref});
+
+  @override
+  State<_SosConfirmationDialog> createState() => _SosConfirmationDialogState();
+}
+
+class _SosConfirmationDialogState extends State<_SosConfirmationDialog> {
+  bool _isSending = false;
+  int _countdown = 5;
+  bool _canSend = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCountdown();
+  }
+
+  void _startCountdown() async {
+    for (int i = 5; i > 0; i--) {
+      if (!mounted) return;
+      setState(() => _countdown = i);
+      await Future.delayed(const Duration(seconds: 1));
+    }
+    if (mounted) {
+      setState(() {
+        _countdown = 0;
+        _canSend = true;
+      });
+    }
+  }
+
+  Future<void> _sendSos() async {
+    if (!_canSend || _isSending) return;
+
+    setState(() => _isSending = true);
+
+    // Haptic feedback for emergency action
+    HapticFeedback.heavyImpact();
+
+    try {
+      // Get current location if available
+      final locationService = widget.ref.read(locationServiceProvider);
+      double? latitude;
+      double? longitude;
+
+      try {
+        final position = await locationService.getCurrentPosition();
+        if (position != null) {
+          latitude = position.latitude;
+          longitude = position.longitude;
+        }
+      } catch (_) {
+        // Location not available, continue without it
+      }
+
+      // Get my node info
+      final myNodeNum = widget.ref.read(myNodeNumProvider);
+      if (myNodeNum == null) {
+        throw Exception('No connected node');
+      }
+      final nodes = widget.ref.read(nodesProvider);
+      final myNode = nodes[myNodeNum];
+      final myName = myNode?.longName ?? myNode?.shortName ?? 'Unknown';
+
+      // Trigger IFTTT SOS webhook
+      final iftttService = widget.ref.read(iftttServiceProvider);
+      await iftttService.triggerSosEmergency(
+        nodeNum: myNodeNum,
+        nodeName: myName,
+        latitude: latitude,
+        longitude: longitude,
+      );
+
+      // Broadcast SOS message to all nodes
+      final protocol = widget.ref.read(protocolServiceProvider);
+      final locationText = (latitude != null && longitude != null)
+          ? '\nLocation: $latitude, $longitude'
+          : '';
+      await protocol.sendMessage(
+        text: '🆘 EMERGENCY SOS from $myName$locationText',
+        to: broadcastAddress,
+        channel: 0,
+        wantAck: true,
+        messageId: 'sos_${DateTime.now().millisecondsSinceEpoch}',
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Emergency SOS sent to all nodes'),
+            backgroundColor: AppTheme.errorRed,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isSending = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to send SOS: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppTheme.darkSurface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.errorRed.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.emergency,
+              color: AppTheme.errorRed,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Text(
+            'Emergency SOS',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.errorRed.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppTheme.errorRed.withValues(alpha: 0.3),
+              ),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'This will:',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• Broadcast an emergency message to ALL nodes on the mesh\n'
+                  '• Include your current location if available\n'
+                  '• Trigger IFTTT webhook (if configured)',
+                  style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 13,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _canSend
+                ? 'Ready to send emergency alert'
+                : 'Please wait $_countdown seconds...',
+            style: TextStyle(
+              color: _canSend ? AppTheme.errorRed : AppTheme.textTertiary,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isSending ? null : () => Navigator.pop(context),
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: _canSend && !_isSending ? _sendSos : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.errorRed,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: AppTheme.darkBorder,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: _isSending
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.emergency, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      _canSend ? 'Send SOS' : '$_countdown',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ],
     );
   }
 }
@@ -351,7 +668,6 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      
                     ),
                   ),
                 ),
@@ -374,7 +690,6 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                 fontWeight: FontWeight.w600,
                 color: AppTheme.textTertiary,
                 letterSpacing: 1,
-                
               ),
             ),
             const SizedBox(height: 8),
@@ -422,7 +737,6 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                               color: Colors.white,
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              
                             ),
                           ),
                           Text(
@@ -432,7 +746,6 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                             style: TextStyle(
                               color: AppTheme.textTertiary,
                               fontSize: 11,
-                              
                             ),
                           ),
                         ],
@@ -457,7 +770,6 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                 fontWeight: FontWeight.w600,
                 color: AppTheme.textTertiary,
                 letterSpacing: 1,
-                
               ),
             ),
             const SizedBox(height: 8),
@@ -497,7 +809,6 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                         color: isSelected
                             ? AppTheme.primaryGreen
                             : AppTheme.textSecondary,
-                        
                       ),
                     ),
                   ),
@@ -510,17 +821,12 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
             // Custom message input
             TextField(
               controller: _controller,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Type a message...',
                 hintStyle: TextStyle(
                   color: AppTheme.textTertiary,
                   fontSize: 14,
-                  
                 ),
                 filled: true,
                 fillColor: AppTheme.darkBackground,
@@ -588,7 +894,6 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              
                             ),
                           ),
                         ],
@@ -623,7 +928,6 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      
                     ),
                   ),
                   const Spacer(),
@@ -634,7 +938,6 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                       style: TextStyle(
                         color: AppTheme.primaryGreen,
                         fontWeight: FontWeight.w600,
-                        
                       ),
                     ),
                   ),
@@ -670,7 +973,6 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textTertiary,
                         letterSpacing: 1,
-                        
                       ),
                     ),
                     const Spacer(),
@@ -679,7 +981,6 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                       style: TextStyle(
                         fontSize: 11,
                         color: AppTheme.textTertiary,
-                        
                       ),
                     ),
                   ],
@@ -784,7 +1085,6 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                             : Colors.white,
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        
                       ),
                     ),
                     Text(
@@ -792,7 +1092,6 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                       style: TextStyle(
                         color: AppTheme.textTertiary,
                         fontSize: 12,
-                        
                       ),
                     ),
                   ],
@@ -869,7 +1168,6 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
           color: Colors.white,
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          
         ),
       ),
       content: SizedBox(
@@ -880,11 +1178,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
           children: [
             const Text(
               'Select a node to trace the route to:',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppTheme.textSecondary,
-                
-              ),
+              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 12),
             Container(
@@ -947,7 +1241,6 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
                                       : Colors.white,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  
                                 ),
                               ),
                             ),
@@ -965,7 +1258,6 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
                                         : Colors.white,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w500,
-                                    
                                   ),
                                 ),
                                 if (node.shortName != null &&
@@ -975,7 +1267,6 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
                                     style: TextStyle(
                                       color: AppTheme.textTertiary,
                                       fontSize: 11,
-                                      
                                     ),
                                   ),
                               ],
@@ -1005,10 +1296,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
           onPressed: _isSending ? null : () => Navigator.pop(context),
           child: Text(
             'Cancel',
-            style: TextStyle(
-              color: AppTheme.textSecondary,
-              
-            ),
+            style: TextStyle(color: AppTheme.textSecondary),
           ),
         ),
         ElevatedButton(
@@ -1034,10 +1322,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
                 )
               : const Text(
                   'Trace',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
         ),
       ],

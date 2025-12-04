@@ -435,7 +435,11 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   final FocusNode _messageFocusNode = FocusNode();
+  final FocusNode _searchFocusNode = FocusNode();
+  bool _isSearching = false;
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -443,16 +447,33 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _messageFocusNode.requestFocus();
     });
+    _searchController.addListener(() {
+      setState(() => _searchQuery = _searchController.text.toLowerCase());
+    });
   }
 
   void _dismissKeyboard() {
     FocusScope.of(context).unfocus();
   }
 
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchController.clear();
+        _searchQuery = '';
+      } else {
+        _searchFocusNode.requestFocus();
+      }
+    });
+  }
+
   @override
   void dispose() {
     _messageController.dispose();
+    _searchController.dispose();
     _messageFocusNode.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -897,6 +918,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           .toList();
     }
 
+    // Apply search filter if searching
+    if (_isSearching && _searchQuery.isNotEmpty) {
+      filteredMessages = filteredMessages
+          .where((m) => m.text.toLowerCase().contains(_searchQuery))
+          .toList();
+    }
+
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: Scaffold(
@@ -904,79 +932,132 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         appBar: AppBar(
           backgroundColor: AppTheme.darkBackground,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: Icon(
+              _isSearching ? Icons.close : Icons.arrow_back,
+              color: Colors.white,
+            ),
             onPressed: () {
               _dismissKeyboard();
-              Navigator.pop(context);
+              if (_isSearching) {
+                _toggleSearch();
+              } else {
+                Navigator.pop(context);
+              }
             },
           ),
-          title: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: widget.type == ConversationType.channel
-                      ? AppTheme.primaryGreen.withValues(alpha: 0.2)
-                      : AppTheme.graphPurple,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: widget.type == ConversationType.channel
-                      ? const Icon(
-                          Icons.tag,
-                          color: AppTheme.primaryGreen,
-                          size: 18,
-                        )
-                      : Text(
-                          widget.title.substring(0, 2),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          title: _isSearching
+              ? TextField(
+                  controller: _searchController,
+                  focusNode: _searchFocusNode,
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  decoration: InputDecoration(
+                    hintText: 'Search messages...',
+                    hintStyle: TextStyle(
+                      color: AppTheme.textSecondary.withValues(alpha: 0.6),
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  autofocus: true,
+                )
+              : Row(
                   children: [
-                    Text(
-                      widget.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: widget.type == ConversationType.channel
+                            ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+                            : AppTheme.graphPurple,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: widget.type == ConversationType.channel
+                            ? const Icon(
+                                Icons.tag,
+                                color: AppTheme.primaryGreen,
+                                size: 18,
+                              )
+                            : Text(
+                                widget.title.substring(0, 2),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                       ),
                     ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.title,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            widget.type == ConversationType.channel
+                                ? 'Channel'
+                                : 'Direct Message',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+          actions: [
+            if (!_isSearching)
+              IconButton(
+                icon: const Icon(Icons.search, color: Colors.white),
+                tooltip: 'Search Messages',
+                onPressed: _toggleSearch,
+              ),
+            if (widget.type == ConversationType.channel && !_isSearching)
+              IconButton(
+                icon: const Icon(Icons.settings, color: Colors.white),
+                tooltip: 'Channel Settings',
+                onPressed: () => _showChannelSettings(context),
+              ),
+          ],
+        ),
+        body: Column(
+          children: [
+            // Search results count
+            if (_isSearching && _searchQuery.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                color: AppTheme.darkCard,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: AppTheme.textSecondary.withValues(alpha: 0.8),
+                    ),
+                    const SizedBox(width: 8),
                     Text(
-                      widget.type == ConversationType.channel
-                          ? 'Channel'
-                          : 'Direct Message',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textTertiary,
+                      '${filteredMessages.length} message${filteredMessages.length == 1 ? '' : 's'} found',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppTheme.textSecondary.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
-          actions: widget.type == ConversationType.channel
-              ? [
-                  IconButton(
-                    icon: const Icon(Icons.settings, color: Colors.white),
-                    tooltip: 'Channel Settings',
-                    onPressed: () => _showChannelSettings(context),
-                  ),
-                ]
-              : null,
-        ),
-        body: Column(
-          children: [
             // Messages
             Expanded(
               child: filteredMessages.isEmpty
@@ -984,14 +1065,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
-                            Icons.chat_bubble_outline,
+                          Icon(
+                            _isSearching
+                                ? Icons.search_off
+                                : Icons.chat_bubble_outline,
                             size: 48,
                             color: AppTheme.textTertiary,
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            widget.type == ConversationType.channel
+                            _isSearching
+                                ? 'No messages match your search'
+                                : widget.type == ConversationType.channel
                                 ? 'No messages in this channel'
                                 : 'Start the conversation',
                             style: const TextStyle(

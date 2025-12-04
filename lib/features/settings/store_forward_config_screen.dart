@@ -1,0 +1,356 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme.dart';
+import '../../providers/app_providers.dart';
+
+/// Screen for configuring Store & Forward module
+class StoreForwardConfigScreen extends ConsumerStatefulWidget {
+  const StoreForwardConfigScreen({super.key});
+
+  @override
+  ConsumerState<StoreForwardConfigScreen> createState() =>
+      _StoreForwardConfigScreenState();
+}
+
+class _StoreForwardConfigScreenState
+    extends ConsumerState<StoreForwardConfigScreen> {
+  bool _enabled = false;
+  bool _isServer = false;
+  bool _heartbeat = false;
+  int _records = 0;
+  int _historyReturnMax = 100;
+  int _historyReturnWindow = 240; // minutes
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentConfig();
+  }
+
+  Future<void> _loadCurrentConfig() async {
+    // Config would be loaded from device if available
+    // For now, start with defaults
+  }
+
+  Future<void> _saveConfig() async {
+    setState(() => _isSaving = true);
+
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      await protocol.setStoreForwardConfig(
+        enabled: _enabled,
+        heartbeat: _heartbeat,
+        records: _records,
+        historyReturnMax: _historyReturnMax,
+        historyReturnWindow: _historyReturnWindow,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Store & Forward configuration saved'),
+            backgroundColor: AppTheme.primaryGreen,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save config: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      appBar: AppBar(
+        backgroundColor: AppTheme.darkSurface,
+        title: const Text('Store & Forward'),
+        actions: [
+          TextButton(
+            onPressed: _isSaving ? null : _saveConfig,
+            child: _isSaving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text(
+                    'Save',
+                    style: TextStyle(color: AppTheme.primaryGreen),
+                  ),
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // Info card
+          _buildInfoCard(),
+
+          const SizedBox(height: 16),
+
+          // Module settings
+          _buildSectionTitle('Module Settings'),
+          _buildConfigCard(),
+
+          const SizedBox(height: 16),
+
+          // Server settings (only shown if server mode)
+          if (_isServer) ...[
+            _buildSectionTitle('Server Settings'),
+            _buildServerSettingsCard(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        title.toUpperCase(),
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: AppTheme.textTertiary,
+          letterSpacing: 1,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.primaryBlue.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.storage, color: AppTheme.primaryBlue, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Store & Forward',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Allows nodes to store messages and forward them to devices that were offline. '
+                  'A "server" node stores messages, while "client" nodes can request missed messages.',
+                  style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConfigCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          SwitchListTile(
+            title: const Text(
+              'Enable Store & Forward',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: const Text(
+              'Participate in the S&F network',
+              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+            ),
+            value: _enabled,
+            activeTrackColor: AppTheme.primaryGreen,
+            onChanged: (v) => setState(() => _enabled = v),
+          ),
+          const Divider(height: 1, color: AppTheme.darkBorder),
+          SwitchListTile(
+            title: const Text(
+              'Act as Server',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: const Text(
+              'Store messages for other nodes (uses more RAM)',
+              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+            ),
+            value: _isServer,
+            activeTrackColor: AppTheme.primaryGreen,
+            onChanged: _enabled ? (v) => setState(() => _isServer = v) : null,
+          ),
+          const Divider(height: 1, color: AppTheme.darkBorder),
+          SwitchListTile(
+            title: const Text(
+              'Heartbeat',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: const Text(
+              'Send periodic announcements to the mesh',
+              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+            ),
+            value: _heartbeat,
+            activeTrackColor: AppTheme.primaryGreen,
+            onChanged: _enabled ? (v) => setState(() => _heartbeat = v) : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServerSettingsCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            title: const Text(
+              'Records Limit',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: Text(
+              _records == 0 ? 'Use device default' : '$_records records',
+              style: const TextStyle(
+                color: AppTheme.textTertiary,
+                fontSize: 12,
+              ),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.remove, color: AppTheme.textSecondary),
+                  onPressed: _records > 0
+                      ? () => setState(() => _records -= 50)
+                      : null,
+                ),
+                Text(
+                  _records == 0 ? 'Auto' : '$_records',
+                  style: const TextStyle(
+                    color: AppTheme.primaryGreen,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add, color: AppTheme.textSecondary),
+                  onPressed: _records < 500
+                      ? () => setState(() => _records += 50)
+                      : null,
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: AppTheme.darkBorder),
+          ListTile(
+            title: const Text(
+              'History Return Max',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: Text(
+              'Max $_historyReturnMax messages per request',
+              style: const TextStyle(
+                color: AppTheme.textTertiary,
+                fontSize: 12,
+              ),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.remove, color: AppTheme.textSecondary),
+                  onPressed: _historyReturnMax > 25
+                      ? () => setState(() => _historyReturnMax -= 25)
+                      : null,
+                ),
+                Text(
+                  '$_historyReturnMax',
+                  style: const TextStyle(
+                    color: AppTheme.primaryGreen,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add, color: AppTheme.textSecondary),
+                  onPressed: _historyReturnMax < 250
+                      ? () => setState(() => _historyReturnMax += 25)
+                      : null,
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: AppTheme.darkBorder),
+          ListTile(
+            title: const Text(
+              'History Window',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: Text(
+              'Keep messages for ${_historyReturnWindow ~/ 60} hours',
+              style: const TextStyle(
+                color: AppTheme.textTertiary,
+                fontSize: 12,
+              ),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.remove, color: AppTheme.textSecondary),
+                  onPressed: _historyReturnWindow > 60
+                      ? () => setState(() => _historyReturnWindow -= 60)
+                      : null,
+                ),
+                Text(
+                  '${_historyReturnWindow ~/ 60}h',
+                  style: const TextStyle(
+                    color: AppTheme.primaryGreen,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add, color: AppTheme.textSecondary),
+                  onPressed: _historyReturnWindow < 720
+                      ? () => setState(() => _historyReturnWindow += 60)
+                      : null,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
