@@ -20,6 +20,21 @@ final _variableRegExp = RegExp(
   r'\{\{(node\.name|battery|location|message|time)\}\}',
 );
 
+/// RegExp to match any {{...}} pattern (for stripping invalid ones)
+final _anyVariableRegExp = RegExp(r'\{\{[^}]+\}\}');
+
+/// Strips invalid variables from text, keeping only valid ones
+String _sanitizeVariables(String text) {
+  return text.replaceAllMapped(_anyVariableRegExp, (match) {
+    final variable = match.group(0)!;
+    if (_validVariables.contains(variable)) {
+      return variable; // Keep valid variables
+    }
+    // Remove invalid variable entirely
+    return '';
+  });
+}
+
 /// Widget for editing an action
 class ActionEditor extends StatefulWidget {
   final AutomationAction action;
@@ -257,9 +272,16 @@ class _ActionEditorState extends State<ActionEditor> {
                 backgroundColor: AppTheme.successGreen.withValues(alpha: 0.15),
               ),
               onChanged: (value) {
+                final sanitized = _sanitizeVariables(value);
+                if (sanitized != value) {
+                  _messageController.text = sanitized;
+                  _messageController.selection = TextSelection.collapsed(
+                    offset: sanitized.length,
+                  );
+                }
                 widget.onChanged(
                   widget.action.copyWith(
-                    config: {...widget.action.config, 'messageText': value},
+                    config: {...widget.action.config, 'messageText': sanitized},
                   ),
                 );
               },
@@ -302,11 +324,17 @@ class _ActionEditorState extends State<ActionEditor> {
                 backgroundColor: AppTheme.successGreen.withValues(alpha: 0.15),
               ),
               onChanged: (value) {
+                final sanitized = _sanitizeVariables(value);
+                if (sanitized != value) {
+                  _notificationTitleController.text = sanitized;
+                  _notificationTitleController.selection =
+                      TextSelection.collapsed(offset: sanitized.length);
+                }
                 widget.onChanged(
                   widget.action.copyWith(
                     config: {
                       ...widget.action.config,
-                      'notificationTitle': value,
+                      'notificationTitle': sanitized,
                     },
                   ),
                 );
@@ -338,11 +366,17 @@ class _ActionEditorState extends State<ActionEditor> {
                 backgroundColor: AppTheme.successGreen.withValues(alpha: 0.15),
               ),
               onChanged: (value) {
+                final sanitized = _sanitizeVariables(value);
+                if (sanitized != value) {
+                  _notificationBodyController.text = sanitized;
+                  _notificationBodyController.selection =
+                      TextSelection.collapsed(offset: sanitized.length);
+                }
                 widget.onChanged(
                   widget.action.copyWith(
                     config: {
                       ...widget.action.config,
-                      'notificationBody': value,
+                      'notificationBody': sanitized,
                     },
                   ),
                 );
