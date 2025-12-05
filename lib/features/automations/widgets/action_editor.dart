@@ -56,7 +56,11 @@ class ActionEditor extends StatelessWidget {
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                         const SizedBox(width: 4),
-                        const Icon(Icons.unfold_more, size: 16, color: Colors.grey),
+                        const Icon(
+                          Icons.unfold_more,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
                       ],
                     ),
                   ),
@@ -75,7 +79,7 @@ class ActionEditor extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Action configuration
           _buildActionConfig(context),
         ],
@@ -117,9 +121,11 @@ class ActionEditor extends StatelessWidget {
           TextField(
             controller: TextEditingController(text: action.messageText ?? ''),
             onChanged: (value) {
-              onChanged(action.copyWith(
-                config: {...action.config, 'messageText': value},
-              ));
+              onChanged(
+                action.copyWith(
+                  config: {...action.config, 'messageText': value},
+                ),
+              );
             },
             decoration: InputDecoration(
               labelText: 'Message',
@@ -144,15 +150,19 @@ class ActionEditor extends StatelessWidget {
       child: Column(
         children: [
           TextField(
-            controller: TextEditingController(text: action.notificationTitle ?? ''),
+            controller: TextEditingController(
+              text: action.notificationTitle ?? '',
+            ),
             onChanged: (value) {
-              onChanged(action.copyWith(
-                config: {...action.config, 'notificationTitle': value},
-              ));
+              onChanged(
+                action.copyWith(
+                  config: {...action.config, 'notificationTitle': value},
+                ),
+              );
             },
             decoration: InputDecoration(
               labelText: 'Title',
-              hintText: 'e.g., 🔋 Low Battery: {{node.name}}',
+              hintText: 'e.g., Low Battery: {{node.name}}',
               isDense: true,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -161,11 +171,15 @@ class ActionEditor extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           TextField(
-            controller: TextEditingController(text: action.notificationBody ?? ''),
+            controller: TextEditingController(
+              text: action.notificationBody ?? '',
+            ),
             onChanged: (value) {
-              onChanged(action.copyWith(
-                config: {...action.config, 'notificationBody': value},
-              ));
+              onChanged(
+                action.copyWith(
+                  config: {...action.config, 'notificationBody': value},
+                ),
+              );
             },
             decoration: InputDecoration(
               labelText: 'Body',
@@ -190,11 +204,15 @@ class ActionEditor extends StatelessWidget {
       child: Column(
         children: [
           TextField(
-            controller: TextEditingController(text: action.webhookEventName ?? ''),
+            controller: TextEditingController(
+              text: action.webhookEventName ?? '',
+            ),
             onChanged: (value) {
-              onChanged(action.copyWith(
-                config: {...action.config, 'webhookEventName': value},
-              ));
+              onChanged(
+                action.copyWith(
+                  config: {...action.config, 'webhookEventName': value},
+                ),
+              );
             },
             decoration: InputDecoration(
               labelText: 'IFTTT Event Name',
@@ -236,17 +254,15 @@ class ActionEditor extends StatelessWidget {
       child: TextField(
         controller: TextEditingController(text: action.shortcutName ?? ''),
         onChanged: (value) {
-          onChanged(action.copyWith(
-            config: {...action.config, 'shortcutName': value},
-          ));
+          onChanged(
+            action.copyWith(config: {...action.config, 'shortcutName': value}),
+          );
         },
         decoration: InputDecoration(
           labelText: 'Shortcut Name',
           hintText: 'e.g., Send Location',
           isDense: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
     );
@@ -327,9 +343,9 @@ class ActionEditor extends StatelessWidget {
             ),
             Text(
               'Change Action Type',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -345,10 +361,15 @@ class ActionEditor extends StatelessWidget {
                     }
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.2)
                           : AppTheme.darkCard,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(

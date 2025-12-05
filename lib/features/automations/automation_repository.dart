@@ -202,7 +202,7 @@ class AutomationRepository {
             AutomationAction(
               type: ActionType.pushNotification,
               config: {
-                'notificationTitle': '🔋 Low Battery: {{node.name}}',
+                'notificationTitle': 'Low Battery: {{node.name}}',
                 'notificationBody': 'Battery at {{battery}}',
               },
             ),
@@ -218,7 +218,7 @@ class AutomationRepository {
             AutomationAction(
               type: ActionType.pushNotification,
               config: {
-                'notificationTitle': '📡 Node Offline',
+                'notificationTitle': 'Node Offline',
                 'notificationBody': '{{node.name}} is no longer reachable',
               },
             ),
@@ -237,7 +237,7 @@ class AutomationRepository {
             AutomationAction(
               type: ActionType.pushNotification,
               config: {
-                'notificationTitle': '📍 Left Area',
+                'notificationTitle': 'Left Area',
                 'notificationBody': '{{node.name}} has left the monitored area',
               },
             ),
@@ -256,7 +256,7 @@ class AutomationRepository {
             AutomationAction(
               type: ActionType.pushNotification,
               config: {
-                'notificationTitle': '🆘 Emergency Alert',
+                'notificationTitle': 'Emergency Alert',
                 'notificationBody': '{{node.name}}: {{message}}',
               },
             ),
@@ -276,7 +276,7 @@ class AutomationRepository {
             AutomationAction(
               type: ActionType.pushNotification,
               config: {
-                'notificationTitle': '⚠️ Node Silent',
+                'notificationTitle': 'Node Silent',
                 'notificationBody':
                     '{{node.name}} hasn\'t been heard from in 30 minutes',
               },
