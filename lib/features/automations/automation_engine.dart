@@ -226,9 +226,20 @@ class AutomationEngine {
         .where((a) => a.enabled && a.trigger.type == event.type)
         .toList();
 
+    debugPrint('🤖 AutomationEngine: Processing ${event.type.name} event');
+    debugPrint(
+      '🤖 AutomationEngine: Found ${automations.length} matching automations',
+    );
+
     for (final automation in automations) {
+      debugPrint('🤖 AutomationEngine: Checking "${automation.name}"');
       if (_shouldTrigger(automation, event)) {
+        debugPrint('🤖 AutomationEngine: TRIGGERING "${automation.name}"');
         await _executeAutomation(automation, event);
+      } else {
+        debugPrint(
+          '🤖 AutomationEngine: Skipped "${automation.name}" (conditions not met)',
+        );
       }
     }
   }
@@ -242,11 +253,15 @@ class AutomationEngine {
     final lastTrigger = _lastTriggerTimes[throttleKey];
     if (lastTrigger != null &&
         DateTime.now().difference(lastTrigger) < _minTriggerInterval) {
+      debugPrint('🤖 _shouldTrigger: Throttled');
       return false;
     }
 
     // Check node filter
     if (trigger.nodeNum != null && trigger.nodeNum != event.nodeNum) {
+      debugPrint(
+        '🤖 _shouldTrigger: Node filter mismatch (trigger=${trigger.nodeNum}, event=${event.nodeNum})',
+      );
       return false;
     }
 
@@ -255,19 +270,29 @@ class AutomationEngine {
       case TriggerType.batteryLow:
         if (event.batteryLevel == null ||
             event.batteryLevel! > trigger.batteryThreshold) {
+          debugPrint('🤖 _shouldTrigger: Battery level not below threshold');
           return false;
         }
         break;
 
       case TriggerType.messageContains:
         if (trigger.keyword == null || event.messageText == null) {
+          debugPrint(
+            '🤖 _shouldTrigger: messageContains - keyword=${trigger.keyword}, message=${event.messageText}',
+          );
           return false;
         }
-        if (!event.messageText!.toLowerCase().contains(
-          trigger.keyword!.toLowerCase(),
-        )) {
+        final keywordLower = trigger.keyword!.toLowerCase();
+        final messageLower = event.messageText!.toLowerCase();
+        if (!messageLower.contains(keywordLower)) {
+          debugPrint(
+            '🤖 _shouldTrigger: messageContains - "$messageLower" does not contain "$keywordLower"',
+          );
           return false;
         }
+        debugPrint(
+          '🤖 _shouldTrigger: messageContains - MATCH! "$messageLower" contains "$keywordLower"',
+        );
         break;
 
       case TriggerType.signalWeak:

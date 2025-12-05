@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../providers/app_providers.dart';
 import 'automation_engine.dart';
@@ -22,6 +23,7 @@ final automationRepositoryInitProvider = FutureProvider<AutomationRepository>((
 });
 
 /// Provider for the automation engine
+/// NOTE: The engine must be initialized via automationEngineInitProvider before use
 final automationEngineProvider = Provider<AutomationEngine>((ref) {
   final repository = ref.watch(automationRepositoryProvider);
   final iftttService = ref.watch(iftttServiceProvider);
@@ -38,6 +40,25 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
   ref.onDispose(() {
     engine.stop();
   });
+
+  return engine;
+});
+
+/// Provider for initializing the automation engine
+/// This ensures the repository is initialized and the engine is started
+final automationEngineInitProvider = FutureProvider<AutomationEngine>((
+  ref,
+) async {
+  // First, ensure the repository is initialized
+  await ref.read(automationRepositoryInitProvider.future);
+
+  // Get the engine (repository is now initialized)
+  final engine = ref.read(automationEngineProvider);
+
+  // Start the engine (for silent node monitoring, etc.)
+  engine.start();
+
+  debugPrint('AutomationEngine: Initialized and started');
 
   return engine;
 });

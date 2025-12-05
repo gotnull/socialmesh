@@ -14,6 +14,8 @@ import '../services/messaging/offline_queue_service.dart';
 import '../services/location/location_service.dart';
 import '../services/live_activity/live_activity_service.dart';
 import '../services/ifttt/ifttt_service.dart';
+import '../features/automations/automation_providers.dart';
+import '../features/automations/automation_engine.dart';
 import '../models/mesh_models.dart';
 import '../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 
@@ -71,6 +73,9 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
 
       // Initialize IFTTT service
       await _ref.read(iftttServiceProvider).init();
+
+      // Initialize automation engine (loads automations from storage)
+      await _ref.read(automationEngineInitProvider.future);
 
       // Check for onboarding completion
       final settings = await _ref.read(settingsServiceProvider.future);
@@ -956,6 +961,39 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
 
     // Trigger IFTTT webhook for message received
     _triggerIftttForMessage(message, senderName, isChannelMessage);
+
+    // Trigger automation engine for message
+    _triggerAutomationForMessage(message, senderName, isChannelMessage);
+  }
+
+  void _triggerAutomationForMessage(
+    Message message,
+    String senderName,
+    bool isChannelMessage,
+  ) {
+    final engine = _ref.read(automationEngineProvider);
+
+    String? channelName;
+    if (isChannelMessage) {
+      final channels = _ref.read(channelsProvider);
+      final channel = channels
+          .where((c) => c.index == message.channel)
+          .firstOrNull;
+      channelName = channel?.name ?? 'Channel ${message.channel}';
+    }
+
+    final automationMessage = AutomationMessage(
+      from: message.from,
+      text: message.text,
+      channel: message.channel,
+    );
+
+    engine.processMessage(
+      automationMessage,
+      senderName: senderName,
+      channelName: channelName,
+    );
+    debugPrint('🤖 Automation: Processed message from $senderName');
   }
 
   void _triggerIftttForMessage(
@@ -1157,6 +1195,9 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
 
       // Trigger IFTTT webhook for node updates
       _triggerIftttForNode(node, existing);
+
+      // Trigger automation engine for node updates
+      _triggerAutomationForNode(node, existing);
     });
   }
 
@@ -1165,6 +1206,11 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
     if (!iftttService.isActive) return;
 
     iftttService.processNodeUpdate(node, previousNode: previousNode);
+  }
+
+  void _triggerAutomationForNode(MeshNode node, MeshNode? previousNode) {
+    final engine = _ref.read(automationEngineProvider);
+    engine.processNodeUpdate(node, previousNode: previousNode);
   }
 
   void addOrUpdateNode(MeshNode node) {
