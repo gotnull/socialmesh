@@ -26,6 +26,71 @@ final _variableRegex = RegExp(
   r'\{\{(node\.name|battery|location|message|time)\}\}',
 );
 
+/// Formatter that protects variables from partial deletion.
+/// If a deletion would break into a variable, delete the whole variable instead.
+class _VariableProtectionFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final oldText = oldValue.text;
+    final newText = newValue.text;
+
+    // Only intercept deletions
+    if (newText.length >= oldText.length) return newValue;
+
+    // Find what was deleted
+    final oldSel = oldValue.selection;
+    final newSel = newValue.selection;
+
+    // Check if deletion would break a variable
+    for (final match in _variableRegex.allMatches(oldText)) {
+      final varStart = match.start;
+      final varEnd = match.end;
+
+      // Case 1: Backspace at cursor - cursor was right after deletion point
+      if (oldSel.isCollapsed && newSel.isCollapsed) {
+        final deletePos = newSel.baseOffset;
+
+        // Check if we're deleting into a variable from the right (backspace)
+        if (deletePos >= varStart && deletePos < varEnd) {
+          // Delete the whole variable
+          final result =
+              oldText.substring(0, varStart) + oldText.substring(varEnd);
+          return TextEditingValue(
+            text: result,
+            selection: TextSelection.collapsed(offset: varStart),
+          );
+        }
+      }
+
+      // Case 2: Selection delete - check if selection partially overlaps variable
+      if (!oldSel.isCollapsed) {
+        final selStart = oldSel.start;
+        final selEnd = oldSel.end;
+
+        // If selection partially overlaps a variable, expand to include whole variable
+        if ((selStart > varStart && selStart < varEnd) ||
+            (selEnd > varStart && selEnd < varEnd)) {
+          // Expand selection to include full variable and recurse
+          final expandedStart = selStart <= varStart ? selStart : varStart;
+          final expandedEnd = selEnd >= varEnd ? selEnd : varEnd;
+          final result =
+              oldText.substring(0, expandedStart) +
+              oldText.substring(expandedEnd);
+          return TextEditingValue(
+            text: result,
+            selection: TextSelection.collapsed(offset: expandedStart),
+          );
+        }
+      }
+    }
+
+    return newValue;
+  }
+}
+
 /// Validates text for invalid variable patterns.
 List<String> validateVariables(String text) {
   final invalidVars = <String>[];
@@ -230,6 +295,7 @@ class VariableTextFieldState extends State<VariableTextField> {
       controller: _controller,
       focusNode: _focusNode,
       onChanged: widget.onChanged,
+      inputFormatters: [_VariableProtectionFormatter()],
       minLines: 2,
       maxLines: 5,
       style: const TextStyle(fontSize: 14),
