@@ -355,7 +355,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
         const SizedBox(height: 4),
         Text(
           subtitle,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppTheme.textSecondary,
             fontSize: 13,
             

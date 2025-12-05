@@ -132,7 +132,7 @@ class _ConnectingIndicator extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation<Color>(context.accentColor),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Text(
             'Discovering nodes...',
             style: TextStyle(
@@ -271,7 +271,7 @@ class _AnimatedNodeCardState extends State<_AnimatedNodeCard>
           children: [
             // Node icon with pulse animation
             _PulsingNodeIcon(shortName: shortName),
-            const SizedBox(width: 14),
+            SizedBox(width: 14),
             // Node info
             Expanded(
               child: Column(

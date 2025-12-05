@@ -154,7 +154,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
               children: [
                 const _SectionHeader(title: 'REGION'),
                 _buildRegionSelector(),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 const _SectionHeader(title: 'MODEM PRESET'),
                 _buildModemPresetSelector(),
                 SizedBox(height: 16),
@@ -220,7 +220,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'Number of times messages can be relayed',
                         style: TextStyle(
                           color: AppTheme.textSecondary,
@@ -284,7 +284,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'Override transmit power (0 = use default)',
                         style: TextStyle(
                           color: AppTheme.textSecondary,

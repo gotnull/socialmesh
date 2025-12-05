@@ -160,7 +160,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
               _isReordering
                   ? 'Drag to reorder responses'
                   : 'Tap to edit, swipe to delete',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppTheme.textSecondary,
                 fontSize: 14,
               ),

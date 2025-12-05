@@ -457,7 +457,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
     }
     // Generate consistent color from node number
     final colors = [
-      AppTheme.primaryMagenta,
+      context.accentColor,
       AppTheme.primaryPurple,
       AppTheme.primaryBlue,
       AppTheme.accentOrange,

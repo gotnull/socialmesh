@@ -72,7 +72,7 @@ class _DetectionSensorConfigScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Detection Sensor configuration saved'),
+            content: Text('Detection Sensor configuration saved'),
             backgroundColor: context.accentColor,
             duration: const Duration(seconds: 2),
           ),
@@ -103,7 +103,7 @@ class _DetectionSensorConfigScreenState
           TextButton(
             onPressed: _isSaving ? null : _saveConfig,
             child: _isSaving
-                ? const SizedBox(
+                ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
@@ -388,7 +388,7 @@ class _DetectionSensorConfigScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.remove, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.remove, color: AppTheme.textSecondary),
                   onPressed: _minimumBroadcastSecs > 15
                       ? () => setState(() => _minimumBroadcastSecs -= 15)
                       : null,
@@ -426,7 +426,7 @@ class _DetectionSensorConfigScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.remove, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.remove, color: AppTheme.textSecondary),
                   onPressed: _stateBroadcastSecs > 60
                       ? () => setState(() => _stateBroadcastSecs -= 60)
                       : null,

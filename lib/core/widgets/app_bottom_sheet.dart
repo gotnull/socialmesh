@@ -499,7 +499,7 @@ class BottomSheetTextField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: hasError ? AppTheme.errorRed : AppTheme.primaryMagenta,
+            color: hasError ? AppTheme.errorRed : context.accentColor,
             width: 2,
           ),
         ),

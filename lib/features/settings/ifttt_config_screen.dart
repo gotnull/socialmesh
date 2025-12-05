@@ -212,7 +212,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             ],
             const SizedBox(height: 16),
             _buildInfoCard(),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             _buildEventNamesCard(),
             SizedBox(height: 32),
           ],
@@ -267,7 +267,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                   helperStyle: const TextStyle(color: AppTheme.textTertiary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: AppTheme.darkBorder),
+                    borderSide: BorderSide(color: AppTheme.darkBorder),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -277,7 +277,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: context.accentColor),
                   ),
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.key,
                     color: AppTheme.textSecondary,
                   ),
@@ -413,7 +413,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                 hintStyle: TextStyle(color: Colors.grey.shade600),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppTheme.darkBorder),
+                  borderSide: BorderSide(color: AppTheme.darkBorder),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -469,7 +469,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                 hintStyle: TextStyle(color: Colors.grey.shade600),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppTheme.darkBorder),
+                  borderSide: BorderSide(color: AppTheme.darkBorder),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -535,7 +535,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppTheme.darkBorder),
+                      borderSide: BorderSide(color: AppTheme.darkBorder),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -573,7 +573,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppTheme.darkBorder),
+                      borderSide: BorderSide(color: AppTheme.darkBorder),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -610,7 +610,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppTheme.darkBorder),
+                      borderSide: BorderSide(color: AppTheme.darkBorder),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -845,7 +845,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   'Minimum time between geofence alerts for the same node',
                   style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),

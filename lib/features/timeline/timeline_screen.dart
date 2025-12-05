@@ -68,7 +68,7 @@ class TimelineEvent {
       case TimelineEventType.waypoint:
         return AppTheme.accentOrange;
       case TimelineEventType.channelActivity:
-        return AppTheme.primaryMagenta;
+        return AccentColors.magenta;
     }
   }
 }
@@ -362,7 +362,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 _filter = filter;
               });
             },
-            selectedColor: AppTheme.primaryMagenta,
+            selectedColor: context.accentColor,
             checkmarkColor: Colors.white,
             backgroundColor: AppTheme.darkSurface,
             labelStyle: TextStyle(
@@ -572,7 +572,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
-                
               ),
             ),
           ),
@@ -581,12 +580,12 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               leading: Icon(
                 filter.icon,
                 color: _filter == filter
-                    ? AppTheme.primaryMagenta
+                    ? context.accentColor
                     : AppTheme.textSecondary,
               ),
               title: Text(filter.label),
               trailing: _filter == filter
-                  ? const Icon(Icons.check, color: AppTheme.primaryMagenta)
+                  ? Icon(Icons.check, color: context.accentColor)
                   : null,
               onTap: () {
                 setState(() {

@@ -48,7 +48,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Range test configuration saved'),
+            content: Text('Range test configuration saved'),
             backgroundColor: context.accentColor,
             duration: const Duration(seconds: 2),
           ),
@@ -256,7 +256,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
             TextButton(
               onPressed: _isSaving ? null : _saveConfig,
               child: _isSaving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
@@ -446,7 +446,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.remove, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.remove, color: AppTheme.textSecondary),
                   onPressed: _senderInterval > 10
                       ? () => setState(() => _senderInterval -= 10)
                       : null,

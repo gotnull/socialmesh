@@ -143,7 +143,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
           children: [
             Text(
               'This node is already in your list as "${existing.displayName}".',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppTheme.textSecondary,
                 fontSize: 14,
               ),
@@ -163,7 +163,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
                       color: context.accentColor,
                       size: 18,
                     ),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'Update name to "$newName" and add to favorites?',
@@ -223,7 +223,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
             const SizedBox(height: 8),
             _buildInfoRow('Node ID', '!$nodeId'),
             if (userId != null) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               _buildInfoRow('User ID', userId),
             ],
             SizedBox(height: 16),

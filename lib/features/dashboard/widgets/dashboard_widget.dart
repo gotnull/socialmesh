@@ -147,7 +147,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
         children: [
           if (widget.isEditMode) ...[
             // Drag handle
-            const Icon(
+            Icon(
               Icons.drag_indicator,
               color: AppTheme.textTertiary,
               size: 20,
@@ -291,7 +291,7 @@ class WidgetEmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               TextButton(
                 onPressed: onAction,
                 child: Text(

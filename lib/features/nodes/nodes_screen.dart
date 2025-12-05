@@ -335,7 +335,7 @@ class _NodeCard extends StatelessWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   // PWD/Battery indicator
                   if (node.role != null || node.batteryLevel != null)
                     Row(
@@ -465,7 +465,7 @@ class _NodeCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     // Last heard
                     if (node.lastHeard != null) ...[
                       Row(
@@ -499,7 +499,7 @@ class _NodeCard extends StatelessWidget {
                           const SizedBox(width: 6),
                           Text(
                             node.role!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               color: AppTheme.textTertiary,
                             ),
@@ -1323,7 +1323,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
                       ),
                     );
                   },
-                  icon: const Icon(Icons.map, color: AppTheme.primaryMagenta),
+                  icon: Icon(Icons.map, color: context.accentColor),
                 ),
               // QR code button
               IconButton(

@@ -241,7 +241,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
           ],
         ),
         body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(child: CircularProgressIndicator())
             : ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
@@ -313,7 +313,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                           ],
                         ),
                         const SizedBox(height: 4),
-                        const Text(
+                        Text(
                           'How often to share position',
                           style: TextStyle(
                             color: AppTheme.textSecondary,
@@ -379,7 +379,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                           ],
                         ),
                         const SizedBox(height: 4),
-                        const Text(
+                        Text(
                           'How often GPS checks for position',
                           style: TextStyle(
                             color: AppTheme.textSecondary,
@@ -467,7 +467,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
+                                borderSide: BorderSide(
                                   color: AppTheme.darkBorder,
                                 ),
                               ),
@@ -511,7 +511,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
+                                borderSide: BorderSide(
                                   color: AppTheme.darkBorder,
                                 ),
                               ),
@@ -555,7 +555,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
+                                borderSide: BorderSide(
                                   color: AppTheme.darkBorder,
                                 ),
                               ),
@@ -661,7 +661,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                             ],
                           ),
                           const SizedBox(height: 4),
-                          const Text(
+                          Text(
                             'Minimum distance moved before broadcasting',
                             style: TextStyle(
                               color: AppTheme.textSecondary,
@@ -727,7 +727,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                             ],
                           ),
                           const SizedBox(height: 4),
-                          const Text(
+                          Text(
                             'Minimum time between broadcasts',
                             style: TextStyle(
                               color: AppTheme.textSecondary,
@@ -812,7 +812,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                           ],
                         ),
                         const SizedBox(height: 4),
-                        const Text(
+                        Text(
                           'How long to wait for GPS lock before giving up',
                           style: TextStyle(
                             color: AppTheme.textSecondary,
@@ -1058,7 +1058,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                             ),
                             Text(
                               m.$3,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppTheme.textSecondary,
                                 fontSize: 13,
                                 

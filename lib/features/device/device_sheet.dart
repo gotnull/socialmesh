@@ -267,7 +267,7 @@ class _DeviceSheetContent extends ConsumerWidget {
           Navigator.pop(context);
           Navigator.of(context).pushNamed('/scanner');
         },
-        icon: const Icon(Icons.bluetooth_searching, size: 20),
+        icon: Icon(Icons.bluetooth_searching, size: 20),
         label: Text('Scan for Devices'),
         style: ElevatedButton.styleFrom(
           backgroundColor: context.accentColor,

@@ -99,7 +99,7 @@ class QuickActionsContent extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Location shared with mesh'),
+            content: Text('Location shared with mesh'),
             backgroundColor: context.accentColor,
             duration: const Duration(seconds: 2),
           ),
@@ -149,7 +149,7 @@ class QuickActionsContent extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Position requests sent to all nodes'),
+            content: Text('Position requests sent to all nodes'),
             backgroundColor: context.accentColor,
             duration: const Duration(seconds: 2),
           ),
@@ -759,7 +759,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                       decoration: BoxDecoration(
                         color: _selectedNodeNum == null
                             ? context.accentColor.withValues(alpha: 0.15)
-                            : AppTheme.primaryMagenta.withValues(alpha: 0.15),
+                            : context.accentColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
@@ -768,7 +768,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                             : Icons.person,
                         color: _selectedNodeNum == null
                             ? context.accentColor
-                            : AppTheme.primaryMagenta,
+                            : context.accentColor,
                         size: 20,
                       ),
                     ),
@@ -1047,7 +1047,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                   return _buildRecipientTile(
                     icon: Icons.person,
                     iconColor: node.isOnline
-                        ? AppTheme.primaryMagenta
+                        ? context.accentColor
                         : AppTheme.textTertiary,
                     title: displayName,
                     subtitle: node.shortName ?? 'Unknown',
@@ -1178,7 +1178,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text(
+            content: Text(
               'Traceroute sent - check messages for response',
             ),
             backgroundColor: context.accentColor,

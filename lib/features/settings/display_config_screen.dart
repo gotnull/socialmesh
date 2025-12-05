@@ -167,7 +167,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
         children: [
           Text(
             'Screen Timeout: ${_screenOnSecs == 0 ? 'Always On' : '${_screenOnSecs}s'}',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -199,7 +199,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
           const SizedBox(height: 8),
           Text(
             'Auto Carousel: ${_autoCarouselSecs == 0 ? 'Disabled' : '${_autoCarouselSecs}s'}',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontSize: 14,
               fontWeight: FontWeight.w500,

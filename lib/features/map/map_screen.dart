@@ -458,7 +458,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   ? Icons.filter_alt
                   : Icons.filter_alt_outlined,
               color: _nodeFilter != NodeFilter.all || _showFilters
-                  ? AppTheme.primaryMagenta
+                  ? context.accentColor
                   : AppTheme.textSecondary,
             ),
             onPressed: () => setState(() => _showFilters = !_showFilters),
@@ -466,7 +466,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           ),
           // Map style
           PopupMenuButton<MapTileStyle>(
-            icon: const Icon(Icons.map, color: AppTheme.textSecondary),
+            icon: Icon(Icons.map, color: AppTheme.textSecondary),
             tooltip: 'Map style',
             onSelected: (style) => setState(() => _mapStyle = style),
             itemBuilder: (context) => MapTileStyle.values.map((style) {
@@ -478,7 +478,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       _mapStyle == style ? Icons.check : Icons.map_outlined,
                       size: 18,
                       color: _mapStyle == style
-                          ? AppTheme.primaryMagenta
+                          ? context.accentColor
                           : AppTheme.textSecondary,
                     ),
                     const SizedBox(width: 8),
@@ -523,7 +523,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           ? AppTheme.textTertiary
                           : AppTheme.textSecondary,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(_isRefreshing ? 'Refreshing...' : 'Refresh positions'),
                   ],
                 ),
@@ -536,10 +536,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       _showHeatmap ? Icons.layers : Icons.layers_outlined,
                       size: 18,
                       color: _showHeatmap
-                          ? AppTheme.primaryMagenta
+                          ? context.accentColor
                           : AppTheme.textSecondary,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(_showHeatmap ? 'Hide heatmap' : 'Show heatmap'),
                   ],
                 ),
@@ -552,7 +552,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       Icons.radio_button_unchecked,
                       size: 18,
                       color: _showRangeCircles
-                          ? AppTheme.primaryMagenta
+                          ? context.accentColor
                           : AppTheme.textSecondary,
                     ),
                     const SizedBox(width: 8),
@@ -572,7 +572,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       Icons.straighten,
                       size: 18,
                       color: _measureMode
-                          ? AppTheme.primaryMagenta
+                          ? context.accentColor
                           : AppTheme.textSecondary,
                     ),
                     const SizedBox(width: 8),
@@ -654,12 +654,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             useRadiusInMeter: true,
                             color:
                                 (isMyNode
-                                        ? AppTheme.primaryMagenta
+                                        ? context.accentColor
                                         : AppTheme.primaryPurple)
                                     .withValues(alpha: 0.08),
                             borderColor:
                                 (isMyNode
-                                        ? AppTheme.primaryMagenta
+                                        ? context.accentColor
                                         : AppTheme.primaryPurple)
                                     .withValues(alpha: 0.2),
                             borderStrokeWidth: 1,
@@ -673,10 +673,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           return CircleMarker(
                             point: LatLng(n.latitude, n.longitude),
                             radius: 50,
-                            color: AppTheme.primaryMagenta.withValues(
+                            color: context.accentColor.withValues(
                               alpha: 0.15,
                             ),
-                            borderColor: AppTheme.primaryMagenta.withValues(
+                            borderColor: context.accentColor.withValues(
                               alpha: 0.3,
                             ),
                             borderStrokeWidth: 1,
@@ -1163,7 +1163,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         ),
         BottomSheetAction(
           icon: Icons.share,
-          iconColor: AppTheme.primaryMagenta,
+          iconColor: context.accentColor,
           label: 'Share Location',
           onTap: () => _shareLocation(point),
         ),
@@ -1176,7 +1176,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       ],
       header: Text(
         '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}',
-        style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+        style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
       ),
     );
   }
@@ -1187,7 +1187,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       actions: [
         BottomSheetAction(
           icon: Icons.share,
-          iconColor: AppTheme.primaryMagenta,
+          iconColor: context.accentColor,
           label: 'Share',
           onTap: () => _shareLocation(waypoint.position, label: waypoint.label),
         ),
@@ -1321,13 +1321,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppTheme.primaryMagenta.withValues(alpha: 0.1),
+                color: context.accentColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.map_outlined,
                 size: 40,
-                color: AppTheme.primaryMagenta,
+                color: context.accentColor,
               ),
             ),
             const SizedBox(height: 24),
@@ -1362,12 +1362,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         color: Colors.white,
                       ),
                     )
-                  : const Icon(Icons.refresh, size: 18),
+                  : Icon(Icons.refresh, size: 18),
               label: Text(
                 _isRefreshing ? 'Requesting...' : 'Request Positions',
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryMagenta,
+                backgroundColor: context.accentColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -1407,7 +1407,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       trails.add(
         Polyline(
           points: points,
-          color: (isMyNode ? AppTheme.primaryMagenta : AppTheme.primaryPurple)
+          color: (isMyNode ? context.accentColor : AppTheme.primaryPurple)
               .withValues(alpha: 0.4),
           strokeWidth: 2,
           pattern: const StrokePattern.dotted(spacingFactor: 1.5),
@@ -1455,7 +1455,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 LatLng(node2.latitude, node2.longitude),
               ],
               color: isMyConnection
-                  ? AppTheme.primaryMagenta.withValues(
+                  ? context.accentColor.withValues(
                       alpha: hasStaleNode ? 0.25 : 0.5,
                     )
                   : AppTheme.primaryPurple.withValues(
@@ -1510,15 +1510,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 color: AppTheme.darkCard.withValues(alpha: 0.85),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: AppTheme.primaryMagenta.withValues(alpha: 0.3),
+                  color: context.accentColor.withValues(alpha: 0.3),
                 ),
               ),
               child: Text(
                 _formatDistance(distance),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.primaryMagenta,
+                  color: context.accentColor,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -1622,7 +1622,7 @@ class _NodeMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final baseColor = isMyNode
-        ? AppTheme.primaryMagenta
+        ? context.accentColor
         : (node.isOnline ? AppTheme.primaryPurple : AppTheme.textTertiary);
     final color = isStale ? baseColor.withValues(alpha: 0.5) : baseColor;
 
@@ -1762,10 +1762,10 @@ class _NodeListPanel extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.list,
                     size: 20,
-                    color: AppTheme.primaryMagenta,
+                    color: context.accentColor,
                   ),
                   const SizedBox(width: 8),
                   const Expanded(
@@ -1902,12 +1902,12 @@ class _NodeListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final node = nodeWithPos.node;
     final baseColor = isMyNode
-        ? AppTheme.primaryMagenta
+        ? context.accentColor
         : (node.isOnline ? AppTheme.primaryPurple : AppTheme.textTertiary);
 
     return Material(
       color: isSelected
-          ? AppTheme.primaryMagenta.withValues(alpha: 0.15)
+          ? context.accentColor.withValues(alpha: 0.15)
           : Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -1997,24 +1997,24 @@ class _NodeListItem extends StatelessWidget {
                           ),
                         ),
                         if (isMyNode) ...[
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 4,
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryMagenta.withValues(
+                              color: context.accentColor.withValues(
                                 alpha: 0.2,
                               ),
                               borderRadius: BorderRadius.circular(3),
                             ),
-                            child: const Text(
+                            child: Text(
                               'YOU',
                               style: TextStyle(
                                 fontSize: 8,
                                 fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryMagenta,
+                                color: context.accentColor,
                               ),
                             ),
                           ),
@@ -2080,13 +2080,13 @@ class _NodeListItem extends StatelessWidget {
                     ),
                   ),
                 ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
               // Arrow indicator
               Icon(
                 Icons.chevron_right,
                 size: 18,
                 color: isSelected
-                    ? AppTheme.primaryMagenta
+                    ? context.accentColor
                     : AppTheme.textTertiary.withValues(alpha: 0.5),
               ),
             ],
@@ -2225,24 +2225,24 @@ class _NodeInfoCard extends ConsumerWidget {
                           ),
                         ),
                         if (isMyNode) ...[
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryMagenta.withValues(
+                              color: context.accentColor.withValues(
                                 alpha: 0.2,
                               ),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text(
+                            child: Text(
                               'YOU',
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryMagenta,
+                                color: context.accentColor,
                               ),
                             ),
                           ),
@@ -2272,10 +2272,10 @@ class _NodeInfoCard extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Text(
                             _formatDistance(distanceFromMe!),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: AppTheme.primaryMagenta,
+                              color: context.accentColor,
                             ),
                           ),
                         ],
@@ -2401,11 +2401,11 @@ class _NodeInfoCard extends ConsumerWidget {
                     child: OutlinedButton.icon(
                       onPressed: () => _exchangePositions(context, ref),
                       icon: const Icon(Icons.swap_horiz, size: 18),
-                      label: const Text('Position'),
+                      label: Text('Position'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.primaryMagenta,
+                        foregroundColor: context.accentColor,
                         side: BorderSide(
-                          color: AppTheme.primaryMagenta.withValues(alpha: 0.5),
+                          color: context.accentColor.withValues(alpha: 0.5),
                         ),
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         shape: RoundedRectangleBorder(
@@ -2422,9 +2422,9 @@ class _NodeInfoCard extends ConsumerWidget {
                     child: ElevatedButton.icon(
                       onPressed: onMessage,
                       icon: const Icon(Icons.message, size: 18),
-                      label: const Text('Message'),
+                      label: Text('Message'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryMagenta,
+                        backgroundColor: context.accentColor,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         shape: RoundedRectangleBorder(
@@ -2662,7 +2662,7 @@ class _NavigationControls extends StatelessWidget {
                     Icons.my_location,
                     size: 20,
                     color: hasMyNode
-                        ? AppTheme.primaryMagenta
+                        ? context.accentColor
                         : AppTheme.textTertiary.withValues(alpha: 0.5),
                   ),
                 ),
@@ -2811,10 +2811,10 @@ class _FilterBar extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.filter_alt,
                 size: 16,
-                color: AppTheme.primaryMagenta,
+                color: context.accentColor,
               ),
               const SizedBox(width: 8),
               Text(
@@ -2848,12 +2848,12 @@ class _FilterBar extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppTheme.primaryMagenta.withValues(alpha: 0.2)
+                        ? context.accentColor.withValues(alpha: 0.2)
                         : AppTheme.darkBackground,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isSelected
-                          ? AppTheme.primaryMagenta
+                          ? context.accentColor
                           : AppTheme.darkBorder,
                       width: isSelected ? 1.5 : 1,
                     ),
@@ -2866,7 +2866,7 @@ class _FilterBar extends StatelessWidget {
                           ? FontWeight.w600
                           : FontWeight.w400,
                       color: isSelected
-                          ? AppTheme.primaryMagenta
+                          ? context.accentColor
                           : AppTheme.textSecondary,
                     ),
                   ),

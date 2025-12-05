@@ -220,7 +220,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
+                                borderSide: BorderSide(
                                   color: AppTheme.darkBorder,
                                 ),
                               ),
@@ -263,7 +263,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
+                                borderSide: BorderSide(
                                   color: AppTheme.darkBorder,
                                 ),
                               ),
@@ -362,7 +362,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
+                              borderSide: BorderSide(
                                 color: AppTheme.darkBorder,
                               ),
                             ),

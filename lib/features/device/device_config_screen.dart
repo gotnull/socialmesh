@@ -219,7 +219,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             TextButton(
               onPressed: _isSaving ? null : _saveConfig,
               child: _isSaving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),

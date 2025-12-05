@@ -175,7 +175,7 @@ class _ChannelTile extends ConsumerWidget {
                                 ? 'Primary Channel'
                                 : 'Channel ${channel.index}')
                           : channel.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -194,7 +194,7 @@ class _ChannelTile extends ConsumerWidget {
                         const SizedBox(width: 6),
                         Text(
                           hasKey ? 'Encrypted' : 'No encryption',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             color: AppTheme.textSecondary,
                           ),
@@ -537,7 +537,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
           title: 'Encryption Key',
           subtitle: '${widget.keyBits}-bit · ${widget.keyBytes} bytes · Base64',
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),

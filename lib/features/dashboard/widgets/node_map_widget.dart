@@ -227,7 +227,7 @@ class _MiniNodeMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isMyNode
-        ? AppTheme.primaryMagenta
+        ? context.accentColor
         : (node.isOnline ? context.accentColor : AppTheme.textTertiary);
 
     return Container(

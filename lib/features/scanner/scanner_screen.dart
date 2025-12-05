@@ -336,7 +336,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
           'Privacy-first mesh social',
           style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
         ),
-        const SizedBox(height: 48),
+        SizedBox(height: 48),
         // Status indicator
         SizedBox(
           width: 48,
@@ -350,13 +350,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    AppTheme.primaryMagenta.withValues(alpha: 0.4),
+                    context.accentColor.withValues(alpha: 0.4),
                   ),
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.bluetooth_connected_rounded,
-                color: AppTheme.primaryMagenta,
+                color: context.accentColor,
                 size: 24,
               ),
             ],
@@ -365,10 +365,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         const SizedBox(height: 16),
         Text(
           statusText,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: AppTheme.primaryMagenta,
+            color: context.accentColor,
             
             letterSpacing: 0.3,
           ),

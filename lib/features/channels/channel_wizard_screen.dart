@@ -306,10 +306,10 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                     color: isComplete
                         ? AppTheme.successGreen
                         : isActive
-                        ? AppTheme.primaryMagenta
+                        ? context.accentColor
                         : AppTheme.darkSurface,
                     border: isActive && !isComplete
-                        ? Border.all(color: AppTheme.primaryMagenta, width: 2)
+                        ? Border.all(color: context.accentColor, width: 2)
                         : null,
                   ),
                   child: Center(
@@ -351,7 +351,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.edit, size: 48, color: AppTheme.primaryMagenta),
+          Icon(Icons.edit, size: 48, color: context.accentColor),
           const SizedBox(height: 24),
           Text('Name Your Channel', style: theme.textTheme.headlineMedium),
           const SizedBox(height: 8),
@@ -384,8 +384,8 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: AppTheme.primaryMagenta,
+                borderSide: BorderSide(
+                  color: context.accentColor,
                   width: 2,
                 ),
               ),
@@ -757,11 +757,11 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Switch(
             value: value,
             onChanged: onChanged,
-            activeTrackColor: AppTheme.primaryMagenta,
+            activeTrackColor: context.accentColor,
           ),
         ],
       ),
@@ -774,9 +774,9 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CircularProgressIndicator(
+            CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(
-                AppTheme.primaryMagenta,
+                context.accentColor,
               ),
             ),
             const SizedBox(height: 24),
@@ -864,10 +864,10 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                       );
                     },
                     icon: const Icon(Icons.copy),
-                    label: const Text('Copy URL'),
+                    label: Text('Copy URL'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.primaryMagenta,
-                      side: const BorderSide(color: AppTheme.primaryMagenta),
+                      foregroundColor: context.accentColor,
+                      side: BorderSide(color: context.accentColor),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
@@ -877,9 +877,9 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                   child: FilledButton.icon(
                     onPressed: () => Navigator.pop(context, true),
                     icon: const Icon(Icons.check),
-                    label: const Text('Done'),
+                    label: Text('Done'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.primaryMagenta,
+                      backgroundColor: context.accentColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
@@ -1063,7 +1063,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                   child: const Text('Back'),
                 ),
               ),
-            if (_currentStep > 0) const SizedBox(width: 16),
+            if (_currentStep > 0) SizedBox(width: 16),
             Expanded(
               child: FilledButton(
                 onPressed: canProceed
@@ -1077,8 +1077,8 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                       }
                     : null,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.primaryMagenta,
-                  disabledBackgroundColor: AppTheme.primaryMagenta.withAlpha(
+                  backgroundColor: context.accentColor,
+                  disabledBackgroundColor: context.accentColor.withAlpha(
                     77,
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 16),

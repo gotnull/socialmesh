@@ -156,7 +156,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               children: [
                 const _SectionHeader(title: 'DEVICE ROLE'),
                 _buildRoleSelector(),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 const _SectionHeader(title: 'REBROADCAST'),
                 _buildRebroadcastSelector(),
                 SizedBox(height: 16),
@@ -237,7 +237,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'How often to broadcast device info',
                         style: TextStyle(
                           color: AppTheme.textSecondary,
@@ -413,7 +413,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                             ),
                             Text(
                               r.$3,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppTheme.textSecondary,
                                 fontSize: 13,
                                 

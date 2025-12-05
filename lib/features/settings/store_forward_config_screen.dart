@@ -49,7 +49,7 @@ class _StoreForwardConfigScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Store & Forward configuration saved'),
+            content: Text('Store & Forward configuration saved'),
             backgroundColor: context.accentColor,
             duration: const Duration(seconds: 2),
           ),
@@ -80,7 +80,7 @@ class _StoreForwardConfigScreenState
           TextButton(
             onPressed: _isSaving ? null : _saveConfig,
             child: _isSaving
-                ? const SizedBox(
+                ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
@@ -246,7 +246,7 @@ class _StoreForwardConfigScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.remove, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.remove, color: AppTheme.textSecondary),
                   onPressed: _records > 0
                       ? () => setState(() => _records -= 50)
                       : null,
@@ -284,7 +284,7 @@ class _StoreForwardConfigScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.remove, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.remove, color: AppTheme.textSecondary),
                   onPressed: _historyReturnMax > 25
                       ? () => setState(() => _historyReturnMax -= 25)
                       : null,
@@ -322,7 +322,7 @@ class _StoreForwardConfigScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.remove, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.remove, color: AppTheme.textSecondary),
                   onPressed: _historyReturnWindow > 60
                       ? () => setState(() => _historyReturnWindow -= 60)
                       : null,

@@ -316,7 +316,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
         return _StatusInfo(
           text: 'Connecting',
           icon: Icons.bluetooth_connected_rounded,
-          color: AppTheme.primaryMagenta,
+          color: context.accentColor,
           showSpinner: true,
         );
       case AutoReconnectState.success:
@@ -655,7 +655,7 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.radar, size: 12, color: context.accentColor),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4),
                   Text(
                     'Found',
                     style: TextStyle(
@@ -699,7 +699,7 @@ class _ErrorScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Failed to initialize the app. Please try again.',
                 style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
                 textAlign: TextAlign.center,

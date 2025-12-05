@@ -679,7 +679,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                           _radiusMeters >= 1000
                               ? '${(_radiusMeters / 1000).toStringAsFixed(1)} km'
                               : '${_radiusMeters.toStringAsFixed(0)} m',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -735,7 +735,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                                     color: context.accentColor,
                                   ),
                                 )
-                              : const Icon(Icons.my_location, size: 18),
+                              : Icon(Icons.my_location, size: 18),
                           label: Text(
                             _isLoadingLocation
                                 ? 'Getting...'
@@ -787,7 +787,7 @@ class _NodeMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final baseColor = isMyNode
-        ? AppTheme.primaryMagenta
+        ? context.accentColor
         : (node.isOnline ? AppTheme.primaryPurple : AppTheme.textTertiary);
 
     // Use green border if monitored, white if selected
@@ -887,10 +887,10 @@ class _NodeListPanel extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.list,
                     size: 20,
-                    color: AppTheme.primaryMagenta,
+                    color: context.accentColor,
                   ),
                   const SizedBox(width: 8),
                   const Expanded(
@@ -1020,7 +1020,7 @@ class _NodeListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final node = nodeWithPos.node;
     final baseColor = isMyNode
-        ? AppTheme.primaryMagenta
+        ? context.accentColor
         : (node.isOnline ? AppTheme.primaryPurple : AppTheme.textTertiary);
 
     return Material(
@@ -1078,22 +1078,22 @@ class _NodeListItem extends StatelessWidget {
                           ),
                         ),
                         if (isMyNode) ...[
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 4,
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryMagenta.withAlpha(51),
+                              color: context.accentColor.withAlpha(51),
                               borderRadius: BorderRadius.circular(3),
                             ),
-                            child: const Text(
+                            child: Text(
                               'YOU',
                               style: TextStyle(
                                 fontSize: 8,
                                 fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryMagenta,
+                                color: context.accentColor,
                               ),
                             ),
                           ),
@@ -1127,7 +1127,7 @@ class _NodeListItem extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.radar, size: 12, color: context.accentColor),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
                       Text(
                         'Monitored',
                         style: TextStyle(

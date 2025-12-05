@@ -428,7 +428,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Tiles to download:',
                         style: TextStyle(color: AppTheme.textSecondary),
                       ),
@@ -445,7 +445,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Estimated size:',
                         style: TextStyle(color: AppTheme.textSecondary),
                       ),
@@ -458,7 +458,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -564,7 +564,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.arrow_back),
+                  icon: Icon(Icons.arrow_back),
                   label: Text('Go Back'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.accentColor,
@@ -682,7 +682,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                                   : _selectionEnd == null
                                   ? 'Tap to set second corner'
                                   : '${_estimateTileCount()} tiles selected',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -733,7 +733,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                       ),
                       Text(
                         '$_downloadedTiles / $_totalTiles',
-                        style: const TextStyle(color: AppTheme.textTertiary),
+                        style: TextStyle(color: AppTheme.textTertiary),
                       ),
                     ],
                   ),

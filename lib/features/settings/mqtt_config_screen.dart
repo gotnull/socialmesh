@@ -230,7 +230,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
+                                borderSide: BorderSide(
                                   color: AppTheme.darkBorder,
                                 ),
                               ),
@@ -273,7 +273,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
+                                borderSide: BorderSide(
                                   color: AppTheme.darkBorder,
                                 ),
                               ),
@@ -344,7 +344,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
+                                borderSide: BorderSide(
                                   color: AppTheme.darkBorder,
                                 ),
                               ),
@@ -388,7 +388,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
+                                borderSide: BorderSide(
                                   color: AppTheme.darkBorder,
                                 ),
                               ),
@@ -481,7 +481,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   _buildInfoCard(),
                   SizedBox(height: 32),
                 ],

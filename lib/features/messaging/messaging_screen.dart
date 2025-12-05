@@ -1712,7 +1712,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
           title: 'Encryption Key',
           subtitle: '$keyBits-bit · ${widget.channel.psk.length} bytes',
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),

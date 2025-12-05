@@ -273,7 +273,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, null),
-            child: const Text(
+            child: Text(
               'Cancel',
               style: TextStyle(color: AppTheme.textSecondary),
             ),

@@ -180,7 +180,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
             const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: () => Navigator.of(context).pushNamed('/scanner'),
-              icon: const Icon(Icons.bluetooth_searching, size: 20),
+              icon: Icon(Icons.bluetooth_searching, size: 20),
               label: Text('Scan for Devices'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.accentColor,
@@ -373,7 +373,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () => _showAddWidgetSheet(context),
-              icon: const Icon(Icons.add, size: 20),
+              icon: Icon(Icons.add, size: 20),
               label: Text('Add Widgets'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.accentColor,
@@ -508,7 +508,7 @@ class _AddWidgetSheet extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Manage Widgets',
                 style: TextStyle(
                   fontSize: 20,

@@ -1125,7 +1125,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
         actions: [
           IconButton(
             onPressed: _showRtttlHelp,
-            icon: const Icon(Icons.help_outline, color: AppTheme.textSecondary),
+            icon: Icon(Icons.help_outline, color: AppTheme.textSecondary),
             tooltip: 'RTTTL Help',
           ),
           Padding(
@@ -1459,7 +1459,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                 size: 20,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12),
                             // Title and description
                             Expanded(
                               child: Column(
@@ -1681,7 +1681,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
+                                    SizedBox(width: 8),
                                     // Selected indicator
                                     SizedBox(
                                       width: 24,
@@ -1729,7 +1729,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       ),
                       TextButton.icon(
                         onPressed: _showAddCustomDialog,
-                        icon: const Icon(Icons.add, size: 18),
+                        icon: Icon(Icons.add, size: 18),
                         label: Text('Add'),
                         style: TextButton.styleFrom(
                           foregroundColor: context.accentColor,
@@ -1822,7 +1822,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                             height: 40,
                                             decoration: BoxDecoration(
                                               color: isSelected
-                                                  ? AppTheme.primaryMagenta
+                                                  ? context.accentColor
                                                         .withValues(alpha: 0.15)
                                                   : AppTheme.darkBackground,
                                               borderRadius:
@@ -1833,7 +1833,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                                   ? Icons.music_note
                                                   : Icons.music_note_outlined,
                                               color: isSelected
-                                                  ? AppTheme.primaryMagenta
+                                                  ? context.accentColor
                                                   : AppTheme.textSecondary,
                                               size: 20,
                                             ),
@@ -1908,10 +1908,10 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                           SizedBox(
                                             width: 24,
                                             child: isSelected
-                                                ? const Icon(
+                                                ? Icon(
                                                     Icons.check_circle,
                                                     color:
-                                                        AppTheme.primaryMagenta,
+                                                        context.accentColor,
                                                     size: 22,
                                                   )
                                                 : const Icon(

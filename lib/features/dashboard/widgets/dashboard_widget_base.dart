@@ -68,7 +68,7 @@ class DashboardWidgetBase extends StatelessWidget {
       child: Row(
         children: [
           // Drag handle
-          const Icon(
+          Icon(
             Icons.drag_indicator,
             color: AppTheme.textTertiary,
             size: 20,
