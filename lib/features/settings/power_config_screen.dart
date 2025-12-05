@@ -177,9 +177,6 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                   subtitle: 'Reduce power consumption when idle',
                   trailing: Switch.adaptive(
                     value: _isPowerSaving,
-                    activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: Colors.grey.shade600,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
                       setState(() => _isPowerSaving = value);
@@ -366,7 +363,6 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
         const SizedBox(height: 8),
         SliderTheme(
           data: SliderThemeData(
-            activeTrackColor: AppTheme.primaryGreen,
             inactiveTrackColor: AppTheme.darkBorder,
             thumbColor: AppTheme.primaryGreen,
             overlayColor: AppTheme.primaryGreen.withValues(alpha: 0.2),

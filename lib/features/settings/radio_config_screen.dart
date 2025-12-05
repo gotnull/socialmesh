@@ -165,9 +165,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                   subtitle: 'Allow device to transmit',
                   trailing: Switch.adaptive(
                     value: _txEnabled,
-                    activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: Colors.grey.shade600,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
                       setState(() => _txEnabled = value);
@@ -233,7 +230,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                       const SizedBox(height: 8),
                       SliderTheme(
                         data: SliderThemeData(
-                          activeTrackColor: AppTheme.primaryGreen,
                           inactiveTrackColor: AppTheme.darkBorder,
                           thumbColor: AppTheme.primaryGreen,
                           overlayColor: AppTheme.primaryGreen.withValues(
@@ -298,7 +294,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                       const SizedBox(height: 8),
                       SliderTheme(
                         data: SliderThemeData(
-                          activeTrackColor: AppTheme.primaryGreen,
                           inactiveTrackColor: AppTheme.darkBorder,
                           thumbColor: AppTheme.primaryGreen,
                           overlayColor: AppTheme.primaryGreen.withValues(

@@ -167,9 +167,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                   subtitle: 'Enable serial port for debugging',
                   trailing: Switch.adaptive(
                     value: _serialEnabled,
-                    activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: Colors.grey.shade600,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
                       setState(() => _serialEnabled = value);
@@ -185,9 +182,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                   subtitle: 'Flash LED to indicate device is running',
                   trailing: Switch.adaptive(
                     value: !_ledHeartbeatDisabled,
-                    activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: Colors.grey.shade600,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
                       setState(() => _ledHeartbeatDisabled = !value);
@@ -253,7 +247,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                       const SizedBox(height: 8),
                       SliderTheme(
                         data: SliderThemeData(
-                          activeTrackColor: AppTheme.primaryGreen,
                           inactiveTrackColor: AppTheme.darkBorder,
                           thumbColor: AppTheme.primaryGreen,
                           overlayColor: AppTheme.primaryGreen.withValues(

@@ -163,9 +163,6 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                   subtitle: 'Device is managed by an external system',
                   trailing: Switch.adaptive(
                     value: _isManaged,
-                    activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: Colors.grey.shade600,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
                       setState(() => _isManaged = value);
@@ -184,9 +181,6 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                   subtitle: 'Enable USB serial console access',
                   trailing: Switch.adaptive(
                     value: _serialEnabled,
-                    activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: Colors.grey.shade600,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
                       setState(() => _serialEnabled = value);
@@ -200,9 +194,6 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                   subtitle: 'Enable verbose debug log output',
                   trailing: Switch.adaptive(
                     value: _debugLogEnabled,
-                    activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: Colors.grey.shade600,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
                       setState(() => _debugLogEnabled = value);
@@ -218,9 +209,6 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                   subtitle: 'Allow remote admin via admin channel',
                   trailing: Switch.adaptive(
                     value: _adminChannelEnabled,
-                    activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: Colors.grey.shade600,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
                       setState(() => _adminChannelEnabled = value);

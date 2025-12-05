@@ -228,9 +228,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       subtitle: 'Send events to IFTTT Webhooks service',
       trailing: Switch.adaptive(
         value: _enabled,
-        activeTrackColor: AppTheme.primaryGreen,
-        inactiveTrackColor: Colors.grey.shade600,
-        thumbColor: WidgetStateProperty.all(Colors.white),
         onChanged: (value) {
           HapticFeedback.selectionClick();
           setState(() => _enabled = value);
@@ -326,9 +323,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           subtitle: 'Trigger when a message is received',
           trailing: Switch.adaptive(
             value: _messageReceived,
-            activeTrackColor: AppTheme.primaryGreen,
-            inactiveTrackColor: Colors.grey.shade600,
-            thumbColor: WidgetStateProperty.all(Colors.white),
             onChanged: (value) {
               HapticFeedback.selectionClick();
               setState(() => _messageReceived = value);
@@ -341,9 +335,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           subtitle: 'Trigger on SOS, emergency, help, mayday keywords',
           trailing: Switch.adaptive(
             value: _sosEmergency,
-            activeTrackColor: AppTheme.primaryGreen,
-            inactiveTrackColor: Colors.grey.shade600,
-            thumbColor: WidgetStateProperty.all(Colors.white),
             onChanged: (value) {
               HapticFeedback.selectionClick();
               setState(() => _sosEmergency = value);
@@ -363,9 +354,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           subtitle: 'Trigger when a node comes online',
           trailing: Switch.adaptive(
             value: _nodeOnline,
-            activeTrackColor: AppTheme.primaryGreen,
-            inactiveTrackColor: Colors.grey.shade600,
-            thumbColor: WidgetStateProperty.all(Colors.white),
             onChanged: (value) {
               HapticFeedback.selectionClick();
               setState(() => _nodeOnline = value);
@@ -378,9 +366,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           subtitle: 'Trigger when a node goes offline',
           trailing: Switch.adaptive(
             value: _nodeOffline,
-            activeTrackColor: AppTheme.primaryGreen,
-            inactiveTrackColor: Colors.grey.shade600,
-            thumbColor: WidgetStateProperty.all(Colors.white),
             onChanged: (value) {
               HapticFeedback.selectionClick();
               setState(() => _nodeOffline = value);
@@ -400,9 +385,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           subtitle: 'Trigger when battery drops below threshold',
           trailing: Switch.adaptive(
             value: _batteryLow,
-            activeTrackColor: AppTheme.primaryGreen,
-            inactiveTrackColor: Colors.grey.shade600,
-            thumbColor: WidgetStateProperty.all(Colors.white),
             onChanged: (value) {
               HapticFeedback.selectionClick();
               setState(() => _batteryLow = value);
@@ -457,9 +439,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           subtitle: 'Trigger when temperature exceeds threshold',
           trailing: Switch.adaptive(
             value: _temperatureAlert,
-            activeTrackColor: AppTheme.primaryGreen,
-            inactiveTrackColor: Colors.grey.shade600,
-            thumbColor: WidgetStateProperty.all(Colors.white),
             onChanged: (value) {
               HapticFeedback.selectionClick();
               setState(() => _temperatureAlert = value);
@@ -523,9 +502,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           subtitle: 'Trigger when node exits geofence area',
           trailing: Switch.adaptive(
             value: _positionUpdate,
-            activeTrackColor: AppTheme.primaryGreen,
-            inactiveTrackColor: Colors.grey.shade600,
-            thumbColor: WidgetStateProperty.all(Colors.white),
             onChanged: (value) {
               HapticFeedback.selectionClick();
               setState(() => _positionUpdate = value);

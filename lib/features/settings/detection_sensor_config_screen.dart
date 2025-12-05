@@ -221,7 +221,6 @@ class _DetectionSensorConfigScreenState
               style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
             ),
             value: _enabled,
-            activeTrackColor: AppTheme.primaryGreen,
             onChanged: (v) => setState(() => _enabled = v),
           ),
           if (_enabled) ...[
@@ -348,7 +347,6 @@ class _DetectionSensorConfigScreenState
               style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
             ),
             value: _usePullup,
-            activeTrackColor: AppTheme.primaryGreen,
             onChanged: (v) => setState(() => _usePullup = v),
           ),
           const Divider(height: 1, color: AppTheme.darkBorder),
@@ -362,7 +360,6 @@ class _DetectionSensorConfigScreenState
               style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
             ),
             value: _sendBell,
-            activeTrackColor: AppTheme.primaryGreen,
             onChanged: (v) => setState(() => _sendBell = v),
           ),
         ],

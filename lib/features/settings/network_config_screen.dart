@@ -177,9 +177,6 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                     subtitle: 'Connect to a WiFi network',
                     trailing: Switch.adaptive(
                       value: _wifiEnabled,
-                      activeTrackColor: AppTheme.primaryGreen,
-                      inactiveTrackColor: Colors.grey.shade600,
-                      thumbColor: WidgetStateProperty.all(Colors.white),
                       onChanged: (value) {
                         HapticFeedback.selectionClick();
                         setState(() => _wifiEnabled = value);
@@ -307,9 +304,6 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                     subtitle: 'Use wired Ethernet connection',
                     trailing: Switch.adaptive(
                       value: _ethEnabled,
-                      activeTrackColor: AppTheme.primaryGreen,
-                      inactiveTrackColor: Colors.grey.shade600,
-                      thumbColor: WidgetStateProperty.all(Colors.white),
                       onChanged: (value) {
                         HapticFeedback.selectionClick();
                         setState(() => _ethEnabled = value);

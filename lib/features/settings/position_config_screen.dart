@@ -258,9 +258,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                         'Only broadcast when position changes significantly',
                     trailing: Switch.adaptive(
                       value: _smartBroadcastEnabled,
-                      activeTrackColor: AppTheme.primaryGreen,
-                      inactiveTrackColor: Colors.grey.shade600,
-                      thumbColor: WidgetStateProperty.all(Colors.white),
                       onChanged: (value) {
                         HapticFeedback.selectionClick();
                         setState(() => _smartBroadcastEnabled = value);
@@ -326,7 +323,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                         const SizedBox(height: 8),
                         SliderTheme(
                           data: SliderThemeData(
-                            activeTrackColor: AppTheme.primaryGreen,
                             inactiveTrackColor: AppTheme.darkBorder,
                             thumbColor: AppTheme.primaryGreen,
                             overlayColor: AppTheme.primaryGreen.withValues(
@@ -393,7 +389,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                         const SizedBox(height: 8),
                         SliderTheme(
                           data: SliderThemeData(
-                            activeTrackColor: AppTheme.primaryGreen,
                             inactiveTrackColor: AppTheme.darkBorder,
                             thumbColor: AppTheme.primaryGreen,
                             overlayColor: AppTheme.primaryGreen.withValues(
@@ -425,9 +420,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                     subtitle: 'Manually set position instead of using GPS',
                     trailing: Switch.adaptive(
                       value: _fixedPosition,
-                      activeTrackColor: AppTheme.primaryGreen,
-                      inactiveTrackColor: Colors.grey.shade600,
-                      thumbColor: WidgetStateProperty.all(Colors.white),
                       onChanged: (value) {
                         HapticFeedback.selectionClick();
                         setState(() => _fixedPosition = value);
@@ -679,7 +671,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                           const SizedBox(height: 8),
                           SliderTheme(
                             data: SliderThemeData(
-                              activeTrackColor: AppTheme.primaryGreen,
                               inactiveTrackColor: AppTheme.darkBorder,
                               thumbColor: AppTheme.primaryGreen,
                               overlayColor: AppTheme.primaryGreen.withValues(
@@ -746,7 +737,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                           const SizedBox(height: 8),
                           SliderTheme(
                             data: SliderThemeData(
-                              activeTrackColor: AppTheme.primaryGreen,
                               inactiveTrackColor: AppTheme.darkBorder,
                               thumbColor: AppTheme.primaryGreen,
                               overlayColor: AppTheme.primaryGreen.withValues(
@@ -832,7 +822,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                         const SizedBox(height: 8),
                         SliderTheme(
                           data: SliderThemeData(
-                            activeTrackColor: AppTheme.primaryGreen,
                             inactiveTrackColor: AppTheme.darkBorder,
                             thumbColor: AppTheme.primaryGreen,
                             overlayColor: AppTheme.primaryGreen.withValues(
@@ -976,9 +965,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
             ),
             Switch.adaptive(
               value: value,
-              activeTrackColor: AppTheme.primaryGreen,
-              inactiveTrackColor: Colors.grey.shade600,
-              thumbColor: WidgetStateProperty.all(Colors.white),
               onChanged: (v) {
                 HapticFeedback.selectionClick();
                 onChanged(v);

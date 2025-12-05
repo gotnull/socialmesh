@@ -1134,7 +1134,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
             value: value,
             onChanged: onChanged,
             activeThumbColor: AppTheme.primaryGreen,
-            activeTrackColor: AppTheme.primaryGreen.withValues(alpha: 0.3),
             inactiveThumbColor: AppTheme.textTertiary,
             inactiveTrackColor: AppTheme.darkBackground,
           ),

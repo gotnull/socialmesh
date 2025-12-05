@@ -220,9 +220,10 @@ class _NavBarItem extends StatelessWidget {
     final theme = Theme.of(context);
 
     // Determine icon color
+    final accentColor = theme.colorScheme.primary;
     Color iconColor;
     if (isSelected) {
-      iconColor = AppTheme.primaryGreen;
+      iconColor = accentColor;
     } else if (showReconnectingBadge) {
       iconColor = Colors.amber;
     } else if (showWarningBadge) {
@@ -234,7 +235,7 @@ class _NavBarItem extends StatelessWidget {
     // Determine label color
     Color labelColor;
     if (isSelected) {
-      labelColor = AppTheme.primaryGreen;
+      labelColor = accentColor;
     } else if (showReconnectingBadge) {
       labelColor = Colors.amber;
     } else if (showWarningBadge) {
@@ -252,7 +253,7 @@ class _NavBarItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+              ? accentColor.withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),

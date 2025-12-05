@@ -373,6 +373,18 @@ class AppTheme {
         space: 1,
       ),
 
+      // Switch theme - uses accent color
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.all(Colors.white),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return accentColor;
+          }
+          return Colors.grey.shade600;
+        }),
+        trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+      ),
+
       // Bottom navigation bar
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: darkSurface,

@@ -30,11 +30,6 @@ class _ActionEditorState extends State<ActionEditor> {
   late TextEditingController _webhookEventController;
   late TextEditingController _shortcutNameController;
 
-  // Focus nodes for variable text fields
-  final _messageFocusNode = FocusNode();
-  final _notificationTitleFocusNode = FocusNode();
-  final _notificationBodyFocusNode = FocusNode();
-
   // Global keys to access VariableTextField state
   final _messageFieldKey = GlobalKey<VariableTextFieldState>();
   final _notificationTitleFieldKey = GlobalKey<VariableTextFieldState>();
@@ -52,20 +47,21 @@ class _ActionEditorState extends State<ActionEditor> {
     _shortcutNameController = TextEditingController(
       text: widget.action.shortcutName ?? '',
     );
-
-    _messageFocusNode.addListener(_updateActiveField);
-    _notificationTitleFocusNode.addListener(_updateActiveField);
-    _notificationBodyFocusNode.addListener(_updateActiveField);
   }
 
   void _updateActiveField() {
     setState(() {
-      if (_messageFocusNode.hasFocus) {
-        _activeField = _messageFieldKey.currentState;
-      } else if (_notificationTitleFocusNode.hasFocus) {
-        _activeField = _notificationTitleFieldKey.currentState;
-      } else if (_notificationBodyFocusNode.hasFocus) {
-        _activeField = _notificationBodyFieldKey.currentState;
+      // Check each field's focus state
+      final messageField = _messageFieldKey.currentState;
+      final titleField = _notificationTitleFieldKey.currentState;
+      final bodyField = _notificationBodyFieldKey.currentState;
+
+      if (messageField?.hasFocus ?? false) {
+        _activeField = messageField;
+      } else if (titleField?.hasFocus ?? false) {
+        _activeField = titleField;
+      } else if (bodyField?.hasFocus ?? false) {
+        _activeField = bodyField;
       } else {
         _activeField = null;
       }
@@ -86,9 +82,6 @@ class _ActionEditorState extends State<ActionEditor> {
   void dispose() {
     _webhookEventController.dispose();
     _shortcutNameController.dispose();
-    _messageFocusNode.dispose();
-    _notificationTitleFocusNode.dispose();
-    _notificationBodyFocusNode.dispose();
     super.dispose();
   }
 
@@ -194,7 +187,6 @@ class _ActionEditorState extends State<ActionEditor> {
         children: [
           VariableTextField(
             key: _messageFieldKey,
-            focusNode: _messageFocusNode,
             value: widget.action.messageText ?? '',
             onChanged: (value) {
               widget.onChanged(
@@ -203,15 +195,13 @@ class _ActionEditorState extends State<ActionEditor> {
                 ),
               );
             },
+            onFocusChange: _updateActiveField,
             labelText: 'Message',
             hintText: 'Tap variables below to insert',
             maxLines: 2,
           ),
           const SizedBox(height: 8),
-          VariableChipPicker(
-            targetField: _activeField,
-            isActive: _messageFocusNode.hasFocus,
-          ),
+          VariableChipPicker(targetField: _activeField),
         ],
       ),
     );
@@ -224,7 +214,6 @@ class _ActionEditorState extends State<ActionEditor> {
         children: [
           VariableTextField(
             key: _notificationTitleFieldKey,
-            focusNode: _notificationTitleFocusNode,
             value: widget.action.notificationTitle ?? '',
             onChanged: (value) {
               widget.onChanged(
@@ -233,13 +222,13 @@ class _ActionEditorState extends State<ActionEditor> {
                 ),
               );
             },
+            onFocusChange: _updateActiveField,
             labelText: 'Title',
             hintText: 'Tap variables below to insert',
           ),
           const SizedBox(height: 8),
           VariableTextField(
             key: _notificationBodyFieldKey,
-            focusNode: _notificationBodyFocusNode,
             value: widget.action.notificationBody ?? '',
             onChanged: (value) {
               widget.onChanged(
@@ -248,17 +237,13 @@ class _ActionEditorState extends State<ActionEditor> {
                 ),
               );
             },
+            onFocusChange: _updateActiveField,
             labelText: 'Body',
             hintText: 'Tap variables below to insert',
             maxLines: 2,
           ),
           const SizedBox(height: 8),
-          VariableChipPicker(
-            targetField: _activeField,
-            isActive:
-                _notificationTitleFocusNode.hasFocus ||
-                _notificationBodyFocusNode.hasFocus,
-          ),
+          VariableChipPicker(targetField: _activeField),
         ],
       ),
     );

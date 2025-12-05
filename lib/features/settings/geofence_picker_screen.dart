@@ -690,7 +690,6 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                     const SizedBox(height: 8),
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: AppTheme.primaryGreen,
                         inactiveTrackColor: AppTheme.darkBorder,
                         thumbColor: AppTheme.primaryGreen,
                         overlayColor: AppTheme.primaryGreen.withAlpha(40),

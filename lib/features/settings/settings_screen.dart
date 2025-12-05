@@ -205,6 +205,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ),
         data: (settingsService) {
+          // Watch accent color for dynamic updates (triggers rebuild when changed)
+          ref.watch(accentColorProvider);
+
           // Get current region for display
           final regionAsync = ref.watch(deviceRegionProvider);
           final regionSubtitle = regionAsync.when(
@@ -240,11 +243,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 icon: Icons.bluetooth,
                 title: 'Auto-reconnect',
                 subtitle: 'Automatically reconnect to last device',
-                trailing: Switch.adaptive(
+                trailing: ThemedSwitch(
                   value: settingsService.autoReconnect,
-                  activeTrackColor: AppTheme.primaryGreen,
-                  inactiveTrackColor: Colors.grey.shade600,
-                  thumbColor: WidgetStateProperty.all(Colors.white),
                   onChanged: (value) async {
                     HapticFeedback.selectionClick();
                     await settingsService.setAutoReconnect(value);
@@ -285,11 +285,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 icon: Icons.notifications_outlined,
                 title: 'Push notifications',
                 subtitle: 'Master toggle for all notifications',
-                trailing: Switch.adaptive(
+                trailing: ThemedSwitch(
                   value: settingsService.notificationsEnabled,
-                  activeTrackColor: AppTheme.primaryGreen,
-                  inactiveTrackColor: Colors.grey.shade600,
-                  thumbColor: WidgetStateProperty.all(Colors.white),
                   onChanged: (value) async {
                     HapticFeedback.selectionClick();
                     await settingsService.setNotificationsEnabled(value);
@@ -302,11 +299,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   icon: Icons.person_add_outlined,
                   title: 'New nodes',
                   subtitle: 'Notify when new nodes join the mesh',
-                  trailing: Switch.adaptive(
+                  trailing: ThemedSwitch(
                     value: settingsService.newNodeNotificationsEnabled,
-                    activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: Colors.grey.shade600,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
                       HapticFeedback.selectionClick();
                       await settingsService.setNewNodeNotificationsEnabled(
@@ -320,11 +314,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   icon: Icons.chat_bubble_outline,
                   title: 'Direct messages',
                   subtitle: 'Notify for private messages',
-                  trailing: Switch.adaptive(
+                  trailing: ThemedSwitch(
                     value: settingsService.directMessageNotificationsEnabled,
-                    activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: Colors.grey.shade600,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
                       HapticFeedback.selectionClick();
                       await settingsService
@@ -337,11 +328,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   icon: Icons.forum_outlined,
                   title: 'Channel messages',
                   subtitle: 'Notify for channel broadcasts',
-                  trailing: Switch.adaptive(
+                  trailing: ThemedSwitch(
                     value: settingsService.channelMessageNotificationsEnabled,
-                    activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: Colors.grey.shade600,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
                       HapticFeedback.selectionClick();
                       await settingsService
@@ -354,11 +342,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   icon: Icons.volume_up_outlined,
                   title: 'Sound',
                   subtitle: 'Play sound with notifications',
-                  trailing: Switch.adaptive(
+                  trailing: ThemedSwitch(
                     value: settingsService.notificationSoundEnabled,
-                    activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: Colors.grey.shade600,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
                       HapticFeedback.selectionClick();
                       await settingsService.setNotificationSoundEnabled(value);
@@ -370,11 +355,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   icon: Icons.vibration,
                   title: 'Vibration',
                   subtitle: 'Vibrate with notifications',
-                  trailing: Switch.adaptive(
+                  trailing: ThemedSwitch(
                     value: settingsService.notificationVibrationEnabled,
-                    activeTrackColor: AppTheme.primaryGreen,
-                    inactiveTrackColor: Colors.grey.shade600,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
                     onChanged: (value) async {
                       HapticFeedback.selectionClick();
                       await settingsService.setNotificationVibrationEnabled(

@@ -254,9 +254,6 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                             HapticFeedback.selectionClick();
                             setState(() => _enabled = value);
                           },
-                          activeTrackColor: AppTheme.primaryGreen,
-                          inactiveTrackColor: Colors.grey.shade600,
-                          thumbColor: WidgetStateProperty.all(Colors.white),
                         ),
                       ],
                     ),

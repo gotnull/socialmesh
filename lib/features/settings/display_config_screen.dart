@@ -179,7 +179,6 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
           ),
           SliderTheme(
             data: SliderThemeData(
-              activeTrackColor: AppTheme.primaryGreen,
               inactiveTrackColor: Colors.grey.shade700,
               thumbColor: AppTheme.primaryGreen,
               overlayColor: AppTheme.primaryGreen.withAlpha(30),
@@ -212,7 +211,6 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
           ),
           SliderTheme(
             data: SliderThemeData(
-              activeTrackColor: AppTheme.primaryGreen,
               inactiveTrackColor: Colors.grey.shade700,
               thumbColor: AppTheme.primaryGreen,
               overlayColor: AppTheme.primaryGreen.withAlpha(30),
@@ -240,9 +238,6 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                 HapticFeedback.selectionClick();
                 setState(() => _flipScreen = value);
               },
-              activeTrackColor: AppTheme.primaryGreen,
-              inactiveTrackColor: Colors.grey.shade600,
-              thumbColor: WidgetStateProperty.all(Colors.white),
             ),
           ),
           const SizedBox(height: 8),
@@ -256,9 +251,6 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                 HapticFeedback.selectionClick();
                 setState(() => _wakeOnTapOrMotion = value);
               },
-              activeTrackColor: AppTheme.primaryGreen,
-              inactiveTrackColor: Colors.grey.shade600,
-              thumbColor: WidgetStateProperty.all(Colors.white),
             ),
           ),
         ],
@@ -317,9 +309,6 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                 HapticFeedback.selectionClick();
                 setState(() => _headingBold = value);
               },
-              activeTrackColor: AppTheme.primaryGreen,
-              inactiveTrackColor: Colors.grey.shade600,
-              thumbColor: WidgetStateProperty.all(Colors.white),
             ),
           ),
         ],

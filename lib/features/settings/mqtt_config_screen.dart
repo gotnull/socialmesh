@@ -183,9 +183,6 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                         'Connect device to an MQTT broker for mesh bridging',
                     trailing: Switch.adaptive(
                       value: _enabled,
-                      activeTrackColor: AppTheme.primaryGreen,
-                      inactiveTrackColor: Colors.grey.shade600,
-                      thumbColor: WidgetStateProperty.all(Colors.white),
                       onChanged: (value) {
                         HapticFeedback.selectionClick();
                         setState(() => _enabled = value);
@@ -301,9 +298,6 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                       subtitle: 'Encrypt connection to broker',
                       trailing: Switch.adaptive(
                         value: _tlsEnabled,
-                        activeTrackColor: AppTheme.primaryGreen,
-                        inactiveTrackColor: Colors.grey.shade600,
-                        thumbColor: WidgetStateProperty.all(Colors.white),
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
                           setState(() => _tlsEnabled = value);
@@ -436,9 +430,6 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                       subtitle: 'Encrypt mesh messages over MQTT',
                       trailing: Switch.adaptive(
                         value: _encryptionEnabled,
-                        activeTrackColor: AppTheme.primaryGreen,
-                        inactiveTrackColor: Colors.grey.shade600,
-                        thumbColor: WidgetStateProperty.all(Colors.white),
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
                           setState(() => _encryptionEnabled = value);
@@ -452,9 +443,6 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                       subtitle: 'Publish messages in JSON format',
                       trailing: Switch.adaptive(
                         value: _jsonEnabled,
-                        activeTrackColor: AppTheme.primaryGreen,
-                        inactiveTrackColor: Colors.grey.shade600,
-                        thumbColor: WidgetStateProperty.all(Colors.white),
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
                           setState(() => _jsonEnabled = value);
@@ -470,9 +458,6 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                       subtitle: 'Forward MQTT messages to connected clients',
                       trailing: Switch.adaptive(
                         value: _proxyToClientEnabled,
-                        activeTrackColor: AppTheme.primaryGreen,
-                        inactiveTrackColor: Colors.grey.shade600,
-                        thumbColor: WidgetStateProperty.all(Colors.white),
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
                           setState(() => _proxyToClientEnabled = value);
@@ -488,9 +473,6 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                       subtitle: 'Report position to public mesh map',
                       trailing: Switch.adaptive(
                         value: _mapReportingEnabled,
-                        activeTrackColor: AppTheme.primaryGreen,
-                        inactiveTrackColor: Colors.grey.shade600,
-                        thumbColor: WidgetStateProperty.all(Colors.white),
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
                           setState(() => _mapReportingEnabled = value);
