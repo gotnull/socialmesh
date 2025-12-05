@@ -48,8 +48,13 @@ class AccentColors {
   ];
 
   static String nameFor(Color color) {
-    final index = all.indexOf(color);
-    return index >= 0 ? names[index] : 'Custom';
+    final colorValue = color.toARGB32();
+    for (int i = 0; i < all.length; i++) {
+      if (all[i].toARGB32() == colorValue) {
+        return names[i];
+      }
+    }
+    return 'Custom';
   }
 }
 

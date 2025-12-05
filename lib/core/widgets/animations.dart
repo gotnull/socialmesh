@@ -1,6 +1,27 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
+/// Custom animation utilities that complement the `animations` package.
+///
+/// The `animations` package provides page transitions (OpenContainer, SharedAxis,
+/// FadeThrough) which we use in animated_list_item.dart.
+///
+/// This file provides micro-interactions and UI animations:
+/// - [BouncyTap] - Tactile tap feedback
+/// - [PulseAnimation] - Attention-grabbing pulse
+/// - [SpinAnimation] - Loading spinner
+/// - [SlideInAnimation] / [ScaleInAnimation] - Entry animations
+/// - [GlowAnimation] - Glowing effects
+/// - [FloatAnimation] / [WaveAnimation] - Ambient motion
+/// - [ShakeAnimation] - Error feedback
+/// - [FlipAnimation] - Card flip
+/// - [AnimatedProgressRing] - Progress indicator
+/// - [AnimatedMorphIcon] - Icon transitions
+/// - [AnimatedCounter] - Number animations
+/// - [TypewriterText] - Text reveal
+///
+/// For skeleton loading states, use the `skeletonizer` package instead.
+
 /// Bouncy scale animation on tap
 class BouncyTap extends StatefulWidget {
   final Widget child;
@@ -69,83 +90,6 @@ class _BouncyTapState extends State<BouncyTap>
       onLongPress: widget.onLongPress,
       child: ScaleTransition(scale: _scaleAnimation, child: widget.child),
     );
-  }
-}
-
-/// Shimmer loading effect
-class ShimmerEffect extends StatefulWidget {
-  final Widget child;
-  final Color baseColor;
-  final Color highlightColor;
-  final Duration duration;
-
-  const ShimmerEffect({
-    super.key,
-    required this.child,
-    this.baseColor = const Color(0xFF29303D),
-    this.highlightColor = const Color(0xFF414A5A),
-    this.duration = const Duration(milliseconds: 1500),
-  });
-
-  @override
-  State<ShimmerEffect> createState() => _ShimmerEffectState();
-}
-
-class _ShimmerEffectState extends State<ShimmerEffect>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: widget.duration)
-      ..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return ShaderMask(
-          shaderCallback: (bounds) {
-            return LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                widget.baseColor,
-                widget.highlightColor,
-                widget.baseColor,
-              ],
-              stops: [
-                (_controller.value - 0.3).clamp(0.0, 1.0),
-                _controller.value,
-                (_controller.value + 0.3).clamp(0.0, 1.0),
-              ],
-              transform: _SlidingGradientTransform(_controller.value),
-            ).createShader(bounds);
-          },
-          blendMode: BlendMode.srcATop,
-          child: widget.child,
-        );
-      },
-    );
-  }
-}
-
-class _SlidingGradientTransform extends GradientTransform {
-  final double slidePercent;
-  const _SlidingGradientTransform(this.slidePercent);
-
-  @override
-  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
-    return Matrix4.translationValues(bounds.width * slidePercent, 0.0, 0.0);
   }
 }
 
