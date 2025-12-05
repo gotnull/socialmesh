@@ -1370,6 +1370,15 @@ final offlineQueueProvider = Provider<OfflineQueueService>((ref) {
             orElse: () => Message(from: 0, to: 0, text: ''),
           );
           if (message.text.isNotEmpty) {
+            // Don't downgrade status from delivered to sent
+            // This can happen if ACK arrives before sendCallback returns
+            if (message.status == MessageStatus.delivered &&
+                status == MessageStatus.sent) {
+              debugPrint(
+                '📤 Skipping status downgrade from delivered to sent for $messageId',
+              );
+              return;
+            }
             notifier.updateMessage(
               messageId,
               message.copyWith(
