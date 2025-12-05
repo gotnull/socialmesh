@@ -217,13 +217,28 @@ class AutomationTrigger {
   int? get channelIndex => config['channelIndex'] as int?;
 
   /// Geofence center latitude
-  double? get geofenceLat => config['geofenceLat'] as double?;
+  double? get geofenceLat {
+    final value = config['geofenceLat'];
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    return null;
+  }
 
   /// Geofence center longitude
-  double? get geofenceLon => config['geofenceLon'] as double?;
+  double? get geofenceLon {
+    final value = config['geofenceLon'];
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    return null;
+  }
 
   /// Geofence radius in meters
-  double get geofenceRadius => config['geofenceRadius'] as double? ?? 500;
+  double get geofenceRadius {
+    final value = config['geofenceRadius'];
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    return 500.0;
+  }
 
   /// Silent duration in minutes for nodeSilent trigger
   int get silentMinutes => config['silentMinutes'] as int? ?? 30;
