@@ -253,6 +253,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               const SizedBox(height: 16),
 
+              // Appearance Section
+              const _SectionHeader(title: 'APPEARANCE'),
+              _SettingsTile(
+                icon: Icons.palette_outlined,
+                title: 'Accent color',
+                subtitle: AccentColors.nameFor(ref.watch(accentColorProvider)),
+                trailing: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: ref.watch(accentColorProvider),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      width: 2,
+                    ),
+                  ),
+                ),
+                onTap: () =>
+                    _showAccentColorPicker(context, ref, settingsService),
+              ),
+
+              const SizedBox(height: 16),
+
               // Notifications Section
               _SectionHeader(title: 'NOTIFICATIONS'),
               _SettingsTile(
@@ -680,6 +704,92 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       );
     }
+  }
+
+  void _showAccentColorPicker(
+    BuildContext context,
+    WidgetRef ref,
+    SettingsService settingsService,
+  ) {
+    final currentColor = ref.read(accentColorProvider);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'Accent Color',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: AccentColors.all.map((color) {
+                  final isSelected =
+                      color.toARGB32() == currentColor.toARGB32();
+                  return GestureDetector(
+                    onTap: () async {
+                      HapticFeedback.selectionClick();
+                      ref.read(accentColorProvider.notifier).state = color;
+                      await settingsService.setAccentColor(color.toARGB32());
+                      if (context.mounted) Navigator.pop(context);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: 0.2),
+                          width: isSelected ? 3 : 2,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: color.withValues(alpha: 0.5),
+                                  blurRadius: 8,
+                                  spreadRadius: 2,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: isSelected
+                          ? const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 24,
+                            )
+                          : null,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showHistoryLimitDialog(

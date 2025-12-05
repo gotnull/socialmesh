@@ -88,15 +88,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
               fontSize: 28,
               fontWeight: FontWeight.w700,
               color: Colors.white,
-              
             ),
           ),
           actions: [
             IconButton(
-              icon: const Icon(
-                Icons.qr_code_scanner,
-                color: AppTheme.primaryGreen,
-              ),
+              icon: const Icon(Icons.qr_code_scanner),
               tooltip: 'Scan Node QR',
               onPressed: () => Navigator.pushNamed(context, '/node-qr-scanner'),
             ),
@@ -114,16 +110,10 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                 ),
                 child: TextField(
                   onChanged: (value) => setState(() => _searchQuery = value),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    
-                  ),
+                  style: const TextStyle(color: Colors.white),
                   decoration: const InputDecoration(
                     hintText: 'Find a node',
-                    hintStyle: TextStyle(
-                      color: AppTheme.textTertiary,
-                      
-                    ),
+                    hintStyle: TextStyle(color: AppTheme.textTertiary),
                     prefixIcon: Icon(
                       Icons.search,
                       color: AppTheme.textTertiary,
@@ -169,7 +159,6 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                               color: AppTheme.textSecondary,
-                              
                             ),
                           ),
                         ],
@@ -318,7 +307,6 @@ class _NodeCard extends StatelessWidget {
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                
                               ),
                             ),
                           ),
@@ -374,7 +362,6 @@ class _NodeCard extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: _getBatteryColor(node.batteryLevel!),
-                                  
                                 ),
                               ),
                           ],
@@ -407,7 +394,6 @@ class _NodeCard extends StatelessWidget {
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
-                                
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -431,7 +417,7 @@ class _NodeCard extends StatelessWidget {
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.white,
-                                  
+
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -456,7 +442,6 @@ class _NodeCard extends StatelessWidget {
                                 fontSize: 13,
                                 color: AppTheme.primaryGreen,
                                 fontWeight: FontWeight.w500,
-                                
                               ),
                             ),
                           ],
@@ -477,7 +462,6 @@ class _NodeCard extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: AppTheme.textSecondary,
-                                
                               ),
                             ),
                           ],
@@ -498,7 +482,6 @@ class _NodeCard extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppTheme.textTertiary,
-                                
                               ),
                             ),
                           ],
@@ -520,7 +503,6 @@ class _NodeCard extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppTheme.textTertiary,
-                                
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -540,7 +522,6 @@ class _NodeCard extends StatelessWidget {
                               color: node.hasPosition
                                   ? AppTheme.primaryGreen
                                   : AppTheme.textTertiary,
-                              
                             ),
                           ),
                         ],
@@ -561,7 +542,6 @@ class _NodeCard extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppTheme.textTertiary,
-                                
                               ),
                             ),
                           ],
@@ -582,7 +562,6 @@ class _NodeCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 12,
                               color: AppTheme.textTertiary,
-                              
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -615,7 +594,6 @@ class _NodeCard extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 12,
                                 color: AppTheme.textTertiary,
-                                
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -800,11 +778,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
               icon: const Icon(Icons.copy, size: 20),
               label: const Text(
                 'Copy Node Info',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  
-                ),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -888,14 +862,16 @@ class _NodeDetailsSheet extends ConsumerWidget {
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
-                
               ),
             ),
           ],
         ),
         content: const Text(
           'This will reboot your Meshtastic device. The app will automatically reconnect once the device restarts.',
-          style: TextStyle(color: AppTheme.textSecondary, fontFamily: 'JetBrainsMono'),
+          style: TextStyle(
+            color: AppTheme.textSecondary,
+            fontFamily: 'JetBrainsMono',
+          ),
         ),
         actions: [
           TextButton(
@@ -967,14 +943,16 @@ class _NodeDetailsSheet extends ConsumerWidget {
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
-                
               ),
             ),
           ],
         ),
         content: const Text(
           'This will turn off your Meshtastic device. You will need to physically power it back on to reconnect.',
-          style: TextStyle(color: AppTheme.textSecondary, fontFamily: 'JetBrainsMono'),
+          style: TextStyle(
+            color: AppTheme.textSecondary,
+            fontFamily: 'JetBrainsMono',
+          ),
         ),
         actions: [
           TextButton(
@@ -1039,18 +1017,11 @@ class _NodeDetailsSheet extends ConsumerWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Remove Node',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         content: Text(
           'Remove ${node.displayName} from the node database? This will remove the node from your local device.',
-          style: const TextStyle(
-            color: AppTheme.textSecondary,
-            
-          ),
+          style: const TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
           TextButton(
@@ -1190,15 +1161,14 @@ class _NodeDetailsSheet extends ConsumerWidget {
             leading: const Icon(Icons.swap_horiz, color: AppTheme.primaryGreen),
             title: const Text(
               'Exchange Positions',
-              style: TextStyle(color: Colors.white, fontFamily: 'JetBrainsMono'),
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'JetBrainsMono',
+              ),
             ),
             subtitle: const Text(
               'Request GPS position from this node',
-              style: TextStyle(
-                color: AppTheme.textTertiary,
-                fontSize: 12,
-                
-              ),
+              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
             ),
             onTap: () {
               Navigator.pop(context);
@@ -1214,7 +1184,10 @@ class _NodeDetailsSheet extends ConsumerWidget {
             ),
             title: Text(
               node.isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
-              style: const TextStyle(color: Colors.white, fontFamily: 'JetBrainsMono'),
+              style: const TextStyle(
+                color: Colors.white,
+                fontFamily: 'JetBrainsMono',
+              ),
             ),
             onTap: () {
               Navigator.pop(context);
@@ -1229,7 +1202,10 @@ class _NodeDetailsSheet extends ConsumerWidget {
               ),
               title: const Text(
                 'Set as Fixed Position',
-                style: TextStyle(color: Colors.white, fontFamily: 'JetBrainsMono'),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'JetBrainsMono',
+                ),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -1240,7 +1216,10 @@ class _NodeDetailsSheet extends ConsumerWidget {
             leading: const Icon(Icons.delete_outline, color: AppTheme.errorRed),
             title: const Text(
               'Remove Node',
-              style: TextStyle(color: AppTheme.errorRed, fontFamily: 'JetBrainsMono'),
+              style: TextStyle(
+                color: AppTheme.errorRed,
+                fontFamily: 'JetBrainsMono',
+              ),
             ),
             onTap: () {
               Navigator.pop(context);
@@ -1278,7 +1257,6 @@ class _NodeDetailsSheet extends ConsumerWidget {
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
-                      
                     ),
                   ),
                 ),
@@ -1297,7 +1275,6 @@ class _NodeDetailsSheet extends ConsumerWidget {
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
-                              
                             ),
                           ),
                         ),
@@ -1318,7 +1295,6 @@ class _NodeDetailsSheet extends ConsumerWidget {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
-                                
                               ),
                             ),
                           ),
@@ -1514,7 +1490,6 @@ class _NodeDetailsSheet extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            
                           ),
                         ),
                       ),
@@ -1538,7 +1513,6 @@ class _NodeDetailsSheet extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            
                           ),
                         ),
                       ),
@@ -1569,7 +1543,6 @@ class _NodeDetailsSheet extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        
                       ),
                     ),
                   ),
@@ -1599,7 +1572,6 @@ class _NodeDetailsSheet extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            
                           ),
                         ),
                       ),
@@ -1625,7 +1597,6 @@ class _NodeDetailsSheet extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            
                           ),
                         ),
                       ),

@@ -132,6 +132,14 @@ class SettingsService {
 
   bool get darkMode => _preferences.getBool('dark_mode') ?? false;
 
+  // Accent Color
+  Future<void> setAccentColor(int colorValue) async {
+    await _preferences.setInt('accent_color', colorValue);
+  }
+
+  int get accentColor =>
+      _preferences.getInt('accent_color') ?? 0xFFE91E8C; // Default magenta
+
   // Notifications - Master toggle
   Future<void> setNotificationsEnabled(bool enabled) async {
     await _preferences.setBool('notifications_enabled', enabled);

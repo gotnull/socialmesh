@@ -1,5 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Available accent colors for the app
+class AccentColors {
+  static const magenta = Color(0xFFE91E8C);
+  static const purple = Color(0xFF8B5CF6);
+  static const blue = Color(0xFF4F6AF6);
+  static const cyan = Color(0xFF06B6D4);
+  static const teal = Color(0xFF14B8A6);
+  static const green = Color(0xFF22C55E);
+  static const lime = Color(0xFF84CC16);
+  static const yellow = Color(0xFFEAB308);
+  static const orange = Color(0xFFF97316);
+  static const red = Color(0xFFEF4444);
+  static const pink = Color(0xFFEC4899);
+  static const rose = Color(0xFFF43F5E);
+
+  static const List<Color> all = [
+    magenta,
+    purple,
+    blue,
+    cyan,
+    teal,
+    green,
+    lime,
+    yellow,
+    orange,
+    red,
+    pink,
+    rose,
+  ];
+
+  static const List<String> names = [
+    'Magenta',
+    'Purple',
+    'Blue',
+    'Cyan',
+    'Teal',
+    'Green',
+    'Lime',
+    'Yellow',
+    'Orange',
+    'Red',
+    'Pink',
+    'Rose',
+  ];
+
+  static String nameFor(Color color) {
+    final index = all.indexOf(color);
+    return index >= 0 ? names[index] : 'Custom';
+  }
+}
+
+/// Provider for the current accent color
+final accentColorProvider = StateProvider<Color>((ref) => AccentColors.magenta);
 
 class AppTheme {
   // Font families
@@ -10,9 +65,6 @@ class AppTheme {
   static const primaryMagenta = Color(0xFFE91E8C); // Hot pink/magenta
   static const primaryPurple = Color(0xFF8B5CF6); // Purple
   static const primaryBlue = Color(0xFF4F6AF6); // Blue
-
-  // Legacy alias for compatibility
-  static const primaryGreen = primaryMagenta;
 
   // Accent colors
   static const secondaryPink = Color(0xFFF97BBD);
@@ -26,7 +78,9 @@ class AppTheme {
   static const darkSurface = Color(0xFF29303D);
   static const darkCard = Color(0xFF29303D);
   static const darkCardAlt = Color(0xFF29303D);
-  static const darkBorder = Color(0xFF414A5A); // Text colors
+  static const darkBorder = Color(0xFF414A5A);
+
+  // Text colors
   static const textPrimary = Color(0xFFFFFFFF);
   static const textSecondary = Color(0xFFD1D5DB);
   static const textTertiary = Color(0xFF9CA3AF);
@@ -71,14 +125,15 @@ class AppTheme {
     colors: [Color(0xFF374151), Color(0xFF2D3748)],
   );
 
-  static ThemeData get darkTheme {
+  /// Create dark theme with the given accent color
+  static ThemeData darkTheme(Color accentColor) {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
 
       // Color scheme
-      colorScheme: const ColorScheme.dark(
-        primary: primaryGreen,
+      colorScheme: ColorScheme.dark(
+        primary: accentColor,
         secondary: secondaryPink,
         tertiary: accentOrange,
         surface: darkCard,
@@ -230,7 +285,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primaryGreen, width: 2),
+          borderSide: BorderSide(color: accentColor, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -243,7 +298,7 @@ class AppTheme {
       // Elevated button
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryGreen,
+          backgroundColor: accentColor,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -261,7 +316,7 @@ class AppTheme {
       // Filled button
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: primaryGreen,
+          backgroundColor: accentColor,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -279,8 +334,8 @@ class AppTheme {
       // Outlined button
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: primaryGreen,
-          side: const BorderSide(color: primaryGreen),
+          foregroundColor: accentColor,
+          side: BorderSide(color: accentColor),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -296,7 +351,7 @@ class AppTheme {
       // Text button
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: primaryGreen,
+          foregroundColor: accentColor,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           textStyle: const TextStyle(
             fontSize: 14,
@@ -314,9 +369,9 @@ class AppTheme {
       ),
 
       // Bottom navigation bar
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: darkSurface,
-        selectedItemColor: primaryGreen,
+        selectedItemColor: accentColor,
         unselectedItemColor: textTertiary,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
@@ -365,7 +420,7 @@ class AppTheme {
       // Chip
       chipTheme: ChipThemeData(
         backgroundColor: darkSurface,
-        selectedColor: primaryGreen.withValues(alpha: 0.3),
+        selectedColor: accentColor.withValues(alpha: 0.3),
         disabledColor: darkSurface.withValues(alpha: 0.5),
         labelStyle: const TextStyle(color: textPrimary),
         secondaryLabelStyle: const TextStyle(color: textSecondary),
@@ -377,4 +432,8 @@ class AppTheme {
       iconTheme: const IconThemeData(color: textPrimary, size: 24),
     );
   }
+
+  /// @deprecated Use Theme.of(context).colorScheme.primary instead
+  /// Legacy alias kept temporarily for compatibility during migration
+  static const primaryGreen = AccentColors.magenta;
 }

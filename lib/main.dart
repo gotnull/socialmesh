@@ -85,7 +85,15 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(appInitProvider.notifier).initialize();
+      // Load accent color from settings
+      _loadAccentColor();
     });
+  }
+
+  Future<void> _loadAccentColor() async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    final colorValue = settings.accentColor;
+    ref.read(accentColorProvider.notifier).state = Color(colorValue);
   }
 
   @override
@@ -95,10 +103,13 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp> {
     ref.watch(autoReconnectManagerProvider);
     ref.watch(liveActivityManagerProvider);
 
+    // Watch accent color for dynamic theme
+    final accentColor = ref.watch(accentColorProvider);
+
     return MaterialApp(
       title: 'Socialmesh',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.darkTheme(accentColor),
       themeMode: ThemeMode.dark,
       home: const _AppRouter(),
       routes: {
@@ -381,7 +392,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: info.color,
-                      
+
                       letterSpacing: 0.3,
                     ),
                   ),
@@ -596,7 +607,6 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
                           color: AppTheme.primaryGreen,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          
                         ),
                       )
                     : const Icon(
@@ -619,7 +629,6 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
                       color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -653,7 +662,6 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
                       color: AppTheme.primaryGreen,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      
                     ),
                   ),
                 ],

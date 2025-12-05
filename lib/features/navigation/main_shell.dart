@@ -20,7 +20,7 @@ class MainShell extends ConsumerStatefulWidget {
 }
 
 class _MainShellState extends ConsumerState<MainShell> {
-  int _currentIndex = 0;
+  int _currentIndex = 3; // Start on Nodes tab
 
   final List<_NavItem> _navItems = [
     _NavItem(
