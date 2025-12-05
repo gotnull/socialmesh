@@ -7,6 +7,7 @@ import 'automation_providers.dart';
 import 'models/automation.dart';
 import 'widgets/trigger_selector.dart';
 import 'widgets/action_editor.dart';
+import 'widgets/variable_text_field.dart';
 
 /// Screen for creating/editing an automation
 class AutomationEditorScreen extends ConsumerStatefulWidget {
@@ -400,6 +401,29 @@ class _AutomationEditorScreenState
         ),
       );
       return;
+    }
+
+    // Validate all actions for invalid variables
+    for (final action in _actions) {
+      final fieldsToValidate = <String>[
+        action.messageText ?? '',
+        action.notificationTitle ?? '',
+        action.notificationBody ?? '',
+      ];
+
+      for (final field in fieldsToValidate) {
+        final invalidVars = validateVariables(field);
+        if (invalidVars.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Invalid variables: ${invalidVars.join(", ")}'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: AppTheme.errorRed,
+            ),
+          );
+          return;
+        }
+      }
     }
 
     final description = _descriptionController.text.trim();

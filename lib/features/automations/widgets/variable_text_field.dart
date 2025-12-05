@@ -26,8 +26,27 @@ final _variableRegex = RegExp(
   r'\{\{(node\.name|battery|location|message|time)\}\}',
 );
 
-/// A text field that renders valid variables as inline chips.
-/// Uses a real TextField for editing, with rich text display showing chips.
+/// Regex to match ANY double-brace pattern (for detecting invalid ones)
+final _anyVariableRegex = RegExp(r'\{\{[^}]*\}\}');
+
+/// Validates text for invalid variable patterns.
+/// Returns list of invalid variables found, or empty list if all valid.
+List<String> validateVariables(String text) {
+  final allMatches = _anyVariableRegex.allMatches(text).toList();
+  final invalidVars = <String>[];
+
+  for (final match in allMatches) {
+    final varText = match.group(0)!;
+    if (!validVariables.contains(varText)) {
+      invalidVars.add(varText);
+    }
+  }
+
+  return invalidVars;
+}
+
+/// A text field that renders variables as styled chips inline.
+/// Shows TextField when focused for editing, rich text with chips when not focused.
 class VariableTextField extends StatefulWidget {
   final String value;
   final ValueChanged<String> onChanged;
@@ -126,73 +145,15 @@ class VariableTextFieldState extends State<VariableTextField> {
     _focusNode.requestFocus();
   }
 
-  /// Calculate dynamic line count based on content length
-  int get _dynamicLines {
-    final length = widget.value.length;
-    if (length < 40) return 1;
-    if (length < 80) return 2;
-    if (length < 150) return 3;
-    return 4;
-  }
+  bool get hasFocus => _hasFocus;
 
-  @override
-  Widget build(BuildContext context) {
-    final effectiveLines = widget.maxLines > 1
-        ? widget.maxLines
-        : _dynamicLines;
-
-    // When focused, show plain TextField for editing
-    // When not focused, show rich text with chips
-    if (_hasFocus) {
-      return TextField(
-        controller: _controller,
-        focusNode: _focusNode,
-        onChanged: widget.onChanged,
-        minLines: 1,
-        maxLines: effectiveLines.clamp(1, 5),
-        style: const TextStyle(fontSize: 14),
-        decoration: InputDecoration(
-          labelText: widget.labelText,
-          hintText: widget.hintText,
-          isDense: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
-          ),
-        ),
-      );
-    }
-
-    // Not focused - show rich display with chips
-    return GestureDetector(
-      onTap: () => _focusNode.requestFocus(),
-      child: InputDecorator(
-        isFocused: false,
-        decoration: InputDecoration(
-          labelText: widget.labelText,
-          hintText: widget.value.isEmpty ? widget.hintText : null,
-          isDense: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
-          ),
-        ),
-        child: widget.value.isEmpty
-            ? const SizedBox(height: 20)
-            : _buildRichContent(effectiveLines),
-      ),
-    );
-  }
-
-  Widget _buildRichContent(int maxLines) {
+  /// Build rich text with inline chips for variables
+  List<InlineSpan> _buildRichContent(String text) {
     final spans = <InlineSpan>[];
-    final text = widget.value;
     int lastEnd = 0;
 
     for (final match in _variableRegex.allMatches(text)) {
-      // Add plain text before this match
+      // Add text before the match
       if (match.start > lastEnd) {
         spans.add(
           TextSpan(
@@ -202,7 +163,7 @@ class VariableTextFieldState extends State<VariableTextField> {
         );
       }
 
-      // Add variable chip
+      // Add the chip as a WidgetSpan
       final variable = match.group(0)!;
       final displayName = _variableDisplayNames[variable] ?? variable;
       spans.add(
@@ -215,24 +176,26 @@ class VariableTextFieldState extends State<VariableTextField> {
               color: AppTheme.successGreen.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(4),
               border: Border.all(
-                color: AppTheme.successGreen.withValues(alpha: 0.5),
+                color: AppTheme.successGreen.withValues(alpha: 0.4),
               ),
             ),
             child: Text(
               displayName,
               style: TextStyle(
-                color: AppTheme.successGreen,
-                fontWeight: FontWeight.w600,
+                fontFamily: 'JetBrainsMono',
                 fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.successGreen,
               ),
             ),
           ),
         ),
       );
+
       lastEnd = match.end;
     }
 
-    // Add remaining plain text
+    // Add remaining text after last match
     if (lastEnd < text.length) {
       spans.add(
         TextSpan(
@@ -242,14 +205,76 @@ class VariableTextFieldState extends State<VariableTextField> {
       );
     }
 
-    return Text.rich(
-      TextSpan(children: spans),
-      maxLines: maxLines.clamp(1, 5),
-      overflow: TextOverflow.ellipsis,
-    );
+    return spans;
   }
 
-  bool get hasFocus => _hasFocus;
+  @override
+  Widget build(BuildContext context) {
+    final invalidVars = validateVariables(widget.value);
+    final hasError = invalidVars.isNotEmpty;
+
+    // When focused, show the TextField for editing
+    if (_hasFocus) {
+      return TextField(
+        controller: _controller,
+        focusNode: _focusNode,
+        onChanged: widget.onChanged,
+        minLines: 2,
+        maxLines: 5,
+        style: const TextStyle(fontSize: 14),
+        decoration: InputDecoration(
+          labelText: widget.labelText,
+          hintText: widget.hintText,
+          isDense: true,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          focusedBorder: hasError
+              ? OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppTheme.errorRed, width: 2),
+                )
+              : null,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
+          errorText: hasError ? 'Invalid: ${invalidVars.join(", ")}' : null,
+        ),
+      );
+    }
+
+    // When not focused, show rich text with chips
+    return GestureDetector(
+      onTap: () => _focusNode.requestFocus(),
+      child: InputDecorator(
+        isFocused: false,
+        decoration: InputDecoration(
+          labelText: widget.labelText,
+          isDense: true,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          enabledBorder: hasError
+              ? OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppTheme.errorRed),
+                )
+              : null,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
+          errorText: hasError ? 'Invalid: ${invalidVars.join(", ")}' : null,
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 40),
+          child: widget.value.isEmpty
+              ? Text(
+                  widget.hintText,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                )
+              : Text.rich(TextSpan(children: _buildRichContent(widget.value))),
+        ),
+      ),
+    );
+  }
 }
 
 /// Widget showing available variables that can be tapped to insert
