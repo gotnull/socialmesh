@@ -306,6 +306,19 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
         'reconnectState: $autoReconnectState)',
       );
 
+      // If connection comes back while we're in a reconnecting state,
+      // reset to idle (the reconnect succeeded, possibly via BLE auto-reconnect)
+      if (state == DeviceConnectionState.connected &&
+          (autoReconnectState == AutoReconnectState.scanning ||
+              autoReconnectState == AutoReconnectState.connecting)) {
+        debugPrint(
+          '🔄 ✅ Connection restored while reconnecting - resetting to idle',
+        );
+        ref.read(autoReconnectStateProvider.notifier).state =
+            AutoReconnectState.idle;
+        return;
+      }
+
       // If disconnected and we have a device to reconnect to
       // Allow reconnect if state is idle OR success (just connected but not reset yet)
       final canAttemptReconnect =
