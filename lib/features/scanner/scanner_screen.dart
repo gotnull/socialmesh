@@ -5,6 +5,7 @@ import '../../core/transport.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
+import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import 'widgets/connecting_animation.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
@@ -250,11 +251,24 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         return;
       }
 
-      // Request LoRa config to check region
-      protocol.getLoRaConfig();
-
-      // Wait a moment for the response
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Wait for region to be available (it's requested automatically after config complete)
+      // Try up to 3 seconds for region to be received
+      pbenum.RegionCode? region = protocol.currentRegion;
+      if (region == null) {
+        // Region not yet received, wait for it
+        try {
+          region = await protocol.regionStream.first.timeout(
+            const Duration(seconds: 3),
+            onTimeout: () {
+              // If timeout, check if we have it now
+              return protocol.currentRegion ?? pbenum.RegionCode.UNSET_REGION;
+            },
+          );
+        } catch (e) {
+          debugPrint('⚠️ Error waiting for region: $e');
+          region = protocol.currentRegion;
+        }
+      }
 
       if (!mounted) return;
 
@@ -263,8 +277,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       final isFromNeedsScanner = appState == AppInitState.needsScanner;
 
       // Check if region is unset - need to configure before using
-      final region = protocol.currentRegion;
-      if (region == null || region.value == 0) {
+      if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
         // Navigate to region selection (initial setup mode)
         Navigator.of(context).pushReplacementNamed('/region-setup');
       } else if (isFromNeedsScanner) {
@@ -369,7 +382,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: context.accentColor,
-            
+
             letterSpacing: 0.3,
           ),
         ),
@@ -510,7 +523,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                             color: Colors.white,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -521,7 +533,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                           style: const TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 12,
-                            
                           ),
                         ),
                       ],
@@ -542,7 +553,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textSecondary,
-                      
+
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -562,7 +573,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: context.accentColor,
-                        
                       ),
                     ),
                   ),
@@ -587,7 +597,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                       color: AppTheme.textSecondary,
-                      
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -597,7 +606,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.textTertiary,
-                      
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -797,7 +805,7 @@ class _DeviceDetailsTable extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 14,
                             color: AppTheme.textTertiary,
-                            
+
                             fontWeight: FontWeight.w400,
                           ),
                         ),
@@ -816,7 +824,6 @@ class _DeviceDetailsTable extends StatelessWidget {
                             fontSize: 14,
                             color: Colors.white,
                             fontWeight: FontWeight.w500,
-                            
                           ),
                           textAlign: TextAlign.right,
                         ),
