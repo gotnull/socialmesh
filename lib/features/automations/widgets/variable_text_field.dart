@@ -213,40 +213,11 @@ class VariableTextFieldState extends State<VariableTextField> {
     final invalidVars = validateVariables(widget.value);
     final hasError = invalidVars.isNotEmpty;
 
-    // When focused, show the TextField for editing
-    if (_hasFocus) {
-      return TextField(
-        controller: _controller,
-        focusNode: _focusNode,
-        onChanged: widget.onChanged,
-        minLines: 2,
-        maxLines: 5,
-        style: const TextStyle(fontSize: 14),
-        decoration: InputDecoration(
-          labelText: widget.labelText,
-          hintText: widget.hintText,
-          isDense: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          focusedBorder: hasError
-              ? OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppTheme.errorRed, width: 2),
-                )
-              : null,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
-          ),
-          errorText: hasError ? 'Invalid: ${invalidVars.join(", ")}' : null,
-        ),
-      );
-    }
-
-    // When not focused, show rich text with chips
+    // Always show rich text with chips - use ExtendedText for inline editing
     return GestureDetector(
       onTap: () => _focusNode.requestFocus(),
       child: InputDecorator(
-        isFocused: false,
+        isFocused: _hasFocus,
         decoration: InputDecoration(
           labelText: widget.labelText,
           isDense: true,
@@ -257,20 +228,56 @@ class VariableTextFieldState extends State<VariableTextField> {
                   borderSide: BorderSide(color: AppTheme.errorRed),
                 )
               : null,
+          focusedBorder: hasError
+              ? OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppTheme.errorRed, width: 2),
+                )
+              : OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 2,
+                  ),
+                ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 12,
             vertical: 12,
           ),
           errorText: hasError ? 'Invalid: ${invalidVars.join(", ")}' : null,
         ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 40),
-          child: widget.value.isEmpty
-              ? Text(
-                  widget.hintText,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                )
-              : Text.rich(TextSpan(children: _buildRichContent(widget.value))),
+        child: Stack(
+          children: [
+            // Invisible text field for input handling
+            Opacity(
+              opacity: 0,
+              child: TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                onChanged: widget.onChanged,
+                minLines: 2,
+                maxLines: 5,
+                style: const TextStyle(fontSize: 14),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  isDense: true,
+                ),
+              ),
+            ),
+            // Visible rich content with chips
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 40),
+              child: widget.value.isEmpty
+                  ? Text(
+                      widget.hintText,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    )
+                  : Text.rich(
+                      TextSpan(children: _buildRichContent(widget.value)),
+                    ),
+            ),
+          ],
         ),
       ),
     );
