@@ -29,15 +29,28 @@ final _variableRegex = RegExp(
 /// Regex to match ANY double-brace pattern (for detecting invalid ones)
 final _anyVariableRegex = RegExp(r'\{\{[^}]*\}\}');
 
+/// Regex to match incomplete/malformed variable patterns
+final _incompleteVariableRegex = RegExp(
+  r'\{\{[^}]*\}(?!\})|\{\{[^}]*$|\{\{[^}]*\}[^}]',
+);
+
 /// Validates text for invalid variable patterns.
 /// Returns list of invalid variables found, or empty list if all valid.
 List<String> validateVariables(String text) {
-  final allMatches = _anyVariableRegex.allMatches(text).toList();
   final invalidVars = <String>[];
 
-  for (final match in allMatches) {
+  // Check for complete but invalid variables
+  for (final match in _anyVariableRegex.allMatches(text)) {
     final varText = match.group(0)!;
     if (!validVariables.contains(varText)) {
+      invalidVars.add(varText);
+    }
+  }
+
+  // Check for incomplete patterns like {{node.name} or {{battery
+  for (final match in _incompleteVariableRegex.allMatches(text)) {
+    final varText = match.group(0)!;
+    if (!invalidVars.contains(varText)) {
       invalidVars.add(varText);
     }
   }
@@ -45,8 +58,135 @@ List<String> validateVariables(String text) {
   return invalidVars;
 }
 
+/// Custom TextEditingController that styles variables with background color
+class _VariableTextEditingController extends TextEditingController {
+  _VariableTextEditingController({super.text});
+
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    final text = this.text;
+    if (text.isEmpty) {
+      return TextSpan(text: text, style: style);
+    }
+
+    // Find all valid variables
+    final validMatches = _variableRegex.allMatches(text).toList();
+
+    // Find all invalid/incomplete patterns
+    final invalidPatterns = <({int start, int end, String text})>[];
+
+    // Complete but invalid {{...}}
+    for (final match in _anyVariableRegex.allMatches(text)) {
+      if (!validVariables.contains(match.group(0))) {
+        invalidPatterns.add((
+          start: match.start,
+          end: match.end,
+          text: match.group(0)!,
+        ));
+      }
+    }
+
+    // Incomplete patterns
+    for (final match in _incompleteVariableRegex.allMatches(text)) {
+      final alreadyFound = invalidPatterns.any(
+        (p) =>
+            (match.start >= p.start && match.start < p.end) ||
+            (match.end > p.start && match.end <= p.end),
+      );
+      if (!alreadyFound) {
+        invalidPatterns.add((
+          start: match.start,
+          end: match.end,
+          text: match.group(0)!,
+        ));
+      }
+    }
+
+    // Build list of all styled ranges
+    final styledRanges = <({int start, int end, bool isValid})>[];
+
+    for (final match in validMatches) {
+      styledRanges.add((start: match.start, end: match.end, isValid: true));
+    }
+
+    for (final pattern in invalidPatterns) {
+      // Don't add if overlaps with valid
+      final overlapsValid = styledRanges.any(
+        (r) =>
+            r.isValid &&
+            ((pattern.start >= r.start && pattern.start < r.end) ||
+                (pattern.end > r.start && pattern.end <= r.end)),
+      );
+      if (!overlapsValid) {
+        styledRanges.add((
+          start: pattern.start,
+          end: pattern.end,
+          isValid: false,
+        ));
+      }
+    }
+
+    // Sort by start position
+    styledRanges.sort((a, b) => a.start.compareTo(b.start));
+
+    final spans = <InlineSpan>[];
+    int lastEnd = 0;
+
+    for (final range in styledRanges) {
+      // Add text before the match
+      if (range.start > lastEnd) {
+        spans.add(
+          TextSpan(text: text.substring(lastEnd, range.start), style: style),
+        );
+      }
+
+      // Style the variable
+      final varText = text.substring(range.start, range.end);
+      if (range.isValid) {
+        spans.add(
+          TextSpan(
+            text: varText,
+            style: style?.copyWith(
+              color: AppTheme.successGreen,
+              backgroundColor: AppTheme.successGreen.withValues(alpha: 0.2),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        );
+      } else {
+        spans.add(
+          TextSpan(
+            text: varText,
+            style: style?.copyWith(
+              color: AppTheme.errorRed,
+              backgroundColor: AppTheme.errorRed.withValues(alpha: 0.2),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        );
+      }
+
+      lastEnd = range.end;
+    }
+
+    // Add remaining text after last match
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(text: text.substring(lastEnd), style: style));
+    }
+
+    if (spans.isEmpty) {
+      return TextSpan(text: text, style: style);
+    }
+
+    return TextSpan(children: spans, style: style);
+  }
+}
+
 /// A text field that renders variables as styled chips inline.
-/// Shows TextField when focused for editing, rich text with chips when not focused.
 class VariableTextField extends StatefulWidget {
   final String value;
   final ValueChanged<String> onChanged;
@@ -72,7 +212,7 @@ class VariableTextField extends StatefulWidget {
 }
 
 class VariableTextFieldState extends State<VariableTextField> {
-  late TextEditingController _controller;
+  late _VariableTextEditingController _controller;
   late FocusNode _focusNode;
   bool _ownsFocusNode = false;
   bool _hasFocus = false;
@@ -80,7 +220,7 @@ class VariableTextFieldState extends State<VariableTextField> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.value);
+    _controller = _VariableTextEditingController(text: widget.value);
     if (widget.focusNode != null) {
       _focusNode = widget.focusNode!;
       _ownsFocusNode = false;
@@ -145,140 +285,134 @@ class VariableTextFieldState extends State<VariableTextField> {
     _focusNode.requestFocus();
   }
 
-  bool get hasFocus => _hasFocus;
+  /// Delete a variable from the text
+  void deleteVariable(int start, int end) {
+    HapticFeedback.lightImpact();
 
-  /// Build rich text with inline chips for variables
-  List<InlineSpan> _buildRichContent(String text) {
-    final spans = <InlineSpan>[];
-    int lastEnd = 0;
+    final text = _controller.text;
+    final newText = text.substring(0, start) + text.substring(end);
+    _controller.text = newText;
+    _controller.selection = TextSelection.collapsed(offset: start);
 
-    for (final match in _variableRegex.allMatches(text)) {
-      // Add text before the match
-      if (match.start > lastEnd) {
-        spans.add(
-          TextSpan(
-            text: text.substring(lastEnd, match.start),
-            style: const TextStyle(fontSize: 14, color: Colors.white),
-          ),
-        );
-      }
-
-      // Add the chip as a WidgetSpan
-      final variable = match.group(0)!;
-      final displayName = _variableDisplayNames[variable] ?? variable;
-      spans.add(
-        WidgetSpan(
-          alignment: PlaceholderAlignment.middle,
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 2),
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: AppTheme.successGreen.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: AppTheme.successGreen.withValues(alpha: 0.4),
-              ),
-            ),
-            child: Text(
-              displayName,
-              style: TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.successGreen,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      lastEnd = match.end;
-    }
-
-    // Add remaining text after last match
-    if (lastEnd < text.length) {
-      spans.add(
-        TextSpan(
-          text: text.substring(lastEnd),
-          style: const TextStyle(fontSize: 14, color: Colors.white),
-        ),
-      );
-    }
-
-    return spans;
+    widget.onChanged(newText);
   }
+
+  /// Get all variable matches with their positions
+  List<({String variable, int start, int end})> get variableMatches {
+    final matches = <({String variable, int start, int end})>[];
+    for (final match in _variableRegex.allMatches(_controller.text)) {
+      matches.add((
+        variable: match.group(0)!,
+        start: match.start,
+        end: match.end,
+      ));
+    }
+    return matches;
+  }
+
+  bool get hasFocus => _hasFocus;
 
   @override
   Widget build(BuildContext context) {
     final invalidVars = validateVariables(widget.value);
     final hasError = invalidVars.isNotEmpty;
+    final matches = variableMatches;
 
-    // Always show rich text with chips - use ExtendedText for inline editing
-    return GestureDetector(
-      onTap: () => _focusNode.requestFocus(),
-      child: InputDecorator(
-        isFocused: _hasFocus,
-        decoration: InputDecoration(
-          labelText: widget.labelText,
-          isDense: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          enabledBorder: hasError
-              ? OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppTheme.errorRed),
-                )
-              : null,
-          focusedBorder: hasError
-              ? OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppTheme.errorRed, width: 2),
-                )
-              : OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: 2,
-                  ),
-                ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: _controller,
+          focusNode: _focusNode,
+          onChanged: widget.onChanged,
+          minLines: 2,
+          maxLines: 5,
+          style: const TextStyle(fontSize: 14),
+          decoration: InputDecoration(
+            labelText: widget.labelText,
+            hintText: widget.hintText,
+            isDense: true,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            enabledBorder: hasError
+                ? OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppTheme.errorRed),
+                  )
+                : null,
+            focusedBorder: hasError
+                ? OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppTheme.errorRed, width: 2),
+                  )
+                : null,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
+            errorText: hasError ? 'Invalid: ${invalidVars.join(", ")}' : null,
           ),
-          errorText: hasError ? 'Invalid: ${invalidVars.join(", ")}' : null,
         ),
-        child: Stack(
-          children: [
-            // Invisible text field for input handling
-            Opacity(
-              opacity: 0,
-              child: TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                onChanged: widget.onChanged,
-                minLines: 2,
-                maxLines: 5,
-                style: const TextStyle(fontSize: 14),
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
-                  isDense: true,
-                ),
+        if (matches.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: matches.asMap().entries.map((entry) {
+              final match = entry.value;
+              final displayName =
+                  _variableDisplayNames[match.variable] ?? match.variable;
+              return _VariableChip(
+                label: displayName,
+                onDelete: () => deleteVariable(match.start, match.end),
+              );
+            }).toList(),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// A deletable variable chip
+class _VariableChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onDelete;
+
+  const _VariableChip({required this.label, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.only(left: 8, right: 4, top: 4, bottom: 4),
+      decoration: BoxDecoration(
+        color: AppTheme.successGreen.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: AppTheme.successGreen.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppTheme.successGreen,
+            ),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: onDelete,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: AppTheme.successGreen.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
               ),
+              child: Icon(Icons.close, size: 14, color: AppTheme.successGreen),
             ),
-            // Visible rich content with chips
-            ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 40),
-              child: widget.value.isEmpty
-                  ? Text(
-                      widget.hintText,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                    )
-                  : Text.rich(
-                      TextSpan(children: _buildRichContent(widget.value)),
-                    ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -345,7 +479,7 @@ class VariableChipPicker extends StatelessWidget {
         child: Text(
           displayName,
           style: TextStyle(
-            fontFamily: 'JetBrainsMono',
+            fontFamily: AppTheme.fontFamily,
             fontSize: 12,
             fontWeight: FontWeight.w500,
             color: isActive ? AppTheme.successGreen : Colors.grey[400],
