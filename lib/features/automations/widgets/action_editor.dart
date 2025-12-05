@@ -1,39 +1,9 @@
-import 'package:detectable_text_field/detectable_text_field.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../models/automation.dart';
-
-/// Valid variable names that can be used in automations
-const _validVariables = [
-  '{{node.name}}',
-  '{{battery}}',
-  '{{location}}',
-  '{{message}}',
-  '{{time}}',
-];
-
-/// RegExp to detect only valid {{variable}} patterns
-final _variableRegExp = RegExp(
-  r'\{\{(node\.name|battery|location|message|time)\}\}',
-);
-
-/// RegExp to match any {{...}} pattern (for stripping invalid ones)
-final _anyVariableRegExp = RegExp(r'\{\{[^}]+\}\}');
-
-/// Strips invalid variables from text, keeping only valid ones
-String _sanitizeVariables(String text) {
-  return text.replaceAllMapped(_anyVariableRegExp, (match) {
-    final variable = match.group(0)!;
-    if (_validVariables.contains(variable)) {
-      return variable; // Keep valid variables
-    }
-    // Remove invalid variable entirely
-    return '';
-  });
-}
+import 'variable_text_field.dart';
 
 /// Widget for editing an action
 class ActionEditor extends StatefulWidget {
@@ -57,102 +27,69 @@ class ActionEditor extends StatefulWidget {
 }
 
 class _ActionEditorState extends State<ActionEditor> {
-  late DetectableTextEditingController _messageController;
-  late DetectableTextEditingController _notificationTitleController;
-  late DetectableTextEditingController _notificationBodyController;
   late TextEditingController _webhookEventController;
   late TextEditingController _shortcutNameController;
 
-  // Track which controller is currently active for variable insertion
-  DetectableTextEditingController? _lastFocusedController;
+  // Focus nodes for variable text fields
+  final _messageFocusNode = FocusNode();
+  final _notificationTitleFocusNode = FocusNode();
+  final _notificationBodyFocusNode = FocusNode();
+
+  // Global keys to access VariableTextField state
+  final _messageFieldKey = GlobalKey<VariableTextFieldState>();
+  final _notificationTitleFieldKey = GlobalKey<VariableTextFieldState>();
+  final _notificationBodyFieldKey = GlobalKey<VariableTextFieldState>();
+
+  // Track which field is currently focused
+  VariableTextFieldState? _activeField;
 
   @override
   void initState() {
     super.initState();
-    _messageController = DetectableTextEditingController(
-      regExp: _variableRegExp,
-      text: widget.action.messageText ?? '',
-    );
-    _notificationTitleController = DetectableTextEditingController(
-      regExp: _variableRegExp,
-      text: widget.action.notificationTitle ?? '',
-    );
-    _notificationBodyController = DetectableTextEditingController(
-      regExp: _variableRegExp,
-      text: widget.action.notificationBody ?? '',
-    );
     _webhookEventController = TextEditingController(
       text: widget.action.webhookEventName ?? '',
     );
     _shortcutNameController = TextEditingController(
       text: widget.action.shortcutName ?? '',
     );
+
+    _messageFocusNode.addListener(_updateActiveField);
+    _notificationTitleFocusNode.addListener(_updateActiveField);
+    _notificationBodyFocusNode.addListener(_updateActiveField);
+  }
+
+  void _updateActiveField() {
+    setState(() {
+      if (_messageFocusNode.hasFocus) {
+        _activeField = _messageFieldKey.currentState;
+      } else if (_notificationTitleFocusNode.hasFocus) {
+        _activeField = _notificationTitleFieldKey.currentState;
+      } else if (_notificationBodyFocusNode.hasFocus) {
+        _activeField = _notificationBodyFieldKey.currentState;
+      } else {
+        _activeField = null;
+      }
+    });
   }
 
   @override
   void didUpdateWidget(ActionEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Only update controllers if the action type changed (not during typing)
     if (oldWidget.action.type != widget.action.type) {
-      _messageController.text = widget.action.messageText ?? '';
-      _notificationTitleController.text = widget.action.notificationTitle ?? '';
-      _notificationBodyController.text = widget.action.notificationBody ?? '';
       _webhookEventController.text = widget.action.webhookEventName ?? '';
       _shortcutNameController.text = widget.action.shortcutName ?? '';
-      _lastFocusedController = null;
+      _activeField = null;
     }
   }
 
   @override
   void dispose() {
-    _messageController.dispose();
-    _notificationTitleController.dispose();
-    _notificationBodyController.dispose();
     _webhookEventController.dispose();
     _shortcutNameController.dispose();
+    _messageFocusNode.dispose();
+    _notificationTitleFocusNode.dispose();
+    _notificationBodyFocusNode.dispose();
     super.dispose();
-  }
-
-  /// Insert a variable at cursor position in the active text field
-  void _insertVariable(String variable) {
-    final controller = _lastFocusedController;
-    if (controller == null) return;
-
-    HapticFeedback.lightImpact();
-
-    final text = controller.text;
-    final selection = controller.selection;
-
-    // Insert at cursor or append
-    final newText = selection.isValid
-        ? text.replaceRange(selection.start, selection.end, variable)
-        : text + variable;
-
-    controller.text = newText;
-
-    // Move cursor after inserted variable
-    final newPosition = selection.isValid
-        ? selection.start + variable.length
-        : newText.length;
-    controller.selection = TextSelection.collapsed(offset: newPosition);
-
-    // Determine config key and update action
-    String? configKey;
-    if (controller == _messageController) {
-      configKey = 'messageText';
-    } else if (controller == _notificationTitleController) {
-      configKey = 'notificationTitle';
-    } else if (controller == _notificationBodyController) {
-      configKey = 'notificationBody';
-    }
-
-    if (configKey != null) {
-      widget.onChanged(
-        widget.action.copyWith(
-          config: {...widget.action.config, configKey: newText},
-        ),
-      );
-    }
   }
 
   @override
@@ -246,7 +183,6 @@ class _ActionEditorState extends State<ActionEditor> {
       case ActionType.vibrate:
       case ActionType.logEvent:
       case ActionType.updateWidget:
-        // No additional config needed
         return const SizedBox.shrink();
     }
   }
@@ -256,48 +192,26 @@ class _ActionEditorState extends State<ActionEditor> {
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       child: Column(
         children: [
-          Focus(
-            onFocusChange: (hasFocus) {
-              if (hasFocus) {
-                setState(() {
-                  _lastFocusedController = _messageController;
-                });
-              }
-            },
-            child: DetectableTextField(
-              controller: _messageController,
-              detectedStyle: TextStyle(
-                color: AppTheme.successGreen,
-                fontWeight: FontWeight.w600,
-                backgroundColor: AppTheme.successGreen.withValues(alpha: 0.15),
-              ),
-              onChanged: (value) {
-                final sanitized = _sanitizeVariables(value);
-                if (sanitized != value) {
-                  _messageController.text = sanitized;
-                  _messageController.selection = TextSelection.collapsed(
-                    offset: sanitized.length,
-                  );
-                }
-                widget.onChanged(
-                  widget.action.copyWith(
-                    config: {...widget.action.config, 'messageText': sanitized},
-                  ),
-                );
-              },
-              decoration: InputDecoration(
-                labelText: 'Message',
-                hintText: 'Tap variables below to insert',
-                isDense: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+          VariableTextField(
+            key: _messageFieldKey,
+            focusNode: _messageFocusNode,
+            value: widget.action.messageText ?? '',
+            onChanged: (value) {
+              widget.onChanged(
+                widget.action.copyWith(
+                  config: {...widget.action.config, 'messageText': value},
                 ),
-              ),
-              maxLines: 2,
-            ),
+              );
+            },
+            labelText: 'Message',
+            hintText: 'Tap variables below to insert',
+            maxLines: 2,
           ),
           const SizedBox(height: 8),
-          _buildVariableHints(context),
+          VariableChipPicker(
+            targetField: _activeField,
+            isActive: _messageFocusNode.hasFocus,
+          ),
         ],
       ),
     );
@@ -308,92 +222,43 @@ class _ActionEditorState extends State<ActionEditor> {
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       child: Column(
         children: [
-          Focus(
-            onFocusChange: (hasFocus) {
-              if (hasFocus) {
-                setState(() {
-                  _lastFocusedController = _notificationTitleController;
-                });
-              }
-            },
-            child: DetectableTextField(
-              controller: _notificationTitleController,
-              detectedStyle: TextStyle(
-                color: AppTheme.successGreen,
-                fontWeight: FontWeight.w600,
-                backgroundColor: AppTheme.successGreen.withValues(alpha: 0.15),
-              ),
-              onChanged: (value) {
-                final sanitized = _sanitizeVariables(value);
-                if (sanitized != value) {
-                  _notificationTitleController.text = sanitized;
-                  _notificationTitleController.selection =
-                      TextSelection.collapsed(offset: sanitized.length);
-                }
-                widget.onChanged(
-                  widget.action.copyWith(
-                    config: {
-                      ...widget.action.config,
-                      'notificationTitle': sanitized,
-                    },
-                  ),
-                );
-              },
-              decoration: InputDecoration(
-                labelText: 'Title',
-                hintText: 'Tap variables below to insert',
-                isDense: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+          VariableTextField(
+            key: _notificationTitleFieldKey,
+            focusNode: _notificationTitleFocusNode,
+            value: widget.action.notificationTitle ?? '',
+            onChanged: (value) {
+              widget.onChanged(
+                widget.action.copyWith(
+                  config: {...widget.action.config, 'notificationTitle': value},
                 ),
-              ),
-            ),
+              );
+            },
+            labelText: 'Title',
+            hintText: 'Tap variables below to insert',
           ),
           const SizedBox(height: 8),
-          Focus(
-            onFocusChange: (hasFocus) {
-              if (hasFocus) {
-                setState(() {
-                  _lastFocusedController = _notificationBodyController;
-                });
-              }
-            },
-            child: DetectableTextField(
-              controller: _notificationBodyController,
-              detectedStyle: TextStyle(
-                color: AppTheme.successGreen,
-                fontWeight: FontWeight.w600,
-                backgroundColor: AppTheme.successGreen.withValues(alpha: 0.15),
-              ),
-              onChanged: (value) {
-                final sanitized = _sanitizeVariables(value);
-                if (sanitized != value) {
-                  _notificationBodyController.text = sanitized;
-                  _notificationBodyController.selection =
-                      TextSelection.collapsed(offset: sanitized.length);
-                }
-                widget.onChanged(
-                  widget.action.copyWith(
-                    config: {
-                      ...widget.action.config,
-                      'notificationBody': sanitized,
-                    },
-                  ),
-                );
-              },
-              decoration: InputDecoration(
-                labelText: 'Body',
-                hintText: 'Tap variables below to insert',
-                isDense: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+          VariableTextField(
+            key: _notificationBodyFieldKey,
+            focusNode: _notificationBodyFocusNode,
+            value: widget.action.notificationBody ?? '',
+            onChanged: (value) {
+              widget.onChanged(
+                widget.action.copyWith(
+                  config: {...widget.action.config, 'notificationBody': value},
                 ),
-              ),
-              maxLines: 2,
-            ),
+              );
+            },
+            labelText: 'Body',
+            hintText: 'Tap variables below to insert',
+            maxLines: 2,
           ),
           const SizedBox(height: 8),
-          _buildVariableHints(context),
+          VariableChipPicker(
+            targetField: _activeField,
+            isActive:
+                _notificationTitleFocusNode.hasFocus ||
+                _notificationBodyFocusNode.hasFocus,
+          ),
         ],
       ),
     );
@@ -469,62 +334,6 @@ class _ActionEditorState extends State<ActionEditor> {
     );
   }
 
-  Widget _buildVariableHints(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _lastFocusedController != null
-                ? 'Tap a variable to insert:'
-                : 'Available variables (tap a field first):',
-            style: TextStyle(color: Colors.grey[600], fontSize: 11),
-          ),
-          const SizedBox(height: 4),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: _validVariables
-                .map((v) => _buildVariableChip(v))
-                .toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVariableChip(String variable) {
-    final isActive = _lastFocusedController != null;
-    return GestureDetector(
-      onTap: isActive ? () => _insertVariable(variable) : null,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: isActive
-              ? AppTheme.successGreen.withValues(alpha: 0.2)
-              : AppTheme.darkCard,
-          borderRadius: BorderRadius.circular(4),
-          border: isActive
-              ? Border.all(color: AppTheme.successGreen.withValues(alpha: 0.5))
-              : null,
-        ),
-        child: Text(
-          variable,
-          style: TextStyle(
-            fontFamily: 'monospace',
-            fontSize: 11,
-            color: isActive ? AppTheme.successGreen : Colors.amber[300],
-          ),
-        ),
-      ),
-    );
-  }
-
   void _showActionTypePicker(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -565,10 +374,6 @@ class _ActionEditorState extends State<ActionEditor> {
                   onTap: () {
                     Navigator.pop(context);
                     if (type != widget.action.type) {
-                      // Reset controllers when type changes
-                      _messageController.text = '';
-                      _notificationTitleController.text = '';
-                      _notificationBodyController.text = '';
                       _webhookEventController.text = '';
                       _shortcutNameController.text = '';
                       widget.onChanged(AutomationAction(type: type));
