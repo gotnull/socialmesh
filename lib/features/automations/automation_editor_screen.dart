@@ -73,153 +73,157 @@ class _AutomationEditorScreenState
             ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Name field
-            _buildSectionTitle(context, 'Name'),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                hintText: 'e.g., Low Battery Alert',
-                filled: true,
-                fillColor: AppTheme.darkCard,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppTheme.darkBorder),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.primary,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Name field
+              _buildSectionTitle(context, 'Name'),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  hintText: 'e.g., Low Battery Alert',
+                  filled: true,
+                  fillColor: AppTheme.darkCard,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppTheme.darkBorder),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Description field
-            _buildSectionTitle(context, 'Description (optional)'),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _descriptionController,
-              decoration: InputDecoration(
-                hintText: 'What does this automation do?',
-                filled: true,
-                fillColor: AppTheme.darkCard,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppTheme.darkBorder),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.primary,
+              // Description field
+              _buildSectionTitle(context, 'Description (optional)'),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _descriptionController,
+                decoration: InputDecoration(
+                  hintText: 'What does this automation do?',
+                  filled: true,
+                  fillColor: AppTheme.darkCard,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppTheme.darkBorder),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                 ),
+                maxLines: 2,
               ),
-              maxLines: 2,
-            ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // WHEN (Trigger)
-            _buildSectionTitle(
-              context,
-              'WHEN',
-              icon: Icons.bolt,
-              color: Colors.amber,
-            ),
-            const SizedBox(height: 8),
-            TriggerSelector(
-              trigger: _trigger,
-              onChanged: (trigger) => setState(() => _trigger = trigger),
-            ),
+              // WHEN (Trigger)
+              _buildSectionTitle(
+                context,
+                'WHEN',
+                icon: Icons.bolt,
+                color: Colors.amber,
+              ),
+              const SizedBox(height: 8),
+              TriggerSelector(
+                trigger: _trigger,
+                onChanged: (trigger) => setState(() => _trigger = trigger),
+              ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // THEN (Actions)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildSectionTitle(
-                  context,
-                  'THEN',
-                  icon: Icons.play_arrow,
-                  color: AppTheme.successGreen,
-                ),
-                BouncyTap(
-                  onTap: _addAction,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.add,
-                          size: 16,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Add Action',
-                          style: TextStyle(
+              // THEN (Actions)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildSectionTitle(
+                    context,
+                    'THEN',
+                    icon: Icons.play_arrow,
+                    color: AppTheme.successGreen,
+                  ),
+                  BouncyTap(
+                    onTap: _addAction,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.add,
+                            size: 16,
                             color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 13,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Text(
+                            'Add Action',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
+                ],
+              ),
+              const SizedBox(height: 8),
 
-            // Actions list
-            ..._actions.asMap().entries.map((entry) {
-              final index = entry.key;
-              final action = entry.value;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: ActionEditor(
-                  action: action,
-                  onChanged: (updated) {
-                    setState(() {
-                      _actions[index] = updated;
-                    });
-                  },
-                  onDelete: _actions.length > 1
-                      ? () => setState(() => _actions.removeAt(index))
-                      : null,
-                ),
-              );
-            }),
+              // Actions list
+              ..._actions.asMap().entries.map((entry) {
+                final index = entry.key;
+                final action = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: ActionEditor(
+                    action: action,
+                    onChanged: (updated) {
+                      setState(() {
+                        _actions[index] = updated;
+                      });
+                    },
+                    onDelete: _actions.length > 1
+                        ? () => setState(() => _actions.removeAt(index))
+                        : null,
+                  ),
+                );
+              }),
 
-            const SizedBox(height: 100), // Space for bottom button
-          ],
+              const SizedBox(height: 100), // Space for bottom button
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: SafeArea(
