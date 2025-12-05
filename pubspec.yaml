@@ -66,6 +66,9 @@ dependencies:
   flutter_map_marker_cluster: ^1.4.0
   firebase_crashlytics: ^5.0.5
   firebase_core: ^4.2.1
+  
+  # Rich text with detectable patterns
+  detectable_text_field: ^3.0.2
 
 dev_dependencies:
   flutter_test:

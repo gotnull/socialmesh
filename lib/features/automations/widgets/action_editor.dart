@@ -1,3 +1,4 @@
+import 'package:detectable_text_field/detectable_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -5,17 +6,24 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../models/automation.dart';
 
+/// RegExp to detect {{variable}} patterns
+final _variableRegExp = RegExp(r'\{\{[a-zA-Z0-9_.]+\}\}');
+
 /// Widget for editing an action
 class ActionEditor extends StatefulWidget {
   final AutomationAction action;
   final void Function(AutomationAction action) onChanged;
   final VoidCallback? onDelete;
+  final int? index;
+  final int? totalActions;
 
   const ActionEditor({
     super.key,
     required this.action,
     required this.onChanged,
     this.onDelete,
+    this.index,
+    this.totalActions,
   });
 
   @override
@@ -23,25 +31,28 @@ class ActionEditor extends StatefulWidget {
 }
 
 class _ActionEditorState extends State<ActionEditor> {
-  late TextEditingController _messageController;
-  late TextEditingController _notificationTitleController;
-  late TextEditingController _notificationBodyController;
+  late DetectableTextEditingController _messageController;
+  late DetectableTextEditingController _notificationTitleController;
+  late DetectableTextEditingController _notificationBodyController;
   late TextEditingController _webhookEventController;
   late TextEditingController _shortcutNameController;
 
   // Track which controller is currently active for variable insertion
-  TextEditingController? _lastFocusedController;
+  DetectableTextEditingController? _lastFocusedController;
 
   @override
   void initState() {
     super.initState();
-    _messageController = TextEditingController(
+    _messageController = DetectableTextEditingController(
+      regExp: _variableRegExp,
       text: widget.action.messageText ?? '',
     );
-    _notificationTitleController = TextEditingController(
+    _notificationTitleController = DetectableTextEditingController(
+      regExp: _variableRegExp,
       text: widget.action.notificationTitle ?? '',
     );
-    _notificationBodyController = TextEditingController(
+    _notificationBodyController = DetectableTextEditingController(
+      regExp: _variableRegExp,
       text: widget.action.notificationBody ?? '',
     );
     _webhookEventController = TextEditingController(
@@ -227,8 +238,13 @@ class _ActionEditorState extends State<ActionEditor> {
                 });
               }
             },
-            child: TextField(
+            child: DetectableTextField(
               controller: _messageController,
+              detectedStyle: TextStyle(
+                color: AppTheme.successGreen,
+                fontWeight: FontWeight.w600,
+                backgroundColor: AppTheme.successGreen.withValues(alpha: 0.15),
+              ),
               onChanged: (value) {
                 widget.onChanged(
                   widget.action.copyWith(
@@ -267,8 +283,13 @@ class _ActionEditorState extends State<ActionEditor> {
                 });
               }
             },
-            child: TextField(
+            child: DetectableTextField(
               controller: _notificationTitleController,
+              detectedStyle: TextStyle(
+                color: AppTheme.successGreen,
+                fontWeight: FontWeight.w600,
+                backgroundColor: AppTheme.successGreen.withValues(alpha: 0.15),
+              ),
               onChanged: (value) {
                 widget.onChanged(
                   widget.action.copyWith(
@@ -298,8 +319,13 @@ class _ActionEditorState extends State<ActionEditor> {
                 });
               }
             },
-            child: TextField(
+            child: DetectableTextField(
               controller: _notificationBodyController,
+              detectedStyle: TextStyle(
+                color: AppTheme.successGreen,
+                fontWeight: FontWeight.w600,
+                backgroundColor: AppTheme.successGreen.withValues(alpha: 0.15),
+              ),
               onChanged: (value) {
                 widget.onChanged(
                   widget.action.copyWith(

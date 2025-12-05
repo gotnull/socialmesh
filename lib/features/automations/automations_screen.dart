@@ -296,6 +296,7 @@ class AutomationsScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.darkSurface,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -500,141 +501,161 @@ class _AddAutomationSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (context, scrollController) => Column(
         children: [
+          // Handle
           Center(
             child: Container(
               width: 40,
               height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
+              margin: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.grey[600],
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
-          Text(
-            'Add Automation',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-
-          // Create from scratch
-          BouncyTap(
-            onTap: onCreateNew,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.darkCard,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.darkBorder),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.add,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Create from Scratch',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Build a custom automation',
-                          style: TextStyle(color: Colors.grey, fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right, color: Colors.grey),
-                ],
+          // Title
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Add Automation',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
             ),
           ),
-
           const SizedBox(height: 16),
-          Text(
-            'Templates',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(color: Colors.grey),
-          ),
-          const SizedBox(height: 12),
-
-          // Templates
-          ...AutomationRepository.templates.map(
-            (template) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: BouncyTap(
-                onTap: () => onSelectTemplate(template.id),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.darkBorder),
+          // Scrollable content
+          Expanded(
+            child: ListView(
+              controller: scrollController,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                // Create from scratch
+                BouncyTap(
+                  onTap: onCreateNew,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkCard,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppTheme.darkBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Create from Scratch',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Build a custom automation',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right, color: Colors.grey),
+                      ],
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(template.icon, size: 24),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+
+                const SizedBox(height: 16),
+                Text(
+                  'Templates',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(color: Colors.grey),
+                ),
+                const SizedBox(height: 12),
+
+                // Templates
+                ...AutomationRepository.templates.map(
+                  (template) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: BouncyTap(
+                      onTap: () => onSelectTemplate(template.id),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkCard,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppTheme.darkBorder),
+                        ),
+                        child: Row(
                           children: [
-                            Text(
-                              template.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
+                            Icon(template.icon, size: 24),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    template.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Text(
+                                    template.description,
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            Text(
-                              template.description,
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12,
-                              ),
+                            const Icon(
+                              Icons.add_circle_outline,
+                              color: Colors.grey,
+                              size: 20,
                             ),
                           ],
                         ),
                       ),
-                      const Icon(
-                        Icons.add_circle_outline,
-                        color: Colors.grey,
-                        size: 20,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+
+                SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+              ],
             ),
           ),
-
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
         ],
       ),
     );

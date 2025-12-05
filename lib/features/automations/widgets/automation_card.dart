@@ -142,41 +142,38 @@ class AutomationCard extends StatelessWidget {
             ),
 
             // Stats row
-            if (automation.triggerCount > 0 ||
-                automation.lastTriggered != null) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  if (automation.triggerCount > 0) ...[
-                    Icon(Icons.trending_up, size: 14, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${automation.triggerCount} runs',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
-                  ],
-                  if (automation.lastTriggered != null) ...[
-                    if (automation.triggerCount > 0) const SizedBox(width: 16),
-                    Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      _formatLastTriggered(automation.lastTriggered!),
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
-                  ],
-                  const Spacer(),
-                  // Delete button
-                  GestureDetector(
-                    onTap: onDelete,
-                    child: Icon(
-                      Icons.delete_outline,
-                      size: 20,
-                      color: Colors.grey[600],
-                    ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                if (automation.triggerCount > 0) ...[
+                  Icon(Icons.trending_up, size: 14, color: Colors.grey[600]),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${automation.triggerCount} runs',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
                 ],
-              ),
-            ],
+                if (automation.lastTriggered != null) ...[
+                  if (automation.triggerCount > 0) const SizedBox(width: 16),
+                  Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                  const SizedBox(width: 4),
+                  Text(
+                    _formatLastTriggered(automation.lastTriggered!),
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  ),
+                ],
+                const Spacer(),
+                // Delete button - always visible
+                GestureDetector(
+                  onTap: onDelete,
+                  child: Icon(
+                    Icons.delete_outline,
+                    size: 20,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

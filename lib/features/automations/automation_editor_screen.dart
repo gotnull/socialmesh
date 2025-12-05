@@ -151,7 +151,8 @@ class _AutomationEditorScreenState
                 onChanged: (trigger) => setState(() => _trigger = trigger),
               ),
 
-              const SizedBox(height: 24),
+              // Flow connector: WHEN -> THEN
+              _buildFlowConnector(context, isFirst: true),
 
               // THEN (Actions)
               Row(
@@ -201,23 +202,29 @@ class _AutomationEditorScreenState
               ),
               const SizedBox(height: 8),
 
-              // Actions list
+              // Actions list with flow connectors
               ..._actions.asMap().entries.map((entry) {
                 final index = entry.key;
                 final action = entry.value;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: ActionEditor(
-                    action: action,
-                    onChanged: (updated) {
-                      setState(() {
-                        _actions[index] = updated;
-                      });
-                    },
-                    onDelete: _actions.length > 1
-                        ? () => setState(() => _actions.removeAt(index))
-                        : null,
-                  ),
+                return Column(
+                  children: [
+                    ActionEditor(
+                      action: action,
+                      index: index,
+                      totalActions: _actions.length,
+                      onChanged: (updated) {
+                        setState(() {
+                          _actions[index] = updated;
+                        });
+                      },
+                      onDelete: _actions.length > 1
+                          ? () => setState(() => _actions.removeAt(index))
+                          : null,
+                    ),
+                    // Show connector between actions (not after the last one)
+                    if (index < _actions.length - 1)
+                      _buildFlowConnector(context, stepNumber: index + 2),
+                  ],
                 );
               }),
 
@@ -281,6 +288,91 @@ class _AutomationEditorScreenState
           ),
         ),
       ],
+    );
+  }
+
+  /// Builds a flow connector with a line and optional step indicator
+  Widget _buildFlowConnector(
+    BuildContext context, {
+    bool isFirst = false,
+    int? stepNumber,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          const SizedBox(width: 18),
+          Column(
+            children: [
+              Container(
+                width: 2,
+                height: 16,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: isFirst
+                        ? [Colors.amber, AppTheme.successGreen]
+                        : [
+                            AppTheme.successGreen.withValues(alpha: 0.6),
+                            AppTheme.successGreen,
+                          ],
+                  ),
+                ),
+              ),
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: isFirst
+                      ? AppTheme.successGreen.withValues(alpha: 0.2)
+                      : AppTheme.successGreen.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppTheme.successGreen, width: 2),
+                ),
+                child: Icon(
+                  Icons.arrow_downward,
+                  size: 14,
+                  color: AppTheme.successGreen,
+                ),
+              ),
+              Container(
+                width: 2,
+                height: 16,
+                color: AppTheme.successGreen.withValues(alpha: 0.6),
+              ),
+            ],
+          ),
+          const SizedBox(width: 12),
+          Text(
+            isFirst ? 'then do...' : 'then...',
+            style: TextStyle(
+              color: Colors.grey[500],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+          if (stepNumber != null) ...[
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppTheme.successGreen.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'Step $stepNumber',
+                style: TextStyle(
+                  color: AppTheme.successGreen,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
+        ],
+      ),
     );
   }
 
