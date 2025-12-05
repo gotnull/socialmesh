@@ -126,8 +126,21 @@ class VariableTextFieldState extends State<VariableTextField> {
     _focusNode.requestFocus();
   }
 
+  /// Calculate dynamic line count based on content length
+  int get _dynamicLines {
+    final length = widget.value.length;
+    if (length < 40) return 1;
+    if (length < 80) return 2;
+    if (length < 150) return 3;
+    return 4;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final effectiveLines = widget.maxLines > 1
+        ? widget.maxLines
+        : _dynamicLines;
+
     // When focused, show plain TextField for editing
     // When not focused, show rich text with chips
     if (_hasFocus) {
@@ -135,7 +148,8 @@ class VariableTextFieldState extends State<VariableTextField> {
         controller: _controller,
         focusNode: _focusNode,
         onChanged: widget.onChanged,
-        maxLines: widget.maxLines,
+        minLines: 1,
+        maxLines: effectiveLines.clamp(1, 5),
         style: const TextStyle(fontSize: 14),
         decoration: InputDecoration(
           labelText: widget.labelText,
@@ -167,12 +181,12 @@ class VariableTextFieldState extends State<VariableTextField> {
         ),
         child: widget.value.isEmpty
             ? const SizedBox(height: 20)
-            : _buildRichContent(),
+            : _buildRichContent(effectiveLines),
       ),
     );
   }
 
-  Widget _buildRichContent() {
+  Widget _buildRichContent(int maxLines) {
     final spans = <InlineSpan>[];
     final text = widget.value;
     int lastEnd = 0;
@@ -230,7 +244,7 @@ class VariableTextFieldState extends State<VariableTextField> {
 
     return Text.rich(
       TextSpan(children: spans),
-      maxLines: widget.maxLines,
+      maxLines: maxLines.clamp(1, 5),
       overflow: TextOverflow.ellipsis,
     );
   }
