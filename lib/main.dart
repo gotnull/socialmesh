@@ -39,7 +39,7 @@ Future<void> main() async {
   // This ensures the app works fully offline
   _initializeFirebaseInBackground();
 
-  runApp(const ProviderScope(child: ProtofluffApp()));
+  runApp(const ProviderScope(child: SocialmeshApp()));
 }
 
 /// Initialize Firebase without blocking the main app.
@@ -72,14 +72,14 @@ Future<void> _initializeFirebaseInBackground() async {
   }
 }
 
-class ProtofluffApp extends ConsumerStatefulWidget {
-  const ProtofluffApp({super.key});
+class SocialmeshApp extends ConsumerStatefulWidget {
+  const SocialmeshApp({super.key});
 
   @override
-  ConsumerState<ProtofluffApp> createState() => _ProtofluffAppState();
+  ConsumerState<SocialmeshApp> createState() => _SocialmeshAppState();
 }
 
-class _ProtofluffAppState extends ConsumerState<ProtofluffApp> {
+class _SocialmeshAppState extends ConsumerState<SocialmeshApp> {
   @override
   void initState() {
     super.initState();
@@ -96,7 +96,7 @@ class _ProtofluffAppState extends ConsumerState<ProtofluffApp> {
     ref.watch(liveActivityManagerProvider);
 
     return MaterialApp(
-      title: 'Protofluff',
+      title: 'Socialmesh',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark,
@@ -220,14 +220,14 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                   ClipRRect(
                     borderRadius: BorderRadius.circular(24),
                     child: Image.asset(
-                      'assets/app_icons/source/protofluff_icon_1024.png',
+                      'assets/app_icons/source/socialmesh_icon_1024.png',
                       width: 120,
                       height: 120,
                     ),
                   ),
                   const SizedBox(height: 32),
                   const Text(
-                    'Protofluff',
+                    'Socialmesh',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,

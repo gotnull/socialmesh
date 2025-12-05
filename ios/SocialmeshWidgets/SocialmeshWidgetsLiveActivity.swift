@@ -1,6 +1,6 @@
 //
-//  ProtofluffWidgetsLiveActivity.swift
-//  ProtofluffWidgets
+//  SocialmeshWidgetsLiveActivity.swift
+//  SocialmeshWidgets
 //
 //  Live Activity widget for Meshtastic device connection status
 //  Uses live_activities Flutter package for data communication via App Groups
@@ -11,10 +11,10 @@ import WidgetKit
 import SwiftUI
 
 // Shared UserDefaults for reading Flutter data
-let sharedDefault = UserDefaults(suiteName: "group.protofluff.liveactivities")!
+let sharedDefault = UserDefaults(suiteName: "group.socialmesh.liveactivities")!
 
 @available(iOS 16.2, *)
-struct ProtofluffWidgetsLiveActivity: Widget {
+struct SocialmeshWidgetsLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: LiveActivitiesAppAttributes.self) { context in
             // Lock Screen / Banner UI
@@ -108,7 +108,7 @@ struct ProtofluffWidgetsLiveActivity: Widget {
                 Image(systemName: isConnected ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
                     .foregroundColor(isConnected ? .green : .red)
             }
-            .widgetURL(URL(string: "protofluff://connect"))
+            .widgetURL(URL(string: "socialmesh://connect"))
         }
     }
 }

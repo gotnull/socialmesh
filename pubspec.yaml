@@ -1,4 +1,4 @@
-name: protofluff
+name: socialmesh
 description: "Flutter Meshtastic companion app with BLE and USB serial support."
 publish_to: 'none'
 
@@ -56,6 +56,9 @@ dependencies:
   flutter_local_notifications: ^19.5.0
   just_audio: ^0.10.5
   live_activities: ^2.4.3
+  
+  # In-App Purchases (RevenueCat)
+  purchases_flutter: ^8.4.1
   
   # Animations
   animations: ^2.1.1

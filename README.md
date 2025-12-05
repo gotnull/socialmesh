@@ -1,4 +1,4 @@
-# Protofluff
+# Socialmesh
 
 A **privacy-first social network** built on Meshtastic mesh radios. Communicate without internet - messages hop between nearby devices, creating a truly decentralized network.
 

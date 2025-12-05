@@ -624,7 +624,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _SectionHeader(title: 'ABOUT'),
               _SettingsTile(
                 icon: Icons.info,
-                title: 'Protofluff',
+                title: 'Socialmesh',
                 subtitle: 'Meshtastic companion app • Version 1.0.0',
               ),
 

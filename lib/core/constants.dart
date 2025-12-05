@@ -3,7 +3,7 @@ library;
 
 /// Database and storage constants
 class StorageConstants {
-  static const String databaseName = 'protofluff.db';
+  static const String databaseName = 'socialmesh.db';
   static const int databaseVersion = 1;
   static const int maxCacheSizeMb = 500;
   static const int defaultMessageTtlHours = 72;

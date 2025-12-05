@@ -8,7 +8,7 @@ class MapConfig {
   static const List<String> defaultSubdomains = ['a', 'b', 'c', 'd'];
 
   /// User agent package name for tile requests
-  static const String userAgentPackageName = 'com.protofluff.app';
+  static const String userAgentPackageName = 'com.socialmesh.app';
 
   /// Default map center (Sydney, Australia)
   static const double defaultLat = -33.8688;

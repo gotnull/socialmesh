@@ -1,4 +1,4 @@
-package com.gotnull.protofluff
+package com.gotnull.socialmesh
 
 import io.flutter.embedding.android.FlutterActivity
 

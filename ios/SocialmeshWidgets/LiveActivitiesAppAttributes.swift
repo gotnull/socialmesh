@@ -1,6 +1,6 @@
 //
 //  LiveActivitiesAppAttributes.swift
-//  ProtofluffWidgets
+//  SocialmeshWidgets
 //
 //  Live Activity attributes for Meshtastic device connection status
 //  NOTE: The struct MUST be named "LiveActivitiesAppAttributes" for the

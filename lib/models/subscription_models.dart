@@ -1,5 +1,7 @@
 // Subscription tier definitions and feature flags for monetization
 
+import '../config/revenuecat_config.dart';
+
 /// User subscription tier levels
 enum SubscriptionTier { free, premium, pro }
 
@@ -56,9 +58,7 @@ class SubscriptionPlan {
   final double monthlyPrice;
   final double yearlyPrice;
   final Set<PremiumFeature> features;
-  final String? stripeMonthlyPriceId;
-  final String? stripeYearlyPriceId;
-  final String? revenueCatOfferingId;
+  final String offeringId;
 
   const SubscriptionPlan({
     required this.id,
@@ -68,9 +68,7 @@ class SubscriptionPlan {
     required this.monthlyPrice,
     required this.yearlyPrice,
     required this.features,
-    this.stripeMonthlyPriceId,
-    this.stripeYearlyPriceId,
-    this.revenueCatOfferingId,
+    required this.offeringId,
   });
 
   double get yearlySavings {
@@ -87,6 +85,73 @@ class SubscriptionPlan {
 
 /// Available subscription plans
 class SubscriptionPlans {
+  static const _freeFeatures = <PremiumFeature>{};
+
+  static const _premiumFeatures = <PremiumFeature>{
+    // Multi-device
+    PremiumFeature.multiDevice,
+    PremiumFeature.deviceProfiles,
+
+    // Analytics
+    PremiumFeature.messageStatistics,
+    PremiumFeature.networkTopology,
+    PremiumFeature.channelAnalytics,
+
+    // Mapping
+    PremiumFeature.offlineMaps,
+    PremiumFeature.customMapLayers,
+
+    // Automation
+    PremiumFeature.customNotificationRules,
+    PremiumFeature.scheduledMessages,
+
+    // Data
+    PremiumFeature.cloudBackup,
+    PremiumFeature.messageExport,
+    PremiumFeature.extendedHistory,
+
+    // Cosmetic
+    PremiumFeature.premiumThemes,
+    PremiumFeature.customRingtones,
+    PremiumFeature.homeWidgets,
+  };
+
+  static const _proFeatures = <PremiumFeature>{
+    // All Premium features
+    PremiumFeature.multiDevice,
+    PremiumFeature.deviceProfiles,
+    PremiumFeature.messageStatistics,
+    PremiumFeature.networkTopology,
+    PremiumFeature.channelAnalytics,
+    PremiumFeature.offlineMaps,
+    PremiumFeature.customMapLayers,
+    PremiumFeature.customNotificationRules,
+    PremiumFeature.scheduledMessages,
+    PremiumFeature.cloudBackup,
+    PremiumFeature.messageExport,
+    PremiumFeature.extendedHistory,
+    PremiumFeature.premiumThemes,
+    PremiumFeature.customRingtones,
+    PremiumFeature.homeWidgets,
+
+    // Additional Pro features
+    PremiumFeature.bulkConfiguration,
+    PremiumFeature.signalHeatmaps,
+    PremiumFeature.batteryPredictions,
+    PremiumFeature.routePlanning,
+    PremiumFeature.geofencing,
+    PremiumFeature.webhookIntegrations,
+    PremiumFeature.positionAutomations,
+    PremiumFeature.crossDeviceSync,
+
+    // Pro exclusive
+    PremiumFeature.teamFeatures,
+    PremiumFeature.sharedChannels,
+    PremiumFeature.adminControls,
+    PremiumFeature.prioritySupport,
+    PremiumFeature.apiAccess,
+  };
+
   static const free = SubscriptionPlan(
     id: 'free',
     name: 'Free',
@@ -94,7 +159,8 @@ class SubscriptionPlans {
     tier: SubscriptionTier.free,
     monthlyPrice: 0,
     yearlyPrice: 0,
-    features: {},
+    features: _freeFeatures,
+    offeringId: '',
   );
 
   static const premium = SubscriptionPlan(
@@ -104,37 +170,8 @@ class SubscriptionPlans {
     tier: SubscriptionTier.premium,
     monthlyPrice: 4.99,
     yearlyPrice: 29.99,
-    stripeMonthlyPriceId: 'price_premium_monthly',
-    stripeYearlyPriceId: 'price_premium_yearly',
-    revenueCatOfferingId: 'premium',
-    features: {
-      // Multi-device
-      PremiumFeature.multiDevice,
-      PremiumFeature.deviceProfiles,
-
-      // Analytics
-      PremiumFeature.messageStatistics,
-      PremiumFeature.networkTopology,
-      PremiumFeature.channelAnalytics,
-
-      // Mapping
-      PremiumFeature.offlineMaps,
-      PremiumFeature.customMapLayers,
-
-      // Automation
-      PremiumFeature.customNotificationRules,
-      PremiumFeature.scheduledMessages,
-
-      // Data
-      PremiumFeature.cloudBackup,
-      PremiumFeature.messageExport,
-      PremiumFeature.extendedHistory,
-
-      // Cosmetic
-      PremiumFeature.premiumThemes,
-      PremiumFeature.customRingtones,
-      PremiumFeature.homeWidgets,
-    },
+    offeringId: RevenueCatConfig.premiumEntitlementId,
+    features: _premiumFeatures,
   );
 
   static const pro = SubscriptionPlan(
@@ -144,47 +181,11 @@ class SubscriptionPlans {
     tier: SubscriptionTier.pro,
     monthlyPrice: 9.99,
     yearlyPrice: 79.99,
-    stripeMonthlyPriceId: 'price_pro_monthly',
-    stripeYearlyPriceId: 'price_pro_yearly',
-    revenueCatOfferingId: 'pro',
-    features: {
-      // All Premium features (explicitly listed)
-      PremiumFeature.multiDevice,
-      PremiumFeature.deviceProfiles,
-      PremiumFeature.messageStatistics,
-      PremiumFeature.networkTopology,
-      PremiumFeature.channelAnalytics,
-      PremiumFeature.offlineMaps,
-      PremiumFeature.customMapLayers,
-      PremiumFeature.customNotificationRules,
-      PremiumFeature.scheduledMessages,
-      PremiumFeature.cloudBackup,
-      PremiumFeature.messageExport,
-      PremiumFeature.extendedHistory,
-      PremiumFeature.premiumThemes,
-      PremiumFeature.customRingtones,
-      PremiumFeature.homeWidgets,
-
-      // Additional Pro features
-      PremiumFeature.bulkConfiguration,
-      PremiumFeature.signalHeatmaps,
-      PremiumFeature.batteryPredictions,
-      PremiumFeature.routePlanning,
-      PremiumFeature.geofencing,
-      PremiumFeature.webhookIntegrations,
-      PremiumFeature.positionAutomations,
-      PremiumFeature.crossDeviceSync,
-
-      // Pro exclusive
-      PremiumFeature.teamFeatures,
-      PremiumFeature.sharedChannels,
-      PremiumFeature.adminControls,
-      PremiumFeature.prioritySupport,
-      PremiumFeature.apiAccess,
-    },
+    offeringId: RevenueCatConfig.proEntitlementId,
+    features: _proFeatures,
   );
 
-  static const allPlans = [free, premium, pro];
+  static List<SubscriptionPlan> get allPlans => [free, premium, pro];
 
   static SubscriptionPlan getPlan(SubscriptionTier tier) {
     switch (tier) {
@@ -260,7 +261,7 @@ class OneTimePurchase {
   final String name;
   final String description;
   final double price;
-  final String stripePriceId;
+  final String productId;
   final PremiumFeature? unlocksFeature;
 
   const OneTimePurchase({
@@ -268,7 +269,7 @@ class OneTimePurchase {
     required this.name,
     required this.description,
     required this.price,
-    required this.stripePriceId,
+    required this.productId,
     this.unlocksFeature,
   });
 }
@@ -279,7 +280,7 @@ class OneTimePurchases {
     name: 'Theme Pack',
     description: 'Unlock 12 premium color themes',
     price: 1.99,
-    stripePriceId: 'price_theme_pack',
+    productId: RevenueCatConfig.themePackProductId,
     unlocksFeature: PremiumFeature.premiumThemes,
   );
 
@@ -288,7 +289,7 @@ class OneTimePurchases {
     name: 'Ringtone Pack',
     description: '25 additional RTTTL ringtones',
     price: 0.99,
-    stripePriceId: 'price_ringtone_pack',
+    productId: RevenueCatConfig.ringtonePackProductId,
     unlocksFeature: PremiumFeature.customRingtones,
   );
 
@@ -297,11 +298,15 @@ class OneTimePurchases {
     name: 'Widget Pack',
     description: 'Home screen widgets for quick actions',
     price: 2.99,
-    stripePriceId: 'price_widget_pack',
+    productId: RevenueCatConfig.widgetPackProductId,
     unlocksFeature: PremiumFeature.homeWidgets,
   );
 
-  static const allPurchases = [themePack, ringtonePack, widgetPack];
+  static const allPurchases = <OneTimePurchase>[
+    themePack,
+    ringtonePack,
+    widgetPack,
+  ];
 }
 
 /// Feature metadata for UI display

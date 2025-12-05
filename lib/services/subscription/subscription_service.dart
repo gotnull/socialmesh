@@ -1,32 +1,104 @@
 import 'dart:async';
-import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import '../../config/stripe_config.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+import '../../config/revenuecat_config.dart';
 import '../../models/subscription_models.dart';
 
-/// Service for managing subscriptions via Stripe/RevenueCat
+/// Service for managing subscriptions via RevenueCat
 class SubscriptionService {
-  static const _subscriptionKey = 'subscription_state';
-  static const _purchasesKey = 'one_time_purchases';
-
-  final SharedPreferences _prefs;
   final StreamController<SubscriptionState> _stateController =
       StreamController<SubscriptionState>.broadcast();
 
   SubscriptionState _currentState = SubscriptionState.initial;
   Set<String> _purchasedItems = {};
-
-  SubscriptionService(this._prefs) {
-    _loadState();
-  }
+  bool _isInitialized = false;
 
   /// Current subscription state
   SubscriptionState get currentState => _currentState;
 
   /// Stream of subscription state changes
   Stream<SubscriptionState> get stateStream => _stateController.stream;
+
+  /// Whether RevenueCat SDK is initialized
+  bool get isInitialized => _isInitialized;
+
+  /// Initialize RevenueCat SDK
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+
+    try {
+      final apiKey = Platform.isIOS
+          ? RevenueCatConfig.iosApiKey
+          : RevenueCatConfig.androidApiKey;
+
+      if (apiKey.isEmpty) {
+        debugPrint('RevenueCat API key not configured');
+        return;
+      }
+
+      await Purchases.configure(
+        PurchasesConfiguration(apiKey)..appUserID = null, // Anonymous user
+      );
+
+      // Listen for customer info updates
+      Purchases.addCustomerInfoUpdateListener(_handleCustomerInfoUpdate);
+
+      _isInitialized = true;
+
+      // Get initial customer info
+      await refreshSubscriptionStatus();
+    } catch (e) {
+      debugPrint('Error initializing RevenueCat: $e');
+    }
+  }
+
+  /// Handle customer info updates from RevenueCat
+  void _handleCustomerInfoUpdate(CustomerInfo customerInfo) {
+    _updateStateFromCustomerInfo(customerInfo);
+  }
+
+  /// Update local state from RevenueCat customer info
+  void _updateStateFromCustomerInfo(CustomerInfo customerInfo) {
+    final entitlements = customerInfo.entitlements.active;
+
+    SubscriptionTier tier = SubscriptionTier.free;
+    DateTime? expiresAt;
+    bool willRenew = true;
+
+    // Check Pro entitlement first (higher tier)
+    if (entitlements.containsKey(RevenueCatConfig.proEntitlementId)) {
+      tier = SubscriptionTier.pro;
+      final entitlement = entitlements[RevenueCatConfig.proEntitlementId]!;
+      expiresAt = entitlement.expirationDate != null
+          ? DateTime.parse(entitlement.expirationDate!)
+          : null;
+      willRenew = entitlement.willRenew;
+    }
+    // Check Premium entitlement
+    else if (entitlements.containsKey(RevenueCatConfig.premiumEntitlementId)) {
+      tier = SubscriptionTier.premium;
+      final entitlement = entitlements[RevenueCatConfig.premiumEntitlementId]!;
+      expiresAt = entitlement.expirationDate != null
+          ? DateTime.parse(entitlement.expirationDate!)
+          : null;
+      willRenew = entitlement.willRenew;
+    }
+
+    // Check for non-consumable purchases
+    _purchasedItems = customerInfo.nonSubscriptionTransactions
+        .map((t) => t.productIdentifier)
+        .toSet();
+
+    _updateState(
+      SubscriptionState(
+        tier: tier,
+        expiresAt: expiresAt,
+        customerId: customerInfo.originalAppUserId,
+        willRenew: willRenew,
+      ),
+    );
+  }
 
   /// Check if user has a specific feature
   bool hasFeature(PremiumFeature feature) {
@@ -36,7 +108,7 @@ class SubscriptionService {
     // Check if feature was unlocked via one-time purchase
     for (final purchase in OneTimePurchases.allPurchases) {
       if (purchase.unlocksFeature == feature &&
-          _purchasedItems.contains(purchase.id)) {
+          _purchasedItems.contains(purchase.productId)) {
         return true;
       }
     }
@@ -45,8 +117,8 @@ class SubscriptionService {
   }
 
   /// Check if a one-time purchase has been made
-  bool hasPurchased(String purchaseId) {
-    return _purchasedItems.contains(purchaseId);
+  bool hasPurchased(String productId) {
+    return _purchasedItems.contains(productId);
   }
 
   /// Get current tier
@@ -58,270 +130,143 @@ class SubscriptionService {
   /// Check if pro
   bool get isPro => _currentState.isPro;
 
-  /// Load saved state from preferences
-  Future<void> _loadState() async {
-    try {
-      final stateJson = _prefs.getString(_subscriptionKey);
-      if (stateJson != null) {
-        final data = jsonDecode(stateJson) as Map<String, dynamic>;
-        _currentState = SubscriptionState(
-          tier: SubscriptionTier.values[data['tier'] as int],
-          expiresAt: data['expiresAt'] != null
-              ? DateTime.parse(data['expiresAt'] as String)
-              : null,
-          isTrialing: data['isTrialing'] as bool? ?? false,
-          trialDaysRemaining: data['trialDaysRemaining'] as int? ?? 0,
-          customerId: data['customerId'] as String?,
-          subscriptionId: data['subscriptionId'] as String?,
-          willRenew: data['willRenew'] as bool? ?? true,
-        );
-      }
-
-      final purchasesJson = _prefs.getStringList(_purchasesKey);
-      if (purchasesJson != null) {
-        _purchasedItems = purchasesJson.toSet();
-      }
-
-      _stateController.add(_currentState);
-    } catch (e) {
-      debugPrint('Error loading subscription state: $e');
-    }
-  }
-
-  /// Save current state to preferences
-  Future<void> _saveState() async {
-    try {
-      final data = {
-        'tier': _currentState.tier.index,
-        'expiresAt': _currentState.expiresAt?.toIso8601String(),
-        'isTrialing': _currentState.isTrialing,
-        'trialDaysRemaining': _currentState.trialDaysRemaining,
-        'customerId': _currentState.customerId,
-        'subscriptionId': _currentState.subscriptionId,
-        'willRenew': _currentState.willRenew,
-      };
-      await _prefs.setString(_subscriptionKey, jsonEncode(data));
-      await _prefs.setStringList(_purchasesKey, _purchasedItems.toList());
-    } catch (e) {
-      debugPrint('Error saving subscription state: $e');
-    }
-  }
-
   /// Update subscription state
   void _updateState(SubscriptionState state) {
     _currentState = state;
     _stateController.add(state);
-    _saveState();
   }
 
   // ============================================================================
-  // STRIPE INTEGRATION
+  // REVENUECAT PURCHASES
   // ============================================================================
 
-  /// Create a Stripe checkout session for subscription
-  Future<String?> createCheckoutSession({
-    required SubscriptionPlan plan,
-    required bool yearly,
-    String? email,
-  }) async {
-    try {
-      final priceId = yearly
-          ? plan.stripeYearlyPriceId
-          : plan.stripeMonthlyPriceId;
-      if (priceId == null) return null;
-
-      final response = await http.post(
-        Uri.parse('${StripeConfig.apiBaseUrl}/create-checkout-session'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'priceId': priceId,
-          'email': email,
-          'customerId': _currentState.customerId,
-          'successUrl': 'protofluff://subscription/success',
-          'cancelUrl': 'protofluff://subscription/cancel',
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['url'] as String?;
-      }
-    } catch (e) {
-      debugPrint('Error creating checkout session: $e');
-    }
-    return null;
-  }
-
-  /// Create a Stripe checkout session for one-time purchase
-  Future<String?> createPurchaseCheckoutSession({
-    required OneTimePurchase purchase,
-    String? email,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('${StripeConfig.apiBaseUrl}/create-purchase-session'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'priceId': purchase.stripePriceId,
-          'purchaseId': purchase.id,
-          'email': email,
-          'customerId': _currentState.customerId,
-          'successUrl': 'protofluff://purchase/success?id=${purchase.id}',
-          'cancelUrl': 'protofluff://purchase/cancel',
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['url'] as String?;
-      }
-    } catch (e) {
-      debugPrint('Error creating purchase session: $e');
-    }
-    return null;
-  }
-
-  /// Open customer portal to manage subscription
-  Future<String?> createCustomerPortalSession() async {
-    if (_currentState.customerId == null) return null;
+  /// Get available offerings from RevenueCat
+  Future<Offerings?> getOfferings() async {
+    if (!_isInitialized) return null;
 
     try {
-      final response = await http.post(
-        Uri.parse('${StripeConfig.apiBaseUrl}/create-portal-session'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'customerId': _currentState.customerId,
-          'returnUrl': 'protofluff://settings',
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['url'] as String?;
-      }
+      return await Purchases.getOfferings();
     } catch (e) {
-      debugPrint('Error creating portal session: $e');
-    }
-    return null;
-  }
-
-  /// Verify subscription status with backend
-  Future<void> verifySubscription() async {
-    if (_currentState.customerId == null) return;
-
-    try {
-      final response = await http.get(
-        Uri.parse(
-          '${StripeConfig.apiBaseUrl}/subscription-status?customerId=${_currentState.customerId}',
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        _updateState(
-          SubscriptionState(
-            tier: _tierFromString(data['tier'] as String?),
-            expiresAt: data['expiresAt'] != null
-                ? DateTime.parse(data['expiresAt'] as String)
-                : null,
-            isTrialing: data['isTrialing'] as bool? ?? false,
-            trialDaysRemaining: data['trialDaysRemaining'] as int? ?? 0,
-            customerId: _currentState.customerId,
-            subscriptionId: data['subscriptionId'] as String?,
-            willRenew: data['willRenew'] as bool? ?? true,
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('Error verifying subscription: $e');
+      debugPrint('Error getting offerings: $e');
+      return null;
     }
   }
 
-  /// Handle successful subscription (called from deep link)
-  Future<void> handleSubscriptionSuccess({
-    required String customerId,
-    required String subscriptionId,
-    required SubscriptionTier tier,
-    DateTime? expiresAt,
-  }) async {
-    _updateState(
-      SubscriptionState(
-        tier: tier,
-        expiresAt: expiresAt,
-        customerId: customerId,
-        subscriptionId: subscriptionId,
-        willRenew: true,
-      ),
-    );
+  /// Get available packages for a specific offering
+  Future<List<Package>?> getPackages({String? offeringId}) async {
+    final offerings = await getOfferings();
+    if (offerings == null) return null;
+
+    final offering = offeringId != null
+        ? offerings.getOffering(offeringId)
+        : offerings.current;
+
+    return offering?.availablePackages;
   }
 
-  /// Handle successful one-time purchase
-  Future<void> handlePurchaseSuccess(String purchaseId) async {
-    _purchasedItems.add(purchaseId);
-    await _saveState();
-    _stateController.add(_currentState); // Notify listeners
+  /// Purchase a subscription package
+  Future<bool> purchasePackage(Package package) async {
+    if (!_isInitialized) return false;
+
+    try {
+      final customerInfo = await Purchases.purchasePackage(package);
+      _updateStateFromCustomerInfo(customerInfo);
+      return true;
+    } on PurchasesErrorCode catch (e) {
+      if (e == PurchasesErrorCode.purchaseCancelledError) {
+        debugPrint('User cancelled purchase');
+      } else {
+        debugPrint('Purchase error: $e');
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Purchase error: $e');
+      return false;
+    }
   }
 
-  /// Start free trial
-  Future<void> startTrial({
-    required SubscriptionTier tier,
-    int durationDays = 7,
-  }) async {
-    final expiresAt = DateTime.now().add(Duration(days: durationDays));
-    _updateState(
-      SubscriptionState(
-        tier: tier,
-        expiresAt: expiresAt,
-        isTrialing: true,
-        trialDaysRemaining: durationDays,
-        customerId: _currentState.customerId,
-      ),
-    );
+  /// Purchase a specific product by ID
+  Future<bool> purchaseProduct(String productId) async {
+    if (!_isInitialized) return false;
+
+    try {
+      final products = await Purchases.getProducts([productId]);
+      if (products.isEmpty) {
+        debugPrint('Product not found: $productId');
+        return false;
+      }
+
+      final customerInfo = await Purchases.purchaseStoreProduct(products.first);
+      _updateStateFromCustomerInfo(customerInfo);
+      return true;
+    } on PurchasesErrorCode catch (e) {
+      if (e == PurchasesErrorCode.purchaseCancelledError) {
+        debugPrint('User cancelled purchase');
+      } else {
+        debugPrint('Purchase error: $e');
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Purchase error: $e');
+      return false;
+    }
   }
 
-  /// Cancel subscription (just marks locally, actual cancel via portal)
-  void markCancelled() {
-    _updateState(_currentState.copyWith(willRenew: false));
+  /// Refresh subscription status from RevenueCat
+  Future<void> refreshSubscriptionStatus() async {
+    if (!_isInitialized) return;
+
+    try {
+      final customerInfo = await Purchases.getCustomerInfo();
+      _updateStateFromCustomerInfo(customerInfo);
+    } catch (e) {
+      debugPrint('Error refreshing subscription: $e');
+    }
   }
 
-  /// Restore purchases (re-verify with server)
+  /// Restore purchases
   Future<bool> restorePurchases() async {
-    await verifySubscription();
-    // Also verify one-time purchases
-    if (_currentState.customerId != null) {
-      try {
-        final response = await http.get(
-          Uri.parse(
-            '${StripeConfig.apiBaseUrl}/purchases?customerId=${_currentState.customerId}',
-          ),
-        );
+    if (!_isInitialized) return false;
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body) as List;
-          _purchasedItems = data.map((e) => e.toString()).toSet();
-          await _saveState();
-          return true;
-        }
-      } catch (e) {
-        debugPrint('Error restoring purchases: $e');
-      }
+    try {
+      final customerInfo = await Purchases.restorePurchases();
+      _updateStateFromCustomerInfo(customerInfo);
+      return true;
+    } catch (e) {
+      debugPrint('Error restoring purchases: $e');
+      return false;
     }
-    return false;
   }
 
-  // ============================================================================
-  // HELPERS
-  // ============================================================================
+  /// Log in user (for cross-device syncing)
+  Future<void> logIn(String userId) async {
+    if (!_isInitialized) return;
 
-  SubscriptionTier _tierFromString(String? tier) {
-    switch (tier?.toLowerCase()) {
-      case 'premium':
-        return SubscriptionTier.premium;
-      case 'pro':
-        return SubscriptionTier.pro;
-      default:
-        return SubscriptionTier.free;
+    try {
+      final result = await Purchases.logIn(userId);
+      _updateStateFromCustomerInfo(result.customerInfo);
+    } catch (e) {
+      debugPrint('Error logging in: $e');
     }
+  }
+
+  /// Log out user
+  Future<void> logOut() async {
+    if (!_isInitialized) return;
+
+    try {
+      final customerInfo = await Purchases.logOut();
+      _updateStateFromCustomerInfo(customerInfo);
+    } catch (e) {
+      debugPrint('Error logging out: $e');
+    }
+  }
+
+  /// Start free trial (if available in offering)
+  Future<bool> startTrial(Package package) async {
+    // In RevenueCat, trials are configured in App Store Connect / Play Console
+    // and automatically applied when purchasing eligible packages
+    return purchasePackage(package);
   }
 
   /// Dispose resources
@@ -352,9 +297,10 @@ class SubscriptionService {
   }
 
   /// Debug: Add purchase (for testing)
-  Future<void> debugAddPurchase(String purchaseId) async {
+  Future<void> debugAddPurchase(String productId) async {
     if (!kDebugMode) return;
-    await handlePurchaseSuccess(purchaseId);
+    _purchasedItems.add(productId);
+    _stateController.add(_currentState);
   }
 
   /// Debug: Reset to free tier

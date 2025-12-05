@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
 import '../../models/subscription_models.dart';
@@ -14,7 +15,7 @@ class SubscriptionScreen extends ConsumerStatefulWidget {
 
 class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   bool _isYearly = true;
-  SubscriptionPlan? _selectedPlan;
+  Package? _selectedPackage;
 
   @override
   Widget build(BuildContext context) {
@@ -22,18 +23,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final currentState = ref.watch(subscriptionStateProvider);
     final isLoading = ref.watch(subscriptionLoadingProvider);
     final error = ref.watch(subscriptionErrorProvider);
+    final offeringsAsync = ref.watch(offeringsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Subscription'),
-        actions: [
-          if (currentState.customerId != null)
-            TextButton(
-              onPressed: _openCustomerPortal,
-              child: const Text('Manage'),
-            ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Subscription')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -49,9 +42,14 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             if (currentTier == SubscriptionTier.free)
               const SizedBox(height: 24),
 
-            // Plan cards
+            // Plan cards from RevenueCat offerings
             if (currentTier != SubscriptionTier.pro)
-              _buildPlanCards(currentTier),
+              offeringsAsync.when(
+                data: (offerings) =>
+                    _buildOfferingCards(offerings, currentTier),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Text('Failed to load plans: $e'),
+              ),
 
             // Error message
             if (error != null) ...[
@@ -70,7 +68,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             ],
 
             // Subscribe button
-            if (_selectedPlan != null &&
+            if (_selectedPackage != null &&
                 currentTier == SubscriptionTier.free) ...[
               const SizedBox(height: 24),
               FilledButton(
@@ -281,7 +279,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _isYearly = false),
+              onTap: () => setState(() {
+                _isYearly = false;
+                _selectedPackage = null;
+              }),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -306,7 +307,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           ),
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _isYearly = true),
+              onTap: () => setState(() {
+                _isYearly = true;
+                _selectedPackage = null;
+              }),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -358,27 +362,50 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     );
   }
 
-  Widget _buildPlanCards(SubscriptionTier currentTier) {
-    final upgrades = ref.watch(availableUpgradesProvider);
+  Widget _buildOfferingCards(
+    Offerings? offerings,
+    SubscriptionTier currentTier,
+  ) {
+    if (offerings == null || offerings.current == null) {
+      return const Text(
+        'No subscription plans available',
+        style: TextStyle(color: AppTheme.textTertiary),
+      );
+    }
+
+    final offering = offerings.current!;
+    final packages = _isYearly
+        ? offering.availablePackages
+              .where((p) => p.packageType == PackageType.annual)
+              .toList()
+        : offering.availablePackages
+              .where((p) => p.packageType == PackageType.monthly)
+              .toList();
+
+    if (packages.isEmpty) {
+      return const Text(
+        'No plans available for this billing period',
+        style: TextStyle(color: AppTheme.textTertiary),
+      );
+    }
 
     return Column(
-      children: upgrades.map((plan) {
-        final isSelected = _selectedPlan?.id == plan.id;
-        final price = _isYearly ? plan.yearlyPrice : plan.monthlyPrice;
-        final period = _isYearly ? '/year' : '/month';
+      children: packages.map((package) {
+        final isSelected = _selectedPackage?.identifier == package.identifier;
+        final product = package.storeProduct;
+        final isPro = package.identifier.toLowerCase().contains('pro');
 
-        Color planColor;
-        switch (plan.tier) {
-          case SubscriptionTier.free:
-            planColor = AppTheme.textTertiary;
-          case SubscriptionTier.premium:
-            planColor = AppTheme.primaryGreen;
-          case SubscriptionTier.pro:
-            planColor = AppTheme.accentOrange;
-        }
+        Color planColor = isPro ? AppTheme.accentOrange : AppTheme.primaryGreen;
+        String planName = isPro ? 'Pro' : 'Premium';
+        String planDescription = isPro
+            ? 'Full power for teams & professionals'
+            : 'Enhanced features for enthusiasts';
+
+        // Get features from local model
+        final plan = isPro ? SubscriptionPlans.pro : SubscriptionPlans.premium;
 
         return GestureDetector(
-          onTap: () => setState(() => _selectedPlan = plan),
+          onTap: () => setState(() => _selectedPackage = package),
           child: Container(
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(20),
@@ -421,7 +448,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          plan.name,
+                          planName,
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -430,7 +457,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                         ),
                       ],
                     ),
-                    if (plan.tier == SubscriptionTier.pro)
+                    if (isPro)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -453,7 +480,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  plan.description,
+                  planDescription,
                   style: const TextStyle(
                     color: AppTheme.textSecondary,
                     fontSize: 14,
@@ -464,7 +491,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '\$${price.toStringAsFixed(2)}',
+                      product.priceString,
                       style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -474,17 +501,17 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
-                        period,
+                        _isYearly ? '/year' : '/month',
                         style: const TextStyle(
                           color: AppTheme.textTertiary,
                           fontSize: 14,
                         ),
                       ),
                     ),
-                    if (_isYearly && plan.yearlySavingsPercent > 0) ...[
+                    if (_isYearly) ...[
                       const Spacer(),
                       Text(
-                        'Save ${plan.yearlySavingsPercent}%',
+                        'Save 50%',
                         style: TextStyle(
                           color: AppTheme.primaryGreen,
                           fontWeight: FontWeight.w600,
@@ -633,12 +660,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }
 
   String _getSubscribeButtonText() {
-    if (_selectedPlan == null) return 'Select a plan';
-    final price = _isYearly
-        ? _selectedPlan!.yearlyPrice
-        : _selectedPlan!.monthlyPrice;
-    final period = _isYearly ? '/year' : '/month';
-    return 'Subscribe - \$${price.toStringAsFixed(2)}$period';
+    if (_selectedPackage == null) return 'Select a plan';
+    return 'Subscribe - ${_selectedPackage!.storeProduct.priceString}${_isYearly ? '/year' : '/month'}';
   }
 
   String _formatDate(DateTime date) {
@@ -646,25 +669,26 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }
 
   Future<void> _subscribe() async {
-    if (_selectedPlan == null) return;
+    if (_selectedPackage == null) return;
 
-    final url = await startCheckout(ref, _selectedPlan!, yearly: _isYearly);
-    if (url != null) {
-      await _openUrl(url);
+    final success = await purchasePackage(ref, _selectedPackage!);
+    if (mounted && success) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Subscription activated!')));
     }
   }
 
   Future<void> _purchaseItem(OneTimePurchase purchase) async {
-    final url = await startPurchaseCheckout(ref, purchase);
-    if (url != null) {
-      await _openUrl(url);
-    }
-  }
-
-  Future<void> _openCustomerPortal() async {
-    final url = await openCustomerPortal(ref);
-    if (url != null) {
-      await _openUrl(url);
+    final success = await purchaseProduct(ref, purchase.productId);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success ? '${purchase.name} unlocked!' : 'Purchase failed',
+          ),
+        ),
+      );
     }
   }
 

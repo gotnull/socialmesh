@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 70;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -18,7 +18,7 @@
 		ACD73A2E5B19A4DD967E19FD /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E499D5BB68AA37FD2AD30935 /* Pods_Runner.framework */; };
 		BD61F0312EDD022E00456D75 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD61F0302EDD022E00456D75 /* WidgetKit.framework */; };
 		BD61F0332EDD022E00456D75 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD61F0322EDD022E00456D75 /* SwiftUI.framework */; };
-		BD61F0422EDD022F00456D75 /* ProtofluffWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BD61F02F2EDD022E00456D75 /* ProtofluffWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BD61F0422EDD022F00456D75 /* SocialmeshWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BD61F02F2EDD022E00456D75 /* SocialmeshWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D5C1D636C7F2A568A037C3D0 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = BEFF18A377E3CA3D364CF1AB /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
@@ -49,7 +49,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				BD61F0422EDD022F00456D75 /* ProtofluffWidgetsExtension.appex in Embed Foundation Extensions */,
+				BD61F0422EDD022F00456D75 /* SocialmeshWidgetsExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -77,11 +77,11 @@
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BB8382CB1A4A98DEB6822541 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
-		BD61F02F2EDD022E00456D75 /* ProtofluffWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ProtofluffWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BD61F02F2EDD022E00456D75 /* SocialmeshWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SocialmeshWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BD61F0302EDD022E00456D75 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		BD61F0322EDD022E00456D75 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		BDE822F72EDD030000DE666E /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
-		BDE822F82EDD033500DE666E /* ProtofluffWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ProtofluffWidgetsExtension.entitlements; sourceTree = "<group>"; };
+		BDE822F82EDD033500DE666E /* SocialmeshWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SocialmeshWidgetsExtension.entitlements; sourceTree = "<group>"; };
 		BEFF18A377E3CA3D364CF1AB /* GoogleService-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Runner/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		E499D5BB68AA37FD2AD30935 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F27DAB8C45A4FF429B43821C /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -89,26 +89,26 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		BD61F0472EDD022F00456D75 /* Exceptions for "ProtofluffWidgets" folder in "ProtofluffWidgetsExtension" target */ = {
+		BD61F0342EDD022E00456D76 /* Exceptions for "SocialmeshWidgets" folder in "SocialmeshWidgetsExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = BD61F02E2EDD022E00456D75 /* ProtofluffWidgetsExtension */;
+			target = BD61F02E2EDD022E00456D75 /* SocialmeshWidgetsExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		BD61F0342EDD022E00456D75 /* ProtofluffWidgets */ = {
+		BD61F0342EDD022E00456D75 /* SocialmeshWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				BD61F0472EDD022F00456D75 /* Exceptions for "ProtofluffWidgets" folder in "ProtofluffWidgetsExtension" target */,
+				BD61F0342EDD022E00456D76 /* Exceptions for "SocialmeshWidgets" folder in "SocialmeshWidgetsExtension" target */,
 			);
 			explicitFileTypes = {
 			};
 			explicitFolders = (
 			);
-			path = ProtofluffWidgets;
+			path = SocialmeshWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -164,10 +164,10 @@
 		97C146E51CF9000F007C117D = {
 			isa = PBXGroup;
 			children = (
-				BDE822F82EDD033500DE666E /* ProtofluffWidgetsExtension.entitlements */,
+				BDE822F82EDD033500DE666E /* SocialmeshWidgetsExtension.entitlements */,
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
-				BD61F0342EDD022E00456D75 /* ProtofluffWidgets */,
+				BD61F0342EDD022E00456D75 /* SocialmeshWidgets */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
 				9D2BE260A89A75ABBC900896 /* Pods */,
@@ -181,7 +181,7 @@
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
-				BD61F02F2EDD022E00456D75 /* ProtofluffWidgetsExtension.appex */,
+				BD61F02F2EDD022E00456D75 /* SocialmeshWidgetsExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -262,6 +262,7 @@
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				61953FCD586494C17FA2BDE5 /* [CP] Embed Pods Frameworks */,
 				8D72A557DCAA03A1FD427D0A /* [CP] Copy Pods Resources */,
+				06DDB2C576C7632ADCB60545 /* FlutterFire: "flutterfire upload-crashlytics-symbols" */,
 			);
 			buildRules = (
 			);
@@ -272,9 +273,9 @@
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
 		};
-		BD61F02E2EDD022E00456D75 /* ProtofluffWidgetsExtension */ = {
+		BD61F02E2EDD022E00456D75 /* SocialmeshWidgetsExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = BD61F0482EDD022F00456D75 /* Build configuration list for PBXNativeTarget "ProtofluffWidgetsExtension" */;
+			buildConfigurationList = BD61F0482EDD022F00456D75 /* Build configuration list for PBXNativeTarget "SocialmeshWidgetsExtension" */;
 			buildPhases = (
 				BD61F02B2EDD022E00456D75 /* Sources */,
 				BD61F02C2EDD022E00456D75 /* Frameworks */,
@@ -285,11 +286,11 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				BD61F0342EDD022E00456D75 /* ProtofluffWidgets */,
+				BD61F0342EDD022E00456D75 /* SocialmeshWidgets */,
 			);
-			name = ProtofluffWidgetsExtension;
-			productName = ProtofluffWidgetsExtension;
-			productReference = BD61F02F2EDD022E00456D75 /* ProtofluffWidgetsExtension.appex */;
+			name = SocialmeshWidgetsExtension;
+			productName = SocialmeshWidgetsExtension;
+			productReference = BD61F02F2EDD022E00456D75 /* SocialmeshWidgetsExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -331,7 +332,7 @@
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
-				BD61F02E2EDD022E00456D75 /* ProtofluffWidgetsExtension */,
+				BD61F02E2EDD022E00456D75 /* SocialmeshWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -366,6 +367,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		06DDB2C576C7632ADCB60545 /* FlutterFire: "flutterfire upload-crashlytics-symbols" */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "FlutterFire: \"flutterfire upload-crashlytics-symbols\"";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\n#!/bin/bash\nPATH=\"${PATH}:$FLUTTER_ROOT/bin:${PUB_CACHE}/bin:$HOME/.pub-cache/bin\"\n\nif [ -z \"$PODS_ROOT\" ] || [ ! -d \"$PODS_ROOT/FirebaseCrashlytics\" ]; then\n  # Cannot use \"BUILD_DIR%/Build/*\" as per Firebase documentation, it points to \"flutter-project/build/ios/*\" path which doesn't have run script\n  DERIVED_DATA_PATH=$(echo \"$BUILD_ROOT\" | sed -E 's|(.*DerivedData/[^/]+).*|\\1|')\n  PATH_TO_CRASHLYTICS_UPLOAD_SCRIPT=\"${DERIVED_DATA_PATH}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nelse\n  PATH_TO_CRASHLYTICS_UPLOAD_SCRIPT=\"$PODS_ROOT/FirebaseCrashlytics/run\"\nfi\n\n# Command to upload symbols script used to upload symbols to Firebase server\nflutterfire upload-crashlytics-symbols --upload-symbols-script-path=\"$PATH_TO_CRASHLYTICS_UPLOAD_SCRIPT\" --platform=ios --apple-project-path=\"${SRCROOT}\" --env-platform-name=\"${PLATFORM_NAME}\" --env-configuration=\"${CONFIGURATION}\" --env-project-dir=\"${PROJECT_DIR}\" --env-built-products-dir=\"${BUILT_PRODUCTS_DIR}\" --env-dwarf-dsym-folder-path=\"${DWARF_DSYM_FOLDER_PATH}\" --env-dwarf-dsym-file-name=\"${DWARF_DSYM_FILE_NAME}\" --env-infoplist-path=\"${INFOPLIST_PATH}\" --default-config=default\n";
+		};
 		33D01D880D1A68C4775382ED /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -599,7 +618,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.protofluff;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -614,9 +633,10 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U336GVDWCE;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.protofluff.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -632,9 +652,10 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U336GVDWCE;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.protofluff.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -648,9 +669,10 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U336GVDWCE;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.protofluff.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -783,7 +805,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.protofluff;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -807,7 +829,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.protofluff;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -826,16 +848,14 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_ENTITLEMENTS = ProtofluffWidgetsExtension.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SocialmeshWidgetsExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = U336GVDWCE;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ProtofluffWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = ProtofluffWidgets;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SocialmeshWidgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -846,7 +866,7 @@
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.protofluff.ProtofluffWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.SocialmeshWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -871,16 +891,14 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_ENTITLEMENTS = ProtofluffWidgetsExtension.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SocialmeshWidgetsExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = U336GVDWCE;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ProtofluffWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = ProtofluffWidgets;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SocialmeshWidgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -890,7 +908,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.protofluff.ProtofluffWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.SocialmeshWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -913,16 +931,14 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_ENTITLEMENTS = ProtofluffWidgetsExtension.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SocialmeshWidgetsExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = U336GVDWCE;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ProtofluffWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = ProtofluffWidgets;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SocialmeshWidgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -932,7 +948,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.protofluff.ProtofluffWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.SocialmeshWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -977,7 +993,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		BD61F0482EDD022F00456D75 /* Build configuration list for PBXNativeTarget "ProtofluffWidgetsExtension" */ = {
+		BD61F0482EDD022F00456D75 /* Build configuration list for PBXNativeTarget "SocialmeshWidgetsExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BD61F0442EDD022F00456D75 /* Debug */,

@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCw_mJqrlJNTAjQDLIknLphzEcmGdAN-wg',
-    appId: '1:571509151050:android:2a721a4583af281f515db3',
+    appId: '1:571509151050:android:db85cbb852c9098a515db3',
     messagingSenderId: '571509151050',
     projectId: 'social-mesh-app',
     storageBucket: 'social-mesh-app.firebasestorage.app',
@@ -59,10 +59,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyA8M3-03k2ETTMRKADHFTcw7w0nnZNSEj4',
-    appId: '1:571509151050:ios:3d6723bd18c74c5b515db3',
+    appId: '1:571509151050:ios:34008143a4671f9c515db3',
     messagingSenderId: '571509151050',
     projectId: 'social-mesh-app',
     storageBucket: 'social-mesh-app.firebasestorage.app',
-    iosBundleId: 'com.gotnull.protofluff',
+    iosBundleId: 'com.gotnull.socialmesh',
   );
+
 }

@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "protofluff" "\0"
+            VALUE "FileDescription", "socialmesh" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "protofluff" "\0"
+            VALUE "InternalName", "socialmesh" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.gotnull. All rights reserved." "\0"
-            VALUE "OriginalFilename", "protofluff.exe" "\0"
-            VALUE "ProductName", "protofluff" "\0"
+            VALUE "OriginalFilename", "socialmesh.exe" "\0"
+            VALUE "ProductName", "socialmesh" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

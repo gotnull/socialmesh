@@ -317,14 +317,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         ClipRRect(
           borderRadius: BorderRadius.circular(24),
           child: Image.asset(
-            'assets/app_icons/source/protofluff_icon_1024.png',
+            'assets/app_icons/source/socialmesh_icon_1024.png',
             width: 120,
             height: 120,
           ),
         ),
         const SizedBox(height: 32),
         const Text(
-          'Protofluff',
+          'Socialmesh',
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,

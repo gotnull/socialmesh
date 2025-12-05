@@ -26,7 +26,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   final List<_OnboardingPage> _pages = [
     _OnboardingPage(
       icon: null, // Uses app icon instead
-      title: 'Welcome to Protofluff',
+      title: 'Welcome to Socialmesh',
       description:
           'Privacy-first mesh messaging.\nCommunicate off-grid with your community.',
       useAppIcon: true,
@@ -371,7 +371,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(32),
                     child: Image.asset(
-                      'assets/app_icons/source/protofluff_icon_1024.png',
+                      'assets/app_icons/source/socialmesh_icon_1024.png',
                       width: 140,
                       height: 140,
                     ),

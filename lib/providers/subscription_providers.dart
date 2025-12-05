@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/subscription_models.dart';
 import '../services/subscription/subscription_service.dart';
@@ -14,8 +15,9 @@ final sharedPreferencesProvider = FutureProvider<SharedPreferences>((
 final subscriptionServiceProvider = FutureProvider<SubscriptionService>((
   ref,
 ) async {
-  final prefs = await ref.watch(sharedPreferencesProvider.future);
-  return SubscriptionService(prefs);
+  final service = SubscriptionService();
+  await service.initialize();
+  return service;
 });
 
 /// Current subscription state - auto-refreshes from service
@@ -41,41 +43,10 @@ class SubscriptionStateNotifier extends StateNotifier<SubscriptionState> {
     });
   }
 
-  /// Refresh subscription from server
+  /// Refresh subscription from RevenueCat
   Future<void> refresh() async {
     final service = await _ref.read(subscriptionServiceProvider.future);
-    await service.verifySubscription();
-    state = service.currentState;
-  }
-
-  /// Start a trial
-  Future<void> startTrial(SubscriptionTier tier) async {
-    final service = await _ref.read(subscriptionServiceProvider.future);
-    await service.startTrial(tier: tier);
-    state = service.currentState;
-  }
-
-  /// Handle subscription success callback
-  Future<void> handleSubscriptionSuccess({
-    required String customerId,
-    required String subscriptionId,
-    required SubscriptionTier tier,
-    DateTime? expiresAt,
-  }) async {
-    final service = await _ref.read(subscriptionServiceProvider.future);
-    await service.handleSubscriptionSuccess(
-      customerId: customerId,
-      subscriptionId: subscriptionId,
-      tier: tier,
-      expiresAt: expiresAt,
-    );
-    state = service.currentState;
-  }
-
-  /// Handle purchase success callback
-  Future<void> handlePurchaseSuccess(String purchaseId) async {
-    final service = await _ref.read(subscriptionServiceProvider.future);
-    await service.handlePurchaseSuccess(purchaseId);
+    await service.refreshSubscriptionStatus();
     state = service.currentState;
   }
 
@@ -171,59 +142,47 @@ final subscriptionLoadingProvider = StateProvider<bool>((ref) => false);
 /// Subscription error state
 final subscriptionErrorProvider = StateProvider<String?>((ref) => null);
 
-/// Start checkout session for subscription
-Future<String?> startCheckout(
-  WidgetRef ref,
-  SubscriptionPlan plan, {
-  bool yearly = false,
-}) async {
+/// RevenueCat offerings provider
+final offeringsProvider = FutureProvider<Offerings?>((ref) async {
+  final service = await ref.read(subscriptionServiceProvider.future);
+  return service.getOfferings();
+});
+
+/// Purchase a subscription package
+Future<bool> purchasePackage(WidgetRef ref, Package package) async {
   ref.read(subscriptionLoadingProvider.notifier).state = true;
   ref.read(subscriptionErrorProvider.notifier).state = null;
 
   try {
     final service = await ref.read(subscriptionServiceProvider.future);
-    final url = await service.createCheckoutSession(plan: plan, yearly: yearly);
-    return url;
+    final success = await service.purchasePackage(package);
+    if (success) {
+      ref.read(subscriptionStateProvider.notifier).refresh();
+    }
+    return success;
   } catch (e) {
     ref.read(subscriptionErrorProvider.notifier).state = e.toString();
-    return null;
+    return false;
   } finally {
     ref.read(subscriptionLoadingProvider.notifier).state = false;
   }
 }
 
-/// Start checkout session for one-time purchase
-Future<String?> startPurchaseCheckout(
-  WidgetRef ref,
-  OneTimePurchase purchase,
-) async {
+/// Purchase a one-time product
+Future<bool> purchaseProduct(WidgetRef ref, String productId) async {
   ref.read(subscriptionLoadingProvider.notifier).state = true;
   ref.read(subscriptionErrorProvider.notifier).state = null;
 
   try {
     final service = await ref.read(subscriptionServiceProvider.future);
-    final url = await service.createPurchaseCheckoutSession(purchase: purchase);
-    return url;
+    final success = await service.purchaseProduct(productId);
+    if (success) {
+      ref.read(subscriptionStateProvider.notifier).refresh();
+    }
+    return success;
   } catch (e) {
     ref.read(subscriptionErrorProvider.notifier).state = e.toString();
-    return null;
-  } finally {
-    ref.read(subscriptionLoadingProvider.notifier).state = false;
-  }
-}
-
-/// Open customer portal for subscription management
-Future<String?> openCustomerPortal(WidgetRef ref) async {
-  ref.read(subscriptionLoadingProvider.notifier).state = true;
-  ref.read(subscriptionErrorProvider.notifier).state = null;
-
-  try {
-    final service = await ref.read(subscriptionServiceProvider.future);
-    final url = await service.createCustomerPortalSession();
-    return url;
-  } catch (e) {
-    ref.read(subscriptionErrorProvider.notifier).state = e.toString();
-    return null;
+    return false;
   } finally {
     ref.read(subscriptionLoadingProvider.notifier).state = false;
   }

@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.gotnull.protofluff</string>
+	<string>com.gotnull.socialmesh</string>
 	<key>PROJECT_ID</key>
 	<string>social-mesh-app</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:571509151050:ios:3d6723bd18c74c5b515db3</string>
+	<string>1:571509151050:ios:34008143a4671f9c515db3</string>
 </dict>
 </plist>
