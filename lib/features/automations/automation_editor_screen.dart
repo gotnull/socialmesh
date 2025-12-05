@@ -209,6 +209,7 @@ class _AutomationEditorScreenState
                       action: action,
                       index: index,
                       totalActions: _actions.length,
+                      triggerType: _trigger.type,
                       onChanged: (updated) {
                         setState(() {
                           _actions[index] = updated;

@@ -12,6 +12,7 @@ class ActionEditor extends StatefulWidget {
   final VoidCallback? onDelete;
   final int? index;
   final int? totalActions;
+  final TriggerType? triggerType;
 
   const ActionEditor({
     super.key,
@@ -20,6 +21,7 @@ class ActionEditor extends StatefulWidget {
     this.onDelete,
     this.index,
     this.totalActions,
+    this.triggerType,
   });
 
   @override
@@ -215,11 +217,14 @@ class _ActionEditorState extends State<ActionEditor> {
             labelText: 'Message',
             hintText: 'Tap variables below to insert',
             maxLines: 2,
+            triggerType: widget.triggerType,
           ),
           const SizedBox(height: 8),
           VariableChipPicker(
             targetField: _insertTargetField,
             isActive: _insertTargetField != null,
+            triggerType: widget.triggerType,
+            showDeleteHint: _insertTargetField != null,
           ),
         ],
       ),
@@ -244,6 +249,7 @@ class _ActionEditorState extends State<ActionEditor> {
             onFocusChange: _updateActiveField,
             labelText: 'Title',
             hintText: 'Tap variables below to insert',
+            triggerType: widget.triggerType,
           ),
           const SizedBox(height: 8),
           VariableTextField(
@@ -260,11 +266,14 @@ class _ActionEditorState extends State<ActionEditor> {
             labelText: 'Body',
             hintText: 'Tap variables below to insert',
             maxLines: 2,
+            triggerType: widget.triggerType,
           ),
           const SizedBox(height: 8),
           VariableChipPicker(
             targetField: _insertTargetField,
             isActive: _insertTargetField != null,
+            triggerType: widget.triggerType,
+            showDeleteHint: _insertTargetField != null,
           ),
         ],
       ),

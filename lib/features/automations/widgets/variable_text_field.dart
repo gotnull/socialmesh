@@ -2,15 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/theme.dart';
+import '../models/automation.dart';
 
-/// Valid variable names that can be used in automations
-const validVariables = [
+/// Universal variables available in all automations
+const _universalVariables = [
   '{{node.name}}',
   '{{battery}}',
   '{{location}}',
   '{{message}}',
   '{{time}}',
 ];
+
+/// Trigger-specific context variables
+const _triggerVariables = <TriggerType, List<String>>{
+  TriggerType.batteryLow: ['{{threshold}}'],
+  TriggerType.batteryFull: ['{{threshold}}'],
+  TriggerType.messageContains: ['{{keyword}}'],
+  TriggerType.geofenceEnter: ['{{zone.radius}}'],
+  TriggerType.geofenceExit: ['{{zone.radius}}'],
+  TriggerType.nodeSilent: ['{{silent.duration}}'],
+  TriggerType.signalWeak: ['{{signal.threshold}}'],
+  TriggerType.channelActivity: ['{{channel.name}}'],
+};
+
+/// Get all valid variables for a given trigger type
+List<String> getValidVariables(TriggerType? triggerType) {
+  final vars = List<String>.from(_universalVariables);
+  if (triggerType != null && _triggerVariables.containsKey(triggerType)) {
+    vars.addAll(_triggerVariables[triggerType]!);
+  }
+  return vars;
+}
 
 /// Display names for variables (without braces)
 const _variableDisplayNames = {
@@ -19,12 +41,36 @@ const _variableDisplayNames = {
   '{{location}}': 'location',
   '{{message}}': 'message',
   '{{time}}': 'time',
+  '{{threshold}}': 'threshold',
+  '{{keyword}}': 'keyword',
+  '{{zone.radius}}': 'zone.radius',
+  '{{silent.duration}}': 'silent.duration',
+  '{{signal.threshold}}': 'signal.threshold',
+  '{{channel.name}}': 'channel.name',
 };
 
-/// Regex to match valid variables
+/// Variable descriptions for tooltips
+const _variableDescriptions = {
+  '{{node.name}}': 'Name of the triggering node',
+  '{{battery}}': 'Current battery percentage',
+  '{{location}}': 'GPS coordinates',
+  '{{message}}': 'Message content',
+  '{{time}}': 'Current timestamp',
+  '{{threshold}}': 'Configured trigger threshold',
+  '{{keyword}}': 'Matched keyword',
+  '{{zone.radius}}': 'Geofence radius in meters',
+  '{{silent.duration}}': 'Silent duration setting',
+  '{{signal.threshold}}': 'Signal threshold (SNR)',
+  '{{channel.name}}': 'Channel name',
+};
+
+/// Regex to match all valid variables (universal + trigger-specific)
 final _variableRegex = RegExp(
-  r'\{\{(node\.name|battery|location|message|time)\}\}',
+  r'\{\{(node\.name|battery|location|message|time|threshold|keyword|zone\.radius|silent\.duration|signal\.threshold|channel\.name)\}\}',
 );
+
+/// Legacy export for backwards compatibility
+List<String> get validVariables => _universalVariables;
 
 /// Formatter that implements two-stage variable deletion.
 /// First backspace marks variable red, second backspace deletes it.
@@ -141,8 +187,19 @@ List<String> validateVariables(String text) {
   return invalidVars;
 }
 
+/// All trigger-specific variable names for color matching
+const _allTriggerVariableNames = [
+  '{{threshold}}',
+  '{{keyword}}',
+  '{{zone.radius}}',
+  '{{silent.duration}}',
+  '{{signal.threshold}}',
+  '{{channel.name}}',
+];
+
 /// Custom controller that styles variables with colored text.
 /// Supports marking a variable red for pending deletion.
+/// Universal variables are green, trigger context variables are amber.
 class _VariableTextController extends TextEditingController {
   int? markedStart;
   int? markedEnd;
@@ -177,12 +234,23 @@ class _VariableTextController extends TextEditingController {
 
       // Check if this variable is marked for deletion
       final isMarked = markedStart == match.start && markedEnd == match.end;
-      final color = isMarked ? AppTheme.errorRed : AppTheme.successGreen;
+      final variableText = match.group(0)!;
+      final isTriggerContext = _allTriggerVariableNames.contains(variableText);
+
+      // Red if marked, amber if trigger context, green if universal
+      final Color color;
+      if (isMarked) {
+        color = AppTheme.errorRed;
+      } else if (isTriggerContext) {
+        color = Colors.amber;
+      } else {
+        color = AppTheme.successGreen;
+      }
 
       // Style the variable
       spans.add(
         TextSpan(
-          text: match.group(0),
+          text: variableText,
           style: style?.copyWith(
             color: color,
             fontWeight: FontWeight.w600,
@@ -214,6 +282,7 @@ class VariableTextField extends StatefulWidget {
   final int maxLines;
   final FocusNode? focusNode;
   final VoidCallback? onFocusChange;
+  final TriggerType? triggerType;
 
   const VariableTextField({
     super.key,
@@ -224,6 +293,7 @@ class VariableTextField extends StatefulWidget {
     this.maxLines = 1,
     this.focusNode,
     this.onFocusChange,
+    this.triggerType,
   });
 
   @override
@@ -328,7 +398,8 @@ class VariableTextFieldState extends State<VariableTextField> {
 
   /// Insert a variable at current cursor position
   void insertVariable(String variable) {
-    if (!validVariables.contains(variable)) return;
+    final availableVars = getValidVariables(widget.triggerType);
+    if (!availableVars.contains(variable)) return;
     HapticFeedback.lightImpact();
 
     final text = _controller.text;
@@ -401,15 +472,27 @@ class VariableTextFieldState extends State<VariableTextField> {
 class VariableChipPicker extends StatelessWidget {
   final VariableTextFieldState? targetField;
   final bool isActive;
+  final TriggerType? triggerType;
+  final bool showDeleteHint;
 
   const VariableChipPicker({
     super.key,
     this.targetField,
     this.isActive = false,
+    this.triggerType,
+    this.showDeleteHint = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final availableVars = getValidVariables(triggerType);
+    final universalVars = availableVars
+        .where((v) => _universalVariables.contains(v))
+        .toList();
+    final triggerVars = availableVars
+        .where((v) => !_universalVariables.contains(v))
+        .toList();
+
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -429,39 +512,76 @@ class VariableChipPicker extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 6,
-            children: validVariables.map((v) => _buildChip(v)).toList(),
+            children: universalVars.map((v) => _buildChip(v, false)).toList(),
           ),
+          if (triggerVars.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Trigger context:',
+              style: TextStyle(color: Colors.grey[600], fontSize: 10),
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: triggerVars.map((v) => _buildChip(v, true)).toList(),
+            ),
+          ],
+          if (showDeleteHint) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.info_outline, size: 12, color: Colors.grey[500]),
+                const SizedBox(width: 4),
+                Text(
+                  'Tap a variable in the field to select it, then backspace to delete',
+                  style: TextStyle(color: Colors.grey[500], fontSize: 10),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildChip(String variable) {
+  Widget _buildChip(String variable, bool isTriggerSpecific) {
     final displayName = _variableDisplayNames[variable] ?? variable;
-    return GestureDetector(
-      onTap: isActive && targetField != null
-          ? () => targetField!.insertVariable(variable)
-          : null,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isActive
-              ? AppTheme.successGreen.withValues(alpha: 0.15)
-              : AppTheme.darkCard,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
+    final description = _variableDescriptions[variable];
+
+    return Tooltip(
+      message: description ?? displayName,
+      child: GestureDetector(
+        onTap: isActive && targetField != null
+            ? () => targetField!.insertVariable(variable)
+            : null,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
             color: isActive
-                ? AppTheme.successGreen.withValues(alpha: 0.4)
-                : AppTheme.darkBorder,
+                ? (isTriggerSpecific
+                      ? Colors.amber.withValues(alpha: 0.15)
+                      : AppTheme.successGreen.withValues(alpha: 0.15))
+                : AppTheme.darkCard,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isActive
+                  ? (isTriggerSpecific
+                        ? Colors.amber.withValues(alpha: 0.4)
+                        : AppTheme.successGreen.withValues(alpha: 0.4))
+                  : AppTheme.darkBorder,
+            ),
           ),
-        ),
-        child: Text(
-          displayName,
-          style: TextStyle(
-            fontFamily: AppTheme.fontFamily,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: isActive ? AppTheme.successGreen : Colors.grey[400],
+          child: Text(
+            displayName,
+            style: TextStyle(
+              fontFamily: AppTheme.fontFamily,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: isActive
+                  ? (isTriggerSpecific ? Colors.amber : AppTheme.successGreen)
+                  : Colors.grey[400],
+            ),
           ),
         ),
       ),

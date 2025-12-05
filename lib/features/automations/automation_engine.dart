@@ -392,14 +392,22 @@ class AutomationEngine {
     switch (action.type) {
       case ActionType.sendMessage:
         if (onSendMessage == null || action.targetNodeNum == null) return false;
-        final message = _interpolateVariables(action.messageText ?? '', event);
+        final message = _interpolateVariables(
+          action.messageText ?? '',
+          event,
+          trigger: automation.trigger,
+        );
         return await onSendMessage!(action.targetNodeNum!, message);
 
       case ActionType.sendToChannel:
         if (onSendToChannel == null || action.targetChannelIndex == null) {
           return false;
         }
-        final message = _interpolateVariables(action.messageText ?? '', event);
+        final message = _interpolateVariables(
+          action.messageText ?? '',
+          event,
+          trigger: automation.trigger,
+        );
         return await onSendToChannel!(action.targetChannelIndex!, message);
 
       case ActionType.playSound:
@@ -416,10 +424,12 @@ class AutomationEngine {
         final title = _interpolateVariables(
           action.notificationTitle ?? automation.name,
           event,
+          trigger: automation.trigger,
         );
         final body = _interpolateVariables(
           action.notificationBody ?? '',
           event,
+          trigger: automation.trigger,
         );
         await _notifications.show(
           automation.id.hashCode,
@@ -554,8 +564,12 @@ class AutomationEngine {
   }
 
   /// Interpolate variables in message text
-  String _interpolateVariables(String text, AutomationEvent event) {
-    return text
+  String _interpolateVariables(
+    String text,
+    AutomationEvent event, {
+    AutomationTrigger? trigger,
+  }) {
+    var result = text
         .replaceAll('{{node.name}}', event.nodeName ?? 'Unknown')
         .replaceAll('{{node.num}}', event.nodeNum?.toRadixString(16) ?? '')
         .replaceAll('{{battery}}', '${event.batteryLevel ?? '?'}%')
@@ -567,6 +581,22 @@ class AutomationEngine {
         )
         .replaceAll('{{message}}', event.messageText ?? '')
         .replaceAll('{{time}}', DateTime.now().toIso8601String());
+
+    // Trigger-specific context variables
+    if (trigger != null) {
+      result = result
+          .replaceAll('{{threshold}}', '${trigger.batteryThreshold}%')
+          .replaceAll('{{keyword}}', trigger.keyword ?? '')
+          .replaceAll('{{zone.radius}}', '${trigger.geofenceRadius.round()}m')
+          .replaceAll('{{silent.duration}}', '${trigger.silentMinutes} min')
+          .replaceAll('{{signal.threshold}}', '${trigger.signalThreshold} dB')
+          .replaceAll(
+            '{{channel.name}}',
+            'Channel ${trigger.channelIndex ?? 0}',
+          );
+    }
+
+    return result;
   }
 
   /// Build trigger details string for logging
