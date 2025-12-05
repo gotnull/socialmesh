@@ -26,41 +26,35 @@ final _variableRegex = RegExp(
   r'\{\{(node\.name|battery|location|message|time)\}\}',
 );
 
-/// Regex to match ANY double-brace pattern (for detecting invalid ones)
-final _anyVariableRegex = RegExp(r'\{\{[^}]*\}\}');
-
-/// Regex to match incomplete/malformed variable patterns
-final _incompleteVariableRegex = RegExp(
-  r'\{\{[^}]*\}(?!\})|\{\{[^}]*$|\{\{[^}]*\}[^}]',
-);
-
 /// Validates text for invalid variable patterns.
-/// Returns list of invalid variables found, or empty list if all valid.
 List<String> validateVariables(String text) {
   final invalidVars = <String>[];
+  final validMatches = _variableRegex.allMatches(text).toList();
 
-  // Check for complete but invalid variables
-  for (final match in _anyVariableRegex.allMatches(text)) {
-    final varText = match.group(0)!;
-    if (!validVariables.contains(varText)) {
-      invalidVars.add(varText);
-    }
-  }
+  int pos = 0;
+  while (pos < text.length - 1) {
+    final idx = text.indexOf('{{', pos);
+    if (idx == -1) break;
 
-  // Check for incomplete patterns like {{node.name} or {{battery
-  for (final match in _incompleteVariableRegex.allMatches(text)) {
-    final varText = match.group(0)!;
-    if (!invalidVars.contains(varText)) {
-      invalidVars.add(varText);
+    final isValid = validMatches.any((m) => m.start == idx);
+    if (!isValid) {
+      final endBrace = text.indexOf('}}', idx);
+      if (endBrace != -1) {
+        invalidVars.add(text.substring(idx, endBrace + 2));
+      } else {
+        final end = text.indexOf(' ', idx);
+        invalidVars.add(text.substring(idx, end == -1 ? text.length : end));
+      }
     }
+    pos = idx + 1;
   }
 
   return invalidVars;
 }
 
-/// Custom TextEditingController that styles variables with background color
-class _VariableTextEditingController extends TextEditingController {
-  _VariableTextEditingController({super.text});
+/// Custom controller that styles variables with colored text (no WidgetSpans)
+class _VariableTextController extends TextEditingController {
+  _VariableTextController({super.text});
 
   @override
   TextSpan buildTextSpan({
@@ -69,124 +63,46 @@ class _VariableTextEditingController extends TextEditingController {
     required bool withComposing,
   }) {
     final text = this.text;
-    if (text.isEmpty) {
-      return TextSpan(text: text, style: style);
-    }
+    if (text.isEmpty) return TextSpan(text: '', style: style);
 
-    // Find all valid variables
-    final validMatches = _variableRegex.allMatches(text).toList();
-
-    // Find all invalid/incomplete patterns
-    final invalidPatterns = <({int start, int end, String text})>[];
-
-    // Complete but invalid {{...}}
-    for (final match in _anyVariableRegex.allMatches(text)) {
-      if (!validVariables.contains(match.group(0))) {
-        invalidPatterns.add((
-          start: match.start,
-          end: match.end,
-          text: match.group(0)!,
-        ));
-      }
-    }
-
-    // Incomplete patterns
-    for (final match in _incompleteVariableRegex.allMatches(text)) {
-      final alreadyFound = invalidPatterns.any(
-        (p) =>
-            (match.start >= p.start && match.start < p.end) ||
-            (match.end > p.start && match.end <= p.end),
-      );
-      if (!alreadyFound) {
-        invalidPatterns.add((
-          start: match.start,
-          end: match.end,
-          text: match.group(0)!,
-        ));
-      }
-    }
-
-    // Build list of all styled ranges
-    final styledRanges = <({int start, int end, bool isValid})>[];
-
-    for (final match in validMatches) {
-      styledRanges.add((start: match.start, end: match.end, isValid: true));
-    }
-
-    for (final pattern in invalidPatterns) {
-      // Don't add if overlaps with valid
-      final overlapsValid = styledRanges.any(
-        (r) =>
-            r.isValid &&
-            ((pattern.start >= r.start && pattern.start < r.end) ||
-                (pattern.end > r.start && pattern.end <= r.end)),
-      );
-      if (!overlapsValid) {
-        styledRanges.add((
-          start: pattern.start,
-          end: pattern.end,
-          isValid: false,
-        ));
-      }
-    }
-
-    // Sort by start position
-    styledRanges.sort((a, b) => a.start.compareTo(b.start));
-
-    final spans = <InlineSpan>[];
+    final spans = <TextSpan>[];
     int lastEnd = 0;
 
-    for (final range in styledRanges) {
+    for (final match in _variableRegex.allMatches(text)) {
       // Add text before the match
-      if (range.start > lastEnd) {
+      if (match.start > lastEnd) {
         spans.add(
-          TextSpan(text: text.substring(lastEnd, range.start), style: style),
+          TextSpan(text: text.substring(lastEnd, match.start), style: style),
         );
       }
 
-      // Style the variable
-      final varText = text.substring(range.start, range.end);
-      if (range.isValid) {
-        spans.add(
-          TextSpan(
-            text: varText,
-            style: style?.copyWith(
-              color: AppTheme.successGreen,
-              backgroundColor: AppTheme.successGreen.withValues(alpha: 0.2),
-              fontWeight: FontWeight.w600,
-            ),
+      // Style the variable with green color and background
+      spans.add(
+        TextSpan(
+          text: match.group(0),
+          style: style?.copyWith(
+            color: AppTheme.successGreen,
+            fontWeight: FontWeight.w600,
+            backgroundColor: AppTheme.successGreen.withValues(alpha: 0.15),
           ),
-        );
-      } else {
-        spans.add(
-          TextSpan(
-            text: varText,
-            style: style?.copyWith(
-              color: AppTheme.errorRed,
-              backgroundColor: AppTheme.errorRed.withValues(alpha: 0.2),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        );
-      }
+        ),
+      );
 
-      lastEnd = range.end;
+      lastEnd = match.end;
     }
 
-    // Add remaining text after last match
+    // Add remaining text
     if (lastEnd < text.length) {
       spans.add(TextSpan(text: text.substring(lastEnd), style: style));
     }
 
-    if (spans.isEmpty) {
-      return TextSpan(text: text, style: style);
-    }
-
-    return TextSpan(children: spans, style: style);
+    return spans.isEmpty
+        ? TextSpan(text: text, style: style)
+        : TextSpan(children: spans, style: style);
   }
 }
 
-/// A text field that renders variables as styled chips inline.
+/// A text field with variable chips that insert at cursor position.
 class VariableTextField extends StatefulWidget {
   final String value;
   final ValueChanged<String> onChanged;
@@ -212,7 +128,7 @@ class VariableTextField extends StatefulWidget {
 }
 
 class VariableTextFieldState extends State<VariableTextField> {
-  late _VariableTextEditingController _controller;
+  late _VariableTextController _controller;
   late FocusNode _focusNode;
   bool _ownsFocusNode = false;
   bool _hasFocus = false;
@@ -220,10 +136,11 @@ class VariableTextFieldState extends State<VariableTextField> {
   @override
   void initState() {
     super.initState();
-    _controller = _VariableTextEditingController(text: widget.value);
+    _controller = _VariableTextController(text: widget.value);
+    _controller.addListener(_onSelectionChange);
+
     if (widget.focusNode != null) {
       _focusNode = widget.focusNode!;
-      _ownsFocusNode = false;
     } else {
       _focusNode = FocusNode();
       _ownsFocusNode = true;
@@ -234,80 +151,72 @@ class VariableTextFieldState extends State<VariableTextField> {
   @override
   void didUpdateWidget(VariableTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.value != widget.value && widget.value != _controller.text) {
+    if (widget.value != _controller.text) {
+      final selection = _controller.selection;
       _controller.text = widget.value;
+      // Try to restore selection
+      if (selection.isValid && selection.end <= widget.value.length) {
+        _controller.selection = selection;
+      }
     }
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onSelectionChange);
     _focusNode.removeListener(_onFocusChange);
-    if (_ownsFocusNode) {
-      _focusNode.dispose();
-    }
+    if (_ownsFocusNode) _focusNode.dispose();
     _controller.dispose();
     super.dispose();
   }
 
   void _onFocusChange() {
-    setState(() {
-      _hasFocus = _focusNode.hasFocus;
-    });
+    setState(() => _hasFocus = _focusNode.hasFocus);
     widget.onFocusChange?.call();
   }
 
-  /// Insert a variable at the current cursor position
+  void _onSelectionChange() {
+    // If cursor is inside a variable, move it to the end of that variable
+    final text = _controller.text;
+    final selection = _controller.selection;
+
+    if (!selection.isValid || !selection.isCollapsed) return;
+
+    final cursorPos = selection.baseOffset;
+
+    for (final match in _variableRegex.allMatches(text)) {
+      if (cursorPos > match.start && cursorPos < match.end) {
+        // Cursor is inside a variable - move to end
+        _controller.selection = TextSelection.collapsed(offset: match.end);
+        return;
+      }
+    }
+  }
+
+  /// Insert a variable at current cursor position
   void insertVariable(String variable) {
     if (!validVariables.contains(variable)) return;
-
     HapticFeedback.lightImpact();
 
     final text = _controller.text;
     final selection = _controller.selection;
 
-    int insertAt;
+    int insertAt = text.length;
     if (selection.isValid && selection.isCollapsed) {
       insertAt = selection.baseOffset;
     } else if (selection.isValid) {
-      insertAt = selection.start;
-    } else {
-      insertAt = text.length;
+      insertAt = selection.end;
     }
 
     final newText =
         text.substring(0, insertAt) + variable + text.substring(insertAt);
     _controller.text = newText;
-
-    final newPosition = insertAt + variable.length;
-    _controller.selection = TextSelection.collapsed(offset: newPosition);
+    _controller.selection = TextSelection.collapsed(
+      offset: insertAt + variable.length,
+    );
 
     widget.onChanged(newText);
     _focusNode.requestFocus();
-  }
-
-  /// Delete a variable from the text
-  void deleteVariable(int start, int end) {
-    HapticFeedback.lightImpact();
-
-    final text = _controller.text;
-    final newText = text.substring(0, start) + text.substring(end);
-    _controller.text = newText;
-    _controller.selection = TextSelection.collapsed(offset: start);
-
-    widget.onChanged(newText);
-  }
-
-  /// Get all variable matches with their positions
-  List<({String variable, int start, int end})> get variableMatches {
-    final matches = <({String variable, int start, int end})>[];
-    for (final match in _variableRegex.allMatches(_controller.text)) {
-      matches.add((
-        variable: match.group(0)!,
-        start: match.start,
-        end: match.end,
-      ));
-    }
-    return matches;
   }
 
   bool get hasFocus => _hasFocus;
@@ -316,103 +225,36 @@ class VariableTextFieldState extends State<VariableTextField> {
   Widget build(BuildContext context) {
     final invalidVars = validateVariables(widget.value);
     final hasError = invalidVars.isNotEmpty;
-    final matches = variableMatches;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: _controller,
-          focusNode: _focusNode,
-          onChanged: widget.onChanged,
-          minLines: 2,
-          maxLines: 5,
-          style: const TextStyle(fontSize: 14),
-          decoration: InputDecoration(
-            labelText: widget.labelText,
-            hintText: widget.hintText,
-            isDense: true,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            enabledBorder: hasError
-                ? OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.errorRed),
-                  )
-                : null,
-            focusedBorder: hasError
-                ? OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.errorRed, width: 2),
-                  )
-                : null,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 12,
-            ),
-            errorText: hasError ? 'Invalid: ${invalidVars.join(", ")}' : null,
-          ),
+    return TextField(
+      controller: _controller,
+      focusNode: _focusNode,
+      onChanged: widget.onChanged,
+      minLines: 2,
+      maxLines: 5,
+      style: const TextStyle(fontSize: 14),
+      decoration: InputDecoration(
+        labelText: widget.labelText,
+        hintText: widget.hintText,
+        isDense: true,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        enabledBorder: hasError
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppTheme.errorRed),
+              )
+            : null,
+        focusedBorder: hasError
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppTheme.errorRed, width: 2),
+              )
+            : null,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
         ),
-        if (matches.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: matches.asMap().entries.map((entry) {
-              final match = entry.value;
-              final displayName =
-                  _variableDisplayNames[match.variable] ?? match.variable;
-              return _VariableChip(
-                label: displayName,
-                onDelete: () => deleteVariable(match.start, match.end),
-              );
-            }).toList(),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-/// A deletable variable chip
-class _VariableChip extends StatelessWidget {
-  final String label;
-  final VoidCallback onDelete;
-
-  const _VariableChip({required this.label, required this.onDelete});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(left: 8, right: 4, top: 4, bottom: 4),
-      decoration: BoxDecoration(
-        color: AppTheme.successGreen.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppTheme.successGreen.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.successGreen,
-            ),
-          ),
-          const SizedBox(width: 4),
-          GestureDetector(
-            onTap: onDelete,
-            child: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                color: AppTheme.successGreen.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.close, size: 14, color: AppTheme.successGreen),
-            ),
-          ),
-        ],
+        errorText: hasError ? 'Invalid: ${invalidVars.join(", ")}' : null,
       ),
     );
   }
