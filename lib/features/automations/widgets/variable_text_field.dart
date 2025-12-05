@@ -538,7 +538,7 @@ class VariableChipPicker extends StatelessWidget {
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
-                    'Tap a variable in the field to select it, then backspace to delete',
+                    'Tap a variable to select it (turns red), then press backspace to remove',
                     style: TextStyle(color: Colors.grey[500], fontSize: 10),
                   ),
                 ),
