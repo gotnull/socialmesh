@@ -130,7 +130,9 @@ class OfflineQueueService {
       final message = _queue.first;
 
       try {
-        debugPrint('📤 Sending queued message: ${message.id}');
+        debugPrint(
+          '📤 Sending queued message: ${message.id}, wantAck: ${message.wantAck}',
+        );
 
         final packetId = await _sendCallback!(
           text: message.text,
@@ -140,12 +142,15 @@ class OfflineQueueService {
           messageId: message.id,
         );
 
-        // Update message status to sent
-        _updateCallback?.call(
-          message.id,
-          MessageStatus.sent,
-          packetId: packetId,
-        );
+        // Only update status to sent for messages WITHOUT ACK (like channel messages)
+        // Messages with ACK will have their status managed by the delivery tracking system
+        if (!message.wantAck) {
+          _updateCallback?.call(
+            message.id,
+            MessageStatus.sent,
+            packetId: packetId,
+          );
+        }
 
         // Remove from queue on success
         _queue.removeAt(0);
