@@ -291,6 +291,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       // If inline (shown within MainShell), don't navigate - just let the
       // connection state change trigger MainShell to rebuild and show main content
 
+      // Reset auto-reconnect state to idle on successful manual connection
+      // This clears any previous failed state from auto-reconnect attempts
+      ref.read(autoReconnectStateProvider.notifier).state =
+          AutoReconnectState.idle;
+
+      // Ensure offline queue is initialized and process any pending messages
+      final queue = ref.read(offlineQueueProvider);
+      queue.processQueueIfNeeded();
+
       // Success - don't reset _connecting, let navigation handle the transition
       return;
     } catch (e) {

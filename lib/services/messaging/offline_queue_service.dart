@@ -42,6 +42,9 @@ typedef UpdateMessageCallback =
       String? errorMessage,
     });
 
+/// Callback to check if ready to send
+typedef ReadyToSendCallback = bool Function();
+
 /// Service to manage offline message queue
 /// Queues messages when device is disconnected and sends them when reconnected
 class OfflineQueueService {
@@ -54,6 +57,7 @@ class OfflineQueueService {
   bool _isConnected = false;
   SendMessageCallback? _sendCallback;
   UpdateMessageCallback? _updateCallback;
+  ReadyToSendCallback? _readyToSendCallback;
 
   /// Stream controller for queue updates
   final _queueController = StreamController<List<QueuedMessage>>.broadcast();
@@ -72,9 +76,11 @@ class OfflineQueueService {
   void initialize({
     required SendMessageCallback sendCallback,
     required UpdateMessageCallback updateCallback,
+    ReadyToSendCallback? readyToSendCallback,
   }) {
     _sendCallback = sendCallback;
     _updateCallback = updateCallback;
+    _readyToSendCallback = readyToSendCallback;
     debugPrint('📤 OfflineQueueService initialized');
   }
 
@@ -86,6 +92,16 @@ class OfflineQueueService {
     if (!wasConnected && isConnected && _queue.isNotEmpty) {
       debugPrint(
         '📤 Connection restored, processing ${_queue.length} queued messages',
+      );
+      _processQueue();
+    }
+  }
+
+  /// Manually trigger queue processing (e.g., after late initialization)
+  void processQueueIfNeeded() {
+    if (_isConnected && _queue.isNotEmpty && !_isProcessing) {
+      debugPrint(
+        '📤 Manual trigger: processing ${_queue.length} queued messages',
       );
       _processQueue();
     }
@@ -122,6 +138,26 @@ class OfflineQueueService {
   /// Process the queue - send all pending messages
   Future<void> _processQueue() async {
     if (_isProcessing || !_isConnected || _sendCallback == null) return;
+
+    // Wait for protocol to be ready before processing
+    if (_readyToSendCallback != null) {
+      var attempts = 0;
+      while (!_readyToSendCallback!() && attempts < 50) {
+        debugPrint(
+          '📤 Waiting for protocol to be ready... (${attempts + 1}/50)',
+        );
+        await Future.delayed(const Duration(milliseconds: 200));
+        attempts++;
+        if (!_isConnected) {
+          debugPrint('📤 Disconnected while waiting, aborting queue');
+          return;
+        }
+      }
+      if (!_readyToSendCallback!()) {
+        debugPrint('📤 Protocol not ready after 10s, aborting queue');
+        return;
+      }
+    }
 
     _isProcessing = true;
     debugPrint('📤 Processing queue of ${_queue.length} messages');

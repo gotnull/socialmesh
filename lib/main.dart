@@ -578,9 +578,7 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
         decoration: BoxDecoration(
           color: AppTheme.darkCard.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: context.accentColor.withValues(alpha: 0.3),
-          ),
+          border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
           boxShadow: [
             BoxShadow(
               color: context.accentColor.withValues(alpha: 0.1),
@@ -609,11 +607,7 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
                           fontWeight: FontWeight.bold,
                         ),
                       )
-                    : Icon(
-                        Icons.person,
-                        color: context.accentColor,
-                        size: 18,
-                      ),
+                    : Icon(Icons.person, color: context.accentColor, size: 18),
               ),
             ),
             const SizedBox(width: 12),

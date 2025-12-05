@@ -1381,9 +1381,20 @@ final offlineQueueProvider = Provider<OfflineQueueService>((ref) {
             // Note: trackPacket is now called in pre-tracking callback before send
           }
         },
+    readyToSendCallback: () {
+      // Ready when protocol has fully completed config exchange
+      // (configurationComplete ensures we've received configCompleteId)
+      return protocol.configurationComplete;
+    },
   );
 
-  // Listen to connection state changes
+  // Check current connection state immediately (in case we're already connected)
+  final currentState = ref.read(connectionStateProvider);
+  currentState.whenData((state) {
+    service.setConnectionState(state == DeviceConnectionState.connected);
+  });
+
+  // Listen to connection state changes for future updates
   ref.listen<AsyncValue<DeviceConnectionState>>(connectionStateProvider, (
     prev,
     next,
