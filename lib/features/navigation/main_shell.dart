@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
+import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
 import '../channels/channels_screen.dart';
 import '../messaging/messaging_screen.dart';
@@ -96,11 +97,25 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     // Build the main scaffold
     final mainScaffold = Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: List.generate(
-          _navItems.length,
-          (index) => _buildScreen(index),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.02),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            ),
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey(_currentIndex),
+          child: _buildScreen(_currentIndex),
         ),
       ),
       bottomNavigationBar: Container(
@@ -228,17 +243,18 @@ class _NavBarItem extends StatelessWidget {
       labelColor = theme.colorScheme.onSurface.withValues(alpha: 0.6);
     }
 
-    return GestureDetector(
+    return BouncyTap(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
+      scaleFactor: 0.9,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppTheme.primaryGreen.withValues(alpha: 0.1)
+              ? AppTheme.primaryGreen.withValues(alpha: 0.15)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -246,7 +262,16 @@ class _NavBarItem extends StatelessWidget {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Icon(icon, size: 24, color: iconColor),
+                AnimatedScale(
+                  scale: isSelected ? 1.1 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutBack,
+                  child: AnimatedMorphIcon(
+                    icon: icon,
+                    size: 24,
+                    color: iconColor,
+                  ),
+                ),
                 if (showBadge)
                   Positioned(
                     right: -4,
@@ -290,13 +315,15 @@ class _NavBarItem extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            Text(
-              label,
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
               style: TextStyle(
-                fontSize: 11,
+                fontSize: isSelected ? 11 : 10,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 color: labelColor,
+                fontFamily: AppTheme.fontFamily,
               ),
+              child: Text(label),
             ),
           ],
         ),

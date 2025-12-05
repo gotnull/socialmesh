@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../providers/app_providers.dart';
 import '../../../core/transport.dart';
@@ -184,42 +185,41 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = enabled ? AppTheme.primaryGreen : AppTheme.textTertiary;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          height: 72,
-          decoration: BoxDecoration(
+    return BouncyTap(
+      onTap: enabled ? onTap : null,
+      scaleFactor: 0.95,
+      enabled: enabled,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        height: 72,
+        decoration: BoxDecoration(
+          color: enabled
+              ? AppTheme.primaryGreen.withValues(alpha: 0.08)
+              : AppTheme.darkBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
             color: enabled
-                ? AppTheme.primaryGreen.withValues(alpha: 0.08)
-                : AppTheme.darkBackground,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: enabled
-                  ? AppTheme.primaryGreen.withValues(alpha: 0.2)
-                  : AppTheme.darkBorder,
-            ),
+                ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+                : AppTheme.darkBorder,
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 22, color: color),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  color: color,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 22, color: color),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+                color: color,
 
-                  height: 1.1,
-                ),
-                textAlign: TextAlign.center,
+                height: 1.1,
               ),
-            ],
-          ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );
@@ -235,11 +235,15 @@ class _SosButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(12),
+    return BouncyTap(
+      onTap: enabled ? onTap : null,
+      scaleFactor: 0.97,
+      enabled: enabled,
+      child: PulseAnimation(
+        enabled: enabled,
+        minScale: 1.0,
+        maxScale: 1.02,
+        duration: const Duration(milliseconds: 1500),
         child: Container(
           height: 48,
           decoration: BoxDecoration(

@@ -11,6 +11,7 @@ import '../../models/canned_response.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animated_list_item.dart';
+import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../services/messaging/offline_queue_service.dart';
@@ -294,119 +295,114 @@ class _ConversationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final timeFormat = DateFormat('h:mm a');
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppTheme.darkCard,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
+    return BouncyTap(
+      onTap: onTap,
+      scaleFactor: 0.98,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppTheme.darkCard,
           borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                // Avatar
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: conversation.avatarColor != null
-                        ? Color(conversation.avatarColor!)
-                        : AppTheme.graphPurple,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      conversation.shortName ??
-                          conversation.name.substring(0, 2),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
+          border: Border.all(color: AppTheme.darkBorder),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Avatar
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: conversation.avatarColor != null
+                      ? Color(conversation.avatarColor!)
+                      : AppTheme.graphPurple,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    conversation.shortName ?? conversation.name.substring(0, 2),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                // Content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
+              ),
+              const SizedBox(width: 12),
+              // Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            conversation.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (conversation.lastMessageTime != null)
+                          Text(
+                            timeFormat.format(conversation.lastMessageTime!),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textTertiary,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            conversation.lastMessage ?? 'Start a conversation',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (conversation.unreadCount > 0) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryGreen,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             child: Text(
-                              conversation.name,
+                              '${conversation.unreadCount}',
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (conversation.lastMessageTime != null)
-                            Text(
-                              timeFormat.format(conversation.lastMessageTime!),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.textTertiary,
-                              ),
-                            ),
                         ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              conversation.lastMessage ??
-                                  'Start a conversation',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: AppTheme.textSecondary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (conversation.unreadCount > 0) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryGreen,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                '${conversation.unreadCount}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+            ],
           ),
         ),
       ),

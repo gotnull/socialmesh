@@ -9,6 +9,7 @@ import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animated_list_item.dart';
+import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
@@ -256,389 +257,386 @@ class _NodeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final signalBars = _calculateSignalBars(node.rssi);
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: isMyNode
-            ? AppTheme.primaryGreen.withValues(alpha: 0.08)
-            : AppTheme.darkCard,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
+    return BouncyTap(
+      onTap: onTap,
+      scaleFactor: 0.98,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
           color: isMyNode
-              ? AppTheme.primaryGreen.withValues(alpha: 0.5)
-              : AppTheme.darkBorder,
-          width: isMyNode ? 1.5 : 1,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
+              ? AppTheme.primaryGreen.withValues(alpha: 0.08)
+              : AppTheme.darkCard,
           borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Avatar
-                Column(
-                  children: [
-                    Stack(
-                      children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: isMyNode
-                                ? AppTheme.primaryGreen
-                                : _getAvatarColor(),
-                            shape: BoxShape.circle,
-                            border: isMyNode
-                                ? Border.all(
-                                    color: Colors.white.withValues(alpha: 0.3),
-                                    width: 2,
-                                  )
-                                : null,
-                          ),
-                          child: Center(
-                            child: Text(
-                              _getShortName(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
+          border: Border.all(
+            color: isMyNode
+                ? AppTheme.primaryGreen.withValues(alpha: 0.5)
+                : AppTheme.darkBorder,
+            width: isMyNode ? 1.5 : 1,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Avatar
+              Column(
+                children: [
+                  Stack(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: isMyNode
+                              ? AppTheme.primaryGreen
+                              : _getAvatarColor(),
+                          shape: BoxShape.circle,
+                          border: isMyNode
+                              ? Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  width: 2,
+                                )
+                              : null,
+                        ),
+                        child: Center(
+                          child: Text(
+                            _getShortName(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
-                        // "You" indicator on avatar
-                        if (isMyNode)
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: AppTheme.darkCard,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: AppTheme.primaryGreen,
-                                  width: 2,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.person,
-                                size: 12,
+                      ),
+                      // "You" indicator on avatar
+                      if (isMyNode)
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: AppTheme.darkCard,
+                              shape: BoxShape.circle,
+                              border: Border.all(
                                 color: AppTheme.primaryGreen,
+                                width: 2,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.person,
+                              size: 12,
+                              color: AppTheme.primaryGreen,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // PWD/Battery indicator
+                  if (node.role != null || node.batteryLevel != null)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (node.role == 'CLIENT')
+                          const Icon(
+                            Icons.bluetooth,
+                            size: 14,
+                            color: AppTheme.primaryGreen,
+                          ),
+                        if (node.batteryLevel != null) ...[
+                          if (node.role != null) const SizedBox(width: 4),
+                          Icon(
+                            _getBatteryIcon(node.batteryLevel!),
+                            size: 14,
+                            color: _getBatteryColor(node.batteryLevel!),
+                          ),
+                          // Only show percentage text if not charging
+                          if (node.batteryLevel! <= 100)
+                            Text(
+                              '${node.batteryLevel}%',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: _getBatteryColor(node.batteryLevel!),
+                              ),
+                            ),
+                        ],
+                      ],
+                    ),
+                ],
+              ),
+              const SizedBox(width: 16),
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        // Lock icon (locked = has PKI public key)
+                        Icon(
+                          node.hasPublicKey ? Icons.lock : Icons.lock_open,
+                          size: 16,
+                          color: node.hasPublicKey
+                              ? AppTheme.primaryGreen
+                              : AppTheme.textTertiary,
+                        ),
+                        const SizedBox(width: 8),
+                        // Name
+                        Flexible(
+                          child: Text(
+                            node.displayName,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // "You" badge
+                        if (isMyNode) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryGreen,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'YOU',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+
+                                letterSpacing: 0.5,
                               ),
                             ),
                           ),
+                        ],
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    // PWD/Battery indicator
-                    if (node.role != null || node.batteryLevel != null)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (node.role == 'CLIENT')
-                            const Icon(
-                              Icons.bluetooth,
-                              size: 14,
-                              color: AppTheme.primaryGreen,
-                            ),
-                          if (node.batteryLevel != null) ...[
-                            if (node.role != null) const SizedBox(width: 4),
-                            Icon(
-                              _getBatteryIcon(node.batteryLevel!),
-                              size: 14,
-                              color: _getBatteryColor(node.batteryLevel!),
-                            ),
-                            // Only show percentage text if not charging
-                            if (node.batteryLevel! <= 100)
-                              Text(
-                                '${node.batteryLevel}%',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: _getBatteryColor(node.batteryLevel!),
-                                ),
-                              ),
-                          ],
-                        ],
-                      ),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                // Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    const SizedBox(height: 6),
+                    // Status - show "This Device" for your own node
+                    if (isMyNode)
                       Row(
                         children: [
-                          // Lock icon (locked = has PKI public key)
                           Icon(
-                            node.hasPublicKey ? Icons.lock : Icons.lock_open,
-                            size: 16,
-                            color: node.hasPublicKey
+                            Icons.smartphone,
+                            size: 14,
+                            color: AppTheme.primaryGreen,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'This Device',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.primaryGreen,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Row(
+                        children: [
+                          Icon(
+                            node.isOnline ? Icons.wifi : Icons.wifi_off,
+                            size: 14,
+                            color: node.isOnline
                                 ? AppTheme.primaryGreen
                                 : AppTheme.textTertiary,
                           ),
-                          const SizedBox(width: 8),
-                          // Name
-                          Flexible(
-                            child: Text(
-                              node.displayName,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          const SizedBox(width: 6),
+                          Text(
+                            node.isOnline ? 'Connected' : 'Offline',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.textSecondary,
                             ),
                           ),
-                          // "You" badge
-                          if (isMyNode) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryGreen,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Text(
-                                'YOU',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                          ],
                         ],
                       ),
-                      const SizedBox(height: 6),
-                      // Status - show "This Device" for your own node
-                      if (isMyNode)
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.smartphone,
-                              size: 14,
-                              color: AppTheme.primaryGreen,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'This Device',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppTheme.primaryGreen,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        )
-                      else
-                        Row(
-                          children: [
-                            Icon(
-                              node.isOnline ? Icons.wifi : Icons.wifi_off,
-                              size: 14,
-                              color: node.isOnline
-                                  ? AppTheme.primaryGreen
-                                  : AppTheme.textTertiary,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              node.isOnline ? 'Connected' : 'Offline',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      const SizedBox(height: 4),
-                      // Last heard
-                      if (node.lastHeard != null) ...[
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.check,
-                              size: 14,
-                              color: AppTheme.primaryGreen,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              _formatLastHeard(node.lastHeard!),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.textTertiary,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                      ],
-                      // Role and GPS status
+                    const SizedBox(height: 4),
+                    // Last heard
+                    if (node.lastHeard != null) ...[
                       Row(
                         children: [
-                          if (node.role != null) ...[
-                            const Icon(
-                              Icons.smartphone,
-                              size: 14,
+                          const Icon(
+                            Icons.check,
+                            size: 14,
+                            color: AppTheme.primaryGreen,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _formatLastHeard(node.lastHeard!),
+                            style: const TextStyle(
+                              fontSize: 12,
                               color: AppTheme.textTertiary,
                             ),
-                            const SizedBox(width: 6),
-                            Text(
-                              node.role!,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.textTertiary,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                          ],
-                          Icon(
-                            Icons.gps_fixed,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                    // Role and GPS status
+                    Row(
+                      children: [
+                        if (node.role != null) ...[
+                          const Icon(
+                            Icons.smartphone,
                             size: 14,
+                            color: AppTheme.textTertiary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            node.role!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textTertiary,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                        ],
+                        Icon(
+                          Icons.gps_fixed,
+                          size: 14,
+                          color: node.hasPosition
+                              ? AppTheme.primaryGreen
+                              : AppTheme.textTertiary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          node.hasPosition ? 'GPS' : 'No GPS',
+                          style: TextStyle(
+                            fontSize: 12,
                             color: node.hasPosition
                                 ? AppTheme.primaryGreen
                                 : AppTheme.textTertiary,
                           ),
-                          const SizedBox(width: 4),
+                        ),
+                      ],
+                    ),
+                    // Distance & heading
+                    if (node.distance != null) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.near_me,
+                            size: 14,
+                            color: AppTheme.textTertiary,
+                          ),
+                          const SizedBox(width: 6),
                           Text(
-                            node.hasPosition ? 'GPS' : 'No GPS',
-                            style: TextStyle(
+                            _formatDistance(node.distance),
+                            style: const TextStyle(
                               fontSize: 12,
-                              color: node.hasPosition
-                                  ? AppTheme.primaryGreen
-                                  : AppTheme.textTertiary,
+                              color: AppTheme.textTertiary,
                             ),
                           ),
                         ],
                       ),
-                      // Distance & heading
-                      if (node.distance != null) ...[
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.near_me,
-                              size: 14,
-                              color: AppTheme.textTertiary,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              _formatDistance(node.distance),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.textTertiary,
-                              ),
-                            ),
-                          ],
+                    ],
+                    // Logs indicators
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.article,
+                          size: 14,
+                          color: AppTheme.textTertiary,
+                        ),
+                        const SizedBox(width: 4),
+                        const Text(
+                          'Logs:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textTertiary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.message,
+                          size: 14,
+                          color: AppTheme.textTertiary,
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.place,
+                          size: 14,
+                          color: AppTheme.textTertiary,
                         ),
                       ],
-                      // Logs indicators
+                    ),
+                    // Signal bars
+                    if (node.rssi != null) ...[
                       const SizedBox(height: 8),
                       Row(
                         children: [
                           const Icon(
-                            Icons.article,
+                            Icons.signal_cellular_alt,
                             size: 14,
                             color: AppTheme.textTertiary,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 6),
                           const Text(
-                            'Logs:',
+                            'Signal Good',
                             style: TextStyle(
                               fontSize: 12,
                               color: AppTheme.textTertiary,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.message,
-                            size: 14,
-                            color: AppTheme.textTertiary,
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.place,
-                            size: 14,
-                            color: AppTheme.textTertiary,
+                          const SizedBox(width: 12),
+                          // Signal strength bars
+                          Row(
+                            children: List.generate(4, (i) {
+                              return Container(
+                                margin: const EdgeInsets.only(right: 3),
+                                width: 4,
+                                height: 12 + (i * 3.0),
+                                decoration: BoxDecoration(
+                                  color: i < signalBars
+                                      ? AppTheme.primaryGreen
+                                      : AppTheme.textTertiary.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                  borderRadius: BorderRadius.circular(1),
+                                ),
+                              );
+                            }),
                           ),
                         ],
                       ),
-                      // Signal bars
-                      if (node.rssi != null) ...[
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.signal_cellular_alt,
-                              size: 14,
-                              color: AppTheme.textTertiary,
-                            ),
-                            const SizedBox(width: 6),
-                            const Text(
-                              'Signal Good',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.textTertiary,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // Signal strength bars
-                            Row(
-                              children: List.generate(4, (i) {
-                                return Container(
-                                  margin: const EdgeInsets.only(right: 3),
-                                  width: 4,
-                                  height: 12 + (i * 3.0),
-                                  decoration: BoxDecoration(
-                                    color: i < signalBars
-                                        ? AppTheme.primaryGreen
-                                        : AppTheme.textTertiary.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                    borderRadius: BorderRadius.circular(1),
-                                  ),
-                                );
-                              }),
-                            ),
-                          ],
-                        ),
-                      ],
                     ],
-                  ),
-                ),
-                // Favorite star & chevron
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (node.isFavorite)
-                      const Icon(Icons.star, color: Color(0xFFFFD700), size: 24)
-                    else
-                      const SizedBox(height: 24),
-                    const SizedBox(height: 8),
-                    const Icon(
-                      Icons.chevron_right,
-                      color: AppTheme.textTertiary,
-                      size: 24,
-                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              // Favorite star & chevron
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (node.isFavorite)
+                    const Icon(Icons.star, color: Color(0xFFFFD700), size: 24)
+                  else
+                    const SizedBox(height: 24),
+                  const SizedBox(height: 8),
+                  const Icon(
+                    Icons.chevron_right,
+                    color: AppTheme.textTertiary,
+                    size: 24,
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

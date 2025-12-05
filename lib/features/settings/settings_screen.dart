@@ -8,6 +8,7 @@ import '../../services/storage/storage_service.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
+import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import '../device/region_selection_screen.dart';
@@ -743,43 +744,53 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 children: AccentColors.all.map((color) {
                   final isSelected =
                       color.toARGB32() == currentColor.toARGB32();
-                  return GestureDetector(
+                  return BouncyTap(
                     onTap: () async {
                       HapticFeedback.selectionClick();
                       ref.read(accentColorProvider.notifier).state = color;
                       await settingsService.setAccentColor(color.toARGB32());
                       if (context.mounted) Navigator.pop(context);
                     },
-                    child: AnimatedContainer(
+                    scaleFactor: 0.9,
+                    child: AnimatedScale(
+                      scale: isSelected ? 1.15 : 1.0,
                       duration: const Duration(milliseconds: 200),
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isSelected
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.2),
-                          width: isSelected ? 3 : 2,
+                      curve: Curves.easeOutBack,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected
+                                ? Colors.white
+                                : Colors.white.withValues(alpha: 0.2),
+                            width: isSelected ? 3 : 2,
+                          ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: color.withValues(alpha: 0.6),
+                                    blurRadius: 12,
+                                    spreadRadius: 4,
+                                  ),
+                                ]
+                              : null,
                         ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: color.withValues(alpha: 0.5),
-                                  blurRadius: 8,
-                                  spreadRadius: 2,
-                                ),
-                              ]
-                            : null,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: isSelected
+                              ? const Icon(
+                                  Icons.check,
+                                  key: ValueKey('check'),
+                                  color: Colors.white,
+                                  size: 24,
+                                )
+                              : const SizedBox.shrink(key: ValueKey('empty')),
+                        ),
                       ),
-                      child: isSelected
-                          ? const Icon(
-                              Icons.check,
-                              color: Colors.white,
-                              size: 24,
-                            )
-                          : null,
                     ),
                   );
                 }).toList(),

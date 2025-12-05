@@ -7,6 +7,7 @@ import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animated_list_item.dart';
+import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../messaging/messaging_screen.dart';
@@ -30,7 +31,6 @@ class ChannelsScreen extends ConsumerWidget {
             fontSize: 22,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            
           ),
         ),
         actions: [
@@ -90,7 +90,6 @@ class ChannelsScreen extends ConsumerWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       color: AppTheme.textSecondary,
-                      
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -99,7 +98,6 @@ class ChannelsScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.textTertiary,
-                      
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -131,116 +129,108 @@ class _ChannelTile extends ConsumerWidget {
     final isPrimary = channel.index == 0;
     final hasKey = channel.psk.isNotEmpty;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.darkCard,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
+    return BouncyTap(
+      onTap: () => _openChannelChat(context),
+      onLongPress: () => _showChannelOptions(context, ref),
+      scaleFactor: 0.98,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: AppTheme.darkCard,
           borderRadius: BorderRadius.circular(12),
-          onTap: () => _openChannelChat(context),
-          onLongPress: () => _showChannelOptions(context, ref),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: isPrimary
-                        ? AppTheme.primaryGreen
-                        : AppTheme.darkBackground,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${channel.index}',
-                      style: TextStyle(
-                        color: isPrimary
-                            ? Colors.white
-                            : AppTheme.textSecondary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        
-                      ),
+          border: Border.all(color: AppTheme.darkBorder),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: isPrimary
+                      ? AppTheme.primaryGreen
+                      : AppTheme.darkBackground,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    '${channel.index}',
+                    style: TextStyle(
+                      color: isPrimary ? Colors.white : AppTheme.textSecondary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        channel.name.isEmpty
-                            ? (isPrimary
-                                  ? 'Primary Channel'
-                                  : 'Channel ${channel.index}')
-                            : channel.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      channel.name.isEmpty
+                          ? (isPrimary
+                                ? 'Primary Channel'
+                                : 'Channel ${channel.index}')
+                          : channel.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          hasKey ? Icons.lock : Icons.lock_open,
+                          size: 14,
+                          color: hasKey
+                              ? AppTheme.primaryGreen
+                              : AppTheme.textTertiary,
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Icon(
-                            hasKey ? Icons.lock : Icons.lock_open,
-                            size: 14,
-                            color: hasKey
-                                ? AppTheme.primaryGreen
-                                : AppTheme.textTertiary,
+                        const SizedBox(width: 6),
+                        Text(
+                          hasKey ? 'Encrypted' : 'No encryption',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textSecondary,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            hasKey ? 'Encrypted' : 'No encryption',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppTheme.textSecondary,
-                              
+                        ),
+                        if (isPrimary) ...[
+                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryGreen.withValues(
+                                alpha: 0.2,
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'PRIMARY',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.primaryGreen,
+
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ),
-                          if (isPrimary) ...[
-                            const SizedBox(width: 12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryGreen.withValues(
-                                  alpha: 0.2,
-                                ),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                'PRIMARY',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppTheme.primaryGreen,
-                                  
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                          ],
                         ],
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ),
-                const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
-              ],
-            ),
+              ),
+              const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+            ],
           ),
         ),
       ),
@@ -413,11 +403,7 @@ class _ChannelTile extends ConsumerWidget {
               icon: const Icon(Icons.share, size: 20),
               label: const Text(
                 'Copy Channel URL',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  
-                ),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -605,7 +591,6 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    
                   ),
                 ),
               ),
@@ -643,11 +628,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                 icon: const Icon(Icons.copy, size: 20),
                 label: const Text(
                   'Copy',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
