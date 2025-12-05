@@ -1016,6 +1016,29 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
   }
 
   void updateMessage(String messageId, Message updatedMessage) {
+    // Find current message to check status
+    final currentMessage = state.firstWhere(
+      (m) => m.id == messageId,
+      orElse: () => updatedMessage,
+    );
+
+    // Don't downgrade from delivered to sent (race condition protection)
+    if (currentMessage.status == MessageStatus.delivered &&
+        updatedMessage.status == MessageStatus.sent) {
+      debugPrint(
+        '📨 Skipping status downgrade from delivered to sent for $messageId',
+      );
+      // Still update other fields like packetId, but keep delivered status
+      final preservedMessage = updatedMessage.copyWith(
+        status: MessageStatus.delivered,
+      );
+      state = state
+          .map((m) => m.id == messageId ? preservedMessage : m)
+          .toList();
+      _storage?.saveMessage(preservedMessage);
+      return;
+    }
+
     state = state.map((m) => m.id == messageId ? updatedMessage : m).toList();
     _storage?.saveMessage(updatedMessage);
   }
