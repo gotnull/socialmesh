@@ -64,7 +64,7 @@ class _LockedFeatureCard extends StatelessWidget {
     final tierName = minimumTier == SubscriptionTier.pro ? 'Pro' : 'Premium';
     final tierColor = minimumTier == SubscriptionTier.pro
         ? AppTheme.accentOrange
-        : AppTheme.primaryGreen;
+        : context.accentColor;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -241,7 +241,7 @@ class PremiumFeatureListTile extends ConsumerWidget {
     final tierColor =
         (info?.minimumTier ?? SubscriptionTier.premium) == SubscriptionTier.pro
         ? AppTheme.accentOrange
-        : AppTheme.primaryGreen;
+        : context.accentColor;
 
     return ListTile(
       leading: hasFeature
@@ -315,7 +315,7 @@ class UpgradeBanner extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.primaryGreen.withValues(alpha: 0.3),
+            context.accentColor.withValues(alpha: 0.3),
             AppTheme.secondaryPink.withValues(alpha: 0.3),
           ],
         ),
@@ -324,7 +324,7 @@ class UpgradeBanner extends ConsumerWidget {
         top: false,
         child: Row(
           children: [
-            const Icon(Icons.star, color: AppTheme.primaryGreen, size: 20),
+            Icon(Icons.star, color: context.accentColor, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -379,7 +379,7 @@ class SubscriptionBadge extends ConsumerWidget {
         badgeText = 'FREE';
         badgeIcon = Icons.person_outline;
       case SubscriptionTier.premium:
-        badgeColor = AppTheme.primaryGreen;
+        badgeColor = context.accentColor;
         badgeText = 'PREMIUM';
         badgeIcon = Icons.star;
       case SubscriptionTier.pro:

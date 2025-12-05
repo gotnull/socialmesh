@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
@@ -118,14 +119,14 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
-        title: const Text('Display Configuration'),
+        title: Text('Display Configuration'),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveConfig,
             child: Text(
               'Save',
               style: TextStyle(
-                color: _isLoading ? Colors.grey : AppTheme.primaryGreen,
+                color: _isLoading ? Colors.grey : context.accentColor,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -172,7 +173,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'How long before screen turns off',
             style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
@@ -180,8 +181,8 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
           SliderTheme(
             data: SliderThemeData(
               inactiveTrackColor: Colors.grey.shade700,
-              thumbColor: AppTheme.primaryGreen,
-              overlayColor: AppTheme.primaryGreen.withAlpha(30),
+              thumbColor: context.accentColor,
+              overlayColor: context.accentColor.withAlpha(30),
             ),
             child: Slider(
               value: _screenOnSecs.toDouble(),
@@ -204,7 +205,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'Automatically cycle through screens',
             style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
@@ -212,8 +213,8 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
           SliderTheme(
             data: SliderThemeData(
               inactiveTrackColor: Colors.grey.shade700,
-              thumbColor: AppTheme.primaryGreen,
-              overlayColor: AppTheme.primaryGreen.withAlpha(30),
+              thumbColor: context.accentColor,
+              overlayColor: context.accentColor.withAlpha(30),
             ),
             child: Slider(
               value: _autoCarouselSecs.toDouble(),
@@ -232,7 +233,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
             icon: Icons.screen_rotation,
             title: 'Flip Screen',
             subtitle: 'Rotate display 180°',
-            trailing: Switch.adaptive(
+            trailing: ThemedSwitch(
               value: _flipScreen,
               onChanged: (value) {
                 HapticFeedback.selectionClick();
@@ -245,7 +246,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
             icon: Icons.touch_app,
             title: 'Wake on Tap/Motion',
             subtitle: 'Turn on screen when device is moved',
-            trailing: Switch.adaptive(
+            trailing: ThemedSwitch(
               value: _wakeOnTapOrMotion,
               onChanged: (value) {
                 HapticFeedback.selectionClick();
@@ -303,7 +304,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
             icon: Icons.format_bold,
             title: 'Bold Headings',
             subtitle: 'Show compass headings in bold',
-            trailing: Switch.adaptive(
+            trailing: ThemedSwitch(
               value: _headingBold,
               onChanged: (value) {
                 HapticFeedback.selectionClick();
@@ -333,11 +334,11 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppTheme.primaryGreen : AppTheme.darkBorder,
+            color: isSelected ? context.accentColor : AppTheme.darkBorder,
             width: isSelected ? 2 : 1,
           ),
           color: isSelected
-              ? AppTheme.primaryGreen.withAlpha(20)
+              ? context.accentColor.withAlpha(20)
               : AppTheme.darkBackground,
         ),
         child: Row(
@@ -346,13 +347,13 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
               isSelected
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
-              color: isSelected ? AppTheme.primaryGreen : Colors.grey,
+              color: isSelected ? context.accentColor : Colors.grey,
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Icon(
               icon,
               color: isSelected
-                  ? AppTheme.primaryGreen
+                  ? context.accentColor
                   : AppTheme.textSecondary,
             ),
             const SizedBox(width: 12),
@@ -451,12 +452,12 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected
-                          ? AppTheme.primaryGreen
+                          ? context.accentColor
                           : AppTheme.darkBorder,
                       width: isSelected ? 2 : 1,
                     ),
                     color: isSelected
-                        ? AppTheme.primaryGreen.withAlpha(20)
+                        ? context.accentColor.withAlpha(20)
                         : AppTheme.darkBackground,
                   ),
                   child: Row(
@@ -464,7 +465,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                       Icon(
                         m.$4,
                         color: isSelected
-                            ? AppTheme.primaryGreen
+                            ? context.accentColor
                             : AppTheme.textSecondary,
                       ),
                       const SizedBox(width: 12),
@@ -492,7 +493,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                         ),
                       ),
                       if (isSelected)
-                        Icon(Icons.check_circle, color: AppTheme.primaryGreen),
+                        Icon(Icons.check_circle, color: context.accentColor),
                     ],
                   ),
                 ),

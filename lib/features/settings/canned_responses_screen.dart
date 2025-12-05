@@ -116,12 +116,12 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
-        title: const Text('Quick Responses'),
+        title: Text('Quick Responses'),
         actions: [
           IconButton(
             icon: Icon(
               _isReordering ? Icons.check : Icons.reorder,
-              color: _isReordering ? AppTheme.primaryGreen : null,
+              color: _isReordering ? context.accentColor : null,
             ),
             tooltip: _isReordering ? 'Done' : 'Reorder',
             onPressed: () {
@@ -168,9 +168,9 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
           ),
           Expanded(
             child: _isLoading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(
-                      color: AppTheme.primaryGreen,
+                      color: context.accentColor,
                     ),
                   )
                 : _isReordering
@@ -236,7 +236,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addResponse,
-        backgroundColor: AppTheme.primaryGreen,
+        backgroundColor: context.accentColor,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -272,11 +272,11 @@ class _ResponseTile extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+            color: context.accentColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: const Center(
-            child: Icon(Icons.bolt, size: 20, color: AppTheme.primaryGreen),
+          child: Center(
+            child: Icon(Icons.bolt, size: 20, color: context.accentColor),
           ),
         ),
         title: Text(

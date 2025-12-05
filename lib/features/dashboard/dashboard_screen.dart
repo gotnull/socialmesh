@@ -79,7 +79,7 @@ class DashboardScreen extends ConsumerWidget {
               Icons.bluetooth,
               color:
                   connectionState == transport.DeviceConnectionState.connected
-                  ? AppTheme.primaryGreen
+                  ? context.accentColor
                   : isReconnecting
                   ? AppTheme.warningYellow
                   : AppTheme.textTertiary,
@@ -151,9 +151,9 @@ class DashboardScreen extends ConsumerWidget {
                         Navigator.of(context).pushNamed('/scanner');
                       },
                       icon: const Icon(Icons.bluetooth_searching, size: 20),
-                      label: const Text('Scan for Devices'),
+                      label: Text('Scan for Devices'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryGreen,
+                        backgroundColor: context.accentColor,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
@@ -202,9 +202,9 @@ class DashboardScreen extends ConsumerWidget {
                                 color: AppTheme.darkBackground,
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.router,
-                                color: AppTheme.primaryGreen,
+                                color: context.accentColor,
                                 size: 24,
                               ),
                             ),
@@ -305,8 +305,8 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   Color _getBatteryColor(int level) {
-    if (level > 100) return AppTheme.primaryGreen; // Charging
-    if (level >= 50) return AppTheme.primaryGreen;
+    if (level > 100) return AccentColors.green; // Charging
+    if (level >= 50) return AccentColors.green;
     if (level >= 20) return AppTheme.warningYellow;
     return AppTheme.errorRed;
   }
@@ -458,7 +458,7 @@ class _ActionCard extends StatelessWidget {
                     color: AppTheme.darkBackground,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, color: AppTheme.primaryGreen, size: 24),
+                  child: Icon(icon, color: context.accentColor, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -520,12 +520,12 @@ class _DeviceDetailsTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = state == transport.DeviceConnectionState.connected
-        ? AppTheme.primaryGreen
+        ? context.accentColor
         : AppTheme.textTertiary;
 
     final rssiColor = device?.rssi != null
         ? (device!.rssi! > -70
-              ? AppTheme.primaryGreen
+              ? context.accentColor
               : device!.rssi! > -85
               ? AppTheme.warningYellow
               : AppTheme.errorRed)
@@ -539,7 +539,7 @@ class _DeviceDetailsTable extends StatelessWidget {
             label: 'Device Name',
             value: device?.name ?? 'Unknown',
             icon: Icons.router,
-            iconColor: AppTheme.primaryGreen,
+            iconColor: context.accentColor,
           ),
           InfoTableRow(
             label: 'Status',

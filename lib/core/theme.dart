@@ -454,3 +454,9 @@ class AppTheme {
   /// Legacy alias kept temporarily for compatibility during migration
   static const primaryGreen = AccentColors.magenta;
 }
+
+/// Extension on BuildContext for easy accent color access
+extension AccentColorExtension on BuildContext {
+  /// Returns the current accent color from the theme
+  Color get accentColor => Theme.of(this).colorScheme.primary;
+}

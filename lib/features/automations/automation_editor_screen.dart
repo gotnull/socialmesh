@@ -63,13 +63,9 @@ class _AutomationEditorScreenState
         title: Text(_isEditing ? 'Edit Automation' : 'New Automation'),
         actions: [
           if (_isEditing)
-            Switch.adaptive(
+            ThemedSwitch(
               value: _enabled,
               onChanged: (value) => setState(() => _enabled = value),
-              activeTrackColor: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.5),
-              activeThumbColor: Theme.of(context).colorScheme.primary,
             ),
         ],
       ),

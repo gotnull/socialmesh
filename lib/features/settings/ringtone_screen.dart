@@ -1085,10 +1085,10 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppTheme.primaryGreen,
+              color: context.accentColor,
             ),
           ),
           const SizedBox(height: 4),
@@ -1133,18 +1133,18 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
             child: TextButton(
               onPressed: _saving ? null : _saveRingtone,
               child: _saving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                       ),
                     )
-                  : const Text(
+                  : Text(
                       'Save',
                       style: TextStyle(
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -1211,7 +1211,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                               borderSide: _validationError != null
-                                  ? const BorderSide(
+                                  ? BorderSide(
                                       color: AppTheme.errorRed,
                                       width: 1,
                                     )
@@ -1222,7 +1222,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                               borderSide: BorderSide(
                                 color: _validationError != null
                                     ? AppTheme.errorRed
-                                    : AppTheme.primaryGreen,
+                                    : context.accentColor,
                                 width: 1,
                               ),
                             ),
@@ -1422,13 +1422,13 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                         letterSpacing: 1,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     Container(
                       decoration: BoxDecoration(
                         color: AppTheme.darkCard,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                          color: context.accentColor.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -1444,7 +1444,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryGreen.withValues(
+                                color: context.accentColor.withValues(
                                   alpha: 0.15,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
@@ -1455,7 +1455,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                     : _selectedSource == 'custom'
                                     ? Icons.star
                                     : Icons.music_note,
-                                color: AppTheme.primaryGreen,
+                                color: context.accentColor,
                                 size: 20,
                               ),
                             ),
@@ -1467,8 +1467,8 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                 children: [
                                   Text(
                                     _selectedName!,
-                                    style: const TextStyle(
-                                      color: AppTheme.primaryGreen,
+                                    style: TextStyle(
+                                      color: context.accentColor,
                                       fontWeight: FontWeight.w600,
 
                                       fontSize: 15,
@@ -1493,7 +1493,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                 height: 36,
                                 decoration: BoxDecoration(
                                   color: _playingSelected
-                                      ? AppTheme.primaryGreen.withValues(
+                                      ? context.accentColor.withValues(
                                           alpha: 0.15,
                                         )
                                       : AppTheme.darkBackground,
@@ -1504,7 +1504,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                       ? Icons.stop
                                       : Icons.play_arrow,
                                   color: _playingSelected
-                                      ? AppTheme.primaryGreen
+                                      ? context.accentColor
                                       : AppTheme.textSecondary,
                                   size: 20,
                                 ),
@@ -1604,7 +1604,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                       height: 40,
                                       decoration: BoxDecoration(
                                         color: isSelected
-                                            ? AppTheme.primaryGreen.withValues(
+                                            ? context.accentColor.withValues(
                                                 alpha: 0.15,
                                               )
                                             : AppTheme.darkBackground,
@@ -1615,12 +1615,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                             ? Icons.music_note
                                             : Icons.music_note_outlined,
                                         color: isSelected
-                                            ? AppTheme.primaryGreen
+                                            ? context.accentColor
                                             : AppTheme.textSecondary,
                                         size: 20,
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
+                                    SizedBox(width: 12),
                                     // Title and description
                                     Expanded(
                                       child: Column(
@@ -1631,7 +1631,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                             preset.name,
                                             style: TextStyle(
                                               color: isSelected
-                                                  ? AppTheme.primaryGreen
+                                                  ? context.accentColor
                                                   : Colors.white,
                                               fontWeight: isSelected
                                                   ? FontWeight.w600
@@ -1686,9 +1686,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                     SizedBox(
                                       width: 24,
                                       child: isSelected
-                                          ? const Icon(
+                                          ? Icon(
                                               Icons.check_circle,
-                                              color: AppTheme.primaryGreen,
+                                              color: context.accentColor,
                                               size: 22,
                                             )
                                           : const Icon(
@@ -1730,9 +1730,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       TextButton.icon(
                         onPressed: _showAddCustomDialog,
                         icon: const Icon(Icons.add, size: 18),
-                        label: const Text('Add'),
+                        label: Text('Add'),
                         style: TextButton.styleFrom(
-                          foregroundColor: AppTheme.primaryGreen,
+                          foregroundColor: context.accentColor,
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                         ),
                       ),

@@ -151,7 +151,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         statusText = 'Free Plan';
         statusIcon = Icons.person_outline;
       case SubscriptionTier.premium:
-        statusColor = AppTheme.primaryGreen;
+        statusColor = context.accentColor;
         statusText = 'Premium';
         statusIcon = Icons.star;
       case SubscriptionTier.pro:
@@ -331,14 +331,14 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                                 : AppTheme.textTertiary,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 6,
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen,
+                            color: context.accentColor,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(
@@ -383,7 +383,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               .toList();
 
     if (packages.isEmpty) {
-      return const Text(
+      return Text(
         'No plans available for this billing period',
         style: TextStyle(color: AppTheme.textTertiary),
       );
@@ -395,7 +395,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         final product = package.storeProduct;
         final isPro = package.identifier.toLowerCase().contains('pro');
 
-        Color planColor = isPro ? AppTheme.accentOrange : AppTheme.primaryGreen;
+        Color planColor = isPro ? AppTheme.accentOrange : context.accentColor;
         String planName = isPro ? 'Pro' : 'Premium';
         String planDescription = isPro
             ? 'Full power for teams & professionals'
@@ -502,7 +502,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
                         _isYearly ? '/year' : '/month',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppTheme.textTertiary,
                           fontSize: 14,
                         ),
@@ -513,7 +513,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                       Text(
                         'Save 50%',
                         style: TextStyle(
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                         ),

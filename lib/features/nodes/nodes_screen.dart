@@ -28,8 +28,8 @@ IconData _getBatteryIcon(int level) {
 }
 
 Color _getBatteryColor(int level) {
-  if (level > 100) return AppTheme.primaryGreen; // Charging
-  if (level >= 50) return AppTheme.primaryGreen;
+  if (level > 100) return AccentColors.green; // Charging
+  if (level >= 50) return AccentColors.green;
   if (level >= 20) return AppTheme.warningYellow;
   return AppTheme.errorRed;
 }
@@ -264,12 +264,12 @@ class _NodeCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
           color: isMyNode
-              ? AppTheme.primaryGreen.withValues(alpha: 0.08)
+              ? context.accentColor.withValues(alpha: 0.08)
               : AppTheme.darkCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isMyNode
-                ? AppTheme.primaryGreen.withValues(alpha: 0.5)
+                ? context.accentColor.withValues(alpha: 0.5)
                 : AppTheme.darkBorder,
             width: isMyNode ? 1.5 : 1,
           ),
@@ -289,7 +289,7 @@ class _NodeCard extends StatelessWidget {
                         height: 56,
                         decoration: BoxDecoration(
                           color: isMyNode
-                              ? AppTheme.primaryGreen
+                              ? context.accentColor
                               : _getAvatarColor(),
                           shape: BoxShape.circle,
                           border: isMyNode
@@ -322,14 +322,14 @@ class _NodeCard extends StatelessWidget {
                               color: AppTheme.darkCard,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: AppTheme.primaryGreen,
+                                color: context.accentColor,
                                 width: 2,
                               ),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.person,
                               size: 12,
-                              color: AppTheme.primaryGreen,
+                              color: context.accentColor,
                             ),
                           ),
                         ),
@@ -342,10 +342,10 @@ class _NodeCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (node.role == 'CLIENT')
-                          const Icon(
+                          Icon(
                             Icons.bluetooth,
                             size: 14,
-                            color: AppTheme.primaryGreen,
+                            color: context.accentColor,
                           ),
                         if (node.batteryLevel != null) ...[
                           if (node.role != null) const SizedBox(width: 4),
@@ -368,7 +368,7 @@ class _NodeCard extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               // Info
               Expanded(
                 child: Column(
@@ -381,7 +381,7 @@ class _NodeCard extends StatelessWidget {
                           node.hasPublicKey ? Icons.lock : Icons.lock_open,
                           size: 16,
                           color: node.hasPublicKey
-                              ? AppTheme.primaryGreen
+                              ? context.accentColor
                               : AppTheme.textTertiary,
                         ),
                         const SizedBox(width: 8),
@@ -400,14 +400,14 @@ class _NodeCard extends StatelessWidget {
                         ),
                         // "You" badge
                         if (isMyNode) ...[
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryGreen,
+                              color: context.accentColor,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: const Text(
@@ -424,7 +424,7 @@ class _NodeCard extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     // Status - show "This Device" for your own node
                     if (isMyNode)
                       Row(
@@ -432,14 +432,14 @@ class _NodeCard extends StatelessWidget {
                           Icon(
                             Icons.smartphone,
                             size: 14,
-                            color: AppTheme.primaryGreen,
+                            color: context.accentColor,
                           ),
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Text(
                             'This Device',
                             style: TextStyle(
                               fontSize: 13,
-                              color: AppTheme.primaryGreen,
+                              color: context.accentColor,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -452,7 +452,7 @@ class _NodeCard extends StatelessWidget {
                             node.isOnline ? Icons.wifi : Icons.wifi_off,
                             size: 14,
                             color: node.isOnline
-                                ? AppTheme.primaryGreen
+                                ? context.accentColor
                                 : AppTheme.textTertiary,
                           ),
                           const SizedBox(width: 6),
@@ -470,10 +470,10 @@ class _NodeCard extends StatelessWidget {
                     if (node.lastHeard != null) ...[
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.check,
                             size: 14,
-                            color: AppTheme.primaryGreen,
+                            color: context.accentColor,
                           ),
                           const SizedBox(width: 6),
                           Text(
@@ -504,22 +504,22 @@ class _NodeCard extends StatelessWidget {
                               color: AppTheme.textTertiary,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                         ],
                         Icon(
                           Icons.gps_fixed,
                           size: 14,
                           color: node.hasPosition
-                              ? AppTheme.primaryGreen
+                              ? context.accentColor
                               : AppTheme.textTertiary,
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: 4),
                         Text(
                           node.hasPosition ? 'GPS' : 'No GPS',
                           style: TextStyle(
                             fontSize: 12,
                             color: node.hasPosition
-                                ? AppTheme.primaryGreen
+                                ? context.accentColor
                                 : AppTheme.textTertiary,
                           ),
                         ),
@@ -595,7 +595,7 @@ class _NodeCard extends StatelessWidget {
                               color: AppTheme.textTertiary,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           // Signal strength bars
                           Row(
                             children: List.generate(4, (i) {
@@ -605,7 +605,7 @@ class _NodeCard extends StatelessWidget {
                                 height: 12 + (i * 3.0),
                                 decoration: BoxDecoration(
                                   color: i < signalBars
-                                      ? AppTheme.primaryGreen
+                                      ? context.accentColor
                                       : AppTheme.textTertiary.withValues(
                                           alpha: 0.3,
                                         ),
@@ -766,7 +766,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGreen,
+                backgroundColor: context.accentColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -1156,7 +1156,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
-            leading: const Icon(Icons.swap_horiz, color: AppTheme.primaryGreen),
+            leading: Icon(Icons.swap_horiz, color: context.accentColor),
             title: const Text(
               'Exchange Positions',
               style: TextStyle(
@@ -1245,7 +1245,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: isMyNode ? AppTheme.primaryGreen : _getAvatarColor(),
+                  color: isMyNode ? context.accentColor : _getAvatarColor(),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -1277,14 +1277,14 @@ class _NodeDetailsSheet extends ConsumerWidget {
                           ),
                         ),
                         if (isMyNode) ...[
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryGreen,
+                              color: context.accentColor,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: const Text(
@@ -1492,13 +1492,13 @@ class _NodeDetailsSheet extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     // Message button
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () => _sendDirectMessage(context),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryGreen,
+                          backgroundColor: context.accentColor,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
@@ -1528,7 +1528,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => _showNodeQrCode(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryGreen,
+                      backgroundColor: context.accentColor,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(

@@ -140,7 +140,7 @@ class _SignalBars extends StatelessWidget {
   }
 
   Color _getBarColor(int bars) {
-    if (bars >= 4) return AppTheme.primaryGreen;
+    if (bars >= 4) return AccentColors.green;
     if (bars >= 2) return AppTheme.warningYellow;
     return AppTheme.errorRed;
   }
@@ -176,17 +176,12 @@ class _MetricCard extends StatelessWidget {
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: color,
-              
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 10,
-              color: AppTheme.textTertiary,
-              
-            ),
+            style: const TextStyle(fontSize: 10, color: AppTheme.textTertiary),
           ),
         ],
       ),
@@ -197,7 +192,7 @@ class _MetricCard extends StatelessWidget {
     switch (quality) {
       case 'excellent':
       case 'good':
-        return AppTheme.primaryGreen;
+        return AccentColors.green;
       case 'fair':
         return AppTheme.warningYellow;
       case 'poor':

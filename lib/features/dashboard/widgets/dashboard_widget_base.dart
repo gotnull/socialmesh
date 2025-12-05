@@ -35,7 +35,7 @@ class DashboardWidgetBase extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isEditMode
-              ? AppTheme.primaryGreen.withValues(alpha: 0.5)
+              ? context.accentColor.withValues(alpha: 0.5)
               : AppTheme.darkBorder,
           width: isEditMode ? 2 : 1,
         ),
@@ -48,14 +48,14 @@ class DashboardWidgetBase extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: [if (isEditMode) _buildEditHeader(), child],
+            children: [if (isEditMode) _buildEditHeader(context), child],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildEditHeader() {
+  Widget _buildEditHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: const BoxDecoration(
@@ -73,8 +73,8 @@ class DashboardWidgetBase extends StatelessWidget {
             color: AppTheme.textTertiary,
             size: 20,
           ),
-          const SizedBox(width: 8),
-          Icon(icon, color: AppTheme.primaryGreen, size: 18),
+          SizedBox(width: 8),
+          Icon(icon, color: context.accentColor, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -83,7 +83,6 @@ class DashboardWidgetBase extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
-                
               ),
             ),
           ),
@@ -165,7 +164,6 @@ class StatCardWidget extends StatelessWidget {
                     fontSize: 36,
                     fontWeight: FontWeight.w600,
                     color: valueColor ?? Colors.white,
-                    
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -174,7 +172,6 @@ class StatCardWidget extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14,
                     color: AppTheme.textSecondary,
-                    
                   ),
                 ),
               ],
@@ -228,7 +225,7 @@ class ActionCardWidget extends StatelessWidget {
                     color: AppTheme.darkBackground,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, color: AppTheme.primaryGreen, size: 24),
+                  child: Icon(icon, color: context.accentColor, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -241,7 +238,6 @@ class ActionCardWidget extends StatelessWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -250,7 +246,6 @@ class ActionCardWidget extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppTheme.textSecondary,
-                          
                         ),
                       ),
                     ],

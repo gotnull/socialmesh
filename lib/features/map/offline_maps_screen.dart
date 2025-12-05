@@ -56,12 +56,14 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                 .where((f) => f is File && f.path.endsWith('.png'))
                 .length;
             if (tileFiles > 0) {
-              regions.add(OfflineMapRegion(
-                name: name,
-                tileCount: tileFiles,
-                downloadDate: (await dir.stat()).modified,
-                path: dir.path,
-              ));
+              regions.add(
+                OfflineMapRegion(
+                  name: name,
+                  tileCount: tileFiles,
+                  downloadDate: (await dir.stat()).modified,
+                  path: dir.path,
+                ),
+              );
             }
           }
         }
@@ -113,12 +115,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
     // Count tiles for zoom levels 10-16
     for (int zoom = 10; zoom <= 16; zoom++) {
       final bounds = _getBoundsForSelection();
-      final tilesX = _getTileCountForAxis(
-        bounds.west,
-        bounds.east,
-        zoom,
-        true,
-      );
+      final tilesX = _getTileCountForAxis(bounds.west, bounds.east, zoom, true);
       final tilesY = _getTileCountForAxis(
         bounds.south,
         bounds.north,
@@ -133,22 +130,18 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
   LatLngBounds _getBoundsForSelection() {
     final minLat = math.min(_selectionStart!.latitude, _selectionEnd!.latitude);
     final maxLat = math.max(_selectionStart!.latitude, _selectionEnd!.latitude);
-    final minLon =
-        math.min(_selectionStart!.longitude, _selectionEnd!.longitude);
-    final maxLon =
-        math.max(_selectionStart!.longitude, _selectionEnd!.longitude);
-    return LatLngBounds(
-      LatLng(minLat, minLon),
-      LatLng(maxLat, maxLon),
+    final minLon = math.min(
+      _selectionStart!.longitude,
+      _selectionEnd!.longitude,
     );
+    final maxLon = math.max(
+      _selectionStart!.longitude,
+      _selectionEnd!.longitude,
+    );
+    return LatLngBounds(LatLng(minLat, minLon), LatLng(maxLat, maxLon));
   }
 
-  int _getTileCountForAxis(
-    double min,
-    double max,
-    int zoom,
-    bool isLongitude,
-  ) {
+  int _getTileCountForAxis(double min, double max, int zoom, bool isLongitude) {
     final n = math.pow(2, zoom).toInt();
 
     int minTile;
@@ -158,20 +151,26 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
       minTile = ((min + 180.0) / 360.0 * n).floor();
       maxTile = ((max + 180.0) / 360.0 * n).floor();
     } else {
-      minTile = ((1 -
-                  math.log(math.tan(min * math.pi / 180) +
-                          1 / math.cos(min * math.pi / 180)) /
-                      math.pi) /
-              2 *
-              n)
-          .floor();
-      maxTile = ((1 -
-                  math.log(math.tan(max * math.pi / 180) +
-                          1 / math.cos(max * math.pi / 180)) /
-                      math.pi) /
-              2 *
-              n)
-          .floor();
+      minTile =
+          ((1 -
+                      math.log(
+                            math.tan(min * math.pi / 180) +
+                                1 / math.cos(min * math.pi / 180),
+                          ) /
+                          math.pi) /
+                  2 *
+                  n)
+              .floor();
+      maxTile =
+          ((1 -
+                      math.log(
+                            math.tan(max * math.pi / 180) +
+                                1 / math.cos(max * math.pi / 180),
+                          ) /
+                          math.pi) /
+                  2 *
+                  n)
+              .floor();
     }
 
     return (maxTile - minTile).abs() + 1;
@@ -212,12 +211,14 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
           .length;
 
       setState(() {
-        _regions.add(OfflineMapRegion(
-          name: name,
-          tileCount: tileCount,
-          downloadDate: DateTime.now(),
-          path: regionDir.path,
-        ));
+        _regions.add(
+          OfflineMapRegion(
+            name: name,
+            tileCount: tileCount,
+            downloadDate: DateTime.now(),
+            path: regionDir.path,
+          ),
+        );
         _isSelecting = false;
         _selectionStart = null;
         _selectionEnd = null;
@@ -227,7 +228,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Downloaded $tileCount tiles for "$name"'),
-            backgroundColor: AppTheme.primaryGreen,
+            backgroundColor: context.accentColor,
           ),
         );
       }
@@ -259,20 +260,26 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
     // Calculate tile bounds
     final minTileX = ((bounds.west + 180.0) / 360.0 * n).floor();
     final maxTileX = ((bounds.east + 180.0) / 360.0 * n).floor();
-    final minTileY = ((1 -
-                math.log(math.tan(bounds.north * math.pi / 180) +
-                        1 / math.cos(bounds.north * math.pi / 180)) /
-                    math.pi) /
-            2 *
-            n)
-        .floor();
-    final maxTileY = ((1 -
-                math.log(math.tan(bounds.south * math.pi / 180) +
-                        1 / math.cos(bounds.south * math.pi / 180)) /
-                    math.pi) /
-            2 *
-            n)
-        .floor();
+    final minTileY =
+        ((1 -
+                    math.log(
+                          math.tan(bounds.north * math.pi / 180) +
+                              1 / math.cos(bounds.north * math.pi / 180),
+                        ) /
+                        math.pi) /
+                2 *
+                n)
+            .floor();
+    final maxTileY =
+        ((1 -
+                    math.log(
+                          math.tan(bounds.south * math.pi / 180) +
+                              1 / math.cos(bounds.south * math.pi / 180),
+                        ) /
+                        math.pi) /
+                2 *
+                n)
+            .floor();
 
     final zoomDir = Directory('${regionDir.path}/$zoom');
     if (!await zoomDir.exists()) {
@@ -333,9 +340,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.errorRed,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed),
             child: const Text('Delete'),
           ),
         ],
@@ -354,7 +359,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Deleted "${region.name}"'),
-              backgroundColor: AppTheme.primaryGreen,
+              backgroundColor: context.accentColor,
             ),
           );
         }
@@ -373,7 +378,9 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
 
   void _showDownloadDialog() {
     final tileCount = _estimateTileCount();
-    final estimatedSize = (tileCount * 15 / 1024).toStringAsFixed(1); // ~15KB per tile
+    final estimatedSize = (tileCount * 15 / 1024).toStringAsFixed(
+      1,
+    ); // ~15KB per tile
 
     final nameController = TextEditingController();
 
@@ -427,8 +434,8 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                       ),
                       Text(
                         '$tileCount',
-                        style: const TextStyle(
-                          color: AppTheme.primaryGreen,
+                        style: TextStyle(
+                          color: context.accentColor,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -444,15 +451,15 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                       ),
                       Text(
                         '~$estimatedSize MB',
-                        style: const TextStyle(
-                          color: AppTheme.primaryGreen,
+                        style: TextStyle(
+                          color: context.accentColor,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
@@ -462,7 +469,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                       Text(
                         '10-16',
                         style: TextStyle(
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -494,7 +501,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
               _downloadRegion(name);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryGreen,
+              backgroundColor: context.accentColor,
               foregroundColor: Colors.black,
             ),
             child: const Text('Download'),
@@ -558,9 +565,9 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                 ElevatedButton.icon(
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.arrow_back),
-                  label: const Text('Go Back'),
+                  label: Text('Go Back'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryGreen,
+                    backgroundColor: context.accentColor,
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
@@ -629,8 +636,8 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                                   _selectionStart!.longitude,
                                 ),
                               ],
-                              color: AppTheme.primaryGreen.withValues(alpha: 0.2),
-                              borderColor: AppTheme.primaryGreen,
+                              color: context.accentColor.withValues(alpha: 0.2),
+                              borderColor: context.accentColor,
                               borderStrokeWidth: 2,
                             ),
                           ],
@@ -644,8 +651,8 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                               width: 20,
                               height: 20,
                               child: Container(
-                                decoration: const BoxDecoration(
-                                  color: AppTheme.primaryGreen,
+                                decoration: BoxDecoration(
+                                  color: context.accentColor,
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -673,19 +680,19 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                               _selectionStart == null
                                   ? 'Tap to set first corner'
                                   : _selectionEnd == null
-                                      ? 'Tap to set second corner'
-                                      : '${_estimateTileCount()} tiles selected',
+                                  ? 'Tap to set second corner'
+                                  : '${_estimateTileCount()} tiles selected',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             if (_selectionEnd != null) ...[
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               ElevatedButton(
                                 onPressed: _showDownloadDialog,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.primaryGreen,
+                                  backgroundColor: context.accentColor,
                                   foregroundColor: Colors.black,
                                   minimumSize: const Size(double.infinity, 44),
                                 ),
@@ -709,12 +716,12 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                 children: [
                   Row(
                     children: [
-                      const SizedBox(
+                      SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -730,12 +737,11 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   LinearProgressIndicator(
                     value: _downloadProgress,
                     backgroundColor: AppTheme.darkBackground,
-                    valueColor:
-                        const AlwaysStoppedAnimation(AppTheme.primaryGreen),
+                    valueColor: AlwaysStoppedAnimation(context.accentColor),
                   ),
                 ],
               ),
@@ -803,13 +809,10 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+              color: context.accentColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
-              Icons.map,
-              color: AppTheme.primaryGreen,
-            ),
+            child: Icon(Icons.map, color: context.accentColor),
           ),
           const SizedBox(width: 16),
           Expanded(

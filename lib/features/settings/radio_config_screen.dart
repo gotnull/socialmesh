@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
@@ -126,18 +127,18 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
             child: TextButton(
               onPressed: _isLoading ? null : _saveConfig,
               child: _isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                       ),
                     )
-                  : const Text(
+                  : Text(
                       'Save',
                       style: TextStyle(
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                         fontWeight: FontWeight.w600,
                         
                       ),
@@ -156,14 +157,14 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                 const SizedBox(height: 16),
                 const _SectionHeader(title: 'MODEM PRESET'),
                 _buildModemPresetSelector(),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 const _SectionHeader(title: 'TRANSMISSION'),
                 _SettingsTile(
                   icon: Icons.cell_tower,
-                  iconColor: _txEnabled ? AppTheme.primaryGreen : null,
+                  iconColor: _txEnabled ? context.accentColor : null,
                   title: 'Transmission Enabled',
                   subtitle: 'Allow device to transmit',
-                  trailing: Switch.adaptive(
+                  trailing: ThemedSwitch(
                     value: _txEnabled,
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
@@ -187,7 +188,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Hop Limit',
                             style: TextStyle(
                               color: Colors.white,
@@ -201,15 +202,15 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryGreen.withValues(
+                              color: context.accentColor.withValues(
                                 alpha: 0.15,
                               ),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               '$_hopLimit',
-                              style: const TextStyle(
-                                color: AppTheme.primaryGreen,
+                              style: TextStyle(
+                                color: context.accentColor,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
                                 
@@ -227,12 +228,12 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                           
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       SliderTheme(
                         data: SliderThemeData(
                           inactiveTrackColor: AppTheme.darkBorder,
-                          thumbColor: AppTheme.primaryGreen,
-                          overlayColor: AppTheme.primaryGreen.withValues(
+                          thumbColor: context.accentColor,
+                          overlayColor: context.accentColor.withValues(
                             alpha: 0.2,
                           ),
                           trackHeight: 4,
@@ -251,7 +252,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'TX Power Override',
                             style: TextStyle(
                               color: Colors.white,
@@ -265,15 +266,15 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryGreen.withValues(
+                              color: context.accentColor.withValues(
                                 alpha: 0.15,
                               ),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               _txPower == 0 ? 'Default' : '${_txPower}dBm',
-                              style: const TextStyle(
-                                color: AppTheme.primaryGreen,
+                              style: TextStyle(
+                                color: context.accentColor,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
                                 
@@ -291,12 +292,12 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                           
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       SliderTheme(
                         data: SliderThemeData(
                           inactiveTrackColor: AppTheme.darkBorder,
-                          thumbColor: AppTheme.primaryGreen,
-                          overlayColor: AppTheme.primaryGreen.withValues(
+                          thumbColor: context.accentColor,
+                          overlayColor: context.accentColor.withValues(
                             alpha: 0.2,
                           ),
                           trackHeight: 4,
@@ -429,7 +430,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
               
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           ...presets.map((p) {
             final isSelected = _selectedModemPreset == p.$1;
             return InkWell(
@@ -443,7 +444,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                           ? Icons.radio_button_checked
                           : Icons.radio_button_unchecked,
                       color: isSelected
-                          ? AppTheme.primaryGreen
+                          ? context.accentColor
                           : AppTheme.textSecondary,
                     ),
                     const SizedBox(width: 12),

@@ -149,7 +149,7 @@ class _ChannelTile extends ConsumerWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: isPrimary
-                      ? AppTheme.primaryGreen
+                      ? context.accentColor
                       : AppTheme.darkBackground,
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -181,14 +181,14 @@ class _ChannelTile extends ConsumerWidget {
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Row(
                       children: [
                         Icon(
                           hasKey ? Icons.lock : Icons.lock_open,
                           size: 14,
                           color: hasKey
-                              ? AppTheme.primaryGreen
+                              ? context.accentColor
                               : AppTheme.textTertiary,
                         ),
                         const SizedBox(width: 6),
@@ -200,24 +200,24 @@ class _ChannelTile extends ConsumerWidget {
                           ),
                         ),
                         if (isPrimary) ...[
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryGreen.withValues(
+                              color: context.accentColor.withValues(
                                 alpha: 0.2,
                               ),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text(
+                            child: Text(
                               'PRIMARY',
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
-                                color: AppTheme.primaryGreen,
+                                color: context.accentColor,
 
                                 letterSpacing: 0.5,
                               ),
@@ -393,7 +393,7 @@ class _ChannelTile extends ConsumerWidget {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGreen,
+                backgroundColor: context.accentColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -549,9 +549,9 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
           child: _showKey
               ? SelectableText(
                   widget.base64Key,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: AppTheme.primaryGreen,
+                    color: context.accentColor,
                     fontFamily: 'monospace',
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.5,
@@ -614,7 +614,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                       }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryGreen,
+                  backgroundColor: context.accentColor,
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: AppTheme.darkBackground,
                   disabledForegroundColor: AppTheme.textTertiary.withValues(

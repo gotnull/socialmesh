@@ -98,10 +98,10 @@ class QuickActionsContent extends ConsumerWidget {
       await locationService.sendPositionOnce();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Location shared with mesh'),
-            backgroundColor: AppTheme.primaryGreen,
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: const Text('Location shared with mesh'),
+            backgroundColor: context.accentColor,
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -148,10 +148,10 @@ class QuickActionsContent extends ConsumerWidget {
       await protocol.requestAllPositions();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Position requests sent to all nodes'),
-            backgroundColor: AppTheme.primaryGreen,
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: const Text('Position requests sent to all nodes'),
+            backgroundColor: context.accentColor,
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -183,7 +183,7 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = enabled ? AppTheme.primaryGreen : AppTheme.textTertiary;
+    final color = enabled ? context.accentColor : AppTheme.textTertiary;
 
     return BouncyTap(
       onTap: enabled ? onTap : null,
@@ -194,12 +194,12 @@ class _ActionButton extends StatelessWidget {
         height: 72,
         decoration: BoxDecoration(
           color: enabled
-              ? AppTheme.primaryGreen.withValues(alpha: 0.08)
+              ? context.accentColor.withValues(alpha: 0.08)
               : AppTheme.darkBackground,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: enabled
-                ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+                ? context.accentColor.withValues(alpha: 0.2)
                 : AppTheme.darkBorder,
           ),
         ),
@@ -643,7 +643,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Sent to $targetName'),
-            backgroundColor: AppTheme.primaryGreen,
+            backgroundColor: context.accentColor,
             duration: const Duration(seconds: 2),
           ),
         );
@@ -697,12 +697,12 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                    color: context.accentColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.send_rounded,
-                    color: AppTheme.primaryGreen,
+                    color: context.accentColor,
                     size: 22,
                   ),
                 ),
@@ -758,7 +758,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                       height: 36,
                       decoration: BoxDecoration(
                         color: _selectedNodeNum == null
-                            ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                            ? context.accentColor.withValues(alpha: 0.15)
                             : AppTheme.primaryMagenta.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -767,7 +767,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                             ? Icons.broadcast_on_personal
                             : Icons.person,
                         color: _selectedNodeNum == null
-                            ? AppTheme.primaryGreen
+                            ? context.accentColor
                             : AppTheme.primaryMagenta,
                         size: 20,
                       ),
@@ -838,12 +838,12 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                          ? context.accentColor.withValues(alpha: 0.15)
                           : AppTheme.darkBackground,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: isSelected
-                            ? AppTheme.primaryGreen
+                            ? context.accentColor
                             : AppTheme.darkBorder,
                       ),
                     ),
@@ -853,7 +853,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: isSelected
-                            ? AppTheme.primaryGreen
+                            ? context.accentColor
                             : AppTheme.textSecondary,
                       ),
                     ),
@@ -886,7 +886,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppTheme.primaryGreen),
+                  borderSide: BorderSide(color: context.accentColor),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 14,
@@ -903,7 +903,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
               onChanged: (_) => setState(() => _selectedPreset = -1),
             ),
 
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Send button
             SizedBox(
@@ -913,7 +913,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                     ? _sendMessage
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryGreen,
+                  backgroundColor: context.accentColor,
                   foregroundColor: Colors.black,
                   disabledBackgroundColor: AppTheme.darkBorder,
                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -968,7 +968,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
               padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
               child: Row(
                 children: [
-                  const Text(
+                  Text(
                     'Send to',
                     style: TextStyle(
                       color: Colors.white,
@@ -982,7 +982,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                     child: Text(
                       'Done',
                       style: TextStyle(
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -994,7 +994,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
             // Broadcast option
             _buildRecipientTile(
               icon: Icons.broadcast_on_personal,
-              iconColor: AppTheme.primaryGreen,
+              iconColor: context.accentColor,
               title: 'All Nodes',
               subtitle: 'Broadcast to everyone on channel',
               isSelected: _selectedNodeNum == null,
@@ -1084,7 +1084,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           color: isSelected
-              ? AppTheme.primaryGreen.withValues(alpha: 0.08)
+              ? context.accentColor.withValues(alpha: 0.08)
               : Colors.transparent,
           child: Row(
             children: [
@@ -1106,7 +1106,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                           width: 10,
                           height: 10,
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen,
+                            color: context.accentColor,
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: AppTheme.darkSurface,
@@ -1118,7 +1118,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1126,9 +1126,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                     Text(
                       title,
                       style: TextStyle(
-                        color: isSelected
-                            ? AppTheme.primaryGreen
-                            : Colors.white,
+                        color: isSelected ? context.accentColor : Colors.white,
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),
@@ -1144,11 +1142,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                 ),
               ),
               if (isSelected)
-                const Icon(
-                  Icons.check_circle,
-                  color: AppTheme.primaryGreen,
-                  size: 22,
-                ),
+                Icon(Icons.check_circle, color: context.accentColor, size: 22),
             ],
           ),
         ),
@@ -1183,10 +1177,12 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Traceroute sent - check messages for response'),
-            backgroundColor: AppTheme.primaryGreen,
-            duration: Duration(seconds: 3),
+          SnackBar(
+            content: const Text(
+              'Traceroute sent - check messages for response',
+            ),
+            backgroundColor: context.accentColor,
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -1266,7 +1262,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                              ? context.accentColor.withValues(alpha: 0.15)
                               : Colors.transparent,
                           borderRadius: BorderRadius.vertical(
                             top: isFirst
@@ -1291,7 +1287,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
                               height: 32,
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? AppTheme.primaryGreen
+                                    ? context.accentColor
                                     : AppTheme.darkBorder,
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -1311,7 +1307,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            SizedBox(width: 10),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1320,7 +1316,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
                                     displayName,
                                     style: TextStyle(
                                       color: isSelected
-                                          ? AppTheme.primaryGreen
+                                          ? context.accentColor
                                           : Colors.white,
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
@@ -1342,8 +1338,8 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
                               Container(
                                 width: 8,
                                 height: 8,
-                                decoration: const BoxDecoration(
-                                  color: AppTheme.primaryGreen,
+                                decoration: BoxDecoration(
+                                  color: context.accentColor,
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -1371,7 +1367,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
               ? _sendTraceroute
               : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primaryGreen,
+            backgroundColor: context.accentColor,
             foregroundColor: Colors.black,
             disabledBackgroundColor: AppTheme.darkBorder,
             shape: RoundedRectangleBorder(

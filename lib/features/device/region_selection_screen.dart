@@ -244,17 +244,17 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                  color: context.accentColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                    color: context.accentColor.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.info_outline,
-                      color: AppTheme.primaryGreen,
+                      color: context.accentColor,
                       size: 24,
                     ),
                     const SizedBox(width: 12),
@@ -338,12 +338,12 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                        ? context.accentColor.withValues(alpha: 0.15)
                         : AppTheme.darkCard,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected
-                          ? AppTheme.primaryGreen
+                          ? context.accentColor
                           : AppTheme.darkBorder,
                       width: isSelected ? 2 : 1,
                     ),
@@ -363,7 +363,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                               height: 48,
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? AppTheme.primaryGreen.withValues(
+                                    ? context.accentColor.withValues(
                                         alpha: 0.2,
                                       )
                                     : AppTheme.darkBackground,
@@ -373,7 +373,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                                 child: Icon(
                                   Icons.cell_tower,
                                   color: isSelected
-                                      ? AppTheme.primaryGreen
+                                      ? context.accentColor
                                       : AppTheme.textTertiary,
                                   size: 24,
                                 ),
@@ -414,7 +414,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? AppTheme.primaryGreen
+                                    ? context.accentColor
                                     : AppTheme.darkBackground,
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -457,10 +457,10 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                               ),
                             ],
                             if (isSelected) ...[
-                              const SizedBox(width: 12),
+                              SizedBox(width: 12),
                               Icon(
                                 Icons.check_circle,
-                                color: AppTheme.primaryGreen,
+                                color: context.accentColor,
                                 size: 24,
                               ),
                             ],
@@ -486,7 +486,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                       ? _saveRegion
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryGreen,
+                    backgroundColor: context.accentColor,
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: AppTheme.darkCard,
                     disabledForegroundColor: AppTheme.textTertiary,

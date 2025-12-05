@@ -136,14 +136,14 @@ class _DeviceBatteryCard extends StatelessWidget {
                     ),
                   ),
                   if (isCharging) ...[
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                        color: context.accentColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Row(
@@ -152,14 +152,14 @@ class _DeviceBatteryCard extends StatelessWidget {
                           Icon(
                             Icons.bolt,
                             size: 12,
-                            color: AppTheme.primaryGreen,
+                            color: context.accentColor,
                           ),
                           Text(
                             'Charging',
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: AppTheme.primaryGreen,
+                              color: context.accentColor,
                               
                             ),
                           ),
@@ -178,7 +178,7 @@ class _DeviceBatteryCard extends StatelessWidget {
 
   Color _getBatteryColor(int? level) {
     if (level == null) return AppTheme.textTertiary;
-    if (level >= 50) return AppTheme.primaryGreen;
+    if (level >= 50) return AccentColors.green;
     if (level >= 20) return AppTheme.warningYellow;
     return AppTheme.errorRed;
   }
@@ -209,7 +209,7 @@ class _BatteryVisual extends StatelessWidget {
 
   Color _getColor() {
     if (level == null) return AppTheme.textTertiary;
-    if (level! >= 50) return AppTheme.primaryGreen;
+    if (level! >= 50) return AccentColors.green;
     if (level! >= 20) return AppTheme.warningYellow;
     return AppTheme.errorRed;
   }

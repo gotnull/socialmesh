@@ -339,7 +339,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkCard,
-        title: const Text('Set Geofence'),
+        title: Text('Set Geofence'),
         actions: [
           TextButton(
             onPressed: _center != null ? _confirmGeofence : null,
@@ -347,7 +347,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
               'Done',
               style: TextStyle(
                 color: _center != null
-                    ? AppTheme.primaryGreen
+                    ? context.accentColor
                     : AppTheme.textTertiary,
                 fontWeight: FontWeight.w600,
               ),
@@ -387,8 +387,8 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                         point: _center!,
                         radius: _radiusMeters,
                         useRadiusInMeter: true,
-                        color: AppTheme.primaryGreen.withAlpha(40),
-                        borderColor: AppTheme.primaryGreen,
+                        color: context.accentColor.withAlpha(40),
+                        borderColor: context.accentColor,
                         borderStrokeWidth: 2,
                       ),
                     ],
@@ -426,7 +426,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                         height: 40,
                         child: Container(
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen,
+                            color: context.accentColor,
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 3),
                             boxShadow: [
@@ -473,7 +473,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                       children: [
                         Icon(
                           Icons.touch_app,
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
@@ -604,10 +604,10 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen.withAlpha(26),
+                        color: context.accentColor.withAlpha(26),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: AppTheme.primaryGreen.withAlpha(77),
+                          color: context.accentColor.withAlpha(77),
                         ),
                       ),
                       child: Row(
@@ -615,7 +615,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                           Icon(
                             Icons.radar,
                             size: 18,
-                            color: AppTheme.primaryGreen,
+                            color: context.accentColor,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -687,12 +687,12 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         inactiveTrackColor: AppTheme.darkBorder,
-                        thumbColor: AppTheme.primaryGreen,
-                        overlayColor: AppTheme.primaryGreen.withAlpha(40),
+                        thumbColor: context.accentColor,
+                        overlayColor: context.accentColor.withAlpha(40),
                         trackHeight: 4,
                       ),
                       child: Slider(
@@ -707,7 +707,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                   ],
 
                   // Buttons row
@@ -720,19 +720,19 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                               ? null
                               : _getCurrentLocation,
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: AppTheme.primaryGreen,
+                            foregroundColor: context.accentColor,
                             side: BorderSide(
-                              color: AppTheme.primaryGreen.withAlpha(100),
+                              color: context.accentColor.withAlpha(100),
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           icon: _isLoadingLocation
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 18,
                                   height: 18,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: AppTheme.primaryGreen,
+                                    color: context.accentColor,
                                   ),
                                 )
                               : const Icon(Icons.my_location, size: 18),
@@ -743,13 +743,13 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       // Confirm button
                       Expanded(
                         child: FilledButton.icon(
                           onPressed: _center != null ? _confirmGeofence : null,
                           style: FilledButton.styleFrom(
-                            backgroundColor: AppTheme.primaryGreen,
+                            backgroundColor: context.accentColor,
                             foregroundColor: Colors.white,
                             disabledBackgroundColor: AppTheme.darkBorder,
                             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -792,7 +792,7 @@ class _NodeMarker extends StatelessWidget {
 
     // Use green border if monitored, white if selected
     final borderColor = isMonitored
-        ? AppTheme.primaryGreen
+        ? context.accentColor
         : (isSelected ? Colors.white : baseColor);
 
     return AnimatedContainer(
@@ -806,7 +806,7 @@ class _NodeMarker extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: (isMonitored ? AppTheme.primaryGreen : baseColor).withAlpha(
+            color: (isMonitored ? context.accentColor : baseColor).withAlpha(
               isSelected ? 150 : 102,
             ),
             blurRadius: isSelected ? 12 : 6,
@@ -1025,7 +1025,7 @@ class _NodeListItem extends StatelessWidget {
 
     return Material(
       color: isMonitored
-          ? AppTheme.primaryGreen.withAlpha(26)
+          ? context.accentColor.withAlpha(26)
           : Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -1120,20 +1120,20 @@ class _NodeListItem extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withAlpha(51),
+                    color: context.accentColor.withAlpha(51),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.radar, size: 12, color: AppTheme.primaryGreen),
+                      Icon(Icons.radar, size: 12, color: context.accentColor),
                       const SizedBox(width: 4),
-                      const Text(
+                      Text(
                         'Monitored',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                         ),
                       ),
                     ],

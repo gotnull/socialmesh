@@ -71,10 +71,10 @@ class _DetectionSensorConfigScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Detection Sensor configuration saved'),
-            backgroundColor: AppTheme.primaryGreen,
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: const Text('Detection Sensor configuration saved'),
+            backgroundColor: context.accentColor,
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -108,10 +108,7 @@ class _DetectionSensorConfigScreenState
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text(
-                    'Save',
-                    style: TextStyle(color: AppTheme.primaryGreen),
-                  ),
+                : Text('Save', style: TextStyle(color: context.accentColor)),
           ),
         ],
       ),
@@ -398,8 +395,8 @@ class _DetectionSensorConfigScreenState
                 ),
                 Text(
                   '${_minimumBroadcastSecs}s',
-                  style: const TextStyle(
-                    color: AppTheme.primaryGreen,
+                  style: TextStyle(
+                    color: context.accentColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -436,8 +433,8 @@ class _DetectionSensorConfigScreenState
                 ),
                 Text(
                   '${_stateBroadcastSecs ~/ 60}m',
-                  style: const TextStyle(
-                    color: AppTheme.primaryGreen,
+                  style: TextStyle(
+                    color: context.accentColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -506,7 +503,7 @@ class _DetectionSensorConfigScreenState
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: AppTheme.textTertiary),
+                    icon: Icon(Icons.close, color: AppTheme.textTertiary),
                   ),
                 ],
               ),
@@ -519,12 +516,12 @@ class _DetectionSensorConfigScreenState
                     _getTriggerTypeDescription(type),
                     style: TextStyle(
                       color: _triggerType == type
-                          ? AppTheme.primaryGreen
+                          ? context.accentColor
                           : Colors.white,
                     ),
                   ),
                   trailing: _triggerType == type
-                      ? const Icon(Icons.check, color: AppTheme.primaryGreen)
+                      ? Icon(Icons.check, color: context.accentColor)
                       : null,
                   onTap: () {
                     setState(() => _triggerType = type);

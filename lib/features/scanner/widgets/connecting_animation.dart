@@ -113,7 +113,7 @@ class _AnimatedDotsState extends State<_AnimatedDots>
               margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppTheme.primaryGreen.withValues(alpha: opacity),
+                color: context.accentColor.withValues(alpha: opacity),
               ),
             );
           }),

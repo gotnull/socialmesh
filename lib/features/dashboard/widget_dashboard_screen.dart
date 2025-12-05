@@ -102,24 +102,24 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
             ),
             // Settings
             IconButton(
-              icon: const Icon(Icons.settings_outlined, color: Colors.white),
+              icon: Icon(Icons.settings_outlined, color: Colors.white),
               onPressed: () => Navigator.of(context).pushNamed('/settings'),
               tooltip: 'Settings',
             ),
           ] else ...[
             // Add widget
             IconButton(
-              icon: const Icon(Icons.add, color: AppTheme.primaryGreen),
+              icon: Icon(Icons.add, color: context.accentColor),
               onPressed: () => _showAddWidgetSheet(context),
               tooltip: 'Add Widget',
             ),
             // Done button
             TextButton(
               onPressed: () => setState(() => _editMode = false),
-              child: const Text(
+              child: Text(
                 'Done',
                 style: TextStyle(
-                  color: AppTheme.primaryGreen,
+                  color: context.accentColor,
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
                 ),
@@ -181,9 +181,9 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
             ElevatedButton.icon(
               onPressed: () => Navigator.of(context).pushNamed('/scanner'),
               icon: const Icon(Icons.bluetooth_searching, size: 20),
-              label: const Text('Scan for Devices'),
+              label: Text('Scan for Devices'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGreen,
+                backgroundColor: context.accentColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 28,
@@ -208,7 +208,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(color: AppTheme.primaryGreen),
+          CircularProgressIndicator(color: context.accentColor),
           const SizedBox(height: 24),
           Text(
             autoReconnectState == AutoReconnectState.scanning
@@ -374,9 +374,9 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
             ElevatedButton.icon(
               onPressed: () => _showAddWidgetSheet(context),
               icon: const Icon(Icons.add, size: 20),
-              label: const Text('Add Widgets'),
+              label: Text('Add Widgets'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGreen,
+                backgroundColor: context.accentColor,
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -419,8 +419,8 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
   }
 
   Color _getBatteryColor(int level) {
-    if (level > 100) return AppTheme.primaryGreen;
-    if (level >= 50) return AppTheme.primaryGreen;
+    if (level > 100) return context.accentColor;
+    if (level >= 50) return context.accentColor;
     if (level >= 20) return AppTheme.warningYellow;
     return AppTheme.errorRed;
   }
@@ -445,7 +445,7 @@ class _DeviceButton extends StatelessWidget {
           Icon(
             Icons.router,
             color: isConnected
-                ? AppTheme.primaryGreen
+                ? context.accentColor
                 : isReconnecting
                 ? AppTheme.warningYellow
                 : AppTheme.textTertiary,
@@ -458,7 +458,7 @@ class _DeviceButton extends StatelessWidget {
               height: 10,
               decoration: BoxDecoration(
                 color: isConnected
-                    ? AppTheme.primaryGreen
+                    ? context.accentColor
                     : isReconnecting
                     ? AppTheme.warningYellow
                     : AppTheme.errorRed,
@@ -519,10 +519,10 @@ class _AddWidgetSheet extends ConsumerWidget {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text(
+                child: Text(
                   'Done',
                   style: TextStyle(
-                    color: AppTheme.primaryGreen,
+                    color: context.accentColor,
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
@@ -610,7 +610,7 @@ class _WidgetOption extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isAdded
-                  ? AppTheme.primaryGreen.withValues(alpha: 0.3)
+                  ? context.accentColor.withValues(alpha: 0.3)
                   : AppTheme.darkBorder,
             ),
           ),
@@ -621,14 +621,14 @@ class _WidgetOption extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: isAdded
-                      ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                      ? context.accentColor.withValues(alpha: 0.15)
                       : AppTheme.darkSurface,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   info.icon,
                   color: isAdded
-                      ? AppTheme.primaryGreen
+                      ? context.accentColor
                       : AppTheme.textSecondary,
                   size: 22,
                 ),
@@ -650,7 +650,7 @@ class _WidgetOption extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       info.description,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         color: AppTheme.textSecondary,
                         
@@ -664,7 +664,7 @@ class _WidgetOption extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: isAdded ? AppTheme.primaryGreen : AppTheme.darkBorder,
+                  color: isAdded ? context.accentColor : AppTheme.darkBorder,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(

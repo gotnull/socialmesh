@@ -309,7 +309,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
           return _StatusInfo(
             text: 'Configuring device',
             icon: Icons.settings_rounded,
-            color: AppTheme.primaryGreen,
+            color: context.accentColor,
             showSpinner: true,
           );
         }
@@ -323,7 +323,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
         return _StatusInfo(
           text: 'Connected',
           icon: Icons.check_circle_rounded,
-          color: AppTheme.primaryGreen,
+          color: context.accentColor,
           showSpinner: false,
         );
       case AutoReconnectState.failed:
@@ -579,11 +579,11 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
           color: AppTheme.darkCard.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+            color: context.accentColor.withValues(alpha: 0.3),
           ),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+              color: context.accentColor.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -596,22 +596,22 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                color: context.accentColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
                 child: shortName.isNotEmpty
                     ? Text(
                         shortName.substring(0, shortName.length.clamp(0, 2)),
-                        style: const TextStyle(
-                          color: AppTheme.primaryGreen,
+                        style: TextStyle(
+                          color: context.accentColor,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
                       )
-                    : const Icon(
+                    : Icon(
                         Icons.person,
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                         size: 18,
                       ),
               ),
@@ -635,7 +635,7 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
                   ),
                   Text(
                     '!$nodeId',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppTheme.textTertiary,
                       fontSize: 11,
                       fontFamily: 'monospace',
@@ -648,18 +648,18 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                color: context.accentColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.radar, size: 12, color: AppTheme.primaryGreen),
+                  Icon(Icons.radar, size: 12, color: context.accentColor),
                   const SizedBox(width: 4),
-                  const Text(
+                  Text(
                     'Found',
                     style: TextStyle(
-                      color: AppTheme.primaryGreen,
+                      color: context.accentColor,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),
@@ -704,13 +704,13 @@ class _ErrorScreen extends ConsumerWidget {
                 style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
                   ref.read(appInitProvider.notifier).initialize();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryGreen,
+                  backgroundColor: context.accentColor,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,

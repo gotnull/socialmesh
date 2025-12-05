@@ -87,7 +87,7 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
   }
 
   Color _getSignalColor(double rssi) {
-    if (rssi >= -60) return AppTheme.primaryGreen;
+    if (rssi >= -60) return context.accentColor;
     if (rssi >= -75) return AppTheme.warningYellow;
     return AppTheme.errorRed;
   }
@@ -145,7 +145,6 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
                     style: TextStyle(
                       color: AppTheme.textTertiary,
                       fontSize: 14,
-                      
                     ),
                   ),
                 ),
@@ -200,7 +199,6 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: signalColor,
-                            
                           ),
                         );
                       },
@@ -239,7 +237,6 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           color: signalColor,
-                          
                         ),
                       ),
                     ),
@@ -298,7 +295,7 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _LegendItem(color: AppTheme.primaryGreen, label: 'RSSI'),
+          _LegendItem(color: context.accentColor, label: 'RSSI'),
           const SizedBox(width: 16),
           _LegendItem(color: AppTheme.graphBlue, label: 'SNR'),
           const SizedBox(width: 16),
@@ -419,7 +416,7 @@ Widget buildLiveIndicator() {
             fontSize: 11,
             fontWeight: FontWeight.w700,
             color: AppTheme.errorRed,
-            
+
             letterSpacing: 0.5,
           ),
         ),
@@ -450,11 +447,7 @@ class _LegendItem extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 10,
-            color: AppTheme.textTertiary,
-            
-          ),
+          style: const TextStyle(fontSize: 10, color: AppTheme.textTertiary),
         ),
       ],
     );
@@ -480,7 +473,7 @@ class MultiSignalData {
 class MultiLineChartPainter extends CustomPainter {
   final List<MultiSignalData> data;
 
-  static const Color rssiColor = AppTheme.primaryGreen;
+  static const Color rssiColor = AccentColors.green;
   static const Color snrColor = AppTheme.graphBlue;
   static const Color channelUtilColor = AppTheme.accentOrange;
 
@@ -527,7 +520,7 @@ class MultiLineChartPainter extends CustomPainter {
         style: const TextStyle(
           color: AppTheme.textTertiary,
           fontSize: 9,
-          
+
           fontWeight: FontWeight.w500,
         ),
       );
@@ -544,7 +537,7 @@ class MultiLineChartPainter extends CustomPainter {
         style: const TextStyle(
           color: channelUtilColor,
           fontSize: 9,
-          
+
           fontWeight: FontWeight.w500,
         ),
       );

@@ -48,10 +48,10 @@ class _StoreForwardConfigScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Store & Forward configuration saved'),
-            backgroundColor: AppTheme.primaryGreen,
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: const Text('Store & Forward configuration saved'),
+            backgroundColor: context.accentColor,
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -85,10 +85,7 @@ class _StoreForwardConfigScreenState
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text(
-                    'Save',
-                    style: TextStyle(color: AppTheme.primaryGreen),
-                  ),
+                : Text('Save', style: TextStyle(color: context.accentColor)),
           ),
         ],
       ),
@@ -256,8 +253,8 @@ class _StoreForwardConfigScreenState
                 ),
                 Text(
                   _records == 0 ? 'Auto' : '$_records',
-                  style: const TextStyle(
-                    color: AppTheme.primaryGreen,
+                  style: TextStyle(
+                    color: context.accentColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -294,8 +291,8 @@ class _StoreForwardConfigScreenState
                 ),
                 Text(
                   '$_historyReturnMax',
-                  style: const TextStyle(
-                    color: AppTheme.primaryGreen,
+                  style: TextStyle(
+                    color: context.accentColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -332,8 +329,8 @@ class _StoreForwardConfigScreenState
                 ),
                 Text(
                   '${_historyReturnWindow ~/ 60}h',
-                  style: const TextStyle(
-                    color: AppTheme.primaryGreen,
+                  style: TextStyle(
+                    color: context.accentColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

@@ -112,7 +112,7 @@ class _ConnectingIndicator extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.darkCard.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
+        border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.3),
@@ -129,14 +129,14 @@ class _ConnectingIndicator extends StatelessWidget {
             height: 14,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+              valueColor: AlwaysStoppedAnimation<Color>(context.accentColor),
             ),
           ),
           const SizedBox(width: 10),
-          const Text(
+          Text(
             'Discovering nodes...',
             style: TextStyle(
-              color: AppTheme.primaryGreen,
+              color: context.accentColor,
               fontSize: 13,
               fontWeight: FontWeight.w500,
               
@@ -251,12 +251,12 @@ class _AnimatedNodeCardState extends State<_AnimatedNodeCard>
           ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppTheme.primaryGreen.withValues(alpha: 0.4),
+            color: context.accentColor.withValues(alpha: 0.4),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+              color: context.accentColor.withValues(alpha: 0.15),
               blurRadius: 12,
               offset: const Offset(0, 2),
             ),
@@ -280,16 +280,16 @@ class _AnimatedNodeCardState extends State<_AnimatedNodeCard>
                 children: [
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.radar,
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                         size: 14,
                       ),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       Text(
                         'Node Discovered',
                         style: TextStyle(
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           
@@ -359,7 +359,7 @@ class _AnimatedNodeCardState extends State<_AnimatedNodeCard>
   }
 
   Color _getSignalColor(int rssi) {
-    if (rssi >= -60) return AppTheme.primaryGreen;
+    if (rssi >= -60) return context.accentColor;
     if (rssi >= -75) return AppTheme.warningYellow;
     return AppTheme.errorRed;
   }
@@ -407,11 +407,11 @@ class _PulsingNodeIconState extends State<_PulsingNodeIcon>
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+            color: context.accentColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primaryGreen.withValues(
+                color: context.accentColor.withValues(
                   alpha: 0.2 * _pulseAnimation.value,
                 ),
                 blurRadius: 8 + (4 * _pulseAnimation.value),
@@ -426,16 +426,16 @@ class _PulsingNodeIconState extends State<_PulsingNodeIcon>
                       0,
                       widget.shortName.length.clamp(0, 2),
                     ),
-                    style: const TextStyle(
-                      color: AppTheme.primaryGreen,
+                    style: TextStyle(
+                      color: context.accentColor,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       
                     ),
                   )
-                : const Icon(
+                : Icon(
                     Icons.person,
-                    color: AppTheme.primaryGreen,
+                    color: context.accentColor,
                     size: 22,
                   ),
           ),

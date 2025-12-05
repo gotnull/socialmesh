@@ -224,10 +224,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text(
+                  : Text(
                       'Save',
                       style: TextStyle(
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                         fontWeight: FontWeight.w600,
                         
                       ),
@@ -359,12 +359,12 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: isSelected
-                                        ? AppTheme.primaryGreen
+                                        ? context.accentColor
                                         : AppTheme.darkBorder,
                                     width: 2,
                                   ),
                                   color: isSelected
-                                      ? AppTheme.primaryGreen
+                                      ? context.accentColor
                                       : Colors.transparent,
                                 ),
                                 child: isSelected
@@ -508,10 +508,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                    color: context.accentColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, color: AppTheme.primaryGreen, size: 20),
+                  child: Icon(icon, color: context.accentColor, size: 20),
                 ),
                 const SizedBox(width: 14),
                 Expanded(

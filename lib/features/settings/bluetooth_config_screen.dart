@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
@@ -182,18 +183,18 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
               child: TextButton(
                 onPressed: _saving ? null : _saveConfig,
                 child: _saving
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                         ),
                       )
-                    : const Text(
+                    : Text(
                         'Save',
                         style: TextStyle(
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                           fontWeight: FontWeight.w600,
                           
                         ),
@@ -248,7 +249,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                             ],
                           ),
                         ),
-                        Switch.adaptive(
+                        ThemedSwitch(
                           value: _enabled,
                           onChanged: (value) {
                             HapticFeedback.selectionClick();
@@ -296,7 +297,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                               ),
                               subtitle: Text(
                                 _getModeDescription(mode),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppTheme.textSecondary,
                                   fontSize: 13,
                                   
@@ -307,7 +308,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                                     ? Icons.radio_button_checked
                                     : Icons.radio_button_unchecked,
                                 color: isSelected
-                                    ? AppTheme.primaryGreen
+                                    ? context.accentColor
                                     : AppTheme.textTertiary,
                               ),
                               selected: isSelected,

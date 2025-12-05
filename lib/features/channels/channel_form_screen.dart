@@ -347,18 +347,18 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
               child: TextButton(
                 onPressed: _isSaving ? null : _saveChannel,
                 child: _isSaving
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                         ),
                       )
-                    : const Text(
+                    : Text(
                         'Save',
                         style: TextStyle(
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
                           
@@ -441,12 +441,12 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                    color: context.accentColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.tag,
-                    color: AppTheme.primaryGreen,
+                    color: context.accentColor,
                     size: 20,
                   ),
                 ),
@@ -601,7 +601,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           height: 40,
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                                ? context.accentColor.withValues(alpha: 0.15)
                                 : AppTheme.darkBackground,
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -610,7 +610,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                                 ? Icons.lock_open
                                 : Icons.lock,
                             color: isSelected
-                                ? AppTheme.primaryGreen
+                                ? context.accentColor
                                 : AppTheme.textTertiary,
                             size: 20,
                           ),
@@ -656,12 +656,12 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: isSelected
-                                  ? AppTheme.primaryGreen
+                                  ? context.accentColor
                                   : AppTheme.darkBorder,
                               width: 2,
                             ),
                             color: isSelected
-                                ? AppTheme.primaryGreen
+                                ? context.accentColor
                                 : Colors.transparent,
                           ),
                           child: isSelected
@@ -718,7 +718,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: hasValidKey
-                        ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                        ? context.accentColor.withValues(alpha: 0.15)
                         : _keyValidationError != null
                         ? AppTheme.errorRed.withValues(alpha: 0.15)
                         : AppTheme.darkBackground,
@@ -727,7 +727,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   child: Icon(
                     Icons.key,
                     color: hasValidKey
-                        ? AppTheme.primaryGreen
+                        ? context.accentColor
                         : _keyValidationError != null
                         ? AppTheme.errorRed
                         : AppTheme.textTertiary,
@@ -748,7 +748,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
                         _isEditingKey
                             ? 'Enter base64-encoded key'
@@ -758,7 +758,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           color: hasValidKey
-                              ? AppTheme.primaryGreen
+                              ? context.accentColor
                               : AppTheme.textTertiary,
                           
                         ),
@@ -774,15 +774,15 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                      color: context.accentColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       _detectedKeySize!.displayName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                         
                       ),
                     ),
@@ -821,9 +821,9 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                         fontFamily: 'monospace',
                       ),
                       suffixIcon: IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.check,
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                         ),
                         onPressed: () {
                           _validateAndDetectKey(_keyController.text);
@@ -863,7 +863,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                               fontSize: 14,
                               color: _keyController.text.isEmpty
                                   ? AppTheme.textTertiary
-                                  : AppTheme.primaryGreen,
+                                  : context.accentColor,
                               fontFamily: 'monospace',
                               fontWeight: FontWeight.w500,
                               letterSpacing: 0.5,
@@ -1072,7 +1072,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
           ),
           _buildToggleRow(
             icon: Icons.location_on_outlined,
-            iconColor: AppTheme.primaryGreen,
+            iconColor: context.accentColor,
             title: 'Position',
             subtitle: 'Share position on this channel',
             value: _positionEnabled,
@@ -1121,7 +1121,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     color: AppTheme.textTertiary,
                     
@@ -1133,7 +1133,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: AppTheme.primaryGreen,
+            activeThumbColor: context.accentColor,
             inactiveThumbColor: AppTheme.textTertiary,
             inactiveTrackColor: AppTheme.darkBackground,
           ),

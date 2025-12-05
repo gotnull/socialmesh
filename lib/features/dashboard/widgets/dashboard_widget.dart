@@ -72,7 +72,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
     Widget content = widget.isEditMode
         ? CustomPaint(
             painter: _DashedBorderPainter(
-              color: AppTheme.primaryGreen.withValues(alpha: 0.6),
+              color: context.accentColor.withValues(alpha: 0.6),
               strokeWidth: 2,
               dashWidth: 8,
               dashSpace: 4,
@@ -152,16 +152,16 @@ class _DashboardWidgetState extends State<DashboardWidget>
               color: AppTheme.textTertiary,
               size: 20,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
           ],
           // Icon
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+              color: context.accentColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(info.icon, color: AppTheme.primaryGreen, size: 16),
+            child: Icon(info.icon, color: context.accentColor, size: 16),
           ),
           const SizedBox(width: 10),
           // Title
@@ -296,10 +296,10 @@ class WidgetEmptyState extends StatelessWidget {
                 onPressed: onAction,
                 child: Text(
                   actionLabel!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.primaryGreen,
+                    color: context.accentColor,
                     
                   ),
                 ),
@@ -325,12 +325,12 @@ class WidgetLoadingState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(
+          SizedBox(
             width: 24,
             height: 24,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: AppTheme.primaryGreen,
+              color: context.accentColor,
             ),
           ),
           if (message != null) ...[

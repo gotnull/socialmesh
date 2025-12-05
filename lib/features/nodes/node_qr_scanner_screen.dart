@@ -149,27 +149,27 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
               ),
             ),
             if (newName != null && newName != existing.longName) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                  color: context.accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.info_outline,
-                      color: AppTheme.primaryGreen,
+                      color: context.accentColor,
                       size: 18,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'Update name to "$newName" and add to favorites?',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                           
                         ),
                       ),
@@ -183,7 +183,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
+            child: Text(
               'Cancel',
               style: TextStyle(color: AppTheme.textSecondary),
             ),
@@ -191,7 +191,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.primaryGreen,
+              backgroundColor: context.accentColor,
             ),
             child: const Text('Update'),
           ),
@@ -226,26 +226,26 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
               const SizedBox(height: 8),
               _buildInfoRow('User ID', userId),
             ],
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                color: context.accentColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                  color: context.accentColor.withValues(alpha: 0.3),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.star, color: AppTheme.primaryGreen, size: 18),
+                  Icon(Icons.star, color: context.accentColor, size: 18),
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       'This node will be added to your favorites for easy access.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                         
                       ),
                     ),
@@ -258,7 +258,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
+            child: Text(
               'Cancel',
               style: TextStyle(color: AppTheme.textSecondary),
             ),
@@ -266,7 +266,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.primaryGreen,
+              backgroundColor: context.accentColor,
             ),
             child: const Text('Add Node'),
           ),
@@ -385,7 +385,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
             onPressed: () => _controller.toggleTorch(),
           ),
           IconButton(
-            icon: const Icon(Icons.flip_camera_ios, color: Colors.white),
+            icon: Icon(Icons.flip_camera_ios, color: Colors.white),
             onPressed: () => _controller.switchCamera(),
           ),
         ],
@@ -397,7 +397,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
           Container(
             decoration: BoxDecoration(
               border: Border.all(
-                color: AppTheme.primaryGreen.withValues(alpha: 0.5),
+                color: context.accentColor.withValues(alpha: 0.5),
                 width: 2,
               ),
             ),
@@ -405,10 +405,10 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
           if (_isProcessing)
             Container(
               color: Colors.black54,
-              child: const Center(
+              child: Center(
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    AppTheme.primaryGreen,
+                    context.accentColor,
                   ),
                 ),
               ),
@@ -430,13 +430,13 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
                   ],
                 ),
               ),
-              child: const Column(
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     Icons.person_add,
                     size: 32,
-                    color: AppTheme.primaryGreen,
+                    color: context.accentColor,
                   ),
                   SizedBox(height: 12),
                   Text(

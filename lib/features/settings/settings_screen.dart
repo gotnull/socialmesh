@@ -818,7 +818,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           isSelected
               ? Icons.radio_button_checked
               : Icons.radio_button_unchecked,
-          color: isSelected ? AppTheme.primaryGreen : AppTheme.textTertiary,
+          color: isSelected ? context.accentColor : AppTheme.textTertiary,
         ),
         title: Text(
           '$limit messages',

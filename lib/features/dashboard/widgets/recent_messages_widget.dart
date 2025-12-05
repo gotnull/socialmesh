@@ -88,13 +88,13 @@ class _MessageTile extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               color: isBroadcast
-                  ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                  ? context.accentColor.withValues(alpha: 0.15)
                   : AppTheme.graphBlue.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               isBroadcast ? Icons.campaign : Icons.person,
-              color: isBroadcast ? AppTheme.primaryGreen : AppTheme.graphBlue,
+              color: isBroadcast ? context.accentColor : AppTheme.graphBlue,
               size: 18,
             ),
           ),

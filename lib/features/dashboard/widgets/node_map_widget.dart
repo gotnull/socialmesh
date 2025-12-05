@@ -170,7 +170,7 @@ class NodeMapContent extends ConsumerWidget {
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () => _openFullMap(context),
-                      splashColor: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                      splashColor: context.accentColor.withValues(alpha: 0.1),
                     ),
                   ),
                 ),
@@ -228,7 +228,7 @@ class _MiniNodeMarker extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isMyNode
         ? AppTheme.primaryMagenta
-        : (node.isOnline ? AppTheme.primaryGreen : AppTheme.textTertiary);
+        : (node.isOnline ? context.accentColor : AppTheme.textTertiary);
 
     return Container(
       decoration: BoxDecoration(

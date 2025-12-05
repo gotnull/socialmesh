@@ -80,7 +80,6 @@ class MeshHealthContent extends ConsumerWidget {
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
                         color: healthColor,
-                        
                       ),
                     ),
                     Text(
@@ -89,7 +88,6 @@ class MeshHealthContent extends ConsumerWidget {
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: healthColor,
-                        
                       ),
                     ),
                   ],
@@ -176,7 +174,7 @@ class MeshHealthContent extends ConsumerWidget {
   }
 
   Color _getHealthColor(double score) {
-    if (score >= 70) return AppTheme.primaryGreen;
+    if (score >= 70) return AccentColors.green;
     if (score >= 40) return AppTheme.warningYellow;
     return AppTheme.errorRed;
   }
@@ -202,7 +200,7 @@ class _HealthFactor extends StatelessWidget {
         Icon(
           icon,
           size: 18,
-          color: isGood ? AppTheme.primaryGreen : AppTheme.textTertiary,
+          color: isGood ? context.accentColor : AppTheme.textTertiary,
         ),
         const SizedBox(height: 4),
         Text(
@@ -211,16 +209,11 @@ class _HealthFactor extends StatelessWidget {
             fontSize: 12,
             fontWeight: FontWeight.w600,
             color: isGood ? Colors.white : AppTheme.textSecondary,
-            
           ),
         ),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 10,
-            color: AppTheme.textTertiary,
-            
-          ),
+          style: const TextStyle(fontSize: 10, color: AppTheme.textTertiary),
         ),
       ],
     );

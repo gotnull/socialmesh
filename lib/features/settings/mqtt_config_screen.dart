@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
@@ -150,18 +151,18 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
               child: TextButton(
                 onPressed: _isLoading ? null : _saveConfig,
                 child: _isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                         ),
                       )
-                    : const Text(
+                    : Text(
                         'Save',
                         style: TextStyle(
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                           fontWeight: FontWeight.w600,
                           
                         ),
@@ -171,17 +172,17 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
           ],
         ),
         body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(child: CircularProgressIndicator())
             : ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
                   _SettingsTile(
                     icon: Icons.cloud,
-                    iconColor: _enabled ? AppTheme.primaryGreen : null,
+                    iconColor: _enabled ? context.accentColor : null,
                     title: 'Enable MQTT',
                     subtitle:
                         'Connect device to an MQTT broker for mesh bridging',
-                    trailing: Switch.adaptive(
+                    trailing: ThemedSwitch(
                       value: _enabled,
                       onChanged: (value) {
                         HapticFeedback.selectionClick();
@@ -235,8 +236,8 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: AppTheme.primaryGreen,
+                                borderSide: BorderSide(
+                                  color: context.accentColor,
                                 ),
                               ),
                               prefixIcon: const Icon(
@@ -278,11 +279,11 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: AppTheme.primaryGreen,
+                                borderSide: BorderSide(
+                                  color: context.accentColor,
                                 ),
                               ),
-                              prefixIcon: const Icon(
+                              prefixIcon: Icon(
                                 Icons.topic,
                                 color: AppTheme.textSecondary,
                               ),
@@ -293,10 +294,10 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                     ),
                     _SettingsTile(
                       icon: Icons.lock_outline,
-                      iconColor: _tlsEnabled ? AppTheme.primaryGreen : null,
+                      iconColor: _tlsEnabled ? context.accentColor : null,
                       title: 'Use TLS',
                       subtitle: 'Encrypt connection to broker',
-                      trailing: Switch.adaptive(
+                      trailing: ThemedSwitch(
                         value: _tlsEnabled,
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
@@ -349,8 +350,8 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: AppTheme.primaryGreen,
+                                borderSide: BorderSide(
+                                  color: context.accentColor,
                                 ),
                               ),
                               prefixIcon: const Icon(
@@ -393,8 +394,8 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: AppTheme.primaryGreen,
+                                borderSide: BorderSide(
+                                  color: context.accentColor,
                                 ),
                               ),
                               prefixIcon: const Icon(
@@ -419,16 +420,16 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     const _SectionHeader(title: 'OPTIONS'),
                     _SettingsTile(
                       icon: Icons.enhanced_encryption,
                       iconColor: _encryptionEnabled
-                          ? AppTheme.primaryGreen
+                          ? context.accentColor
                           : null,
                       title: 'Encryption',
                       subtitle: 'Encrypt mesh messages over MQTT',
-                      trailing: Switch.adaptive(
+                      trailing: ThemedSwitch(
                         value: _encryptionEnabled,
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
@@ -438,10 +439,10 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                     ),
                     _SettingsTile(
                       icon: Icons.data_object,
-                      iconColor: _jsonEnabled ? AppTheme.primaryGreen : null,
+                      iconColor: _jsonEnabled ? context.accentColor : null,
                       title: 'JSON Output',
                       subtitle: 'Publish messages in JSON format',
-                      trailing: Switch.adaptive(
+                      trailing: ThemedSwitch(
                         value: _jsonEnabled,
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
@@ -452,11 +453,11 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                     _SettingsTile(
                       icon: Icons.swap_horiz,
                       iconColor: _proxyToClientEnabled
-                          ? AppTheme.primaryGreen
+                          ? context.accentColor
                           : null,
                       title: 'Proxy to Client',
                       subtitle: 'Forward MQTT messages to connected clients',
-                      trailing: Switch.adaptive(
+                      trailing: ThemedSwitch(
                         value: _proxyToClientEnabled,
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
@@ -467,11 +468,11 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                     _SettingsTile(
                       icon: Icons.map_outlined,
                       iconColor: _mapReportingEnabled
-                          ? AppTheme.primaryGreen
+                          ? context.accentColor
                           : null,
                       title: 'Map Reporting',
                       subtitle: 'Report position to public mesh map',
-                      trailing: Switch.adaptive(
+                      trailing: ThemedSwitch(
                         value: _mapReportingEnabled,
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
@@ -482,7 +483,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                   ],
                   const SizedBox(height: 16),
                   _buildInfoCard(),
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32),
                 ],
               ),
       ),
@@ -493,17 +494,17 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.primaryGreen.withAlpha(20),
+        color: context.accentColor.withAlpha(20),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.primaryGreen.withAlpha(50)),
+        border: Border.all(color: context.accentColor.withAlpha(50)),
       ),
       padding: const EdgeInsets.all(16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
+          Icon(
             Icons.info_outline,
-            color: AppTheme.primaryGreen,
+            color: context.accentColor,
             size: 20,
           ),
           const SizedBox(width: 12),

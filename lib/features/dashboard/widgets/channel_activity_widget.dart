@@ -85,7 +85,7 @@ class _ChannelTile extends StatelessWidget {
                 height: 36,
                 decoration: BoxDecoration(
                   color: isPrimary
-                      ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                      ? context.accentColor.withValues(alpha: 0.15)
                       : AppTheme.darkBackground,
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -96,7 +96,7 @@ class _ChannelTile extends StatelessWidget {
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: isPrimary
-                          ? AppTheme.primaryGreen
+                          ? context.accentColor
                           : AppTheme.textSecondary,
                       
                     ),
@@ -112,12 +112,12 @@ class _ChannelTile extends StatelessWidget {
                     width: 10,
                     height: 10,
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen,
+                      color: context.accentColor,
                       shape: BoxShape.circle,
                       border: Border.all(color: AppTheme.darkCard, width: 2),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primaryGreen.withValues(alpha: 0.5),
+                          color: context.accentColor.withValues(alpha: 0.5),
                           blurRadius: 4,
                         ),
                       ],
@@ -155,15 +155,15 @@ class _ChannelTile extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                          color: context.accentColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Text(
+                        child: Text(
                           'PRIMARY',
                           style: TextStyle(
                             fontSize: 8,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.primaryGreen,
+                            color: context.accentColor,
                             
                           ),
                         ),

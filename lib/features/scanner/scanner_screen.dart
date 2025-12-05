@@ -470,7 +470,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: AppTheme.errorRed),
+                    icon: Icon(Icons.close, color: AppTheme.errorRed),
                     onPressed: () => setState(() => _errorMessage = null),
                     iconSize: 20,
                   ),
@@ -483,10 +483,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                color: context.accentColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                  color: context.accentColor.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -495,7 +495,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                      color: AppTheme.primaryGreen,
+                      color: context.accentColor,
                       strokeWidth: 2,
                     ),
                   ),
@@ -546,22 +546,22 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                       letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                      color: context.accentColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       '${_devices.length}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                         
                       ),
                     ),
@@ -642,8 +642,8 @@ class _DeviceCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
-          splashColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
-          highlightColor: AppTheme.primaryGreen.withValues(alpha: 0.1),
+          splashColor: context.accentColor.withValues(alpha: 0.2),
+          highlightColor: context.accentColor.withValues(alpha: 0.1),
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
@@ -663,7 +663,7 @@ class _DeviceCard extends StatelessWidget {
                     device.type == TransportType.ble
                         ? Icons.bluetooth
                         : Icons.usb,
-                    color: AppTheme.primaryGreen,
+                    color: context.accentColor,
                     size: 24,
                   ),
                 ),
@@ -702,7 +702,7 @@ class _DeviceCard extends StatelessWidget {
                           margin: const EdgeInsets.symmetric(horizontal: 1.5),
                           decoration: BoxDecoration(
                             color: i < signalBars
-                                ? AppTheme.primaryGreen
+                                ? context.accentColor
                                 : AppTheme.textTertiary.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(1),
                           ),

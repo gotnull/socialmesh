@@ -47,10 +47,10 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Range test configuration saved'),
-            backgroundColor: AppTheme.primaryGreen,
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: const Text('Range test configuration saved'),
+            backgroundColor: context.accentColor,
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -187,7 +187,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: node.isOnline
-                          ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                          ? context.accentColor.withValues(alpha: 0.15)
                           : AppTheme.darkBackground,
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -196,7 +196,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                         node.shortName?.substring(0, 1).toUpperCase() ?? '?',
                         style: TextStyle(
                           color: node.isOnline
-                              ? AppTheme.primaryGreen
+                              ? context.accentColor
                               : AppTheme.textTertiary,
                           fontWeight: FontWeight.w600,
                         ),
@@ -205,22 +205,19 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                   ),
                   title: Text(
                     displayName,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: Colors.white),
                   ),
                   subtitle: Text(
                     node.isOnline ? 'Online' : 'Offline',
                     style: TextStyle(
                       color: node.isOnline
-                          ? AppTheme.primaryGreen
+                          ? context.accentColor
                           : AppTheme.textTertiary,
                       fontSize: 12,
                     ),
                   ),
                   trailing: _selectedTargetNode == node.nodeNum
-                      ? const Icon(
-                          Icons.check_circle,
-                          color: AppTheme.primaryGreen,
-                        )
+                      ? Icon(Icons.check_circle, color: context.accentColor)
                       : null,
                   onTap: () {
                     setState(() => _selectedTargetNode = node.nodeNum);
@@ -264,10 +261,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text(
-                      'Save',
-                      style: TextStyle(color: AppTheme.primaryGreen),
-                    ),
+                  : Text('Save', style: TextStyle(color: context.accentColor)),
             ),
         ],
       ),
@@ -325,7 +319,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: _isRunning
-              ? AppTheme.primaryGreen.withValues(alpha: 0.3)
+              ? context.accentColor.withValues(alpha: 0.3)
               : AppTheme.darkBorder,
         ),
       ),
@@ -337,17 +331,17 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
             height: 64,
             decoration: BoxDecoration(
               color: _isRunning
-                  ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                  ? context.accentColor.withValues(alpha: 0.15)
                   : AppTheme.darkBackground,
               shape: BoxShape.circle,
             ),
             child: Icon(
               _isRunning ? Icons.radar : Icons.radar_outlined,
               size: 32,
-              color: _isRunning ? AppTheme.primaryGreen : AppTheme.textTertiary,
+              color: _isRunning ? context.accentColor : AppTheme.textTertiary,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
 
           // Status text
           Text(
@@ -355,7 +349,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: _isRunning ? AppTheme.primaryGreen : Colors.white,
+              color: _isRunning ? context.accentColor : Colors.white,
             ),
           ),
           const SizedBox(height: 4),
@@ -387,7 +381,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                     ),
                   ),
                 ),
-              if (!_isRunning) const SizedBox(width: 12),
+              if (!_isRunning) SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: _isRunning ? _stopTest : _startTest,
@@ -399,7 +393,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isRunning
                         ? AppTheme.errorRed
-                        : AppTheme.primaryGreen,
+                        : context.accentColor,
                     foregroundColor: _isRunning ? Colors.white : Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -459,8 +453,8 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                 ),
                 Text(
                   '${_senderInterval}s',
-                  style: const TextStyle(
-                    color: AppTheme.primaryGreen,
+                  style: TextStyle(
+                    color: context.accentColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -541,14 +535,14 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                    color: context.accentColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
                     child: Text(
                       '#${_results.length - index}',
-                      style: const TextStyle(
-                        color: AppTheme.primaryGreen,
+                      style: TextStyle(
+                        color: context.accentColor,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -580,8 +574,8 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
         children: [
           Text(
             value,
-            style: const TextStyle(
-              color: AppTheme.primaryGreen,
+            style: TextStyle(
+              color: context.accentColor,
               fontSize: 18,
               fontWeight: FontWeight.w700,
             ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -159,7 +160,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                 : 'Failed to send test webhook. Check your key.',
           ),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: success ? AppTheme.primaryGreen : AppTheme.errorRed,
+          backgroundColor: success ? context.accentColor : AppTheme.errorRed,
         ),
       );
     }
@@ -213,7 +214,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             _buildInfoCard(),
             const SizedBox(height: 8),
             _buildEventNamesCard(),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
           ],
         ),
       ),
@@ -223,10 +224,10 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   Widget _buildEnableTile() {
     return _SettingsTile(
       icon: Icons.webhook,
-      iconColor: _enabled ? AppTheme.primaryGreen : null,
+      iconColor: _enabled ? context.accentColor : null,
       title: 'Enable IFTTT',
       subtitle: 'Send events to IFTTT Webhooks service',
-      trailing: Switch.adaptive(
+      trailing: ThemedSwitch(
         value: _enabled,
         onChanged: (value) {
           HapticFeedback.selectionClick();
@@ -270,11 +271,11 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: AppTheme.darkBorder),
+                    borderSide: BorderSide(color: AppTheme.darkBorder),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: AppTheme.primaryGreen),
+                    borderSide: BorderSide(color: context.accentColor),
                   ),
                   prefixIcon: const Icon(
                     Icons.key,
@@ -284,23 +285,23 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                   fillColor: AppTheme.darkBackground,
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: _isTesting ? null : _testWebhook,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.primaryGreen.withAlpha(30),
-                    foregroundColor: AppTheme.primaryGreen,
+                    backgroundColor: context.accentColor.withAlpha(30),
+                    foregroundColor: context.accentColor,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   icon: _isTesting
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: AppTheme.primaryGreen,
+                            color: context.accentColor,
                           ),
                         )
                       : const Icon(Icons.send, size: 18),
@@ -321,7 +322,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           icon: Icons.message_outlined,
           title: 'Message Received',
           subtitle: 'Trigger when a message is received',
-          trailing: Switch.adaptive(
+          trailing: ThemedSwitch(
             value: _messageReceived,
             onChanged: (value) {
               HapticFeedback.selectionClick();
@@ -333,7 +334,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           icon: Icons.sos_outlined,
           title: 'SOS / Emergency',
           subtitle: 'Trigger on SOS, emergency, help, mayday keywords',
-          trailing: Switch.adaptive(
+          trailing: ThemedSwitch(
             value: _sosEmergency,
             onChanged: (value) {
               HapticFeedback.selectionClick();
@@ -352,7 +353,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           icon: Icons.wifi_tethering,
           title: 'Node Online',
           subtitle: 'Trigger when a node comes online',
-          trailing: Switch.adaptive(
+          trailing: ThemedSwitch(
             value: _nodeOnline,
             onChanged: (value) {
               HapticFeedback.selectionClick();
@@ -364,7 +365,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           icon: Icons.wifi_off_outlined,
           title: 'Node Offline',
           subtitle: 'Trigger when a node goes offline',
-          trailing: Switch.adaptive(
+          trailing: ThemedSwitch(
             value: _nodeOffline,
             onChanged: (value) {
               HapticFeedback.selectionClick();
@@ -383,7 +384,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           icon: Icons.battery_3_bar,
           title: 'Battery Low',
           subtitle: 'Trigger when battery drops below threshold',
-          trailing: Switch.adaptive(
+          trailing: ThemedSwitch(
             value: _batteryLow,
             onChanged: (value) {
               HapticFeedback.selectionClick();
@@ -416,11 +417,11 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppTheme.darkBorder),
+                  borderSide: BorderSide(color: AppTheme.darkBorder),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppTheme.primaryGreen),
+                  borderSide: BorderSide(color: context.accentColor),
                 ),
                 prefixIcon: const Icon(
                   Icons.battery_3_bar,
@@ -437,7 +438,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           icon: Icons.device_thermostat,
           title: 'Temperature Alert',
           subtitle: 'Trigger when temperature exceeds threshold',
-          trailing: Switch.adaptive(
+          trailing: ThemedSwitch(
             value: _temperatureAlert,
             onChanged: (value) {
               HapticFeedback.selectionClick();
@@ -472,11 +473,11 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppTheme.darkBorder),
+                  borderSide: BorderSide(color: AppTheme.darkBorder),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppTheme.primaryGreen),
+                  borderSide: BorderSide(color: context.accentColor),
                 ),
                 prefixIcon: const Icon(
                   Icons.device_thermostat,
@@ -500,7 +501,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           icon: Icons.radar,
           title: 'Position Updates',
           subtitle: 'Trigger when node exits geofence area',
-          trailing: Switch.adaptive(
+          trailing: ThemedSwitch(
             value: _positionUpdate,
             onChanged: (value) {
               HapticFeedback.selectionClick();
@@ -538,8 +539,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                        color: AppTheme.primaryGreen,
+                      borderSide: BorderSide(
+                        color: context.accentColor,
                       ),
                     ),
                     prefixIcon: const Icon(
@@ -576,8 +577,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                        color: AppTheme.primaryGreen,
+                      borderSide: BorderSide(
+                        color: context.accentColor,
                       ),
                     ),
                     prefixIcon: const Icon(
@@ -613,8 +614,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                        color: AppTheme.primaryGreen,
+                      borderSide: BorderSide(
+                        color: context.accentColor,
                       ),
                     ),
                     prefixIcon: const Icon(
@@ -658,9 +659,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                                           point: LatLng(lat, lon),
                                           radius: radius,
                                           useRadiusInMeter: true,
-                                          color: AppTheme.primaryGreen
+                                          color: context.accentColor
                                               .withAlpha(40),
-                                          borderColor: AppTheme.primaryGreen,
+                                          borderColor: context.accentColor,
                                           borderStrokeWidth: 2,
                                         ),
                                       ],
@@ -673,7 +674,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                                           height: 24,
                                           child: Container(
                                             decoration: BoxDecoration(
-                                              color: AppTheme.primaryGreen,
+                                              color: context.accentColor,
                                               shape: BoxShape.circle,
                                               border: Border.all(
                                                 color: Colors.white,
@@ -694,7 +695,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                         ],
                       );
                     }
@@ -706,17 +707,17 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withAlpha(20),
+                      color: context.accentColor.withAlpha(20),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: AppTheme.primaryGreen.withAlpha(50),
+                        color: context.accentColor.withAlpha(50),
                       ),
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.radar,
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                           size: 20,
                         ),
                         const SizedBox(width: 12),
@@ -849,16 +850,16 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                   'Minimum time between geofence alerts for the same node',
                   style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 // Pick on Map button
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: _openGeofencePicker,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.primaryGreen,
+                      foregroundColor: context.accentColor,
                       side: BorderSide(
-                        color: AppTheme.primaryGreen.withAlpha(100),
+                        color: context.accentColor.withAlpha(100),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
@@ -915,21 +916,21 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.primaryGreen.withAlpha(20),
+        color: context.accentColor.withAlpha(20),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.primaryGreen.withAlpha(50)),
+        border: Border.all(color: context.accentColor.withAlpha(50)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.info_outline, color: AppTheme.primaryGreen, size: 20),
+              Icon(Icons.info_outline, color: context.accentColor, size: 20),
               SizedBox(width: 12),
               Text(
                 'Setup Guide',
                 style: TextStyle(
-                  color: AppTheme.primaryGreen,
+                  color: context.accentColor,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -956,16 +957,16 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             width: 20,
             height: 20,
             decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withAlpha(50),
+              color: context.accentColor.withAlpha(50),
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 number,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryGreen,
+                  color: context.accentColor,
                 ),
               ),
             ),
@@ -1066,11 +1067,11 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             flex: 2,
             child: Text(
               eventName,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'monospace',
                 fontWeight: FontWeight.w600,
                 fontSize: 11,
-                color: AppTheme.primaryGreen,
+                color: context.accentColor,
               ),
             ),
           ),

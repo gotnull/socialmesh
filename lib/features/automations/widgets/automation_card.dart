@@ -93,14 +93,7 @@ class AutomationCard extends StatelessWidget {
                 ),
 
                 // Toggle switch
-                Switch.adaptive(
-                  value: isEnabled,
-                  onChanged: onToggle,
-                  activeTrackColor: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.5),
-                  activeThumbColor: Theme.of(context).colorScheme.primary,
-                ),
+                ThemedSwitch(value: isEnabled, onChanged: onToggle),
               ],
             ),
 

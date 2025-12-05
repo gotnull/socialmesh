@@ -375,14 +375,14 @@ class _ConversationTile extends StatelessWidget {
                           ),
                         ),
                         if (conversation.unreadCount > 0) ...[
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryGreen,
+                              color: context.accentColor,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -859,7 +859,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGreen,
+                backgroundColor: context.accentColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -945,17 +945,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 height: 36,
                 decoration: BoxDecoration(
                   color: widget.type == ConversationType.channel
-                      ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+                      ? context.accentColor.withValues(alpha: 0.2)
                       : AppTheme.graphPurple,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: widget.type == ConversationType.channel
-                      ? const Icon(
-                          Icons.tag,
-                          color: AppTheme.primaryGreen,
-                          size: 18,
-                        )
+                      ? Icon(Icons.tag, color: context.accentColor, size: 18)
                       : Text(
                           widget.title.substring(0, 2),
                           style: const TextStyle(
@@ -983,7 +979,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       widget.type == ConversationType.channel
                           ? 'Channel'
                           : 'Direct Message',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         color: AppTheme.textTertiary,
                       ),
@@ -997,7 +993,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             IconButton(
               icon: Icon(
                 _isSearching ? Icons.close : Icons.search,
-                color: _isSearching ? AppTheme.primaryGreen : Colors.white,
+                color: _isSearching ? context.accentColor : Colors.white,
               ),
               tooltip: _isSearching ? 'Close Search' : 'Search Messages',
               onPressed: _toggleSearch,
@@ -1199,7 +1195,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     // Voice messaging not practical over LoRa due to bandwidth limits
                     // Show send button always
                     GestureDetector(
@@ -1207,8 +1203,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       child: Container(
                         width: 48,
                         height: 48,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.primaryGreen,
+                        decoration: BoxDecoration(
+                          color: context.accentColor,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -1310,8 +1306,8 @@ class _MessageBubble extends StatelessWidget {
                       color: isFailed
                           ? AppTheme.errorRed.withValues(alpha: 0.8)
                           : isPending
-                          ? AppTheme.primaryGreen.withValues(alpha: 0.6)
-                          : AppTheme.primaryGreen,
+                          ? context.accentColor.withValues(alpha: 0.6)
+                          : context.accentColor,
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: Column(
@@ -1418,20 +1414,20 @@ class _MessageBubble extends StatelessWidget {
                             color: AppTheme.darkCard,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
                                 Icons.refresh,
                                 size: 12,
-                                color: AppTheme.primaryGreen,
+                                color: context.accentColor,
                               ),
                               SizedBox(width: 4),
                               Text(
                                 'Retry',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: AppTheme.primaryGreen,
+                                  color: context.accentColor,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -1556,14 +1552,10 @@ class _QuickResponsesSheet extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                    color: context.accentColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.bolt,
-                    color: AppTheme.primaryGreen,
-                    size: 18,
-                  ),
+                  child: Icon(Icons.bolt, color: context.accentColor, size: 18),
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -1732,9 +1724,9 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
           child: _showKey
               ? SelectableText(
                   base64Key,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: AppTheme.primaryGreen,
+                    color: context.accentColor,
                     fontFamily: 'monospace',
                   ),
                 )
@@ -1784,7 +1776,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                       }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryGreen,
+                  backgroundColor: context.accentColor,
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: AppTheme.darkBackground,
                   padding: const EdgeInsets.symmetric(vertical: 14),

@@ -150,7 +150,7 @@ class AppBottomSheet extends StatelessWidget {
                   child: Text(cancelLabel),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
                   onPressed: () => Navigator.pop(context, true),
@@ -158,7 +158,7 @@ class AppBottomSheet extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: isDestructive
                         ? AppTheme.errorRed
-                        : AppTheme.primaryGreen,
+                        : context.accentColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -390,12 +390,12 @@ class BottomSheetHeader extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: (iconColor ?? AppTheme.primaryGreen).withValues(alpha: 0.15),
+            color: (iconColor ?? context.accentColor).withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
             icon,
-            color: iconColor ?? AppTheme.primaryGreen,
+            color: iconColor ?? context.accentColor,
             size: 24,
           ),
         ),
@@ -553,7 +553,7 @@ class BottomSheetButtons extends StatelessWidget {
             child: Text(cancelLabel),
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: FilledButton(
             onPressed: isConfirmEnabled ? onConfirm : null,
@@ -561,7 +561,7 @@ class BottomSheetButtons extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 16),
               backgroundColor: isDestructive
                   ? AppTheme.errorRed
-                  : AppTheme.primaryGreen,
+                  : context.accentColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
@@ -219,18 +220,18 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
               child: TextButton(
                 onPressed: _isLoading ? null : _saveConfig,
                 child: _isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                         ),
                       )
-                    : const Text(
+                    : Text(
                         'Save',
                         style: TextStyle(
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                           fontWeight: FontWeight.w600,
                           
                         ),
@@ -246,17 +247,17 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                 children: [
                   const _SectionHeader(title: 'GPS MODE'),
                   _buildGpsModeSelector(),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   const _SectionHeader(title: 'BROADCAST SETTINGS'),
                   _SettingsTile(
                     icon: Icons.tune,
                     iconColor: _smartBroadcastEnabled
-                        ? AppTheme.primaryGreen
+                        ? context.accentColor
                         : null,
                     title: 'Smart Broadcast',
                     subtitle:
                         'Only broadcast when position changes significantly',
-                    trailing: Switch.adaptive(
+                    trailing: ThemedSwitch(
                       value: _smartBroadcastEnabled,
                       onChanged: (value) {
                         HapticFeedback.selectionClick();
@@ -280,7 +281,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               'Position Broadcast Interval',
                               style: TextStyle(
                                 color: Colors.white,
@@ -294,15 +295,15 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryGreen.withValues(
+                                color: context.accentColor.withValues(
                                   alpha: 0.15,
                                 ),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 _formatDuration(_positionBroadcastSecs),
-                                style: const TextStyle(
-                                  color: AppTheme.primaryGreen,
+                                style: TextStyle(
+                                  color: context.accentColor,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13,
                                   
@@ -320,12 +321,12 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                             
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         SliderTheme(
                           data: SliderThemeData(
                             inactiveTrackColor: AppTheme.darkBorder,
-                            thumbColor: AppTheme.primaryGreen,
-                            overlayColor: AppTheme.primaryGreen.withValues(
+                            thumbColor: context.accentColor,
+                            overlayColor: context.accentColor.withValues(
                               alpha: 0.2,
                             ),
                             trackHeight: 4,
@@ -346,7 +347,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               'GPS Update Interval',
                               style: TextStyle(
                                 color: Colors.white,
@@ -360,15 +361,15 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryGreen.withValues(
+                                color: context.accentColor.withValues(
                                   alpha: 0.15,
                                 ),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 '${_gpsUpdateInterval}s',
-                                style: const TextStyle(
-                                  color: AppTheme.primaryGreen,
+                                style: TextStyle(
+                                  color: context.accentColor,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13,
                                   
@@ -386,12 +387,12 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                             
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         SliderTheme(
                           data: SliderThemeData(
                             inactiveTrackColor: AppTheme.darkBorder,
-                            thumbColor: AppTheme.primaryGreen,
-                            overlayColor: AppTheme.primaryGreen.withValues(
+                            thumbColor: context.accentColor,
+                            overlayColor: context.accentColor.withValues(
                               alpha: 0.2,
                             ),
                             trackHeight: 4,
@@ -411,14 +412,14 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   const _SectionHeader(title: 'FIXED POSITION'),
                   _SettingsTile(
                     icon: Icons.pin_drop,
-                    iconColor: _fixedPosition ? AppTheme.primaryGreen : null,
+                    iconColor: _fixedPosition ? context.accentColor : null,
                     title: 'Use Fixed Position',
                     subtitle: 'Manually set position instead of using GPS',
-                    trailing: Switch.adaptive(
+                    trailing: ThemedSwitch(
                       value: _fixedPosition,
                       onChanged: (value) {
                         HapticFeedback.selectionClick();
@@ -472,8 +473,8 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: AppTheme.primaryGreen,
+                                borderSide: BorderSide(
+                                  color: context.accentColor,
                                 ),
                               ),
                               prefixIcon: const Icon(
@@ -516,8 +517,8 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: AppTheme.primaryGreen,
+                                borderSide: BorderSide(
+                                  color: context.accentColor,
                                 ),
                               ),
                               prefixIcon: const Icon(
@@ -560,8 +561,8 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: AppTheme.primaryGreen,
+                                borderSide: BorderSide(
+                                  color: context.accentColor,
                                 ),
                               ),
                               prefixIcon: const Icon(
@@ -628,7 +629,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
+                              Text(
                                 'Minimum Distance',
                                 style: TextStyle(
                                   color: Colors.white,
@@ -642,15 +643,15 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primaryGreen.withValues(
+                                  color: context.accentColor.withValues(
                                     alpha: 0.15,
                                   ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   '${_smartMinimumDistance}m',
-                                  style: const TextStyle(
-                                    color: AppTheme.primaryGreen,
+                                  style: TextStyle(
+                                    color: context.accentColor,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 13,
                                     
@@ -668,12 +669,12 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                               
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           SliderTheme(
                             data: SliderThemeData(
                               inactiveTrackColor: AppTheme.darkBorder,
-                              thumbColor: AppTheme.primaryGreen,
-                              overlayColor: AppTheme.primaryGreen.withValues(
+                              thumbColor: context.accentColor,
+                              overlayColor: context.accentColor.withValues(
                                 alpha: 0.2,
                               ),
                               trackHeight: 4,
@@ -694,7 +695,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
+                              Text(
                                 'Minimum Interval',
                                 style: TextStyle(
                                   color: Colors.white,
@@ -708,15 +709,15 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primaryGreen.withValues(
+                                  color: context.accentColor.withValues(
                                     alpha: 0.15,
                                   ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   '${_smartMinimumIntervalSecs}s',
-                                  style: const TextStyle(
-                                    color: AppTheme.primaryGreen,
+                                  style: TextStyle(
+                                    color: context.accentColor,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 13,
                                     
@@ -734,12 +735,12 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                               
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           SliderTheme(
                             data: SliderThemeData(
                               inactiveTrackColor: AppTheme.darkBorder,
-                              thumbColor: AppTheme.primaryGreen,
-                              overlayColor: AppTheme.primaryGreen.withValues(
+                              thumbColor: context.accentColor,
+                              overlayColor: context.accentColor.withValues(
                                 alpha: 0.2,
                               ),
                               trackHeight: 4,
@@ -779,7 +780,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               'GPS Attempt Time',
                               style: TextStyle(
                                 color: Colors.white,
@@ -793,15 +794,15 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryGreen.withValues(
+                                color: context.accentColor.withValues(
                                   alpha: 0.15,
                                 ),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 '${_gpsAttemptTime}s',
-                                style: const TextStyle(
-                                  color: AppTheme.primaryGreen,
+                                style: TextStyle(
+                                  color: context.accentColor,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13,
                                   
@@ -819,12 +820,12 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                             
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         SliderTheme(
                           data: SliderThemeData(
                             inactiveTrackColor: AppTheme.darkBorder,
-                            thumbColor: AppTheme.primaryGreen,
-                            overlayColor: AppTheme.primaryGreen.withValues(
+                            thumbColor: context.accentColor,
+                            overlayColor: context.accentColor.withValues(
                               alpha: 0.2,
                             ),
                             trackHeight: 4,
@@ -963,7 +964,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                 ],
               ),
             ),
-            Switch.adaptive(
+            ThemedSwitch(
               value: value,
               onChanged: (v) {
                 HapticFeedback.selectionClick();
@@ -1022,12 +1023,12 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected
-                          ? AppTheme.primaryGreen
+                          ? context.accentColor
                           : AppTheme.darkBorder,
                       width: isSelected ? 2 : 1,
                     ),
                     color: isSelected
-                        ? AppTheme.primaryGreen.withValues(alpha: 0.1)
+                        ? context.accentColor.withValues(alpha: 0.1)
                         : null,
                   ),
                   child: Row(
@@ -1035,10 +1036,10 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                       Icon(
                         m.$4,
                         color: isSelected
-                            ? AppTheme.primaryGreen
+                            ? context.accentColor
                             : AppTheme.textSecondary,
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1050,7 +1051,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                     ? FontWeight.bold
                                     : FontWeight.w500,
                                 color: isSelected
-                                    ? AppTheme.primaryGreen
+                                    ? context.accentColor
                                     : Colors.white,
                                 
                               ),
@@ -1067,9 +1068,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                         ),
                       ),
                       if (isSelected)
-                        const Icon(
+                        Icon(
                           Icons.check_circle,
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                         ),
                     ],
                   ),

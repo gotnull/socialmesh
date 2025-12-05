@@ -41,7 +41,7 @@ class NetworkOverviewContent extends ConsumerWidget {
             child: _StatItem(
               icon: isConnected ? Icons.check_circle : Icons.error_outline,
               iconColor: isConnected
-                  ? AppTheme.primaryGreen
+                  ? context.accentColor
                   : AppTheme.errorRed,
               value: isConnected ? 'Online' : 'Offline',
               label: 'Status',
@@ -62,7 +62,7 @@ class NetworkOverviewContent extends ConsumerWidget {
           Expanded(
             child: _StatItem(
               icon: Icons.chat_bubble_outline,
-              iconColor: AppTheme.primaryGreen,
+              iconColor: context.accentColor,
               value: recentMessages.toString(),
               label: 'Last Hour',
               badge: unreadMessages > 0 ? unreadMessages : null,

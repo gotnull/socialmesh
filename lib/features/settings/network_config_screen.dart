@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
@@ -142,18 +143,18 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
               child: TextButton(
                 onPressed: _saving ? null : _saveConfig,
                 child: _saving
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                         ),
                       )
-                    : const Text(
+                    : Text(
                         'Save',
                         style: TextStyle(
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                           fontWeight: FontWeight.w600,
                           
                         ),
@@ -163,7 +164,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
           ],
         ),
         body: _loading
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(child: CircularProgressIndicator())
             : ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
@@ -172,10 +173,10 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
 
                   _SettingsTile(
                     icon: Icons.wifi,
-                    iconColor: _wifiEnabled ? AppTheme.primaryGreen : null,
+                    iconColor: _wifiEnabled ? context.accentColor : null,
                     title: 'WiFi Enabled',
                     subtitle: 'Connect to a WiFi network',
-                    trailing: Switch.adaptive(
+                    trailing: ThemedSwitch(
                       value: _wifiEnabled,
                       onChanged: (value) {
                         HapticFeedback.selectionClick();
@@ -225,8 +226,8 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: AppTheme.primaryGreen,
+                                borderSide: BorderSide(
+                                  color: context.accentColor,
                                 ),
                               ),
                               prefixIcon: const Icon(
@@ -268,8 +269,8 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: AppTheme.primaryGreen,
+                                borderSide: BorderSide(
+                                  color: context.accentColor,
                                 ),
                               ),
                               prefixIcon: const Icon(
@@ -292,17 +293,17 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                         ],
                       ),
                     ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Ethernet Section
                   const _SectionHeader(title: 'ETHERNET'),
 
                   _SettingsTile(
                     icon: Icons.settings_ethernet,
-                    iconColor: _ethEnabled ? AppTheme.primaryGreen : null,
+                    iconColor: _ethEnabled ? context.accentColor : null,
                     title: 'Ethernet Enabled',
                     subtitle: 'Use wired Ethernet connection',
-                    trailing: Switch.adaptive(
+                    trailing: ThemedSwitch(
                       value: _ethEnabled,
                       onChanged: (value) {
                         HapticFeedback.selectionClick();
@@ -367,8 +368,8 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: AppTheme.primaryGreen,
+                              borderSide: BorderSide(
+                                color: context.accentColor,
                               ),
                             ),
                             prefixIcon: const Icon(

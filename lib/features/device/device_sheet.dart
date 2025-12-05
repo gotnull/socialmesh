@@ -60,14 +60,14 @@ class _DeviceSheetContent extends ConsumerWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: isConnected
-                      ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                      ? context.accentColor.withValues(alpha: 0.15)
                       : AppTheme.darkBackground,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.router,
                   color: isConnected
-                      ? AppTheme.primaryGreen
+                      ? context.accentColor
                       : AppTheme.textTertiary,
                   size: 24,
                 ),
@@ -86,7 +86,7 @@ class _DeviceSheetContent extends ConsumerWidget {
                         
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Row(
                       children: [
                         Container(
@@ -94,20 +94,20 @@ class _DeviceSheetContent extends ConsumerWidget {
                           height: 8,
                           decoration: BoxDecoration(
                             color: isConnected
-                                ? AppTheme.primaryGreen
+                                ? context.accentColor
                                 : isReconnecting
                                 ? AppTheme.warningYellow
                                 : AppTheme.textTertiary,
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Text(
                           _getStatusText(connectionState, autoReconnectState),
                           style: TextStyle(
                             fontSize: 14,
                             color: isConnected
-                                ? AppTheme.primaryGreen
+                                ? context.accentColor
                                 : isReconnecting
                                 ? AppTheme.warningYellow
                                 : AppTheme.textTertiary,
@@ -268,9 +268,9 @@ class _DeviceSheetContent extends ConsumerWidget {
           Navigator.of(context).pushNamed('/scanner');
         },
         icon: const Icon(Icons.bluetooth_searching, size: 20),
-        label: const Text('Scan for Devices'),
+        label: Text('Scan for Devices'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primaryGreen,
+          backgroundColor: context.accentColor,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -336,12 +336,12 @@ class _DeviceInfoCard extends StatelessWidget {
         connectionState == transport.DeviceConnectionState.connected;
 
     final statusColor = isConnected
-        ? AppTheme.primaryGreen
+        ? context.accentColor
         : AppTheme.textTertiary;
 
     final rssiColor = device?.rssi != null
         ? (device!.rssi! > -70
-              ? AppTheme.primaryGreen
+              ? context.accentColor
               : device!.rssi! > -85
               ? AppTheme.warningYellow
               : AppTheme.errorRed)
@@ -352,7 +352,7 @@ class _DeviceInfoCard extends StatelessWidget {
               ? AppTheme
                     .primaryGreen // Charging
               : batteryLevel! >= 50
-              ? AppTheme.primaryGreen
+              ? context.accentColor
               : batteryLevel! >= 20
               ? AppTheme.warningYellow
               : AppTheme.errorRed)
@@ -370,7 +370,7 @@ class _DeviceInfoCard extends StatelessWidget {
             label: 'Device Name',
             value: device?.name ?? 'Unknown',
             icon: Icons.router,
-            iconColor: AppTheme.primaryGreen,
+            iconColor: context.accentColor,
           ),
           InfoTableRow(
             label: 'Status',
@@ -480,7 +480,7 @@ class _ActionTile extends StatelessWidget {
                     color: AppTheme.darkCard,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, color: AppTheme.primaryGreen, size: 22),
+                  child: Icon(icon, color: context.accentColor, size: 22),
                 ),
                 const SizedBox(width: 14),
                 Expanded(

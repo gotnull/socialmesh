@@ -907,3 +907,25 @@ class AnimatedMorphIcon extends StatelessWidget {
     );
   }
 }
+
+/// A themed switch that uses the app's accent color.
+/// Works correctly on both iOS (CupertinoSwitch) and Android (Material Switch).
+class ThemedSwitch extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  const ThemedSwitch({super.key, required this.value, this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final accentColor = Theme.of(context).colorScheme.primary;
+    return Switch.adaptive(
+      value: value,
+      onChanged: onChanged,
+      activeThumbColor: Colors.white,
+      activeTrackColor: accentColor,
+      inactiveThumbColor: Colors.grey.shade400,
+      inactiveTrackColor: Colors.grey.shade700,
+    );
+  }
+}

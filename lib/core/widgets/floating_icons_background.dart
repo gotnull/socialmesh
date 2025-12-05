@@ -30,7 +30,7 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
   static const List<_FloatingIconData> _icons = [
     _FloatingIconData(
       icon: Icons.router,
-      color: AppTheme.primaryGreen,
+      color: AccentColors.green,
       size: 44,
       startX: 0.08,
       startY: 0.12,
@@ -71,7 +71,7 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
     ),
     _FloatingIconData(
       icon: Icons.signal_cellular_alt,
-      color: AppTheme.primaryGreen,
+      color: AccentColors.green,
       colorAlpha: 0.7,
       size: 30,
       startX: 0.92,
@@ -113,7 +113,7 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
     ),
     _FloatingIconData(
       icon: Icons.device_hub,
-      color: AppTheme.primaryGreen,
+      color: AccentColors.green,
       colorAlpha: 0.5,
       size: 28,
       startX: 0.48,

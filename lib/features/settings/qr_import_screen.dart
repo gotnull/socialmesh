@@ -280,15 +280,15 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
+            child: Text(
               'Edit First',
-              style: TextStyle(color: AppTheme.primaryGreen),
+              style: TextStyle(color: context.accentColor),
             ),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.primaryGreen,
+              backgroundColor: context.accentColor,
             ),
             child: const Text('Import'),
           ),
@@ -380,7 +380,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
             onPressed: () => _controller.toggleTorch(),
           ),
           IconButton(
-            icon: const Icon(Icons.flip_camera_ios, color: Colors.white),
+            icon: Icon(Icons.flip_camera_ios, color: Colors.white),
             onPressed: () => _controller.switchCamera(),
           ),
         ],
@@ -392,7 +392,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
           Container(
             decoration: BoxDecoration(
               border: Border.all(
-                color: AppTheme.primaryGreen.withValues(alpha: 0.5),
+                color: context.accentColor.withValues(alpha: 0.5),
                 width: 2,
               ),
             ),
@@ -400,10 +400,10 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
           if (_isProcessing)
             Container(
               color: Colors.black54,
-              child: const Center(
+              child: Center(
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    AppTheme.primaryGreen,
+                    context.accentColor,
                   ),
                 ),
               ),
@@ -425,13 +425,13 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
                   ],
                 ),
               ),
-              child: const Column(
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     Icons.qr_code_scanner,
                     size: 32,
-                    color: AppTheme.primaryGreen,
+                    color: context.accentColor,
                   ),
                   SizedBox(height: 12),
                   Text(

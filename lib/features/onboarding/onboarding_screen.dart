@@ -37,7 +37,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       title: 'Mesh Network',
       description:
           'Messages hop between devices,\nextending range without internet.',
-      accentColor: AppTheme.primaryGreen,
+      accentColor: AccentColors.green,
     ),
     _OnboardingPage(
       icon: Icons.lock_outline,

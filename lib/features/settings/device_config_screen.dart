@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
@@ -128,18 +129,18 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             child: TextButton(
               onPressed: _isLoading ? null : _saveConfig,
               child: _isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                       ),
                     )
-                  : const Text(
+                  : Text(
                       'Save',
                       style: TextStyle(
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                         fontWeight: FontWeight.w600,
                         
                       ),
@@ -158,14 +159,14 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 const SizedBox(height: 16),
                 const _SectionHeader(title: 'REBROADCAST'),
                 _buildRebroadcastSelector(),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 const _SectionHeader(title: 'SETTINGS'),
                 _SettingsTile(
                   icon: Icons.terminal,
-                  iconColor: _serialEnabled ? AppTheme.primaryGreen : null,
+                  iconColor: _serialEnabled ? context.accentColor : null,
                   title: 'Serial Console',
                   subtitle: 'Enable serial port for debugging',
-                  trailing: Switch.adaptive(
+                  trailing: ThemedSwitch(
                     value: _serialEnabled,
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
@@ -176,11 +177,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 _SettingsTile(
                   icon: Icons.lightbulb_outline,
                   iconColor: !_ledHeartbeatDisabled
-                      ? AppTheme.primaryGreen
+                      ? context.accentColor
                       : null,
                   title: 'LED Heartbeat',
                   subtitle: 'Flash LED to indicate device is running',
-                  trailing: Switch.adaptive(
+                  trailing: ThemedSwitch(
                     value: !_ledHeartbeatDisabled,
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
@@ -204,7 +205,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Node Info Broadcast',
                             style: TextStyle(
                               color: Colors.white,
@@ -218,15 +219,15 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryGreen.withValues(
+                              color: context.accentColor.withValues(
                                 alpha: 0.15,
                               ),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               _formatDuration(_nodeInfoBroadcastSecs),
-                              style: const TextStyle(
-                                color: AppTheme.primaryGreen,
+                              style: TextStyle(
+                                color: context.accentColor,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
                                 
@@ -244,12 +245,12 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                           
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       SliderTheme(
                         data: SliderThemeData(
                           inactiveTrackColor: AppTheme.darkBorder,
-                          thumbColor: AppTheme.primaryGreen,
-                          overlayColor: AppTheme.primaryGreen.withValues(
+                          thumbColor: context.accentColor,
+                          overlayColor: context.accentColor.withValues(
                             alpha: 0.2,
                           ),
                           trackHeight: 4,
@@ -363,7 +364,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           ...roles.map((r) {
             final isSelected = _selectedRole == r.$1;
             return Padding(
@@ -377,12 +378,12 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected
-                          ? AppTheme.primaryGreen
+                          ? context.accentColor
                           : AppTheme.darkBorder,
                       width: isSelected ? 2 : 1,
                     ),
                     color: isSelected
-                        ? AppTheme.primaryGreen.withValues(alpha: 0.1)
+                        ? context.accentColor.withValues(alpha: 0.1)
                         : null,
                   ),
                   child: Row(
@@ -390,10 +391,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                       Icon(
                         r.$4,
                         color: isSelected
-                            ? AppTheme.primaryGreen
+                            ? context.accentColor
                             : AppTheme.textSecondary,
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -405,7 +406,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                     ? FontWeight.bold
                                     : FontWeight.w500,
                                 color: isSelected
-                                    ? AppTheme.primaryGreen
+                                    ? context.accentColor
                                     : Colors.white,
                                 
                               ),
@@ -422,9 +423,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                         ),
                       ),
                       if (isSelected)
-                        const Icon(
+                        Icon(
                           Icons.check_circle,
-                          color: AppTheme.primaryGreen,
+                          color: context.accentColor,
                         ),
                     ],
                   ),
@@ -484,7 +485,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           ...modes.map((m) {
             final isSelected = _rebroadcastMode == m.$1;
             return InkWell(
@@ -498,7 +499,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                           ? Icons.radio_button_checked
                           : Icons.radio_button_unchecked,
                       color: isSelected
-                          ? AppTheme.primaryGreen
+                          ? context.accentColor
                           : AppTheme.textSecondary,
                     ),
                     const SizedBox(width: 12),

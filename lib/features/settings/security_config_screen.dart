@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
@@ -128,18 +129,18 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
             child: TextButton(
               onPressed: _saving ? null : _saveConfig,
               child: _saving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                       ),
                     )
-                  : const Text(
+                  : Text(
                       'Save',
                       style: TextStyle(
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                         fontWeight: FontWeight.w600,
                         
                       ),
@@ -149,7 +150,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
@@ -158,10 +159,10 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
 
                 _SettingsTile(
                   icon: Icons.admin_panel_settings,
-                  iconColor: _isManaged ? AppTheme.primaryGreen : null,
+                  iconColor: _isManaged ? context.accentColor : null,
                   title: 'Managed Mode',
                   subtitle: 'Device is managed by an external system',
-                  trailing: Switch.adaptive(
+                  trailing: ThemedSwitch(
                     value: _isManaged,
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
@@ -169,17 +170,17 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                     },
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
 
                 // Access Controls
                 const _SectionHeader(title: 'ACCESS CONTROLS'),
 
                 _SettingsTile(
                   icon: Icons.usb,
-                  iconColor: _serialEnabled ? AppTheme.primaryGreen : null,
+                  iconColor: _serialEnabled ? context.accentColor : null,
                   title: 'Serial Console',
                   subtitle: 'Enable USB serial console access',
-                  trailing: Switch.adaptive(
+                  trailing: ThemedSwitch(
                     value: _serialEnabled,
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
@@ -189,10 +190,10 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                 ),
                 _SettingsTile(
                   icon: Icons.bug_report,
-                  iconColor: _debugLogEnabled ? AppTheme.primaryGreen : null,
+                  iconColor: _debugLogEnabled ? context.accentColor : null,
                   title: 'Debug Logging',
                   subtitle: 'Enable verbose debug log output',
-                  trailing: Switch.adaptive(
+                  trailing: ThemedSwitch(
                     value: _debugLogEnabled,
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
@@ -203,11 +204,11 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                 _SettingsTile(
                   icon: Icons.security,
                   iconColor: _adminChannelEnabled
-                      ? AppTheme.primaryGreen
+                      ? context.accentColor
                       : null,
                   title: 'Admin Channel',
                   subtitle: 'Allow remote admin via admin channel',
-                  trailing: Switch.adaptive(
+                  trailing: ThemedSwitch(
                     value: _adminChannelEnabled,
                     onChanged: (value) {
                       HapticFeedback.selectionClick();

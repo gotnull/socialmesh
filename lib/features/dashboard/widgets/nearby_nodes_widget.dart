@@ -83,7 +83,6 @@ class _NodeTile extends StatelessWidget {
                     fontSize: 8,
                     fontWeight: FontWeight.w700,
                     color: signalColor,
-                    
                   ),
                 ),
               ],
@@ -113,7 +112,6 @@ class _NodeTile extends StatelessWidget {
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -133,7 +131,6 @@ class _NodeTile extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppTheme.textTertiary,
-                        
                       ),
                     ),
                   ],
@@ -150,7 +147,7 @@ class _NodeTile extends StatelessWidget {
   }
 
   Color _getSignalColor(int rssi) {
-    if (rssi >= -60) return AppTheme.primaryGreen;
+    if (rssi >= -60) return AccentColors.green;
     if (rssi >= -75) return AppTheme.warningYellow;
     return AppTheme.errorRed;
   }
@@ -178,12 +175,12 @@ class _RoleChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: isRouter
-            ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+            ? context.accentColor.withValues(alpha: 0.15)
             : AppTheme.darkBackground,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
           color: isRouter
-              ? AppTheme.primaryGreen.withValues(alpha: 0.3)
+              ? context.accentColor.withValues(alpha: 0.3)
               : AppTheme.darkBorder,
         ),
       ),
@@ -192,8 +189,7 @@ class _RoleChip extends StatelessWidget {
         style: TextStyle(
           fontSize: 9,
           fontWeight: FontWeight.w600,
-          color: isRouter ? AppTheme.primaryGreen : AppTheme.textTertiary,
-          
+          color: isRouter ? context.accentColor : AppTheme.textTertiary,
         ),
       ),
     );
@@ -211,7 +207,7 @@ class _BatteryIndicator extends StatelessWidget {
         ? AppTheme
               .primaryGreen // Charging
         : level >= 50
-        ? AppTheme.primaryGreen
+        ? context.accentColor
         : level >= 20
         ? AppTheme.warningYellow
         : AppTheme.errorRed;
@@ -237,7 +233,6 @@ class _BatteryIndicator extends StatelessWidget {
               fontSize: 10,
               fontWeight: FontWeight.w600,
               color: color,
-              
             ),
           ),
       ],

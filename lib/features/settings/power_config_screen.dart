@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
@@ -142,18 +143,18 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
             child: TextButton(
               onPressed: _saving ? null : _saveConfig,
               child: _saving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                       ),
                     )
-                  : const Text(
+                  : Text(
                       'Save',
                       style: TextStyle(
-                        color: AppTheme.primaryGreen,
+                        color: context.accentColor,
                         fontWeight: FontWeight.w600,
                         
                       ),
@@ -163,7 +164,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
@@ -172,10 +173,10 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                   icon: _isPowerSaving
                       ? Icons.battery_saver
                       : Icons.battery_full,
-                  iconColor: _isPowerSaving ? AppTheme.primaryGreen : null,
+                  iconColor: _isPowerSaving ? context.accentColor : null,
                   title: 'Power Saving Mode',
                   subtitle: 'Reduce power consumption when idle',
-                  trailing: Switch.adaptive(
+                  trailing: ThemedSwitch(
                     value: _isPowerSaving,
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
@@ -327,7 +328,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
           children: [
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w500,
                 
@@ -336,13 +337,13 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                color: context.accentColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 formatValue(value),
-                style: const TextStyle(
-                  color: AppTheme.primaryGreen,
+                style: TextStyle(
+                  color: context.accentColor,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                   
@@ -360,12 +361,12 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
             
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         SliderTheme(
           data: SliderThemeData(
             inactiveTrackColor: AppTheme.darkBorder,
-            thumbColor: AppTheme.primaryGreen,
-            overlayColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
+            thumbColor: context.accentColor,
+            overlayColor: context.accentColor.withValues(alpha: 0.2),
             trackHeight: 4,
           ),
           child: Slider(
