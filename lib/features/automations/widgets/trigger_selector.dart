@@ -6,7 +6,7 @@ import '../../settings/geofence_picker_screen.dart';
 import '../models/automation.dart';
 
 /// Widget for selecting and configuring a trigger
-class TriggerSelector extends StatelessWidget {
+class TriggerSelector extends StatefulWidget {
   final AutomationTrigger trigger;
   final void Function(AutomationTrigger trigger) onChanged;
 
@@ -15,6 +15,49 @@ class TriggerSelector extends StatelessWidget {
     required this.trigger,
     required this.onChanged,
   });
+
+  @override
+  State<TriggerSelector> createState() => _TriggerSelectorState();
+}
+
+class _TriggerSelectorState extends State<TriggerSelector> {
+  // Controllers for text fields
+  late TextEditingController _keywordController;
+  late TextEditingController _latController;
+  late TextEditingController _lonController;
+
+  @override
+  void initState() {
+    super.initState();
+    _keywordController = TextEditingController(
+      text: widget.trigger.keyword ?? '',
+    );
+    _latController = TextEditingController(
+      text: widget.trigger.geofenceLat?.toString() ?? '',
+    );
+    _lonController = TextEditingController(
+      text: widget.trigger.geofenceLon?.toString() ?? '',
+    );
+  }
+
+  @override
+  void didUpdateWidget(TriggerSelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only update controllers if the trigger type changed (not during typing)
+    if (oldWidget.trigger.type != widget.trigger.type) {
+      _keywordController.text = widget.trigger.keyword ?? '';
+      _latController.text = widget.trigger.geofenceLat?.toString() ?? '';
+      _lonController.text = widget.trigger.geofenceLon?.toString() ?? '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _keywordController.dispose();
+    _latController.dispose();
+    _lonController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +82,7 @@ class TriggerSelector extends StatelessWidget {
                     color: Colors.amber.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(trigger.type.icon, color: Colors.amber),
+                  child: Icon(widget.trigger.type.icon, color: Colors.amber),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -47,12 +90,12 @@ class TriggerSelector extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        trigger.type.displayName,
+                        widget.trigger.type.displayName,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        trigger.type.category,
+                        widget.trigger.type.category,
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 13,
@@ -76,36 +119,29 @@ class TriggerSelector extends StatelessWidget {
   }
 
   Widget _buildTriggerConfig(BuildContext context) {
-    switch (trigger.type) {
+    switch (widget.trigger.type) {
       case TriggerType.batteryLow:
         return _buildSliderConfig(
           context,
           label: 'Battery threshold',
-          value: trigger.batteryThreshold.toDouble(),
+          value: widget.trigger.batteryThreshold.toDouble(),
           min: 5,
           max: 50,
           suffix: '%',
           onChanged: (value) {
-            onChanged(
-              trigger.copyWith(
-                config: {...trigger.config, 'batteryThreshold': value.round()},
+            widget.onChanged(
+              widget.trigger.copyWith(
+                config: {
+                  ...widget.trigger.config,
+                  'batteryThreshold': value.round(),
+                },
               ),
             );
           },
         );
 
       case TriggerType.messageContains:
-        return _buildTextConfig(
-          context,
-          label: 'Keyword to match',
-          hint: 'e.g., SOS, help, emergency',
-          value: trigger.keyword ?? '',
-          onChanged: (value) {
-            onChanged(
-              trigger.copyWith(config: {...trigger.config, 'keyword': value}),
-            );
-          },
-        );
+        return _buildKeywordConfig(context);
 
       case TriggerType.geofenceEnter:
       case TriggerType.geofenceExit:
@@ -115,15 +151,18 @@ class TriggerSelector extends StatelessWidget {
         return _buildSliderConfig(
           context,
           label: 'Silent duration',
-          value: trigger.silentMinutes.toDouble(),
+          value: widget.trigger.silentMinutes.toDouble(),
           min: 5,
           max: 120,
           suffix: ' min',
           divisions: 23,
           onChanged: (value) {
-            onChanged(
-              trigger.copyWith(
-                config: {...trigger.config, 'silentMinutes': value.round()},
+            widget.onChanged(
+              widget.trigger.copyWith(
+                config: {
+                  ...widget.trigger.config,
+                  'silentMinutes': value.round(),
+                },
               ),
             );
           },
@@ -133,14 +172,17 @@ class TriggerSelector extends StatelessWidget {
         return _buildSliderConfig(
           context,
           label: 'Signal threshold (SNR)',
-          value: trigger.signalThreshold.toDouble(),
+          value: widget.trigger.signalThreshold.toDouble(),
           min: -20,
           max: 0,
           suffix: ' dB',
           onChanged: (value) {
-            onChanged(
-              trigger.copyWith(
-                config: {...trigger.config, 'signalThreshold': value.round()},
+            widget.onChanged(
+              widget.trigger.copyWith(
+                config: {
+                  ...widget.trigger.config,
+                  'signalThreshold': value.round(),
+                },
               ),
             );
           },
@@ -196,13 +238,7 @@ class TriggerSelector extends StatelessWidget {
     );
   }
 
-  Widget _buildTextConfig(
-    BuildContext context, {
-    required String label,
-    required String hint,
-    required String value,
-    required void Function(String value) onChanged,
-  }) {
+  Widget _buildKeywordConfig(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -213,13 +249,19 @@ class TriggerSelector extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
+          const Text('Keyword to match', style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 8),
           TextField(
-            controller: TextEditingController(text: value),
-            onChanged: onChanged,
+            controller: _keywordController,
+            onChanged: (value) {
+              widget.onChanged(
+                widget.trigger.copyWith(
+                  config: {...widget.trigger.config, 'keyword': value},
+                ),
+              );
+            },
             decoration: InputDecoration(
-              hintText: hint,
+              hintText: 'e.g., SOS, help, emergency',
               isDense: true,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -259,9 +301,7 @@ class TriggerSelector extends StatelessWidget {
             children: [
               Expanded(
                 child: TextField(
-                  controller: TextEditingController(
-                    text: trigger.geofenceLat?.toString() ?? '',
-                  ),
+                  controller: _latController,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                     signed: true,
@@ -276,9 +316,12 @@ class TriggerSelector extends StatelessWidget {
                   onChanged: (value) {
                     final lat = double.tryParse(value);
                     if (lat != null) {
-                      onChanged(
-                        trigger.copyWith(
-                          config: {...trigger.config, 'geofenceLat': lat},
+                      widget.onChanged(
+                        widget.trigger.copyWith(
+                          config: {
+                            ...widget.trigger.config,
+                            'geofenceLat': lat,
+                          },
                         ),
                       );
                     }
@@ -288,9 +331,7 @@ class TriggerSelector extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: TextField(
-                  controller: TextEditingController(
-                    text: trigger.geofenceLon?.toString() ?? '',
-                  ),
+                  controller: _lonController,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                     signed: true,
@@ -305,9 +346,12 @@ class TriggerSelector extends StatelessWidget {
                   onChanged: (value) {
                     final lon = double.tryParse(value);
                     if (lon != null) {
-                      onChanged(
-                        trigger.copyWith(
-                          config: {...trigger.config, 'geofenceLon': lon},
+                      widget.onChanged(
+                        widget.trigger.copyWith(
+                          config: {
+                            ...widget.trigger.config,
+                            'geofenceLon': lon,
+                          },
                         ),
                       );
                     }
@@ -322,7 +366,7 @@ class TriggerSelector extends StatelessWidget {
             children: [
               const Text('Radius', style: TextStyle(color: Colors.grey)),
               Text(
-                '${trigger.geofenceRadius.round()}m',
+                '${widget.trigger.geofenceRadius.round()}m',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.w600,
@@ -331,14 +375,14 @@ class TriggerSelector extends StatelessWidget {
             ],
           ),
           Slider(
-            value: trigger.geofenceRadius,
+            value: widget.trigger.geofenceRadius,
             min: 100,
             max: 5000,
             divisions: 49,
             onChanged: (value) {
-              onChanged(
-                trigger.copyWith(
-                  config: {...trigger.config, 'geofenceRadius': value},
+              widget.onChanged(
+                widget.trigger.copyWith(
+                  config: {...widget.trigger.config, 'geofenceRadius': value},
                 ),
               );
             },
@@ -349,18 +393,21 @@ class TriggerSelector extends StatelessWidget {
                 final result = await Navigator.of(context).push<GeofenceResult>(
                   MaterialPageRoute(
                     builder: (context) => GeofencePickerScreen(
-                      initialLat: trigger.geofenceLat,
-                      initialLon: trigger.geofenceLon,
-                      initialRadius: trigger.geofenceRadius,
+                      initialLat: widget.trigger.geofenceLat,
+                      initialLon: widget.trigger.geofenceLon,
+                      initialRadius: widget.trigger.geofenceRadius,
                     ),
                   ),
                 );
 
                 if (result != null) {
-                  onChanged(
-                    trigger.copyWith(
+                  // Update controllers with new values
+                  _latController.text = result.latitude.toString();
+                  _lonController.text = result.longitude.toString();
+                  widget.onChanged(
+                    widget.trigger.copyWith(
                       config: {
-                        ...trigger.config,
+                        ...widget.trigger.config,
                         'geofenceLat': result.latitude,
                         'geofenceLon': result.longitude,
                         'geofenceRadius': result.radiusMeters,
@@ -453,7 +500,7 @@ class TriggerSelector extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: type == trigger.type
+                color: type == widget.trigger.type
                     ? Theme.of(
                         context,
                       ).colorScheme.primary.withValues(alpha: 0.2)
@@ -463,13 +510,13 @@ class TriggerSelector extends StatelessWidget {
               child: Icon(
                 type.icon,
                 size: 20,
-                color: type == trigger.type
+                color: type == widget.trigger.type
                     ? Theme.of(context).colorScheme.primary
                     : Colors.grey,
               ),
             ),
             title: Text(type.displayName),
-            trailing: type == trigger.type
+            trailing: type == widget.trigger.type
                 ? Icon(
                     Icons.check,
                     color: Theme.of(context).colorScheme.primary,
@@ -477,7 +524,11 @@ class TriggerSelector extends StatelessWidget {
                 : null,
             onTap: () {
               Navigator.pop(context);
-              onChanged(AutomationTrigger(type: type));
+              // Reset controllers when type changes
+              _keywordController.text = '';
+              _latController.text = '';
+              _lonController.text = '';
+              widget.onChanged(AutomationTrigger(type: type));
             },
           ),
         );

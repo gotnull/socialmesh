@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../models/automation.dart';
 
 /// Widget for editing an action
-class ActionEditor extends StatelessWidget {
+class ActionEditor extends StatefulWidget {
   final AutomationAction action;
   final void Function(AutomationAction action) onChanged;
   final VoidCallback? onDelete;
@@ -16,6 +17,106 @@ class ActionEditor extends StatelessWidget {
     required this.onChanged,
     this.onDelete,
   });
+
+  @override
+  State<ActionEditor> createState() => _ActionEditorState();
+}
+
+class _ActionEditorState extends State<ActionEditor> {
+  late TextEditingController _messageController;
+  late TextEditingController _notificationTitleController;
+  late TextEditingController _notificationBodyController;
+  late TextEditingController _webhookEventController;
+  late TextEditingController _shortcutNameController;
+
+  // Track which controller is currently active for variable insertion
+  TextEditingController? _lastFocusedController;
+
+  @override
+  void initState() {
+    super.initState();
+    _messageController = TextEditingController(
+      text: widget.action.messageText ?? '',
+    );
+    _notificationTitleController = TextEditingController(
+      text: widget.action.notificationTitle ?? '',
+    );
+    _notificationBodyController = TextEditingController(
+      text: widget.action.notificationBody ?? '',
+    );
+    _webhookEventController = TextEditingController(
+      text: widget.action.webhookEventName ?? '',
+    );
+    _shortcutNameController = TextEditingController(
+      text: widget.action.shortcutName ?? '',
+    );
+  }
+
+  @override
+  void didUpdateWidget(ActionEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only update controllers if the action type changed (not during typing)
+    if (oldWidget.action.type != widget.action.type) {
+      _messageController.text = widget.action.messageText ?? '';
+      _notificationTitleController.text = widget.action.notificationTitle ?? '';
+      _notificationBodyController.text = widget.action.notificationBody ?? '';
+      _webhookEventController.text = widget.action.webhookEventName ?? '';
+      _shortcutNameController.text = widget.action.shortcutName ?? '';
+      _lastFocusedController = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _notificationTitleController.dispose();
+    _notificationBodyController.dispose();
+    _webhookEventController.dispose();
+    _shortcutNameController.dispose();
+    super.dispose();
+  }
+
+  /// Insert a variable at cursor position in the active text field
+  void _insertVariable(String variable) {
+    final controller = _lastFocusedController;
+    if (controller == null) return;
+
+    HapticFeedback.lightImpact();
+
+    final text = controller.text;
+    final selection = controller.selection;
+
+    // Insert at cursor or append
+    final newText = selection.isValid
+        ? text.replaceRange(selection.start, selection.end, variable)
+        : text + variable;
+
+    controller.text = newText;
+
+    // Move cursor after inserted variable
+    final newPosition = selection.isValid
+        ? selection.start + variable.length
+        : newText.length;
+    controller.selection = TextSelection.collapsed(offset: newPosition);
+
+    // Determine config key and update action
+    String? configKey;
+    if (controller == _messageController) {
+      configKey = 'messageText';
+    } else if (controller == _notificationTitleController) {
+      configKey = 'notificationTitle';
+    } else if (controller == _notificationBodyController) {
+      configKey = 'notificationBody';
+    }
+
+    if (configKey != null) {
+      widget.onChanged(
+        widget.action.copyWith(
+          config: {...widget.action.config, configKey: newText},
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +141,7 @@ class ActionEditor extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
-                    action.type.icon,
+                    widget.action.type.icon,
                     color: AppTheme.successGreen,
                     size: 18,
                   ),
@@ -52,7 +153,7 @@ class ActionEditor extends StatelessWidget {
                     child: Row(
                       children: [
                         Text(
-                          action.type.displayName,
+                          widget.action.type.displayName,
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                         const SizedBox(width: 4),
@@ -65,11 +166,11 @@ class ActionEditor extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (onDelete != null)
+                if (widget.onDelete != null)
                   IconButton(
                     icon: const Icon(Icons.close, size: 18),
                     color: Colors.grey,
-                    onPressed: onDelete,
+                    onPressed: widget.onDelete,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
                       minWidth: 32,
@@ -88,7 +189,7 @@ class ActionEditor extends StatelessWidget {
   }
 
   Widget _buildActionConfig(BuildContext context) {
-    switch (action.type) {
+    switch (widget.action.type) {
       case ActionType.sendMessage:
         return _buildMessageConfig(context, toChannel: false);
 
@@ -118,24 +219,33 @@ class ActionEditor extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       child: Column(
         children: [
-          TextField(
-            controller: TextEditingController(text: action.messageText ?? ''),
-            onChanged: (value) {
-              onChanged(
-                action.copyWith(
-                  config: {...action.config, 'messageText': value},
-                ),
-              );
+          Focus(
+            onFocusChange: (hasFocus) {
+              if (hasFocus) {
+                setState(() {
+                  _lastFocusedController = _messageController;
+                });
+              }
             },
-            decoration: InputDecoration(
-              labelText: 'Message',
-              hintText: 'Use {{node.name}}, {{battery}}, etc.',
-              isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+            child: TextField(
+              controller: _messageController,
+              onChanged: (value) {
+                widget.onChanged(
+                  widget.action.copyWith(
+                    config: {...widget.action.config, 'messageText': value},
+                  ),
+                );
+              },
+              decoration: InputDecoration(
+                labelText: 'Message',
+                hintText: 'Tap variables below to insert',
+                isDense: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
+              maxLines: 2,
             ),
-            maxLines: 2,
           ),
           const SizedBox(height: 8),
           _buildVariableHints(context),
@@ -149,47 +259,67 @@ class ActionEditor extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       child: Column(
         children: [
-          TextField(
-            controller: TextEditingController(
-              text: action.notificationTitle ?? '',
-            ),
-            onChanged: (value) {
-              onChanged(
-                action.copyWith(
-                  config: {...action.config, 'notificationTitle': value},
-                ),
-              );
+          Focus(
+            onFocusChange: (hasFocus) {
+              if (hasFocus) {
+                setState(() {
+                  _lastFocusedController = _notificationTitleController;
+                });
+              }
             },
-            decoration: InputDecoration(
-              labelText: 'Title',
-              hintText: 'e.g., Low Battery: {{node.name}}',
-              isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+            child: TextField(
+              controller: _notificationTitleController,
+              onChanged: (value) {
+                widget.onChanged(
+                  widget.action.copyWith(
+                    config: {
+                      ...widget.action.config,
+                      'notificationTitle': value,
+                    },
+                  ),
+                );
+              },
+              decoration: InputDecoration(
+                labelText: 'Title',
+                hintText: 'Tap variables below to insert',
+                isDense: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ),
           const SizedBox(height: 8),
-          TextField(
-            controller: TextEditingController(
-              text: action.notificationBody ?? '',
-            ),
-            onChanged: (value) {
-              onChanged(
-                action.copyWith(
-                  config: {...action.config, 'notificationBody': value},
-                ),
-              );
+          Focus(
+            onFocusChange: (hasFocus) {
+              if (hasFocus) {
+                setState(() {
+                  _lastFocusedController = _notificationBodyController;
+                });
+              }
             },
-            decoration: InputDecoration(
-              labelText: 'Body',
-              hintText: 'e.g., Battery at {{battery}}',
-              isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+            child: TextField(
+              controller: _notificationBodyController,
+              onChanged: (value) {
+                widget.onChanged(
+                  widget.action.copyWith(
+                    config: {
+                      ...widget.action.config,
+                      'notificationBody': value,
+                    },
+                  ),
+                );
+              },
+              decoration: InputDecoration(
+                labelText: 'Body',
+                hintText: 'Tap variables below to insert',
+                isDense: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
+              maxLines: 2,
             ),
-            maxLines: 2,
           ),
           const SizedBox(height: 8),
           _buildVariableHints(context),
@@ -204,13 +334,11 @@ class ActionEditor extends StatelessWidget {
       child: Column(
         children: [
           TextField(
-            controller: TextEditingController(
-              text: action.webhookEventName ?? '',
-            ),
+            controller: _webhookEventController,
             onChanged: (value) {
-              onChanged(
-                action.copyWith(
-                  config: {...action.config, 'webhookEventName': value},
+              widget.onChanged(
+                widget.action.copyWith(
+                  config: {...widget.action.config, 'webhookEventName': value},
                 ),
               );
             },
@@ -252,10 +380,12 @@ class ActionEditor extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       child: TextField(
-        controller: TextEditingController(text: action.shortcutName ?? ''),
+        controller: _shortcutNameController,
         onChanged: (value) {
-          onChanged(
-            action.copyWith(config: {...action.config, 'shortcutName': value}),
+          widget.onChanged(
+            widget.action.copyWith(
+              config: {...widget.action.config, 'shortcutName': value},
+            ),
           );
         },
         decoration: InputDecoration(
@@ -279,7 +409,9 @@ class ActionEditor extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Available variables:',
+            _lastFocusedController != null
+                ? 'Tap a variable to insert:'
+                : 'Available variables (tap a field first):',
             style: TextStyle(color: Colors.grey[600], fontSize: 11),
           ),
           const SizedBox(height: 4),
@@ -300,18 +432,27 @@ class ActionEditor extends StatelessWidget {
   }
 
   Widget _buildVariableChip(String variable) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: AppTheme.darkCard,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        variable,
-        style: TextStyle(
-          fontFamily: 'monospace',
-          fontSize: 11,
-          color: Colors.amber[300],
+    final isActive = _lastFocusedController != null;
+    return GestureDetector(
+      onTap: isActive ? () => _insertVariable(variable) : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: isActive
+              ? AppTheme.successGreen.withValues(alpha: 0.2)
+              : AppTheme.darkCard,
+          borderRadius: BorderRadius.circular(4),
+          border: isActive
+              ? Border.all(color: AppTheme.successGreen.withValues(alpha: 0.5))
+              : null,
+        ),
+        child: Text(
+          variable,
+          style: TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 11,
+            color: isActive ? AppTheme.successGreen : Colors.amber[300],
+          ),
         ),
       ),
     );
@@ -352,12 +493,18 @@ class ActionEditor extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: ActionType.values.map((type) {
-                final isSelected = type == action.type;
+                final isSelected = type == widget.action.type;
                 return BouncyTap(
                   onTap: () {
                     Navigator.pop(context);
-                    if (type != action.type) {
-                      onChanged(AutomationAction(type: type));
+                    if (type != widget.action.type) {
+                      // Reset controllers when type changes
+                      _messageController.text = '';
+                      _notificationTitleController.text = '';
+                      _notificationBodyController.text = '';
+                      _webhookEventController.text = '';
+                      _shortcutNameController.text = '';
+                      widget.onChanged(AutomationAction(type: type));
                     }
                   },
                   child: Container(
