@@ -6,8 +6,19 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../models/automation.dart';
 
-/// RegExp to detect {{variable}} patterns
-final _variableRegExp = RegExp(r'\{\{[a-zA-Z0-9_.]+\}\}');
+/// Valid variable names that can be used in automations
+const _validVariables = [
+  '{{node.name}}',
+  '{{battery}}',
+  '{{location}}',
+  '{{message}}',
+  '{{time}}',
+];
+
+/// RegExp to detect only valid {{variable}} patterns
+final _variableRegExp = RegExp(
+  r'\{\{(node\.name|battery|location|message|time)\}\}',
+);
 
 /// Widget for editing an action
 class ActionEditor extends StatefulWidget {
@@ -444,13 +455,9 @@ class _ActionEditorState extends State<ActionEditor> {
           Wrap(
             spacing: 8,
             runSpacing: 4,
-            children: [
-              _buildVariableChip('{{node.name}}'),
-              _buildVariableChip('{{battery}}'),
-              _buildVariableChip('{{location}}'),
-              _buildVariableChip('{{message}}'),
-              _buildVariableChip('{{time}}'),
-            ],
+            children: _validVariables
+                .map((v) => _buildVariableChip(v))
+                .toList(),
           ),
         ],
       ),
