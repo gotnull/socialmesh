@@ -21,8 +21,8 @@ const _variableDisplayNames = {
   '{{time}}': 'time',
 };
 
-/// A simple text field with variable chip insertion support.
-/// Uses a standard TextField - variables are inserted at cursor position.
+/// A text field that displays variables as tappable chips inline.
+/// Tapping a chip removes it. Variables can be inserted via the chips below.
 class VariableTextField extends StatefulWidget {
   final String value;
   final ValueChanged<String> onChanged;
@@ -48,15 +48,21 @@ class VariableTextField extends StatefulWidget {
 }
 
 class VariableTextFieldState extends State<VariableTextField> {
-  late TextEditingController _controller;
   late FocusNode _focusNode;
   bool _ownsFocusNode = false;
   bool _hasFocus = false;
 
+  // Parse text into segments (plain text and variables)
+  List<_TextSegment> _segments = [];
+
+  // Track which plain text segment is being edited
+  int? _editingIndex;
+  final _editController = TextEditingController();
+  final _editFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.value);
     if (widget.focusNode != null) {
       _focusNode = widget.focusNode!;
       _ownsFocusNode = false;
@@ -64,15 +70,17 @@ class VariableTextFieldState extends State<VariableTextField> {
       _focusNode = FocusNode();
       _ownsFocusNode = true;
     }
+    _parseValue(widget.value);
     _focusNode.addListener(_onFocusChange);
+    _editFocusNode.addListener(_onEditFocusChange);
   }
 
   @override
   void didUpdateWidget(VariableTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Only update if value changed externally
-    if (oldWidget.value != widget.value && widget.value != _controller.text) {
-      _controller.text = widget.value;
+    // Only reparse if value changed externally (not from our own edits)
+    if (oldWidget.value != widget.value && _editingIndex == null) {
+      _parseValue(widget.value);
     }
   }
 
@@ -82,7 +90,9 @@ class VariableTextFieldState extends State<VariableTextField> {
     if (_ownsFocusNode) {
       _focusNode.dispose();
     }
-    _controller.dispose();
+    _editFocusNode.removeListener(_onEditFocusChange);
+    _editFocusNode.dispose();
+    _editController.dispose();
     super.dispose();
   }
 
@@ -93,62 +103,234 @@ class VariableTextFieldState extends State<VariableTextField> {
     widget.onFocusChange?.call();
   }
 
-  /// Insert a variable at the current cursor position
+  void _onEditFocusChange() {
+    if (!_editFocusNode.hasFocus && _editingIndex != null) {
+      _finishEditing();
+    }
+    widget.onFocusChange?.call();
+  }
+
+  void _parseValue(String value) {
+    _segments = [];
+    final regex = RegExp(r'\{\{(node\.name|battery|location|message|time)\}\}');
+    int lastEnd = 0;
+
+    for (final match in regex.allMatches(value)) {
+      // Add plain text before this match
+      if (match.start > lastEnd) {
+        final plainText = value.substring(lastEnd, match.start);
+        if (plainText.isNotEmpty) {
+          _segments.add(_TextSegment(text: plainText, isVariable: false));
+        }
+      }
+      // Add the variable
+      _segments.add(_TextSegment(text: match.group(0)!, isVariable: true));
+      lastEnd = match.end;
+    }
+
+    // Add remaining plain text
+    if (lastEnd < value.length) {
+      final plainText = value.substring(lastEnd);
+      if (plainText.isNotEmpty) {
+        _segments.add(_TextSegment(text: plainText, isVariable: false));
+      }
+    }
+  }
+
+  String _buildValue() {
+    return _segments.map((s) => s.text).join();
+  }
+
+  void _removeVariable(int index) {
+    HapticFeedback.lightImpact();
+    setState(() {
+      _segments.removeAt(index);
+    });
+    widget.onChanged(_buildValue());
+  }
+
   void insertVariable(String variable) {
     if (!validVariables.contains(variable)) return;
 
     HapticFeedback.lightImpact();
+    setState(() {
+      _segments.add(_TextSegment(text: variable, isVariable: true));
+    });
+    widget.onChanged(_buildValue());
+  }
 
-    final text = _controller.text;
-    final selection = _controller.selection;
+  void _startEditing(int index) {
+    setState(() {
+      _editingIndex = index;
+      _editController.text = _segments[index].text;
+      _editController.selection = TextSelection.collapsed(
+        offset: _editController.text.length,
+      );
+    });
+    Future.microtask(() => _editFocusNode.requestFocus());
+  }
 
-    // Calculate insertion point
-    int insertAt;
-    if (selection.isValid && selection.isCollapsed) {
-      insertAt = selection.baseOffset;
-    } else if (selection.isValid) {
-      insertAt = selection.start;
-    } else {
-      insertAt = text.length;
-    }
+  void _finishEditing() {
+    if (_editingIndex == null) return;
 
-    // Insert the variable
-    final newText =
-        text.substring(0, insertAt) + variable + text.substring(insertAt);
-    _controller.text = newText;
+    final newText = _editController.text;
+    setState(() {
+      if (newText.isEmpty) {
+        _segments.removeAt(_editingIndex!);
+      } else {
+        _segments[_editingIndex!] = _TextSegment(
+          text: newText,
+          isVariable: false,
+        );
+      }
+      _editingIndex = null;
+    });
+    widget.onChanged(_buildValue());
+  }
 
-    // Move cursor after inserted variable
-    final newPosition = insertAt + variable.length;
-    _controller.selection = TextSelection.collapsed(offset: newPosition);
+  void _onEditChanged(String value) {
+    if (_editingIndex == null) return;
+    _segments[_editingIndex!] = _TextSegment(text: value, isVariable: false);
+    widget.onChanged(_buildValue());
+  }
 
-    widget.onChanged(newText);
-
-    // Keep focus on the field
-    _focusNode.requestFocus();
+  void _addNewText() {
+    setState(() {
+      _segments.add(_TextSegment(text: '', isVariable: false));
+      _editingIndex = _segments.length - 1;
+      _editController.text = '';
+    });
+    Future.microtask(() => _editFocusNode.requestFocus());
   }
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      focusNode: _focusNode,
-      onChanged: widget.onChanged,
-      maxLines: widget.maxLines,
-      style: const TextStyle(fontSize: 14),
-      decoration: InputDecoration(
-        labelText: widget.labelText,
-        hintText: widget.hintText,
-        isDense: true,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 12,
+    return GestureDetector(
+      onTap: () {
+        // If no text segments exist or none being edited, start editing new text
+        if (_editingIndex == null) {
+          _addNewText();
+        }
+      },
+      child: InputDecorator(
+        isFocused: _hasFocus || _editFocusNode.hasFocus,
+        decoration: InputDecoration(
+          labelText: widget.labelText,
+          hintText: _segments.isEmpty ? widget.hintText : null,
+          isDense: true,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
+        ),
+        child: _buildContent(),
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_segments.isEmpty && _editingIndex == null) {
+      return const SizedBox(height: 20);
+    }
+
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        for (int i = 0; i < _segments.length; i++)
+          if (_segments[i].isVariable)
+            _buildVariableChip(_segments[i].text, i)
+          else if (_editingIndex == i)
+            _buildInlineInput()
+          else
+            _buildPlainText(_segments[i].text, i),
+        // Add button to append more text
+        if (_editingIndex == null)
+          GestureDetector(
+            onTap: _addNewText,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Icon(Icons.add, size: 16, color: Colors.grey[600]),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildVariableChip(String variable, int index) {
+    final displayName = _variableDisplayNames[variable] ?? variable;
+    return GestureDetector(
+      onTap: () => _removeVariable(index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppTheme.successGreen.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: AppTheme.successGreen.withValues(alpha: 0.5),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              displayName,
+              style: TextStyle(
+                color: AppTheme.successGreen,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.close,
+              size: 14,
+              color: AppTheme.successGreen.withValues(alpha: 0.7),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  bool get hasFocus => _hasFocus;
+  Widget _buildPlainText(String text, int index) {
+    return GestureDetector(
+      onTap: () => _startEditing(index),
+      child: Text(text, style: const TextStyle(fontSize: 14)),
+    );
+  }
+
+  Widget _buildInlineInput() {
+    return IntrinsicWidth(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 50),
+        child: TextField(
+          controller: _editController,
+          focusNode: _editFocusNode,
+          onChanged: _onEditChanged,
+          onSubmitted: (_) => _finishEditing(),
+          style: const TextStyle(fontSize: 14),
+          decoration: const InputDecoration(
+            isDense: true,
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+          ),
+          maxLines: widget.maxLines,
+        ),
+      ),
+    );
+  }
+
+  bool get hasFocus => _hasFocus || _editFocusNode.hasFocus;
+}
+
+class _TextSegment {
+  final String text;
+  final bool isVariable;
+
+  _TextSegment({required this.text, required this.isVariable});
 }
 
 /// Widget showing available variables that can be tapped to insert
@@ -164,9 +346,6 @@ class VariableChipPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Active if a target field exists (even if not currently focused)
-    final showActive = isActive || targetField != null;
-
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -177,50 +356,47 @@ class VariableChipPicker extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            showActive ? 'Tap to insert at cursor:' : 'Available variables:',
+            isActive
+                ? 'Tap to insert, tap chip to remove:'
+                : 'Available variables (tap a field first):',
             style: TextStyle(color: Colors.grey[600], fontSize: 11),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Wrap(
             spacing: 8,
-            runSpacing: 6,
-            children: validVariables
-                .map((v) => _buildChip(v, showActive))
-                .toList(),
+            runSpacing: 4,
+            children: validVariables.map((v) {
+              return _buildChip(v);
+            }).toList(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildChip(String variable, bool isActive) {
+  Widget _buildChip(String variable) {
     final displayName = _variableDisplayNames[variable] ?? variable;
     return GestureDetector(
-      onTap: () {
-        if (targetField != null) {
-          targetField!.insertVariable(variable);
-        }
-      },
+      onTap: isActive && targetField != null
+          ? () => targetField!.insertVariable(variable)
+          : null,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: isActive
-              ? AppTheme.successGreen.withValues(alpha: 0.15)
+              ? AppTheme.successGreen.withValues(alpha: 0.2)
               : AppTheme.darkCard,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isActive
-                ? AppTheme.successGreen.withValues(alpha: 0.4)
-                : AppTheme.darkBorder,
-          ),
+          borderRadius: BorderRadius.circular(6),
+          border: isActive
+              ? Border.all(color: AppTheme.successGreen.withValues(alpha: 0.5))
+              : null,
         ),
         child: Text(
           displayName,
           style: TextStyle(
             fontFamily: 'JetBrainsMono',
             fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: isActive ? AppTheme.successGreen : Colors.grey[400],
+            color: isActive ? AppTheme.successGreen : Colors.amber[300],
           ),
         ),
       ),
