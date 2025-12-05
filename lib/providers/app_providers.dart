@@ -1322,7 +1322,7 @@ final offlineQueueProvider = Provider<OfflineQueueService>((ref) {
   final service = OfflineQueueService();
   final protocol = ref.watch(protocolServiceProvider);
 
-  // Initialize with send callback
+  // Initialize with send callback that uses pre-tracking
   service.initialize(
     sendCallback:
         ({
@@ -1330,13 +1330,31 @@ final offlineQueueProvider = Provider<OfflineQueueService>((ref) {
           required int to,
           required int channel,
           required bool wantAck,
+          required String messageId,
         }) async {
-          return protocol.sendMessage(
-            text: text,
-            to: to,
-            channel: channel,
-            wantAck: wantAck,
-          );
+          if (wantAck) {
+            // Use pre-tracking to avoid race condition
+            return protocol.sendMessageWithPreTracking(
+              text: text,
+              to: to,
+              channel: channel,
+              wantAck: wantAck,
+              messageId: messageId,
+              onPacketIdGenerated: (packetId) {
+                ref
+                    .read(messagesProvider.notifier)
+                    .trackPacket(packetId, messageId);
+              },
+            );
+          } else {
+            return protocol.sendMessage(
+              text: text,
+              to: to,
+              channel: channel,
+              wantAck: wantAck,
+              messageId: messageId,
+            );
+          }
         },
     updateCallback:
         (
@@ -1360,9 +1378,7 @@ final offlineQueueProvider = Provider<OfflineQueueService>((ref) {
                 errorMessage: errorMessage,
               ),
             );
-            if (packetId != null) {
-              notifier.trackPacket(packetId, messageId);
-            }
+            // Note: trackPacket is now called in pre-tracking callback before send
           }
         },
   );

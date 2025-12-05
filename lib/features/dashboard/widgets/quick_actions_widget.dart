@@ -380,18 +380,17 @@ class _SosConfirmationDialogState extends State<_SosConfirmationDialog> {
       );
       widget.ref.read(messagesProvider.notifier).addMessage(pendingMessage);
 
-      final packetId = await protocol.sendMessage(
+      // Pre-track before sending to avoid race condition
+      await protocol.sendMessageWithPreTracking(
         text: messageText,
         to: broadcastAddress,
         channel: 0,
         wantAck: true,
         messageId: messageId,
+        onPacketIdGenerated: (id) {
+          widget.ref.read(messagesProvider.notifier).trackPacket(id, messageId);
+        },
       );
-
-      // Track for delivery status
-      widget.ref
-          .read(messagesProvider.notifier)
-          .trackPacket(packetId, messageId);
 
       if (mounted) {
         Navigator.pop(context);
@@ -615,19 +614,17 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
       );
       widget.ref.read(messagesProvider.notifier).addMessage(pendingMessage);
 
-      // Send via protocol
-      final packetId = await protocol.sendMessage(
+      // Send via protocol - pre-track before sending to avoid race condition
+      await protocol.sendMessageWithPreTracking(
         text: messageText,
         to: targetAddress,
         channel: 0,
         wantAck: true,
         messageId: messageId,
+        onPacketIdGenerated: (id) {
+          widget.ref.read(messagesProvider.notifier).trackPacket(id, messageId);
+        },
       );
-
-      // Track for delivery status
-      widget.ref
-          .read(messagesProvider.notifier)
-          .trackPacket(packetId, messageId);
 
       if (mounted) {
         Navigator.pop(context);
@@ -1178,9 +1175,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Traceroute sent - check messages for response',
-            ),
+            content: Text('Traceroute sent - check messages for response'),
             backgroundColor: context.accentColor,
             duration: const Duration(seconds: 3),
           ),

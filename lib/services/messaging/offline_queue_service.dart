@@ -30,6 +30,7 @@ typedef SendMessageCallback =
       required int to,
       required int channel,
       required bool wantAck,
+      required String messageId,
     });
 
 /// Callback for updating message status
@@ -136,6 +137,7 @@ class OfflineQueueService {
           to: message.to,
           channel: message.channel,
           wantAck: message.wantAck,
+          messageId: message.id,
         );
 
         // Update message status to sent

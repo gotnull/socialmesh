@@ -1325,6 +1325,81 @@ class ProtocolService {
     }
   }
 
+  /// Send a text message with pre-tracking callback
+  /// This allows tracking to be set up BEFORE the message is sent,
+  /// avoiding race conditions where ACK arrives before tracking is ready
+  Future<int> sendMessageWithPreTracking({
+    required String text,
+    required int to,
+    int channel = 0,
+    bool wantAck = true,
+    String? messageId,
+    required void Function(int packetId) onPacketIdGenerated,
+  }) async {
+    // Validate we're ready to send
+    if (_myNodeNum == null) {
+      throw StateError(
+        'Cannot send message: device not ready (no node number)',
+      );
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot send message: not connected to device');
+    }
+
+    try {
+      _logger.i('Sending message to $to: $text');
+
+      final packetId = _generatePacketId();
+
+      // Call the pre-tracking callback BEFORE sending
+      // This ensures tracking is set up before any ACK can arrive
+      if (wantAck) {
+        onPacketIdGenerated(packetId);
+      }
+
+      final data = pb.Data()
+        ..portnum = pb.PortNum.TEXT_MESSAGE_APP
+        ..payload = utf8.encode(text)
+        ..wantResponse = wantAck;
+
+      final packet = pb.MeshPacket()
+        ..from = _myNodeNum!
+        ..to = to
+        ..channel = channel
+        ..decoded = data
+        ..id = packetId
+        ..wantAck = wantAck;
+
+      final toRadio = pn.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+
+      // Track the message for delivery status (internal tracking)
+      if (messageId != null && wantAck) {
+        _pendingMessages[packetId] = messageId;
+      }
+
+      final message = Message(
+        id: messageId,
+        from: _myNodeNum!,
+        to: to,
+        text: text,
+        channel: channel,
+        sent: true,
+        packetId: packetId,
+        status: wantAck ? MessageStatus.pending : MessageStatus.sent,
+      );
+
+      _messageController.add(message);
+
+      return packetId;
+    } catch (e) {
+      _logger.e('Error sending message: $e');
+      rethrow;
+    }
+  }
+
   /// Generate a random packet ID
   int _generatePacketId() {
     return _random.nextInt(0x7FFFFFFF);

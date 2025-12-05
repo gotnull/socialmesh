@@ -572,18 +572,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           wantAck: false,
           messageId: messageId,
         );
+        // Channel messages don't get ACKs, so no tracking needed
       } else {
-        packetId = await protocol.sendMessage(
+        // Pre-generate packet ID and track BEFORE sending to avoid race condition
+        // where ACK arrives before tracking is set up
+        packetId = await protocol.sendMessageWithPreTracking(
           text: text,
           to: widget.nodeNum!,
           channel: 0,
           wantAck: true,
           messageId: messageId,
+          onPacketIdGenerated: (id) {
+            ref.read(messagesProvider.notifier).trackPacket(id, messageId);
+          },
         );
       }
-
-      // Track the packet ID for delivery updates
-      ref.read(messagesProvider.notifier).trackPacket(packetId, messageId);
 
       // Update status to sent with packet ID
       ref
@@ -665,18 +668,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           wantAck: false,
           messageId: message.id,
         );
+        // Broadcast messages don't get ACKs, no tracking needed
       } else {
-        packetId = await protocol.sendMessage(
+        // Pre-track before sending to avoid race condition
+        packetId = await protocol.sendMessageWithPreTracking(
           text: message.text,
           to: message.to,
           channel: 0,
           wantAck: true,
           messageId: message.id,
+          onPacketIdGenerated: (id) {
+            ref.read(messagesProvider.notifier).trackPacket(id, message.id);
+          },
         );
       }
-
-      // Track the new packet ID for delivery updates
-      ref.read(messagesProvider.notifier).trackPacket(packetId, message.id);
 
       ref
           .read(messagesProvider.notifier)
