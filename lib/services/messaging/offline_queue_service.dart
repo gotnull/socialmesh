@@ -42,9 +42,6 @@ typedef UpdateMessageCallback =
       String? errorMessage,
     });
 
-/// Callback to check if protocol is ready
-typedef ProtocolReadyCallback = bool Function();
-
 /// Service to manage offline message queue
 /// Queues messages when device is disconnected and sends them when reconnected
 class OfflineQueueService {
@@ -54,11 +51,9 @@ class OfflineQueueService {
 
   final List<QueuedMessage> _queue = [];
   bool _isProcessing = false;
-  bool _isWaitingForProtocol = false;
   bool _isConnected = false;
   SendMessageCallback? _sendCallback;
   UpdateMessageCallback? _updateCallback;
-  ProtocolReadyCallback? _protocolReadyCallback;
 
   /// Stream controller for queue updates
   final _queueController = StreamController<List<QueuedMessage>>.broadcast();
@@ -77,11 +72,9 @@ class OfflineQueueService {
   void initialize({
     required SendMessageCallback sendCallback,
     required UpdateMessageCallback updateCallback,
-    required ProtocolReadyCallback protocolReadyCallback,
   }) {
     _sendCallback = sendCallback;
     _updateCallback = updateCallback;
-    _protocolReadyCallback = protocolReadyCallback;
     debugPrint('📤 OfflineQueueService initialized');
   }
 
@@ -92,53 +85,10 @@ class OfflineQueueService {
 
     if (!wasConnected && isConnected && _queue.isNotEmpty) {
       debugPrint(
-        '📤 Connection restored, will process ${_queue.length} queued messages when protocol ready',
+        '📤 Connection restored, processing ${_queue.length} queued messages',
       );
-      _waitForProtocolAndProcess();
-    }
-  }
-
-  /// Wait for protocol to be ready, then process queue
-  Future<void> _waitForProtocolAndProcess() async {
-    // Prevent multiple concurrent waits
-    if (_isWaitingForProtocol || _isProcessing) {
-      debugPrint('📤 Already waiting/processing, skipping');
-      return;
-    }
-
-    if (_protocolReadyCallback == null) {
-      debugPrint('📤 No protocol ready callback, processing immediately');
       _processQueue();
-      return;
     }
-
-    _isWaitingForProtocol = true;
-
-    // Wait for protocol to be ready (config received) with timeout
-    const maxWaitMs = 10000;
-    const checkIntervalMs = 100;
-    var waited = 0;
-
-    while (waited < maxWaitMs && _isConnected) {
-      if (_protocolReadyCallback!()) {
-        debugPrint('📤 Protocol ready after ${waited}ms, processing queue');
-        _isWaitingForProtocol = false;
-        _processQueue();
-        return;
-      }
-      await Future.delayed(const Duration(milliseconds: checkIntervalMs));
-      waited += checkIntervalMs;
-    }
-
-    _isWaitingForProtocol = false;
-
-    if (!_isConnected) {
-      debugPrint('📤 Disconnected while waiting for protocol, aborting');
-      return;
-    }
-
-    debugPrint('📤 Timeout waiting for protocol, processing queue anyway');
-    _processQueue();
   }
 
   /// Queue a message for sending
@@ -149,9 +99,9 @@ class OfflineQueueService {
       '📤 Message queued: ${message.id}, queue size: ${_queue.length}',
     );
 
-    // Try to send immediately if connected and protocol ready
+    // Try to send immediately if connected
     if (_isConnected && !_isProcessing) {
-      _waitForProtocolAndProcess();
+      _processQueue();
     }
   }
 
@@ -180,9 +130,7 @@ class OfflineQueueService {
       final message = _queue.first;
 
       try {
-        debugPrint(
-          '📤 Sending queued message: ${message.id}, wantAck: ${message.wantAck}',
-        );
+        debugPrint('📤 Sending queued message: ${message.id}');
 
         final packetId = await _sendCallback!(
           text: message.text,
@@ -192,15 +140,12 @@ class OfflineQueueService {
           messageId: message.id,
         );
 
-        // Only update status to sent for messages WITHOUT ACK (like channel messages)
-        // Messages with ACK will have their status managed by the delivery tracking system
-        if (!message.wantAck) {
-          _updateCallback?.call(
-            message.id,
-            MessageStatus.sent,
-            packetId: packetId,
-          );
-        }
+        // Update message status to sent
+        _updateCallback?.call(
+          message.id,
+          MessageStatus.sent,
+          packetId: packetId,
+        );
 
         // Remove from queue on success
         _queue.removeAt(0);

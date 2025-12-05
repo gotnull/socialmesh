@@ -72,15 +72,6 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
       // Initialize IFTTT service
       await _ref.read(iftttServiceProvider).init();
 
-      // Eagerly initialize messages provider so delivery listener is active
-      // This must be done early so ACKs are processed even when messaging screen isn't open
-      _ref.read(messagesProvider);
-
-      // Eagerly initialize offline queue so it listens for connection changes
-      // This must be done early so it receives connection state updates
-      // even when the messaging screen isn't open
-      _ref.read(offlineQueueProvider);
-
       // Check for onboarding completion
       final settings = await _ref.read(settingsServiceProvider.future);
       if (!settings.onboardingComplete) {
@@ -1025,29 +1016,6 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
   }
 
   void updateMessage(String messageId, Message updatedMessage) {
-    // Find current message to check status
-    final currentMessage = state.firstWhere(
-      (m) => m.id == messageId,
-      orElse: () => updatedMessage,
-    );
-
-    // Don't downgrade from delivered to sent (race condition protection)
-    if (currentMessage.status == MessageStatus.delivered &&
-        updatedMessage.status == MessageStatus.sent) {
-      debugPrint(
-        '📨 Skipping status downgrade from delivered to sent for $messageId',
-      );
-      // Still update other fields like packetId, but keep delivered status
-      final preservedMessage = updatedMessage.copyWith(
-        status: MessageStatus.delivered,
-      );
-      state = state
-          .map((m) => m.id == messageId ? preservedMessage : m)
-          .toList();
-      _storage?.saveMessage(preservedMessage);
-      return;
-    }
-
     state = state.map((m) => m.id == messageId ? updatedMessage : m).toList();
     _storage?.saveMessage(updatedMessage);
   }
@@ -1402,15 +1370,6 @@ final offlineQueueProvider = Provider<OfflineQueueService>((ref) {
             orElse: () => Message(from: 0, to: 0, text: ''),
           );
           if (message.text.isNotEmpty) {
-            // Don't downgrade status from delivered to sent
-            // This can happen if ACK arrives before sendCallback returns
-            if (message.status == MessageStatus.delivered &&
-                status == MessageStatus.sent) {
-              debugPrint(
-                '📤 Skipping status downgrade from delivered to sent for $messageId',
-              );
-              return;
-            }
             notifier.updateMessage(
               messageId,
               message.copyWith(
@@ -1422,10 +1381,6 @@ final offlineQueueProvider = Provider<OfflineQueueService>((ref) {
             // Note: trackPacket is now called in pre-tracking callback before send
           }
         },
-    protocolReadyCallback: () {
-      // Protocol is ready when it has received configuration (myNodeNum is set)
-      return protocol.myNodeNum != null;
-    },
   );
 
   // Listen to connection state changes
