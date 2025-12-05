@@ -72,6 +72,11 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
       // Initialize IFTTT service
       await _ref.read(iftttServiceProvider).init();
 
+      // Eagerly initialize offline queue so it listens for connection changes
+      // This must be done early so it receives connection state updates
+      // even when the messaging screen isn't open
+      _ref.read(offlineQueueProvider);
+
       // Check for onboarding completion
       final settings = await _ref.read(settingsServiceProvider.future);
       if (!settings.onboardingComplete) {
@@ -1413,6 +1418,10 @@ final offlineQueueProvider = Provider<OfflineQueueService>((ref) {
             // Note: trackPacket is now called in pre-tracking callback before send
           }
         },
+    protocolReadyCallback: () {
+      // Protocol is ready when it has received configuration (myNodeNum is set)
+      return protocol.myNodeNum != null;
+    },
   );
 
   // Listen to connection state changes

@@ -42,6 +42,9 @@ typedef UpdateMessageCallback =
       String? errorMessage,
     });
 
+/// Callback to check if protocol is ready
+typedef ProtocolReadyCallback = bool Function();
+
 /// Service to manage offline message queue
 /// Queues messages when device is disconnected and sends them when reconnected
 class OfflineQueueService {
@@ -54,6 +57,7 @@ class OfflineQueueService {
   bool _isConnected = false;
   SendMessageCallback? _sendCallback;
   UpdateMessageCallback? _updateCallback;
+  ProtocolReadyCallback? _protocolReadyCallback;
 
   /// Stream controller for queue updates
   final _queueController = StreamController<List<QueuedMessage>>.broadcast();
@@ -72,9 +76,11 @@ class OfflineQueueService {
   void initialize({
     required SendMessageCallback sendCallback,
     required UpdateMessageCallback updateCallback,
+    required ProtocolReadyCallback protocolReadyCallback,
   }) {
     _sendCallback = sendCallback;
     _updateCallback = updateCallback;
+    _protocolReadyCallback = protocolReadyCallback;
     debugPrint('📤 OfflineQueueService initialized');
   }
 
@@ -85,10 +91,37 @@ class OfflineQueueService {
 
     if (!wasConnected && isConnected && _queue.isNotEmpty) {
       debugPrint(
-        '📤 Connection restored, processing ${_queue.length} queued messages',
+        '📤 Connection restored, will process ${_queue.length} queued messages when protocol ready',
       );
-      _processQueue();
+      _waitForProtocolAndProcess();
     }
+  }
+
+  /// Wait for protocol to be ready, then process queue
+  Future<void> _waitForProtocolAndProcess() async {
+    if (_protocolReadyCallback == null) {
+      debugPrint('📤 No protocol ready callback, processing immediately');
+      _processQueue();
+      return;
+    }
+
+    // Wait for protocol to be ready (config received) with timeout
+    const maxWaitMs = 10000;
+    const checkIntervalMs = 100;
+    var waited = 0;
+
+    while (waited < maxWaitMs) {
+      if (_protocolReadyCallback!()) {
+        debugPrint('📤 Protocol ready, processing queue');
+        _processQueue();
+        return;
+      }
+      await Future.delayed(const Duration(milliseconds: checkIntervalMs));
+      waited += checkIntervalMs;
+    }
+
+    debugPrint('📤 Timeout waiting for protocol, processing queue anyway');
+    _processQueue();
   }
 
   /// Queue a message for sending
@@ -99,9 +132,9 @@ class OfflineQueueService {
       '📤 Message queued: ${message.id}, queue size: ${_queue.length}',
     );
 
-    // Try to send immediately if connected
+    // Try to send immediately if connected and protocol ready
     if (_isConnected && !_isProcessing) {
-      _processQueue();
+      _waitForProtocolAndProcess();
     }
   }
 
