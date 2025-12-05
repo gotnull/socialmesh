@@ -412,11 +412,13 @@ class VariableTextFieldState extends State<VariableTextField> {
       insertAt = selection.end;
     }
 
+    // Add trailing space so cursor isn't immediately on the variable (which would mark it red)
+    final insertText = '$variable ';
     final newText =
-        text.substring(0, insertAt) + variable + text.substring(insertAt);
+        text.substring(0, insertAt) + insertText + text.substring(insertAt);
     _controller.text = newText;
     _controller.selection = TextSelection.collapsed(
-      offset: insertAt + variable.length,
+      offset: insertAt + insertText.length,
     );
 
     widget.onChanged(newText);
@@ -530,12 +532,15 @@ class VariableChipPicker extends StatelessWidget {
           if (showDeleteHint) ...[
             const SizedBox(height: 8),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(Icons.info_outline, size: 12, color: Colors.grey[500]),
                 const SizedBox(width: 4),
-                Text(
-                  'Tap a variable in the field to select it, then backspace to delete',
-                  style: TextStyle(color: Colors.grey[500], fontSize: 10),
+                Expanded(
+                  child: Text(
+                    'Tap a variable in the field to select it, then backspace to delete',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 10),
+                  ),
                 ),
               ],
             ),
