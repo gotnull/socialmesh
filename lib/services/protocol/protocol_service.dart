@@ -738,8 +738,8 @@ class ProtocolService {
           break;
 
         case telemetry.Telemetry_Variant.environmentMetrics:
+          final envMetrics = telem.environmentMetrics;
           if (ProtocolDebugFlags.logTelemetry) {
-            final envMetrics = telem.environmentMetrics;
             _logger.i(
               'EnvironmentMetrics from ${packet.from}: '
               'temp=${envMetrics.hasTemperature() ? envMetrics.temperature : "N/A"}°C, '
@@ -747,7 +747,20 @@ class ProtocolService {
               'pressure=${envMetrics.hasBarometricPressure() ? envMetrics.barometricPressure : "N/A"}hPa',
             );
           }
-          // Environment metrics don't update battery - just log
+          // Update node with environment metrics
+          final existingEnvNode = _nodes[packet.from];
+          if (existingEnvNode != null) {
+            final updatedEnvNode = existingEnvNode.copyWith(
+              temperature: envMetrics.hasTemperature()
+                  ? envMetrics.temperature.toDouble()
+                  : null,
+              humidity: envMetrics.hasRelativeHumidity()
+                  ? envMetrics.relativeHumidity.toDouble()
+                  : null,
+            );
+            _nodes[packet.from] = updatedEnvNode;
+            _nodeController.add(updatedEnvNode);
+          }
           return;
 
         case telemetry.Telemetry_Variant.airQualityMetrics:

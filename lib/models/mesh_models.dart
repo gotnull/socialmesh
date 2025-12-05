@@ -154,6 +154,8 @@ class MeshNode {
   final int? snr;
   final int? rssi;
   final int? batteryLevel;
+  final double? temperature; // Temperature in Celsius from environment metrics
+  final double? humidity; // Relative humidity percentage
   final String? firmwareVersion;
   final String? hardwareModel;
   final String? role; // 'CLIENT', 'ROUTER', etc.
@@ -175,6 +177,8 @@ class MeshNode {
     this.snr,
     this.rssi,
     this.batteryLevel,
+    this.temperature,
+    this.humidity,
     this.firmwareVersion,
     this.hardwareModel,
     this.role,
@@ -197,6 +201,8 @@ class MeshNode {
     int? snr,
     int? rssi,
     int? batteryLevel,
+    double? temperature,
+    double? humidity,
     String? firmwareVersion,
     String? hardwareModel,
     String? role,
@@ -218,6 +224,8 @@ class MeshNode {
       snr: snr ?? this.snr,
       rssi: rssi ?? this.rssi,
       batteryLevel: batteryLevel ?? this.batteryLevel,
+      temperature: temperature ?? this.temperature,
+      humidity: humidity ?? this.humidity,
       firmwareVersion: firmwareVersion ?? this.firmwareVersion,
       hardwareModel: hardwareModel ?? this.hardwareModel,
       role: role ?? this.role,

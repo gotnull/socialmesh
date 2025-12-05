@@ -464,6 +464,15 @@ class IftttService {
       );
     }
 
+    // Check temperature
+    if (node.temperature != null) {
+      await triggerTemperatureAlert(
+        nodeNum: node.nodeNum,
+        nodeName: nodeName,
+        temperature: node.temperature!,
+      );
+    }
+
     // Check position for geofencing
     if (node.hasPosition) {
       await triggerPositionUpdate(
