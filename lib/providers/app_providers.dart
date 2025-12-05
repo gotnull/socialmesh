@@ -482,9 +482,21 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         try {
           await transport.connect(foundDevice);
 
+          // Check if cancelled (connection may have been restored by another path)
+          if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
+            debugPrint('🔄 Reconnect cancelled (already connected)');
+            return;
+          }
+
           // Wait a moment for connection to stabilize
           debugPrint('🔄 Waiting for connection to stabilize...');
           await Future.delayed(const Duration(seconds: 2));
+
+          // Check if cancelled again
+          if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
+            debugPrint('🔄 Reconnect cancelled (already connected)');
+            return;
+          }
 
           // Check if still connected
           if (transport.state != DeviceConnectionState.connected) {
@@ -501,11 +513,23 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           // Update connected device
           ref.read(connectedDeviceProvider.notifier).state = foundDevice;
 
+          // Check if cancelled before starting protocol
+          if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
+            debugPrint('🔄 Reconnect cancelled (already connected)');
+            return;
+          }
+
           // Restart protocol service
           debugPrint('🔄 Starting protocol service...');
           final protocol = ref.read(protocolServiceProvider);
           await protocol.start();
           debugPrint('🔄 Protocol service started!');
+
+          // Check if cancelled after protocol start
+          if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
+            debugPrint('🔄 Reconnect cancelled (already connected)');
+            return;
+          }
 
           // Check again if still connected after protocol start
           await Future.delayed(const Duration(milliseconds: 500));
@@ -548,6 +572,13 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           }
         } catch (e) {
           debugPrint('🔄 ❌ Connect error: $e');
+          // Check if we should abort (connection restored via another path)
+          if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
+            debugPrint(
+              '🔄 Reconnect cancelled (already connected), ignoring error',
+            );
+            return;
+          }
           if (attempt < maxRetries) {
             ref.read(autoReconnectStateProvider.notifier).state =
                 AutoReconnectState.scanning;
