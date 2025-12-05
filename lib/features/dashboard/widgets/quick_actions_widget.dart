@@ -365,13 +365,33 @@ class _SosConfirmationDialogState extends State<_SosConfirmationDialog> {
       final locationText = (latitude != null && longitude != null)
           ? '\nLocation: $latitude, $longitude'
           : '';
-      await protocol.sendMessage(
-        text: '🆘 EMERGENCY SOS from $myName$locationText',
+      final messageId = 'sos_${DateTime.now().millisecondsSinceEpoch}';
+      final messageText = '🆘 EMERGENCY SOS from $myName$locationText';
+
+      // Add message to provider for UI display (optimistic)
+      final pendingMessage = Message(
+        id: messageId,
+        from: myNodeNum,
+        to: broadcastAddress,
+        text: messageText,
+        channel: 0,
+        sent: true,
+        status: MessageStatus.pending,
+      );
+      widget.ref.read(messagesProvider.notifier).addMessage(pendingMessage);
+
+      final packetId = await protocol.sendMessage(
+        text: messageText,
         to: broadcastAddress,
         channel: 0,
         wantAck: true,
-        messageId: 'sos_${DateTime.now().millisecondsSinceEpoch}',
+        messageId: messageId,
       );
+
+      // Track for delivery status
+      widget.ref
+          .read(messagesProvider.notifier)
+          .trackPacket(packetId, messageId);
 
       if (mounted) {
         Navigator.pop(context);
@@ -578,14 +598,36 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
 
     try {
       final protocol = widget.ref.read(protocolServiceProvider);
+      final myNodeNum = widget.ref.read(myNodeNumProvider);
       final targetAddress = _selectedNodeNum ?? broadcastAddress;
-      await protocol.sendMessage(
-        text: _controller.text,
+      final messageId = 'quick_${DateTime.now().millisecondsSinceEpoch}';
+      final messageText = _controller.text;
+
+      // Add message to provider for UI display (optimistic)
+      final pendingMessage = Message(
+        id: messageId,
+        from: myNodeNum ?? 0,
+        to: targetAddress,
+        text: messageText,
+        channel: _selectedNodeNum == null ? 0 : null,
+        sent: true,
+        status: MessageStatus.pending,
+      );
+      widget.ref.read(messagesProvider.notifier).addMessage(pendingMessage);
+
+      // Send via protocol
+      final packetId = await protocol.sendMessage(
+        text: messageText,
         to: targetAddress,
         channel: 0,
         wantAck: true,
-        messageId: 'quick_${DateTime.now().millisecondsSinceEpoch}',
+        messageId: messageId,
       );
+
+      // Track for delivery status
+      widget.ref
+          .read(messagesProvider.notifier)
+          .trackPacket(packetId, messageId);
 
       if (mounted) {
         Navigator.pop(context);

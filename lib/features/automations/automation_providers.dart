@@ -1,0 +1,146 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+import '../../providers/app_providers.dart';
+import 'automation_engine.dart';
+import 'automation_repository.dart';
+import 'models/automation.dart';
+
+/// Provider for the automation repository
+final automationRepositoryProvider = Provider<AutomationRepository>((ref) {
+  final repository = AutomationRepository();
+  return repository;
+});
+
+/// Provider for initializing the repository
+final automationRepositoryInitProvider = FutureProvider<AutomationRepository>((
+  ref,
+) async {
+  final repository = ref.read(automationRepositoryProvider);
+  await repository.init();
+  return repository;
+});
+
+/// Provider for the automation engine
+final automationEngineProvider = Provider<AutomationEngine>((ref) {
+  final repository = ref.watch(automationRepositoryProvider);
+  final iftttService = ref.watch(iftttServiceProvider);
+
+  // Get the notification plugin instance
+  final notifications = FlutterLocalNotificationsPlugin();
+
+  final engine = AutomationEngine(
+    repository: repository,
+    iftttService: iftttService,
+    notifications: notifications,
+  );
+
+  ref.onDispose(() {
+    engine.stop();
+  });
+
+  return engine;
+});
+
+/// Provider for the list of automations
+final automationsProvider =
+    StateNotifierProvider<AutomationsNotifier, AsyncValue<List<Automation>>>((
+      ref,
+    ) {
+      final repository = ref.watch(automationRepositoryProvider);
+      return AutomationsNotifier(repository);
+    });
+
+/// State notifier for automations
+class AutomationsNotifier extends StateNotifier<AsyncValue<List<Automation>>> {
+  final AutomationRepository _repository;
+
+  AutomationsNotifier(this._repository) : super(const AsyncValue.loading()) {
+    _loadAutomations();
+  }
+
+  Future<void> _loadAutomations() async {
+    try {
+      await _repository.init();
+      state = AsyncValue.data(_repository.automations);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> refresh() async {
+    await _loadAutomations();
+  }
+
+  Future<void> addAutomation(Automation automation) async {
+    await _repository.addAutomation(automation);
+    state = AsyncValue.data(_repository.automations);
+  }
+
+  Future<void> updateAutomation(Automation automation) async {
+    await _repository.updateAutomation(automation);
+    state = AsyncValue.data(_repository.automations);
+  }
+
+  Future<void> deleteAutomation(String id) async {
+    await _repository.deleteAutomation(id);
+    state = AsyncValue.data(_repository.automations);
+  }
+
+  Future<void> toggleAutomation(String id, bool enabled) async {
+    await _repository.toggleAutomation(id, enabled);
+    state = AsyncValue.data(_repository.automations);
+  }
+
+  Future<void> addFromTemplate(String templateId) async {
+    final automation = AutomationRepository.createTemplate(templateId);
+    await addAutomation(automation);
+  }
+}
+
+/// Provider for automation execution log
+final automationLogProvider = Provider<List<AutomationLogEntry>>((ref) {
+  final repository = ref.watch(automationRepositoryProvider);
+  return repository.log;
+});
+
+/// Provider for enabled automations count
+final enabledAutomationsCountProvider = Provider<int>((ref) {
+  final automations = ref.watch(automationsProvider);
+  return automations.whenOrNull(
+        data: (list) => list.where((a) => a.enabled).length,
+      ) ??
+      0;
+});
+
+/// Provider for automation stats
+final automationStatsProvider = Provider<AutomationStats>((ref) {
+  final automations = ref.watch(automationsProvider);
+  final log = ref.watch(automationLogProvider);
+
+  return automations.when(
+    data: (list) => AutomationStats(
+      total: list.length,
+      enabled: list.where((a) => a.enabled).length,
+      totalTriggers: list.fold(0, (sum, a) => sum + a.triggerCount),
+      recentExecutions: log.take(10).toList(),
+    ),
+    loading: () => const AutomationStats(),
+    error: (e, s) => const AutomationStats(),
+  );
+});
+
+/// Automation statistics
+class AutomationStats {
+  final int total;
+  final int enabled;
+  final int totalTriggers;
+  final List<AutomationLogEntry> recentExecutions;
+
+  const AutomationStats({
+    this.total = 0,
+    this.enabled = 0,
+    this.totalTriggers = 0,
+    this.recentExecutions = const [],
+  });
+}

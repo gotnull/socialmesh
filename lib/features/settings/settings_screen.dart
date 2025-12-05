@@ -26,6 +26,7 @@ import 'ringtone_screen.dart';
 import 'subscription_screen.dart';
 import 'premium_widgets.dart';
 import 'ifttt_config_screen.dart';
+import '../automations/automations_screen.dart';
 import 'canned_responses_screen.dart';
 import 'range_test_screen.dart';
 import 'store_forward_config_screen.dart';
@@ -600,6 +601,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const IftttConfigScreen()),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.bolt,
+                title: 'Automations',
+                subtitle: 'Create trigger-action rules for mesh events',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AutomationsScreen()),
                 ),
               ),
               _SettingsTile(
