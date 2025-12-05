@@ -54,6 +54,7 @@ class OfflineQueueService {
 
   final List<QueuedMessage> _queue = [];
   bool _isProcessing = false;
+  bool _isWaitingForProtocol = false;
   bool _isConnected = false;
   SendMessageCallback? _sendCallback;
   UpdateMessageCallback? _updateCallback;
@@ -99,25 +100,41 @@ class OfflineQueueService {
 
   /// Wait for protocol to be ready, then process queue
   Future<void> _waitForProtocolAndProcess() async {
+    // Prevent multiple concurrent waits
+    if (_isWaitingForProtocol || _isProcessing) {
+      debugPrint('📤 Already waiting/processing, skipping');
+      return;
+    }
+
     if (_protocolReadyCallback == null) {
       debugPrint('📤 No protocol ready callback, processing immediately');
       _processQueue();
       return;
     }
 
+    _isWaitingForProtocol = true;
+
     // Wait for protocol to be ready (config received) with timeout
     const maxWaitMs = 10000;
     const checkIntervalMs = 100;
     var waited = 0;
 
-    while (waited < maxWaitMs) {
+    while (waited < maxWaitMs && _isConnected) {
       if (_protocolReadyCallback!()) {
-        debugPrint('📤 Protocol ready, processing queue');
+        debugPrint('📤 Protocol ready after ${waited}ms, processing queue');
+        _isWaitingForProtocol = false;
         _processQueue();
         return;
       }
       await Future.delayed(const Duration(milliseconds: checkIntervalMs));
       waited += checkIntervalMs;
+    }
+
+    _isWaitingForProtocol = false;
+
+    if (!_isConnected) {
+      debugPrint('📤 Disconnected while waiting for protocol, aborting');
+      return;
     }
 
     debugPrint('📤 Timeout waiting for protocol, processing queue anyway');
