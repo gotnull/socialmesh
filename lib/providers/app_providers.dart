@@ -72,6 +72,10 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
       // Initialize IFTTT service
       await _ref.read(iftttServiceProvider).init();
 
+      // Eagerly initialize messages provider so delivery listener is active
+      // This must be done early so ACKs are processed even when messaging screen isn't open
+      _ref.read(messagesProvider);
+
       // Eagerly initialize offline queue so it listens for connection changes
       // This must be done early so it receives connection state updates
       // even when the messaging screen isn't open
