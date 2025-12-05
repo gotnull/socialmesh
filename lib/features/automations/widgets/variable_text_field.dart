@@ -26,9 +26,13 @@ final _variableRegex = RegExp(
   r'\{\{(node\.name|battery|location|message|time)\}\}',
 );
 
-/// Formatter that protects variables from partial deletion.
-/// If a deletion would break into a variable, delete the whole variable instead.
+/// Formatter that implements two-stage variable deletion.
+/// First backspace marks variable red, second backspace deletes it.
 class _VariableProtectionFormatter extends TextInputFormatter {
+  final VariableTextFieldState state;
+
+  _VariableProtectionFormatter(this.state);
+
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
@@ -38,7 +42,11 @@ class _VariableProtectionFormatter extends TextInputFormatter {
     final newText = newValue.text;
 
     // Only intercept deletions
-    if (newText.length >= oldText.length) return newValue;
+    if (newText.length >= oldText.length) {
+      // Any typing clears the marked variable
+      state._clearMarkedVariable();
+      return newValue;
+    }
 
     // Find what was deleted
     final oldSel = oldValue.selection;
@@ -49,19 +57,27 @@ class _VariableProtectionFormatter extends TextInputFormatter {
       final varStart = match.start;
       final varEnd = match.end;
 
-      // Case 1: Backspace at cursor - cursor was right after deletion point
+      // Case 1: Backspace at cursor
       if (oldSel.isCollapsed && newSel.isCollapsed) {
         final deletePos = newSel.baseOffset;
 
         // Check if we're deleting into a variable from the right (backspace)
         if (deletePos >= varStart && deletePos < varEnd) {
-          // Delete the whole variable
-          final result =
-              oldText.substring(0, varStart) + oldText.substring(varEnd);
-          return TextEditingValue(
-            text: result,
-            selection: TextSelection.collapsed(offset: varStart),
-          );
+          // Is this variable already marked for deletion?
+          if (state._markedVariableStart == varStart) {
+            // Second backspace - delete the whole variable
+            state._clearMarkedVariable();
+            final result =
+                oldText.substring(0, varStart) + oldText.substring(varEnd);
+            return TextEditingValue(
+              text: result,
+              selection: TextSelection.collapsed(offset: varStart),
+            );
+          } else {
+            // First backspace - mark it red, don't delete
+            state._markVariableForDeletion(varStart, varEnd);
+            return oldValue; // Keep text unchanged
+          }
         }
       }
 
@@ -70,10 +86,16 @@ class _VariableProtectionFormatter extends TextInputFormatter {
         final selStart = oldSel.start;
         final selEnd = oldSel.end;
 
+        // If selection covers the whole variable, allow deletion
+        if (selStart <= varStart && selEnd >= varEnd) {
+          state._clearMarkedVariable();
+          continue;
+        }
+
         // If selection partially overlaps a variable, expand to include whole variable
         if ((selStart > varStart && selStart < varEnd) ||
             (selEnd > varStart && selEnd < varEnd)) {
-          // Expand selection to include full variable and recurse
+          state._clearMarkedVariable();
           final expandedStart = selStart <= varStart ? selStart : varStart;
           final expandedEnd = selEnd >= varEnd ? selEnd : varEnd;
           final result =
@@ -87,6 +109,8 @@ class _VariableProtectionFormatter extends TextInputFormatter {
       }
     }
 
+    // Normal deletion outside variables
+    state._clearMarkedVariable();
     return newValue;
   }
 }
@@ -117,9 +141,19 @@ List<String> validateVariables(String text) {
   return invalidVars;
 }
 
-/// Custom controller that styles variables with colored text (no WidgetSpans)
+/// Custom controller that styles variables with colored text.
+/// Supports marking a variable red for pending deletion.
 class _VariableTextController extends TextEditingController {
+  int? markedStart;
+  int? markedEnd;
+
   _VariableTextController({super.text});
+
+  void setMarkedVariable(int? start, int? end) {
+    markedStart = start;
+    markedEnd = end;
+    notifyListeners();
+  }
 
   @override
   TextSpan buildTextSpan({
@@ -141,14 +175,18 @@ class _VariableTextController extends TextEditingController {
         );
       }
 
-      // Style the variable with green color and background
+      // Check if this variable is marked for deletion
+      final isMarked = markedStart == match.start && markedEnd == match.end;
+      final color = isMarked ? AppTheme.errorRed : AppTheme.successGreen;
+
+      // Style the variable
       spans.add(
         TextSpan(
           text: match.group(0),
           style: style?.copyWith(
-            color: AppTheme.successGreen,
+            color: color,
             fontWeight: FontWeight.w600,
-            backgroundColor: AppTheme.successGreen.withValues(alpha: 0.15),
+            backgroundColor: color.withValues(alpha: 0.15),
           ),
         ),
       );
@@ -197,6 +235,7 @@ class VariableTextFieldState extends State<VariableTextField> {
   late FocusNode _focusNode;
   bool _ownsFocusNode = false;
   bool _hasFocus = false;
+  int? _markedVariableStart;
 
   @override
   void initState() {
@@ -223,6 +262,7 @@ class VariableTextFieldState extends State<VariableTextField> {
       if (selection.isValid && selection.end <= widget.value.length) {
         _controller.selection = selection;
       }
+      _clearMarkedVariable();
     }
   }
 
@@ -237,25 +277,53 @@ class VariableTextFieldState extends State<VariableTextField> {
 
   void _onFocusChange() {
     setState(() => _hasFocus = _focusNode.hasFocus);
+    if (!_focusNode.hasFocus) {
+      _clearMarkedVariable();
+    }
     widget.onFocusChange?.call();
   }
 
+  void _markVariableForDeletion(int start, int end) {
+    _markedVariableStart = start;
+    _controller.setMarkedVariable(start, end);
+    HapticFeedback.lightImpact();
+  }
+
+  void _clearMarkedVariable() {
+    if (_markedVariableStart != null) {
+      _markedVariableStart = null;
+      _controller.setMarkedVariable(null, null);
+    }
+  }
+
   void _onSelectionChange() {
-    // If cursor is inside a variable, move it to the end of that variable
     final text = _controller.text;
     final selection = _controller.selection;
 
-    if (!selection.isValid || !selection.isCollapsed) return;
+    if (!selection.isValid) return;
 
     final cursorPos = selection.baseOffset;
 
+    // Check if cursor/tap is on a variable
     for (final match in _variableRegex.allMatches(text)) {
-      if (cursorPos > match.start && cursorPos < match.end) {
-        // Cursor is inside a variable - move to end
-        _controller.selection = TextSelection.collapsed(offset: match.end);
+      if (cursorPos >= match.start && cursorPos <= match.end) {
+        // Cursor is on or inside a variable
+        if (selection.isCollapsed) {
+          // Single tap - mark it for deletion (turns red)
+          if (_markedVariableStart != match.start) {
+            _markVariableForDeletion(match.start, match.end);
+          }
+          // Move cursor to end of variable
+          if (cursorPos < match.end) {
+            _controller.selection = TextSelection.collapsed(offset: match.end);
+          }
+        }
         return;
       }
     }
+
+    // Cursor moved outside any variable - clear marking
+    _clearMarkedVariable();
   }
 
   /// Insert a variable at current cursor position
@@ -294,8 +362,11 @@ class VariableTextFieldState extends State<VariableTextField> {
     return TextField(
       controller: _controller,
       focusNode: _focusNode,
-      onChanged: widget.onChanged,
-      inputFormatters: [_VariableProtectionFormatter()],
+      onChanged: (value) {
+        _clearMarkedVariable();
+        widget.onChanged(value);
+      },
+      inputFormatters: [_VariableProtectionFormatter(this)],
       minLines: 2,
       maxLines: 5,
       style: const TextStyle(fontSize: 14),
