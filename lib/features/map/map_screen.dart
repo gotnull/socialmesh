@@ -447,7 +447,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
             fontSize: 28,
             fontWeight: FontWeight.w700,
             color: Colors.white,
-            
           ),
         ),
         actions: [
@@ -673,9 +672,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           return CircleMarker(
                             point: LatLng(n.latitude, n.longitude),
                             radius: 50,
-                            color: context.accentColor.withValues(
-                              alpha: 0.15,
-                            ),
+                            color: context.accentColor.withValues(alpha: 0.15),
                             borderColor: context.accentColor.withValues(
                               alpha: 0.3,
                             ),
@@ -1547,6 +1544,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           type: ConversationType.directMessage,
           nodeNum: node.nodeNum,
           title: node.displayName,
+          avatarColor: node.avatarColor,
         ),
       ),
     );
@@ -1762,11 +1760,7 @@ class _NodeListPanel extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.list,
-                    size: 20,
-                    color: context.accentColor,
-                  ),
+                  Icon(Icons.list, size: 20, color: context.accentColor),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
@@ -2004,9 +1998,7 @@ class _NodeListItem extends StatelessWidget {
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
-                              color: context.accentColor.withValues(
-                                alpha: 0.2,
-                              ),
+                              color: context.accentColor.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(3),
                             ),
                             child: Text(
@@ -2232,9 +2224,7 @@ class _NodeInfoCard extends ConsumerWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: context.accentColor.withValues(
-                                alpha: 0.2,
-                              ),
+                              color: context.accentColor.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -2811,11 +2801,7 @@ class _FilterBar extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.filter_alt,
-                size: 16,
-                color: context.accentColor,
-              ),
+              Icon(Icons.filter_alt, size: 16, color: context.accentColor),
               const SizedBox(width: 8),
               Text(
                 'Filter Nodes',

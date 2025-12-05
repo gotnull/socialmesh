@@ -154,12 +154,18 @@ class VariableTextFieldState extends State<VariableTextField> {
 /// Widget showing available variables that can be tapped to insert
 class VariableChipPicker extends StatelessWidget {
   final VariableTextFieldState? targetField;
+  final bool isActive;
 
-  const VariableChipPicker({super.key, this.targetField});
+  const VariableChipPicker({
+    super.key,
+    this.targetField,
+    this.isActive = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isActive = targetField?.hasFocus ?? false;
+    // Active if a target field exists (even if not currently focused)
+    final showActive = isActive || targetField != null;
 
     return Container(
       padding: const EdgeInsets.all(8),
@@ -171,7 +177,7 @@ class VariableChipPicker extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isActive ? 'Tap to insert at cursor:' : 'Available variables:',
+            showActive ? 'Tap to insert at cursor:' : 'Available variables:',
             style: TextStyle(color: Colors.grey[600], fontSize: 11),
           ),
           const SizedBox(height: 6),
@@ -179,7 +185,7 @@ class VariableChipPicker extends StatelessWidget {
             spacing: 8,
             runSpacing: 6,
             children: validVariables
-                .map((v) => _buildChip(v, isActive))
+                .map((v) => _buildChip(v, showActive))
                 .toList(),
           ),
         ],

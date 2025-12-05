@@ -147,6 +147,7 @@ class MessagingScreen extends ConsumerWidget {
                             type: conv.type,
                             nodeNum: conv.nodeNum,
                             title: conv.name,
+                            avatarColor: conv.avatarColor,
                           ),
                         ),
                       );
@@ -251,6 +252,7 @@ class MessagingScreen extends ConsumerWidget {
                         type: ConversationType.directMessage,
                         nodeNum: node.nodeNum,
                         title: node.displayName,
+                        avatarColor: node.avatarColor,
                       ),
                     ),
                   );
@@ -416,6 +418,7 @@ class ChatScreen extends ConsumerStatefulWidget {
   final int? channelIndex;
   final int? nodeNum;
   final String title;
+  final int? avatarColor;
 
   const ChatScreen({
     super.key,
@@ -423,6 +426,7 @@ class ChatScreen extends ConsumerStatefulWidget {
     this.channelIndex,
     this.nodeNum,
     required this.title,
+    this.avatarColor,
   });
 
   @override
@@ -946,6 +950,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 decoration: BoxDecoration(
                   color: widget.type == ConversationType.channel
                       ? context.accentColor.withValues(alpha: 0.2)
+                      : widget.avatarColor != null
+                      ? Color(widget.avatarColor!)
                       : AppTheme.graphPurple,
                   shape: BoxShape.circle,
                 ),

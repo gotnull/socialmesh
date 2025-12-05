@@ -35,8 +35,9 @@ class _ActionEditorState extends State<ActionEditor> {
   final _notificationTitleFieldKey = GlobalKey<VariableTextFieldState>();
   final _notificationBodyFieldKey = GlobalKey<VariableTextFieldState>();
 
-  // Track which field is currently focused
+  // Track which field is currently focused (or was last focused)
   VariableTextFieldState? _activeField;
+  VariableTextFieldState? _lastActiveField;
 
   @override
   void initState() {
@@ -50,23 +51,38 @@ class _ActionEditorState extends State<ActionEditor> {
   }
 
   void _updateActiveField() {
-    setState(() {
-      // Check each field's focus state
-      final messageField = _messageFieldKey.currentState;
-      final titleField = _notificationTitleFieldKey.currentState;
-      final bodyField = _notificationBodyFieldKey.currentState;
+    // Check each field's focus state
+    final messageField = _messageFieldKey.currentState;
+    final titleField = _notificationTitleFieldKey.currentState;
+    final bodyField = _notificationBodyFieldKey.currentState;
 
-      if (messageField?.hasFocus ?? false) {
-        _activeField = messageField;
-      } else if (titleField?.hasFocus ?? false) {
-        _activeField = titleField;
-      } else if (bodyField?.hasFocus ?? false) {
-        _activeField = bodyField;
-      } else {
+    VariableTextFieldState? newActive;
+    if (messageField?.hasFocus ?? false) {
+      newActive = messageField;
+    } else if (titleField?.hasFocus ?? false) {
+      newActive = titleField;
+    } else if (bodyField?.hasFocus ?? false) {
+      newActive = bodyField;
+    }
+
+    // Only update if a field is focused (don't clear on blur)
+    // This allows chip taps to work even when field briefly loses focus
+    if (newActive != null) {
+      setState(() {
+        _activeField = newActive;
+        _lastActiveField = newActive;
+      });
+    } else {
+      // Keep lastActiveField for chip insertion, but update active for styling
+      setState(() {
         _activeField = null;
-      }
-    });
+      });
+    }
   }
+
+  /// Get the field to insert variables into (current or last focused)
+  VariableTextFieldState? get _insertTargetField =>
+      _activeField ?? _lastActiveField;
 
   @override
   void didUpdateWidget(ActionEditor oldWidget) {
@@ -201,7 +217,10 @@ class _ActionEditorState extends State<ActionEditor> {
             maxLines: 2,
           ),
           const SizedBox(height: 8),
-          VariableChipPicker(targetField: _activeField),
+          VariableChipPicker(
+            targetField: _insertTargetField,
+            isActive: _insertTargetField != null,
+          ),
         ],
       ),
     );
@@ -243,7 +262,10 @@ class _ActionEditorState extends State<ActionEditor> {
             maxLines: 2,
           ),
           const SizedBox(height: 8),
-          VariableChipPicker(targetField: _activeField),
+          VariableChipPicker(
+            targetField: _insertTargetField,
+            isActive: _insertTargetField != null,
+          ),
         ],
       ),
     );

@@ -794,6 +794,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
           type: ConversationType.directMessage,
           nodeNum: node.nodeNum,
           title: node.displayName,
+          avatarColor: node.avatarColor,
         ),
       ),
     );
