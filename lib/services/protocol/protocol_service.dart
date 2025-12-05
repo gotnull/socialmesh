@@ -735,6 +735,22 @@ class ProtocolService {
               'channelUtil=$channelUtil%, airUtilTx=$airUtilTx%, uptime=${uptimeSeconds}s',
             );
           }
+
+          // Update node with device metrics
+          final existingDeviceNode = _nodes[packet.from];
+          if (existingDeviceNode != null) {
+            final updatedDeviceNode = existingDeviceNode.copyWith(
+              batteryLevel: batteryLevel,
+              voltage: voltage,
+              channelUtilization: channelUtil,
+              airUtilTx: airUtilTx,
+              uptimeSeconds: uptimeSeconds,
+              lastHeard: DateTime.now(),
+              isOnline: true,
+            );
+            _nodes[packet.from] = updatedDeviceNode;
+            _nodeController.add(updatedDeviceNode);
+          }
           break;
 
         case telemetry.Telemetry_Variant.environmentMetrics:
@@ -747,7 +763,7 @@ class ProtocolService {
               'pressure=${envMetrics.hasBarometricPressure() ? envMetrics.barometricPressure : "N/A"}hPa',
             );
           }
-          // Update node with environment metrics
+          // Update node with all environment metrics
           final existingEnvNode = _nodes[packet.from];
           if (existingEnvNode != null) {
             final updatedEnvNode = existingEnvNode.copyWith(
@@ -757,6 +773,60 @@ class ProtocolService {
               humidity: envMetrics.hasRelativeHumidity()
                   ? envMetrics.relativeHumidity.toDouble()
                   : null,
+              barometricPressure: envMetrics.hasBarometricPressure()
+                  ? envMetrics.barometricPressure.toDouble()
+                  : null,
+              gasResistance: envMetrics.hasGasResistance()
+                  ? envMetrics.gasResistance.toDouble()
+                  : null,
+              iaq: envMetrics.hasIaq() ? envMetrics.iaq : null,
+              lux: envMetrics.hasLux() ? envMetrics.lux.toDouble() : null,
+              whiteLux: envMetrics.hasWhiteLux()
+                  ? envMetrics.whiteLux.toDouble()
+                  : null,
+              irLux: envMetrics.hasIrLux() ? envMetrics.irLux.toDouble() : null,
+              uvLux: envMetrics.hasUvLux() ? envMetrics.uvLux.toDouble() : null,
+              windDirection: envMetrics.hasWindDirection()
+                  ? envMetrics.windDirection
+                  : null,
+              windSpeed: envMetrics.hasWindSpeed()
+                  ? envMetrics.windSpeed.toDouble()
+                  : null,
+              windGust: envMetrics.hasWindGust()
+                  ? envMetrics.windGust.toDouble()
+                  : null,
+              windLull: envMetrics.hasWindLull()
+                  ? envMetrics.windLull.toDouble()
+                  : null,
+              weight: envMetrics.hasWeight()
+                  ? envMetrics.weight.toDouble()
+                  : null,
+              radiation: envMetrics.hasRadiation()
+                  ? envMetrics.radiation.toDouble()
+                  : null,
+              rainfall1h: envMetrics.hasRainfall1h()
+                  ? envMetrics.rainfall1h.toDouble()
+                  : null,
+              rainfall24h: envMetrics.hasRainfall24h()
+                  ? envMetrics.rainfall24h.toDouble()
+                  : null,
+              soilMoisture: envMetrics.hasSoilMoisture()
+                  ? envMetrics.soilMoisture
+                  : null,
+              soilTemperature: envMetrics.hasSoilTemperature()
+                  ? envMetrics.soilTemperature.toDouble()
+                  : null,
+              envDistance: envMetrics.hasDistance()
+                  ? envMetrics.distance.toDouble()
+                  : null,
+              envCurrent: envMetrics.hasCurrent()
+                  ? envMetrics.current.toDouble()
+                  : null,
+              envVoltage: envMetrics.hasVoltage()
+                  ? envMetrics.voltage.toDouble()
+                  : null,
+              lastHeard: DateTime.now(),
+              isOnline: true,
             );
             _nodes[packet.from] = updatedEnvNode;
             _nodeController.add(updatedEnvNode);
@@ -764,18 +834,100 @@ class ProtocolService {
           return;
 
         case telemetry.Telemetry_Variant.airQualityMetrics:
+          final aqMetrics = telem.airQualityMetrics;
           if (ProtocolDebugFlags.logTelemetry) {
-            final aqMetrics = telem.airQualityMetrics;
             _logger.i(
               'AirQualityMetrics from ${packet.from}: '
-              'PM2.5=${aqMetrics.hasPm25Standard() ? aqMetrics.pm25Standard : "N/A"}ug/m3',
+              'PM2.5=${aqMetrics.hasPm25Standard() ? aqMetrics.pm25Standard : "N/A"}ug/m3, '
+              'CO2=${aqMetrics.hasCo2() ? aqMetrics.co2 : "N/A"}ppm',
             );
+          }
+          // Update node with air quality metrics
+          final existingAqNode = _nodes[packet.from];
+          if (existingAqNode != null) {
+            final updatedAqNode = existingAqNode.copyWith(
+              pm10Standard: aqMetrics.hasPm10Standard()
+                  ? aqMetrics.pm10Standard
+                  : null,
+              pm25Standard: aqMetrics.hasPm25Standard()
+                  ? aqMetrics.pm25Standard
+                  : null,
+              pm100Standard: aqMetrics.hasPm100Standard()
+                  ? aqMetrics.pm100Standard
+                  : null,
+              pm10Environmental: aqMetrics.hasPm10Environmental()
+                  ? aqMetrics.pm10Environmental
+                  : null,
+              pm25Environmental: aqMetrics.hasPm25Environmental()
+                  ? aqMetrics.pm25Environmental
+                  : null,
+              pm100Environmental: aqMetrics.hasPm100Environmental()
+                  ? aqMetrics.pm100Environmental
+                  : null,
+              particles03um: aqMetrics.hasParticles03um()
+                  ? aqMetrics.particles03um
+                  : null,
+              particles05um: aqMetrics.hasParticles05um()
+                  ? aqMetrics.particles05um
+                  : null,
+              particles10um: aqMetrics.hasParticles10um()
+                  ? aqMetrics.particles10um
+                  : null,
+              particles25um: aqMetrics.hasParticles25um()
+                  ? aqMetrics.particles25um
+                  : null,
+              particles50um: aqMetrics.hasParticles50um()
+                  ? aqMetrics.particles50um
+                  : null,
+              particles100um: aqMetrics.hasParticles100um()
+                  ? aqMetrics.particles100um
+                  : null,
+              co2: aqMetrics.hasCo2() ? aqMetrics.co2 : null,
+              lastHeard: DateTime.now(),
+              isOnline: true,
+            );
+            _nodes[packet.from] = updatedAqNode;
+            _nodeController.add(updatedAqNode);
           }
           return;
 
         case telemetry.Telemetry_Variant.powerMetrics:
+          final pwrMetrics = telem.powerMetrics;
           if (ProtocolDebugFlags.logTelemetry) {
-            _logger.i('PowerMetrics from ${packet.from}');
+            _logger.i(
+              'PowerMetrics from ${packet.from}: '
+              'ch1=${pwrMetrics.hasCh1Voltage() ? pwrMetrics.ch1Voltage : "N/A"}V, '
+              'ch2=${pwrMetrics.hasCh2Voltage() ? pwrMetrics.ch2Voltage : "N/A"}V, '
+              'ch3=${pwrMetrics.hasCh3Voltage() ? pwrMetrics.ch3Voltage : "N/A"}V',
+            );
+          }
+          // Update node with power metrics
+          final existingPwrNode = _nodes[packet.from];
+          if (existingPwrNode != null) {
+            final updatedPwrNode = existingPwrNode.copyWith(
+              ch1Voltage: pwrMetrics.hasCh1Voltage()
+                  ? pwrMetrics.ch1Voltage.toDouble()
+                  : null,
+              ch1Current: pwrMetrics.hasCh1Current()
+                  ? pwrMetrics.ch1Current.toDouble()
+                  : null,
+              ch2Voltage: pwrMetrics.hasCh2Voltage()
+                  ? pwrMetrics.ch2Voltage.toDouble()
+                  : null,
+              ch2Current: pwrMetrics.hasCh2Current()
+                  ? pwrMetrics.ch2Current.toDouble()
+                  : null,
+              ch3Voltage: pwrMetrics.hasCh3Voltage()
+                  ? pwrMetrics.ch3Voltage.toDouble()
+                  : null,
+              ch3Current: pwrMetrics.hasCh3Current()
+                  ? pwrMetrics.ch3Current.toDouble()
+                  : null,
+              lastHeard: DateTime.now(),
+              isOnline: true,
+            );
+            _nodes[packet.from] = updatedPwrNode;
+            _nodeController.add(updatedPwrNode);
           }
           return;
 
@@ -792,6 +944,36 @@ class ProtocolService {
           if (packet.from == _myNodeNum) {
             _lastChannelUtil = stats.channelUtilization.toDouble();
             _channelUtilController.add(_lastChannelUtil);
+          }
+          // Update node with local stats
+          final existingStatsNode = _nodes[packet.from];
+          if (existingStatsNode != null) {
+            final updatedStatsNode = existingStatsNode.copyWith(
+              channelUtilization: stats.hasChannelUtilization()
+                  ? stats.channelUtilization.toDouble()
+                  : null,
+              airUtilTx: stats.hasAirUtilTx()
+                  ? stats.airUtilTx.toDouble()
+                  : null,
+              uptimeSeconds: stats.hasUptimeSeconds()
+                  ? stats.uptimeSeconds
+                  : null,
+              numPacketsTx: stats.hasNumPacketsTx() ? stats.numPacketsTx : null,
+              numPacketsRx: stats.hasNumPacketsRx() ? stats.numPacketsRx : null,
+              numPacketsRxBad: stats.hasNumPacketsRxBad()
+                  ? stats.numPacketsRxBad
+                  : null,
+              numOnlineNodes: stats.hasNumOnlineNodes()
+                  ? stats.numOnlineNodes
+                  : null,
+              numTotalNodes: stats.hasNumTotalNodes()
+                  ? stats.numTotalNodes
+                  : null,
+              lastHeard: DateTime.now(),
+              isOnline: true,
+            );
+            _nodes[packet.from] = updatedStatsNode;
+            _nodeController.add(updatedStatsNode);
           }
           return;
 
@@ -814,24 +996,11 @@ class ProtocolService {
         _channelUtilController.add(channelUtil);
       }
 
-      // Only update node if we got valid battery data from deviceMetrics
-      if (batteryLevel == null || batteryLevel == 0) {
-        _logger.d('No valid battery level in telemetry, skipping node update');
-        return;
-      }
-
-      final node = _nodes[packet.from];
-      if (node != null) {
-        final updatedNode = node.copyWith(
-          batteryLevel: batteryLevel,
-          lastHeard: DateTime.now(),
-          isOnline: true,
-        );
-        _nodes[packet.from] = updatedNode;
-        _nodeController.add(updatedNode);
-        _logger.d('Updated node ${packet.from} battery to $batteryLevel%');
-      } else {
-        // Create a new node entry with just the telemetry data
+      // Device metrics are now handled in the switch case above
+      // This block is only for creating new nodes if they don't exist
+      if (_nodes[packet.from] == null &&
+          batteryLevel != null &&
+          batteryLevel > 0) {
         _logger.d('Creating new node entry for ${packet.from} from telemetry');
         final colors = [
           0xFF1976D2,
@@ -847,6 +1016,10 @@ class ProtocolService {
         final newNode = MeshNode(
           nodeNum: packet.from,
           batteryLevel: batteryLevel,
+          voltage: voltage,
+          channelUtilization: channelUtil,
+          airUtilTx: airUtilTx,
+          uptimeSeconds: uptimeSeconds,
           lastHeard: DateTime.now(),
           isOnline: true,
           avatarColor: avatarColor,

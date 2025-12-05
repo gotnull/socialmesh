@@ -165,6 +165,64 @@ class MeshNode {
   final int? avatarColor; // Color value for avatar
   final bool hasPublicKey; // Whether node has encryption key set
 
+  // Device Metrics
+  final double? voltage; // Battery voltage
+  final double? channelUtilization; // Current channel utilization %
+  final double? airUtilTx; // Airtime TX utilization %
+  final int? uptimeSeconds; // Device uptime in seconds
+
+  // Environment Metrics
+  final double? barometricPressure; // Pressure in hPa
+  final double? gasResistance; // Gas resistance for IAQ
+  final int? iaq; // Indoor Air Quality index
+  final double? lux; // Ambient light
+  final double? whiteLux; // White light lux
+  final double? irLux; // Infrared lux
+  final double? uvLux; // UV light lux
+  final int? windDirection; // Wind direction (degrees)
+  final double? windSpeed; // Wind speed (m/s)
+  final double? windGust; // Wind gust speed
+  final double? windLull; // Wind lull speed
+  final double? weight; // Scale weight
+  final double? radiation; // Radiation level
+  final double? rainfall1h; // Rainfall last hour (mm)
+  final double? rainfall24h; // Rainfall last 24h (mm)
+  final int? soilMoisture; // Soil moisture %
+  final double? soilTemperature; // Soil temperature °C
+  final double? envDistance; // Distance sensor (mm)
+  final double? envCurrent; // Environment sensor current
+  final double? envVoltage; // Environment sensor voltage
+
+  // Power Metrics
+  final double? ch1Voltage;
+  final double? ch1Current;
+  final double? ch2Voltage;
+  final double? ch2Current;
+  final double? ch3Voltage;
+  final double? ch3Current;
+
+  // Air Quality Metrics
+  final int? pm10Standard; // PM1.0 standard
+  final int? pm25Standard; // PM2.5 standard
+  final int? pm100Standard; // PM10.0 standard
+  final int? pm10Environmental; // PM1.0 environmental
+  final int? pm25Environmental; // PM2.5 environmental
+  final int? pm100Environmental; // PM10.0 environmental
+  final int? particles03um; // 0.3µm particle count
+  final int? particles05um; // 0.5µm particle count
+  final int? particles10um; // 1.0µm particle count
+  final int? particles25um; // 2.5µm particle count
+  final int? particles50um; // 5.0µm particle count
+  final int? particles100um; // 10.0µm particle count
+  final int? co2; // CO2 concentration (ppm)
+
+  // Local Stats
+  final int? numPacketsTx; // Total packets transmitted
+  final int? numPacketsRx; // Total packets received
+  final int? numPacketsRxBad; // Bad packets received
+  final int? numOnlineNodes; // Online node count
+  final int? numTotalNodes; // Total node count
+
   MeshNode({
     required this.nodeNum,
     this.longName,
@@ -187,6 +245,59 @@ class MeshNode {
     this.isFavorite = false,
     this.avatarColor,
     this.hasPublicKey = false,
+    // Device Metrics
+    this.voltage,
+    this.channelUtilization,
+    this.airUtilTx,
+    this.uptimeSeconds,
+    // Environment Metrics
+    this.barometricPressure,
+    this.gasResistance,
+    this.iaq,
+    this.lux,
+    this.whiteLux,
+    this.irLux,
+    this.uvLux,
+    this.windDirection,
+    this.windSpeed,
+    this.windGust,
+    this.windLull,
+    this.weight,
+    this.radiation,
+    this.rainfall1h,
+    this.rainfall24h,
+    this.soilMoisture,
+    this.soilTemperature,
+    this.envDistance,
+    this.envCurrent,
+    this.envVoltage,
+    // Power Metrics
+    this.ch1Voltage,
+    this.ch1Current,
+    this.ch2Voltage,
+    this.ch2Current,
+    this.ch3Voltage,
+    this.ch3Current,
+    // Air Quality Metrics
+    this.pm10Standard,
+    this.pm25Standard,
+    this.pm100Standard,
+    this.pm10Environmental,
+    this.pm25Environmental,
+    this.pm100Environmental,
+    this.particles03um,
+    this.particles05um,
+    this.particles10um,
+    this.particles25um,
+    this.particles50um,
+    this.particles100um,
+    this.co2,
+    // Local Stats
+    this.numPacketsTx,
+    this.numPacketsRx,
+    this.numPacketsRxBad,
+    this.numOnlineNodes,
+    this.numTotalNodes,
   });
 
   MeshNode copyWith({
@@ -211,6 +322,59 @@ class MeshNode {
     bool? isFavorite,
     int? avatarColor,
     bool? hasPublicKey,
+    // Device Metrics
+    double? voltage,
+    double? channelUtilization,
+    double? airUtilTx,
+    int? uptimeSeconds,
+    // Environment Metrics
+    double? barometricPressure,
+    double? gasResistance,
+    int? iaq,
+    double? lux,
+    double? whiteLux,
+    double? irLux,
+    double? uvLux,
+    int? windDirection,
+    double? windSpeed,
+    double? windGust,
+    double? windLull,
+    double? weight,
+    double? radiation,
+    double? rainfall1h,
+    double? rainfall24h,
+    int? soilMoisture,
+    double? soilTemperature,
+    double? envDistance,
+    double? envCurrent,
+    double? envVoltage,
+    // Power Metrics
+    double? ch1Voltage,
+    double? ch1Current,
+    double? ch2Voltage,
+    double? ch2Current,
+    double? ch3Voltage,
+    double? ch3Current,
+    // Air Quality Metrics
+    int? pm10Standard,
+    int? pm25Standard,
+    int? pm100Standard,
+    int? pm10Environmental,
+    int? pm25Environmental,
+    int? pm100Environmental,
+    int? particles03um,
+    int? particles05um,
+    int? particles10um,
+    int? particles25um,
+    int? particles50um,
+    int? particles100um,
+    int? co2,
+    // Local Stats
+    int? numPacketsTx,
+    int? numPacketsRx,
+    int? numPacketsRxBad,
+    int? numOnlineNodes,
+    int? numTotalNodes,
   }) {
     return MeshNode(
       nodeNum: nodeNum ?? this.nodeNum,
@@ -234,6 +398,59 @@ class MeshNode {
       isFavorite: isFavorite ?? this.isFavorite,
       avatarColor: avatarColor ?? this.avatarColor,
       hasPublicKey: hasPublicKey ?? this.hasPublicKey,
+      // Device Metrics
+      voltage: voltage ?? this.voltage,
+      channelUtilization: channelUtilization ?? this.channelUtilization,
+      airUtilTx: airUtilTx ?? this.airUtilTx,
+      uptimeSeconds: uptimeSeconds ?? this.uptimeSeconds,
+      // Environment Metrics
+      barometricPressure: barometricPressure ?? this.barometricPressure,
+      gasResistance: gasResistance ?? this.gasResistance,
+      iaq: iaq ?? this.iaq,
+      lux: lux ?? this.lux,
+      whiteLux: whiteLux ?? this.whiteLux,
+      irLux: irLux ?? this.irLux,
+      uvLux: uvLux ?? this.uvLux,
+      windDirection: windDirection ?? this.windDirection,
+      windSpeed: windSpeed ?? this.windSpeed,
+      windGust: windGust ?? this.windGust,
+      windLull: windLull ?? this.windLull,
+      weight: weight ?? this.weight,
+      radiation: radiation ?? this.radiation,
+      rainfall1h: rainfall1h ?? this.rainfall1h,
+      rainfall24h: rainfall24h ?? this.rainfall24h,
+      soilMoisture: soilMoisture ?? this.soilMoisture,
+      soilTemperature: soilTemperature ?? this.soilTemperature,
+      envDistance: envDistance ?? this.envDistance,
+      envCurrent: envCurrent ?? this.envCurrent,
+      envVoltage: envVoltage ?? this.envVoltage,
+      // Power Metrics
+      ch1Voltage: ch1Voltage ?? this.ch1Voltage,
+      ch1Current: ch1Current ?? this.ch1Current,
+      ch2Voltage: ch2Voltage ?? this.ch2Voltage,
+      ch2Current: ch2Current ?? this.ch2Current,
+      ch3Voltage: ch3Voltage ?? this.ch3Voltage,
+      ch3Current: ch3Current ?? this.ch3Current,
+      // Air Quality Metrics
+      pm10Standard: pm10Standard ?? this.pm10Standard,
+      pm25Standard: pm25Standard ?? this.pm25Standard,
+      pm100Standard: pm100Standard ?? this.pm100Standard,
+      pm10Environmental: pm10Environmental ?? this.pm10Environmental,
+      pm25Environmental: pm25Environmental ?? this.pm25Environmental,
+      pm100Environmental: pm100Environmental ?? this.pm100Environmental,
+      particles03um: particles03um ?? this.particles03um,
+      particles05um: particles05um ?? this.particles05um,
+      particles10um: particles10um ?? this.particles10um,
+      particles25um: particles25um ?? this.particles25um,
+      particles50um: particles50um ?? this.particles50um,
+      particles100um: particles100um ?? this.particles100um,
+      co2: co2 ?? this.co2,
+      // Local Stats
+      numPacketsTx: numPacketsTx ?? this.numPacketsTx,
+      numPacketsRx: numPacketsRx ?? this.numPacketsRx,
+      numPacketsRxBad: numPacketsRxBad ?? this.numPacketsRxBad,
+      numOnlineNodes: numOnlineNodes ?? this.numOnlineNodes,
+      numTotalNodes: numTotalNodes ?? this.numTotalNodes,
     );
   }
 
