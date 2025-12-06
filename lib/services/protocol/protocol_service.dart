@@ -2914,6 +2914,7 @@ class ProtocolService {
   /// Set Telemetry module configuration
   Future<void> setTelemetryModuleConfig({
     int? deviceUpdateInterval,
+    bool? deviceTelemetryEnabled,
     int? environmentUpdateInterval,
     bool? environmentMeasurementEnabled,
     bool? environmentScreenEnabled,
@@ -2922,12 +2923,16 @@ class ProtocolService {
     int? airQualityInterval,
     bool? powerMeasurementEnabled,
     int? powerUpdateInterval,
+    bool? powerScreenEnabled,
   }) async {
     _logger.i('Setting telemetry config');
 
     final telemetryConfig = pb.ModuleConfig_TelemetryConfig();
     if (deviceUpdateInterval != null) {
       telemetryConfig.deviceUpdateInterval = deviceUpdateInterval;
+    }
+    if (deviceTelemetryEnabled != null) {
+      telemetryConfig.deviceTelemetryEnabled = deviceTelemetryEnabled;
     }
     if (environmentUpdateInterval != null) {
       telemetryConfig.environmentUpdateInterval = environmentUpdateInterval;
@@ -2954,6 +2959,9 @@ class ProtocolService {
     }
     if (powerUpdateInterval != null) {
       telemetryConfig.powerUpdateInterval = powerUpdateInterval;
+    }
+    if (powerScreenEnabled != null) {
+      telemetryConfig.powerScreenEnabled = powerScreenEnabled;
     }
 
     final moduleConfig = pb.ModuleConfig()..telemetry = telemetryConfig;

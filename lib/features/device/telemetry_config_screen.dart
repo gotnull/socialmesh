@@ -15,24 +15,27 @@ class TelemetryConfigScreen extends ConsumerStatefulWidget {
 
 class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
   // Device Metrics
-  int _deviceMetricsUpdateInterval = 900;
-  bool _deviceMetricsEnabled = true;
+  int _deviceMetricsUpdateInterval = 1800; // Default 30 minutes
+  bool _deviceMetricsEnabled = false;
 
   // Environment Metrics
-  int _environmentMetricsUpdateInterval = 900;
-  bool _environmentMetricsEnabled = true;
+  int _environmentMetricsUpdateInterval = 1800; // Default 30 minutes
+  bool _environmentMetricsEnabled = false;
   bool _environmentDisplayOnScreen = false;
+  bool _environmentDisplayFahrenheit = false;
 
   // Air Quality
-  int _airQualityUpdateInterval = 900;
+  int _airQualityUpdateInterval = 1800; // Default 30 minutes
   bool _airQualityEnabled = false;
 
   // Power Metrics
-  int _powerMetricsUpdateInterval = 900;
+  int _powerMetricsUpdateInterval = 1800; // Default 30 minutes
   bool _powerMetricsEnabled = false;
+  bool _powerScreenEnabled = false;
 
   bool _hasChanges = false;
   bool _isSaving = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -45,16 +48,34 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
     final config = await protocol.getTelemetryModuleConfig();
     if (config != null && mounted) {
       setState(() {
-        _deviceMetricsUpdateInterval = config.deviceUpdateInterval;
-        _deviceMetricsEnabled = config.deviceUpdateInterval > 0;
-        _environmentMetricsUpdateInterval = config.environmentUpdateInterval;
-        _environmentMetricsEnabled = config.environmentUpdateInterval > 0;
+        // Device Metrics - use deviceTelemetryEnabled flag
+        _deviceMetricsEnabled = config.deviceTelemetryEnabled;
+        _deviceMetricsUpdateInterval =
+            config.deviceUpdateInterval > 0 ? config.deviceUpdateInterval : 1800;
+
+        // Environment Metrics - use environmentMeasurementEnabled flag
+        _environmentMetricsEnabled = config.environmentMeasurementEnabled;
+        _environmentMetricsUpdateInterval = config.environmentUpdateInterval > 0
+            ? config.environmentUpdateInterval
+            : 1800;
         _environmentDisplayOnScreen = config.environmentScreenEnabled;
-        _airQualityUpdateInterval = config.airQualityInterval;
+        _environmentDisplayFahrenheit = config.environmentDisplayFahrenheit;
+
+        // Air Quality - use airQualityEnabled flag
         _airQualityEnabled = config.airQualityEnabled;
-        _powerMetricsUpdateInterval = config.powerUpdateInterval;
-        _powerMetricsEnabled = config.powerUpdateInterval > 0;
+        _airQualityUpdateInterval =
+            config.airQualityInterval > 0 ? config.airQualityInterval : 1800;
+
+        // Power Metrics - use powerMeasurementEnabled flag
+        _powerMetricsEnabled = config.powerMeasurementEnabled;
+        _powerMetricsUpdateInterval =
+            config.powerUpdateInterval > 0 ? config.powerUpdateInterval : 1800;
+        _powerScreenEnabled = config.powerScreenEnabled;
+
+        _isLoading = false;
       });
+    } else if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -64,18 +85,25 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
     try {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.setTelemetryModuleConfig(
-        deviceUpdateInterval: _deviceMetricsEnabled
-            ? _deviceMetricsUpdateInterval
-            : 0,
-        environmentUpdateInterval: _environmentMetricsEnabled
-            ? _environmentMetricsUpdateInterval
-            : 0,
+        // Device Metrics
+        deviceTelemetryEnabled: _deviceMetricsEnabled,
+        deviceUpdateInterval:
+            _deviceMetricsEnabled ? _deviceMetricsUpdateInterval : 0,
+        // Environment Metrics
+        environmentMeasurementEnabled: _environmentMetricsEnabled,
+        environmentUpdateInterval:
+            _environmentMetricsEnabled ? _environmentMetricsUpdateInterval : 0,
         environmentScreenEnabled: _environmentDisplayOnScreen,
-        airQualityInterval: _airQualityEnabled ? _airQualityUpdateInterval : 0,
+        environmentDisplayFahrenheit: _environmentDisplayFahrenheit,
+        // Air Quality
         airQualityEnabled: _airQualityEnabled,
-        powerUpdateInterval: _powerMetricsEnabled
-            ? _powerMetricsUpdateInterval
-            : 0,
+        airQualityInterval:
+            _airQualityEnabled ? _airQualityUpdateInterval : 0,
+        // Power Metrics
+        powerMeasurementEnabled: _powerMetricsEnabled,
+        powerUpdateInterval:
+            _powerMetricsEnabled ? _powerMetricsUpdateInterval : 0,
+        powerScreenEnabled: _powerScreenEnabled,
       );
 
       setState(() => _hasChanges = false);
@@ -103,6 +131,30 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppTheme.darkBackground,
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkBackground,
+          title: const Text(
+            'Telemetry',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Center(
+          child: CircularProgressIndicator(color: context.accentColor),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
