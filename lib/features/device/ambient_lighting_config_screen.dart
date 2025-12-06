@@ -118,15 +118,18 @@ class _AmbientLightingConfigScreenState
             TextButton(
               onPressed: _isSaving ? null : _save,
               child: _isSaving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.accentColor,
+                      ),
                     )
-                  : const Text(
+                  : Text(
                       'Save',
                       style: TextStyle(
-                        color: AccentColors.blue,
+                        color: context.accentColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -168,7 +171,8 @@ class _AmbientLightingConfigScreenState
                 ),
                 Switch(
                   value: _ledState,
-                  activeThumbColor: AccentColors.blue,
+                  activeTrackColor: context.accentColor,
+                  activeThumbColor: Colors.white,
                   onChanged: (value) {
                     setState(() {
                       _ledState = value;
@@ -300,19 +304,15 @@ class _AmbientLightingConfigScreenState
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AccentColors.blue.withValues(alpha: 0.1),
+              color: context.accentColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AccentColors.blue.withValues(alpha: 0.3),
+                color: context.accentColor.withValues(alpha: 0.3),
               ),
             ),
             child: Row(
               children: [
-                const Icon(
-                  Icons.info_outline,
-                  color: AccentColors.blue,
-                  size: 20,
-                ),
+                Icon(Icons.info_outline, color: context.accentColor, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
