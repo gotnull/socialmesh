@@ -1,0 +1,494 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme.dart';
+import '../../providers/app_providers.dart';
+
+/// Telemetry module configuration screen
+class TelemetryConfigScreen extends ConsumerStatefulWidget {
+  const TelemetryConfigScreen({super.key});
+
+  @override
+  ConsumerState<TelemetryConfigScreen> createState() =>
+      _TelemetryConfigScreenState();
+}
+
+class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
+  // Device Metrics
+  int _deviceMetricsUpdateInterval = 900;
+  bool _deviceMetricsEnabled = true;
+
+  // Environment Metrics
+  int _environmentMetricsUpdateInterval = 900;
+  bool _environmentMetricsEnabled = true;
+  bool _environmentDisplayOnScreen = false;
+
+  // Air Quality
+  int _airQualityUpdateInterval = 900;
+  bool _airQualityEnabled = false;
+
+  // Power Metrics
+  int _powerMetricsUpdateInterval = 900;
+  bool _powerMetricsEnabled = false;
+
+  bool _hasChanges = false;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentConfig();
+  }
+
+  Future<void> _loadCurrentConfig() async {
+    final protocol = ref.read(protocolServiceProvider);
+    final config = await protocol.getTelemetryModuleConfig();
+    if (config != null && mounted) {
+      setState(() {
+        _deviceMetricsUpdateInterval = config.deviceUpdateInterval;
+        _deviceMetricsEnabled = config.deviceUpdateInterval > 0;
+        _environmentMetricsUpdateInterval = config.environmentUpdateInterval;
+        _environmentMetricsEnabled = config.environmentUpdateInterval > 0;
+        _environmentDisplayOnScreen = config.environmentScreenEnabled;
+        _airQualityUpdateInterval = config.airQualityInterval;
+        _airQualityEnabled = config.airQualityEnabled;
+        _powerMetricsUpdateInterval = config.powerUpdateInterval;
+        _powerMetricsEnabled = config.powerUpdateInterval > 0;
+      });
+    }
+  }
+
+  Future<void> _save() async {
+    setState(() => _isSaving = true);
+
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      await protocol.setTelemetryModuleConfig(
+        deviceUpdateInterval: _deviceMetricsEnabled
+            ? _deviceMetricsUpdateInterval
+            : 0,
+        environmentUpdateInterval: _environmentMetricsEnabled
+            ? _environmentMetricsUpdateInterval
+            : 0,
+        environmentScreenEnabled: _environmentDisplayOnScreen,
+        airQualityInterval: _airQualityEnabled ? _airQualityUpdateInterval : 0,
+        airQualityEnabled: _airQualityEnabled,
+        powerUpdateInterval: _powerMetricsEnabled
+            ? _powerMetricsUpdateInterval
+            : 0,
+      );
+
+      setState(() => _hasChanges = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Telemetry config saved'),
+            backgroundColor: AccentColors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      appBar: AppBar(
+        backgroundColor: AppTheme.darkBackground,
+        title: const Text(
+          'Telemetry',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          if (_hasChanges)
+            TextButton(
+              onPressed: _isSaving ? null : _save,
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text(
+                      'Save',
+                      style: TextStyle(
+                        color: AccentColors.blue,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+            ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // Device Metrics Section
+          _SectionHeader(
+            title: 'Device Metrics',
+            icon: Icons.memory,
+            color: AccentColors.blue,
+          ),
+          const SizedBox(height: 12),
+          _TelemetrySection(
+            enabled: _deviceMetricsEnabled,
+            updateInterval: _deviceMetricsUpdateInterval,
+            onEnabledChanged: (value) {
+              setState(() {
+                _deviceMetricsEnabled = value;
+                _hasChanges = true;
+              });
+            },
+            onIntervalChanged: (value) {
+              setState(() {
+                _deviceMetricsUpdateInterval = value;
+                _hasChanges = true;
+              });
+            },
+            description:
+                'Battery level, voltage, channel utilization, air util TX',
+          ),
+
+          const SizedBox(height: 24),
+
+          // Environment Metrics Section
+          _SectionHeader(
+            title: 'Environment Metrics',
+            icon: Icons.thermostat,
+            color: AccentColors.green,
+          ),
+          const SizedBox(height: 12),
+          _TelemetrySection(
+            enabled: _environmentMetricsEnabled,
+            updateInterval: _environmentMetricsUpdateInterval,
+            onEnabledChanged: (value) {
+              setState(() {
+                _environmentMetricsEnabled = value;
+                _hasChanges = true;
+              });
+            },
+            onIntervalChanged: (value) {
+              setState(() {
+                _environmentMetricsUpdateInterval = value;
+                _hasChanges = true;
+              });
+            },
+            description:
+                'Temperature, humidity, barometric pressure, gas resistance',
+            additionalWidget: _ToggleTile(
+              title: 'Display on Screen',
+              subtitle: 'Show environment data on device screen',
+              value: _environmentDisplayOnScreen,
+              onChanged: (value) {
+                setState(() {
+                  _environmentDisplayOnScreen = value;
+                  _hasChanges = true;
+                });
+              },
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Air Quality Section
+          _SectionHeader(
+            title: 'Air Quality',
+            icon: Icons.air,
+            color: AccentColors.teal,
+          ),
+          const SizedBox(height: 12),
+          _TelemetrySection(
+            enabled: _airQualityEnabled,
+            updateInterval: _airQualityUpdateInterval,
+            onEnabledChanged: (value) {
+              setState(() {
+                _airQualityEnabled = value;
+                _hasChanges = true;
+              });
+            },
+            onIntervalChanged: (value) {
+              setState(() {
+                _airQualityUpdateInterval = value;
+                _hasChanges = true;
+              });
+            },
+            description: 'PM1.0, PM2.5, PM10, particle counts, CO2',
+          ),
+
+          const SizedBox(height: 24),
+
+          // Power Metrics Section
+          _SectionHeader(
+            title: 'Power Metrics',
+            icon: Icons.electric_bolt,
+            color: AccentColors.orange,
+          ),
+          const SizedBox(height: 12),
+          _TelemetrySection(
+            enabled: _powerMetricsEnabled,
+            updateInterval: _powerMetricsUpdateInterval,
+            onEnabledChanged: (value) {
+              setState(() {
+                _powerMetricsEnabled = value;
+                _hasChanges = true;
+              });
+            },
+            onIntervalChanged: (value) {
+              setState(() {
+                _powerMetricsUpdateInterval = value;
+                _hasChanges = true;
+              });
+            },
+            description: 'Voltage and current for channels 1-3',
+          ),
+
+          const SizedBox(height: 24),
+
+          // Info card
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AccentColors.blue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AccentColors.blue.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.info_outline,
+                  color: AccentColors.blue,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Telemetry data is shared with all nodes on the mesh network. '
+                    'Shorter intervals increase airtime usage.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+
+  const _SectionHeader({
+    required this.title,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TelemetrySection extends StatelessWidget {
+  final bool enabled;
+  final int updateInterval;
+  final ValueChanged<bool> onEnabledChanged;
+  final ValueChanged<int> onIntervalChanged;
+  final String description;
+  final Widget? additionalWidget;
+
+  const _TelemetrySection({
+    required this.enabled,
+    required this.updateInterval,
+    required this.onEnabledChanged,
+    required this.onIntervalChanged,
+    required this.description,
+    this.additionalWidget,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Enabled',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: enabled,
+                activeThumbColor: AccentColors.blue,
+                onChanged: onEnabledChanged,
+              ),
+            ],
+          ),
+          if (enabled) ...[
+            const SizedBox(height: 16),
+            const Divider(color: Colors.white12, height: 1),
+            const SizedBox(height: 16),
+            Text(
+              'Update Interval',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.white.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  '${updateInterval ~/ 60}',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    color: AccentColors.blue,
+                  ),
+                ),
+                Text(
+                  ' minutes',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.5),
+                  ),
+                ),
+              ],
+            ),
+            Slider(
+              value: updateInterval.toDouble(),
+              min: 60,
+              max: 3600,
+              divisions: 59,
+              activeColor: AccentColors.blue,
+              inactiveColor: AccentColors.blue.withValues(alpha: 0.2),
+              onChanged: (value) => onIntervalChanged(value.round()),
+            ),
+            if (additionalWidget != null) ...[
+              const SizedBox(height: 12),
+              additionalWidget!,
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ToggleTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _ToggleTile({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontSize: 14, color: Colors.white),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white.withValues(alpha: 0.5),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Switch(
+          value: value,
+          activeThumbColor: AccentColors.blue,
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+}

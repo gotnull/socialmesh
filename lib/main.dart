@@ -10,6 +10,7 @@ import 'firebase_options.dart';
 import 'core/theme.dart';
 import 'core/transport.dart';
 import 'providers/app_providers.dart';
+import 'providers/telemetry_providers.dart';
 import 'models/mesh_models.dart';
 import 'features/scanner/scanner_screen.dart';
 import 'features/scanner/widgets/connecting_animation.dart';
@@ -102,6 +103,9 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp> {
     // so they stay active regardless of which screen is shown
     ref.watch(autoReconnectManagerProvider);
     ref.watch(liveActivityManagerProvider);
+
+    // Watch telemetry logger to automatically save telemetry data
+    ref.watch(telemetryLoggerProvider);
 
     // Watch accent color for dynamic theme
     final accentColor = ref.watch(accentColorProvider);

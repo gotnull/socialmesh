@@ -223,6 +223,18 @@ class MeshNode {
   final int? numOnlineNodes; // Online node count
   final int? numTotalNodes; // Total node count
 
+  // GPS/Position Extended Fields
+  final int? satsInView; // Number of satellites in view
+  final double? gpsAccuracy; // GPS accuracy in meters
+  final double? groundSpeed; // Ground speed m/s
+  final double? groundTrack; // Ground track (heading) degrees
+  final int? precisionBits; // Position precision bits
+  final DateTime? positionTimestamp; // Last position update time
+
+  // Connectivity
+  final bool hasWifi; // Whether device has WiFi
+  final bool hasBluetooth; // Whether device has Bluetooth
+
   MeshNode({
     required this.nodeNum,
     this.longName,
@@ -298,6 +310,16 @@ class MeshNode {
     this.numPacketsRxBad,
     this.numOnlineNodes,
     this.numTotalNodes,
+    // GPS/Position Extended Fields
+    this.satsInView,
+    this.gpsAccuracy,
+    this.groundSpeed,
+    this.groundTrack,
+    this.precisionBits,
+    this.positionTimestamp,
+    // Connectivity
+    this.hasWifi = false,
+    this.hasBluetooth = false,
   });
 
   MeshNode copyWith({
@@ -375,6 +397,16 @@ class MeshNode {
     int? numPacketsRxBad,
     int? numOnlineNodes,
     int? numTotalNodes,
+    // GPS/Position Extended Fields
+    int? satsInView,
+    double? gpsAccuracy,
+    double? groundSpeed,
+    double? groundTrack,
+    int? precisionBits,
+    DateTime? positionTimestamp,
+    // Connectivity
+    bool? hasWifi,
+    bool? hasBluetooth,
   }) {
     return MeshNode(
       nodeNum: nodeNum ?? this.nodeNum,
@@ -451,6 +483,16 @@ class MeshNode {
       numPacketsRxBad: numPacketsRxBad ?? this.numPacketsRxBad,
       numOnlineNodes: numOnlineNodes ?? this.numOnlineNodes,
       numTotalNodes: numTotalNodes ?? this.numTotalNodes,
+      // GPS/Position Extended Fields
+      satsInView: satsInView ?? this.satsInView,
+      gpsAccuracy: gpsAccuracy ?? this.gpsAccuracy,
+      groundSpeed: groundSpeed ?? this.groundSpeed,
+      groundTrack: groundTrack ?? this.groundTrack,
+      precisionBits: precisionBits ?? this.precisionBits,
+      positionTimestamp: positionTimestamp ?? this.positionTimestamp,
+      // Connectivity
+      hasWifi: hasWifi ?? this.hasWifi,
+      hasBluetooth: hasBluetooth ?? this.hasBluetooth,
     );
   }
 

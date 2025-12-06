@@ -472,8 +472,9 @@ class AutomationEngine {
 
       case ActionType.triggerWebhook:
         if (action.webhookEventName == null) return false;
-        return await _iftttService
-            .testWebhook(); // TODO: use actual webhook method
+        return await _iftttService.triggerCustomEvent(
+          eventName: action.webhookEventName!,
+        );
 
       case ActionType.logEvent:
         // Already logging executions

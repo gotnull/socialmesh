@@ -59,6 +59,8 @@ class ProtocolService {
   final StreamController<pb.Config_SecurityConfig> _securityConfigController;
   final StreamController<pb.Config_LoRaConfig> _loraConfigController;
   final StreamController<pb.ModuleConfig_MQTTConfig> _mqttConfigController;
+  final StreamController<pb.ModuleConfig_TelemetryConfig>
+  _telemetryConfigController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
@@ -79,6 +81,7 @@ class ProtocolService {
   pb.Config_SecurityConfig? _currentSecurityConfig;
   pb.Config_LoRaConfig? _currentLoraConfig;
   pb.ModuleConfig_MQTTConfig? _currentMqttConfig;
+  pb.ModuleConfig_TelemetryConfig? _currentTelemetryConfig;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
   final Random _random = Random();
@@ -117,7 +120,9 @@ class ProtocolService {
       _loraConfigController =
           StreamController<pb.Config_LoRaConfig>.broadcast(),
       _mqttConfigController =
-          StreamController<pb.ModuleConfig_MQTTConfig>.broadcast();
+          StreamController<pb.ModuleConfig_MQTTConfig>.broadcast(),
+      _telemetryConfigController =
+          StreamController<pb.ModuleConfig_TelemetryConfig>.broadcast();
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -197,6 +202,14 @@ class ProtocolService {
 
   /// Current MQTT config
   pb.ModuleConfig_MQTTConfig? get currentMqttConfig => _currentMqttConfig;
+
+  /// Stream of telemetry config updates
+  Stream<pb.ModuleConfig_TelemetryConfig> get telemetryConfigStream =>
+      _telemetryConfigController.stream;
+
+  /// Current telemetry config
+  pb.ModuleConfig_TelemetryConfig? get currentTelemetryConfig =>
+      _currentTelemetryConfig;
 
   /// Stream of RSSI updates
   Stream<int> get rssiStream => _rssiController.stream;
@@ -588,6 +601,16 @@ class ProtocolService {
           _logger.i('Received MQTT config - enabled: ${mqttConfig.enabled}');
           _currentMqttConfig = mqttConfig;
           _mqttConfigController.add(mqttConfig);
+        }
+
+        // Handle Telemetry config
+        if (moduleConfig.hasTelemetry()) {
+          final telemetryConfig = moduleConfig.telemetry;
+          _logger.i(
+            'Received Telemetry config - deviceInterval: ${telemetryConfig.deviceUpdateInterval}',
+          );
+          _currentTelemetryConfig = telemetryConfig;
+          _telemetryConfigController.add(telemetryConfig);
         }
       } else if (adminMsg.hasGetChannelResponse()) {
         // Handle channel response - update local channel list
@@ -2863,8 +2886,33 @@ class ProtocolService {
     await setModuleConfig(moduleConfig);
   }
 
+  /// Get Telemetry module configuration
+  /// Returns the current telemetry config, requesting from device if needed
+  Future<pb.ModuleConfig_TelemetryConfig?> getTelemetryModuleConfig() async {
+    // If we already have the config, return it
+    if (_currentTelemetryConfig != null) {
+      return _currentTelemetryConfig;
+    }
+
+    // Request config from device
+    await getModuleConfig(pb.AdminMessage_ModuleConfigType.TELEMETRY_CONFIG);
+
+    // Wait for response with timeout
+    try {
+      final config = await _telemetryConfigController.stream.first.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () =>
+            throw TimeoutException('Telemetry config request timed out'),
+      );
+      return config;
+    } catch (e) {
+      _logger.e('Failed to get telemetry config: $e');
+      return null;
+    }
+  }
+
   /// Set Telemetry module configuration
-  Future<void> setTelemetryConfig({
+  Future<void> setTelemetryModuleConfig({
     int? deviceUpdateInterval,
     int? environmentUpdateInterval,
     bool? environmentMeasurementEnabled,
@@ -2975,6 +3023,116 @@ class ProtocolService {
     if (save != null) rtConfig.save = save;
 
     final moduleConfig = pb.ModuleConfig()..rangeTest = rtConfig;
+    await setModuleConfig(moduleConfig);
+  }
+
+  /// Get Ambient Lighting module configuration
+  Future<pb.ModuleConfig_AmbientLightingConfig?>
+  getAmbientLightingModuleConfig() async {
+    // Request config from device
+    await getModuleConfig(
+      pb.AdminMessage_ModuleConfigType.AMBIENTLIGHTING_CONFIG,
+    );
+
+    // Wait for response with timeout - for now return null as we don't have
+    // a dedicated stream for this config type
+    return null;
+  }
+
+  /// Set Ambient Lighting module configuration
+  Future<void> setAmbientLightingConfig({
+    required bool ledState,
+    required int red,
+    required int green,
+    required int blue,
+    int? current,
+  }) async {
+    _logger.i('Setting ambient lighting config');
+
+    final alConfig = pb.ModuleConfig_AmbientLightingConfig();
+    alConfig.ledState = ledState;
+    alConfig.red = red;
+    alConfig.green = green;
+    alConfig.blue = blue;
+    if (current != null) alConfig.current = current;
+
+    final moduleConfig = pb.ModuleConfig()..ambientLighting = alConfig;
+    await setModuleConfig(moduleConfig);
+  }
+
+  /// Get PAX Counter module configuration
+  Future<pb.ModuleConfig_PaxcounterConfig?> getPaxCounterModuleConfig() async {
+    // Request config from device
+    await getModuleConfig(pb.AdminMessage_ModuleConfigType.PAXCOUNTER_CONFIG);
+
+    // Wait for response with timeout - for now return null as we don't have
+    // a dedicated stream for this config type
+    return null;
+  }
+
+  /// Set PAX Counter module configuration
+  Future<void> setPaxCounterConfig({
+    bool? enabled,
+    int? updateInterval,
+    bool? wifiEnabled,
+    bool? bleEnabled,
+  }) async {
+    _logger.i('Setting PAX counter config');
+
+    final paxConfig = pb.ModuleConfig_PaxcounterConfig();
+    if (enabled != null) paxConfig.enabled = enabled;
+    if (updateInterval != null) {
+      paxConfig.paxcounterUpdateInterval = updateInterval;
+    }
+
+    final moduleConfig = pb.ModuleConfig()..paxcounter = paxConfig;
+    await setModuleConfig(moduleConfig);
+  }
+
+  /// Get Serial module configuration
+  Future<pb.ModuleConfig_SerialConfig?> getSerialModuleConfig() async {
+    // Request config from device
+    await getModuleConfig(pb.AdminMessage_ModuleConfigType.SERIAL_CONFIG);
+
+    // Wait for response with timeout - for now return null as we don't have
+    // a dedicated stream for this config type
+    return null;
+  }
+
+  /// Set Serial module configuration
+  Future<void> setSerialConfig({
+    bool? enabled,
+    bool? echo,
+    int? rxd,
+    int? txd,
+    int? baud,
+    int? timeout,
+    int? mode,
+    bool? overrideConsoleSerialPort,
+  }) async {
+    _logger.i('Setting serial config');
+
+    final serialConfig = pb.ModuleConfig_SerialConfig();
+    if (enabled != null) serialConfig.enabled = enabled;
+    if (echo != null) serialConfig.echo = echo;
+    if (rxd != null) serialConfig.rxd = rxd;
+    if (txd != null) serialConfig.txd = txd;
+    if (baud != null) {
+      serialConfig.baud =
+          pb.ModuleConfig_SerialConfig_Serial_Baud.valueOf(baud) ??
+          pb.ModuleConfig_SerialConfig_Serial_Baud.BAUD_DEFAULT;
+    }
+    if (timeout != null) serialConfig.timeout = timeout;
+    if (mode != null) {
+      serialConfig.mode =
+          pb.ModuleConfig_SerialConfig_Serial_Mode.valueOf(mode) ??
+          pb.ModuleConfig_SerialConfig_Serial_Mode.DEFAULT;
+    }
+    if (overrideConsoleSerialPort != null) {
+      serialConfig.overrideConsoleSerialPort = overrideConsoleSerialPort;
+    }
+
+    final moduleConfig = pb.ModuleConfig()..serial = serialConfig;
     await setModuleConfig(moduleConfig);
   }
 

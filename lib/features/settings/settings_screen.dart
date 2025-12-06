@@ -32,6 +32,22 @@ import 'range_test_screen.dart';
 import 'store_forward_config_screen.dart';
 import 'detection_sensor_config_screen.dart';
 import '../map/offline_maps_screen.dart';
+import 'data_export_screen.dart';
+import '../device/serial_config_screen.dart';
+import '../device/gps_status_screen.dart';
+import '../device/firmware_update_screen.dart';
+import '../device/ambient_lighting_config_screen.dart';
+import '../device/pax_counter_config_screen.dart';
+import '../device/telemetry_config_screen.dart';
+import '../debug/app_log_screen.dart';
+import '../telemetry/device_metrics_log_screen.dart';
+import '../telemetry/environment_metrics_log_screen.dart';
+import '../telemetry/position_log_screen.dart';
+import '../telemetry/traceroute_log_screen.dart';
+import '../telemetry/air_quality_log_screen.dart';
+import '../telemetry/pax_counter_log_screen.dart';
+import '../telemetry/detection_sensor_log_screen.dart';
+import '../routes/routes_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -632,6 +648,180 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const RingtoneScreen()),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.lightbulb_outline,
+                title: 'Ambient Lighting',
+                subtitle: 'Configure LED and RGB settings',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AmbientLightingConfigScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.people_outline,
+                title: 'PAX Counter',
+                subtitle: 'WiFi/BLE device detection settings',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const PaxCounterConfigScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.analytics_outlined,
+                title: 'Telemetry Intervals',
+                subtitle: 'Configure telemetry update frequency',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TelemetryConfigScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.usb_rounded,
+                title: 'Serial',
+                subtitle: 'Serial port configuration',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SerialConfigScreen()),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Telemetry Section
+              _SectionHeader(title: 'TELEMETRY LOGS'),
+              _SettingsTile(
+                icon: Icons.battery_charging_full,
+                title: 'Device Metrics',
+                subtitle: 'Battery, voltage, utilization history',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DeviceMetricsLogScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.thermostat,
+                title: 'Environment Metrics',
+                subtitle: 'Temperature, humidity, pressure logs',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const EnvironmentMetricsLogScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.air,
+                title: 'Air Quality',
+                subtitle: 'PM2.5, PM10, CO2 readings',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AirQualityLogScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.location_on_outlined,
+                title: 'Position History',
+                subtitle: 'GPS position logs',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PositionLogScreen()),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.timeline,
+                title: 'Traceroute History',
+                subtitle: 'Network path analysis logs',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TraceRouteLogScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.people_alt_outlined,
+                title: 'PAX Counter Logs',
+                subtitle: 'Device detection history',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const PaxCounterLogScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.sensors,
+                title: 'Detection Sensor Logs',
+                subtitle: 'Sensor event history',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DetectionSensorLogScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.route,
+                title: 'Routes',
+                subtitle: 'Record and manage GPS routes',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RoutesScreen()),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Tools Section
+              _SectionHeader(title: 'TOOLS'),
+              _SettingsTile(
+                icon: Icons.gps_fixed,
+                title: 'GPS Status',
+                subtitle: 'View detailed GPS information',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const GpsStatusScreen()),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.system_update,
+                title: 'Firmware Update',
+                subtitle: 'Check for device firmware updates',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const FirmwareUpdateScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.ios_share,
+                title: 'Export Data',
+                subtitle: 'Export messages, telemetry, routes',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DataExportScreen()),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.article_outlined,
+                title: 'App Log',
+                subtitle: 'View application debug logs',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AppLogScreen()),
                 ),
               ),
 

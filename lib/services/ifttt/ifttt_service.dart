@@ -421,6 +421,23 @@ class IftttService {
     );
   }
 
+  /// Trigger a custom webhook event (for automations)
+  Future<bool> triggerCustomEvent({
+    required String eventName,
+    String? value1,
+    String? value2,
+    String? value3,
+  }) async {
+    if (!isActive) return false;
+
+    return _triggerWebhook(
+      eventName: eventName,
+      value1: value1,
+      value2: value2,
+      value3: value3,
+    );
+  }
+
   /// Test webhook configuration
   /// Sends a sample geofence alert so you can test your notification format
   Future<bool> testWebhook() async {
