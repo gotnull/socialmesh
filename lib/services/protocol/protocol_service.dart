@@ -70,6 +70,8 @@ class ProtocolService {
   _storeForwardConfigController;
   final StreamController<pb.ModuleConfig_DetectionSensorConfig>
   _detectionSensorConfigController;
+  final StreamController<pb.ModuleConfig_RangeTestConfig>
+  _rangeTestConfigController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
@@ -96,6 +98,7 @@ class ProtocolService {
   pb.ModuleConfig_SerialConfig? _currentSerialConfig;
   pb.ModuleConfig_StoreForwardConfig? _currentStoreForwardConfig;
   pb.ModuleConfig_DetectionSensorConfig? _currentDetectionSensorConfig;
+  pb.ModuleConfig_RangeTestConfig? _currentRangeTestConfig;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
   final Random _random = Random();
@@ -146,7 +149,9 @@ class ProtocolService {
       _storeForwardConfigController =
           StreamController<pb.ModuleConfig_StoreForwardConfig>.broadcast(),
       _detectionSensorConfigController =
-          StreamController<pb.ModuleConfig_DetectionSensorConfig>.broadcast();
+          StreamController<pb.ModuleConfig_DetectionSensorConfig>.broadcast(),
+      _rangeTestConfigController =
+          StreamController<pb.ModuleConfig_RangeTestConfig>.broadcast();
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -724,6 +729,16 @@ class ProtocolService {
           );
           _currentDetectionSensorConfig = dsConfig;
           _detectionSensorConfigController.add(dsConfig);
+        }
+
+        // Handle Range Test config
+        if (moduleConfig.hasRangeTest()) {
+          final rtConfig = moduleConfig.rangeTest;
+          _logger.i(
+            'Received Range Test config - enabled: ${rtConfig.enabled}',
+          );
+          _currentRangeTestConfig = rtConfig;
+          _rangeTestConfigController.add(rtConfig);
         }
       } else if (adminMsg.hasGetChannelResponse()) {
         // Handle channel response - update local channel list
@@ -3180,6 +3195,30 @@ class ProtocolService {
       return config;
     } catch (e) {
       _logger.e('Failed to get detection sensor config: $e');
+      return null;
+    }
+  }
+
+  /// Get Range Test module configuration
+  Future<pb.ModuleConfig_RangeTestConfig?> getRangeTestModuleConfig() async {
+    // If we already have the config, return it
+    if (_currentRangeTestConfig != null) {
+      return _currentRangeTestConfig;
+    }
+
+    // Request config from device
+    await getModuleConfig(pb.AdminMessage_ModuleConfigType.RANGETEST_CONFIG);
+
+    // Wait for response with timeout
+    try {
+      final config = await _rangeTestConfigController.stream.first.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () =>
+            throw TimeoutException('Range test config request timed out'),
+      );
+      return config;
+    } catch (e) {
+      _logger.e('Failed to get range test config: $e');
       return null;
     }
   }

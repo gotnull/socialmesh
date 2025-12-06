@@ -18,6 +18,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
   bool _saveResults = false;
   bool _isSaving = false;
   bool _isRunning = false;
+  bool _isLoading = true;
 
   // Test results
   final List<RangeTestResult> _results = [];
@@ -30,8 +31,18 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
   }
 
   Future<void> _loadCurrentConfig() async {
-    // Config would be loaded from device if available
-    // For now, start with defaults
+    final protocol = ref.read(protocolServiceProvider);
+    final config = await protocol.getRangeTestModuleConfig();
+    if (config != null && mounted) {
+      setState(() {
+        _enabled = config.enabled;
+        _senderInterval = config.sender > 0 ? config.sender : 60;
+        _saveResults = config.save;
+        _isLoading = false;
+      });
+    } else if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _saveConfig() async {
@@ -265,34 +276,36 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
             ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Test Status Card
-          _buildStatusCard(targetName),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                // Test Status Card
+                _buildStatusCard(targetName),
 
-          const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-          // Configuration Section
-          if (!_isRunning) ...[
-            _buildSectionTitle('Configuration'),
-            _buildConfigCard(),
-            const SizedBox(height: 16),
-          ],
+                // Configuration Section
+                if (!_isRunning) ...[
+                  _buildSectionTitle('Configuration'),
+                  _buildConfigCard(),
+                  const SizedBox(height: 16),
+                ],
 
-          // Results Section
-          if (_results.isNotEmpty) ...[
-            _buildSectionTitle('Results (${_results.length})'),
-            _buildResultsCard(),
-          ],
+                // Results Section
+                if (_results.isNotEmpty) ...[
+                  _buildSectionTitle('Results (${_results.length})'),
+                  _buildResultsCard(),
+                ],
 
-          // Info Section
-          if (!_isRunning && _results.isEmpty) ...[
-            _buildSectionTitle('About Range Test'),
-            _buildInfoCard(),
-          ],
-        ],
-      ),
+                // Info Section
+                if (!_isRunning && _results.isEmpty) ...[
+                  _buildSectionTitle('About Range Test'),
+                  _buildInfoCard(),
+                ],
+              ],
+            ),
     );
   }
 
