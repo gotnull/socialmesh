@@ -12,29 +12,34 @@ final firmwareCheckProvider = FutureProvider.autoDispose<FirmwareInfo?>((
 ) async {
   try {
     // Fetch latest release from Meshtastic GitHub releases API
-    final response = await http.get(
-      Uri.parse('https://api.github.com/repos/meshtastic/firmware/releases/latest'),
-      headers: {'Accept': 'application/vnd.github.v3+json'},
-    ).timeout(const Duration(seconds: 10));
+    final response = await http
+        .get(
+          Uri.parse(
+            'https://api.github.com/repos/meshtastic/firmware/releases/latest',
+          ),
+          headers: {'Accept': 'application/vnd.github.v3+json'},
+        )
+        .timeout(const Duration(seconds: 10));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body) as Map<String, dynamic>;
-      
+
       // Parse version from tag name (e.g., "v2.3.10" -> "2.3.10")
       final tagName = data['tag_name'] as String? ?? '';
       final version = tagName.startsWith('v') ? tagName.substring(1) : tagName;
-      
+
       // Parse published date
       final publishedAt = data['published_at'] as String?;
-      final releaseDate = publishedAt != null 
-          ? DateTime.parse(publishedAt) 
+      final releaseDate = publishedAt != null
+          ? DateTime.parse(publishedAt)
           : DateTime.now();
-      
+
       // Get release notes body
       final body = data['body'] as String? ?? 'No release notes available.';
-      
+
       // Get download URL
-      final htmlUrl = data['html_url'] as String? ?? 
+      final htmlUrl =
+          data['html_url'] as String? ??
           'https://github.com/meshtastic/firmware/releases';
 
       return FirmwareInfo(

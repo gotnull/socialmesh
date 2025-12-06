@@ -26,7 +26,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
   // Test results
   final List<RangeTestResult> _results = [];
   int? _selectedTargetNode;
-  
+
   // Stream subscription for incoming range test messages
   StreamSubscription<MeshNode>? _nodeSubscription;
   Timer? _sendTimer;
@@ -106,7 +106,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
 
     // Listen for node updates (which include RSSI/SNR from range test responses)
     _startRangeTestListener();
-    
+
     // Start sending range test packets at configured interval
     _startSendingPackets();
   }
@@ -121,31 +121,35 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
 
   void _startRangeTestListener() {
     final protocol = ref.read(protocolServiceProvider);
-    
+
     // Listen for node updates from the target node
     _nodeSubscription = protocol.nodeStream.listen((node) {
       if (!_isRunning || _selectedTargetNode == null) return;
-      
+
       // Check if this update is from our target node
       if (node.nodeNum == _selectedTargetNode) {
         // Extract signal metrics from the node update
         final snr = node.snr?.toDouble() ?? -10.0;
         final rssi = node.rssi?.toDouble() ?? -100.0;
-        
+
         // Calculate distance if we have position data
         double? distance;
         final nodes = ref.read(nodesProvider);
         final myNodeNum = ref.read(myNodeNumProvider);
         final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
-        
-        if (myNode?.latitude != null && myNode?.longitude != null &&
-            node.latitude != null && node.longitude != null) {
+
+        if (myNode?.latitude != null &&
+            myNode?.longitude != null &&
+            node.latitude != null &&
+            node.longitude != null) {
           distance = _calculateDistance(
-            myNode!.latitude!, myNode.longitude!,
-            node.latitude!, node.longitude!,
+            myNode!.latitude!,
+            myNode.longitude!,
+            node.latitude!,
+            node.longitude!,
           );
         }
-        
+
         if (mounted) {
           setState(() {
             _results.add(
@@ -166,7 +170,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
   void _startSendingPackets() {
     // Send initial packet immediately
     _sendRangeTestPacket();
-    
+
     // Then send at configured interval
     _sendTimer = Timer.periodic(
       Duration(seconds: _senderInterval),
@@ -176,7 +180,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
 
   Future<void> _sendRangeTestPacket() async {
     if (!_isRunning || _selectedTargetNode == null) return;
-    
+
     try {
       final protocol = ref.read(protocolServiceProvider);
       // Send a range test message to the target node
@@ -190,17 +194,20 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
   }
 
   double _calculateDistance(
-    double lat1, double lon1,
-    double lat2, double lon2,
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
   ) {
     // Haversine formula for distance calculation
     const double earthRadius = 6371000; // meters
     final dLat = (lat2 - lat1) * (math.pi / 180);
     final dLon = (lon2 - lon1) * (math.pi / 180);
-    final a = 
+    final a =
         (math.sin(dLat / 2) * math.sin(dLat / 2)) +
-        math.cos(lat1 * (math.pi / 180)) * math.cos(lat2 * (math.pi / 180)) *
-        (math.sin(dLon / 2) * math.sin(dLon / 2));
+        math.cos(lat1 * (math.pi / 180)) *
+            math.cos(lat2 * (math.pi / 180)) *
+            (math.sin(dLon / 2) * math.sin(dLon / 2));
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
     return earthRadius * c;
   }
