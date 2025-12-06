@@ -19,6 +19,15 @@
 - Code must pass `flutter analyze` cleanly.
 - Ensure every feature is fully wired and functional end to end.
 
+## Systematic Verification (CRITICAL)
+- NEVER assume you have found all instances of a pattern. Always search exhaustively.
+- When fixing a bug pattern, FIRST run a comprehensive search to find ALL affected files before making any changes.
+- Use grep/find commands to discover the full scope BEFORE claiming completeness.
+- After making changes, run verification commands to PROVE all instances are fixed.
+- When asked "are you sure?" or similar, re-run discovery commands to verify - do not rely on memory.
+- For config screens or similar patterns: search for `_loadCurrentConfig`, `_isLoading`, empty stubs, etc. across the ENTIRE codebase.
+- Always provide evidence (command output) when claiming completeness, not just assertions.
+
 ## UI and UX
 - Maintain consistent styling and sizing.
 - Avoid duplicating actions across multiple UI elements.
