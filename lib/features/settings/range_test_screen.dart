@@ -1,8 +1,11 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../providers/app_providers.dart';
+import '../../models/mesh_models.dart';
 
 /// Screen for running and configuring Range Test module
 class RangeTestScreen extends ConsumerStatefulWidget {
@@ -23,11 +26,22 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
   // Test results
   final List<RangeTestResult> _results = [];
   int? _selectedTargetNode;
+  
+  // Stream subscription for incoming range test messages
+  StreamSubscription<MeshNode>? _nodeSubscription;
+  Timer? _sendTimer;
 
   @override
   void initState() {
     super.initState();
     _loadCurrentConfig();
+  }
+
+  @override
+  void dispose() {
+    _nodeSubscription?.cancel();
+    _sendTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadCurrentConfig() async {
@@ -90,39 +104,105 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
       _results.clear();
     });
 
-    // Simulate range test results (in real implementation, listen to incoming messages)
-    _simulateTestResults();
+    // Listen for node updates (which include RSSI/SNR from range test responses)
+    _startRangeTestListener();
+    
+    // Start sending range test packets at configured interval
+    _startSendingPackets();
   }
 
   void _stopTest() {
+    _nodeSubscription?.cancel();
+    _nodeSubscription = null;
+    _sendTimer?.cancel();
+    _sendTimer = null;
     setState(() => _isRunning = false);
   }
 
-  void _simulateTestResults() async {
-    // This would normally listen to actual range test messages from the mesh
-    // For now, we'll add a placeholder showing the feature is ready
-    if (!_isRunning) return;
-
-    // Add a simulated result
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted && _isRunning) {
-      setState(() {
-        _results.add(
-          RangeTestResult(
-            timestamp: DateTime.now(),
-            snr: -8.5 + (_results.length * 0.5),
-            rssi: -95 + (_results.length * 2),
-            hopCount: 1,
-            distance: 1250.0 + (_results.length * 100),
-          ),
-        );
-      });
-
-      // Continue if still running
-      if (_isRunning && _results.length < 20) {
-        _simulateTestResults();
+  void _startRangeTestListener() {
+    final protocol = ref.read(protocolServiceProvider);
+    
+    // Listen for node updates from the target node
+    _nodeSubscription = protocol.nodeStream.listen((node) {
+      if (!_isRunning || _selectedTargetNode == null) return;
+      
+      // Check if this update is from our target node
+      if (node.nodeNum == _selectedTargetNode) {
+        // Extract signal metrics from the node update
+        final snr = node.snr?.toDouble() ?? -10.0;
+        final rssi = node.rssi?.toDouble() ?? -100.0;
+        
+        // Calculate distance if we have position data
+        double? distance;
+        final nodes = ref.read(nodesProvider);
+        final myNodeNum = ref.read(myNodeNumProvider);
+        final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
+        
+        if (myNode?.latitude != null && myNode?.longitude != null &&
+            node.latitude != null && node.longitude != null) {
+          distance = _calculateDistance(
+            myNode!.latitude!, myNode.longitude!,
+            node.latitude!, node.longitude!,
+          );
+        }
+        
+        if (mounted) {
+          setState(() {
+            _results.add(
+              RangeTestResult(
+                timestamp: DateTime.now(),
+                snr: snr,
+                rssi: rssi,
+                hopCount: 0, // Hop count not available in node data
+                distance: distance ?? 0,
+              ),
+            );
+          });
+        }
       }
+    });
+  }
+
+  void _startSendingPackets() {
+    // Send initial packet immediately
+    _sendRangeTestPacket();
+    
+    // Then send at configured interval
+    _sendTimer = Timer.periodic(
+      Duration(seconds: _senderInterval),
+      (_) => _sendRangeTestPacket(),
+    );
+  }
+
+  Future<void> _sendRangeTestPacket() async {
+    if (!_isRunning || _selectedTargetNode == null) return;
+    
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      // Send a range test message to the target node
+      await protocol.sendMessage(
+        text: 'RT ${DateTime.now().millisecondsSinceEpoch}',
+        to: _selectedTargetNode!,
+      );
+    } catch (e) {
+      debugPrint('Error sending range test packet: $e');
     }
+  }
+
+  double _calculateDistance(
+    double lat1, double lon1,
+    double lat2, double lon2,
+  ) {
+    // Haversine formula for distance calculation
+    const double earthRadius = 6371000; // meters
+    final dLat = (lat2 - lat1) * (math.pi / 180);
+    final dLon = (lon2 - lon1) * (math.pi / 180);
+    final a = 
+        (math.sin(dLat / 2) * math.sin(dLat / 2)) +
+        math.cos(lat1 * (math.pi / 180)) * math.cos(lat2 * (math.pi / 180)) *
+        (math.sin(dLon / 2) * math.sin(dLon / 2));
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadius * c;
   }
 
   void _showNodePicker() {

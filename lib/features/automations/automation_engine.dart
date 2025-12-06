@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../models/mesh_models.dart' show MeshNode;
@@ -440,8 +441,11 @@ class AutomationEngine {
         return true;
 
       case ActionType.vibrate:
-        // Vibration would be handled via HapticFeedback or platform channel
-        // For now just return true as a stub
+        // Trigger haptic feedback for vibration
+        await HapticFeedback.heavyImpact();
+        // Add a small delay and vibrate again for emphasis
+        await Future.delayed(const Duration(milliseconds: 100));
+        await HapticFeedback.heavyImpact();
         return true;
 
       case ActionType.pushNotification:
