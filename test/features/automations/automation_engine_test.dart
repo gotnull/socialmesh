@@ -55,6 +55,8 @@ class MockIftttService extends IftttService {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late MockAutomationRepository mockRepository;
   late MockIftttService mockIftttService;
   late AutomationEngine engine;
