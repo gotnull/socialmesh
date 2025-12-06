@@ -61,6 +61,15 @@ class ProtocolService {
   final StreamController<pb.ModuleConfig_MQTTConfig> _mqttConfigController;
   final StreamController<pb.ModuleConfig_TelemetryConfig>
   _telemetryConfigController;
+  final StreamController<pb.ModuleConfig_PaxcounterConfig>
+  _paxCounterConfigController;
+  final StreamController<pb.ModuleConfig_AmbientLightingConfig>
+  _ambientLightingConfigController;
+  final StreamController<pb.ModuleConfig_SerialConfig> _serialConfigController;
+  final StreamController<pb.ModuleConfig_StoreForwardConfig>
+  _storeForwardConfigController;
+  final StreamController<pb.ModuleConfig_DetectionSensorConfig>
+  _detectionSensorConfigController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
@@ -82,6 +91,11 @@ class ProtocolService {
   pb.Config_LoRaConfig? _currentLoraConfig;
   pb.ModuleConfig_MQTTConfig? _currentMqttConfig;
   pb.ModuleConfig_TelemetryConfig? _currentTelemetryConfig;
+  pb.ModuleConfig_PaxcounterConfig? _currentPaxCounterConfig;
+  pb.ModuleConfig_AmbientLightingConfig? _currentAmbientLightingConfig;
+  pb.ModuleConfig_SerialConfig? _currentSerialConfig;
+  pb.ModuleConfig_StoreForwardConfig? _currentStoreForwardConfig;
+  pb.ModuleConfig_DetectionSensorConfig? _currentDetectionSensorConfig;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
   final Random _random = Random();
@@ -122,7 +136,17 @@ class ProtocolService {
       _mqttConfigController =
           StreamController<pb.ModuleConfig_MQTTConfig>.broadcast(),
       _telemetryConfigController =
-          StreamController<pb.ModuleConfig_TelemetryConfig>.broadcast();
+          StreamController<pb.ModuleConfig_TelemetryConfig>.broadcast(),
+      _paxCounterConfigController =
+          StreamController<pb.ModuleConfig_PaxcounterConfig>.broadcast(),
+      _ambientLightingConfigController =
+          StreamController<pb.ModuleConfig_AmbientLightingConfig>.broadcast(),
+      _serialConfigController =
+          StreamController<pb.ModuleConfig_SerialConfig>.broadcast(),
+      _storeForwardConfigController =
+          StreamController<pb.ModuleConfig_StoreForwardConfig>.broadcast(),
+      _detectionSensorConfigController =
+          StreamController<pb.ModuleConfig_DetectionSensorConfig>.broadcast();
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -210,6 +234,45 @@ class ProtocolService {
   /// Current telemetry config
   pb.ModuleConfig_TelemetryConfig? get currentTelemetryConfig =>
       _currentTelemetryConfig;
+
+  /// Stream of PAX counter config updates
+  Stream<pb.ModuleConfig_PaxcounterConfig> get paxCounterConfigStream =>
+      _paxCounterConfigController.stream;
+
+  /// Current PAX counter config
+  pb.ModuleConfig_PaxcounterConfig? get currentPaxCounterConfig =>
+      _currentPaxCounterConfig;
+
+  /// Stream of ambient lighting config updates
+  Stream<pb.ModuleConfig_AmbientLightingConfig>
+  get ambientLightingConfigStream => _ambientLightingConfigController.stream;
+
+  /// Current ambient lighting config
+  pb.ModuleConfig_AmbientLightingConfig? get currentAmbientLightingConfig =>
+      _currentAmbientLightingConfig;
+
+  /// Stream of serial config updates
+  Stream<pb.ModuleConfig_SerialConfig> get serialConfigStream =>
+      _serialConfigController.stream;
+
+  /// Current serial config
+  pb.ModuleConfig_SerialConfig? get currentSerialConfig => _currentSerialConfig;
+
+  /// Stream of store forward config updates
+  Stream<pb.ModuleConfig_StoreForwardConfig> get storeForwardConfigStream =>
+      _storeForwardConfigController.stream;
+
+  /// Current store forward config
+  pb.ModuleConfig_StoreForwardConfig? get currentStoreForwardConfig =>
+      _currentStoreForwardConfig;
+
+  /// Stream of detection sensor config updates
+  Stream<pb.ModuleConfig_DetectionSensorConfig>
+  get detectionSensorConfigStream => _detectionSensorConfigController.stream;
+
+  /// Current detection sensor config
+  pb.ModuleConfig_DetectionSensorConfig? get currentDetectionSensorConfig =>
+      _currentDetectionSensorConfig;
 
   /// Stream of RSSI updates
   Stream<int> get rssiStream => _rssiController.stream;
@@ -611,6 +674,56 @@ class ProtocolService {
           );
           _currentTelemetryConfig = telemetryConfig;
           _telemetryConfigController.add(telemetryConfig);
+        }
+
+        // Handle PAX counter config
+        if (moduleConfig.hasPaxcounter()) {
+          final paxConfig = moduleConfig.paxcounter;
+          _logger.i(
+            'Received PAX counter config - enabled: ${paxConfig.enabled}',
+          );
+          _currentPaxCounterConfig = paxConfig;
+          _paxCounterConfigController.add(paxConfig);
+        }
+
+        // Handle Ambient Lighting config
+        if (moduleConfig.hasAmbientLighting()) {
+          final ambientConfig = moduleConfig.ambientLighting;
+          _logger.i(
+            'Received Ambient Lighting config - ledState: ${ambientConfig.ledState}',
+          );
+          _currentAmbientLightingConfig = ambientConfig;
+          _ambientLightingConfigController.add(ambientConfig);
+        }
+
+        // Handle Serial config
+        if (moduleConfig.hasSerial()) {
+          final serialConfig = moduleConfig.serial;
+          _logger.i(
+            'Received Serial config - enabled: ${serialConfig.enabled}',
+          );
+          _currentSerialConfig = serialConfig;
+          _serialConfigController.add(serialConfig);
+        }
+
+        // Handle Store Forward config
+        if (moduleConfig.hasStoreForward()) {
+          final sfConfig = moduleConfig.storeForward;
+          _logger.i(
+            'Received Store Forward config - enabled: ${sfConfig.enabled}',
+          );
+          _currentStoreForwardConfig = sfConfig;
+          _storeForwardConfigController.add(sfConfig);
+        }
+
+        // Handle Detection Sensor config
+        if (moduleConfig.hasDetectionSensor()) {
+          final dsConfig = moduleConfig.detectionSensor;
+          _logger.i(
+            'Received Detection Sensor config - enabled: ${dsConfig.enabled}',
+          );
+          _currentDetectionSensorConfig = dsConfig;
+          _detectionSensorConfigController.add(dsConfig);
         }
       } else if (adminMsg.hasGetChannelResponse()) {
         // Handle channel response - update local channel list
@@ -3017,6 +3130,60 @@ class ProtocolService {
     await setModuleConfig(moduleConfig);
   }
 
+  /// Get Store & Forward module configuration
+  Future<pb.ModuleConfig_StoreForwardConfig?>
+  getStoreForwardModuleConfig() async {
+    // If we already have the config, return it
+    if (_currentStoreForwardConfig != null) {
+      return _currentStoreForwardConfig;
+    }
+
+    // Request config from device
+    await getModuleConfig(pb.AdminMessage_ModuleConfigType.STOREFORWARD_CONFIG);
+
+    // Wait for response with timeout
+    try {
+      final config = await _storeForwardConfigController.stream.first.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () =>
+            throw TimeoutException('Store forward config request timed out'),
+      );
+      return config;
+    } catch (e) {
+      _logger.e('Failed to get store forward config: $e');
+      return null;
+    }
+  }
+
+  /// Get Detection Sensor module configuration
+  Future<pb.ModuleConfig_DetectionSensorConfig?>
+  getDetectionSensorModuleConfig() async {
+    // If we already have the config, return it
+    if (_currentDetectionSensorConfig != null) {
+      return _currentDetectionSensorConfig;
+    }
+
+    // Request config from device
+    await getModuleConfig(
+      pb.AdminMessage_ModuleConfigType.DETECTIONSENSOR_CONFIG,
+    );
+
+    // Wait for response with timeout
+    try {
+      final config = await _detectionSensorConfigController.stream.first
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => throw TimeoutException(
+              'Detection sensor config request timed out',
+            ),
+          );
+      return config;
+    } catch (e) {
+      _logger.e('Failed to get detection sensor config: $e');
+      return null;
+    }
+  }
+
   /// Set Range Test module configuration
   Future<void> setRangeTestConfig({
     bool? enabled,
@@ -3037,14 +3204,30 @@ class ProtocolService {
   /// Get Ambient Lighting module configuration
   Future<pb.ModuleConfig_AmbientLightingConfig?>
   getAmbientLightingModuleConfig() async {
+    // If we already have the config, return it
+    if (_currentAmbientLightingConfig != null) {
+      return _currentAmbientLightingConfig;
+    }
+
     // Request config from device
     await getModuleConfig(
       pb.AdminMessage_ModuleConfigType.AMBIENTLIGHTING_CONFIG,
     );
 
-    // Wait for response with timeout - for now return null as we don't have
-    // a dedicated stream for this config type
-    return null;
+    // Wait for response with timeout
+    try {
+      final config = await _ambientLightingConfigController.stream.first
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => throw TimeoutException(
+              'Ambient lighting config request timed out',
+            ),
+          );
+      return config;
+    } catch (e) {
+      _logger.e('Failed to get ambient lighting config: $e');
+      return null;
+    }
   }
 
   /// Set Ambient Lighting module configuration
@@ -3070,12 +3253,26 @@ class ProtocolService {
 
   /// Get PAX Counter module configuration
   Future<pb.ModuleConfig_PaxcounterConfig?> getPaxCounterModuleConfig() async {
+    // If we already have the config, return it
+    if (_currentPaxCounterConfig != null) {
+      return _currentPaxCounterConfig;
+    }
+
     // Request config from device
     await getModuleConfig(pb.AdminMessage_ModuleConfigType.PAXCOUNTER_CONFIG);
 
-    // Wait for response with timeout - for now return null as we don't have
-    // a dedicated stream for this config type
-    return null;
+    // Wait for response with timeout
+    try {
+      final config = await _paxCounterConfigController.stream.first.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () =>
+            throw TimeoutException('PAX counter config request timed out'),
+      );
+      return config;
+    } catch (e) {
+      _logger.e('Failed to get PAX counter config: $e');
+      return null;
+    }
   }
 
   /// Set PAX Counter module configuration
@@ -3099,12 +3296,26 @@ class ProtocolService {
 
   /// Get Serial module configuration
   Future<pb.ModuleConfig_SerialConfig?> getSerialModuleConfig() async {
+    // If we already have the config, return it
+    if (_currentSerialConfig != null) {
+      return _currentSerialConfig;
+    }
+
     // Request config from device
     await getModuleConfig(pb.AdminMessage_ModuleConfigType.SERIAL_CONFIG);
 
-    // Wait for response with timeout - for now return null as we don't have
-    // a dedicated stream for this config type
-    return null;
+    // Wait for response with timeout
+    try {
+      final config = await _serialConfigController.stream.first.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () =>
+            throw TimeoutException('Serial config request timed out'),
+      );
+      return config;
+    } catch (e) {
+      _logger.e('Failed to get serial config: $e');
+      return null;
+    }
   }
 
   /// Set Serial module configuration

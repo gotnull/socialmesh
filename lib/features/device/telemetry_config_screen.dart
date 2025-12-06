@@ -50,8 +50,9 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
       setState(() {
         // Device Metrics - use deviceTelemetryEnabled flag
         _deviceMetricsEnabled = config.deviceTelemetryEnabled;
-        _deviceMetricsUpdateInterval =
-            config.deviceUpdateInterval > 0 ? config.deviceUpdateInterval : 1800;
+        _deviceMetricsUpdateInterval = config.deviceUpdateInterval > 0
+            ? config.deviceUpdateInterval
+            : 1800;
 
         // Environment Metrics - use environmentMeasurementEnabled flag
         _environmentMetricsEnabled = config.environmentMeasurementEnabled;
@@ -63,13 +64,15 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
 
         // Air Quality - use airQualityEnabled flag
         _airQualityEnabled = config.airQualityEnabled;
-        _airQualityUpdateInterval =
-            config.airQualityInterval > 0 ? config.airQualityInterval : 1800;
+        _airQualityUpdateInterval = config.airQualityInterval > 0
+            ? config.airQualityInterval
+            : 1800;
 
         // Power Metrics - use powerMeasurementEnabled flag
         _powerMetricsEnabled = config.powerMeasurementEnabled;
-        _powerMetricsUpdateInterval =
-            config.powerUpdateInterval > 0 ? config.powerUpdateInterval : 1800;
+        _powerMetricsUpdateInterval = config.powerUpdateInterval > 0
+            ? config.powerUpdateInterval
+            : 1800;
         _powerScreenEnabled = config.powerScreenEnabled;
 
         _isLoading = false;
@@ -87,22 +90,24 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
       await protocol.setTelemetryModuleConfig(
         // Device Metrics
         deviceTelemetryEnabled: _deviceMetricsEnabled,
-        deviceUpdateInterval:
-            _deviceMetricsEnabled ? _deviceMetricsUpdateInterval : 0,
+        deviceUpdateInterval: _deviceMetricsEnabled
+            ? _deviceMetricsUpdateInterval
+            : 0,
         // Environment Metrics
         environmentMeasurementEnabled: _environmentMetricsEnabled,
-        environmentUpdateInterval:
-            _environmentMetricsEnabled ? _environmentMetricsUpdateInterval : 0,
+        environmentUpdateInterval: _environmentMetricsEnabled
+            ? _environmentMetricsUpdateInterval
+            : 0,
         environmentScreenEnabled: _environmentDisplayOnScreen,
         environmentDisplayFahrenheit: _environmentDisplayFahrenheit,
         // Air Quality
         airQualityEnabled: _airQualityEnabled,
-        airQualityInterval:
-            _airQualityEnabled ? _airQualityUpdateInterval : 0,
+        airQualityInterval: _airQualityEnabled ? _airQualityUpdateInterval : 0,
         // Power Metrics
         powerMeasurementEnabled: _powerMetricsEnabled,
-        powerUpdateInterval:
-            _powerMetricsEnabled ? _powerMetricsUpdateInterval : 0,
+        powerUpdateInterval: _powerMetricsEnabled
+            ? _powerMetricsUpdateInterval
+            : 0,
         powerScreenEnabled: _powerScreenEnabled,
       );
 

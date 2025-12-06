@@ -16,11 +16,12 @@ class PaxCounterConfigScreen extends ConsumerStatefulWidget {
 class _PaxCounterConfigScreenState
     extends ConsumerState<PaxCounterConfigScreen> {
   bool _paxCounterEnabled = false;
-  int _paxCounterUpdateInterval = 900; // 15 minutes default
+  int _paxCounterUpdateInterval = 1800; // 30 minutes default
   bool _wifiEnabled = true;
   bool _bleEnabled = true;
   bool _hasChanges = false;
   bool _isSaving = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -34,8 +35,13 @@ class _PaxCounterConfigScreenState
     if (config != null && mounted) {
       setState(() {
         _paxCounterEnabled = config.enabled;
-        _paxCounterUpdateInterval = config.paxcounterUpdateInterval;
+        _paxCounterUpdateInterval = config.paxcounterUpdateInterval > 0
+            ? config.paxcounterUpdateInterval
+            : 1800;
+        _isLoading = false;
       });
+    } else if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -76,6 +82,30 @@ class _PaxCounterConfigScreenState
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppTheme.darkBackground,
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkBackground,
+          title: const Text(
+            'PAX Counter',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Center(
+          child: CircularProgressIndicator(color: context.accentColor),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(

@@ -27,6 +27,7 @@ class _DetectionSensorConfigScreenState
       pbenum.ModuleConfig_DetectionSensorConfig_TriggerType.LOGIC_HIGH;
 
   bool _isSaving = false;
+  bool _isLoading = true;
 
   final _nameController = TextEditingController();
   final _pinController = TextEditingController();
@@ -45,8 +46,29 @@ class _DetectionSensorConfigScreenState
   }
 
   Future<void> _loadCurrentConfig() async {
-    // Config would be loaded from device if available
-    // For now, start with defaults
+    final protocol = ref.read(protocolServiceProvider);
+    final config = await protocol.getDetectionSensorModuleConfig();
+    if (config != null && mounted) {
+      setState(() {
+        _enabled = config.enabled;
+        _name = config.name;
+        _monitorPin = config.monitorPin;
+        _minimumBroadcastSecs = config.minimumBroadcastSecs > 0
+            ? config.minimumBroadcastSecs
+            : 45;
+        _stateBroadcastSecs = config.stateBroadcastSecs > 0
+            ? config.stateBroadcastSecs
+            : 300;
+        _sendBell = config.sendBell;
+        _usePullup = config.usePullup;
+        _triggerType = config.detectionTriggerType;
+        _nameController.text = _name;
+        _pinController.text = _monitorPin.toString();
+        _isLoading = false;
+      });
+    } else if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _saveConfig() async {
@@ -112,33 +134,35 @@ class _DetectionSensorConfigScreenState
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Info card
-          _buildInfoCard(),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                // Info card
+                _buildInfoCard(),
 
-          const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-          // Basic settings
-          _buildSectionTitle('Basic Settings'),
-          _buildBasicSettingsCard(),
+                // Basic settings
+                _buildSectionTitle('Basic Settings'),
+                _buildBasicSettingsCard(),
 
-          const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-          // Pin configuration (only shown if enabled)
-          if (_enabled) ...[
-            _buildSectionTitle('Pin Configuration'),
-            _buildPinConfigCard(),
+                // Pin configuration (only shown if enabled)
+                if (_enabled) ...[
+                  _buildSectionTitle('Pin Configuration'),
+                  _buildPinConfigCard(),
 
-            const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-            // Timing settings
-            _buildSectionTitle('Timing'),
-            _buildTimingCard(),
-          ],
-        ],
-      ),
+                  // Timing settings
+                  _buildSectionTitle('Timing'),
+                  _buildTimingCard(),
+                ],
+              ],
+            ),
     );
   }
 

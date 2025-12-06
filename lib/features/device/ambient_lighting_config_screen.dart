@@ -21,6 +21,7 @@ class _AmbientLightingConfigScreenState
   int _blue = 255;
   bool _hasChanges = false;
   bool _isSaving = false;
+  bool _isLoading = true;
 
   final List<int> _presetColors = [
     0xFFFF0000, // Red
@@ -49,7 +50,10 @@ class _AmbientLightingConfigScreenState
         _green = config.green;
         _blue = config.blue;
         _currentColor = (0xFF << 24) | (_red << 16) | (_green << 8) | _blue;
+        _isLoading = false;
       });
+    } else if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -97,6 +101,30 @@ class _AmbientLightingConfigScreenState
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppTheme.darkBackground,
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkBackground,
+          title: const Text(
+            'Ambient Lighting',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Center(
+          child: CircularProgressIndicator(color: context.accentColor),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(

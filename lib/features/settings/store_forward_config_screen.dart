@@ -21,6 +21,7 @@ class _StoreForwardConfigScreenState
   int _historyReturnMax = 100;
   int _historyReturnWindow = 240; // minutes
   bool _isSaving = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -29,8 +30,24 @@ class _StoreForwardConfigScreenState
   }
 
   Future<void> _loadCurrentConfig() async {
-    // Config would be loaded from device if available
-    // For now, start with defaults
+    final protocol = ref.read(protocolServiceProvider);
+    final config = await protocol.getStoreForwardModuleConfig();
+    if (config != null && mounted) {
+      setState(() {
+        _enabled = config.enabled;
+        _heartbeat = config.heartbeat;
+        _records = config.records;
+        _historyReturnMax = config.historyReturnMax > 0
+            ? config.historyReturnMax
+            : 100;
+        _historyReturnWindow = config.historyReturnWindow > 0
+            ? config.historyReturnWindow
+            : 240;
+        _isLoading = false;
+      });
+    } else if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _saveConfig() async {
@@ -89,27 +106,29 @@ class _StoreForwardConfigScreenState
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Info card
-          _buildInfoCard(),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                // Info card
+                _buildInfoCard(),
 
-          const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-          // Module settings
-          _buildSectionTitle('Module Settings'),
-          _buildConfigCard(),
+                // Module settings
+                _buildSectionTitle('Module Settings'),
+                _buildConfigCard(),
 
-          const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-          // Server settings (only shown if server mode)
-          if (_isServer) ...[
-            _buildSectionTitle('Server Settings'),
-            _buildServerSettingsCard(),
-          ],
-        ],
-      ),
+                // Server settings (only shown if server mode)
+                if (_isServer) ...[
+                  _buildSectionTitle('Server Settings'),
+                  _buildServerSettingsCard(),
+                ],
+              ],
+            ),
     );
   }
 

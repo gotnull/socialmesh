@@ -11,7 +11,7 @@ class SerialConfigScreen extends ConsumerStatefulWidget {
 }
 
 class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
-  bool _serialEnabled = true;
+  bool _serialEnabled = false;
   bool _rxdGpioEnabled = false;
   bool _txdGpioEnabled = false;
   int _baudRate = 115200;
@@ -19,6 +19,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
   String _mode = 'SIMPLE';
   bool _hasChanges = false;
   bool _isSaving = false;
+  bool _isLoading = true;
 
   final List<int> _baudRates = [
     9600,
@@ -40,6 +41,41 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
     'NMEA': 3,
     'CALTOPO': 4,
   };
+
+  final Map<int, String> _modeNames = {
+    0: 'SIMPLE',
+    1: 'PROTO',
+    2: 'TEXTMSG',
+    3: 'NMEA',
+    4: 'CALTOPO',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentConfig();
+  }
+
+  Future<void> _loadCurrentConfig() async {
+    final protocol = ref.read(protocolServiceProvider);
+    final config = await protocol.getSerialModuleConfig();
+    if (config != null && mounted) {
+      setState(() {
+        _serialEnabled = config.enabled;
+        _rxdGpioEnabled = config.rxd > 0;
+        _txdGpioEnabled = config.txd > 0;
+        // baud is stored as index
+        if (config.baud.value >= 0 && config.baud.value < _baudRates.length) {
+          _baudRate = _baudRates[config.baud.value];
+        }
+        _timeout = config.timeout > 0 ? config.timeout : 5;
+        _mode = _modeNames[config.mode.value] ?? 'SIMPLE';
+        _isLoading = false;
+      });
+    } else if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
 
   String _getModeDescription(String mode) {
     switch (mode) {
@@ -106,6 +142,26 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppTheme.darkBackground,
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkBackground,
+          title: const Text(
+            'Serial Config',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        body: Center(
+          child: CircularProgressIndicator(color: context.accentColor),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
@@ -123,10 +179,13 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
             TextButton(
               onPressed: _isSaving ? null : _saveConfig,
               child: _isSaving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.accentColor,
+                      ),
                     )
                   : Text(
                       'Save',
