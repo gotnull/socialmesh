@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
 
 /// PAX Counter module configuration screen
@@ -96,15 +97,18 @@ class _PaxCounterConfigScreenState
             TextButton(
               onPressed: _isSaving ? null : _save,
               child: _isSaving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.accentColor,
+                      ),
                     )
-                  : const Text(
+                  : Text(
                       'Save',
                       style: TextStyle(
-                        color: AccentColors.blue,
+                        color: context.accentColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -118,12 +122,12 @@ class _PaxCounterConfigScreenState
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AccentColors.purple.withValues(alpha: 0.1),
+              color: context.accentColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
-                const Icon(Icons.people, color: AccentColors.purple, size: 32),
+                Icon(Icons.people, color: context.accentColor, size: 32),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -157,9 +161,8 @@ class _PaxCounterConfigScreenState
           _SettingsTile(
             title: 'Enable PAX Counter',
             subtitle: 'Count nearby devices and report to mesh',
-            trailing: Switch(
+            trailing: ThemedSwitch(
               value: _paxCounterEnabled,
-              activeThumbColor: AccentColors.blue,
               onChanged: (value) {
                 setState(() {
                   _paxCounterEnabled = value;
@@ -196,10 +199,10 @@ class _PaxCounterConfigScreenState
                     children: [
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.wifi,
                             size: 20,
-                            color: AccentColors.blue,
+                            color: context.accentColor,
                           ),
                           const SizedBox(width: 8),
                           const Text(
@@ -208,9 +211,8 @@ class _PaxCounterConfigScreenState
                           ),
                         ],
                       ),
-                      Switch(
+                      ThemedSwitch(
                         value: _wifiEnabled,
-                        activeThumbColor: AccentColors.blue,
                         onChanged: (value) {
                           setState(() {
                             _wifiEnabled = value;
@@ -226,10 +228,10 @@ class _PaxCounterConfigScreenState
                     children: [
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.bluetooth,
                             size: 20,
-                            color: AccentColors.purple,
+                            color: context.accentColor,
                           ),
                           const SizedBox(width: 8),
                           const Text(
@@ -238,9 +240,8 @@ class _PaxCounterConfigScreenState
                           ),
                         ],
                       ),
-                      Switch(
+                      ThemedSwitch(
                         value: _bleEnabled,
-                        activeThumbColor: AccentColors.purple,
                         onChanged: (value) {
                           setState(() {
                             _bleEnabled = value;
@@ -277,26 +278,33 @@ class _PaxCounterConfigScreenState
                   const SizedBox(height: 8),
                   Text(
                     '${_paxCounterUpdateInterval ~/ 60} minutes',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,
-                      color: AccentColors.blue,
+                      color: context.accentColor,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Slider(
-                    value: _paxCounterUpdateInterval.toDouble(),
-                    min: 60,
-                    max: 3600,
-                    divisions: 59,
-                    activeColor: AccentColors.blue,
-                    inactiveColor: AccentColors.blue.withValues(alpha: 0.2),
-                    onChanged: (value) {
-                      setState(() {
-                        _paxCounterUpdateInterval = value.round();
-                        _hasChanges = true;
-                      });
-                    },
+                  SliderTheme(
+                    data: SliderThemeData(
+                      activeTrackColor: context.accentColor,
+                      inactiveTrackColor:
+                          context.accentColor.withValues(alpha: 0.2),
+                      thumbColor: context.accentColor,
+                      overlayColor: context.accentColor.withValues(alpha: 0.2),
+                    ),
+                    child: Slider(
+                      value: _paxCounterUpdateInterval.toDouble(),
+                      min: 60,
+                      max: 3600,
+                      divisions: 59,
+                      onChanged: (value) {
+                        setState(() {
+                          _paxCounterUpdateInterval = value.round();
+                          _hasChanges = true;
+                        });
+                      },
+                    ),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -328,10 +336,10 @@ class _PaxCounterConfigScreenState
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AccentColors.blue.withValues(alpha: 0.1),
+              color: context.accentColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AccentColors.blue.withValues(alpha: 0.3),
+                color: context.accentColor.withValues(alpha: 0.3),
               ),
             ),
             child: Column(
@@ -339,18 +347,18 @@ class _PaxCounterConfigScreenState
               children: [
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.info_outline,
-                      color: AccentColors.blue,
+                      color: context.accentColor,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
-                    const Text(
+                    Text(
                       'About PAX Counter',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AccentColors.blue,
+                        color: context.accentColor,
                       ),
                     ),
                   ],

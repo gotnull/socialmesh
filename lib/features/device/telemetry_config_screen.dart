@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
 
 /// Telemetry module configuration screen
@@ -123,15 +124,18 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
             TextButton(
               onPressed: _isSaving ? null : _save,
               child: _isSaving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.accentColor,
+                      ),
                     )
-                  : const Text(
+                  : Text(
                       'Save',
                       style: TextStyle(
-                        color: AccentColors.blue,
+                        color: context.accentColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -266,17 +270,17 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AccentColors.blue.withValues(alpha: 0.1),
+              color: context.accentColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AccentColors.blue.withValues(alpha: 0.3),
+                color: context.accentColor.withValues(alpha: 0.3),
               ),
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.info_outline,
-                  color: AccentColors.blue,
+                  color: context.accentColor,
                   size: 20,
                 ),
                 const SizedBox(width: 12),
@@ -355,6 +359,7 @@ class _TelemetrySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accentColor = context.accentColor;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -389,9 +394,8 @@ class _TelemetrySection extends StatelessWidget {
                   ],
                 ),
               ),
-              Switch(
+              ThemedSwitch(
                 value: enabled,
-                activeThumbColor: AccentColors.blue,
                 onChanged: onEnabledChanged,
               ),
             ],
@@ -412,10 +416,10 @@ class _TelemetrySection extends StatelessWidget {
               children: [
                 Text(
                   '${updateInterval ~/ 60}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
-                    color: AccentColors.blue,
+                    color: accentColor,
                   ),
                 ),
                 Text(
@@ -427,14 +431,20 @@ class _TelemetrySection extends StatelessWidget {
                 ),
               ],
             ),
-            Slider(
-              value: updateInterval.toDouble(),
-              min: 60,
-              max: 3600,
-              divisions: 59,
-              activeColor: AccentColors.blue,
-              inactiveColor: AccentColors.blue.withValues(alpha: 0.2),
-              onChanged: (value) => onIntervalChanged(value.round()),
+            SliderTheme(
+              data: SliderThemeData(
+                activeTrackColor: accentColor,
+                inactiveTrackColor: accentColor.withValues(alpha: 0.2),
+                thumbColor: accentColor,
+                overlayColor: accentColor.withValues(alpha: 0.2),
+              ),
+              child: Slider(
+                value: updateInterval.toDouble(),
+                min: 60,
+                max: 3600,
+                divisions: 59,
+                onChanged: (value) => onIntervalChanged(value.round()),
+              ),
             ),
             if (additionalWidget != null) ...[
               const SizedBox(height: 12),
@@ -483,9 +493,8 @@ class _ToggleTile extends StatelessWidget {
             ],
           ),
         ),
-        Switch(
+        ThemedSwitch(
           value: value,
-          activeThumbColor: AccentColors.blue,
           onChanged: onChanged,
         ),
       ],
