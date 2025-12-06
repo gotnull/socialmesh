@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/route.dart' as route_model;
 import '../../providers/telemetry_providers.dart';
 
@@ -110,9 +111,9 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
   }
 
   void _startRecording() {
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (context) => _NewRouteDialog(
+      child: _NewRouteSheet(
         onStart: (name, notes, color) {
           ref
               .read(activeRouteProvider.notifier)
@@ -127,30 +128,13 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
   }
 
   void _deleteRoute(route_model.Route route) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text(
-          'Delete Route?',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Text(
-          'Are you sure you want to delete "${route.name}"?',
-          style: const TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Route?',
+      message:
+          'Are you sure you want to delete "${route.name}"? This cannot be undone.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
 
     if (confirmed == true) {
@@ -547,23 +531,26 @@ class _StatChip extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           value,
-          style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.7)),
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
         ),
       ],
     );
   }
 }
 
-class _NewRouteDialog extends StatefulWidget {
+class _NewRouteSheet extends StatefulWidget {
   final void Function(String name, String? notes, int color) onStart;
 
-  const _NewRouteDialog({required this.onStart});
+  const _NewRouteSheet({required this.onStart});
 
   @override
-  State<_NewRouteDialog> createState() => _NewRouteDialogState();
+  State<_NewRouteSheet> createState() => _NewRouteSheetState();
 }
 
-class _NewRouteDialogState extends State<_NewRouteDialog> {
+class _NewRouteSheetState extends State<_NewRouteSheet> {
   final _nameController = TextEditingController();
   final _notesController = TextEditingController();
   int _selectedColor = 0xFF33C758;
@@ -588,90 +575,80 @@ class _NewRouteDialogState extends State<_NewRouteDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppTheme.darkCard,
-      title: const Text('New Route', style: TextStyle(color: Colors.white)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            controller: _nameController,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              labelText: 'Route Name',
-              labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: AccentColors.blue),
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const BottomSheetHeader(
+          icon: Icons.route,
+          iconColor: AccentColors.green,
+          title: 'New Route',
+          subtitle: 'Start recording your GPS track',
+        ),
+        const SizedBox(height: 24),
+        BottomSheetTextField(
+          controller: _nameController,
+          label: 'Route Name',
+          hint: 'Morning hike',
+          autofocus: true,
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: 16),
+        BottomSheetTextField(
+          controller: _notesController,
+          label: 'Notes (optional)',
+          hint: 'Trail conditions, weather, etc.',
+          maxLines: 2,
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Color',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.white.withValues(alpha: 0.7),
           ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _notesController,
-            style: const TextStyle(color: Colors.white),
-            maxLines: 2,
-            decoration: InputDecoration(
-              labelText: 'Notes (optional)',
-              labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: AccentColors.blue),
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Color',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.7),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _colors.map((color) {
-              final isSelected = color == _selectedColor;
-              return GestureDetector(
-                onTap: () => setState(() => _selectedColor = color),
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Color(color),
-                    shape: BoxShape.circle,
-                    border: isSelected
-                        ? Border.all(color: Colors.white, width: 2)
-                        : null,
-                  ),
-                  child: isSelected
-                      ? const Icon(Icons.check, size: 16, color: Colors.white)
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: _colors.map((color) {
+            final isSelected = color == _selectedColor;
+            return GestureDetector(
+              onTap: () => setState(() => _selectedColor = color),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Color(color),
+                  shape: BoxShape.circle,
+                  border: isSelected
+                      ? Border.all(color: Colors.white, width: 3)
+                      : null,
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: Color(color).withValues(alpha: 0.4),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          ),
+                        ]
                       : null,
                 ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+                child: isSelected
+                    ? const Icon(Icons.check, size: 20, color: Colors.white)
+                    : null,
+              ),
+            );
+          }).toList(),
         ),
-        FilledButton(
-          onPressed: () {
-            if (_nameController.text.trim().isEmpty) return;
+        const SizedBox(height: 24),
+        BottomSheetButtons(
+          cancelLabel: 'Cancel',
+          confirmLabel: 'Start',
+          isConfirmEnabled: _nameController.text.trim().isNotEmpty,
+          onConfirm: () {
             widget.onStart(
               _nameController.text.trim(),
               _notesController.text.trim().isEmpty
@@ -681,8 +658,6 @@ class _NewRouteDialogState extends State<_NewRouteDialog> {
             );
             Navigator.pop(context);
           },
-          style: FilledButton.styleFrom(backgroundColor: AccentColors.green),
-          child: const Text('Start'),
         ),
       ],
     );
