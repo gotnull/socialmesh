@@ -278,11 +278,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: context.accentColor,
-                  size: 20,
-                ),
+                Icon(Icons.info_outline, color: context.accentColor, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -394,10 +390,7 @@ class _TelemetrySection extends StatelessWidget {
                   ],
                 ),
               ),
-              ThemedSwitch(
-                value: enabled,
-                onChanged: onEnabledChanged,
-              ),
+              ThemedSwitch(value: enabled, onChanged: onEnabledChanged),
             ],
           ),
           if (enabled) ...[
@@ -493,10 +486,7 @@ class _ToggleTile extends StatelessWidget {
             ],
           ),
         ),
-        ThemedSwitch(
-          value: value,
-          onChanged: onChanged,
-        ),
+        ThemedSwitch(value: value, onChanged: onChanged),
       ],
     );
   }

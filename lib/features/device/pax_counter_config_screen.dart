@@ -288,8 +288,9 @@ class _PaxCounterConfigScreenState
                   SliderTheme(
                     data: SliderThemeData(
                       activeTrackColor: context.accentColor,
-                      inactiveTrackColor:
-                          context.accentColor.withValues(alpha: 0.2),
+                      inactiveTrackColor: context.accentColor.withValues(
+                        alpha: 0.2,
+                      ),
                       thumbColor: context.accentColor,
                       overlayColor: context.accentColor.withValues(alpha: 0.2),
                     ),
