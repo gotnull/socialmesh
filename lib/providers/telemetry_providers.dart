@@ -291,21 +291,39 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
 
       final newLat = node.latitude!;
       final newLon = node.longitude!;
-      debugPrint('🛤️ Route: New position: $newLat, $newLon');
+      debugPrint(
+        '🛤️ Route: New position: $newLat, $newLon (precision=${node.precisionBits})',
+      );
 
-      // Filter out GPS jumps - if distance from last point is too far for the time elapsed
+      // Filter out GPS jumps and low precision positions
       if (state!.locations.isNotEmpty) {
         final lastLoc = state!.locations.last;
         final timeDiff = DateTime.now().difference(lastLoc.timestamp).inSeconds;
 
-        // Only filter if we have meaningful time difference (at least 1 second)
-        if (timeDiff >= 1) {
-          final distance = _calculateDistance(
-            lastLoc.latitude,
-            lastLoc.longitude,
-            newLat,
-            newLon,
+        final distance = _calculateDistance(
+          lastLoc.latitude,
+          lastLoc.longitude,
+          newLat,
+          newLon,
+        );
+
+        // Skip duplicate positions (same lat/lon as last point)
+        if (lastLoc.latitude == newLat && lastLoc.longitude == newLon) {
+          debugPrint('🛤️ Route: Skipping - duplicate position');
+          return;
+        }
+
+        // Skip if distance is unreasonably large (> 500m) - likely precision truncation
+        // Position precision bits can cause coordinates to jump by kilometers
+        if (distance > 500) {
+          debugPrint(
+            '🛤️ Route: Skipping - distance too large (${distance.toStringAsFixed(0)}m > 500m limit)',
           );
+          return;
+        }
+
+        // Only check speed if we have meaningful time difference (at least 1 second)
+        if (timeDiff >= 1) {
           final speed = distance / timeDiff; // meters per second
           debugPrint(
             '🛤️ Route: Distance=${distance.toStringAsFixed(1)}m, timeDiff=${timeDiff}s, speed=${speed.toStringAsFixed(1)}m/s',
@@ -319,12 +337,9 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
             return;
           }
         }
-
-        // Skip duplicate positions (same lat/lon as last point)
-        if (lastLoc.latitude == newLat && lastLoc.longitude == newLon) {
-          debugPrint('🛤️ Route: Skipping - duplicate position');
-          return;
-        }
+      } else {
+        // First point - log it
+        debugPrint('🛤️ Route: Recording first point');
       }
 
       final location = RouteLocation(
