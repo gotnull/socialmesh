@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:uuid/uuid.dart';
 
 /// Route for tracking GPS paths
@@ -58,6 +59,22 @@ class Route {
     return gain;
   }
 
+  /// Get the center point of the route (for map centering)
+  ({double lat, double lon})? get center {
+    if (locations.isEmpty) return null;
+    double minLat = double.infinity;
+    double maxLat = -double.infinity;
+    double minLon = double.infinity;
+    double maxLon = -double.infinity;
+    for (final loc in locations) {
+      if (loc.latitude < minLat) minLat = loc.latitude;
+      if (loc.latitude > maxLat) maxLat = loc.latitude;
+      if (loc.longitude < minLon) minLon = loc.longitude;
+      if (loc.longitude > maxLon) maxLon = loc.longitude;
+    }
+    return (lat: (minLat + maxLat) / 2, lon: (minLon + maxLon) / 2);
+  }
+
   Route copyWith({
     String? id,
     String? name,
@@ -112,6 +129,7 @@ class Route {
     'locations': locations.map((l) => l.toJson()).toList(),
   };
 
+  /// Haversine formula for accurate distance calculation
   static double _haversineDistance(
     double lat1,
     double lon1,
@@ -122,65 +140,16 @@ class Route {
     final dLat = _toRadians(lat2 - lat1);
     final dLon = _toRadians(lon2 - lon1);
     final a =
-        _sin(dLat / 2) * _sin(dLat / 2) +
-        _cos(_toRadians(lat1)) *
-            _cos(_toRadians(lat2)) *
-            _sin(dLon / 2) *
-            _sin(dLon / 2);
-    final c = 2 * _atan2(_sqrt(a), _sqrt(1 - a));
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_toRadians(lat1)) *
+            math.cos(_toRadians(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
     return r * c;
   }
 
-  static double _toRadians(double degrees) => degrees * 3.141592653589793 / 180;
-  static double _sin(double x) => _taylorSin(x);
-  static double _cos(double x) => _taylorSin(x + 1.5707963267948966);
-  static double _sqrt(double x) {
-    if (x <= 0) return 0;
-    double guess = x / 2;
-    for (int i = 0; i < 20; i++) {
-      guess = (guess + x / guess) / 2;
-    }
-    return guess;
-  }
-
-  static double _atan2(double y, double x) {
-    if (x > 0) return _atan(y / x);
-    if (x < 0 && y >= 0) return _atan(y / x) + 3.141592653589793;
-    if (x < 0 && y < 0) return _atan(y / x) - 3.141592653589793;
-    if (x == 0 && y > 0) return 1.5707963267948966;
-    if (x == 0 && y < 0) return -1.5707963267948966;
-    return 0;
-  }
-
-  static double _atan(double x) {
-    if (x.abs() > 1) {
-      return (x > 0 ? 1 : -1) * 1.5707963267948966 - _atan(1 / x);
-    }
-    double result = 0;
-    double term = x;
-    for (int n = 0; n < 20; n++) {
-      result += term / (2 * n + 1);
-      term *= -x * x;
-    }
-    return result;
-  }
-
-  static double _taylorSin(double x) {
-    // Normalize to -pi to pi
-    while (x > 3.141592653589793) {
-      x -= 2 * 3.141592653589793;
-    }
-    while (x < -3.141592653589793) {
-      x += 2 * 3.141592653589793;
-    }
-    double result = 0;
-    double term = x;
-    for (int n = 0; n < 10; n++) {
-      result += term;
-      term *= -x * x / ((2 * n + 2) * (2 * n + 3));
-    }
-    return result;
-  }
+  static double _toRadians(double degrees) => degrees * math.pi / 180;
 }
 
 /// Location point in a route

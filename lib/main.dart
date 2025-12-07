@@ -29,6 +29,8 @@ import 'features/onboarding/onboarding_screen.dart';
 import 'features/timeline/timeline_screen.dart';
 import 'features/presence/presence_screen.dart';
 import 'features/discovery/node_discovery_overlay.dart';
+import 'features/routes/route_detail_screen.dart';
+import 'models/route.dart' as route_model;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -134,6 +136,16 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp> {
         '/onboarding': (context) => const OnboardingScreen(),
         '/timeline': (context) => const TimelineScreen(),
         '/presence': (context) => const PresenceScreen(),
+      },
+      onGenerateRoute: (settings) {
+        // Handle routes that need arguments
+        if (settings.name == '/route-detail') {
+          final route = settings.arguments as route_model.Route;
+          return MaterialPageRoute(
+            builder: (context) => RouteDetailScreen(route: route),
+          );
+        }
+        return null;
       },
     );
   }

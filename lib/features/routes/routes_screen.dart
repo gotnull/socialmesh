@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -151,7 +154,27 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
     final fileName =
         '${route.name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.gpx';
 
-    await Share.share(gpx, subject: fileName);
+    try {
+      // Save to temp file and share as file for proper save-to-files behavior
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsString(gpx);
+
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: fileName,
+        text: 'Route: ${route.name}',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _importRoute() async {
@@ -290,15 +313,17 @@ class _ActiveRouteBanner extends ConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
+                child: FilledButton.icon(
                   onPressed: () {
                     ref.read(activeRouteProvider.notifier).cancelRecording();
                   },
-                  icon: const Icon(Icons.close, size: 18),
-                  label: const Text('Cancel'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.errorRed,
-                    side: const BorderSide(color: AppTheme.errorRed),
+                  icon: const Icon(Icons.close, size: 18, color: Colors.white),
+                  label: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.errorRed,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),

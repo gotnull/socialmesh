@@ -113,27 +113,39 @@ class RouteStorageService {
       String? desc;
       final locations = <RouteLocation>[];
 
-      // Simple GPX parsing (basic implementation)
+      // Parse name from metadata or track
       final nameMatch = RegExp(r'<name>([^<]+)</name>').firstMatch(gpx);
       if (nameMatch != null) {
         name = nameMatch.group(1);
       }
 
+      // Parse description
       final descMatch = RegExp(r'<desc>([^<]+)</desc>').firstMatch(gpx);
       if (descMatch != null) {
         desc = descMatch.group(1);
       }
 
-      final trkptRegex = RegExp(
-        r'<trkpt\s+lat="([^"]+)"\s+lon="([^"]+)"[^>]*>.*?(?:<ele>([^<]+)</ele>)?.*?(?:<time>([^<]+)</time>)?.*?</trkpt>',
+      // Parse trackpoints - handle both self-closing and full tags
+      // Pattern 1: Full tags with children: <trkpt lat="..." lon="...">...</trkpt>
+      final fullTrkptRegex = RegExp(
+        r'<trkpt\s+lat="([^"]+)"\s+lon="([^"]+)"[^>]*>(.*?)</trkpt>',
         dotAll: true,
       );
 
-      for (final match in trkptRegex.allMatches(gpx)) {
+      for (final match in fullTrkptRegex.allMatches(gpx)) {
         final lat = double.tryParse(match.group(1) ?? '');
         final lon = double.tryParse(match.group(2) ?? '');
-        final ele = int.tryParse(match.group(3) ?? '');
-        final time = match.group(4);
+        final content = match.group(3) ?? '';
+
+        // Parse elevation
+        final eleMatch = RegExp(r'<ele>([^<]+)</ele>').firstMatch(content);
+        final ele = eleMatch != null
+            ? double.tryParse(eleMatch.group(1) ?? '')?.toInt()
+            : null;
+
+        // Parse time
+        final timeMatch = RegExp(r'<time>([^<]+)</time>').firstMatch(content);
+        final time = timeMatch?.group(1);
 
         if (lat != null && lon != null) {
           locations.add(
@@ -144,6 +156,59 @@ class RouteStorageService {
               timestamp: time != null ? DateTime.tryParse(time) : null,
             ),
           );
+        }
+      }
+
+      // Pattern 2: Self-closing tags: <trkpt lat="..." lon="..." />
+      final selfClosingRegex = RegExp(
+        r'<trkpt\s+lat="([^"]+)"\s+lon="([^"]+)"[^/]*/\s*>',
+      );
+
+      for (final match in selfClosingRegex.allMatches(gpx)) {
+        final lat = double.tryParse(match.group(1) ?? '');
+        final lon = double.tryParse(match.group(2) ?? '');
+
+        if (lat != null && lon != null) {
+          // Check if this point was already added by full tag regex
+          final exists = locations.any(
+            (l) => l.latitude == lat && l.longitude == lon,
+          );
+          if (!exists) {
+            locations.add(RouteLocation(latitude: lat, longitude: lon));
+          }
+        }
+      }
+
+      // Also try waypoints (wpt) if no trackpoints found
+      if (locations.isEmpty) {
+        final wptRegex = RegExp(
+          r'<wpt\s+lat="([^"]+)"\s+lon="([^"]+)"[^>]*>(.*?)</wpt>',
+          dotAll: true,
+        );
+
+        for (final match in wptRegex.allMatches(gpx)) {
+          final lat = double.tryParse(match.group(1) ?? '');
+          final lon = double.tryParse(match.group(2) ?? '');
+          final content = match.group(3) ?? '';
+
+          final eleMatch = RegExp(r'<ele>([^<]+)</ele>').firstMatch(content);
+          final ele = eleMatch != null
+              ? double.tryParse(eleMatch.group(1) ?? '')?.toInt()
+              : null;
+
+          final timeMatch = RegExp(r'<time>([^<]+)</time>').firstMatch(content);
+          final time = timeMatch?.group(1);
+
+          if (lat != null && lon != null) {
+            locations.add(
+              RouteLocation(
+                latitude: lat,
+                longitude: lon,
+                altitude: ele,
+                timestamp: time != null ? DateTime.tryParse(time) : null,
+              ),
+            );
+          }
         }
       }
 
