@@ -18,6 +18,19 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
   bool _exporting = false;
   String? _exportingType;
 
+  /// Helper to share with proper iPad support
+  Future<void> _shareText(String text, {String? subject}) async {
+    final box = context.findRenderObject() as RenderBox?;
+    final sharePositionOrigin = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : const Rect.fromLTWH(0, 0, 100, 100);
+    await Share.share(
+      text,
+      subject: subject,
+      sharePositionOrigin: sharePositionOrigin,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -395,7 +408,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       );
     }
 
-    await Share.share(buffer.toString(), subject: 'Protofluff Messages Export');
+    await _shareText(buffer.toString(), subject: 'Socialmesh Messages Export');
   }
 
   Future<void> _exportDeviceMetrics() async {
@@ -412,9 +425,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       );
     }
 
-    await Share.share(
+    await _shareText(
       buffer.toString(),
-      subject: 'Protofluff Device Metrics Export',
+      subject: 'Socialmesh Device Metrics Export',
     );
   }
 
@@ -432,9 +445,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       );
     }
 
-    await Share.share(
+    await _shareText(
       buffer.toString(),
-      subject: 'Protofluff Environment Metrics Export',
+      subject: 'Socialmesh Environment Metrics Export',
     );
   }
 
@@ -450,9 +463,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       );
     }
 
-    await Share.share(
+    await _shareText(
       buffer.toString(),
-      subject: 'Protofluff Air Quality Export',
+      subject: 'Socialmesh Air Quality Export',
     );
   }
 
@@ -470,9 +483,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       );
     }
 
-    await Share.share(
+    await _shareText(
       buffer.toString(),
-      subject: 'Protofluff Power Metrics Export',
+      subject: 'Socialmesh Power Metrics Export',
     );
   }
 
@@ -490,9 +503,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       );
     }
 
-    await Share.share(
+    await _shareText(
       buffer.toString(),
-      subject: 'Protofluff Position History Export',
+      subject: 'Socialmesh Position History Export',
     );
   }
 
@@ -515,7 +528,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     final buffer = StringBuffer();
     buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
     buffer.writeln(
-      '<gpx version="1.1" creator="Protofluff" xmlns="http://www.topografix.com/GPX/1/1">',
+      '<gpx version="1.1" creator="Socialmesh" xmlns="http://www.topografix.com/GPX/1/1">',
     );
 
     for (final route in routes) {
@@ -541,7 +554,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
 
     buffer.writeln('</gpx>');
 
-    await Share.share(buffer.toString(), subject: 'Protofluff Routes Export');
+    await _shareText(buffer.toString(), subject: 'Socialmesh Routes Export');
   }
 
   Future<void> _exportTraceroutes() async {
@@ -558,9 +571,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       );
     }
 
-    await Share.share(
+    await _shareText(
       buffer.toString(),
-      subject: 'Protofluff Traceroute Export',
+      subject: 'Socialmesh Traceroute Export',
     );
   }
 
@@ -578,10 +591,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       );
     }
 
-    await Share.share(
-      buffer.toString(),
-      subject: 'Protofluff Node List Export',
-    );
+    await _shareText(buffer.toString(), subject: 'Socialmesh Node List Export');
   }
 
   Future<void> _exportAll() async {
@@ -611,7 +621,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
 
     final json = const JsonEncoder.withIndent('  ').convert(data);
 
-    await Share.share(json, subject: 'Protofluff Complete Export');
+    await _shareText(json, subject: 'Socialmesh Complete Export');
   }
 
   Map<String, dynamic> _nodeToMap(MeshNode node) {

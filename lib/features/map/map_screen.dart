@@ -365,7 +365,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final text = label != null
         ? '$label\nhttps://maps.google.com/?q=$lat,$lng'
         : 'https://maps.google.com/?q=$lat,$lng';
-    Share.share(text);
+    
+    // Get share position for iPad support
+    final box = context.findRenderObject() as RenderBox?;
+    final sharePositionOrigin = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : const Rect.fromLTWH(0, 0, 100, 100);
+    Share.share(text, sharePositionOrigin: sharePositionOrigin);
   }
 
   void _copyCoordinates(LatLng point) {

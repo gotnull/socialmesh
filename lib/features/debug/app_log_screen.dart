@@ -208,7 +208,12 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
   void _shareLog() {
     final logger = ref.read(appLoggerProvider);
     final content = logger.export();
-    Share.share(content, subject: 'Protofluff App Log');
+    // Get share position for iPad support
+    final box = context.findRenderObject() as RenderBox?;
+    final sharePositionOrigin = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : const Rect.fromLTWH(0, 0, 100, 100);
+    Share.share(content, subject: 'Socialmesh App Log', sharePositionOrigin: sharePositionOrigin);
   }
 
   void _copyToClipboard() {

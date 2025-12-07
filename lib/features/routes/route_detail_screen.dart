@@ -60,7 +60,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
                 // Tile layer
                 TileLayer(
                   urlTemplate: MapTileStyle.dark.url,
-                  userAgentPackageName: 'com.protofluff.app',
+                  userAgentPackageName: 'com.socialmesh.app',
                   maxZoom: 19,
                   tileBuilder: (context, tileWidget, tile) => ColorFiltered(
                     colorFilter: const ColorFilter.matrix([
