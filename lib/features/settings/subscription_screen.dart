@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
+import '../../utils/snackbar.dart';
 
 class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
@@ -673,37 +674,29 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
     final success = await purchasePackage(ref, _selectedPackage!);
     if (mounted && success) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Subscription activated!')));
+      showAppSnackBar(context, 'Subscription activated!');
     }
   }
 
   Future<void> _purchaseItem(OneTimePurchase purchase) async {
     final success = await purchaseProduct(ref, purchase.productId);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success ? '${purchase.name} unlocked!' : 'Purchase failed',
-          ),
-        ),
-      );
+      if (success) {
+        showAppSnackBar(context, '${purchase.name} unlocked!');
+      } else {
+        showErrorSnackBar(context, 'Purchase failed');
+      }
     }
   }
 
   Future<void> _restorePurchases() async {
     final success = await restorePurchases(ref);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success
-                ? 'Purchases restored successfully'
-                : 'No purchases to restore',
-          ),
-        ),
-      );
+      if (success) {
+        showAppSnackBar(context, 'Purchases restored successfully');
+      } else {
+        showAppSnackBar(context, 'No purchases to restore');
+      }
     }
   }
 

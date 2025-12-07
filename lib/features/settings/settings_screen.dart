@@ -10,6 +10,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import '../device/region_selection_screen.dart';
 import 'device_management_screen.dart';
@@ -868,23 +869,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } catch (e) {
       debugPrint('🔔 Test notification error: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Notification error: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        showErrorSnackBar(context, 'Notification error: $e');
       }
       return;
     }
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Test notification sent - check notification center'),
-          duration: Duration(seconds: 3),
-        ),
+      showAppSnackBar(
+        context,
+        'Test notification sent - check notification center',
       );
     }
   }
@@ -1057,9 +1050,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     if (confirmed == true && context.mounted) {
       ref.read(messagesProvider.notifier).clearMessages();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Messages cleared')));
+      showAppSnackBar(context, 'Messages cleared');
     }
   }
 
@@ -1108,9 +1099,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       channelsNotifier.clearChannels();
 
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('All data cleared')));
+        showAppSnackBar(context, 'All data cleared');
       }
     }
   }

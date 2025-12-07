@@ -6,6 +6,7 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../providers/app_providers.dart';
 import '../../services/audio/rtttl_library_service.dart';
 import '../../services/audio/rtttl_player.dart';
+import '../../utils/snackbar.dart';
 
 /// Preset ringtones with name and RTTTL string
 class RingtonePreset {
@@ -742,13 +743,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     final validation = _validateRtttl(_rtttlController.text);
     if (validation != null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(validation),
-          backgroundColor: AppTheme.errorRed,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      showErrorSnackBar(context, validation);
       return;
     }
 
@@ -770,13 +765,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to play: ${e.toString()}'),
-            backgroundColor: AppTheme.errorRed,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to play: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -883,13 +872,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   Future<void> _saveRingtone() async {
     final validation = _validateRtttl(_rtttlController.text);
     if (validation != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(validation),
-          backgroundColor: AppTheme.errorRed,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      showErrorSnackBar(context, validation);
       return;
     }
 
@@ -900,23 +883,11 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
       await protocol.setRingtone(_rtttlController.text.trim());
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Ringtone saved to device'),
-            backgroundColor: AppTheme.darkCard,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showAppSnackBar(context, 'Ringtone saved to device');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save ringtone: $e'),
-            backgroundColor: AppTheme.errorRed,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to save ringtone: $e');
       }
     } finally {
       if (mounted) {
@@ -952,13 +923,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
         validateRtttl: _validateRtttl,
         onAdd: (preset) {
           ref.read(customRingtonesProvider.notifier).addPreset(preset);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Custom ringtone added'),
-              backgroundColor: AppTheme.darkCard,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          showAppSnackBar(context, 'Custom ringtone added');
         },
       ),
     );

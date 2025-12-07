@@ -9,7 +9,8 @@ void showAppSnackBar(
   SnackBarAction? action,
 }) {
   final mediaQuery = MediaQuery.of(context);
-  final topPadding = mediaQuery.padding.top;
+  // Position snackbar below status bar with proper safe area padding
+  final topInset = mediaQuery.padding.top + 56; // safe area + app bar height
 
   ScaffoldMessenger.of(context).hideCurrentSnackBar();
   ScaffoldMessenger.of(context).showSnackBar(
@@ -18,7 +19,8 @@ void showAppSnackBar(
       backgroundColor: context.accentColor,
       behavior: SnackBarBehavior.floating,
       margin: EdgeInsets.only(
-        bottom: mediaQuery.size.height - topPadding - 100,
+        top: topInset,
+        bottom: mediaQuery.size.height - topInset - 60,
         left: 16,
         right: 16,
       ),
@@ -35,7 +37,8 @@ void showErrorSnackBar(
   Duration duration = const Duration(seconds: 4),
 }) {
   final mediaQuery = MediaQuery.of(context);
-  final topPadding = mediaQuery.padding.top;
+  // Position snackbar below status bar with proper safe area padding
+  final topInset = mediaQuery.padding.top + 56; // safe area + app bar height
 
   ScaffoldMessenger.of(context).hideCurrentSnackBar();
   ScaffoldMessenger.of(context).showSnackBar(
@@ -44,7 +47,8 @@ void showErrorSnackBar(
       backgroundColor: Colors.red.shade700,
       behavior: SnackBarBehavior.floating,
       margin: EdgeInsets.only(
-        bottom: mediaQuery.size.height - topPadding - 100,
+        top: topInset,
+        bottom: mediaQuery.size.height - topInset - 60,
         left: 16,
         right: 16,
       ),
