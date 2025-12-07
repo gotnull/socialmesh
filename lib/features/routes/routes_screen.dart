@@ -394,7 +394,7 @@ class _RouteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('MMM d, yyyy');
+    final dateFormat = DateFormat('MMM d, yyyy • h:mm a');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

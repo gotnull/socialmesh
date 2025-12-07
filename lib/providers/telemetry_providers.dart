@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -176,24 +177,33 @@ class RoutesNotifier extends StateNotifier<List<Route>> {
 
   Future<void> _loadRoutes() async {
     if (_storage == null) return;
-    state = await _storage.getRoutes();
+    final routes = await _storage.getRoutes();
+    // Sort by createdAt descending (newest first)
+    routes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    state = routes;
   }
 
   Future<void> saveRoute(Route route) async {
     if (_storage == null) return;
     await _storage.saveRoute(route);
-    state = await _storage.getRoutes();
+    final routes = await _storage.getRoutes();
+    routes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    state = routes;
   }
 
   Future<void> deleteRoute(String routeId) async {
     if (_storage == null) return;
     await _storage.deleteRoute(routeId);
-    state = await _storage.getRoutes();
+    final routes = await _storage.getRoutes();
+    routes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    state = routes;
   }
 
   Future<void> refresh() async {
     if (_storage == null) return;
-    state = await _storage.getRoutes();
+    final routes = await _storage.getRoutes();
+    routes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    state = routes;
   }
 }
 
@@ -255,24 +265,41 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
   }
 
   void _startLocationTracking() {
+    debugPrint('🛤️ Route: Starting location tracking');
     // Listen to position updates from nodes (including phone GPS positions)
     _positionSubscription = _protocol.nodeStream.listen((node) async {
-      if (state == null || !node.hasPosition) return;
+      if (state == null) {
+        debugPrint('🛤️ Route: No active route, skipping');
+        return;
+      }
+      if (!node.hasPosition) {
+        debugPrint('🛤️ Route: Node ${node.nodeNum} has no position, skipping');
+        return;
+      }
 
-      // Check if this is a position update for any tracked node
-      // For route recording, we typically track the local device's position
+      // Track position updates from our own node
       final myNodeNum = _protocol.myNodeNum;
-      if (node.nodeNum != myNodeNum) return;
+      debugPrint(
+        '🛤️ Route: Got position from node ${node.nodeNum}, myNodeNum=$myNodeNum',
+      );
+
+      // Skip if this isn't our node (but allow if myNodeNum is null during setup)
+      if (myNodeNum != null && node.nodeNum != myNodeNum) {
+        debugPrint('🛤️ Route: Skipping - not our node');
+        return;
+      }
 
       final newLat = node.latitude!;
       final newLon = node.longitude!;
+      debugPrint('🛤️ Route: New position: $newLat, $newLon');
 
       // Filter out GPS jumps - if distance from last point is too far for the time elapsed
-      // Max realistic speed: ~150 km/h = ~42 m/s
       if (state!.locations.isNotEmpty) {
         final lastLoc = state!.locations.last;
         final timeDiff = DateTime.now().difference(lastLoc.timestamp).inSeconds;
-        if (timeDiff > 0) {
+
+        // Only filter if we have meaningful time difference (at least 1 second)
+        if (timeDiff >= 1) {
           final distance = _calculateDistance(
             lastLoc.latitude,
             lastLoc.longitude,
@@ -280,10 +307,23 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
             newLon,
           );
           final speed = distance / timeDiff; // meters per second
+          debugPrint(
+            '🛤️ Route: Distance=${distance.toStringAsFixed(1)}m, timeDiff=${timeDiff}s, speed=${speed.toStringAsFixed(1)}m/s',
+          );
+
           // Skip if speed > 50 m/s (180 km/h) - likely GPS error
           if (speed > 50) {
+            debugPrint(
+              '🛤️ Route: Skipping - GPS jump detected (speed too high)',
+            );
             return;
           }
+        }
+
+        // Skip duplicate positions (same lat/lon as last point)
+        if (lastLoc.latitude == newLat && lastLoc.longitude == newLon) {
+          debugPrint('🛤️ Route: Skipping - duplicate position');
+          return;
         }
       }
 
@@ -291,14 +331,18 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
         latitude: newLat,
         longitude: newLon,
         altitude: node.altitude,
-        heading: null, // Could be added if available
-        speed: null, // Could be added if available
+        heading: node.groundTrack?.toInt(),
+        speed: node.groundSpeed?.toInt(),
       );
 
+      debugPrint(
+        '🛤️ Route: Adding location point #${state!.locations.length + 1}',
+      );
       if (_storage != null) {
         final updated = await _storage.addLocationToActiveRoute(location);
         if (updated != null) {
           state = updated;
+          debugPrint('🛤️ Route: Now have ${state!.locations.length} points');
         }
       }
     });
@@ -309,7 +353,7 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
     _positionSubscription = null;
   }
 
-  /// Haversine distance calculation
+  /// Haversine distance calculation using dart:math
   double _calculateDistance(
     double lat1,
     double lon1,
@@ -317,58 +361,16 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
     double lon2,
   ) {
     const r = 6371000.0; // Earth's radius in meters
-    final dLat = (lat2 - lat1) * 3.141592653589793 / 180;
-    final dLon = (lon2 - lon1) * 3.141592653589793 / 180;
+    final dLat = (lat2 - lat1) * math.pi / 180;
+    final dLon = (lon2 - lon1) * math.pi / 180;
     final a =
-        _sin(dLat / 2) * _sin(dLat / 2) +
-        _cos(lat1 * 3.141592653589793 / 180) *
-            _cos(lat2 * 3.141592653589793 / 180) *
-            _sin(dLon / 2) *
-            _sin(dLon / 2);
-    final c = 2 * _atan2(_sqrt(a), _sqrt(1 - a));
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1 * math.pi / 180) *
+            math.cos(lat2 * math.pi / 180) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
     return r * c;
-  }
-
-  double _sin(double x) => x - (x * x * x) / 6 + (x * x * x * x * x) / 120;
-  double _cos(double x) => 1 - (x * x) / 2 + (x * x * x * x) / 24;
-  double _sqrt(double x) {
-    if (x <= 0) return 0;
-    double g = x / 2;
-    for (int i = 0; i < 10; i++) {
-      g = (g + x / g) / 2;
-    }
-    return g;
-  }
-
-  double _atan2(double y, double x) {
-    if (x > 0) {
-      return _atan(y / x);
-    }
-    if (x < 0 && y >= 0) {
-      return _atan(y / x) + 3.141592653589793;
-    }
-    if (x < 0 && y < 0) {
-      return _atan(y / x) - 3.141592653589793;
-    }
-    if (y > 0) {
-      return 1.5707963267948966;
-    }
-    if (y < 0) {
-      return -1.5707963267948966;
-    }
-    return 0;
-  }
-
-  double _atan(double x) {
-    if (x.abs() > 1) {
-      return (x > 0 ? 1 : -1) * 1.5707963267948966 - _atan(1 / x);
-    }
-    double r = 0, t = x;
-    for (int n = 0; n < 10; n++) {
-      r += t / (2 * n + 1);
-      t *= -x * x;
-    }
-    return r;
   }
 
   @override
