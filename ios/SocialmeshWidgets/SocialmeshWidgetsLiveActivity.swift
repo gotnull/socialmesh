@@ -11,7 +11,10 @@ import WidgetKit
 import SwiftUI
 
 // Shared UserDefaults for reading Flutter data
-let sharedDefault = UserDefaults(suiteName: "group.socialmesh.liveactivities")!
+// Use a computed property to handle potential nil case gracefully
+private var sharedDefault: UserDefaults {
+    UserDefaults(suiteName: "group.socialmesh.liveactivities") ?? UserDefaults.standard
+}
 
 @available(iOS 16.2, *)
 struct SocialmeshWidgetsLiveActivity: Widget {

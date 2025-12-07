@@ -15,13 +15,21 @@ struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
     public typealias LiveDeliveryData = ContentState
     
     public struct ContentState: Codable, Hashable {
-        // ContentState is required by ActivityKit but we read actual data from UserDefaults
-        // The live_activities package stores data there with prefixed keys
-        var dummy: Int = 0
+        // The live_activities plugin passes appGroupId when creating the activity
+        // We store it but read actual data from UserDefaults with prefixed keys
+        var appGroupId: String?
+        
+        init(appGroupId: String? = nil) {
+            self.appGroupId = appGroupId
+        }
     }
     
     // Required by Identifiable - used for prefixed keys in UserDefaults
     var id = UUID()
+    
+    init(id: UUID = UUID()) {
+        self.id = id
+    }
 }
 
 // Extension to generate prefixed keys for UserDefaults access
