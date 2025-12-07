@@ -190,6 +190,10 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.setRegion(_selectedRegion!);
 
+      // Mark region as configured so we don't prompt again on reconnect
+      final settings = await ref.read(settingsServiceProvider.future);
+      await settings.setRegionConfigured(true);
+
       if (mounted) {
         if (widget.isInitialSetup) {
           // Set app state to initialized - this will trigger router to show MainShell

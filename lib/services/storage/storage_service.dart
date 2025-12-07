@@ -210,6 +210,14 @@ class SettingsService {
   bool get onboardingComplete =>
       _preferences.getBool('onboarding_complete') ?? false;
 
+  // Region configuration (tracks if region has ever been set)
+  Future<void> setRegionConfigured(bool configured) async {
+    await _preferences.setBool('region_configured', configured);
+  }
+
+  bool get regionConfigured =>
+      _preferences.getBool('region_configured') ?? false;
+
   // Canned responses
   Future<void> setCannedResponses(List<CannedResponse> responses) async {
     final jsonList = responses.map((r) => r.toJson()).toList();
