@@ -1219,6 +1219,13 @@ class ProtocolService {
           longitude: position.longitudeI / 1e7,
           altitude: position.hasAltitude() ? position.altitude : node.altitude,
           lastHeard: DateTime.now(),
+          positionTimestamp: DateTime.now(),
+          // GPS extended fields
+          satsInView: position.hasSatsInView() ? position.satsInView : node.satsInView,
+          gpsAccuracy: position.hasGpsAccuracy() ? position.gpsAccuracy / 1000.0 : node.gpsAccuracy, // mm to meters
+          groundSpeed: position.hasGroundSpeed() ? position.groundSpeed.toDouble() : node.groundSpeed, // m/s
+          groundTrack: position.hasGroundTrack() ? position.groundTrack / 100.0 : node.groundTrack, // 1/100 degrees to degrees
+          precisionBits: position.hasPrecisionBits() ? position.precisionBits : node.precisionBits,
         );
         _nodes[packet.from] = updatedNode;
         _nodeController.add(updatedNode);
@@ -1266,6 +1273,13 @@ class ProtocolService {
           isOnline: true,
           avatarColor: avatarColor,
           isFavorite: false,
+          positionTimestamp: DateTime.now(),
+          // GPS extended fields
+          satsInView: position.hasSatsInView() ? position.satsInView : null,
+          gpsAccuracy: position.hasGpsAccuracy() ? position.gpsAccuracy / 1000.0 : null,
+          groundSpeed: position.hasGroundSpeed() ? position.groundSpeed.toDouble() : null,
+          groundTrack: position.hasGroundTrack() ? position.groundTrack / 100.0 : null,
+          precisionBits: position.hasPrecisionBits() ? position.precisionBits : null,
         );
         _nodes[packet.from] = newNode;
         _nodeController.add(newNode);
