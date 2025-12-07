@@ -505,6 +505,33 @@ class AutomationEvent {
 }
 
 /// Automation execution log entry
+/// Result of a single action execution
+class ActionResult {
+  final String actionName;
+  final bool success;
+  final String? errorMessage;
+
+  ActionResult({
+    required this.actionName,
+    required this.success,
+    this.errorMessage,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'actionName': actionName,
+    'success': success,
+    'errorMessage': errorMessage,
+  };
+
+  factory ActionResult.fromJson(Map<String, dynamic> json) {
+    return ActionResult(
+      actionName: json['actionName'] as String,
+      success: json['success'] as bool,
+      errorMessage: json['errorMessage'] as String?,
+    );
+  }
+}
+
 class AutomationLogEntry {
   final String automationId;
   final String automationName;
@@ -512,6 +539,7 @@ class AutomationLogEntry {
   final bool success;
   final String? triggerDetails;
   final List<String> actionsExecuted;
+  final List<ActionResult>? actionResults;
   final String? errorMessage;
 
   AutomationLogEntry({
@@ -521,8 +549,20 @@ class AutomationLogEntry {
     required this.success,
     this.triggerDetails,
     required this.actionsExecuted,
+    this.actionResults,
     this.errorMessage,
   });
+
+  /// Returns count of successful actions
+  int get successfulActionCount =>
+      actionResults?.where((r) => r.success).length ?? actionsExecuted.length;
+
+  /// Returns count of failed actions
+  int get failedActionCount =>
+      actionResults?.where((r) => !r.success).length ?? 0;
+
+  /// Returns whether any actions failed
+  bool get hasFailedActions => failedActionCount > 0;
 
   Map<String, dynamic> toJson() => {
     'automationId': automationId,
@@ -531,6 +571,7 @@ class AutomationLogEntry {
     'success': success,
     'triggerDetails': triggerDetails,
     'actionsExecuted': actionsExecuted,
+    'actionResults': actionResults?.map((r) => r.toJson()).toList(),
     'errorMessage': errorMessage,
   };
 
@@ -542,6 +583,9 @@ class AutomationLogEntry {
       success: json['success'] as bool,
       triggerDetails: json['triggerDetails'] as String?,
       actionsExecuted: (json['actionsExecuted'] as List).cast<String>(),
+      actionResults: (json['actionResults'] as List?)
+          ?.map((r) => ActionResult.fromJson(r as Map<String, dynamic>))
+          .toList(),
       errorMessage: json['errorMessage'] as String?,
     );
   }

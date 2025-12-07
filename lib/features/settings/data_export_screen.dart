@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../utils/snackbar.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/telemetry_providers.dart';
+import '../automations/automation_providers.dart';
 
 class DataExportScreen extends ConsumerStatefulWidget {
   const DataExportScreen({super.key});
@@ -16,8 +18,8 @@ class DataExportScreen extends ConsumerStatefulWidget {
 }
 
 class _DataExportScreenState extends ConsumerState<DataExportScreen> {
-  bool _exporting = false;
-  String? _exportingType;
+  final Set<String> _exportingTypes = {};
+  final Set<String> _clearingTypes = {};
 
   /// Helper to share with proper iPad support
   Future<void> _shareText(String text, {String? subject}) async {
@@ -67,6 +69,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                   format: 'CSV',
                   type: 'messages',
                   onExport: _exportMessages,
+                  onClear: () => _confirmClear('messages', 'all messages'),
                 ),
               ],
             ),
@@ -91,6 +94,8 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                   format: 'CSV',
                   type: 'device_metrics',
                   onExport: _exportDeviceMetrics,
+                  onClear: () =>
+                      _confirmClear('device_metrics', 'device metrics'),
                 ),
                 _buildDivider(),
                 _buildExportTile(
@@ -100,6 +105,10 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                   format: 'CSV',
                   type: 'environment_metrics',
                   onExport: _exportEnvironmentMetrics,
+                  onClear: () => _confirmClear(
+                    'environment_metrics',
+                    'environment metrics',
+                  ),
                 ),
                 _buildDivider(),
                 _buildExportTile(
@@ -109,6 +118,8 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                   format: 'CSV',
                   type: 'air_quality',
                   onExport: _exportAirQuality,
+                  onClear: () =>
+                      _confirmClear('air_quality', 'air quality data'),
                 ),
                 _buildDivider(),
                 _buildExportTile(
@@ -118,6 +129,8 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                   format: 'CSV',
                   type: 'power_metrics',
                   onExport: _exportPowerMetrics,
+                  onClear: () =>
+                      _confirmClear('power_metrics', 'power metrics'),
                 ),
               ],
             ),
@@ -142,6 +155,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                   format: 'CSV',
                   type: 'positions',
                   onExport: _exportPositions,
+                  onClear: () => _confirmClear('positions', 'position history'),
                 ),
                 _buildDivider(),
                 _buildExportTile(
@@ -151,6 +165,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                   format: 'GPX',
                   type: 'routes',
                   onExport: _exportRoutes,
+                  onClear: () => _confirmClear('routes', 'all routes'),
                 ),
                 _buildDivider(),
                 _buildExportTile(
@@ -160,6 +175,45 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                   format: 'CSV',
                   type: 'traceroutes',
                   onExport: _exportTraceroutes,
+                  onClear: () =>
+                      _confirmClear('traceroutes', 'traceroute data'),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Automations
+          _buildSectionHeader('Automations'),
+          Container(
+            decoration: BoxDecoration(
+              color: AppTheme.darkCard,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.darkBorder),
+            ),
+            child: Column(
+              children: [
+                _buildExportTile(
+                  icon: Icons.auto_awesome,
+                  title: 'Automation Rules',
+                  subtitle: 'All automation configurations',
+                  format: 'JSON',
+                  type: 'automations',
+                  onExport: _exportAutomations,
+                  onClear: () =>
+                      _confirmClear('automations', 'all automation rules'),
+                ),
+                _buildDivider(),
+                _buildExportTile(
+                  icon: Icons.history,
+                  title: 'Execution Log',
+                  subtitle: 'Automation trigger history with results',
+                  format: 'JSON',
+                  type: 'automation_log',
+                  onExport: _exportAutomationLog,
+                  onClear: () =>
+                      _confirmClear('automation_log', 'automation log'),
                 ),
               ],
             ),
@@ -184,6 +238,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                   format: 'CSV',
                   type: 'nodes',
                   onExport: _exportNodes,
+                  onClear: null, // Can't clear nodes - managed by protocol
                 ),
               ],
             ),
@@ -208,11 +263,79 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
               format: 'JSON',
               type: 'all',
               onExport: _exportAll,
+              onClear: null,
               isHighlighted: true,
             ),
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+
+          // Clear All Data
+          _buildSectionHeader('Clear Data'),
+          Container(
+            decoration: BoxDecoration(
+              color: AppTheme.errorRed.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppTheme.errorRed.withValues(alpha: 0.3),
+              ),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => _confirmClearAll(),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppTheme.errorRed.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.delete_forever,
+                        color: AppTheme.errorRed,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Clear All Data',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.errorRed,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Delete all stored telemetry, routes, and logs',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.warning_amber,
+                      color: AppTheme.errorRed,
+                      size: 20,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
 
           // Info
           Container(
@@ -234,7 +357,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                 const SizedBox(width: 12),
                 const Expanded(
                   child: Text(
-                    'Exported files can be shared via email, AirDrop, or saved to Files.',
+                    'Exported files can be shared via email, AirDrop, or saved to Files. Tap the trash icon to clear specific data.',
                     style: TextStyle(
                       fontSize: 13,
                       color: AppTheme.textSecondary,
@@ -280,84 +403,111 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     required String format,
     required String type,
     required Future<void> Function() onExport,
+    VoidCallback? onClear,
     bool isHighlighted = false,
   }) {
-    final isExporting = _exporting && _exportingType == type;
+    final isExporting = _exportingTypes.contains(type);
+    final isClearing = _clearingTypes.contains(type);
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: isExporting ? null : () => _handleExport(type, onExport),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color:
-                    (isHighlighted ? context.accentColor : context.accentColor)
-                        .withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: isHighlighted
-                    ? context.accentColor
-                    : context.accentColor,
-                size: 22,
-              ),
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: (isHighlighted ? context.accentColor : context.accentColor)
+                  .withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: isHighlighted ? context.accentColor : Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
+            child: Icon(
+              icon,
+              color: isHighlighted ? context.accentColor : context.accentColor,
+              size: 22,
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                format,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textTertiary,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: isHighlighted ? context.accentColor : Colors.white,
+                  ),
                 ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              format,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textTertiary,
               ),
             ),
-            const SizedBox(width: 8),
-            if (isExporting)
+          ),
+          const SizedBox(width: 8),
+          // Clear button
+          if (onClear != null) ...[
+            if (isClearing)
               const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppTheme.errorRed,
+                ),
               )
             else
-              Icon(Icons.ios_share, color: context.accentColor, size: 20),
+              IconButton(
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: AppTheme.textTertiary.withValues(alpha: 0.6),
+                  size: 20,
+                ),
+                onPressed: onClear,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Clear data',
+              ),
           ],
-        ),
+          const SizedBox(width: 4),
+          // Export button
+          if (isExporting)
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          else
+            IconButton(
+              icon: Icon(Icons.ios_share, color: context.accentColor, size: 20),
+              onPressed: () => _handleExport(type, onExport),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              tooltip: 'Export',
+            ),
+        ],
       ),
     );
   }
@@ -367,8 +517,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     Future<void> Function() exportFn,
   ) async {
     setState(() {
-      _exporting = true;
-      _exportingType = type;
+      _exportingTypes.add(type);
     });
 
     try {
@@ -380,8 +529,146 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     } finally {
       if (mounted) {
         setState(() {
-          _exporting = false;
-          _exportingType = null;
+          _exportingTypes.remove(type);
+        });
+      }
+    }
+  }
+
+  void _confirmClear(String type, String dataName) async {
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: 'Clear $dataName?',
+      message:
+          'This will permanently delete all $dataName. This action cannot be undone.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
+    );
+    if (confirmed == true && mounted) {
+      _handleClear(type);
+    }
+  }
+
+  void _confirmClearAll() async {
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: 'Clear All Data?',
+      message:
+          'This will permanently delete ALL stored data including telemetry, routes, and automation logs. This action cannot be undone.',
+      confirmLabel: 'Delete All',
+      isDestructive: true,
+    );
+    if (confirmed == true && mounted) {
+      _handleClearAll();
+    }
+  }
+
+  Future<void> _handleClear(String type) async {
+    setState(() {
+      _clearingTypes.add(type);
+    });
+
+    try {
+      final storage = await ref.read(telemetryStorageProvider.future);
+
+      switch (type) {
+        case 'messages':
+          ref.read(messagesProvider.notifier).clearMessages();
+          break;
+        case 'device_metrics':
+          await storage.clearDeviceMetrics();
+          break;
+        case 'environment_metrics':
+          await storage.clearEnvironmentMetrics();
+          break;
+        case 'air_quality':
+          await storage.clearAirQualityMetrics();
+          break;
+        case 'power_metrics':
+          await storage.clearPowerMetrics();
+          break;
+        case 'positions':
+          await storage.clearPositionLogs();
+          break;
+        case 'routes':
+          final routeStorage = await ref.read(routeStorageProvider.future);
+          await routeStorage.clearAllRoutes();
+          ref.read(routesProvider.notifier).refresh();
+          break;
+        case 'traceroutes':
+          await storage.clearTraceRouteLogs();
+          break;
+        case 'automations':
+          final repo = ref.read(automationRepositoryProvider);
+          for (final auto in repo.automations.toList()) {
+            await repo.deleteAutomation(auto.id);
+          }
+          ref.read(automationsProvider.notifier).refresh();
+          break;
+        case 'automation_log':
+          final repo = ref.read(automationRepositoryProvider);
+          await repo.clearLog();
+          break;
+      }
+
+      if (mounted) {
+        showAppSnackBar(context, 'Data cleared');
+      }
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to clear data: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _clearingTypes.remove(type);
+        });
+      }
+    }
+  }
+
+  Future<void> _handleClearAll() async {
+    final types = [
+      'messages',
+      'device_metrics',
+      'environment_metrics',
+      'air_quality',
+      'power_metrics',
+      'positions',
+      'routes',
+      'traceroutes',
+      'automation_log',
+    ];
+
+    for (final type in types) {
+      setState(() {
+        _clearingTypes.add(type);
+      });
+    }
+
+    try {
+      final storage = await ref.read(telemetryStorageProvider.future);
+      ref.read(messagesProvider.notifier).clearMessages();
+      await storage.clearAllData();
+
+      final routeStorage = await ref.read(routeStorageProvider.future);
+      await routeStorage.clearAllRoutes();
+      ref.read(routesProvider.notifier).refresh();
+
+      final repo = ref.read(automationRepositoryProvider);
+      await repo.clearLog();
+
+      if (mounted) {
+        showAppSnackBar(context, 'All data cleared');
+      }
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to clear data: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _clearingTypes.clear();
         });
       }
     }
@@ -568,6 +855,48 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     );
   }
 
+  Future<void> _exportAutomations() async {
+    final repo = ref.read(automationRepositoryProvider);
+    final automations = repo.automations;
+
+    if (automations.isEmpty) {
+      if (mounted) {
+        showAppSnackBar(context, 'No automations to export');
+      }
+      return;
+    }
+
+    final data = {
+      'exportDate': DateTime.now().toIso8601String(),
+      'version': '1.0',
+      'automations': automations.map((a) => a.toJson()).toList(),
+    };
+
+    final json = const JsonEncoder.withIndent('  ').convert(data);
+    await _shareText(json, subject: 'Socialmesh Automations Export');
+  }
+
+  Future<void> _exportAutomationLog() async {
+    final repo = ref.read(automationRepositoryProvider);
+    final log = repo.log;
+
+    if (log.isEmpty) {
+      if (mounted) {
+        showAppSnackBar(context, 'No automation log entries');
+      }
+      return;
+    }
+
+    final data = {
+      'exportDate': DateTime.now().toIso8601String(),
+      'version': '1.0',
+      'executionLog': log.map((l) => l.toJson()).toList(),
+    };
+
+    final json = const JsonEncoder.withIndent('  ').convert(data);
+    await _shareText(json, subject: 'Socialmesh Automation Log Export');
+  }
+
   Future<void> _exportNodes() async {
     final nodes = ref.read(nodesProvider);
 
@@ -596,6 +925,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     final routes = ref.read(routesProvider);
     final traceroutes = await ref.read(traceRouteLogsProvider.future);
 
+    // Get automation data
+    final automationRepo = ref.read(automationRepositoryProvider);
+
     final data = {
       'exportDate': DateTime.now().toIso8601String(),
       'version': '1.0',
@@ -608,6 +940,8 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       'positions': positions.map((l) => l.toJson()).toList(),
       'routes': routes.map((r) => r.toJson()).toList(),
       'traceroutes': traceroutes.map((l) => l.toJson()).toList(),
+      'automations': automationRepo.automations.map((a) => a.toJson()).toList(),
+      'automationLog': automationRepo.log.map((l) => l.toJson()).toList(),
     };
 
     final json = const JsonEncoder.withIndent('  ').convert(data);

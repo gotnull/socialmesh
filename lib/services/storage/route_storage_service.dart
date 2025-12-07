@@ -36,6 +36,12 @@ class RouteStorageService {
     await _saveRoutes(routes);
   }
 
+  /// Clear all routes
+  Future<void> clearAllRoutes() async {
+    await _prefs.remove(_routesKey);
+    await _prefs.remove(_activeRouteKey);
+  }
+
   Future<void> _saveRoutes(List<Route> routes) async {
     await _prefs.setStringList(
       _routesKey,

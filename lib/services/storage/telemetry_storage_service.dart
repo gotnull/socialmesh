@@ -260,6 +260,65 @@ class TelemetryStorageService {
     await _prefs.remove('${_detectionSensorLogKey}_$nodeNum');
   }
 
+  // Clear device metrics for all nodes
+  Future<void> clearDeviceMetrics() async {
+    for (final nodeNum in _getNodeNumbersForKey(_deviceMetricsKey)) {
+      await _prefs.remove('${_deviceMetricsKey}_$nodeNum');
+    }
+  }
+
+  // Clear environment metrics for all nodes
+  Future<void> clearEnvironmentMetrics() async {
+    for (final nodeNum in _getNodeNumbersForKey(_environmentMetricsKey)) {
+      await _prefs.remove('${_environmentMetricsKey}_$nodeNum');
+    }
+  }
+
+  // Clear power metrics for all nodes
+  Future<void> clearPowerMetrics() async {
+    for (final nodeNum in _getNodeNumbersForKey(_powerMetricsKey)) {
+      await _prefs.remove('${_powerMetricsKey}_$nodeNum');
+    }
+  }
+
+  // Clear air quality metrics for all nodes
+  Future<void> clearAirQualityMetrics() async {
+    for (final nodeNum in _getNodeNumbersForKey(_airQualityMetricsKey)) {
+      await _prefs.remove('${_airQualityMetricsKey}_$nodeNum');
+    }
+  }
+
+  // Clear position logs for all nodes
+  Future<void> clearPositionLogs() async {
+    for (final nodeNum in _getNodeNumbersForKey(_positionLogKey)) {
+      await _prefs.remove('${_positionLogKey}_$nodeNum');
+    }
+  }
+
+  // Clear traceroute logs for all nodes
+  Future<void> clearTraceRouteLogs() async {
+    for (final nodeNum in _getNodeNumbersForKey(_traceRouteLogKey)) {
+      await _prefs.remove('${_traceRouteLogKey}_$nodeNum');
+    }
+  }
+
+  // Clear all telemetry data
+  Future<void> clearAllData() async {
+    await clearDeviceMetrics();
+    await clearEnvironmentMetrics();
+    await clearPowerMetrics();
+    await clearAirQualityMetrics();
+    await clearPositionLogs();
+    await clearTraceRouteLogs();
+    // Also clear pax counter and detection sensor logs
+    for (final nodeNum in _getNodeNumbersForKey(_paxCounterLogKey)) {
+      await _prefs.remove('${_paxCounterLogKey}_$nodeNum');
+    }
+    for (final nodeNum in _getNodeNumbersForKey(_detectionSensorLogKey)) {
+      await _prefs.remove('${_detectionSensorLogKey}_$nodeNum');
+    }
+  }
+
   // Get all node numbers that have telemetry data
   Set<int> _getNodeNumbersForKey(String keyPrefix) {
     final nodeNums = <int>{};

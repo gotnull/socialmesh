@@ -378,14 +378,17 @@ class AutomationEngine {
     _lastTriggerTimes[throttleKey] = DateTime.now();
 
     final actionsExecuted = <String>[];
+    final actionResults = <ActionResult>[];
     String? errorMessage;
 
     try {
       for (final action in automation.actions) {
-        final success = await _executeAction(action, event, automation);
-        if (success) {
-          actionsExecuted.add(action.type.displayName);
-        }
+        final result = await _executeAction(action, event, automation);
+        actionsExecuted.add(action.type.displayName);
+        actionResults.add(result);
+        debugPrint(
+          'AutomationEngine: Action "${action.type.displayName}" - ${result.success ? "SUCCESS" : "FAILED: ${result.errorMessage}"}',
+        );
       }
 
       // Update automation stats
@@ -395,103 +398,187 @@ class AutomationEngine {
       debugPrint('AutomationEngine: Error executing automation: $e');
     }
 
+    // Determine overall success (all actions succeeded and no error)
+    final allActionsSucceeded = actionResults.every((r) => r.success);
+    final overallSuccess = errorMessage == null && allActionsSucceeded;
+
+    // Build error message from failed actions if none set
+    if (errorMessage == null && !allActionsSucceeded) {
+      final failedActions = actionResults
+          .where((r) => !r.success)
+          .map((r) => '${r.actionName}: ${r.errorMessage}')
+          .toList();
+      errorMessage = 'Failed actions: ${failedActions.join("; ")}';
+    }
+
     // Log execution
     await _repository.addLogEntry(
       AutomationLogEntry(
         automationId: automation.id,
         automationName: automation.name,
         timestamp: DateTime.now(),
-        success: errorMessage == null,
+        success: overallSuccess,
         triggerDetails: _buildTriggerDetails(event),
         actionsExecuted: actionsExecuted,
+        actionResults: actionResults,
         errorMessage: errorMessage,
       ),
     );
   }
 
-  /// Execute a single action
-  Future<bool> _executeAction(
+  /// Execute a single action and return detailed result
+  Future<ActionResult> _executeAction(
     AutomationAction action,
     AutomationEvent event,
     Automation automation,
   ) async {
-    switch (action.type) {
-      case ActionType.sendMessage:
-        if (onSendMessage == null || action.targetNodeNum == null) return false;
-        final message = _interpolateVariables(
-          action.messageText ?? '',
-          event,
-          trigger: automation.trigger,
-        );
-        return await onSendMessage!(action.targetNodeNum!, message);
+    final actionName = action.type.displayName;
 
-      case ActionType.sendToChannel:
-        if (onSendToChannel == null || action.targetChannelIndex == null) {
-          return false;
-        }
-        final message = _interpolateVariables(
-          action.messageText ?? '',
-          event,
-          trigger: automation.trigger,
-        );
-        return await onSendToChannel!(action.targetChannelIndex!, message);
+    try {
+      switch (action.type) {
+        case ActionType.sendMessage:
+          if (onSendMessage == null) {
+            return ActionResult(
+              actionName: actionName,
+              success: false,
+              errorMessage: 'Send message callback not configured',
+            );
+          }
+          if (action.targetNodeNum == null) {
+            return ActionResult(
+              actionName: actionName,
+              success: false,
+              errorMessage: 'No target node specified',
+            );
+          }
+          final message = _interpolateVariables(
+            action.messageText ?? '',
+            event,
+            trigger: automation.trigger,
+          );
+          final sent = await onSendMessage!(action.targetNodeNum!, message);
+          return ActionResult(
+            actionName: actionName,
+            success: sent,
+            errorMessage: sent ? null : 'Failed to send message',
+          );
 
-      case ActionType.playSound:
-        // Sound playback handled elsewhere
-        return true;
+        case ActionType.sendToChannel:
+          if (onSendToChannel == null) {
+            return ActionResult(
+              actionName: actionName,
+              success: false,
+              errorMessage: 'Send to channel callback not configured',
+            );
+          }
+          if (action.targetChannelIndex == null) {
+            return ActionResult(
+              actionName: actionName,
+              success: false,
+              errorMessage: 'No target channel specified',
+            );
+          }
+          final message = _interpolateVariables(
+            action.messageText ?? '',
+            event,
+            trigger: automation.trigger,
+          );
+          final sent = await onSendToChannel!(
+            action.targetChannelIndex!,
+            message,
+          );
+          return ActionResult(
+            actionName: actionName,
+            success: sent,
+            errorMessage: sent ? null : 'Failed to send to channel',
+          );
 
-      case ActionType.vibrate:
-        // Trigger haptic feedback for vibration
-        await HapticFeedback.heavyImpact();
-        // Add a small delay and vibrate again for emphasis
-        await Future.delayed(const Duration(milliseconds: 100));
-        await HapticFeedback.heavyImpact();
-        return true;
+        case ActionType.playSound:
+          // Sound playback handled elsewhere
+          return ActionResult(actionName: actionName, success: true);
 
-      case ActionType.pushNotification:
-        if (_notifications == null) return false;
-        final title = _interpolateVariables(
-          action.notificationTitle ?? automation.name,
-          event,
-          trigger: automation.trigger,
-        );
-        final body = _interpolateVariables(
-          action.notificationBody ?? '',
-          event,
-          trigger: automation.trigger,
-        );
-        await _notifications.show(
-          automation.id.hashCode,
-          title,
-          body,
-          const NotificationDetails(
-            iOS: DarwinNotificationDetails(
-              presentAlert: true,
-              presentBadge: true,
-              presentSound: true,
+        case ActionType.vibrate:
+          // Trigger haptic feedback for vibration
+          await HapticFeedback.heavyImpact();
+          // Add a small delay and vibrate again for emphasis
+          await Future.delayed(const Duration(milliseconds: 100));
+          await HapticFeedback.heavyImpact();
+          return ActionResult(actionName: actionName, success: true);
+
+        case ActionType.pushNotification:
+          if (_notifications == null) {
+            return ActionResult(
+              actionName: actionName,
+              success: false,
+              errorMessage: 'Notifications not initialized',
+            );
+          }
+          final title = _interpolateVariables(
+            action.notificationTitle ?? automation.name,
+            event,
+            trigger: automation.trigger,
+          );
+          final body = _interpolateVariables(
+            action.notificationBody ?? '',
+            event,
+            trigger: automation.trigger,
+          );
+          await _notifications.show(
+            automation.id.hashCode,
+            title,
+            body,
+            const NotificationDetails(
+              iOS: DarwinNotificationDetails(
+                presentAlert: true,
+                presentBadge: true,
+                presentSound: true,
+              ),
             ),
-          ),
-        );
-        return true;
+          );
+          return ActionResult(actionName: actionName, success: true);
 
-      case ActionType.triggerWebhook:
-        if (action.webhookEventName == null) return false;
-        return await _iftttService.triggerCustomEvent(
-          eventName: action.webhookEventName!,
-        );
+        case ActionType.triggerWebhook:
+          if (action.webhookEventName == null) {
+            return ActionResult(
+              actionName: actionName,
+              success: false,
+              errorMessage: 'No webhook event name specified',
+            );
+          }
+          final webhookSuccess = await _iftttService.triggerCustomEvent(
+            eventName: action.webhookEventName!,
+          );
+          return ActionResult(
+            actionName: actionName,
+            success: webhookSuccess,
+            errorMessage: webhookSuccess
+                ? null
+                : 'Webhook request failed - check IFTTT key configuration',
+          );
 
-      case ActionType.logEvent:
-        // Already logging executions
-        return true;
+        case ActionType.logEvent:
+          // Already logging executions
+          return ActionResult(actionName: actionName, success: true);
 
-      case ActionType.updateWidget:
-        // Widget updates handled via WidgetKit
-        return true;
+        case ActionType.updateWidget:
+          // Widget updates handled via WidgetKit
+          return ActionResult(actionName: actionName, success: true);
 
-      case ActionType.triggerShortcut:
-        // iOS Shortcuts via URL scheme
-        // Would need: url_launcher to open shortcuts://run-shortcut?name=X
-        return true;
+        case ActionType.triggerShortcut:
+          // iOS Shortcuts via URL scheme
+          // Would need: url_launcher to open shortcuts://run-shortcut?name=X
+          return ActionResult(
+            actionName: actionName,
+            success: false,
+            errorMessage: 'Shortcuts integration not yet implemented',
+          );
+      }
+    } catch (e) {
+      return ActionResult(
+        actionName: actionName,
+        success: false,
+        errorMessage: e.toString(),
+      );
     }
   }
 
