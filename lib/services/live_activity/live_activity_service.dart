@@ -29,7 +29,7 @@ class LiveActivityService {
 
     try {
       await _liveActivitiesPlugin.init(
-        appGroupId: 'group.socialmesh.liveactivities',
+        appGroupId: 'group.com.gotnull.socialmesh',
         urlScheme: 'socialmesh',
       );
 
@@ -143,7 +143,7 @@ class LiveActivityService {
       // - No Dynamic Island on device (still works on Lock Screen)
       // - Widget extension not properly installed
       debugPrint(
-        '📱 💡 Tip: Ensure App Group "group.socialmesh.liveactivities" '
+        '📱 💡 Tip: Ensure App Group "group.com.gotnull.socialmesh" '
         'is configured in both main app and widget extension provisioning profiles',
       );
     }

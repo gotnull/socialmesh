@@ -14,22 +14,14 @@ import SwiftUI
 struct LiveActivitiesAppAttributes: ActivityAttributes, Identifiable {
     public typealias LiveDeliveryData = ContentState
     
+    // ContentState MUST match the plugin's definition exactly:
+    // The live_activities plugin (v2.4.3) expects appGroupId as non-optional String
     public struct ContentState: Codable, Hashable {
-        // The live_activities plugin passes appGroupId when creating the activity
-        // We store it but read actual data from UserDefaults with prefixed keys
-        var appGroupId: String?
-        
-        init(appGroupId: String? = nil) {
-            self.appGroupId = appGroupId
-        }
+        var appGroupId: String
     }
     
     // Required by Identifiable - used for prefixed keys in UserDefaults
     var id = UUID()
-    
-    init(id: UUID = UUID()) {
-        self.id = id
-    }
 }
 
 // Extension to generate prefixed keys for UserDefaults access

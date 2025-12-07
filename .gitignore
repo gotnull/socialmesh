@@ -12,6 +12,7 @@
 .swiftpm/
 migrate_working_dir/
 meshtastic-ios/
+flutter_live_activities-main/
 
 # Environment files (keep .env.example)
 .env

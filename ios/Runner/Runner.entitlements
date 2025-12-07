@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.socialmesh.liveactivities</string>
+		<string>group.com.gotnull.socialmesh</string>
 	</array>
 </dict>
 </plist>

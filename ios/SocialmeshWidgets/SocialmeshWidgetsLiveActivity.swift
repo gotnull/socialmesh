@@ -13,7 +13,7 @@ import SwiftUI
 // Shared UserDefaults for reading Flutter data
 // Use a computed property to handle potential nil case gracefully
 private var sharedDefault: UserDefaults {
-    UserDefaults(suiteName: "group.socialmesh.liveactivities") ?? UserDefaults.standard
+    UserDefaults(suiteName: "group.com.gotnull.socialmesh") ?? UserDefaults.standard
 }
 
 @available(iOS 16.2, *)
