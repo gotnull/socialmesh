@@ -192,8 +192,8 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
 
       if (mounted) {
         if (widget.isInitialSetup) {
-          // Navigate to main app after initial setup
-          Navigator.of(context).pushReplacementNamed('/main');
+          // Set app state to initialized - this will trigger router to show MainShell
+          ref.read(appInitProvider.notifier).setInitialized();
         } else {
           Navigator.of(context).pop(true);
         }
@@ -232,7 +232,6 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            
           ),
         ),
       ),
@@ -268,7 +267,6 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                               color: Colors.white,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -277,7 +275,6 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 12,
-                              
                             ),
                           ),
                         ],
@@ -298,16 +295,10 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                 border: Border.all(color: AppTheme.darkBorder),
               ),
               child: TextField(
-                style: const TextStyle(
-                  color: Colors.white,
-                  
-                ),
+                style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Search regions...',
-                  hintStyle: const TextStyle(
-                    color: AppTheme.textTertiary,
-                    
-                  ),
+                  hintStyle: const TextStyle(color: AppTheme.textTertiary),
                   prefixIcon: const Icon(
                     Icons.search,
                     color: AppTheme.textTertiary,
@@ -363,9 +354,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                               height: 48,
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? context.accentColor.withValues(
-                                        alpha: 0.2,
-                                      )
+                                    ? context.accentColor.withValues(alpha: 0.2)
                                     : AppTheme.darkBackground,
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -392,7 +381,6 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                                       color: isSelected
                                           ? Colors.white
                                           : AppTheme.textSecondary,
-                                      
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -401,7 +389,6 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                                     style: const TextStyle(
                                       fontSize: 13,
                                       color: AppTheme.textTertiary,
-                                      
                                     ),
                                   ),
                                 ],
@@ -426,7 +413,6 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                                   color: isSelected
                                       ? Colors.white
                                       : AppTheme.textTertiary,
-                                  
                                 ),
                               ),
                             ),
@@ -451,7 +437,6 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
                                     color: AppTheme.graphBlue,
-                                    
                                   ),
                                 ),
                               ),
@@ -510,7 +495,6 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            
                           ),
                         ),
                 ),

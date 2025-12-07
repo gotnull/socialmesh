@@ -40,6 +40,7 @@ enum AppInitState {
   initialized,
   needsOnboarding,
   needsScanner, // Auto-reconnect failed or no saved device
+  needsRegionSetup, // Connected but region not configured
   error,
 }
 
@@ -155,6 +156,51 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
             );
             _ref.read(autoReconnectStateProvider.notifier).state =
                 AutoReconnectState.success;
+
+            // Check region - if unset, need to go through region setup
+            debugPrint('🔍 Auto-reconnect: Checking region...');
+            var region = protocol.currentRegion;
+            if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
+              // Request LoRa config explicitly
+              debugPrint('🔍 Auto-reconnect: Requesting LoRa config...');
+              try {
+                await protocol.getLoRaConfig();
+                await Future.delayed(const Duration(milliseconds: 500));
+                region = protocol.currentRegion;
+              } catch (e) {
+                debugPrint('⚠️ Auto-reconnect: Error getting LoRa config: $e');
+              }
+
+              // If still no region, wait for stream
+              if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
+                debugPrint('🔍 Auto-reconnect: Waiting for region stream...');
+                try {
+                  region = await protocol.regionStream
+                      .where((r) => r != pbenum.RegionCode.UNSET_REGION)
+                      .first
+                      .timeout(
+                        const Duration(seconds: 5),
+                        onTimeout: () {
+                          return protocol.currentRegion ??
+                              pbenum.RegionCode.UNSET_REGION;
+                        },
+                      );
+                } catch (e) {
+                  debugPrint('⚠️ Auto-reconnect: Error waiting for region: $e');
+                  region = protocol.currentRegion;
+                }
+              }
+            }
+            debugPrint(
+              '📍 Auto-reconnect: Final region: ${region?.name ?? "null"}',
+            );
+
+            // If region is still unset, go to region setup instead of initialized
+            if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
+              debugPrint('⚠️ Auto-reconnect: Region unset, needs setup');
+              state = AppInitState.needsRegionSetup;
+              return;
+            }
           } else {
             // Device not found during scan - go to scanner
             _ref.read(autoReconnectStateProvider.notifier).state =

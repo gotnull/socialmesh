@@ -157,6 +157,8 @@ class _AppRouter extends ConsumerWidget {
         return const OnboardingScreen();
       case AppInitState.needsScanner:
         return const ScannerScreen();
+      case AppInitState.needsRegionSetup:
+        return const RegionSelectionScreen(isInitialSetup: true);
       case AppInitState.initialized:
         return const MainShell();
     }
