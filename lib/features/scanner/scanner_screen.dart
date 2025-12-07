@@ -252,18 +252,30 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       }
 
       // Wait for region to be available (it's requested automatically after config complete)
-      // Try up to 3 seconds for region to be received
+      // The LoRa config request happens ~100ms after configComplete, and response takes time
+      // Wait up to 5 seconds for region to be received from the device
       pbenum.RegionCode? region = protocol.currentRegion;
-      if (region == null) {
-        // Region not yet received, wait for it
+      if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
+        // Region not yet received or is unset, wait for a valid region
+        debugPrint('🔍 Waiting for region config from device...');
         try {
-          region = await protocol.regionStream.first.timeout(
-            const Duration(seconds: 3),
-            onTimeout: () {
-              // If timeout, check if we have it now
-              return protocol.currentRegion ?? pbenum.RegionCode.UNSET_REGION;
-            },
-          );
+          // Wait for regionStream to emit a value, with longer timeout
+          // Device may take time to send LoRa config response
+          region = await protocol.regionStream
+              .where((r) => r != pbenum.RegionCode.UNSET_REGION)
+              .first
+              .timeout(
+                const Duration(seconds: 5),
+                onTimeout: () {
+                  // If timeout, check if we have it now (even UNSET)
+                  debugPrint(
+                    '⏱️ Region timeout, current: ${protocol.currentRegion}',
+                  );
+                  return protocol.currentRegion ??
+                      pbenum.RegionCode.UNSET_REGION;
+                },
+              );
+          debugPrint('✅ Received region: ${region.name}');
         } catch (e) {
           debugPrint('⚠️ Error waiting for region: $e');
           region = protocol.currentRegion;
