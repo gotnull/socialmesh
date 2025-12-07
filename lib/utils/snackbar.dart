@@ -1,58 +1,98 @@
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
-import '../core/theme.dart';
 
-/// Shows a styled snackbar at the top of the screen with accent color background
+/// Shows a success snackbar at the bottom of the screen
 void showAppSnackBar(
   BuildContext context,
   String message, {
+  String title = 'Success',
   Duration duration = const Duration(seconds: 3),
-  SnackBarAction? action,
 }) {
-  final mediaQuery = MediaQuery.of(context);
-  // Position snackbar below status bar with proper safe area padding
-  final topInset = mediaQuery.padding.top + 56; // safe area + app bar height
-
-  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message, style: const TextStyle(color: Colors.white)),
-      backgroundColor: context.accentColor,
-      behavior: SnackBarBehavior.floating,
-      margin: EdgeInsets.only(
-        top: topInset,
-        bottom: mediaQuery.size.height - topInset - 60,
-        left: 16,
-        right: 16,
-      ),
-      duration: duration,
-      action: action,
+  final snackBar = SnackBar(
+    elevation: 0,
+    behavior: SnackBarBehavior.floating,
+    backgroundColor: Colors.transparent,
+    duration: duration,
+    content: AwesomeSnackbarContent(
+      title: title,
+      message: message,
+      contentType: ContentType.success,
     ),
   );
+
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(snackBar);
 }
 
-/// Shows an error snackbar at the top of the screen
+/// Shows an error snackbar at the bottom of the screen
 void showErrorSnackBar(
   BuildContext context,
   String message, {
+  String title = 'Error',
   Duration duration = const Duration(seconds: 4),
 }) {
-  final mediaQuery = MediaQuery.of(context);
-  // Position snackbar below status bar with proper safe area padding
-  final topInset = mediaQuery.padding.top + 56; // safe area + app bar height
-
-  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message, style: const TextStyle(color: Colors.white)),
-      backgroundColor: Colors.red.shade700,
-      behavior: SnackBarBehavior.floating,
-      margin: EdgeInsets.only(
-        top: topInset,
-        bottom: mediaQuery.size.height - topInset - 60,
-        left: 16,
-        right: 16,
-      ),
-      duration: duration,
+  final snackBar = SnackBar(
+    elevation: 0,
+    behavior: SnackBarBehavior.floating,
+    backgroundColor: Colors.transparent,
+    duration: duration,
+    content: AwesomeSnackbarContent(
+      title: title,
+      message: message,
+      contentType: ContentType.failure,
     ),
   );
+
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(snackBar);
+}
+
+/// Shows a warning snackbar at the bottom of the screen
+void showWarningSnackBar(
+  BuildContext context,
+  String message, {
+  String title = 'Warning',
+  Duration duration = const Duration(seconds: 4),
+}) {
+  final snackBar = SnackBar(
+    elevation: 0,
+    behavior: SnackBarBehavior.floating,
+    backgroundColor: Colors.transparent,
+    duration: duration,
+    content: AwesomeSnackbarContent(
+      title: title,
+      message: message,
+      contentType: ContentType.warning,
+    ),
+  );
+
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(snackBar);
+}
+
+/// Shows a help/info snackbar at the bottom of the screen
+void showInfoSnackBar(
+  BuildContext context,
+  String message, {
+  String title = 'Info',
+  Duration duration = const Duration(seconds: 3),
+}) {
+  final snackBar = SnackBar(
+    elevation: 0,
+    behavior: SnackBarBehavior.floating,
+    backgroundColor: Colors.transparent,
+    duration: duration,
+    content: AwesomeSnackbarContent(
+      title: title,
+      message: message,
+      contentType: ContentType.help,
+    ),
+  );
+
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(snackBar);
 }
