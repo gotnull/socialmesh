@@ -365,7 +365,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final text = label != null
         ? '$label\nhttps://maps.google.com/?q=$lat,$lng'
         : 'https://maps.google.com/?q=$lat,$lng';
-    
+
     // Get share position for iPad support
     final box = context.findRenderObject() as RenderBox?;
     final sharePositionOrigin = box != null

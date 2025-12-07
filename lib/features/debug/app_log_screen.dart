@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
+import '../../services/debug/debug_export_service.dart';
 
 /// Log entry with level and timestamp
 class AppLogEntry {
@@ -213,7 +214,40 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
     final sharePositionOrigin = box != null
         ? box.localToGlobal(Offset.zero) & box.size
         : const Rect.fromLTWH(0, 0, 100, 100);
-    Share.share(content, subject: 'Socialmesh App Log', sharePositionOrigin: sharePositionOrigin);
+    Share.share(
+      content,
+      subject: 'Socialmesh App Log',
+      sharePositionOrigin: sharePositionOrigin,
+    );
+  }
+
+  Future<void> _exportDebug() async {
+    final box = context.findRenderObject() as RenderBox?;
+    final sharePositionOrigin = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : const Rect.fromLTWH(0, 0, 100, 100);
+
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Generating debug export...'),
+          backgroundColor: AppTheme.darkCard,
+          duration: Duration(seconds: 1),
+        ),
+      );
+
+      final exportService = ref.read(debugExportServiceProvider);
+      await exportService.exportAndShare(sharePositionOrigin);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    }
   }
 
   void _copyToClipboard() {
@@ -301,6 +335,9 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
                 case 'share':
                   _shareLog();
                   break;
+                case 'debug_export':
+                  _exportDebug();
+                  break;
                 case 'clear':
                   _clearLogs();
                   break;
@@ -339,7 +376,24 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
                   children: [
                     Icon(Icons.share, color: AppTheme.textSecondary, size: 20),
                     SizedBox(width: 12),
-                    Text('Share', style: TextStyle(color: Colors.white)),
+                    Text('Share Log', style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'debug_export',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.bug_report,
+                      color: context.accentColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Export Debug JSON',
+                      style: TextStyle(color: context.accentColor),
+                    ),
                   ],
                 ),
               ),
