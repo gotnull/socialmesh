@@ -2094,6 +2094,15 @@ class ProtocolService {
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
+
+      // Immediately update local node cache so UI reflects the change
+      final existingNode = _nodes[_myNodeNum!];
+      if (existingNode != null) {
+        final updatedNode = existingNode.copyWith(role: role.name);
+        _nodes[_myNodeNum!] = updatedNode;
+        _nodeController.add(updatedNode);
+        _logger.i('Updated local node cache with new role');
+      }
     } catch (e) {
       _logger.e('Error setting device role: $e');
       rethrow;
@@ -2150,6 +2159,18 @@ class ProtocolService {
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
+
+      // Immediately update local node cache so UI reflects the change
+      final existingNode = _nodes[_myNodeNum!];
+      if (existingNode != null) {
+        final updatedNode = existingNode.copyWith(
+          longName: trimmedLong,
+          shortName: trimmedShort,
+        );
+        _nodes[_myNodeNum!] = updatedNode;
+        _nodeController.add(updatedNode);
+        _logger.i('Updated local node cache with new name');
+      }
     } catch (e) {
       _logger.e('Error setting user name: $e');
       rethrow;
