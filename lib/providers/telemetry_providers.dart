@@ -264,9 +264,32 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
       final myNodeNum = _protocol.myNodeNum;
       if (node.nodeNum != myNodeNum) return;
 
+      final newLat = node.latitude!;
+      final newLon = node.longitude!;
+
+      // Filter out GPS jumps - if distance from last point is too far for the time elapsed
+      // Max realistic speed: ~150 km/h = ~42 m/s
+      if (state!.locations.isNotEmpty) {
+        final lastLoc = state!.locations.last;
+        final timeDiff = DateTime.now().difference(lastLoc.timestamp).inSeconds;
+        if (timeDiff > 0) {
+          final distance = _calculateDistance(
+            lastLoc.latitude,
+            lastLoc.longitude,
+            newLat,
+            newLon,
+          );
+          final speed = distance / timeDiff; // meters per second
+          // Skip if speed > 50 m/s (180 km/h) - likely GPS error
+          if (speed > 50) {
+            return;
+          }
+        }
+      }
+
       final location = RouteLocation(
-        latitude: node.latitude!,
-        longitude: node.longitude!,
+        latitude: newLat,
+        longitude: newLon,
         altitude: node.altitude,
         heading: null, // Could be added if available
         speed: null, // Could be added if available
@@ -284,6 +307,57 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
   void _stopLocationTracking() {
     _positionSubscription?.cancel();
     _positionSubscription = null;
+  }
+
+  /// Haversine distance calculation
+  double _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
+    const r = 6371000.0; // Earth's radius in meters
+    final dLat = (lat2 - lat1) * 3.141592653589793 / 180;
+    final dLon = (lon2 - lon1) * 3.141592653589793 / 180;
+    final a =
+        _sin(dLat / 2) * _sin(dLat / 2) +
+        _cos(lat1 * 3.141592653589793 / 180) *
+            _cos(lat2 * 3.141592653589793 / 180) *
+            _sin(dLon / 2) *
+            _sin(dLon / 2);
+    final c = 2 * _atan2(_sqrt(a), _sqrt(1 - a));
+    return r * c;
+  }
+
+  double _sin(double x) => x - (x * x * x) / 6 + (x * x * x * x * x) / 120;
+  double _cos(double x) => 1 - (x * x) / 2 + (x * x * x * x) / 24;
+  double _sqrt(double x) {
+    if (x <= 0) return 0;
+    double g = x / 2;
+    for (int i = 0; i < 10; i++) {
+      g = (g + x / g) / 2;
+    }
+    return g;
+  }
+
+  double _atan2(double y, double x) {
+    if (x > 0) return _atan(y / x);
+    if (x < 0 && y >= 0) return _atan(y / x) + 3.141592653589793;
+    if (x < 0 && y < 0) return _atan(y / x) - 3.141592653589793;
+    if (y > 0) return 1.5707963267948966;
+    if (y < 0) return -1.5707963267948966;
+    return 0;
+  }
+
+  double _atan(double x) {
+    if (x.abs() > 1)
+      return (x > 0 ? 1 : -1) * 1.5707963267948966 - _atan(1 / x);
+    double r = 0, t = x;
+    for (int n = 0; n < 10; n++) {
+      r += t / (2 * n + 1);
+      t *= -x * x;
+    }
+    return r;
   }
 
   @override
