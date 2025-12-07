@@ -10,6 +10,7 @@ import '../../models/mesh_models.dart';
 import '../../models/canned_response.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
+import '../../utils/snackbar.dart';
 import '../../core/widgets/animated_list_item.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -549,13 +550,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       // Show snackbar that message is queued
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Message queued - will send when connected'),
-            behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        showAppSnackBar(context, 'Message queued - will send when connected');
       }
       return;
     }
@@ -645,13 +640,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       // Show snackbar that message is queued
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Message queued - will send when connected'),
-            behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        showAppSnackBar(context, 'Message queued - will send when connected');
       }
       return;
     }
@@ -860,12 +849,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: channelUrl));
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Channel URL copied to clipboard'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                showAppSnackBar(context, 'Channel URL copied to clipboard');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.accentColor,
@@ -1778,12 +1762,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                     ? () {
                         Clipboard.setData(ClipboardData(text: base64Key));
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Key copied to clipboard'),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
+                        showAppSnackBar(context, 'Key copied to clipboard');
                       }
                     : null,
                 style: ElevatedButton.styleFrom(

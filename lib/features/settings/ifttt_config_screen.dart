@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/snackbar.dart';
 import '../../services/ifttt/ifttt_service.dart';
 import 'geofence_picker_screen.dart';
 
@@ -100,25 +101,14 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
     await iftttService.saveConfig(config);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('IFTTT settings saved'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      showAppSnackBar(context, 'IFTTT settings saved');
       Navigator.pop(context);
     }
   }
 
   Future<void> _testWebhook() async {
     if (_webhookKeyController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please enter your Webhook Key first'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppTheme.errorRed,
-        ),
-      );
+      showErrorSnackBar(context, 'Please enter your Webhook Key first');
       return;
     }
 
@@ -152,17 +142,14 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
     setState(() => _isTesting = false);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success
-                ? 'Test webhook sent! Check your IFTTT applet.'
-                : 'Failed to send test webhook. Check your key.',
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: success ? context.accentColor : AppTheme.errorRed,
-        ),
-      );
+      if (success) {
+        showAppSnackBar(context, 'Test webhook sent! Check your IFTTT applet.');
+      } else {
+        showErrorSnackBar(
+          context,
+          'Failed to send test webhook. Check your key.',
+        );
+      }
     }
   }
 
@@ -277,10 +264,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: context.accentColor),
                   ),
-                  prefixIcon: Icon(
-                    Icons.key,
-                    color: AppTheme.textSecondary,
-                  ),
+                  prefixIcon: Icon(Icons.key, color: AppTheme.textSecondary),
                   filled: true,
                   fillColor: AppTheme.darkBackground,
                 ),
@@ -539,9 +523,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                        color: context.accentColor,
-                      ),
+                      borderSide: BorderSide(color: context.accentColor),
                     ),
                     prefixIcon: const Icon(
                       Icons.radar,
@@ -577,9 +559,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                        color: context.accentColor,
-                      ),
+                      borderSide: BorderSide(color: context.accentColor),
                     ),
                     prefixIcon: const Icon(
                       Icons.my_location,
@@ -614,9 +594,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                        color: context.accentColor,
-                      ),
+                      borderSide: BorderSide(color: context.accentColor),
                     ),
                     prefixIcon: const Icon(
                       Icons.my_location,
@@ -659,8 +637,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                                           point: LatLng(lat, lon),
                                           radius: radius,
                                           useRadiusInMeter: true,
-                                          color: context.accentColor
-                                              .withAlpha(40),
+                                          color: context.accentColor.withAlpha(
+                                            40,
+                                          ),
                                           borderColor: context.accentColor,
                                           borderStrokeWidth: 2,
                                         ),
@@ -715,11 +694,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.radar,
-                          color: context.accentColor,
-                          size: 20,
-                        ),
+                        Icon(Icons.radar, color: context.accentColor, size: 20),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -1153,7 +1128,6 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -1162,7 +1136,6 @@ class _SettingsTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppTheme.textTertiary,
-                      
                     ),
                   ),
                 ],

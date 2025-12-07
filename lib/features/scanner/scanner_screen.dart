@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/transport.dart';
 import '../../core/theme.dart';
+import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
@@ -354,13 +355,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       final message = e.toString().replaceFirst('Exception: ', '');
 
       if (!isAutoReconnect) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            duration: const Duration(seconds: 6),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        showErrorSnackBar(context, message);
       }
 
       // Only reset connecting state on error

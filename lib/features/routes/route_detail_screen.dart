@@ -11,6 +11,7 @@ import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../models/route.dart' as route_model;
 import '../../providers/telemetry_providers.dart';
+import '../../utils/snackbar.dart';
 
 /// Screen showing route details with map view
 class RouteDetailScreen extends ConsumerStatefulWidget {
@@ -424,12 +425,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
       final storage = storageAsync.valueOrNull;
       if (storage == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Storage not available'),
-              backgroundColor: AppTheme.errorRed,
-            ),
-          );
+          showErrorSnackBar(context, 'Storage not available');
         }
         return;
       }
@@ -452,12 +448,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Export failed: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Export failed: $e');
       }
     } finally {
       if (mounted) {

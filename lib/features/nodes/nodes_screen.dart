@@ -7,6 +7,7 @@ import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../../utils/snackbar.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animated_list_item.dart';
 import '../../core/widgets/animations.dart';
@@ -757,13 +758,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
                   ),
                 );
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Node info copied'),
-                    backgroundColor: AppTheme.darkCard,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                showAppSnackBar(context, 'Node info copied');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.accentColor,
@@ -811,37 +806,20 @@ class _NodeDetailsSheet extends ConsumerWidget {
         // Update local state
         nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: false));
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${node.displayName} removed from favorites'),
-              backgroundColor: AppTheme.darkCard,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          showAppSnackBar(
+              context, '${node.displayName} removed from favorites');
         }
       } else {
         await protocol.setFavoriteNode(node.nodeNum);
         // Update local state
         nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: true));
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${node.displayName} added to favorites'),
-              backgroundColor: AppTheme.darkCard,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          showAppSnackBar(context, '${node.displayName} added to favorites');
         }
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update favorite: $e'),
-            backgroundColor: AppTheme.errorRed,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to update favorite: $e');
       }
     }
   }
@@ -890,23 +868,11 @@ class _NodeDetailsSheet extends ConsumerWidget {
               try {
                 await protocol.reboot();
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Device is rebooting...'),
-                      backgroundColor: AppTheme.darkCard,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  showAppSnackBar(context, 'Device is rebooting...');
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to reboot: $e'),
-                      backgroundColor: AppTheme.errorRed,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  showErrorSnackBar(context, 'Failed to reboot: $e');
                 }
               }
             },
@@ -971,23 +937,11 @@ class _NodeDetailsSheet extends ConsumerWidget {
               try {
                 await protocol.shutdown();
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Device is shutting down...'),
-                      backgroundColor: AppTheme.darkCard,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  showAppSnackBar(context, 'Device is shutting down...');
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to shutdown: $e'),
-                      backgroundColor: AppTheme.errorRed,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  showErrorSnackBar(context, 'Failed to shutdown: $e');
                 }
               }
             },
@@ -1040,23 +994,11 @@ class _NodeDetailsSheet extends ConsumerWidget {
               try {
                 await protocol.removeNode(node.nodeNum);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${node.displayName} removed'),
-                      backgroundColor: AppTheme.darkCard,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  showAppSnackBar(context, '${node.displayName} removed');
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to remove node: $e'),
-                      backgroundColor: AppTheme.errorRed,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  showErrorSnackBar(context, 'Failed to remove node: $e');
                 }
               }
             },
@@ -1073,13 +1015,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
 
   void _setFixedPosition(BuildContext context, WidgetRef ref) async {
     if (!node.hasPosition) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Node has no position data'),
-          backgroundColor: AppTheme.darkCard,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      showAppSnackBar(context, 'Node has no position data');
       return;
     }
 
@@ -1095,25 +1031,14 @@ class _NodeDetailsSheet extends ConsumerWidget {
         altitude: node.altitude ?? 0,
       );
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Fixed position set to ${node.displayName}\'s location',
-            ),
-            backgroundColor: AppTheme.darkCard,
-            behavior: SnackBarBehavior.floating,
-          ),
+        showAppSnackBar(
+          context,
+          'Fixed position set to ${node.displayName}\'s location',
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to set fixed position: $e'),
-            backgroundColor: AppTheme.errorRed,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to set fixed position: $e');
       }
     }
   }
@@ -1128,23 +1053,12 @@ class _NodeDetailsSheet extends ConsumerWidget {
       await protocol.requestPosition(node.nodeNum);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Position requested from ${node.displayName}'),
-            backgroundColor: AppTheme.darkCard,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showAppSnackBar(
+            context, 'Position requested from ${node.displayName}');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to request position: $e'),
-            backgroundColor: AppTheme.errorRed,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to request position: $e');
       }
     }
   }

@@ -7,6 +7,7 @@ import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../core/theme.dart';
+import '../../utils/snackbar.dart';
 import '../channels/channel_form_screen.dart';
 
 class QrImportScreen extends ConsumerStatefulWidget {
@@ -205,12 +206,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
     } catch (e) {
       _logger.e('QR import error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to import: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to import: $e');
         setState(() {
           _isProcessing = false;
         });
@@ -336,22 +332,12 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Channel "${channel.name}" imported'),
-            backgroundColor: AppTheme.darkCard,
-          ),
-        );
+        showAppSnackBar(context, 'Channel "${channel.name}" imported');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Import failed: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Import failed: $e');
         setState(() {
           _isProcessing = false;
         });

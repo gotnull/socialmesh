@@ -9,6 +9,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/theme.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 
@@ -212,12 +213,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to create channel: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to create channel: $e');
         setState(() {
           _isSaving = false;
         });
@@ -384,10 +380,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: context.accentColor,
-                  width: 2,
-                ),
+                borderSide: BorderSide(color: context.accentColor, width: 2),
               ),
               counterStyle: const TextStyle(color: AppTheme.textSecondary),
             ),
@@ -775,9 +768,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(
-                context.accentColor,
-              ),
+              valueColor: AlwaysStoppedAnimation<Color>(context.accentColor),
             ),
             const SizedBox(height: 24),
             Text(
@@ -856,11 +847,9 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: channelUrl));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Channel URL copied to clipboard'),
-                          backgroundColor: AppTheme.successGreen,
-                        ),
+                      showAppSnackBar(
+                        context,
+                        'Channel URL copied to clipboard',
                       );
                     },
                     icon: const Icon(Icons.copy),
@@ -1078,9 +1067,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                     : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: context.accentColor,
-                  disabledBackgroundColor: context.accentColor.withAlpha(
-                    77,
-                  ),
+                  disabledBackgroundColor: context.accentColor.withAlpha(77),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Text(

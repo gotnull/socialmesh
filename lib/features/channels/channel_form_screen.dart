@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/snackbar.dart';
 import '../../utils/validation.dart';
 
 /// Key size options
@@ -206,13 +207,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
     if (_selectedKeySize != KeySize.none) {
       _validateAndDetectKey(_keyController.text);
       if (_keyValidationError != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Invalid key: $_keyValidationError'),
-            backgroundColor: AppTheme.errorRed,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showErrorSnackBar(context, 'Invalid key: $_keyValidationError');
         return;
       }
     }
@@ -296,23 +291,14 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isEditing ? 'Channel updated' : 'Channel created'),
-            backgroundColor: AppTheme.darkCard,
-            behavior: SnackBarBehavior.floating,
-          ),
+        showAppSnackBar(
+          context,
+          isEditing ? 'Channel updated' : 'Channel created',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppTheme.errorRed,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showErrorSnackBar(context, 'Error: $e');
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -337,7 +323,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              
             ),
           ),
           centerTitle: true,
@@ -361,7 +346,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           color: context.accentColor,
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
-                          
                         ),
                       ),
               ),
@@ -416,7 +400,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         fontSize: 13,
         fontWeight: FontWeight.w600,
         color: AppTheme.textSecondary,
-        
+
         letterSpacing: 0.3,
       ),
     );
@@ -444,11 +428,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                     color: context.accentColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    Icons.tag,
-                    color: context.accentColor,
-                    size: 20,
-                  ),
+                  child: Icon(Icons.tag, color: context.accentColor, size: 20),
                 ),
                 const SizedBox(width: 14),
                 const Expanded(
@@ -461,7 +441,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          
                         ),
                       ),
                       SizedBox(height: 2),
@@ -470,7 +449,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           color: AppTheme.textTertiary,
-                          
                         ),
                       ),
                     ],
@@ -495,7 +473,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                       color: _nameController.text.length > 9
                           ? AppTheme.warningYellow
                           : AppTheme.textTertiary,
-                      
                     ),
                   ),
                 ),
@@ -519,7 +496,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
               style: const TextStyle(
                 fontSize: 15,
                 color: Colors.white,
-                
+
                 fontWeight: FontWeight.w500,
               ),
               decoration: const InputDecoration(
@@ -630,7 +607,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                                   color: isSelected
                                       ? Colors.white
                                       : AppTheme.textSecondary,
-                                  
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -643,7 +619,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: AppTheme.textTertiary,
-                                  
                                 ),
                               ),
                             ],
@@ -745,7 +720,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          
                         ),
                       ),
                       SizedBox(height: 2),
@@ -760,7 +734,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           color: hasValidKey
                               ? context.accentColor
                               : AppTheme.textTertiary,
-                          
                         ),
                       ),
                     ],
@@ -783,7 +756,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: context.accentColor,
-                        
                       ),
                     ),
                   ),
@@ -821,10 +793,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                         fontFamily: 'monospace',
                       ),
                       suffixIcon: IconButton(
-                        icon: Icon(
-                          Icons.check,
-                          color: context.accentColor,
-                        ),
+                        icon: Icon(Icons.check, color: context.accentColor),
                         onPressed: () {
                           _validateAndDetectKey(_keyController.text);
                           setState(() {
@@ -903,7 +872,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppTheme.errorRed,
-                      
                     ),
                   ),
                 ],
@@ -943,13 +911,10 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   onPressed: !_isEditingKey
                       ? () {
                           _generateRandomKey();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('New key generated'),
-                              behavior: SnackBarBehavior.floating,
-                              backgroundColor: AppTheme.darkCard,
-                              duration: Duration(seconds: 1),
-                            ),
+                          showAppSnackBar(
+                            context,
+                            'New key generated',
+                            duration: const Duration(seconds: 1),
                           );
                         }
                       : null,
@@ -968,13 +933,10 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           Clipboard.setData(
                             ClipboardData(text: _keyController.text),
                           );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Key copied to clipboard'),
-                              behavior: SnackBarBehavior.floating,
-                              backgroundColor: AppTheme.darkCard,
-                              duration: Duration(seconds: 1),
-                            ),
+                          showAppSnackBar(
+                            context,
+                            'Key copied to clipboard',
+                            duration: const Duration(seconds: 1),
                           );
                         }
                       : null,
@@ -1024,7 +986,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                     color: isEnabled
                         ? AppTheme.textSecondary
                         : AppTheme.textTertiary.withValues(alpha: 0.4),
-                    
                   ),
                 ),
               ],
@@ -1115,17 +1076,12 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                     color: Colors.white,
-                    
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppTheme.textTertiary,
-                    
-                  ),
+                  style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
                 ),
               ],
             ),
@@ -1178,17 +1134,12 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.warningYellow,
-                    
                   ),
                 ),
                 SizedBox(height: 4),
                 Text(
                   'This is the main channel for device communication. Changes may affect connectivity.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppTheme.textSecondary,
-                    
-                  ),
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                 ),
               ],
             ),
@@ -1232,17 +1183,12 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.accentOrange,
-                    
                   ),
                 ),
                 SizedBox(height: 4),
                 Text(
                   'Saving this channel will cause your device to reboot. The app will automatically reconnect.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppTheme.textSecondary,
-                    
-                  ),
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                 ),
               ],
             ),

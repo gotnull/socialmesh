@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import '../../core/theme.dart';
 import '../../core/map_config.dart';
+import '../../utils/snackbar.dart';
 import '../../providers/subscription_providers.dart';
 import '../../models/subscription_models.dart';
 
@@ -225,21 +226,11 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Downloaded $tileCount tiles for "$name"'),
-            backgroundColor: context.accentColor,
-          ),
-        );
+        showAppSnackBar(context, 'Downloaded $tileCount tiles for "$name"');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Download failed: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Download failed: $e');
       }
     } finally {
       setState(() {
@@ -356,21 +347,11 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
         setState(() => _regions.remove(region));
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Deleted "${region.name}"'),
-              backgroundColor: context.accentColor,
-            ),
-          );
+          showAppSnackBar(context, 'Deleted "${region.name}"');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to delete: $e'),
-              backgroundColor: AppTheme.errorRed,
-            ),
-          );
+          showErrorSnackBar(context, 'Failed to delete: $e');
         }
       }
     }
@@ -492,9 +473,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
             onPressed: () {
               final name = nameController.text.trim();
               if (name.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please enter a name')),
-                );
+                showAppSnackBar(context, 'Please enter a name');
                 return;
               }
               Navigator.pop(context);

@@ -6,6 +6,7 @@ import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../../utils/snackbar.dart';
 import '../../core/widgets/animated_list_item.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -207,9 +208,7 @@ class _ChannelTile extends ConsumerWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: context.accentColor.withValues(
-                                alpha: 0.2,
-                              ),
+                              color: context.accentColor.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -384,13 +383,7 @@ class _ChannelTile extends ConsumerWidget {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: channelUrl));
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Channel URL copied to clipboard'),
-                    behavior: SnackBarBehavior.floating,
-                    backgroundColor: AppTheme.darkCard,
-                  ),
-                );
+                showAppSnackBar(context, 'Channel URL copied to clipboard');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.accentColor,
@@ -486,13 +479,7 @@ class _ChannelTile extends ConsumerWidget {
                 // Don't show snackbar - the reconnecting overlay will handle UX
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to delete channel: $e'),
-                      backgroundColor: AppTheme.errorRed,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  showErrorSnackBar(context, 'Failed to delete channel: $e');
                 }
               }
             },
@@ -604,13 +591,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                           ClipboardData(text: widget.base64Key),
                         );
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Key copied to clipboard'),
-                            behavior: SnackBarBehavior.floating,
-                            backgroundColor: AppTheme.darkCard,
-                          ),
-                        );
+                        showAppSnackBar(context, 'Key copied to clipboard');
                       }
                     : null,
                 style: ElevatedButton.styleFrom(

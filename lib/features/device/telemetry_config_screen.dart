@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/snackbar.dart';
 
 /// Telemetry module configuration screen
 class TelemetryConfigScreen extends ConsumerStatefulWidget {
@@ -113,21 +114,11 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
 
       setState(() => _hasChanges = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Telemetry config saved'),
-            backgroundColor: AccentColors.green,
-          ),
-        );
+        showAppSnackBar(context, 'Telemetry config saved');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
       setState(() => _isSaving = false);

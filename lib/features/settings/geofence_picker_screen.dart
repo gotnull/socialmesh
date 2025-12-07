@@ -11,6 +11,7 @@ import 'package:latlong2/latlong.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../models/mesh_models.dart';
+import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 
 /// Result from the geofence picker
@@ -153,12 +154,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
         if (requested == LocationPermission.denied ||
             requested == LocationPermission.deniedForever) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Location permission denied'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            showAppSnackBar(context, 'Location permission denied');
           }
           setState(() => _isLoadingLocation = false);
           return;
@@ -178,12 +174,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
       _mapController.move(newCenter, _mapController.camera.zoom);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to get location: $e'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showAppSnackBar(context, 'Failed to get location: $e');
       }
       setState(() => _isLoadingLocation = false);
     }
@@ -300,11 +291,9 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
 
   void _confirmGeofence() {
     if (_center == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please tap on the map to set a geofence center'),
-          behavior: SnackBarBehavior.floating,
-        ),
+      showAppSnackBar(
+        context,
+        'Please tap on the map to set a geofence center',
       );
       return;
     }
@@ -887,11 +876,7 @@ class _NodeListPanel extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.list,
-                    size: 20,
-                    color: context.accentColor,
-                  ),
+                  Icon(Icons.list, size: 20, color: context.accentColor),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(

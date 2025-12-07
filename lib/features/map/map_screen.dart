@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../utils/snackbar.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
@@ -315,13 +316,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       await protocol.requestAllPositions();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Requesting positions from nodes...'),
-            duration: Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showAppSnackBar(context, 'Requesting positions from nodes...');
       }
     } finally {
       await Future.delayed(const Duration(seconds: 2));
@@ -378,13 +373,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final lat = point.latitude.toStringAsFixed(6);
     final lng = point.longitude.toStringAsFixed(6);
     Clipboard.setData(ClipboardData(text: '$lat, $lng'));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Coordinates copied to clipboard'),
-        duration: Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    showAppSnackBar(context, 'Coordinates copied to clipboard');
   }
 
   @override
@@ -2140,22 +2129,11 @@ class _NodeInfoCard extends ConsumerWidget {
       await protocol.requestPosition(node.nodeNum);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Position requested from ${node.displayName}'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showAppSnackBar(context, 'Position requested from ${node.displayName}');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed: $e'),
-            backgroundColor: AppTheme.errorRed,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed: $e');
       }
     }
   }

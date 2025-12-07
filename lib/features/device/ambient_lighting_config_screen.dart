@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/snackbar.dart';
 
 /// Ambient Lighting configuration screen
 class AmbientLightingConfigScreen extends ConsumerStatefulWidget {
@@ -78,21 +79,11 @@ class _AmbientLightingConfigScreenState
 
       setState(() => _hasChanges = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Ambient lighting saved'),
-            backgroundColor: AccentColors.green,
-          ),
-        );
+        showAppSnackBar(context, 'Ambient lighting saved');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
       setState(() => _isSaving = false);

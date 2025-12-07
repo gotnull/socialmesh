@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
+import '../../../utils/snackbar.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../providers/app_providers.dart';
@@ -97,22 +98,11 @@ class QuickActionsContent extends ConsumerWidget {
       final locationService = ref.read(locationServiceProvider);
       await locationService.sendPositionOnce();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Location shared with mesh'),
-            backgroundColor: context.accentColor,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        showAppSnackBar(context, 'Location shared with mesh');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to share location: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to share location: $e');
       }
     }
   }
@@ -127,12 +117,7 @@ class QuickActionsContent extends ConsumerWidget {
         .toList();
 
     if (otherNodes.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No other nodes available for traceroute'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      showAppSnackBar(context, 'No other nodes available for traceroute');
       return;
     }
 
@@ -147,22 +132,11 @@ class QuickActionsContent extends ConsumerWidget {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.requestAllPositions();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Position requests sent to all nodes'),
-            backgroundColor: context.accentColor,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        showAppSnackBar(context, 'Position requests sent to all nodes');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to request positions: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to request positions: $e');
       }
     }
   }
@@ -394,23 +368,12 @@ class _SosConfirmationDialogState extends State<_SosConfirmationDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Emergency SOS sent to all nodes'),
-            backgroundColor: AppTheme.errorRed,
-            duration: Duration(seconds: 4),
-          ),
-        );
+        showErrorSnackBar(context, 'Emergency SOS sent to all nodes');
       }
     } catch (e) {
       setState(() => _isSending = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to send SOS: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to send SOS: $e');
       }
     }
   }
@@ -637,23 +600,12 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                       )
                       .longName ??
                   'node';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Sent to $targetName'),
-            backgroundColor: context.accentColor,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        showAppSnackBar(context, 'Sent to $targetName');
       }
     } catch (e) {
       setState(() => _isSending = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to send: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to send: $e');
       }
     }
   }
@@ -1173,23 +1125,12 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Traceroute sent - check messages for response'),
-            backgroundColor: context.accentColor,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        showAppSnackBar(context, 'Traceroute sent - check messages for response');
       }
     } catch (e) {
       setState(() => _isSending = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to send traceroute: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to send traceroute: $e');
       }
     }
   }

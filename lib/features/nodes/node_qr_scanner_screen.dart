@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../../utils/snackbar.dart';
 
 class NodeQrScannerScreen extends ConsumerStatefulWidget {
   const NodeQrScannerScreen({super.key});
@@ -114,12 +115,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to import node: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to import node: $e');
         setState(() {
           _isProcessing = false;
         });
@@ -340,26 +336,17 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
       nodesNotifier.addOrUpdateNode(node);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              existing != null
-                  ? 'Node "${node.displayName}" updated'
-                  : 'Node "${node.displayName}" added to favorites',
-            ),
-            backgroundColor: AppTheme.darkCard,
-          ),
+        showAppSnackBar(
+          context,
+          existing != null
+              ? 'Node "${node.displayName}" updated'
+              : 'Node "${node.displayName}" added to favorites',
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to add node: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to add node: $e');
       }
     }
   }

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
 class NetworkConfigScreen extends ConsumerStatefulWidget {
@@ -94,24 +95,12 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Network configuration saved'),
-            backgroundColor: AppTheme.darkCard,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showAppSnackBar(context, 'Network configuration saved');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save: $e'),
-            backgroundColor: AppTheme.errorRed,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
       if (mounted) {
@@ -134,7 +123,6 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              
             ),
           ),
           actions: [
@@ -156,7 +144,6 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                         style: TextStyle(
                           color: context.accentColor,
                           fontWeight: FontWeight.w600,
-                          
                         ),
                       ),
               ),
@@ -200,15 +187,11 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                           TextField(
                             controller: _ssidController,
                             textInputAction: TextInputAction.next,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              
-                            ),
+                            style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                               labelText: 'Network Name (SSID)',
                               labelStyle: const TextStyle(
                                 color: AppTheme.textSecondary,
-                                
                               ),
                               filled: true,
                               fillColor: AppTheme.darkBackground,
@@ -243,15 +226,11 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) =>
                                 FocusScope.of(context).unfocus(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              
-                            ),
+                            style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                               labelText: 'Password',
                               labelStyle: const TextStyle(
                                 color: AppTheme.textSecondary,
-                                
                               ),
                               filled: true,
                               fillColor: AppTheme.darkBackground,
@@ -334,7 +313,6 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w500,
-                            
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -342,15 +320,11 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                           controller: _ntpController,
                           textInputAction: TextInputAction.done,
                           onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            
-                          ),
+                          style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             hintText: 'pool.ntp.org',
                             hintStyle: const TextStyle(
                               color: AppTheme.textTertiary,
-                              
                             ),
                             filled: true,
                             fillColor: AppTheme.darkBackground,
@@ -384,7 +358,6 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                           style: TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 13,
-                            
                           ),
                         ),
                       ],
@@ -421,7 +394,6 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                             style: TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 13,
-                              
                             ),
                           ),
                         ),
@@ -497,7 +469,6 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -506,7 +477,6 @@ class _SettingsTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppTheme.textTertiary,
-                      
                     ),
                   ),
                 ],

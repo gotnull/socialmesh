@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pb;
 import '../../utils/validation.dart';
 
@@ -171,21 +172,14 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
 
       if (mounted) {
         setState(() => _hasChanges = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Device configuration saved. Device may reboot.'),
-            backgroundColor: AppTheme.darkCard,
-          ),
+        showAppSnackBar(
+          context,
+          'Device configuration saved. Device may reboot.',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error saving config: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Error saving config: $e');
       }
     } finally {
       if (mounted) {
@@ -211,7 +205,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            
           ),
         ),
         actions: [
@@ -229,7 +222,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                       style: TextStyle(
                         color: context.accentColor,
                         fontWeight: FontWeight.w600,
-                        
                       ),
                     ),
             ),
@@ -271,11 +263,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               'Your device name is broadcast to the mesh and visible to other nodes.',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppTheme.textTertiary,
-                
-              ),
+              style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
             ),
           ),
 
@@ -390,7 +378,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                         color: isSelected
                                             ? Colors.white
                                             : AppTheme.textSecondary,
-                                        
                                       ),
                                     ),
                                     const SizedBox(height: 2),
@@ -399,7 +386,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: AppTheme.textTertiary,
-                                        
                                       ),
                                     ),
                                   ],
@@ -443,7 +429,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                     style: TextStyle(
                       fontSize: 13,
                       color: AppTheme.warningYellow.withValues(alpha: 0.9),
-                      
                     ),
                   ),
                 ),
@@ -466,7 +451,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: AppTheme.textSecondary,
-          
         ),
       ),
     );
@@ -524,7 +508,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -533,7 +516,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppTheme.textTertiary,
-                          
                         ),
                       ),
                     ],
@@ -558,7 +540,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                       color: controller.text.length >= maxLength
                           ? AppTheme.warningYellow
                           : AppTheme.textTertiary,
-                      
                     ),
                   ),
                 ),
@@ -584,7 +565,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               style: const TextStyle(
                 fontSize: 15,
                 color: Colors.white,
-                
+
                 fontWeight: FontWeight.w500,
               ),
               decoration: InputDecoration(

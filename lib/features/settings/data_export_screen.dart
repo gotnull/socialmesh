@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
+import '../../utils/snackbar.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/telemetry_providers.dart';
@@ -374,12 +375,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       await exportFn();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Export failed: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Export failed: $e');
       }
     } finally {
       if (mounted) {
@@ -514,12 +510,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
 
     if (routes.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No routes to export'),
-            backgroundColor: AppTheme.darkCard,
-          ),
-        );
+        showAppSnackBar(context, 'No routes to export');
       }
       return;
     }

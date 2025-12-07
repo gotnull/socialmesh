@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/snackbar.dart';
 
 /// Screen for configuring Store & Forward module
 class StoreForwardConfigScreen extends ConsumerStatefulWidget {
@@ -64,22 +65,11 @@ class _StoreForwardConfigScreenState
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Store & Forward configuration saved'),
-            backgroundColor: context.accentColor,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        showAppSnackBar(context, 'Store & Forward configuration saved');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save config: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to save config: $e');
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
 /// Screen for configuring MQTT module settings
@@ -105,23 +106,12 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('MQTT configuration saved'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showAppSnackBar(context, 'MQTT configuration saved');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save: $e'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -142,7 +132,6 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              
             ),
           ),
           actions: [
@@ -164,7 +153,6 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                         style: TextStyle(
                           color: context.accentColor,
                           fontWeight: FontWeight.w600,
-                          
                         ),
                       ),
               ),
@@ -209,10 +197,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                           TextField(
                             controller: _addressController,
                             textInputAction: TextInputAction.next,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              
-                            ),
+                            style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                               labelText: 'Server Address',
                               labelStyle: const TextStyle(
@@ -252,10 +237,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) =>
                                 FocusScope.of(context).unfocus(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              
-                            ),
+                            style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                               labelText: 'Topic Root',
                               labelStyle: const TextStyle(
@@ -323,10 +305,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                           TextField(
                             controller: _usernameController,
                             textInputAction: TextInputAction.next,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              
-                            ),
+                            style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                               labelText: 'Username',
                               labelStyle: const TextStyle(
@@ -367,10 +346,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) =>
                                 FocusScope.of(context).unfocus(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              
-                            ),
+                            style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                               labelText: 'Password',
                               labelStyle: const TextStyle(
@@ -502,22 +478,14 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.info_outline,
-            color: context.accentColor,
-            size: 20,
-          ),
+          Icon(Icons.info_outline, color: context.accentColor, size: 20),
           const SizedBox(width: 12),
           const Expanded(
             child: Text(
               'MQTT allows your device to bridge the local mesh network '
               'to the internet. This enables communication with nodes '
               'that are not in direct radio range.',
-              style: TextStyle(
-                color: AppTheme.textSecondary,
-                fontSize: 13,
-                
-              ),
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
             ),
           ),
         ],
@@ -587,7 +555,6 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -596,7 +563,6 @@ class _SettingsTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppTheme.textTertiary,
-                      
                     ),
                   ),
                 ],

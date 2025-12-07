@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
@@ -92,22 +93,11 @@ class _DetectionSensorConfigScreenState
       await protocol.setModuleConfig(moduleConfig);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Detection Sensor configuration saved'),
-            backgroundColor: context.accentColor,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        showAppSnackBar(context, 'Detection Sensor configuration saved');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save config: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to save config: $e');
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/snackbar.dart';
 
 /// PAX Counter module configuration screen
 class PaxCounterConfigScreen extends ConsumerStatefulWidget {
@@ -59,21 +60,11 @@ class _PaxCounterConfigScreenState
 
       setState(() => _hasChanges = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('PAX counter config saved'),
-            backgroundColor: AccentColors.green,
-          ),
-        );
+        showAppSnackBar(context, 'PAX counter config saved');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
       setState(() => _isSaving = false);

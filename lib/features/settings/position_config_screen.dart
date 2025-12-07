@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
 /// Screen for configuring GPS and position settings
@@ -174,23 +175,12 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Position configuration saved'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showAppSnackBar(context, 'Position configuration saved');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save: $e'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -211,7 +201,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              
             ),
           ),
           actions: [
@@ -233,7 +222,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                         style: TextStyle(
                           color: context.accentColor,
                           fontWeight: FontWeight.w600,
-                          
                         ),
                       ),
               ),
@@ -286,7 +274,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w500,
-                                
                               ),
                             ),
                             Container(
@@ -306,7 +293,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                   color: context.accentColor,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13,
-                                  
                                 ),
                               ),
                             ),
@@ -318,7 +304,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                           style: TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 13,
-                            
                           ),
                         ),
                         SizedBox(height: 8),
@@ -352,7 +337,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w500,
-                                
                               ),
                             ),
                             Container(
@@ -372,7 +356,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                   color: context.accentColor,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13,
-                                  
                                 ),
                               ),
                             ),
@@ -384,7 +367,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                           style: TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 13,
-                            
                           ),
                         ),
                         SizedBox(height: 8),
@@ -442,10 +424,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                         children: [
                           TextField(
                             controller: _latController,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              
-                            ),
+                            style: const TextStyle(color: Colors.white),
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
@@ -486,10 +465,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                           const SizedBox(height: 16),
                           TextField(
                             controller: _lonController,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              
-                            ),
+                            style: const TextStyle(color: Colors.white),
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
@@ -530,10 +506,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                           const SizedBox(height: 16),
                           TextField(
                             controller: _altController,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              
-                            ),
+                            style: const TextStyle(color: Colors.white),
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) =>
@@ -602,7 +575,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                               style: TextStyle(
                                 color: AppTheme.textSecondary,
                                 fontSize: 13,
-                                
                               ),
                             ),
                           ),
@@ -634,7 +606,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w500,
-                                  
                                 ),
                               ),
                               Container(
@@ -654,7 +625,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                     color: context.accentColor,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 13,
-                                    
                                   ),
                                 ),
                               ),
@@ -666,7 +636,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                             style: TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 13,
-                              
                             ),
                           ),
                           SizedBox(height: 8),
@@ -700,7 +669,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w500,
-                                  
                                 ),
                               ),
                               Container(
@@ -720,7 +688,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                     color: context.accentColor,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 13,
-                                    
                                   ),
                                 ),
                               ),
@@ -732,7 +699,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                             style: TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 13,
-                              
                             ),
                           ),
                           SizedBox(height: 8),
@@ -785,7 +751,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w500,
-                                
                               ),
                             ),
                             Container(
@@ -805,7 +770,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                   color: context.accentColor,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13,
-                                  
                                 ),
                               ),
                             ),
@@ -817,7 +781,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                           style: TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 13,
-                            
                           ),
                         ),
                         SizedBox(height: 8),
@@ -949,7 +912,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -958,7 +920,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppTheme.textTertiary,
-                      
                     ),
                   ),
                 ],
@@ -1053,7 +1014,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                 color: isSelected
                                     ? context.accentColor
                                     : Colors.white,
-                                
                               ),
                             ),
                             Text(
@@ -1061,17 +1021,13 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                               style: TextStyle(
                                 color: AppTheme.textSecondary,
                                 fontSize: 13,
-                                
                               ),
                             ),
                           ],
                         ),
                       ),
                       if (isSelected)
-                        Icon(
-                          Icons.check_circle,
-                          color: context.accentColor,
-                        ),
+                        Icon(Icons.check_circle, color: context.accentColor),
                     ],
                   ),
                 ),
@@ -1152,7 +1108,6 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -1161,7 +1116,6 @@ class _SettingsTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppTheme.textTertiary,
-                      
                     ),
                   ),
                 ],

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
 import '../../services/debug/debug_export_service.dart';
+import '../../utils/snackbar.dart';
 
 /// Log entry with level and timestamp
 class AppLogEntry {
@@ -228,24 +229,17 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
         : const Rect.fromLTWH(0, 0, 100, 100);
 
     try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Generating debug export...'),
-          backgroundColor: AppTheme.darkCard,
-          duration: Duration(seconds: 1),
-        ),
+      showAppSnackBar(
+        context,
+        'Generating debug export...',
+        duration: const Duration(seconds: 1),
       );
 
       final exportService = ref.read(debugExportServiceProvider);
       await exportService.exportAndShare(sharePositionOrigin);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Export failed: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Export failed: $e');
       }
     }
   }
@@ -254,12 +248,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
     final logger = ref.read(appLoggerProvider);
     final content = logger.export();
     Clipboard.setData(ClipboardData(text: content));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Log copied to clipboard'),
-        backgroundColor: AppTheme.darkCard,
-      ),
-    );
+    showAppSnackBar(context, 'Log copied to clipboard');
   }
 
   void _clearLogs() {

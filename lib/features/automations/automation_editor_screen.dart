@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import 'automation_providers.dart';
 import 'models/automation.dart';
@@ -395,12 +396,7 @@ class _AutomationEditorScreenState
   Future<void> _save() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a name for this automation'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      showAppSnackBar(context, 'Please enter a name for this automation');
       return;
     }
 
@@ -415,13 +411,7 @@ class _AutomationEditorScreenState
       for (final field in fieldsToValidate) {
         final invalidVars = validateVariables(field);
         if (invalidVars.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Invalid variables: ${invalidVars.join(", ")}'),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: AppTheme.errorRed,
-            ),
-          );
+          showErrorSnackBar(context, 'Invalid variables: ${invalidVars.join(", ")}');
           return;
         }
       }
@@ -449,13 +439,9 @@ class _AutomationEditorScreenState
 
     if (mounted) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _isEditing ? 'Automation updated' : 'Automation created',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
+      showAppSnackBar(
+        context,
+        _isEditing ? 'Automation updated' : 'Automation created',
       );
     }
   }

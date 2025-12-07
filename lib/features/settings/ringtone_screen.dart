@@ -1910,8 +1910,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                             child: isSelected
                                                 ? Icon(
                                                     Icons.check_circle,
-                                                    color:
-                                                        context.accentColor,
+                                                    color: context.accentColor,
                                                     size: 22,
                                                   )
                                                 : const Icon(

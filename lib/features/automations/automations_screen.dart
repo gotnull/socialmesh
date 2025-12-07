@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import 'automation_providers.dart';
 import 'automation_repository.dart';
@@ -340,12 +341,7 @@ class AutomationsScreen extends ConsumerWidget {
   ) async {
     await ref.read(automationsProvider.notifier).addFromTemplate(templateId);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Automation created from template'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      showAppSnackBar(context, 'Automation created from template');
     }
   }
 
@@ -371,12 +367,7 @@ class AutomationsScreen extends ConsumerWidget {
               ref
                   .read(automationsProvider.notifier)
                   .deleteAutomation(automation.id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Deleted "${automation.name}"'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              showAppSnackBar(context, 'Deleted "${automation.name}"');
             },
             style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
             child: const Text('Delete'),

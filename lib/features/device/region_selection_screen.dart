@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart';
+import '../../utils/snackbar.dart';
 
 /// Region data with display info
 class RegionInfo {
@@ -204,12 +205,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to set region: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to set region: $e');
       }
     } finally {
       if (mounted) {

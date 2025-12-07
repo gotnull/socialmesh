@@ -10,6 +10,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/route.dart' as route_model;
 import '../../providers/telemetry_providers.dart';
+import '../../utils/snackbar.dart';
 
 /// Screen showing saved routes and route recording
 class RoutesScreen extends ConsumerStatefulWidget {
@@ -174,12 +175,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Export failed: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Export failed: $e');
       }
     }
   }
@@ -197,12 +193,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
       final file = result.files.first;
       if (file.bytes == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to read file'),
-              backgroundColor: AppTheme.errorRed,
-            ),
-          );
+          showErrorSnackBar(context, 'Failed to read file');
         }
         return;
       }
@@ -216,31 +207,16 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
       if (importedRoute != null) {
         await ref.read(routesProvider.notifier).saveRoute(importedRoute);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Imported: ${importedRoute.name}'),
-              backgroundColor: AccentColors.green,
-            ),
-          );
+          showAppSnackBar(context, 'Imported: ${importedRoute.name}');
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Invalid GPX file'),
-              backgroundColor: AppTheme.errorRed,
-            ),
-          );
+          showErrorSnackBar(context, 'Invalid GPX file');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Import failed: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Import failed: $e');
       }
     }
   }

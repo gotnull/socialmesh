@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 
@@ -71,22 +72,11 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Range test configuration saved'),
-            backgroundColor: context.accentColor,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        showAppSnackBar(context, 'Range test configuration saved');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save config: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to save config: $e');
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -226,12 +216,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
           });
 
     if (otherNodes.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No other nodes available'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      showAppSnackBar(context, 'No other nodes available');
       return;
     }
 

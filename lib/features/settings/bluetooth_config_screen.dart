@@ -4,6 +4,7 @@ import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pb;
 import '../../generated/meshtastic/mesh.pb.dart' as pb_config;
@@ -79,13 +80,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
     if (_mode == pb.Config_BluetoothConfig_PairingMode.FIXED_PIN) {
       final pinText = _pinController.text;
       if (pinText.isEmpty || pinText.length < 6) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please enter a valid 6-digit PIN'),
-            backgroundColor: AppTheme.errorRed,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showErrorSnackBar(context, 'Please enter a valid 6-digit PIN');
         return;
       }
     }
@@ -102,24 +97,12 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Bluetooth configuration saved'),
-            backgroundColor: AppTheme.darkCard,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showAppSnackBar(context, 'Bluetooth configuration saved');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save: $e'),
-            backgroundColor: AppTheme.errorRed,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
       if (mounted) {
@@ -174,7 +157,6 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              
             ),
           ),
           actions: [
@@ -196,7 +178,6 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                         style: TextStyle(
                           color: context.accentColor,
                           fontWeight: FontWeight.w600,
-                          
                         ),
                       ),
               ),
@@ -235,7 +216,6 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w500,
-                                  
                                 ),
                               ),
                               Text(
@@ -243,7 +223,6 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                                 style: TextStyle(
                                   color: AppTheme.textSecondary,
                                   fontSize: 13,
-                                  
                                 ),
                               ),
                             ],
@@ -269,7 +248,6 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textTertiary,
                       letterSpacing: 1,
-                      
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -292,7 +270,6 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w500,
-                                  
                                 ),
                               ),
                               subtitle: Text(
@@ -300,7 +277,6 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                                 style: TextStyle(
                                   color: AppTheme.textSecondary,
                                   fontSize: 13,
-                                  
                                 ),
                               ),
                               leading: Icon(
@@ -338,7 +314,6 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textTertiary,
                         letterSpacing: 1,
-                        
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -403,7 +378,6 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                             style: TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 13,
-                              
                             ),
                           ),
                         ],
@@ -437,7 +411,6 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                             style: TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 13,
-                              
                             ),
                           ),
                         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/snackbar.dart';
 
 class SerialConfigScreen extends ConsumerStatefulWidget {
   const SerialConfigScreen({super.key});
@@ -117,21 +118,11 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
 
       if (mounted) {
         setState(() => _hasChanges = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Serial configuration saved'),
-            backgroundColor: AppTheme.darkCard,
-          ),
-        );
+        showAppSnackBar(context, 'Serial configuration saved');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error saving config: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Error saving config: $e');
       }
     } finally {
       if (mounted) {

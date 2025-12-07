@@ -4,6 +4,7 @@ import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
@@ -85,23 +86,12 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Device configuration saved'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showAppSnackBar(context, 'Device configuration saved');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save: $e'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -120,7 +110,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            
           ),
         ),
         actions: [
@@ -142,7 +131,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                       style: TextStyle(
                         color: context.accentColor,
                         fontWeight: FontWeight.w600,
-                        
                       ),
                     ),
             ),
@@ -210,7 +198,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w500,
-                              
                             ),
                           ),
                           Container(
@@ -230,7 +217,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                 color: context.accentColor,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
-                                
                               ),
                             ),
                           ),
@@ -242,7 +228,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                         style: TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 13,
-                          
                         ),
                       ),
                       SizedBox(height: 8),
@@ -358,11 +343,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         children: [
           const Text(
             'Select how this device should behave in the mesh',
-            style: TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 13,
-              
-            ),
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
           ),
           SizedBox(height: 16),
           ...roles.map((r) {
@@ -408,7 +389,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                 color: isSelected
                                     ? context.accentColor
                                     : Colors.white,
-                                
                               ),
                             ),
                             Text(
@@ -416,17 +396,13 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                               style: TextStyle(
                                 color: AppTheme.textSecondary,
                                 fontSize: 13,
-                                
                               ),
                             ),
                           ],
                         ),
                       ),
                       if (isSelected)
-                        Icon(
-                          Icons.check_circle,
-                          color: context.accentColor,
-                        ),
+                        Icon(Icons.check_circle, color: context.accentColor),
                     ],
                   ),
                 ),
@@ -479,11 +455,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         children: [
           const Text(
             'Controls which messages this device will relay',
-            style: TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 13,
-              
-            ),
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
           ),
           SizedBox(height: 16),
           ...modes.map((m) {
@@ -514,7 +486,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                   ? Colors.white
                                   : AppTheme.textSecondary,
                               fontWeight: FontWeight.w500,
-                              
                             ),
                           ),
                           Text(
@@ -522,7 +493,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                             style: const TextStyle(
                               color: AppTheme.textTertiary,
                               fontSize: 13,
-                              
                             ),
                           ),
                         ],
@@ -607,7 +577,6 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -616,7 +585,6 @@ class _SettingsTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppTheme.textTertiary,
-                      
                     ),
                   ),
                 ],
