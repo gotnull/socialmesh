@@ -1,6 +1,9 @@
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
 
+/// Default margin for snackbars - gives space for the bubble icon
+const _snackBarMargin = EdgeInsets.fromLTRB(24, 0, 24, 16);
+
 /// Shows a success snackbar at the bottom of the screen
 void showAppSnackBar(
   BuildContext context,
@@ -12,6 +15,7 @@ void showAppSnackBar(
     elevation: 0,
     behavior: SnackBarBehavior.floating,
     backgroundColor: Colors.transparent,
+    margin: _snackBarMargin,
     duration: duration,
     content: AwesomeSnackbarContent(
       title: title,
@@ -36,6 +40,7 @@ void showErrorSnackBar(
     elevation: 0,
     behavior: SnackBarBehavior.floating,
     backgroundColor: Colors.transparent,
+    margin: _snackBarMargin,
     duration: duration,
     content: AwesomeSnackbarContent(
       title: title,
@@ -60,6 +65,7 @@ void showWarningSnackBar(
     elevation: 0,
     behavior: SnackBarBehavior.floating,
     backgroundColor: Colors.transparent,
+    margin: _snackBarMargin,
     duration: duration,
     content: AwesomeSnackbarContent(
       title: title,
@@ -84,6 +90,7 @@ void showInfoSnackBar(
     elevation: 0,
     behavior: SnackBarBehavior.floating,
     backgroundColor: Colors.transparent,
+    margin: _snackBarMargin,
     duration: duration,
     content: AwesomeSnackbarContent(
       title: title,
