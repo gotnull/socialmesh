@@ -413,6 +413,12 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
   Future<void> _exportRoute() async {
     setState(() => _isExporting = true);
 
+    // Get the render box for sharePositionOrigin (required on iPad) before async
+    final box = context.findRenderObject() as RenderBox?;
+    final sharePositionOrigin = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : const Rect.fromLTWH(0, 0, 100, 100);
+
     try {
       final storageAsync = ref.read(routeStorageProvider);
       final storage = storageAsync.valueOrNull;
@@ -442,6 +448,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
         [XFile(file.path)],
         subject: fileName,
         text: 'Route: ${widget.route.name}',
+        sharePositionOrigin: sharePositionOrigin,
       );
     } catch (e) {
       if (mounted) {

@@ -341,17 +341,28 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
   }
 
   double _atan2(double y, double x) {
-    if (x > 0) return _atan(y / x);
-    if (x < 0 && y >= 0) return _atan(y / x) + 3.141592653589793;
-    if (x < 0 && y < 0) return _atan(y / x) - 3.141592653589793;
-    if (y > 0) return 1.5707963267948966;
-    if (y < 0) return -1.5707963267948966;
+    if (x > 0) {
+      return _atan(y / x);
+    }
+    if (x < 0 && y >= 0) {
+      return _atan(y / x) + 3.141592653589793;
+    }
+    if (x < 0 && y < 0) {
+      return _atan(y / x) - 3.141592653589793;
+    }
+    if (y > 0) {
+      return 1.5707963267948966;
+    }
+    if (y < 0) {
+      return -1.5707963267948966;
+    }
     return 0;
   }
 
   double _atan(double x) {
-    if (x.abs() > 1)
+    if (x.abs() > 1) {
       return (x > 0 ? 1 : -1) * 1.5707963267948966 - _atan(1 / x);
+    }
     double r = 0, t = x;
     for (int n = 0; n < 10; n++) {
       r += t / (2 * n + 1);

@@ -150,6 +150,12 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
     final storage = storageAsync.valueOrNull;
     if (storage == null) return;
 
+    // Get the render box for sharePositionOrigin (required on iPad) before async
+    final box = context.findRenderObject() as RenderBox?;
+    final sharePositionOrigin = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : const Rect.fromLTWH(0, 0, 100, 100);
+
     final gpx = storage.exportRouteAsGpx(route);
     final fileName =
         '${route.name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.gpx';
@@ -164,6 +170,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
         [XFile(file.path)],
         subject: fileName,
         text: 'Route: ${route.name}',
+        sharePositionOrigin: sharePositionOrigin,
       );
     } catch (e) {
       if (mounted) {
