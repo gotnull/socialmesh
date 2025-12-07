@@ -23,10 +23,13 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
 
   /// Helper to share with proper iPad support
   Future<void> _shareText(String text, {String? subject}) async {
-    final box = context.findRenderObject() as RenderBox?;
-    final sharePositionOrigin = box != null
-        ? box.localToGlobal(Offset.zero) & box.size
-        : const Rect.fromLTWH(0, 0, 100, 100);
+    // Use screen center for iPad popover positioning
+    final size = MediaQuery.of(context).size;
+    final sharePositionOrigin = Rect.fromCenter(
+      center: Offset(size.width / 2, size.height / 2),
+      width: 1,
+      height: 1,
+    );
     await Share.share(
       text,
       subject: subject,
