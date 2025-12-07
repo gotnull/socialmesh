@@ -253,34 +253,51 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       // Wait for region to be available (it's requested automatically after config complete)
       // The LoRa config request happens ~100ms after configComplete, and response takes time
-      // Wait up to 5 seconds for region to be received from the device
       pbenum.RegionCode? region = protocol.currentRegion;
+      debugPrint('🔍 Initial region check: ${region?.name ?? "null"}');
+
       if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
-        // Region not yet received or is unset, wait for a valid region
-        debugPrint('🔍 Waiting for region config from device...');
+        // Region not yet received or is unset, explicitly request it and wait
+        debugPrint('🔍 Requesting LoRa config for region...');
+
+        // Explicitly request LoRa config (may have been missed)
         try {
-          // Wait for regionStream to emit a value, with longer timeout
-          // Device may take time to send LoRa config response
-          region = await protocol.regionStream
-              .where((r) => r != pbenum.RegionCode.UNSET_REGION)
-              .first
-              .timeout(
-                const Duration(seconds: 5),
-                onTimeout: () {
-                  // If timeout, check if we have it now (even UNSET)
-                  debugPrint(
-                    '⏱️ Region timeout, current: ${protocol.currentRegion}',
-                  );
-                  return protocol.currentRegion ??
-                      pbenum.RegionCode.UNSET_REGION;
-                },
-              );
-          debugPrint('✅ Received region: ${region.name}');
+          await protocol.getLoRaConfig();
         } catch (e) {
-          debugPrint('⚠️ Error waiting for region: $e');
-          region = protocol.currentRegion;
+          debugPrint('⚠️ Error requesting LoRa config: $e');
+        }
+
+        // Give it a moment to arrive
+        await Future.delayed(const Duration(milliseconds: 500));
+        region = protocol.currentRegion;
+        debugPrint('🔍 After explicit request: ${region?.name ?? "null"}');
+
+        // If still not available, wait for stream with timeout
+        if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
+          debugPrint('🔍 Waiting for region stream...');
+          try {
+            region = await protocol.regionStream
+                .where((r) => r != pbenum.RegionCode.UNSET_REGION)
+                .first
+                .timeout(
+                  const Duration(seconds: 5),
+                  onTimeout: () {
+                    debugPrint(
+                      '⏱️ Region timeout, current: ${protocol.currentRegion}',
+                    );
+                    return protocol.currentRegion ??
+                        pbenum.RegionCode.UNSET_REGION;
+                  },
+                );
+            debugPrint('✅ Received region from stream: ${region.name}');
+          } catch (e) {
+            debugPrint('⚠️ Error waiting for region: $e');
+            region = protocol.currentRegion;
+          }
         }
       }
+
+      debugPrint('📍 Final region decision: ${region?.name ?? "null"}');
 
       if (!mounted) return;
 
