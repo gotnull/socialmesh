@@ -26,30 +26,38 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   final List<_OnboardingPage> _pages = [
     _OnboardingPage(
       icon: null, // Uses app icon instead
-      title: 'Welcome to Socialmesh',
+      title: 'Talk Freely',
       description:
-          'Privacy-first mesh messaging.\nCommunicate off-grid with your community.',
+          'Communicate without servers, carriers or\ncorporations. Just you and your community.',
       useAppIcon: true,
       accentColor: AppTheme.primaryMagenta,
     ),
     _OnboardingPage(
-      icon: Icons.wifi_tethering,
-      title: 'Mesh Network',
+      icon: Icons.people_outline,
+      title: 'People-Powered',
       description:
-          'Messages hop between devices,\nextending range without internet.',
+          'Messages travel device to device.\nNo cloud. No middleman. Just direct connection.',
       accentColor: AccentColors.green,
     ),
     _OnboardingPage(
-      icon: Icons.lock_outline,
-      title: 'End-to-End Encrypted',
+      icon: Icons.visibility_off_outlined,
+      title: 'Private by Default',
       description:
-          'Your conversations are secured\nwith strong encryption by default.',
+          'No accounts. No tracking. No data stored.\nYour conversations belong to you.',
       accentColor: AppTheme.graphBlue,
     ),
     _OnboardingPage(
+      icon: Icons.wifi_tethering,
+      title: 'Always Connected',
+      description:
+          'Works without internet or phone signal.\nYour network grows with every device.',
+      accentColor: AccentColors.cyan,
+    ),
+    _OnboardingPage(
       icon: Icons.bluetooth,
-      title: 'Connect Your Device',
-      description: 'Pair your Meshtastic radio\nto start communicating.',
+      title: 'Ready to Join?',
+      description:
+          'Connect your radio and become part\nof a communication network you control.',
       isLastPage: true,
       accentColor: AppTheme.primaryPurple,
     ),
