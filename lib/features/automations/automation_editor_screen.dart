@@ -147,6 +147,7 @@ class _AutomationEditorScreenState
               const SizedBox(height: 8),
               TriggerSelector(
                 trigger: _trigger,
+                availableNodes: ref.watch(nodesProvider).values.toList(),
                 onChanged: (trigger) => setState(() => _trigger = trigger),
               ),
 

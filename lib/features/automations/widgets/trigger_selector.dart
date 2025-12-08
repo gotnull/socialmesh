@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../models/mesh_models.dart';
 import '../../settings/geofence_picker_screen.dart';
 import '../models/automation.dart';
 
@@ -9,11 +11,13 @@ import '../models/automation.dart';
 class TriggerSelector extends StatefulWidget {
   final AutomationTrigger trigger;
   final void Function(AutomationTrigger trigger) onChanged;
+  final List<MeshNode> availableNodes;
 
   const TriggerSelector({
     super.key,
     required this.trigger,
     required this.onChanged,
+    this.availableNodes = const [],
   });
 
   @override
@@ -188,6 +192,10 @@ class _TriggerSelectorState extends State<TriggerSelector> {
           },
         );
 
+      case TriggerType.nodeOnline:
+      case TriggerType.nodeOffline:
+        return _buildNodeFilterConfig(context);
+
       default:
         return const SizedBox.shrink();
     }
@@ -275,6 +283,207 @@ class _TriggerSelectorState extends State<TriggerSelector> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildNodeFilterConfig(BuildContext context) {
+    final selectedNodeNum = widget.trigger.nodeNum;
+    final selectedNode = selectedNodeNum != null
+        ? widget.availableNodes
+              .where((n) => n.nodeNum == selectedNodeNum)
+              .firstOrNull
+        : null;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Filter by node (optional)',
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Leave empty to trigger for any node',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          ),
+          const SizedBox(height: 12),
+          BouncyTap(
+            onTap: () => _showNodePicker(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.darkBackground,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.darkBorder),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: selectedNode != null
+                          ? Colors.blue.withValues(alpha: 0.2)
+                          : Colors.grey.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      selectedNode != null ? Icons.router : Icons.all_inclusive,
+                      size: 18,
+                      color: selectedNode != null ? Colors.blue : Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          selectedNode?.longName ??
+                              selectedNode?.shortName ??
+                              'Any node',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: selectedNode != null
+                                ? Colors.white
+                                : Colors.grey,
+                          ),
+                        ),
+                        if (selectedNode != null)
+                          Text(
+                            '!${selectedNode.nodeNum.toRadixString(16)}',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (selectedNode != null)
+                    GestureDetector(
+                      onTap: () {
+                        // Clear node filter
+                        final newConfig = Map<String, dynamic>.from(
+                          widget.trigger.config,
+                        );
+                        newConfig.remove('nodeNum');
+                        widget.onChanged(
+                          widget.trigger.copyWith(config: newConfig),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          Icons.close,
+                          size: 18,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    )
+                  else
+                    const Icon(Icons.chevron_right, color: Colors.grey),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showNodePicker(BuildContext context) {
+    AppBottomSheet.showScrollable<void>(
+      context: context,
+      builder: (scrollController) {
+        if (widget.availableNodes.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(
+              child: Text(
+                'No nodes available',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          );
+        }
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'Select Node',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                itemCount: widget.availableNodes.length,
+                itemBuilder: (context, index) {
+                  final node = widget.availableNodes[index];
+                  final isSelected = widget.trigger.nodeNum == node.nodeNum;
+
+                  return ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.2)
+                            : AppTheme.darkCard,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.router,
+                        size: 20,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.grey,
+                      ),
+                    ),
+                    title: Text(node.longName ?? node.shortName ?? 'Unknown'),
+                    subtitle: Text(
+                      '!${node.nodeNum.toRadixString(16)}',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
+                    trailing: isSelected
+                        ? Icon(
+                            Icons.check,
+                            color: Theme.of(context).colorScheme.primary,
+                          )
+                        : null,
+                    onTap: () {
+                      Navigator.pop(context);
+                      widget.onChanged(
+                        widget.trigger.copyWith(
+                          config: {
+                            ...widget.trigger.config,
+                            'nodeNum': node.nodeNum,
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
