@@ -821,13 +821,15 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
     final shortName = myNode?.shortName ?? '????';
     final batteryLevel = myNode?.batteryLevel;
     final rssi = myNode?.rssi;
+    final snr = myNode?.snr;
 
-    // Count online nodes
+    // Count online and total nodes
     final onlineCount = nodes.values.where((n) => n.isOnline).length;
+    final totalCount = nodes.length;
 
     debugPrint(
       '📱 Starting Live Activity: device=$deviceName, shortName=$shortName, '
-      'battery=$batteryLevel%, rssi=$rssi, nodes=$onlineCount',
+      'battery=$batteryLevel%, rssi=$rssi, snr=$snr, nodes=$onlineCount/$totalCount',
     );
 
     final success = await _liveActivityService.startMeshActivity(
@@ -836,7 +838,16 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
       nodeNum: myNodeNum ?? 0,
       batteryLevel: batteryLevel,
       signalStrength: rssi,
+      snr: snr,
       nodesOnline: onlineCount,
+      totalNodes: totalCount,
+      channelUtilization: myNode?.channelUtilization,
+      airtime: myNode?.airUtilTx,
+      sentPackets: myNode?.numPacketsTx ?? 0,
+      receivedPackets: myNode?.numPacketsRx ?? 0,
+      badPackets: myNode?.numPacketsRxBad ?? 0,
+      uptimeSeconds: myNode?.uptimeSeconds,
+      temperature: myNode?.temperature,
     );
 
     if (success) {
@@ -862,8 +873,16 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
         _liveActivityService.updateActivity(
           batteryLevel: currentNode?.batteryLevel,
           signalStrength: currentNode?.rssi,
+          snr: currentNode?.snr,
           nodesOnline: currentOnlineCount,
+          totalNodes: currentNodes.length,
           channelUtilization: channelUtil,
+          airtime: currentNode?.airUtilTx,
+          sentPackets: currentNode?.numPacketsTx,
+          receivedPackets: currentNode?.numPacketsRx,
+          badPackets: currentNode?.numPacketsRxBad,
+          uptimeSeconds: currentNode?.uptimeSeconds,
+          temperature: currentNode?.temperature,
         );
       });
     }
@@ -883,7 +902,16 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
       shortName: myNode.shortName,
       batteryLevel: myNode.batteryLevel,
       signalStrength: myNode.rssi,
+      snr: myNode.snr,
       nodesOnline: onlineCount,
+      totalNodes: nodes.length,
+      channelUtilization: myNode.channelUtilization,
+      airtime: myNode.airUtilTx,
+      sentPackets: myNode.numPacketsTx,
+      receivedPackets: myNode.numPacketsRx,
+      badPackets: myNode.numPacketsRxBad,
+      uptimeSeconds: myNode.uptimeSeconds,
+      temperature: myNode.temperature,
     );
   }
 

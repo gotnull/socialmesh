@@ -293,6 +293,31 @@ struct LockScreenView: View {
         sharedDefault.integer(forKey: context.attributes.prefixedKey("receivedPackets"))
     }
     
+    var snr: Int {
+        sharedDefault.integer(forKey: context.attributes.prefixedKey("snr"))
+    }
+    
+    var totalNodes: Int {
+        sharedDefault.integer(forKey: context.attributes.prefixedKey("totalNodes"))
+    }
+    
+    var uptimeSeconds: Int {
+        sharedDefault.integer(forKey: context.attributes.prefixedKey("uptimeSeconds"))
+    }
+    
+    var temperature: Double {
+        sharedDefault.double(forKey: context.attributes.prefixedKey("temperature"))
+    }
+    
+    var formattedUptime: String {
+        let hours = uptimeSeconds / 3600
+        let minutes = (uptimeSeconds % 3600) / 60
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        }
+        return "\(minutes)m"
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             // Header Row with device info
@@ -334,7 +359,7 @@ struct LockScreenView: View {
             // Gradient progress bars for Channel Util & Airtime
             VStack(spacing: 6) {
                 ProgressBar(
-                    label: "Ch. Util",
+                    label: "Channel Utilization",
                     value: channelUtilization,
                     gradient: LinearGradient(
                         colors: [AppColors.purple, AppColors.magenta],
@@ -344,7 +369,7 @@ struct LockScreenView: View {
                 )
                 
                 ProgressBar(
-                    label: "Airtime",
+                    label: "Airtime TX",
                     value: airtime,
                     gradient: LinearGradient(
                         colors: [AppColors.blue, AppColors.purple],
@@ -357,33 +382,45 @@ struct LockScreenView: View {
             .padding(.bottom, 10)
             
             // Stats grid at bottom
-            HStack(spacing: 10) {
-                CompactStatCard(
-                    icon: "arrow.up",
-                    label: "TX",
-                    value: "\(sentPackets)",
-                    color: AppColors.magenta
-                )
+            HStack(spacing: 0) {
+                // TX
+                MiniStatCard(icon: "arrow.up", value: "\(sentPackets)", label: "TX", color: AppColors.magenta)
                 
-                CompactStatCard(
-                    icon: "arrow.down",
-                    label: "RX",
-                    value: "\(receivedPackets)",
-                    color: AppColors.successGreen
-                )
+                Spacer()
+                
+                // RX
+                MiniStatCard(icon: "arrow.down", value: "\(receivedPackets)", label: "RX", color: AppColors.successGreen)
+                
+                Spacer()
+                
+                // SNR
+                MiniStatCard(icon: "waveform", value: "\(snr)", label: "SNR", color: AppColors.blue)
+                
+                Spacer()
+                
+                // Uptime (if available)
+                if uptimeSeconds > 0 {
+                    MiniStatCard(icon: "clock", value: formattedUptime, label: "UP", color: AppColors.purple)
+                    Spacer()
+                }
                 
                 // Nodes online badge - prominent
-                HStack(spacing: 5) {
+                HStack(spacing: 4) {
                     Image(systemName: "person.2.fill")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
                     Text("\(nodesOnline)")
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                    if totalNodes > 0 {
+                        Text("/\(totalNodes)")
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .opacity(0.7)
+                    }
                 }
                 .foregroundColor(.black)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 10)
                         .fill(AppColors.successGreen)
                 )
             }
@@ -430,6 +467,33 @@ struct ProgressBar: View {
                 }
             }
             .frame(height: 6)
+        }
+    }
+}
+
+// Mini stat card for bottom row
+struct MiniStatCard: View {
+    let icon: String
+    let value: String
+    let label: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 2) {
+            HStack(spacing: 3) {
+                Image(systemName: icon)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(color)
+                Text(value)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundColor(AppColors.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            Text(label)
+                .font(.system(size: 8, weight: .medium))
+                .foregroundColor(AppColors.textTertiary)
+                .textCase(.uppercase)
         }
     }
 }

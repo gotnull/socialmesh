@@ -72,11 +72,16 @@ class LiveActivityService {
     required int nodeNum,
     int? batteryLevel,
     int? signalStrength,
+    int? snr,
     int nodesOnline = 0,
+    int totalNodes = 0,
     double? channelUtilization,
     double? airtime,
     int sentPackets = 0,
     int receivedPackets = 0,
+    int badPackets = 0,
+    int? uptimeSeconds,
+    double? temperature,
   }) async {
     if (!isSupported) {
       debugPrint('📱 Live Activities not supported on this platform');
@@ -110,11 +115,16 @@ class LiveActivityService {
         nodeNum: nodeNum,
         batteryLevel: batteryLevel,
         signalStrength: signalStrength,
+        snr: snr,
         nodesOnline: nodesOnline,
+        totalNodes: totalNodes,
         channelUtilization: channelUtilization,
         airtime: airtime,
         sentPackets: sentPackets,
         receivedPackets: receivedPackets,
+        badPackets: badPackets,
+        uptimeSeconds: uptimeSeconds,
+        temperature: temperature,
       );
 
       debugPrint('📱 Creating Live Activity with data: $activityData');
@@ -158,12 +168,16 @@ class LiveActivityService {
     int? nodeNum,
     int? batteryLevel,
     int? signalStrength,
+    int? snr,
     int? nodesOnline,
+    int? totalNodes,
     double? channelUtilization,
     double? airtime,
     int? sentPackets,
     int? receivedPackets,
     int? badPackets,
+    int? uptimeSeconds,
+    double? temperature,
     bool isConnected = true,
   }) async {
     if (!isSupported || _currentActivityId == null) {
@@ -177,19 +191,20 @@ class LiveActivityService {
       if (shortName != null) activityData['shortName'] = shortName;
       if (nodeNum != null) activityData['nodeNum'] = nodeNum;
       if (batteryLevel != null) activityData['batteryLevel'] = batteryLevel;
-      if (signalStrength != null) {
+      if (signalStrength != null)
         activityData['signalStrength'] = signalStrength;
-      }
+      if (snr != null) activityData['snr'] = snr;
       if (nodesOnline != null) activityData['nodesOnline'] = nodesOnline;
-      if (channelUtilization != null) {
+      if (totalNodes != null) activityData['totalNodes'] = totalNodes;
+      if (channelUtilization != null)
         activityData['channelUtilization'] = channelUtilization;
-      }
       if (airtime != null) activityData['airtime'] = airtime;
       if (sentPackets != null) activityData['sentPackets'] = sentPackets;
-      if (receivedPackets != null) {
+      if (receivedPackets != null)
         activityData['receivedPackets'] = receivedPackets;
-      }
       if (badPackets != null) activityData['badPackets'] = badPackets;
+      if (uptimeSeconds != null) activityData['uptimeSeconds'] = uptimeSeconds;
+      if (temperature != null) activityData['temperature'] = temperature;
       activityData['isConnected'] = isConnected;
 
       // Update timestamp
@@ -255,25 +270,34 @@ class LiveActivityService {
     required int nodeNum,
     int? batteryLevel,
     int? signalStrength,
+    int? snr,
     int nodesOnline = 0,
+    int totalNodes = 0,
     double? channelUtilization,
     double? airtime,
     int sentPackets = 0,
     int receivedPackets = 0,
+    int badPackets = 0,
+    int? uptimeSeconds,
+    double? temperature,
   }) {
     // All values must be UserDefaults-compatible types
-    // Integers should stay as integers, not converted to strings
     return <String, dynamic>{
       'deviceName': deviceName,
       'shortName': shortName,
       'nodeNum': nodeNum,
       'batteryLevel': batteryLevel ?? 0,
       'signalStrength': signalStrength ?? -100,
+      'snr': snr ?? 0,
       'nodesOnline': nodesOnline,
+      'totalNodes': totalNodes,
       'channelUtilization': channelUtilization ?? 0.0,
       'airtime': airtime ?? 0.0,
       'sentPackets': sentPackets,
       'receivedPackets': receivedPackets,
+      'badPackets': badPackets,
+      'uptimeSeconds': uptimeSeconds ?? 0,
+      'temperature': temperature ?? 0.0,
       'lastUpdated': DateTime.now().millisecondsSinceEpoch,
       'isConnected': true,
     };
