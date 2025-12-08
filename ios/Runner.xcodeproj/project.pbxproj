@@ -18,6 +18,7 @@
 		ACD73A2E5B19A4DD967E19FD /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E499D5BB68AA37FD2AD30935 /* Pods_Runner.framework */; };
 		AI0001012024120800000001 /* AppIntentErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000010 /* AppIntentErrors.swift */; };
 		AI00010120241208000000010 /* ShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000100 /* ShortcutsProvider.swift */; };
+		AI00010120241208000000011 /* RunAutomationIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000110 /* RunAutomationIntent.swift */; };
 		AI0001012024120800000002 /* AppIntentsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000020 /* AppIntentsManager.swift */; };
 		AI0001012024120800000003 /* SendMessageIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000030 /* SendMessageIntent.swift */; };
 		AI0001012024120800000004 /* SendChannelMessageIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000040 /* SendChannelMessageIntent.swift */; };
@@ -26,7 +27,6 @@
 		AI0001012024120800000007 /* OpenNodeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000070 /* OpenNodeIntent.swift */; };
 		AI0001012024120800000008 /* OpenMapIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000080 /* OpenMapIntent.swift */; };
 		AI0001012024120800000009 /* OpenMessagesIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000090 /* OpenMessagesIntent.swift */; };
-		AI00010120241208000000011 /* RunAutomationIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000110 /* RunAutomationIntent.swift */; };
 		BD61F0312EDD022E00456D75 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD61F0302EDD022E00456D75 /* WidgetKit.framework */; };
 		BD61F0332EDD022E00456D75 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD61F0322EDD022E00456D75 /* SwiftUI.framework */; };
 		BD61F0422EDD022F00456D75 /* SocialmeshWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BD61F02F2EDD022E00456D75 /* SocialmeshWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -89,6 +89,7 @@
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AI0001012024120800000010 /* AppIntentErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntentErrors.swift; sourceTree = "<group>"; };
 		AI00010120241208000000100 /* ShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsProvider.swift; sourceTree = "<group>"; };
+		AI00010120241208000000110 /* RunAutomationIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunAutomationIntent.swift; sourceTree = "<group>"; };
 		AI0001012024120800000020 /* AppIntentsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntentsManager.swift; sourceTree = "<group>"; };
 		AI0001012024120800000030 /* SendMessageIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendMessageIntent.swift; sourceTree = "<group>"; };
 		AI0001012024120800000040 /* SendChannelMessageIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendChannelMessageIntent.swift; sourceTree = "<group>"; };
@@ -97,7 +98,6 @@
 		AI0001012024120800000070 /* OpenNodeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenNodeIntent.swift; sourceTree = "<group>"; };
 		AI0001012024120800000080 /* OpenMapIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMapIntent.swift; sourceTree = "<group>"; };
 		AI0001012024120800000090 /* OpenMessagesIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMessagesIntent.swift; sourceTree = "<group>"; };
-		AI00010120241208000000110 /* RunAutomationIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunAutomationIntent.swift; sourceTree = "<group>"; };
 		BB8382CB1A4A98DEB6822541 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		BD61F02F2EDD022E00456D75 /* SocialmeshWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SocialmeshWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BD61F0302EDD022E00456D75 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
@@ -925,9 +925,12 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = SocialmeshWidgetsExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = U336GVDWCE;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = U336GVDWCE;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -944,6 +947,8 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.SocialmeshWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "iOS SocialmeshWidgets App Development Profile";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
@@ -968,9 +973,12 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = SocialmeshWidgetsExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = U336GVDWCE;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = U336GVDWCE;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -986,6 +994,8 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.SocialmeshWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "iOS SocialmeshWidgets App Development Profile";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -1008,9 +1018,12 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = SocialmeshWidgetsExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = U336GVDWCE;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = U336GVDWCE;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -1026,6 +1039,8 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.SocialmeshWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "iOS SocialmeshWidgets App Development Profile";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
