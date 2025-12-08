@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../models/mesh_models.dart' show MeshNode;
 import '../../services/ifttt/ifttt_service.dart';
 import '../../services/audio/rtttl_player.dart';
+import '../../services/audio/notification_sound_service.dart';
 import 'models/automation.dart';
 import 'automation_repository.dart';
 
@@ -555,26 +556,41 @@ class AutomationEngine {
             event,
             trigger: automation.trigger,
           );
+
+          // Prepare custom notification sound if configured
+          String? soundFileName;
+          final customSoundRtttl = action.notificationSoundRtttl;
+          if (customSoundRtttl != null && customSoundRtttl.isNotEmpty) {
+            try {
+              soundFileName = await NotificationSoundService.instance
+                  .prepareSoundFromRtttl(customSoundRtttl);
+            } catch (e) {
+              debugPrint('Failed to prepare notification sound: $e');
+            }
+          }
+
+          // Show notification with custom or default sound
           await _notifications.show(
             automation.id.hashCode,
             title,
             body,
-            const NotificationDetails(
+            NotificationDetails(
               iOS: DarwinNotificationDetails(
                 presentAlert: true,
                 presentBadge: true,
                 presentSound: true,
+                sound: soundFileName,
               ),
             ),
           );
-          // Play custom sound if configured
-          final customSoundRtttl = action.notificationSoundRtttl;
+
+          // Also play the sound through the audio player for immediate feedback
+          // (notification sound may be delayed or silenced by system)
           if (customSoundRtttl != null && customSoundRtttl.isNotEmpty) {
             final player = RtttlPlayer();
             try {
               await player.play(customSoundRtttl);
             } catch (e) {
-              // Don't fail the action if sound fails
               debugPrint('Failed to play notification sound: $e');
             } finally {
               await player.dispose();

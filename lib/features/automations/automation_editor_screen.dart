@@ -57,6 +57,59 @@ class _AutomationEditorScreenState
     super.dispose();
   }
 
+  /// Update trigger and also update action configs when trigger type changes
+  void _updateTrigger(AutomationTrigger newTrigger) {
+    final oldType = _trigger.type;
+    final newType = newTrigger.type;
+
+    // If trigger type changed, update actions with new default text
+    if (oldType != newType) {
+      final oldDefaultText = oldType.defaultMessageText;
+      final newDefaultText = newType.defaultMessageText;
+
+      _actions = _actions.map((action) {
+        final newConfig = Map<String, dynamic>.from(action.config);
+        var changed = false;
+
+        // Update messageText for sendMessage/sendToChannel
+        if (action.type == ActionType.sendMessage ||
+            action.type == ActionType.sendToChannel) {
+          final messageText = newConfig['messageText'] as String?;
+          if (messageText == null ||
+              messageText.isEmpty ||
+              messageText == oldDefaultText) {
+            newConfig['messageText'] = newDefaultText;
+            changed = true;
+          }
+        }
+
+        // Update notification title/body if they match old defaults
+        if (action.type == ActionType.pushNotification) {
+          final title = newConfig['notificationTitle'] as String?;
+          final body = newConfig['notificationBody'] as String?;
+
+          if (title == null ||
+              title.isEmpty ||
+              title == oldType.displayName ||
+              title == '${oldType.displayName} Alert') {
+            newConfig['notificationTitle'] = newType.displayName;
+            changed = true;
+          }
+          if (body == null || body.isEmpty || body == oldDefaultText) {
+            newConfig['notificationBody'] = newDefaultText;
+            changed = true;
+          }
+        }
+
+        return changed ? action.copyWith(config: newConfig) : action;
+      }).toList();
+    }
+
+    setState(() {
+      _trigger = newTrigger;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -148,7 +201,7 @@ class _AutomationEditorScreenState
               TriggerSelector(
                 trigger: _trigger,
                 availableNodes: ref.watch(nodesProvider).values.toList(),
-                onChanged: (trigger) => setState(() => _trigger = trigger),
+                onChanged: (trigger) => _updateTrigger(trigger),
               ),
 
               // Flow connector: WHEN -> THEN
