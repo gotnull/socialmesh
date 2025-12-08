@@ -94,5 +94,29 @@ struct SocialmeshShortcuts: AppShortcutsProvider {
             shortTitle: "Open Messages",
             systemImageName: "message"
         )
+        
+        // Run Automation
+        AppShortcut(
+            intent: RunAutomationIntent(),
+            phrases: [
+                "Run automation with \(.applicationName)",
+                "Execute automation using \(.applicationName)",
+                "Trigger automation in \(.applicationName)"
+            ],
+            shortTitle: "Run Automation",
+            systemImageName: "gearshape.2"
+        )
+        
+        // List Automations
+        AppShortcut(
+            intent: ListAutomationsIntent(),
+            phrases: [
+                "List automations in \(.applicationName)",
+                "Show automations from \(.applicationName)",
+                "What automations are in \(.applicationName)"
+            ],
+            shortTitle: "List Automations",
+            systemImageName: "list.bullet"
+        )
     }
 }

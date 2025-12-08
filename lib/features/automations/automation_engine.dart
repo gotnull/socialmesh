@@ -71,6 +71,15 @@ class AutomationEngine {
     debugPrint('AutomationEngine: Stopped');
   }
 
+  /// Execute an automation manually (e.g., from Siri Shortcuts)
+  Future<void> executeAutomationManually(
+    Automation automation,
+    AutomationEvent event,
+  ) async {
+    debugPrint('AutomationEngine: Manual execution of "${automation.name}"');
+    await _executeAutomation(automation, event);
+  }
+
   /// Process a node update event
   Future<void> processNodeUpdate(
     MeshNode node, {

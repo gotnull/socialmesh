@@ -106,6 +106,7 @@ enum TriggerType {
   scheduled,
   signalWeak,
   channelActivity,
+  manual, // Triggered manually via Siri Shortcuts or UI
 }
 
 extension TriggerTypeExtension on TriggerType {
@@ -137,6 +138,8 @@ extension TriggerTypeExtension on TriggerType {
         return 'Signal strength drops';
       case TriggerType.channelActivity:
         return 'Activity on channel';
+      case TriggerType.manual:
+        return 'Manual trigger';
     }
   }
 
@@ -168,6 +171,8 @@ extension TriggerTypeExtension on TriggerType {
         return Icons.signal_cellular_alt;
       case TriggerType.channelActivity:
         return Icons.forum;
+      case TriggerType.manual:
+        return Icons.play_arrow;
     }
   }
 
@@ -192,6 +197,8 @@ extension TriggerTypeExtension on TriggerType {
         return 'Time';
       case TriggerType.signalWeak:
         return 'Signal';
+      case TriggerType.manual:
+        return 'Manual';
     }
   }
 
@@ -224,6 +231,8 @@ extension TriggerTypeExtension on TriggerType {
         return '{{node.name}} signal weak';
       case TriggerType.channelActivity:
         return 'Activity on {{channel.name}}: {{message}}';
+      case TriggerType.manual:
+        return 'Automation triggered manually';
     }
   }
 }

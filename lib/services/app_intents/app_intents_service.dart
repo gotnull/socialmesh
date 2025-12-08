@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/automations/automation_providers.dart';
+import '../../features/automations/models/automation.dart';
 import '../../providers/app_providers.dart';
 
 /// Service to handle iOS App Intents (Siri Shortcuts integration)
@@ -74,6 +76,10 @@ class AppIntentsService {
         return _handleOpenMap();
       case 'openMessages':
         return _handleOpenMessages();
+      case 'runAutomation':
+        return _handleRunAutomation(args);
+      case 'listAutomations':
+        return _handleListAutomations();
       default:
         throw Exception('Unknown intent: $intentName');
     }
@@ -188,6 +194,65 @@ class AppIntentsService {
   Future<Map<String, dynamic>?> _handleOpenMessages() async {
     // Navigation will be handled by the app when it opens
     return {'screen': 'messages'};
+  }
+
+  Future<Map<String, dynamic>?> _handleRunAutomation(
+    Map<Object?, Object?> args,
+  ) async {
+    final name = args['name'] as String?;
+
+    if (name == null || name.isEmpty) {
+      return {'executed': false, 'error': 'Automation name is required'};
+    }
+
+    final repository = _ref.read(automationRepositoryProvider);
+    final automations = repository.automations;
+
+    // Find automation by name (case-insensitive)
+    final automation = automations.cast<Automation?>().firstWhere(
+      (a) => a?.name.toLowerCase() == name.toLowerCase(),
+      orElse: () => null,
+    );
+
+    if (automation == null) {
+      return {'executed': false, 'error': "Automation '$name' not found"};
+    }
+
+    if (!automation.enabled) {
+      return {'executed': false, 'error': "Automation '$name' is disabled"};
+    }
+
+    // Execute the automation
+    final engine = _ref.read(automationEngineProvider);
+
+    // Create a manual trigger event
+    final event = AutomationEvent(
+      type: TriggerType.manual,
+      timestamp: DateTime.now(),
+    );
+
+    // Execute the automation
+    await engine.executeAutomationManually(automation, event);
+
+    return {'executed': true, 'name': automation.name};
+  }
+
+  Future<Map<String, dynamic>?> _handleListAutomations() async {
+    final repository = _ref.read(automationRepositoryProvider);
+    final automations = repository.automations;
+
+    final automationList = automations
+        .map(
+          (a) => {
+            'id': a.id,
+            'name': a.name,
+            'enabled': a.enabled,
+            'description': a.description,
+          },
+        )
+        .toList();
+
+    return {'automations': automationList};
   }
 
   Future<void> _sendResult(
