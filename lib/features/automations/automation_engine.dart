@@ -545,8 +545,39 @@ class AutomationEngine {
               errorMessage: 'No webhook event name specified',
             );
           }
+          // Build value1, value2, value3 from event data
+          String? value1;
+          String? value2;
+          String? value3;
+
+          // value1: Node name or message sender
+          if (event.nodeName != null) {
+            value1 = event.nodeName;
+          }
+
+          // value2: Location or message text
+          if (event.latitude != null && event.longitude != null) {
+            value2 = '${event.latitude},${event.longitude}';
+          } else if (event.messageText != null) {
+            value2 = event.messageText;
+          }
+
+          // value3: Additional context (battery, SNR, timestamp)
+          final contextParts = <String>[];
+          if (event.batteryLevel != null) {
+            contextParts.add('Battery: ${event.batteryLevel}%');
+          }
+          if (event.snr != null) {
+            contextParts.add('SNR: ${event.snr}');
+          }
+          contextParts.add('Time: ${event.timestamp.toIso8601String()}');
+          value3 = contextParts.join(', ');
+
           final webhookSuccess = await _iftttService.triggerCustomEvent(
             eventName: action.webhookEventName!,
+            value1: value1,
+            value2: value2,
+            value3: value3,
           );
           return ActionResult(
             actionName: actionName,

@@ -304,13 +304,25 @@ class IftttService {
     required double latitude,
     required double longitude,
   }) async {
-    if (!_config.positionUpdate) return false;
-    if (_config.geofenceLat == null || _config.geofenceLon == null) {
+    if (!_config.positionUpdate) {
+      debugPrint('IFTTT: Position update disabled in config');
       return false;
+    }
+
+    // If no geofence is configured, trigger on every position update
+    if (_config.geofenceLat == null || _config.geofenceLon == null) {
+      debugPrint('IFTTT: No geofence configured, triggering position update');
+      return _triggerWebhook(
+        eventName: 'meshtastic_position',
+        value1: nodeName,
+        value2: '$latitude,$longitude',
+        value3: DateTime.now().toIso8601String(),
+      );
     }
 
     // Only trigger for the monitored node if one is specified
     if (_config.geofenceNodeNum != null && _config.geofenceNodeNum != nodeNum) {
+      debugPrint('IFTTT: Position update ignored - not monitored node');
       return false;
     }
 
@@ -331,6 +343,9 @@ class IftttService {
 
     // Only trigger when transitioning from inside to outside
     if (isInsideGeofence || !wasInside) {
+      debugPrint(
+        'IFTTT: Position update ignored - no geofence transition (inside=$isInsideGeofence, wasInside=$wasInside)',
+      );
       return false;
     }
 
@@ -339,10 +354,12 @@ class IftttService {
     if (lastAlert != null &&
         DateTime.now().difference(lastAlert).inMinutes <
             _config.geofenceThrottleMinutes) {
+      debugPrint('IFTTT: Position update throttled');
       return false;
     }
     _lastGeofenceAlert[nodeNum] = DateTime.now();
 
+    debugPrint('IFTTT: Triggering geofence alert - $nodeName left geofence');
     return _triggerWebhook(
       eventName: 'meshtastic_position',
       value1: nodeName,
