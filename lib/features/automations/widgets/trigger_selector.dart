@@ -843,7 +843,46 @@ class _TriggerSelectorState extends State<TriggerSelector> {
               _keywordController.text = '';
               _latController.text = '';
               _lonController.text = '';
-              widget.onChanged(AutomationTrigger(type: type));
+
+              // Check if both old and new types are node-related
+              final nodeRelatedTypes = {
+                TriggerType.nodeOnline,
+                TriggerType.nodeOffline,
+                TriggerType.batteryLow,
+                TriggerType.batteryFull,
+                TriggerType.signalWeak,
+                TriggerType.nodeSilent,
+                TriggerType.positionChanged,
+              };
+
+              final oldType = widget.trigger.type;
+              final preserveNode =
+                  nodeRelatedTypes.contains(oldType) &&
+                  nodeRelatedTypes.contains(type);
+
+              // Create new trigger, preserving nodeNum if switching between
+              // node-related triggers
+              final newConfig = <String, dynamic>{};
+              if (preserveNode && widget.trigger.nodeNum != null) {
+                newConfig['nodeNum'] = widget.trigger.nodeNum;
+              }
+
+              final newTrigger = AutomationTrigger(
+                type: type,
+                config: newConfig,
+              );
+              widget.onChanged(newTrigger);
+
+              // If the new trigger type needs a node but doesn't have one,
+              // show the picker after a brief delay
+              if (nodeRelatedTypes.contains(type) &&
+                  newConfig['nodeNum'] == null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    _showNodePicker(this.context);
+                  }
+                });
+              }
             },
           ),
         );
