@@ -391,8 +391,14 @@ class AutomationAction {
   /// Target channel for sendToChannel
   int? get targetChannelIndex => config['targetChannelIndex'] as int?;
 
-  /// Sound type for playSound
+  /// Sound type for playSound (legacy)
   String? get soundType => config['soundType'] as String?;
+
+  /// RTTTL string for playSound
+  String? get soundRtttl => config['soundRtttl'] as String?;
+
+  /// Display name for the selected sound
+  String? get soundName => config['soundName'] as String?;
 
   /// Webhook URL for triggerWebhook
   String? get webhookUrl => config['webhookUrl'] as String?;

@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/mesh_models.dart' show MeshNode;
 import '../../services/ifttt/ifttt_service.dart';
+import '../../services/audio/rtttl_player.dart';
 import 'models/automation.dart';
 import 'automation_repository.dart';
 
@@ -506,8 +507,27 @@ class AutomationEngine {
           );
 
         case ActionType.playSound:
-          // Sound playback handled elsewhere
-          return ActionResult(actionName: actionName, success: true);
+          final rtttl = action.soundRtttl;
+          if (rtttl == null || rtttl.isEmpty) {
+            return ActionResult(
+              actionName: actionName,
+              success: false,
+              errorMessage: 'No sound configured',
+            );
+          }
+          final player = RtttlPlayer();
+          try {
+            await player.play(rtttl);
+            return ActionResult(actionName: actionName, success: true);
+          } catch (e) {
+            return ActionResult(
+              actionName: actionName,
+              success: false,
+              errorMessage: 'Failed to play sound: $e',
+            );
+          } finally {
+            await player.dispose();
+          }
 
         case ActionType.vibrate:
           // Trigger haptic feedback for vibration

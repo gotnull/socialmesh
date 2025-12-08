@@ -4,6 +4,8 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../models/mesh_models.dart';
+import '../../../services/audio/rtttl_library_service.dart';
+import '../../../services/audio/rtttl_player.dart';
 import '../models/automation.dart';
 import 'variable_text_field.dart';
 
@@ -199,6 +201,8 @@ class _ActionEditorState extends State<ActionEditor> {
         return _buildShortcutConfig(context);
 
       case ActionType.playSound:
+        return _buildSoundConfig(context);
+
       case ActionType.vibrate:
       case ActionType.logEvent:
       case ActionType.updateWidget:
@@ -664,6 +668,167 @@ class _ActionEditorState extends State<ActionEditor> {
     );
   }
 
+  Widget _buildSoundConfig(BuildContext context) {
+    final selectedSound = widget.action.soundName;
+    final hasSound = selectedSound != null && selectedSound.isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'SOUND',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textTertiary,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => _showSoundPicker(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.darkBackground,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.darkBorder),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.music_note,
+                      color: Colors.orange,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          hasSound ? selectedSound : 'Select a sound',
+                          style: TextStyle(
+                            color: hasSound
+                                ? Colors.white
+                                : AppTheme.textSecondary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          hasSound ? 'RTTTL ringtone' : 'Tap to choose',
+                          style: const TextStyle(
+                            color: AppTheme.textTertiary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    color: AppTheme.textSecondary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (hasSound) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _previewSound(context),
+                    icon: const Icon(Icons.play_arrow, size: 18),
+                    label: const Text('Preview'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.orange,
+                      side: BorderSide(
+                        color: Colors.orange.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showSoundPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkSurface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => _SoundPickerSheet(
+        currentRtttl: widget.action.soundRtttl,
+        onSelect: (item) {
+          widget.onChanged(
+            widget.action.copyWith(
+              config: {
+                ...widget.action.config,
+                'soundRtttl': item.rtttl,
+                'soundName': item.formattedTitle,
+              },
+            ),
+          );
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+
+  void _previewSound(BuildContext context) async {
+    final rtttl = widget.action.soundRtttl;
+    if (rtttl == null || rtttl.isEmpty) return;
+
+    final player = RtttlPlayer();
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 12),
+              Text('Playing "${widget.action.soundName}"...'),
+            ],
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      await player.play(rtttl);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to play sound: $e')));
+      }
+    } finally {
+      await player.dispose();
+    }
+  }
+
   Widget _buildNotificationConfig(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -1068,6 +1233,314 @@ class _ActionEditorState extends State<ActionEditor> {
             SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SoundPickerSheet extends StatefulWidget {
+  final String? currentRtttl;
+  final void Function(RtttlLibraryItem) onSelect;
+
+  const _SoundPickerSheet({required this.currentRtttl, required this.onSelect});
+
+  @override
+  State<_SoundPickerSheet> createState() => _SoundPickerSheetState();
+}
+
+class _SoundPickerSheetState extends State<_SoundPickerSheet> {
+  final _searchController = TextEditingController();
+  final _rtttlLibraryService = RtttlLibraryService();
+  RtttlPlayer? _player;
+  String? _playingRtttl;
+  List<RtttlLibraryItem> _suggestions = [];
+  List<RtttlLibraryItem> _searchResults = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSuggestions();
+  }
+
+  Future<void> _loadSuggestions() async {
+    final suggestions = await _rtttlLibraryService.getSuggestions();
+    setState(() {
+      _suggestions = suggestions;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _search(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = [];
+      });
+    } else {
+      final results = await _rtttlLibraryService.search(query);
+      setState(() {
+        _searchResults = results;
+      });
+    }
+  }
+
+  Future<void> _playPreview(RtttlLibraryItem item) async {
+    // Stop any currently playing sound
+    await _player?.dispose();
+
+    setState(() {
+      _playingRtttl = item.rtttl;
+    });
+
+    _player = RtttlPlayer();
+    try {
+      await _player!.play(item.rtttl);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to play: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _playingRtttl = null;
+        });
+      }
+      await _player?.dispose();
+      _player = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _player?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final displayItems = _searchController.text.isNotEmpty
+        ? _searchResults
+        : _suggestions;
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.5,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (context, scrollController) => Column(
+        children: [
+          // Handle bar
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey[600],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          // Title
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.library_music, color: Colors.orange),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Select Sound',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          // Search field
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _search,
+              decoration: InputDecoration(
+                hintText: 'Search sounds...',
+                prefixIcon: const Icon(Icons.search),
+                isDense: true,
+                filled: true,
+                fillColor: AppTheme.darkBackground,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+          // Category label
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: Row(
+              children: [
+                Text(
+                  _searchController.text.isEmpty
+                      ? 'SUGGESTIONS'
+                      : 'SEARCH RESULTS',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textTertiary,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${displayItems.length} sounds',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppTheme.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Sound list
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : displayItems.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 48,
+                          color: Colors.grey[600],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No sounds found',
+                          style: TextStyle(color: Colors.grey[500]),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    controller: scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: displayItems.length,
+                    itemBuilder: (context, index) {
+                      final item = displayItems[index];
+                      final isSelected = item.rtttl == widget.currentRtttl;
+                      final isPlaying = item.rtttl == _playingRtttl;
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: BouncyTap(
+                          onTap: () => widget.onSelect(item),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Colors.orange.withValues(alpha: 0.15)
+                                  : AppTheme.darkCard,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.orange
+                                    : AppTheme.darkBorder,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? Colors.orange.withValues(alpha: 0.2)
+                                        : AppTheme.darkBackground,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    Icons.music_note,
+                                    color: isSelected
+                                        ? Colors.orange
+                                        : AppTheme.textSecondary,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.formattedTitle,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          color: isSelected
+                                              ? Colors.orange
+                                              : Colors.white,
+                                        ),
+                                      ),
+                                      if (item.subtitle != null)
+                                        Text(
+                                          item.subtitle!,
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: AppTheme.textTertiary,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => _playPreview(item),
+                                  icon: isPlaying
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.orange,
+                                          ),
+                                        )
+                                      : Icon(
+                                          Icons.play_circle_outline,
+                                          color: isSelected
+                                              ? Colors.orange
+                                              : AppTheme.textSecondary,
+                                        ),
+                                ),
+                                if (isSelected)
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: Colors.orange,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom),
+        ],
       ),
     );
   }
