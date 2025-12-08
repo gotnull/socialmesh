@@ -12,41 +12,24 @@ class RevenueCatConfig {
       dotenv.env['REVENUECAT_ANDROID_API_KEY'] ?? '';
 
   // ============================================================================
-  // ENTITLEMENT IDS
-  // These must match what you configure in RevenueCat dashboard
-  // ============================================================================
-
-  /// Entitlement ID for Premium tier access
-  static const String premiumEntitlementId = 'premium';
-
-  /// Entitlement ID for Pro tier access
-  static const String proEntitlementId = 'pro';
-
-  // ============================================================================
   // PRODUCT IDS
   // These must match your App Store Connect / Google Play Console product IDs
   // ============================================================================
 
-  /// Premium monthly subscription product ID
-  static const String premiumMonthlyProductId = 'socialmesh_premium_monthly';
-
-  /// Premium yearly subscription product ID
-  static const String premiumYearlyProductId = 'socialmesh_premium_yearly';
-
-  /// Pro monthly subscription product ID
-  static const String proMonthlyProductId = 'socialmesh_pro_monthly';
-
-  /// Pro yearly subscription product ID
-  static const String proYearlyProductId = 'socialmesh_pro_yearly';
-
   /// Theme pack non-consumable product ID
-  static const String themePackProductId = 'socialmesh_theme_pack';
+  static const String themePackProductId = 'prod0da6d733fd';
 
   /// Ringtone pack non-consumable product ID
-  static const String ringtonePackProductId = 'socialmesh_ringtone_pack';
+  static const String ringtonePackProductId = 'prod1a7cd06c47';
 
   /// Widget pack non-consumable product ID
-  static const String widgetPackProductId = 'socialmesh_widget_pack';
+  static const String widgetPackProductId = 'prod69bcb2bd24';
+
+  /// Automations pack non-consumable product ID
+  static const String automationsPackProductId = 'prod67adcb1f11';
+
+  /// IFTTT integration non-consumable product ID
+  static const String iftttPackProductId = 'prod50d4fc8254';
 
   // ============================================================================
   // OFFERING IDS

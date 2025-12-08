@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
 import '../../models/subscription_models.dart';
@@ -15,42 +14,24 @@ class SubscriptionScreen extends ConsumerStatefulWidget {
 }
 
 class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
-  bool _isYearly = true;
-  Package? _selectedPackage;
-
   @override
   Widget build(BuildContext context) {
-    final currentTier = ref.watch(currentTierProvider);
-    final currentState = ref.watch(subscriptionStateProvider);
     final isLoading = ref.watch(subscriptionLoadingProvider);
     final error = ref.watch(subscriptionErrorProvider);
-    final offeringsAsync = ref.watch(offeringsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Subscription')),
+      appBar: AppBar(title: const Text('Upgrades')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Current status card
-            _buildCurrentStatusCard(currentTier, currentState),
+            // Header
+            _buildHeader(),
             const SizedBox(height: 24),
 
-            // Billing toggle
-            if (currentTier == SubscriptionTier.free) _buildBillingToggle(),
-
-            if (currentTier == SubscriptionTier.free)
-              const SizedBox(height: 24),
-
-            // Plan cards from RevenueCat offerings
-            if (currentTier != SubscriptionTier.pro)
-              offeringsAsync.when(
-                data: (offerings) =>
-                    _buildOfferingCards(offerings, currentTier),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Text('Failed to load plans: $e'),
-              ),
+            // One-time purchases
+            _buildOneTimePurchases(),
 
             // Error message
             if (error != null) ...[
@@ -67,29 +48,6 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 ),
               ),
             ],
-
-            // Subscribe button
-            if (_selectedPackage != null &&
-                currentTier == SubscriptionTier.free) ...[
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: isLoading ? null : _subscribe,
-                child: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(_getSubscribeButtonText()),
-              ),
-            ],
-
-            // One-time purchases
-            const SizedBox(height: 32),
-            _buildOneTimePurchases(),
 
             // Restore purchases
             const SizedBox(height: 24),
@@ -136,31 +94,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     );
   }
 
-  Widget _buildCurrentStatusCard(
-    SubscriptionTier tier,
-    SubscriptionState state,
-  ) {
-    final plan = SubscriptionPlans.getPlan(tier);
-
-    Color statusColor;
-    String statusText;
-    IconData statusIcon;
-
-    switch (tier) {
-      case SubscriptionTier.free:
-        statusColor = AppTheme.textTertiary;
-        statusText = 'Free Plan';
-        statusIcon = Icons.person_outline;
-      case SubscriptionTier.premium:
-        statusColor = context.accentColor;
-        statusText = 'Premium';
-        statusIcon = Icons.star;
-      case SubscriptionTier.pro:
-        statusColor = AppTheme.accentOrange;
-        statusText = 'Pro';
-        statusIcon = Icons.workspace_premium;
-    }
-
+  Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -168,434 +102,73 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            statusColor.withValues(alpha: 0.3),
-            statusColor.withValues(alpha: 0.1),
+            context.accentColor.withValues(alpha: 0.3),
+            context.accentColor.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: statusColor.withValues(alpha: 0.5)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(statusIcon, color: statusColor, size: 28),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      statusText,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: statusColor,
-                      ),
-                    ),
-                    Text(
-                      plan.description,
-                      style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (state.isTrialing) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppTheme.warningYellow.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.timer_outlined,
-                    color: AppTheme.warningYellow,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${state.trialDaysRemaining} days left in trial',
-                    style: const TextStyle(
-                      color: AppTheme.warningYellow,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          if (state.expiresAt != null && !state.isTrialing) ...[
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  state.willRenew ? Icons.autorenew : Icons.event_busy,
-                  color: AppTheme.textTertiary,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  state.willRenew
-                      ? 'Renews ${_formatDate(state.expiresAt!)}'
-                      : 'Expires ${_formatDate(state.expiresAt!)}',
-                  style: const TextStyle(
-                    color: AppTheme.textTertiary,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBillingToggle() {
-    final accentColor = context.accentColor;
-
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppTheme.darkSurface,
-        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.accentColor.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() {
-                _isYearly = false;
-                _selectedPackage = null;
-              }),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: !_isYearly
-                      ? accentColor.withValues(alpha: 0.15)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: !_isYearly ? accentColor : Colors.transparent,
-                    width: 2,
-                  ),
-                ),
-                child: Text(
-                  'Monthly',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: !_isYearly ? accentColor : AppTheme.textTertiary,
-                  ),
-                ),
-              ),
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.rocket_launch_rounded,
+              color: context.accentColor,
+              size: 28,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 16),
           Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() {
-                _isYearly = true;
-                _selectedPackage = null;
-              }),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: _isYearly
-                      ? accentColor.withValues(alpha: 0.15)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: _isYearly ? accentColor : Colors.transparent,
-                    width: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Unlock Features',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: context.accentColor,
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Yearly',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: _isYearly ? accentColor : AppTheme.textTertiary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: accentColor,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'Save 50%',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
+                const Text(
+                  'One-time purchases, yours forever',
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                 ),
-              ),
+              ],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildOfferingCards(
-    Offerings? offerings,
-    SubscriptionTier currentTier,
-  ) {
-    if (offerings == null || offerings.current == null) {
-      return const Text(
-        'No subscription plans available',
-        style: TextStyle(color: AppTheme.textTertiary),
-      );
-    }
-
-    final offering = offerings.current!;
-    final packages = _isYearly
-        ? offering.availablePackages
-              .where((p) => p.packageType == PackageType.annual)
-              .toList()
-        : offering.availablePackages
-              .where((p) => p.packageType == PackageType.monthly)
-              .toList();
-
-    if (packages.isEmpty) {
-      return Text(
-        'No plans available for this billing period',
-        style: TextStyle(color: AppTheme.textTertiary),
-      );
-    }
-
-    return Column(
-      children: packages.map((package) {
-        final isSelected = _selectedPackage?.identifier == package.identifier;
-        final product = package.storeProduct;
-        final isPro = package.identifier.toLowerCase().contains('pro');
-
-        Color planColor = isPro ? AppTheme.accentOrange : context.accentColor;
-        String planName = isPro ? 'Pro' : 'Premium';
-        String planDescription = isPro
-            ? 'Full power for teams & professionals'
-            : 'Enhanced features for enthusiasts';
-
-        // Get features from local model
-        final plan = isPro ? SubscriptionPlans.pro : SubscriptionPlans.premium;
-
-        return GestureDetector(
-          onTap: () => setState(() => _selectedPackage = package),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppTheme.darkCard,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isSelected ? planColor : AppTheme.darkBorder,
-                width: isSelected ? 2 : 1,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: isSelected
-                                  ? planColor
-                                  : AppTheme.darkBorder,
-                              width: 2,
-                            ),
-                            color: isSelected ? planColor : Colors.transparent,
-                          ),
-                          child: isSelected
-                              ? const Icon(
-                                  Icons.check,
-                                  size: 14,
-                                  color: Colors.white,
-                                )
-                              : null,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          planName,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: planColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (isPro)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: planColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          'BEST VALUE',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: planColor,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  planDescription,
-                  style: const TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      product.priceString,
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        _isYearly ? '/year' : '/month',
-                        style: TextStyle(
-                          color: AppTheme.textTertiary,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    if (_isYearly) ...[
-                      const Spacer(),
-                      Text(
-                        'Save 50%',
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const Divider(color: AppTheme.darkBorder),
-                const SizedBox(height: 16),
-                // Feature list
-                ...plan.features.take(5).map((feature) {
-                  final info = FeatureInfo.getInfo(feature);
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle, color: planColor, size: 18),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            info?.name ?? feature.name,
-                            style: const TextStyle(
-                              color: AppTheme.textSecondary,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-                if (plan.features.length > 5)
-                  Text(
-                    '+ ${plan.features.length - 5} more features',
-                    style: TextStyle(
-                      color: planColor,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
     );
   }
 
   Widget _buildOneTimePurchases() {
+    final purchaseState = ref.watch(purchaseStateProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'One-time Purchases',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Unlock specific features without a subscription',
-          style: TextStyle(color: AppTheme.textTertiary, fontSize: 14),
-        ),
-        const SizedBox(height: 16),
         ...OneTimePurchases.allPurchases.map((purchase) {
+          final isPurchased = purchaseState.hasPurchased(purchase.productId);
+
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppTheme.darkCard,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(
+                color: isPurchased
+                    ? context.accentColor.withValues(alpha: 0.5)
+                    : AppTheme.darkBorder,
+              ),
             ),
             child: Row(
               children: [
@@ -603,12 +176,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppTheme.secondaryPink.withValues(alpha: 0.2),
+                    color: context.accentColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     _getPurchaseIcon(purchase.id),
-                    color: AppTheme.secondaryPink,
+                    color: context.accentColor,
                     size: 22,
                   ),
                 ),
@@ -617,13 +190,25 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        purchase.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                          color: AppTheme.textPrimary,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            purchase.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          if (isPurchased) ...[
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.check_circle,
+                              color: context.accentColor,
+                              size: 18,
+                            ),
+                          ],
+                        ],
                       ),
                       Text(
                         purchase.description,
@@ -636,16 +221,36 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                OutlinedButton(
-                  onPressed: () => _purchaseItem(purchase),
-                  style: OutlinedButton.styleFrom(
+                if (isPurchased)
+                  Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+                      horizontal: 12,
+                      vertical: 6,
                     ),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Owned',
+                      style: TextStyle(
+                        color: context.accentColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  )
+                else
+                  OutlinedButton(
+                    onPressed: () => _purchaseItem(purchase),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                    ),
+                    child: Text('\$${purchase.price.toStringAsFixed(2)}'),
                   ),
-                  child: Text('\$${purchase.price.toStringAsFixed(2)}'),
-                ),
               ],
             ),
           );
@@ -662,26 +267,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         return Icons.music_note;
       case 'widget_pack':
         return Icons.widgets;
+      case 'automations_pack':
+        return Icons.auto_awesome;
+      case 'ifttt_pack':
+        return Icons.webhook;
       default:
         return Icons.shopping_bag;
-    }
-  }
-
-  String _getSubscribeButtonText() {
-    if (_selectedPackage == null) return 'Select a plan';
-    return 'Subscribe - ${_selectedPackage!.storeProduct.priceString}${_isYearly ? '/year' : '/month'}';
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.month}/${date.day}/${date.year}';
-  }
-
-  Future<void> _subscribe() async {
-    if (_selectedPackage == null) return;
-
-    final success = await purchasePackage(ref, _selectedPackage!);
-    if (mounted && success) {
-      showAppSnackBar(context, 'Subscription activated!');
     }
   }
 

@@ -10,8 +10,6 @@ import 'package:http/http.dart' as http;
 import '../../core/theme.dart';
 import '../../core/map_config.dart';
 import '../../utils/snackbar.dart';
-import '../../providers/subscription_providers.dart';
-import '../../models/subscription_models.dart';
 
 /// Screen for downloading and managing offline map regions
 class OfflineMapsScreen extends ConsumerStatefulWidget {
@@ -492,75 +490,6 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final subscriptionState = ref.watch(subscriptionStateProvider);
-    final hasFeature = subscriptionState.hasFeature(PremiumFeature.offlineMaps);
-
-    if (!hasFeature) {
-      return Scaffold(
-        backgroundColor: AppTheme.darkBackground,
-        appBar: AppBar(
-          backgroundColor: AppTheme.darkSurface,
-          title: const Text('Offline Maps'),
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: AppTheme.warningYellow.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.lock,
-                    size: 40,
-                    color: AppTheme.warningYellow,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Premium Feature',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Offline Maps is available with Premium or Pro subscription. Download map regions for use without internet.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: AppTheme.textSecondary,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.arrow_back),
-                  label: Text('Go Back'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.accentColor,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 14,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(

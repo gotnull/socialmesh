@@ -11,6 +11,7 @@ import 'core/theme.dart';
 import 'core/transport.dart';
 import 'providers/app_providers.dart';
 import 'providers/telemetry_providers.dart';
+import 'providers/subscription_providers.dart';
 import 'models/mesh_models.dart';
 import 'services/app_intents/app_intents_service.dart';
 import 'features/scanner/scanner_screen.dart';
@@ -93,7 +94,18 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp> {
       _loadAccentColor();
       // Setup App Intents for iOS Shortcuts integration
       ref.read(appIntentsServiceProvider).setup();
+      // Initialize RevenueCat for purchases
+      _initializePurchases();
     });
+  }
+
+  Future<void> _initializePurchases() async {
+    try {
+      await ref.read(subscriptionServiceProvider.future);
+      debugPrint('💰 RevenueCat initialized');
+    } catch (e) {
+      debugPrint('💰 RevenueCat init failed: $e');
+    }
   }
 
   Future<void> _loadAccentColor() async {
