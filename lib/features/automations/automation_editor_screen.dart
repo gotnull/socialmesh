@@ -66,6 +66,25 @@ class _AutomationEditorScreenState
     if (oldType != newType) {
       final oldDefaultText = oldType.defaultMessageText;
       final newDefaultText = newType.defaultMessageText;
+      final oldDisplayName = oldType.displayName;
+      final newDisplayName = newType.displayName;
+
+      // Update Name field if it matches old trigger pattern
+      final currentName = _nameController.text;
+      if (currentName.isEmpty ||
+          currentName == oldDisplayName ||
+          currentName == '$oldDisplayName Alert') {
+        _nameController.text = '$newDisplayName Alert';
+      }
+
+      // Update Description field if it matches old trigger pattern
+      final currentDesc = _descriptionController.text;
+      if (currentDesc.isEmpty ||
+          currentDesc == oldDefaultText ||
+          currentDesc == 'Alert when ${oldDisplayName.toLowerCase()}' ||
+          currentDesc == 'Triggered when ${oldDisplayName.toLowerCase()}') {
+        _descriptionController.text = '';
+      }
 
       _actions = _actions.map((action) {
         final newConfig = Map<String, dynamic>.from(action.config);
@@ -88,14 +107,20 @@ class _AutomationEditorScreenState
           final title = newConfig['notificationTitle'] as String?;
           final body = newConfig['notificationBody'] as String?;
 
+          // Update title if it matches old trigger name patterns
           if (title == null ||
               title.isEmpty ||
-              title == oldType.displayName ||
-              title == '${oldType.displayName} Alert') {
-            newConfig['notificationTitle'] = newType.displayName;
+              title == oldDisplayName ||
+              title == '$oldDisplayName Alert') {
+            newConfig['notificationTitle'] = newDisplayName;
             changed = true;
           }
-          if (body == null || body.isEmpty || body == oldDefaultText) {
+
+          // Update body if it matches old default text
+          if (body == null ||
+              body.isEmpty ||
+              body == oldDefaultText ||
+              body == oldDisplayName) {
             newConfig['notificationBody'] = newDefaultText;
             changed = true;
           }
