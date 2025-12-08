@@ -827,6 +827,9 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
     final onlineCount = nodes.values.where((n) => n.isOnline).length;
     final totalCount = nodes.length;
 
+    // Find nearest node with distance
+    final nearestNode = _findNearestNode(nodes, myNodeNum);
+
     debugPrint(
       '📱 Starting Live Activity: device=$deviceName, shortName=$shortName, '
       'battery=$batteryLevel%, rssi=$rssi, snr=$snr, nodes=$onlineCount/$totalCount',
@@ -848,6 +851,15 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
       badPackets: myNode?.numPacketsRxBad ?? 0,
       uptimeSeconds: myNode?.uptimeSeconds,
       temperature: myNode?.temperature,
+      humidity: myNode?.humidity,
+      voltage: myNode?.voltage,
+      nearestNodeDistance: nearestNode?.$2,
+      nearestNodeName: nearestNode?.$1.shortName ?? nearestNode?.$1.longName,
+      firmwareVersion: myNode?.firmwareVersion,
+      hardwareModel: myNode?.hardwareModel,
+      role: myNode?.role,
+      latitude: myNode?.latitude,
+      longitude: myNode?.longitude,
     );
 
     if (success) {
@@ -870,6 +882,11 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
             .where((n) => n.isOnline)
             .length;
 
+        final currentNearestNode = _findNearestNode(
+          currentNodes,
+          currentMyNodeNum,
+        );
+
         _liveActivityService.updateActivity(
           batteryLevel: currentNode?.batteryLevel,
           signalStrength: currentNode?.rssi,
@@ -883,6 +900,12 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
           badPackets: currentNode?.numPacketsRxBad,
           uptimeSeconds: currentNode?.uptimeSeconds,
           temperature: currentNode?.temperature,
+          humidity: currentNode?.humidity,
+          voltage: currentNode?.voltage,
+          nearestNodeDistance: currentNearestNode?.$2,
+          nearestNodeName:
+              currentNearestNode?.$1.shortName ??
+              currentNearestNode?.$1.longName,
         );
       });
     }
@@ -896,6 +919,7 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
     if (myNode == null) return;
 
     final onlineCount = nodes.values.where((n) => n.isOnline).length;
+    final nearestNode = _findNearestNode(nodes, myNodeNum);
 
     _liveActivityService.updateActivity(
       deviceName: myNode.longName,
@@ -912,7 +936,41 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
       badPackets: myNode.numPacketsRxBad,
       uptimeSeconds: myNode.uptimeSeconds,
       temperature: myNode.temperature,
+      humidity: myNode.humidity,
+      voltage: myNode.voltage,
+      nearestNodeDistance: nearestNode?.$2,
+      nearestNodeName: nearestNode?.$1.shortName ?? nearestNode?.$1.longName,
     );
+  }
+
+  /// Find the nearest node with a valid distance from my node
+  (MeshNode, double)? _findNearestNode(
+    Map<int, MeshNode> nodes,
+    int? myNodeNum,
+  ) {
+    if (myNodeNum == null) return null;
+
+    MeshNode? nearestNode;
+    double? nearestDistance;
+
+    for (final node in nodes.values) {
+      // Skip my own node
+      if (node.nodeNum == myNodeNum) continue;
+
+      // Skip nodes without distance
+      final distance = node.distance;
+      if (distance == null || distance <= 0) continue;
+
+      if (nearestDistance == null || distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestNode = node;
+      }
+    }
+
+    if (nearestNode != null && nearestDistance != null) {
+      return (nearestNode, nearestDistance);
+    }
+    return null;
   }
 
   Future<void> _endLiveActivity() async {

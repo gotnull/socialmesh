@@ -82,6 +82,15 @@ class LiveActivityService {
     int badPackets = 0,
     int? uptimeSeconds,
     double? temperature,
+    double? humidity,
+    double? voltage,
+    double? nearestNodeDistance,
+    String? nearestNodeName,
+    String? firmwareVersion,
+    String? hardwareModel,
+    String? role,
+    double? latitude,
+    double? longitude,
   }) async {
     if (!isSupported) {
       debugPrint('📱 Live Activities not supported on this platform');
@@ -125,6 +134,15 @@ class LiveActivityService {
         badPackets: badPackets,
         uptimeSeconds: uptimeSeconds,
         temperature: temperature,
+        humidity: humidity,
+        voltage: voltage,
+        nearestNodeDistance: nearestNodeDistance,
+        nearestNodeName: nearestNodeName,
+        firmwareVersion: firmwareVersion,
+        hardwareModel: hardwareModel,
+        role: role,
+        latitude: latitude,
+        longitude: longitude,
       );
 
       debugPrint('📱 Creating Live Activity with data: $activityData');
@@ -178,6 +196,15 @@ class LiveActivityService {
     int? badPackets,
     int? uptimeSeconds,
     double? temperature,
+    double? humidity,
+    double? voltage,
+    double? nearestNodeDistance,
+    String? nearestNodeName,
+    String? firmwareVersion,
+    String? hardwareModel,
+    String? role,
+    double? latitude,
+    double? longitude,
     bool isConnected = true,
   }) async {
     if (!isSupported || _currentActivityId == null) {
@@ -208,6 +235,21 @@ class LiveActivityService {
       if (badPackets != null) activityData['badPackets'] = badPackets;
       if (uptimeSeconds != null) activityData['uptimeSeconds'] = uptimeSeconds;
       if (temperature != null) activityData['temperature'] = temperature;
+      if (humidity != null) activityData['humidity'] = humidity;
+      if (voltage != null) activityData['voltage'] = voltage;
+      if (nearestNodeDistance != null) {
+        activityData['nearestNodeDistance'] = nearestNodeDistance;
+      }
+      if (nearestNodeName != null) {
+        activityData['nearestNodeName'] = nearestNodeName;
+      }
+      if (firmwareVersion != null) {
+        activityData['firmwareVersion'] = firmwareVersion;
+      }
+      if (hardwareModel != null) activityData['hardwareModel'] = hardwareModel;
+      if (role != null) activityData['role'] = role;
+      if (latitude != null) activityData['latitude'] = latitude;
+      if (longitude != null) activityData['longitude'] = longitude;
       activityData['isConnected'] = isConnected;
 
       // Update timestamp
@@ -283,6 +325,15 @@ class LiveActivityService {
     int badPackets = 0,
     int? uptimeSeconds,
     double? temperature,
+    double? humidity,
+    double? voltage,
+    double? nearestNodeDistance,
+    String? nearestNodeName,
+    String? firmwareVersion,
+    String? hardwareModel,
+    String? role,
+    double? latitude,
+    double? longitude,
   }) {
     // All values must be UserDefaults-compatible types
     return <String, dynamic>{
@@ -301,6 +352,15 @@ class LiveActivityService {
       'badPackets': badPackets,
       'uptimeSeconds': uptimeSeconds ?? 0,
       'temperature': temperature ?? 0.0,
+      'humidity': humidity ?? 0.0,
+      'voltage': voltage ?? 0.0,
+      'nearestNodeDistance': nearestNodeDistance ?? 0.0,
+      'nearestNodeName': nearestNodeName ?? '',
+      'firmwareVersion': firmwareVersion ?? '',
+      'hardwareModel': hardwareModel ?? '',
+      'role': role ?? '',
+      'latitude': latitude ?? 0.0,
+      'longitude': longitude ?? 0.0,
       'lastUpdated': DateTime.now().millisecondsSinceEpoch,
       'isConnected': true,
     };
