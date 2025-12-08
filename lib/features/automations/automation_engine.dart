@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/mesh_models.dart' show MeshNode;
 import '../../services/ifttt/ifttt_service.dart';
@@ -597,12 +599,56 @@ class AutomationEngine {
 
         case ActionType.triggerShortcut:
           // iOS Shortcuts via URL scheme
-          // Would need: url_launcher to open shortcuts://run-shortcut?name=X
-          return ActionResult(
-            actionName: actionName,
-            success: false,
-            errorMessage: 'Shortcuts integration not yet implemented',
+          if (!Platform.isIOS) {
+            return ActionResult(
+              actionName: actionName,
+              success: false,
+              errorMessage: 'Shortcuts only available on iOS',
+            );
+          }
+
+          final shortcutName = action.shortcutName;
+          if (shortcutName == null || shortcutName.isEmpty) {
+            return ActionResult(
+              actionName: actionName,
+              success: false,
+              errorMessage: 'No shortcut name specified',
+            );
+          }
+
+          // Build input text from event variables
+          final inputText = _buildShortcutInput(event);
+
+          // URL encode the shortcut name and input
+          final encodedName = Uri.encodeComponent(shortcutName);
+          final encodedInput = Uri.encodeComponent(inputText);
+
+          // Use shortcuts:// URL scheme with input parameter
+          // The shortcut can access this via "Shortcut Input" action
+          final shortcutUrl = Uri.parse(
+            'shortcuts://run-shortcut?name=$encodedName&input=$encodedInput',
           );
+
+          try {
+            final launched = await launchUrl(
+              shortcutUrl,
+              mode: LaunchMode.externalApplication,
+            );
+            if (!launched) {
+              return ActionResult(
+                actionName: actionName,
+                success: false,
+                errorMessage: 'Could not launch shortcut "$shortcutName"',
+              );
+            }
+            return ActionResult(actionName: actionName, success: true);
+          } catch (e) {
+            return ActionResult(
+              actionName: actionName,
+              success: false,
+              errorMessage: 'Failed to run shortcut: $e',
+            );
+          }
       }
     } catch (e) {
       return ActionResult(
@@ -761,6 +807,42 @@ class AutomationEngine {
       parts.add('Message: ${event.messageText}');
     }
     return parts.join(', ');
+  }
+
+  /// Build input text for iOS Shortcut from event data
+  /// The shortcut can parse this JSON to access event variables
+  String _buildShortcutInput(AutomationEvent event) {
+    final data = <String, dynamic>{
+      'trigger': event.type.name,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+
+    if (event.nodeNum != null) {
+      data['nodeNum'] = event.nodeNum;
+      data['nodeHex'] = '!${event.nodeNum!.toRadixString(16)}';
+    }
+    if (event.nodeName != null) {
+      data['nodeName'] = event.nodeName;
+    }
+    if (event.batteryLevel != null) {
+      data['battery'] = event.batteryLevel;
+    }
+    if (event.latitude != null && event.longitude != null) {
+      data['latitude'] = event.latitude;
+      data['longitude'] = event.longitude;
+    }
+    if (event.messageText != null) {
+      data['message'] = event.messageText;
+    }
+    if (event.channelIndex != null) {
+      data['channelIndex'] = event.channelIndex;
+    }
+    if (event.snr != null) {
+      data['snr'] = event.snr;
+    }
+
+    // Return as key:value pairs that the shortcut can parse with "Split Text"
+    return data.entries.map((e) => '${e.key}:${e.value}').join('\n');
   }
 
   /// Parse time of day from string

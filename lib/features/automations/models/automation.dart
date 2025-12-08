@@ -194,6 +194,38 @@ extension TriggerTypeExtension on TriggerType {
         return 'Signal';
     }
   }
+
+  /// Default message text for sendMessage/sendToChannel actions
+  String get defaultMessageText {
+    switch (this) {
+      case TriggerType.nodeOnline:
+        return '{{node.name}} is now online';
+      case TriggerType.nodeOffline:
+        return '{{node.name}} went offline';
+      case TriggerType.batteryLow:
+        return '{{node.name}} battery low: {{battery}}';
+      case TriggerType.batteryFull:
+        return '{{node.name}} battery fully charged';
+      case TriggerType.messageReceived:
+        return 'Message from {{node.name}}: {{message}}';
+      case TriggerType.messageContains:
+        return 'Keyword detected from {{node.name}}: {{message}}';
+      case TriggerType.positionChanged:
+        return '{{node.name}} moved to {{location}}';
+      case TriggerType.geofenceEnter:
+        return '{{node.name}} entered the zone';
+      case TriggerType.geofenceExit:
+        return '{{node.name}} left the zone';
+      case TriggerType.nodeSilent:
+        return '{{node.name}} has been silent for {{silent.duration}}';
+      case TriggerType.scheduled:
+        return 'Scheduled alert at {{time}}';
+      case TriggerType.signalWeak:
+        return '{{node.name}} signal weak';
+      case TriggerType.channelActivity:
+        return 'Activity on {{channel.name}}: {{message}}';
+    }
+  }
 }
 
 /// Automation trigger

@@ -336,10 +336,13 @@ class _ActionEditorState extends State<ActionEditor> {
           ),
           const SizedBox(height: 16),
 
-          // Message text field
+          // Message text field - use default text from trigger type if empty
           VariableTextField(
             key: _messageFieldKey,
-            value: widget.action.messageText ?? '',
+            value:
+                widget.action.messageText ??
+                widget.triggerType?.defaultMessageText ??
+                '',
             onChanged: (value) {
               widget.onChanged(
                 widget.action.copyWith(
@@ -822,7 +825,17 @@ class _ActionEditorState extends State<ActionEditor> {
                     if (type != widget.action.type) {
                       _webhookEventController.text = '';
                       _shortcutNameController.text = '';
-                      widget.onChanged(AutomationAction(type: type));
+                      // Pre-populate message text for sendMessage/sendToChannel
+                      final config = <String, dynamic>{};
+                      if ((type == ActionType.sendMessage ||
+                              type == ActionType.sendToChannel) &&
+                          widget.triggerType != null) {
+                        config['messageText'] =
+                            widget.triggerType!.defaultMessageText;
+                      }
+                      widget.onChanged(
+                        AutomationAction(type: type, config: config),
+                      );
                     }
                   },
                   child: Container(
