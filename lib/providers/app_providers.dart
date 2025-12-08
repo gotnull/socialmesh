@@ -919,7 +919,10 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
     if (myNode == null) return;
 
     final onlineCount = nodes.values.where((n) => n.isOnline).length;
+    final totalCount = nodes.length;
     final nearestNode = _findNearestNode(nodes, myNodeNum);
+
+    debugPrint('📱 Live Activity update: nodes=$onlineCount/$totalCount');
 
     _liveActivityService.updateActivity(
       deviceName: myNode.longName,
@@ -928,7 +931,7 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
       signalStrength: myNode.rssi,
       snr: myNode.snr,
       nodesOnline: onlineCount,
-      totalNodes: nodes.length,
+      totalNodes: totalCount,
       channelUtilization: myNode.channelUtilization,
       airtime: myNode.airUtilTx,
       sentPackets: myNode.numPacketsTx,
