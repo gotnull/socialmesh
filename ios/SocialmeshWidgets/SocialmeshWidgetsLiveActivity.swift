@@ -23,29 +23,30 @@ struct AppColors {
     static let blue = Color(red: 79/255, green: 106/255, blue: 246/255)      // #4F6AF6
     
     // Background colors
-    static let darkBackground = Color(red: 31/255, green: 38/255, blue: 51/255)  // #1F2633
-    static let darkSurface = Color(red: 41/255, green: 48/255, blue: 61/255)     // #29303D
-    static let darkBorder = Color(red: 65/255, green: 74/255, blue: 90/255)      // #414A5A
+    static let darkBackground = Color(red: 18/255, green: 18/255, blue: 18/255)   // True black for OLED
+    static let darkCard = Color(red: 28/255, green: 28/255, blue: 30/255)         // Card background
+    static let darkSurface = Color(red: 41/255, green: 48/255, blue: 61/255)      // #29303D
+    static let darkBorder = Color(red: 58/255, green: 58/255, blue: 60/255)       // Subtle border
     
     // Text colors
     static let textPrimary = Color.white
-    static let textSecondary = Color(red: 209/255, green: 213/255, blue: 219/255)  // #D1D5DB
-    static let textTertiary = Color(red: 156/255, green: 163/255, blue: 175/255)   // #9CA3AF
+    static let textSecondary = Color(red: 174/255, green: 174/255, blue: 178/255)  // iOS secondary
+    static let textTertiary = Color(red: 99/255, green: 99/255, blue: 102/255)     // iOS tertiary
     
     // Status colors
-    static let successGreen = Color(red: 74/255, green: 222/255, blue: 128/255)    // #4ADE80
-    static let warningYellow = Color(red: 251/255, green: 191/255, blue: 36/255)   // #FBBF24
-    static let errorRed = Color(red: 239/255, green: 68/255, blue: 68/255)         // #EF4444
+    static let successGreen = Color(red: 52/255, green: 199/255, blue: 89/255)     // iOS green
+    static let warningYellow = Color(red: 255/255, green: 159/255, blue: 10/255)   // iOS orange
+    static let errorRed = Color(red: 255/255, green: 69/255, blue: 58/255)         // iOS red
     
     // Brand gradient
     static let brandGradient = LinearGradient(
-        colors: [magenta, purple, blue],
+        colors: [magenta, purple],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
     
     static let subtleGradient = LinearGradient(
-        colors: [magenta.opacity(0.3), purple.opacity(0.2)],
+        colors: [magenta.opacity(0.15), purple.opacity(0.1)],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
@@ -97,15 +98,22 @@ struct ExpandedLeadingView: View {
     
     var body: some View {
         let isConnected = sharedDefault.bool(forKey: context.attributes.prefixedKey("isConnected"))
+        let shortName = sharedDefault.string(forKey: context.attributes.prefixedKey("shortName")) ?? "????"
         
         HStack(spacing: 6) {
-            // Animated radio icon with gradient
-            Image(systemName: isConnected ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(isConnected ? AppColors.brandGradient : LinearGradient(colors: [AppColors.errorRed], startPoint: .leading, endPoint: .trailing))
+            // Radio icon in rounded container
+            ZStack {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isConnected ? AppColors.successGreen.opacity(0.2) : AppColors.errorRed.opacity(0.2))
+                    .frame(width: 24, height: 24)
+                
+                Image(systemName: "antenna.radiowaves.left.and.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(isConnected ? AppColors.successGreen : AppColors.errorRed)
+            }
             
-            Text(sharedDefault.string(forKey: context.attributes.prefixedKey("shortName")) ?? "????")
-                .font(.system(size: 14, weight: .bold, design: .monospaced))
+            Text(shortName)
+                .font(.system(size: 15, weight: .bold, design: .monospaced))
                 .foregroundColor(AppColors.textPrimary)
         }
     }
@@ -117,10 +125,11 @@ struct ExpandedTrailingView: View {
     
     var body: some View {
         let batteryLevel = sharedDefault.integer(forKey: context.attributes.prefixedKey("batteryLevel"))
+        let signalStrength = sharedDefault.integer(forKey: context.attributes.prefixedKey("signalStrength"))
         
-        HStack(spacing: 6) {
-            BatteryIndicator(level: batteryLevel, showPercentage: true)
-            SignalBars(strength: sharedDefault.integer(forKey: context.attributes.prefixedKey("signalStrength")))
+        HStack(spacing: 8) {
+            BatteryPill(level: batteryLevel)
+            SignalBars(strength: signalStrength)
         }
     }
 }
@@ -130,10 +139,13 @@ struct ExpandedCenterView: View {
     let context: ActivityViewContext<LiveActivitiesAppAttributes>
     
     var body: some View {
-        Text(sharedDefault.string(forKey: context.attributes.prefixedKey("deviceName")) ?? "Meshtastic")
-            .font(.system(size: 16, weight: .bold, design: .monospaced))
+        let deviceName = sharedDefault.string(forKey: context.attributes.prefixedKey("deviceName")) ?? "Meshtastic"
+        
+        Text(deviceName)
+            .font(.system(size: 18, weight: .bold))
             .foregroundColor(AppColors.textPrimary)
             .lineLimit(1)
+            .minimumScaleFactor(0.7)
     }
 }
 
@@ -149,18 +161,32 @@ struct ExpandedBottomView: View {
         let nodesOnline = sharedDefault.integer(forKey: context.attributes.prefixedKey("nodesOnline"))
         
         HStack(spacing: 0) {
-            // Channel Utilization
-            StatPill(icon: "waveform.path", value: String(format: "%.1f%%", channelUtil), color: AppColors.purple)
+            // Channel stats (left)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Ch. Util: \(String(format: "%.1f", channelUtil))%")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(AppColors.textSecondary)
+                Text("Airtime: \(String(format: "%.1f", airtime))%")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(AppColors.textSecondary)
+            }
             
             Spacer()
             
-            // Nodes Online
-            StatPill(icon: "person.2.fill", value: "\(nodesOnline)", color: AppColors.successGreen)
+            // TX/RX (center)
+            VStack(spacing: 2) {
+                Text("TX: \(sentPackets)")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(AppColors.textSecondary)
+                Text("RX: \(receivedPackets)")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(AppColors.textSecondary)
+            }
             
             Spacer()
             
-            // TX/RX
-            StatPill(icon: "arrow.up.arrow.down", value: "\(sentPackets)/\(receivedPackets)", color: AppColors.blue)
+            // Nodes online (right) - prominent badge
+            NodesBadge(count: nodesOnline)
         }
         .padding(.horizontal, 4)
     }
@@ -175,9 +201,15 @@ struct CompactLeadingView: View {
     var body: some View {
         let isConnected = sharedDefault.bool(forKey: context.attributes.prefixedKey("isConnected"))
         
-        Image(systemName: isConnected ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(isConnected ? AppColors.brandGradient : LinearGradient(colors: [AppColors.errorRed], startPoint: .leading, endPoint: .trailing))
+        ZStack {
+            Circle()
+                .fill(isConnected ? AppColors.successGreen.opacity(0.2) : AppColors.errorRed.opacity(0.2))
+                .frame(width: 22, height: 22)
+            
+            Image(systemName: "antenna.radiowaves.left.and.right")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(isConnected ? AppColors.successGreen : AppColors.errorRed)
+        }
     }
 }
 
@@ -188,10 +220,9 @@ struct CompactTrailingView: View {
     var body: some View {
         let batteryLevel = sharedDefault.integer(forKey: context.attributes.prefixedKey("batteryLevel"))
         
-        HStack(spacing: 3) {
-            BatteryIndicator(level: batteryLevel, showPercentage: false, compact: true)
+        HStack(spacing: 4) {
             Text("\(batteryLevel)%")
-                .font(.system(size: 12, weight: .medium, design: .monospaced))
+                .font(.system(size: 13, weight: .bold, design: .rounded))
                 .foregroundColor(batteryColor(for: batteryLevel))
         }
     }
@@ -210,9 +241,9 @@ struct MinimalView: View {
     var body: some View {
         let isConnected = sharedDefault.bool(forKey: context.attributes.prefixedKey("isConnected"))
         
-        Image(systemName: isConnected ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(isConnected ? AppColors.brandGradient : LinearGradient(colors: [AppColors.errorRed], startPoint: .leading, endPoint: .trailing))
+        Image(systemName: "antenna.radiowaves.left.and.right")
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundColor(isConnected ? AppColors.successGreen : AppColors.errorRed)
     }
 }
 
@@ -263,24 +294,17 @@ struct LockScreenView: View {
     }
     
     var body: some View {
-        VStack(spacing: 12) {
-            // Top row: Icon + Short Name | Device Name | Battery + Signal
-            HStack(alignment: .center) {
-                // Left: Connection icon with short name
-                HStack(spacing: 8) {
-                    ZStack {
-                        // Gradient glow effect
-                        Circle()
-                            .fill(AppColors.subtleGradient)
-                            .frame(width: 36, height: 36)
-                        
-                        Image(systemName: isConnected ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(isConnected ? AppColors.brandGradient : LinearGradient(colors: [AppColors.errorRed], startPoint: .leading, endPoint: .trailing))
-                    }
+        VStack(spacing: 0) {
+            // Header Row
+            HStack {
+                // Left: Radio icon + Short name (like "✈ UA2645")
+                HStack(spacing: 6) {
+                    Image(systemName: "antenna.radiowaves.left.and.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(isConnected ? AppColors.successGreen : AppColors.errorRed)
                     
                     Text(shortName)
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .font(.system(size: 15, weight: .bold, design: .monospaced))
                         .foregroundColor(AppColors.textPrimary)
                 }
                 
@@ -288,142 +312,147 @@ struct LockScreenView: View {
                 
                 // Center: Device name
                 Text(deviceName)
-                    .font(.system(size: 18, weight: .bold, design: .monospaced))
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(AppColors.textPrimary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 
                 Spacer()
                 
-                // Right: Battery and signal
-                HStack(spacing: 8) {
-                    BatteryIndicator(level: batteryLevel, showPercentage: true)
+                // Right: Battery + Signal (like Flighty "FLIGHTY" label area)
+                HStack(spacing: 6) {
+                    BatteryPill(level: batteryLevel)
                     SignalBars(strength: signalStrength)
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+            .padding(.bottom, 12)
             
-            // Divider with gradient
-            Rectangle()
-                .fill(AppColors.darkBorder)
-                .frame(height: 1)
-            
-            // Bottom row: Stats
-            HStack(spacing: 16) {
-                // Channel Utilization
-                StatItem(
-                    icon: "waveform.path",
+            // MARK: Stats Row - Clean grid like Fitness app
+            HStack(spacing: 12) {
+                // Channel Utilization Card
+                StatCard(
                     label: "Ch. Util",
-                    value: String(format: "%.1f%%", channelUtilization),
+                    value: String(format: "%.1f", channelUtilization),
+                    unit: "%",
                     color: AppColors.purple
                 )
                 
-                Spacer()
-                
-                // Airtime
-                StatItem(
-                    icon: "clock.fill",
+                // Airtime Card
+                StatCard(
                     label: "Airtime",
-                    value: String(format: "%.1f%%", airtime),
+                    value: String(format: "%.1f", airtime),
+                    unit: "%",
                     color: AppColors.blue
                 )
                 
-                Spacer()
-                
-                // TX/RX
-                StatItem(
-                    icon: "arrow.up.arrow.down",
-                    label: "TX/RX",
-                    value: "\(sentPackets)/\(receivedPackets)",
+                // TX Card
+                StatCard(
+                    label: "TX",
+                    value: "\(sentPackets)",
+                    unit: nil,
                     color: AppColors.magenta
                 )
                 
-                Spacer()
-                
-                // Nodes online
-                StatItem(
-                    icon: "person.2.fill",
-                    label: "Online",
-                    value: "\(nodesOnline)",
+                // RX Card
+                StatCard(
+                    label: "RX",
+                    value: "\(receivedPackets)",
+                    unit: nil,
                     color: AppColors.successGreen
                 )
+                
+                // Nodes Online Badge (prominent, like Flighty luggage badge)
+                NodesBadge(count: nodesOnline)
             }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 14)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
     }
 }
 
 // MARK: - Reusable Components
 
-struct StatItem: View {
-    let icon: String
+// Compact stat card like Fitness app grid items
+struct StatCard: View {
     let label: String
     let value: String
+    let unit: String?
     let color: Color
     
     var body: some View {
         VStack(alignment: .center, spacing: 2) {
-            HStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(color)
+            HStack(alignment: .lastTextBaseline, spacing: 1) {
                 Text(value)
-                    .font(.system(size: 12, weight: .bold, design: .monospaced))
-                    .foregroundColor(AppColors.textPrimary)
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundColor(color)
+                if let unit = unit {
+                    Text(unit)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(color.opacity(0.8))
+                }
             }
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            
             Text(label)
                 .font(.system(size: 9, weight: .medium))
                 .foregroundColor(AppColors.textTertiary)
+                .textCase(.uppercase)
         }
+        .frame(maxWidth: .infinity)
     }
 }
 
-struct StatPill: View {
-    let icon: String
-    let value: String
-    let color: Color
+// Prominent badge for nodes online (like Flighty's luggage count badge)
+struct NodesBadge: View {
+    let count: Int
     
     var body: some View {
         HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(color)
-            Text(value)
-                .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                .foregroundColor(AppColors.textPrimary)
+            Image(systemName: "person.2.fill")
+                .font(.system(size: 12, weight: .semibold))
+            Text("\(count)")
+                .font(.system(size: 14, weight: .bold, design: .rounded))
         }
+        .foregroundColor(.black)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(AppColors.successGreen)
+        )
     }
 }
 
-struct BatteryIndicator: View {
+// Battery pill with fill indicator (like iPhone battery)
+struct BatteryPill: View {
     let level: Int
-    var showPercentage: Bool = true
-    var compact: Bool = false
     
-    var batteryColor: Color {
+    var color: Color {
         if level <= 20 { return AppColors.errorRed }
         if level <= 50 { return AppColors.warningYellow }
         return AppColors.successGreen
     }
     
-    var batteryIcon: String {
-        if level <= 10 { return "battery.0" }
-        if level <= 25 { return "battery.25" }
-        if level <= 50 { return "battery.50" }
-        if level <= 75 { return "battery.75" }
-        return "battery.100"
-    }
-    
     var body: some View {
-        HStack(spacing: 3) {
-            Image(systemName: batteryIcon)
-                .font(.system(size: compact ? 14 : 16, weight: .medium))
-                .foregroundColor(batteryColor)
-            
-            if showPercentage {
-                Text("\(level)%")
-                    .font(.system(size: compact ? 11 : 12, weight: .semibold, design: .monospaced))
-                    .foregroundColor(batteryColor)
+        HStack(spacing: 4) {
+            // Battery outline with fill
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 3)
+                    .stroke(color, lineWidth: 1)
+                    .frame(width: 22, height: 11)
+                
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(color)
+                    .frame(width: max(2, CGFloat(level) / 100.0 * 18), height: 7)
+                    .padding(.leading, 2)
             }
+            
+            Text("\(level)%")
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundColor(color)
         }
     }
 }
@@ -439,12 +468,18 @@ struct SignalBars: View {
         return 0
     }
     
+    var color: Color {
+        if signalBars >= 3 { return AppColors.successGreen }
+        if signalBars >= 2 { return AppColors.warningYellow }
+        return AppColors.errorRed
+    }
+    
     var body: some View {
-        HStack(spacing: 2) {
+        HStack(alignment: .bottom, spacing: 1.5) {
             ForEach(0..<4, id: \.self) { index in
                 RoundedRectangle(cornerRadius: 1)
-                    .fill(index < signalBars ? AppColors.successGreen : AppColors.darkBorder)
-                    .frame(width: 3, height: CGFloat(5 + index * 3))
+                    .fill(index < signalBars ? color : AppColors.darkBorder)
+                    .frame(width: 3, height: CGFloat(4 + index * 3))
             }
         }
     }
