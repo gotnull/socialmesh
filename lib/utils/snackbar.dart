@@ -1,101 +1,87 @@
-import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
 
-/// Default margin for snackbars - gives space for the bubble icon
-const _snackBarMargin = EdgeInsets.fromLTRB(24, 0, 24, 16);
-
-/// Shows a success snackbar at the bottom of the screen
+/// Shows a success snackbar with accent color background
 void showAppSnackBar(
   BuildContext context,
   String message, {
   String title = 'Success',
   Duration duration = const Duration(seconds: 3),
 }) {
-  final snackBar = SnackBar(
-    elevation: 0,
-    behavior: SnackBarBehavior.floating,
-    backgroundColor: Colors.transparent,
-    margin: _snackBarMargin,
+  _showSnackBar(
+    context,
+    message,
+    backgroundColor: Theme.of(context).colorScheme.primary,
     duration: duration,
-    content: AwesomeSnackbarContent(
-      title: title,
-      message: message,
-      contentType: ContentType.success,
-    ),
   );
-
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(snackBar);
 }
 
-/// Shows an error snackbar at the bottom of the screen
+/// Shows an error snackbar with red background
 void showErrorSnackBar(
   BuildContext context,
   String message, {
   String title = 'Error',
   Duration duration = const Duration(seconds: 4),
 }) {
-  final snackBar = SnackBar(
-    elevation: 0,
-    behavior: SnackBarBehavior.floating,
-    backgroundColor: Colors.transparent,
-    margin: _snackBarMargin,
+  _showSnackBar(
+    context,
+    message,
+    backgroundColor: Colors.red.shade700,
     duration: duration,
-    content: AwesomeSnackbarContent(
-      title: title,
-      message: message,
-      contentType: ContentType.failure,
-    ),
   );
-
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(snackBar);
 }
 
-/// Shows a warning snackbar at the bottom of the screen
+/// Shows a warning snackbar with orange background
 void showWarningSnackBar(
   BuildContext context,
   String message, {
   String title = 'Warning',
   Duration duration = const Duration(seconds: 4),
 }) {
-  final snackBar = SnackBar(
-    elevation: 0,
-    behavior: SnackBarBehavior.floating,
-    backgroundColor: Colors.transparent,
-    margin: _snackBarMargin,
+  _showSnackBar(
+    context,
+    message,
+    backgroundColor: Colors.orange.shade700,
     duration: duration,
-    content: AwesomeSnackbarContent(
-      title: title,
-      message: message,
-      contentType: ContentType.warning,
-    ),
   );
-
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(snackBar);
 }
 
-/// Shows a help/info snackbar at the bottom of the screen
+/// Shows an info snackbar with accent color background
 void showInfoSnackBar(
   BuildContext context,
   String message, {
   String title = 'Info',
   Duration duration = const Duration(seconds: 3),
 }) {
-  final snackBar = SnackBar(
-    elevation: 0,
-    behavior: SnackBarBehavior.floating,
-    backgroundColor: Colors.transparent,
-    margin: _snackBarMargin,
+  _showSnackBar(
+    context,
+    message,
+    backgroundColor: Theme.of(context).colorScheme.primary,
     duration: duration,
-    content: AwesomeSnackbarContent(
-      title: title,
-      message: message,
-      contentType: ContentType.help,
+  );
+}
+
+void _showSnackBar(
+  BuildContext context,
+  String message, {
+  required Color backgroundColor,
+  required Duration duration,
+}) {
+  final snackBar = SnackBar(
+    behavior: SnackBarBehavior.floating,
+    backgroundColor: backgroundColor,
+    duration: duration,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    margin: const EdgeInsets.all(16),
+    content: Text(
+      message,
+      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+    ),
+    action: SnackBarAction(
+      label: '✕',
+      textColor: Colors.white,
+      onPressed: () {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      },
     ),
   );
 
