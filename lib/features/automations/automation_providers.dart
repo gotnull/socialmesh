@@ -7,11 +7,12 @@ import 'automation_engine.dart';
 import 'automation_repository.dart';
 import 'models/automation.dart';
 
-/// Provider for the automation repository
-final automationRepositoryProvider = Provider<AutomationRepository>((ref) {
-  final repository = AutomationRepository();
-  return repository;
-});
+/// Provider for the automation repository (ChangeNotifier for reactive updates)
+final automationRepositoryProvider =
+    ChangeNotifierProvider<AutomationRepository>((ref) {
+      final repository = AutomationRepository();
+      return repository;
+    });
 
 /// Provider for initializing the repository
 final automationRepositoryInitProvider = FutureProvider<AutomationRepository>((
@@ -69,15 +70,31 @@ final automationsProvider =
       ref,
     ) {
       final repository = ref.watch(automationRepositoryProvider);
-      return AutomationsNotifier(repository);
+      return AutomationsNotifier(repository, ref);
     });
 
 /// State notifier for automations
 class AutomationsNotifier extends StateNotifier<AsyncValue<List<Automation>>> {
   final AutomationRepository _repository;
 
-  AutomationsNotifier(this._repository) : super(const AsyncValue.loading()) {
+  AutomationsNotifier(this._repository, Ref ref)
+    : super(const AsyncValue.loading()) {
     _loadAutomations();
+    // Listen to repository changes (e.g., from engine recordTrigger)
+    _repository.addListener(_onRepositoryChanged);
+  }
+
+  void _onRepositoryChanged() {
+    // Update state with latest automations when repository changes
+    if (mounted) {
+      state = AsyncValue.data(_repository.automations);
+    }
+  }
+
+  @override
+  void dispose() {
+    _repository.removeListener(_onRepositoryChanged);
+    super.dispose();
   }
 
   Future<void> _loadAutomations() async {

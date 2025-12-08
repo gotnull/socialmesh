@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'models/automation.dart';
 
 /// Repository for storing and retrieving automations
-class AutomationRepository {
+class AutomationRepository extends ChangeNotifier {
   static const String _automationsKey = 'automations';
   static const String _logKey = 'automation_log';
   static const int _maxLogEntries = 100;
@@ -124,6 +124,7 @@ class AutomationRepository {
         triggerCount: automation.triggerCount + 1,
       );
       await _saveAutomations();
+      notifyListeners();
     }
   }
 
@@ -135,6 +136,7 @@ class AutomationRepository {
       _log = _log.sublist(0, _maxLogEntries);
     }
     await _saveLog();
+    notifyListeners();
   }
 
   /// Clear the log
