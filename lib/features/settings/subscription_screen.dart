@@ -270,6 +270,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }
 
   Widget _buildBillingToggle() {
+    final accentColor = context.accentColor;
+
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -284,74 +286,78 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 _isYearly = false;
                 _selectedPackage = null;
               }),
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: !_isYearly ? AppTheme.darkCard : Colors.transparent,
+                  color: !_isYearly
+                      ? accentColor.withValues(alpha: 0.15)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: !_isYearly ? accentColor : Colors.transparent,
+                    width: 2,
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Monthly',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: !_isYearly
-                            ? AppTheme.textPrimary
-                            : AppTheme.textTertiary,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Monthly',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: !_isYearly ? accentColor : AppTheme.textTertiary,
+                  ),
                 ),
               ),
             ),
           ),
+          const SizedBox(width: 8),
           Expanded(
             child: GestureDetector(
               onTap: () => setState(() {
                 _isYearly = true;
                 _selectedPackage = null;
               }),
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: _isYearly ? AppTheme.darkCard : Colors.transparent,
+                  color: _isYearly
+                      ? accentColor.withValues(alpha: 0.15)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: _isYearly ? accentColor : Colors.transparent,
+                    width: 2,
+                  ),
                 ),
-                child: Column(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Yearly',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: _isYearly
-                                ? AppTheme.textPrimary
-                                : AppTheme.textTertiary,
-                          ),
+                    Text(
+                      'Yearly',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: _isYearly ? accentColor : AppTheme.textTertiary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: accentColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'Save 50%',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-                        SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: context.accentColor,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Text(
-                            'Save 50%',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
@@ -629,6 +635,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(width: 12),
                 OutlinedButton(
                   onPressed: () => _purchaseItem(purchase),
                   style: OutlinedButton.styleFrom(
