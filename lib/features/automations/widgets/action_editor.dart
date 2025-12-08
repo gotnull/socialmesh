@@ -830,6 +830,10 @@ class _ActionEditorState extends State<ActionEditor> {
   }
 
   Widget _buildNotificationConfig(BuildContext context) {
+    final hasCustomSound =
+        widget.action.notificationSoundName != null &&
+        widget.action.notificationSoundName!.isNotEmpty;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       child: Column(
@@ -873,7 +877,117 @@ class _ActionEditorState extends State<ActionEditor> {
             triggerType: widget.triggerType,
             showDeleteHint: _insertTargetField != null,
           ),
+          const SizedBox(height: 12),
+          // Custom sound option
+          GestureDetector(
+            onTap: () => _showNotificationSoundPicker(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.darkBackground,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.darkBorder),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: hasCustomSound
+                          ? Colors.orange.withValues(alpha: 0.15)
+                          : AppTheme.darkCard,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.music_note,
+                      color: hasCustomSound
+                          ? Colors.orange
+                          : AppTheme.textTertiary,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          hasCustomSound
+                              ? widget.action.notificationSoundName!
+                              : 'Custom sound (optional)',
+                          style: TextStyle(
+                            color: hasCustomSound
+                                ? Colors.white
+                                : AppTheme.textSecondary,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          hasCustomSound
+                              ? 'Plays after notification'
+                              : 'System default',
+                          style: const TextStyle(
+                            color: AppTheme.textTertiary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (hasCustomSound)
+                    IconButton(
+                      onPressed: () {
+                        widget.onChanged(
+                          widget.action.copyWith(
+                            config: {
+                              ...widget.action.config,
+                              'notificationSoundRtttl': null,
+                              'notificationSoundName': null,
+                            },
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.close, size: 18),
+                      color: AppTheme.textTertiary,
+                      visualDensity: VisualDensity.compact,
+                    )
+                  else
+                    const Icon(
+                      Icons.keyboard_arrow_down,
+                      color: AppTheme.textSecondary,
+                    ),
+                ],
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _showNotificationSoundPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkSurface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => _SoundPickerSheet(
+        currentRtttl: widget.action.notificationSoundRtttl,
+        onSelect: (item) {
+          widget.onChanged(
+            widget.action.copyWith(
+              config: {
+                ...widget.action.config,
+                'notificationSoundRtttl': item.rtttl,
+                'notificationSoundName': item.formattedTitle,
+              },
+            ),
+          );
+          Navigator.pop(context);
+        },
       ),
     );
   }

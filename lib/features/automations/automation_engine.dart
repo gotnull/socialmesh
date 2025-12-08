@@ -567,6 +567,19 @@ class AutomationEngine {
               ),
             ),
           );
+          // Play custom sound if configured
+          final customSoundRtttl = action.notificationSoundRtttl;
+          if (customSoundRtttl != null && customSoundRtttl.isNotEmpty) {
+            final player = RtttlPlayer();
+            try {
+              await player.play(customSoundRtttl);
+            } catch (e) {
+              // Don't fail the action if sound fails
+              debugPrint('Failed to play notification sound: $e');
+            } finally {
+              await player.dispose();
+            }
+          }
           return ActionResult(actionName: actionName, success: true);
 
         case ActionType.triggerWebhook:

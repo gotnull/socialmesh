@@ -412,6 +412,14 @@ class AutomationAction {
   /// Notification body
   String? get notificationBody => config['notificationBody'] as String?;
 
+  /// Notification sound RTTTL (optional custom sound)
+  String? get notificationSoundRtttl =>
+      config['notificationSoundRtttl'] as String?;
+
+  /// Notification sound name (for display)
+  String? get notificationSoundName =>
+      config['notificationSoundName'] as String?;
+
   /// iOS Shortcut name
   String? get shortcutName => config['shortcutName'] as String?;
 
