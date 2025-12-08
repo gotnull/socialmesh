@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/features/automations/automation_engine.dart';
 import 'package:socialmesh/features/automations/automation_repository.dart';
@@ -45,11 +46,43 @@ class MockAutomationRepository extends AutomationRepository {
 class MockIftttService extends IftttService {
   bool webhookCalled = false;
   String? lastEventName;
+  String? lastValue1;
+  String? lastValue2;
+  String? lastValue3;
+  final List<String> triggeredEvents = [];
+
+  void reset() {
+    webhookCalled = false;
+    lastEventName = null;
+    lastValue1 = null;
+    lastValue2 = null;
+    lastValue3 = null;
+    triggeredEvents.clear();
+  }
+
+  @override
+  bool get isActive => true;
 
   @override
   Future<bool> testWebhook() async {
     webhookCalled = true;
     lastEventName = 'test';
+    return true;
+  }
+
+  @override
+  Future<bool> triggerCustomEvent({
+    required String eventName,
+    String? value1,
+    String? value2,
+    String? value3,
+  }) async {
+    webhookCalled = true;
+    lastEventName = eventName;
+    lastValue1 = value1;
+    lastValue2 = value2;
+    lastValue3 = value3;
+    triggeredEvents.add(eventName);
     return true;
   }
 }
@@ -959,6 +992,496 @@ void main() {
       expect(sentMessages, isNotEmpty);
       expect(sentMessages.first.$2, contains('TestNode'));
       expect(sentMessages.first.$2, contains('-37.82'));
+    });
+  });
+
+  group('AutomationEngine - Webhook Action', () {
+    test('triggerWebhook action calls IFTTT service with event data', () async {
+      final automation = Automation(
+        id: 'test-webhook',
+        name: 'Webhook Test',
+        trigger: const AutomationTrigger(type: TriggerType.nodeOnline),
+        actions: const [
+          AutomationAction(
+            type: ActionType.triggerWebhook,
+            config: {'webhookEventName': 'my_custom_event'},
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      // Node comes online
+      final nodeOffline = MeshNode(
+        nodeNum: 123,
+        longName: 'TestNode',
+        batteryLevel: 75,
+        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
+        isOnline: false,
+      );
+      await engine.processNodeUpdate(nodeOffline);
+
+      final nodeOnline = MeshNode(
+        nodeNum: 123,
+        longName: 'TestNode',
+        batteryLevel: 75,
+        latitude: -37.8136,
+        longitude: 144.9631,
+        lastHeard: DateTime.now(),
+        isOnline: true,
+      );
+      await engine.processNodeUpdate(nodeOnline);
+
+      expect(mockIftttService.webhookCalled, true);
+      expect(mockIftttService.lastEventName, 'my_custom_event');
+      expect(mockIftttService.lastValue1, 'TestNode');
+      expect(mockIftttService.lastValue2, contains('-37.8136'));
+    });
+
+    test('webhook action passes battery and timestamp in value3', () async {
+      final automation = Automation(
+        id: 'test-webhook-battery',
+        name: 'Webhook Battery Test',
+        trigger: const AutomationTrigger(type: TriggerType.batteryLow),
+        actions: const [
+          AutomationAction(
+            type: ActionType.triggerWebhook,
+            config: {'webhookEventName': 'battery_alert'},
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      // Battery drops below threshold
+      final nodeHigh = MeshNode(
+        nodeNum: 456,
+        longName: 'BatteryNode',
+        batteryLevel: 25,
+        lastHeard: DateTime.now(),
+      );
+      await engine.processNodeUpdate(nodeHigh);
+
+      final nodeLow = MeshNode(
+        nodeNum: 456,
+        longName: 'BatteryNode',
+        batteryLevel: 15,
+        lastHeard: DateTime.now(),
+      );
+      await engine.processNodeUpdate(nodeLow);
+
+      expect(mockIftttService.webhookCalled, true);
+      expect(mockIftttService.lastEventName, 'battery_alert');
+      expect(mockIftttService.lastValue3, contains('Battery: 15%'));
+      expect(mockIftttService.lastValue3, contains('Time:'));
+    });
+
+    test('webhook action fails gracefully without event name', () async {
+      final automation = Automation(
+        id: 'test-webhook-no-name',
+        name: 'Webhook No Name Test',
+        trigger: const AutomationTrigger(type: TriggerType.messageReceived),
+        actions: const [
+          AutomationAction(
+            type: ActionType.triggerWebhook,
+            config: {}, // No webhookEventName
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      final message = AutomationMessage(from: 123, text: 'Test');
+      await engine.processMessage(message, senderName: 'Test');
+
+      // Should log error but not crash
+      expect(mockRepository.log, isNotEmpty);
+      expect(mockRepository.log.first.success, false);
+    });
+  });
+
+  group('AutomationEngine - Push Notification Action', () {
+    test('pushNotification action interpolates variables', () async {
+      final automation = Automation(
+        id: 'test-notification',
+        name: 'Notification Test',
+        trigger: const AutomationTrigger(type: TriggerType.nodeOffline),
+        actions: const [
+          AutomationAction(
+            type: ActionType.pushNotification,
+            config: {
+              'notificationTitle': '{{node.name}} Offline',
+              'notificationBody': 'Node went offline at {{time}}',
+            },
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      // Node goes offline
+      final nodeOnline = MeshNode(
+        nodeNum: 789,
+        longName: 'NotifyNode',
+        lastHeard: DateTime.now(),
+        isOnline: true,
+      );
+      await engine.processNodeUpdate(nodeOnline);
+
+      final nodeOffline = MeshNode(
+        nodeNum: 789,
+        longName: 'NotifyNode',
+        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
+        isOnline: false,
+      );
+      await engine.processNodeUpdate(nodeOffline);
+
+      // Verify action was executed (notification plugin is null in tests)
+      expect(mockRepository.log, isNotEmpty);
+      expect(
+        mockRepository.log.first.actionsExecuted,
+        contains('Push notification'),
+      );
+    });
+  });
+
+  group('AutomationEngine - Time and Day Conditions', () {
+    test('respects timeRange condition', () async {
+      // Create automation that should only run during current time window
+      final now = TimeOfDay.now();
+      final startHour = (now.hour - 1) % 24;
+      final endHour = (now.hour + 1) % 24;
+
+      final automation = Automation(
+        id: 'test-time-range',
+        name: 'Time Range Test',
+        trigger: const AutomationTrigger(type: TriggerType.messageReceived),
+        actions: const [
+          AutomationAction(
+            type: ActionType.sendMessage,
+            config: {'targetNodeNum': 999, 'messageText': 'In time range'},
+          ),
+        ],
+        conditions: [
+          AutomationCondition(
+            type: ConditionType.timeRange,
+            config: {'timeStart': '$startHour:00', 'timeEnd': '$endHour:00'},
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      final message = AutomationMessage(from: 123, text: 'Test');
+      await engine.processMessage(message, senderName: 'Test');
+
+      // Should trigger because we're within the time range
+      expect(sentMessages, isNotEmpty);
+    });
+
+    test('blocks outside timeRange condition', () async {
+      // Create automation that should NOT run (time window in past)
+      final now = TimeOfDay.now();
+      final startHour = (now.hour + 2) % 24;
+      final endHour = (now.hour + 3) % 24;
+
+      final automation = Automation(
+        id: 'test-time-range-block',
+        name: 'Time Range Block Test',
+        trigger: const AutomationTrigger(type: TriggerType.messageReceived),
+        actions: const [
+          AutomationAction(
+            type: ActionType.sendMessage,
+            config: {'targetNodeNum': 999, 'messageText': 'Should not send'},
+          ),
+        ],
+        conditions: [
+          AutomationCondition(
+            type: ConditionType.timeRange,
+            config: {'timeStart': '$startHour:00', 'timeEnd': '$endHour:00'},
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      final message = AutomationMessage(from: 456, text: 'Test');
+      await engine.processMessage(message, senderName: 'Test');
+
+      // Should NOT trigger because we're outside the time range
+      expect(sentMessages, isEmpty);
+    });
+
+    test('respects dayOfWeek condition on matching day', () async {
+      final today = DateTime.now().weekday % 7; // 0-6 (Sunday = 0)
+
+      final automation = Automation(
+        id: 'test-day-match',
+        name: 'Day Match Test',
+        trigger: const AutomationTrigger(type: TriggerType.messageReceived),
+        actions: const [
+          AutomationAction(
+            type: ActionType.sendMessage,
+            config: {'targetNodeNum': 999, 'messageText': 'Day matches'},
+          ),
+        ],
+        conditions: [
+          AutomationCondition(
+            type: ConditionType.dayOfWeek,
+            config: {
+              'daysOfWeek': [today],
+            },
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      final message = AutomationMessage(from: 789, text: 'Test');
+      await engine.processMessage(message, senderName: 'Test');
+
+      expect(sentMessages, isNotEmpty);
+    });
+
+    test('blocks on non-matching dayOfWeek', () async {
+      final tomorrow = (DateTime.now().weekday + 1) % 7;
+
+      final automation = Automation(
+        id: 'test-day-no-match',
+        name: 'Day No Match Test',
+        trigger: const AutomationTrigger(type: TriggerType.messageReceived),
+        actions: const [
+          AutomationAction(
+            type: ActionType.sendMessage,
+            config: {'targetNodeNum': 999, 'messageText': 'Should not send'},
+          ),
+        ],
+        conditions: [
+          AutomationCondition(
+            type: ConditionType.dayOfWeek,
+            config: {
+              'daysOfWeek': [tomorrow],
+            },
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      final message = AutomationMessage(from: 321, text: 'Test');
+      await engine.processMessage(message, senderName: 'Test');
+
+      expect(sentMessages, isEmpty);
+    });
+  });
+
+  group('AutomationEngine - Node Online/Offline Conditions', () {
+    test('respects nodeOnline condition', () async {
+      // Add a dummy automation first so processNodeUpdate doesn't short-circuit
+      final dummyAutomation = Automation(
+        id: 'dummy',
+        name: 'Dummy',
+        trigger: const AutomationTrigger(type: TriggerType.nodeOffline),
+        actions: const [],
+      );
+      mockRepository.addTestAutomation(dummyAutomation);
+
+      // Now register node 555 - start offline then come online
+      final node555Offline = MeshNode(
+        nodeNum: 555,
+        isOnline: false,
+        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
+      );
+      await engine.processNodeUpdate(node555Offline);
+
+      final node555Online = MeshNode(
+        nodeNum: 555,
+        isOnline: true,
+        lastHeard: DateTime.now(),
+      );
+      await engine.processNodeUpdate(node555Online);
+
+      // Now add the actual automation that checks the condition
+      final automation = Automation(
+        id: 'test-condition-node-online',
+        name: 'Node Online Condition Test',
+        trigger: const AutomationTrigger(type: TriggerType.messageReceived),
+        actions: const [
+          AutomationAction(
+            type: ActionType.sendMessage,
+            config: {'targetNodeNum': 999, 'messageText': 'Node 555 is online'},
+          ),
+        ],
+        conditions: const [
+          AutomationCondition(
+            type: ConditionType.nodeOnline,
+            config: {'nodeNum': 555},
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      final message = AutomationMessage(from: 123, text: 'Test');
+      await engine.processMessage(message, senderName: 'Test');
+
+      expect(sentMessages, isNotEmpty);
+    });
+
+    test('blocks when nodeOnline condition not met', () async {
+      // Add a dummy automation first
+      final dummyAutomation = Automation(
+        id: 'dummy2',
+        name: 'Dummy',
+        trigger: const AutomationTrigger(type: TriggerType.nodeOffline),
+        actions: const [],
+      );
+      mockRepository.addTestAutomation(dummyAutomation);
+
+      // Register node 666 as offline
+      final node666Online = MeshNode(
+        nodeNum: 666,
+        isOnline: true,
+        lastHeard: DateTime.now(),
+      );
+      await engine.processNodeUpdate(node666Online);
+
+      final node666Offline = MeshNode(
+        nodeNum: 666,
+        isOnline: false,
+        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
+      );
+      await engine.processNodeUpdate(node666Offline);
+
+      final automation = Automation(
+        id: 'test-condition-node-offline-check',
+        name: 'Node Offline Check Test',
+        trigger: const AutomationTrigger(type: TriggerType.messageReceived),
+        actions: const [
+          AutomationAction(
+            type: ActionType.sendMessage,
+            config: {'targetNodeNum': 999, 'messageText': 'Should not send'},
+          ),
+        ],
+        conditions: const [
+          AutomationCondition(
+            type: ConditionType.nodeOnline,
+            config: {'nodeNum': 666},
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      final message = AutomationMessage(from: 234, text: 'Test');
+      await engine.processMessage(message, senderName: 'Test');
+
+      expect(sentMessages, isEmpty);
+    });
+  });
+
+  group('AutomationEngine - Vibrate Action', () {
+    test('vibrate action succeeds', () async {
+      final automation = Automation(
+        id: 'test-vibrate',
+        name: 'Vibrate Test',
+        trigger: const AutomationTrigger(type: TriggerType.messageReceived),
+        actions: const [AutomationAction(type: ActionType.vibrate)],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      final message = AutomationMessage(from: 123, text: 'Trigger');
+      await engine.processMessage(message, senderName: 'Test');
+
+      expect(mockRepository.log, isNotEmpty);
+      expect(mockRepository.log.first.success, true);
+      expect(
+        mockRepository.log.first.actionsExecuted,
+        contains('Vibrate device'),
+      );
+    });
+  });
+
+  group('AutomationEngine - Variable Interpolation', () {
+    test('interpolates all supported variables', () async {
+      final automation = Automation(
+        id: 'test-all-vars',
+        name: 'All Variables Test',
+        trigger: const AutomationTrigger(type: TriggerType.positionChanged),
+        actions: const [
+          AutomationAction(
+            type: ActionType.sendMessage,
+            config: {
+              'targetNodeNum': 999,
+              'messageText':
+                  'Node: {{node.name}}, ID: {{node.num}}, Battery: {{battery}}, Location: {{location}}, Time: {{time}}',
+            },
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      // First position to establish baseline
+      final node1 = MeshNode(
+        nodeNum: 0xABCD,
+        longName: 'VarTestNode',
+        batteryLevel: 75,
+        latitude: -33.0,
+        longitude: 151.0,
+        lastHeard: DateTime.now(),
+      );
+      await engine.processNodeUpdate(node1);
+
+      // Position changes - triggers positionChanged
+      final node2 = MeshNode(
+        nodeNum: 0xABCD,
+        longName: 'VarTestNode',
+        batteryLevel: 75,
+        latitude: -33.8688,
+        longitude: 151.2093,
+        lastHeard: DateTime.now(),
+      );
+      await engine.processNodeUpdate(node2);
+
+      expect(sentMessages, isNotEmpty);
+      final msg = sentMessages.first.$2;
+      expect(msg, contains('VarTestNode'));
+      expect(msg, contains('abcd')); // hex node num
+      expect(msg, contains('-33.8688'));
+      expect(msg, contains('151.2093'));
+    });
+
+    test('interpolates battery variable from battery event', () async {
+      final automation = Automation(
+        id: 'test-battery-vars',
+        name: 'Battery Variables Test',
+        trigger: const AutomationTrigger(
+          type: TriggerType.batteryLow,
+          config: {'batteryThreshold': 30},
+        ),
+        actions: const [
+          AutomationAction(
+            type: ActionType.sendMessage,
+            config: {
+              'targetNodeNum': 999,
+              'messageText': 'Battery: {{battery}} for {{node.name}}',
+            },
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      // Battery drops below threshold
+      final nodeHigh = MeshNode(
+        nodeNum: 0x1234,
+        longName: 'BatteryVarNode',
+        batteryLevel: 35,
+        lastHeard: DateTime.now(),
+      );
+      await engine.processNodeUpdate(nodeHigh);
+
+      final nodeLow = MeshNode(
+        nodeNum: 0x1234,
+        longName: 'BatteryVarNode',
+        batteryLevel: 20,
+        lastHeard: DateTime.now(),
+      );
+      await engine.processNodeUpdate(nodeLow);
+
+      expect(sentMessages, isNotEmpty);
+      final msg = sentMessages.first.$2;
+      expect(msg, contains('20%'));
+      expect(msg, contains('BatteryVarNode'));
     });
   });
 }

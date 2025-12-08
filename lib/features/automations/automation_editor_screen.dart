@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
+import '../../providers/app_providers.dart';
 import 'automation_providers.dart';
 import 'models/automation.dart';
 import 'widgets/trigger_selector.dart';
@@ -204,6 +205,10 @@ class _AutomationEditorScreenState
               ..._actions.asMap().entries.map((entry) {
                 final index = entry.key;
                 final action = entry.value;
+                // Get nodes and channels for action editor
+                final nodes = ref.watch(nodesProvider);
+                final channels = ref.watch(channelsProvider);
+                final myNodeNum = ref.watch(myNodeNumProvider);
                 return Column(
                   children: [
                     ActionEditor(
@@ -211,6 +216,9 @@ class _AutomationEditorScreenState
                       index: index,
                       totalActions: _actions.length,
                       triggerType: _trigger.type,
+                      availableNodes: nodes.values.toList(),
+                      availableChannels: channels,
+                      myNodeNum: myNodeNum,
                       onChanged: (updated) {
                         setState(() {
                           _actions[index] = updated;
@@ -411,7 +419,10 @@ class _AutomationEditorScreenState
       for (final field in fieldsToValidate) {
         final invalidVars = validateVariables(field);
         if (invalidVars.isNotEmpty) {
-          showErrorSnackBar(context, 'Invalid variables: ${invalidVars.join(", ")}');
+          showErrorSnackBar(
+            context,
+            'Invalid variables: ${invalidVars.join(", ")}',
+          );
           return;
         }
       }

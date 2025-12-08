@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../models/mesh_models.dart';
 import '../models/automation.dart';
 import 'variable_text_field.dart';
 
@@ -13,6 +15,9 @@ class ActionEditor extends StatefulWidget {
   final int? index;
   final int? totalActions;
   final TriggerType? triggerType;
+  final List<MeshNode> availableNodes;
+  final List<ChannelConfig> availableChannels;
+  final int? myNodeNum;
 
   const ActionEditor({
     super.key,
@@ -22,6 +27,9 @@ class ActionEditor extends StatefulWidget {
     this.index,
     this.totalActions,
     this.triggerType,
+    this.availableNodes = const [],
+    this.availableChannels = const [],
+    this.myNodeNum,
   });
 
   @override
@@ -199,10 +207,136 @@ class _ActionEditorState extends State<ActionEditor> {
   }
 
   Widget _buildMessageConfig(BuildContext context, {required bool toChannel}) {
+    // Get available nodes excluding self
+    final nodes =
+        widget.availableNodes
+            .where((n) => n.nodeNum != widget.myNodeNum)
+            .toList()
+          ..sort((a, b) {
+            // Online nodes first, then by name
+            if (a.isOnline != b.isOnline) return a.isOnline ? -1 : 1;
+            final aName = a.longName ?? a.shortName ?? '';
+            final bName = b.longName ?? b.shortName ?? '';
+            return aName.compareTo(bName);
+          });
+
+    final channels = widget.availableChannels;
+
+    // Determine selected target display name
+    String targetDisplay;
+    if (toChannel) {
+      final selectedChannelIndex = widget.action.targetChannelIndex;
+      if (selectedChannelIndex != null) {
+        final channel = channels.firstWhere(
+          (c) => c.index == selectedChannelIndex,
+          orElse: () =>
+              ChannelConfig(index: selectedChannelIndex, name: '', psk: []),
+        );
+        targetDisplay = channel.name.isEmpty
+            ? (selectedChannelIndex == 0
+                  ? 'Primary'
+                  : 'Channel $selectedChannelIndex')
+            : channel.name;
+      } else {
+        targetDisplay = 'Select channel';
+      }
+    } else {
+      final selectedNodeNum = widget.action.targetNodeNum;
+      if (selectedNodeNum != null) {
+        final node = nodes.firstWhere(
+          (n) => n.nodeNum == selectedNodeNum,
+          orElse: () => MeshNode(nodeNum: selectedNodeNum),
+        );
+        targetDisplay = node.displayName;
+      } else {
+        targetDisplay = 'Select node';
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Target selector (node or channel)
+          const Text(
+            'TO',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textTertiary,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => toChannel
+                ? _showChannelPicker(context, channels)
+                : _showNodePicker(context, nodes),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.darkBackground,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.darkBorder),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      toChannel ? Icons.forum : Icons.person,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          targetDisplay,
+                          style: TextStyle(
+                            color:
+                                (toChannel
+                                        ? widget.action.targetChannelIndex
+                                        : widget.action.targetNodeNum) !=
+                                    null
+                                ? Colors.white
+                                : AppTheme.textSecondary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          toChannel ? 'Channel message' : 'Direct message',
+                          style: TextStyle(
+                            color: AppTheme.textTertiary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    color: AppTheme.textSecondary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Message text field
           VariableTextField(
             key: _messageFieldKey,
             value: widget.action.messageText ?? '',
@@ -227,6 +361,302 @@ class _ActionEditorState extends State<ActionEditor> {
             showDeleteHint: _insertTargetField != null,
           ),
         ],
+      ),
+    );
+  }
+
+  void _showNodePicker(BuildContext context, List<MeshNode> nodes) {
+    if (nodes.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No nodes available')));
+      return;
+    }
+
+    AppBottomSheet.show(
+      context: context,
+      padding: EdgeInsets.zero,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.5,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
+              child: Row(
+                children: [
+                  const Text(
+                    'Select Node',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Done',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: AppTheme.darkBorder),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Text(
+                    '${nodes.length} nodes',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Node list
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: nodes.length,
+                itemBuilder: (context, index) {
+                  final node = nodes[index];
+                  final isSelected =
+                      widget.action.targetNodeNum == node.nodeNum;
+                  return _buildTargetTile(
+                    context: context,
+                    icon: Icons.person,
+                    iconColor: node.isOnline
+                        ? Theme.of(context).colorScheme.primary
+                        : AppTheme.textTertiary,
+                    title: node.displayName,
+                    subtitle:
+                        node.shortName ?? '!${node.nodeNum.toRadixString(16)}',
+                    isSelected: isSelected,
+                    isOnline: node.isOnline,
+                    onTap: () {
+                      widget.onChanged(
+                        widget.action.copyWith(
+                          config: {
+                            ...widget.action.config,
+                            'targetNodeNum': node.nodeNum,
+                          },
+                        ),
+                      );
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showChannelPicker(BuildContext context, List<ChannelConfig> channels) {
+    if (channels.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No channels available')));
+      return;
+    }
+
+    AppBottomSheet.show(
+      context: context,
+      padding: EdgeInsets.zero,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.4,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
+              child: Row(
+                children: [
+                  const Text(
+                    'Select Channel',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Done',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: AppTheme.darkBorder),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Text(
+                    '${channels.length} channels',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Channel list
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: channels.length,
+                itemBuilder: (context, index) {
+                  final channel = channels[index];
+                  final isSelected =
+                      widget.action.targetChannelIndex == channel.index;
+                  final channelName = channel.name.isEmpty
+                      ? (channel.index == 0
+                            ? 'Primary'
+                            : 'Channel ${channel.index}')
+                      : channel.name;
+                  return _buildTargetTile(
+                    context: context,
+                    icon: Icons.forum,
+                    iconColor: Theme.of(context).colorScheme.primary,
+                    title: channelName,
+                    subtitle: channel.index == 0
+                        ? 'Default channel'
+                        : 'Channel ${channel.index}',
+                    isSelected: isSelected,
+                    onTap: () {
+                      widget.onChanged(
+                        widget.action.copyWith(
+                          config: {
+                            ...widget.action.config,
+                            'targetChannelIndex': channel.index,
+                          },
+                        ),
+                      );
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTargetTile({
+    required BuildContext context,
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required bool isSelected,
+    bool isOnline = false,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+              : Colors.transparent,
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Stack(
+                  children: [
+                    Center(child: Icon(icon, color: iconColor, size: 22)),
+                    if (isOnline)
+                      Positioned(
+                        right: 2,
+                        bottom: 2,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppTheme.darkSurface,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: AppTheme.textTertiary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isSelected)
+                Icon(
+                  Icons.check_circle,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 22,
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

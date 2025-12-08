@@ -1277,6 +1277,12 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
   final ProtocolService _protocol;
   final NodeStorageService? _storage;
   final Ref _ref;
+  Timer? _stalenessTimer;
+
+  /// Timeout after which a node is considered offline (2 minutes)
+  /// This matches the iOS Meshtastic app's behavior but uses a shorter
+  /// timeout for automation triggers to be more responsive.
+  static const _offlineTimeoutMinutes = 2;
 
   NodesNotifier(this._protocol, this._storage, this._ref) : super({}) {
     _init();
@@ -1318,6 +1324,12 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
       state = {...state, entry.key: node};
     }
 
+    // Start periodic staleness check (every 30 seconds)
+    _stalenessTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _checkNodeStaleness(),
+    );
+
     // Listen for new nodes
     _protocol.nodeStream.listen((node) {
       final isNewNode = !state.containsKey(node.nodeNum);
@@ -1352,6 +1364,43 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
     });
   }
 
+  /// Check all nodes for staleness and mark offline if lastHeard is too old
+  void _checkNodeStaleness() {
+    final now = DateTime.now();
+    final cutoff = now.subtract(Duration(minutes: _offlineTimeoutMinutes));
+    var hasChanges = false;
+    final newState = Map<int, MeshNode>.from(state);
+
+    for (final entry in state.entries) {
+      final node = entry.value;
+      // Skip nodes that are already offline or have no lastHeard
+      if (!node.isOnline || node.lastHeard == null) continue;
+
+      // Check if node is stale (hasn't been heard from in _offlineTimeoutMinutes)
+      if (node.lastHeard!.isBefore(cutoff)) {
+        debugPrint(
+          '⚠️ Node ${node.displayName} (${node.nodeNum}) went offline - '
+          'last heard ${now.difference(node.lastHeard!).inMinutes}m ago',
+        );
+
+        final offlineNode = node.copyWith(isOnline: false);
+        newState[entry.key] = offlineNode;
+        hasChanges = true;
+
+        // Trigger automation/IFTTT for the offline transition
+        _triggerIftttForNode(offlineNode, node);
+        _triggerAutomationForNode(offlineNode, node);
+
+        // Persist the updated node
+        _storage?.saveNode(offlineNode);
+      }
+    }
+
+    if (hasChanges) {
+      state = newState;
+    }
+  }
+
   void _triggerIftttForNode(MeshNode node, MeshNode? previousNode) {
     final iftttService = _ref.read(iftttServiceProvider);
     if (!iftttService.isActive) return;
@@ -1378,6 +1427,12 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
   void clearNodes() {
     state = {};
     _storage?.clearNodes();
+  }
+
+  @override
+  void dispose() {
+    _stalenessTimer?.cancel();
+    super.dispose();
   }
 }
 
