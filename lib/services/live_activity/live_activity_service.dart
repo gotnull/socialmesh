@@ -191,17 +191,20 @@ class LiveActivityService {
       if (shortName != null) activityData['shortName'] = shortName;
       if (nodeNum != null) activityData['nodeNum'] = nodeNum;
       if (batteryLevel != null) activityData['batteryLevel'] = batteryLevel;
-      if (signalStrength != null)
+      if (signalStrength != null) {
         activityData['signalStrength'] = signalStrength;
+      }
       if (snr != null) activityData['snr'] = snr;
       if (nodesOnline != null) activityData['nodesOnline'] = nodesOnline;
       if (totalNodes != null) activityData['totalNodes'] = totalNodes;
-      if (channelUtilization != null)
+      if (channelUtilization != null) {
         activityData['channelUtilization'] = channelUtilization;
+      }
       if (airtime != null) activityData['airtime'] = airtime;
       if (sentPackets != null) activityData['sentPackets'] = sentPackets;
-      if (receivedPackets != null)
+      if (receivedPackets != null) {
         activityData['receivedPackets'] = receivedPackets;
+      }
       if (badPackets != null) activityData['badPackets'] = badPackets;
       if (uptimeSeconds != null) activityData['uptimeSeconds'] = uptimeSeconds;
       if (temperature != null) activityData['temperature'] = temperature;
