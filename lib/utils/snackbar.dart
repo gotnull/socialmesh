@@ -66,26 +66,32 @@ void _showSnackBar(
   required Color backgroundColor,
   required Duration duration,
 }) {
+  final messenger = ScaffoldMessenger.of(context);
+
   final snackBar = SnackBar(
-    behavior: SnackBarBehavior.floating,
+    behavior: SnackBarBehavior.fixed,
     backgroundColor: backgroundColor,
     duration: duration,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    margin: const EdgeInsets.all(16),
-    content: Text(
-      message,
-      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-    ),
-    action: SnackBarAction(
-      label: '✕',
-      textColor: Colors.white,
-      onPressed: () {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      },
+    content: Row(
+      children: [
+        Expanded(
+          child: Text(
+            message,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        GestureDetector(
+          onTap: () => messenger.hideCurrentSnackBar(),
+          child: const Icon(Icons.close, color: Colors.white, size: 20),
+        ),
+      ],
     ),
   );
 
-  ScaffoldMessenger.of(context)
+  messenger
     ..hideCurrentSnackBar()
     ..showSnackBar(snackBar);
 }
