@@ -532,7 +532,9 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                 ),
                 child: Stack(
                   children: [
-                    Center(child: Icon(Icons.person, color: iconColor, size: 22)),
+                    Center(
+                      child: Icon(Icons.person, color: iconColor, size: 22),
+                    ),
                     if (node.isOnline)
                       Positioned(
                         right: 2,
