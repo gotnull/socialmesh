@@ -764,21 +764,195 @@ class _ActionEditorState extends State<ActionEditor> {
   Widget _buildShortcutConfig(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      child: TextField(
-        controller: _shortcutNameController,
-        onChanged: (value) {
-          widget.onChanged(
-            widget.action.copyWith(
-              config: {...widget.action.config, 'shortcutName': value},
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: _shortcutNameController,
+            onChanged: (value) {
+              widget.onChanged(
+                widget.action.copyWith(
+                  config: {...widget.action.config, 'shortcutName': value},
+                ),
+              );
+            },
+            decoration: InputDecoration(
+              labelText: 'Shortcut Name',
+              hintText: 'Enter exact shortcut name',
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.help_outline, size: 20),
+                onPressed: () => _showShortcutHelp(context),
+              ),
             ),
-          );
-        },
-        decoration: InputDecoration(
-          labelText: 'Shortcut Name',
-          hintText: 'e.g., Send Location',
-          isDense: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, size: 16, color: Colors.blue[300]),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Event data (node name, battery, location, etc.) will be passed as JSON input to your shortcut.',
+                    style: TextStyle(fontSize: 12, color: Colors.blue[200]),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showShortcutHelp(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        title: const Row(
+          children: [
+            Icon(Icons.lightbulb_outline, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Using Shortcuts'),
+          ],
         ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'How to access event data in your shortcut:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              _buildHelpStep('1', 'Add "Get Dictionary from Input" action'),
+              _buildHelpStep('2', 'Use "Get Value for Key" to extract data'),
+              const SizedBox(height: 12),
+              const Text(
+                'Available keys:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              _buildKeyItem('node_name', 'Name of the triggering node'),
+              _buildKeyItem('node_num', 'Node number (hex)'),
+              _buildKeyItem('trigger', 'Trigger type (e.g., nodeOffline)'),
+              _buildKeyItem('battery', 'Battery level (if available)'),
+              _buildKeyItem('latitude', 'GPS latitude (if available)'),
+              _buildKeyItem('longitude', 'GPS longitude (if available)'),
+              _buildKeyItem('message', 'Message text (if applicable)'),
+              _buildKeyItem('timestamp', 'ISO timestamp of event'),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.warning_amber,
+                      size: 16,
+                      color: Colors.orange[300],
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Note: Shortcuts app will briefly open when triggered. This is an iOS limitation.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.orange[200],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Got it'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHelpStep(String number, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                number,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKeyItem(String key, String description) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              key,
+              style: TextStyle(
+                fontSize: 11,
+                fontFamily: 'monospace',
+                color: Colors.green[300],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              description,
+              style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+            ),
+          ),
+        ],
       ),
     );
   }

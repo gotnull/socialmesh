@@ -400,74 +400,87 @@ class _TriggerSelectorState extends State<TriggerSelector> {
   }
 
   void _showNodePicker(BuildContext context) {
-    AppBottomSheet.showScrollable<void>(
-      context: context,
-      builder: (scrollController) {
-        if (widget.availableNodes.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(
-              child: Text(
-                'No nodes available',
-                style: TextStyle(color: Colors.grey),
-              ),
-            ),
-          );
-        }
+    if (widget.availableNodes.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No nodes available')));
+      return;
+    }
 
-        return Column(
+    // Sort nodes: online first, then by name
+    final nodes = widget.availableNodes.toList()
+      ..sort((a, b) {
+        if (a.isOnline != b.isOnline) return a.isOnline ? -1 : 1;
+        final aName = a.longName ?? a.shortName ?? '';
+        final bName = b.longName ?? b.shortName ?? '';
+        return aName.compareTo(bName);
+      });
+
+    AppBottomSheet.show(
+      context: context,
+      padding: EdgeInsets.zero,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.5,
+        ),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Header
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                'Select Node',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
+              child: Row(
+                children: [
+                  const Text(
+                    'Select Node',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Done',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            Expanded(
+            const Divider(height: 1, color: AppTheme.darkBorder),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Text(
+                    '${nodes.length} nodes',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Node list
+            Flexible(
               child: ListView.builder(
-                controller: scrollController,
-                itemCount: widget.availableNodes.length,
+                shrinkWrap: true,
+                itemCount: nodes.length,
                 itemBuilder: (context, index) {
-                  final node = widget.availableNodes[index];
+                  final node = nodes[index];
                   final isSelected = widget.trigger.nodeNum == node.nodeNum;
-
-                  return ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.2)
-                            : AppTheme.darkCard,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.router,
-                        size: 20,
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.grey,
-                      ),
-                    ),
-                    title: Text(node.longName ?? node.shortName ?? 'Unknown'),
-                    subtitle: Text(
-                      '!${node.nodeNum.toRadixString(16)}',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
-                    trailing: isSelected
-                        ? Icon(
-                            Icons.check,
-                            color: Theme.of(context).colorScheme.primary,
-                          )
-                        : null,
+                  return _buildNodeTile(
+                    context: context,
+                    node: node,
+                    isSelected: isSelected,
                     onTap: () {
-                      Navigator.pop(context);
                       widget.onChanged(
                         widget.trigger.copyWith(
                           config: {
@@ -476,14 +489,105 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                           },
                         ),
                       );
+                      Navigator.pop(context);
                     },
                   );
                 },
               ),
             ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
           ],
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNodeTile({
+    required BuildContext context,
+    required MeshNode node,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final iconColor = node.isOnline
+        ? Theme.of(context).colorScheme.primary
+        : AppTheme.textTertiary;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+              : Colors.transparent,
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Stack(
+                  children: [
+                    Center(child: Icon(Icons.person, color: iconColor, size: 22)),
+                    if (node.isOnline)
+                      Positioned(
+                        right: 2,
+                        bottom: 2,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppTheme.darkSurface,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      node.longName ?? node.shortName ?? 'Unknown',
+                      style: TextStyle(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      node.shortName ?? '!${node.nodeNum.toRadixString(16)}',
+                      style: TextStyle(
+                        color: AppTheme.textTertiary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isSelected)
+                Icon(
+                  Icons.check_circle,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 22,
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

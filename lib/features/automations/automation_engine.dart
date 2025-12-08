@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io' show Platform;
 import 'dart:math' as math;
 
@@ -616,17 +617,18 @@ class AutomationEngine {
             );
           }
 
-          // Build input text from event variables
+          // Build input text from event variables (JSON format)
           final inputText = _buildShortcutInput(event);
 
           // URL encode the shortcut name and input
           final encodedName = Uri.encodeComponent(shortcutName);
           final encodedInput = Uri.encodeComponent(inputText);
 
-          // Use shortcuts:// URL scheme with input parameter
-          // The shortcut can access this via "Shortcut Input" action
+          // Use x-callback-url to return to app after shortcut completes
+          // The shortcut can access the input via "Shortcut Input" action
+          // and parse it as JSON using "Get Dictionary from Input"
           final shortcutUrl = Uri.parse(
-            'shortcuts://run-shortcut?name=$encodedName&input=$encodedInput',
+            'shortcuts://x-callback-url/run-shortcut?name=$encodedName&input=text&text=$encodedInput',
           );
 
           try {
@@ -810,7 +812,7 @@ class AutomationEngine {
   }
 
   /// Build input text for iOS Shortcut from event data
-  /// The shortcut can parse this JSON to access event variables
+  /// The shortcut can parse this JSON using "Get Dictionary from Input" action
   String _buildShortcutInput(AutomationEvent event) {
     final data = <String, dynamic>{
       'trigger': event.type.name,
@@ -818,11 +820,10 @@ class AutomationEngine {
     };
 
     if (event.nodeNum != null) {
-      data['nodeNum'] = event.nodeNum;
-      data['nodeHex'] = '!${event.nodeNum!.toRadixString(16)}';
+      data['node_num'] = '!${event.nodeNum!.toRadixString(16)}';
     }
     if (event.nodeName != null) {
-      data['nodeName'] = event.nodeName;
+      data['node_name'] = event.nodeName;
     }
     if (event.batteryLevel != null) {
       data['battery'] = event.batteryLevel;
@@ -835,14 +836,14 @@ class AutomationEngine {
       data['message'] = event.messageText;
     }
     if (event.channelIndex != null) {
-      data['channelIndex'] = event.channelIndex;
+      data['channel'] = event.channelIndex;
     }
     if (event.snr != null) {
       data['snr'] = event.snr;
     }
 
-    // Return as key:value pairs that the shortcut can parse with "Split Text"
-    return data.entries.map((e) => '${e.key}:${e.value}').join('\n');
+    // Return as JSON string - shortcut uses "Get Dictionary from Input" to parse
+    return jsonEncode(data);
   }
 
   /// Parse time of day from string
