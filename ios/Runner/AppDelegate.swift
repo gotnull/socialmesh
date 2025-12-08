@@ -14,6 +14,13 @@ import UIKit
       UNUserNotificationCenter.current().delegate = self
     }
     
+    // Setup App Intents manager for Shortcuts integration
+    if #available(iOS 16.0, *) {
+      if let controller = window?.rootViewController as? FlutterViewController {
+        AppIntentsManager.shared.setup(with: controller)
+      }
+    }
+    
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

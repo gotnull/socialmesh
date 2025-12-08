@@ -12,6 +12,7 @@ import 'core/transport.dart';
 import 'providers/app_providers.dart';
 import 'providers/telemetry_providers.dart';
 import 'models/mesh_models.dart';
+import 'services/app_intents/app_intents_service.dart';
 import 'features/scanner/scanner_screen.dart';
 import 'features/scanner/widgets/connecting_animation.dart';
 import 'features/dashboard/dashboard_screen.dart';
@@ -90,6 +91,8 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp> {
       ref.read(appInitProvider.notifier).initialize();
       // Load accent color from settings
       _loadAccentColor();
+      // Setup App Intents for iOS Shortcuts integration
+      ref.read(appIntentsServiceProvider).setup();
     });
   }
 

@@ -16,6 +16,16 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		ACD73A2E5B19A4DD967E19FD /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E499D5BB68AA37FD2AD30935 /* Pods_Runner.framework */; };
+		AI0001012024120800000001 /* AppIntentErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000010 /* AppIntentErrors.swift */; };
+		AI00010120241208000000010 /* ShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000100 /* ShortcutsProvider.swift */; };
+		AI0001012024120800000002 /* AppIntentsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000020 /* AppIntentsManager.swift */; };
+		AI0001012024120800000003 /* SendMessageIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000030 /* SendMessageIntent.swift */; };
+		AI0001012024120800000004 /* SendChannelMessageIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000040 /* SendChannelMessageIntent.swift */; };
+		AI0001012024120800000005 /* GetNodeStatusIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000050 /* GetNodeStatusIntent.swift */; };
+		AI0001012024120800000006 /* GetOnlineNodesIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000060 /* GetOnlineNodesIntent.swift */; };
+		AI0001012024120800000007 /* OpenNodeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000070 /* OpenNodeIntent.swift */; };
+		AI0001012024120800000008 /* OpenMapIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000080 /* OpenMapIntent.swift */; };
+		AI0001012024120800000009 /* OpenMessagesIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000090 /* OpenMessagesIntent.swift */; };
 		BD61F0312EDD022E00456D75 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD61F0302EDD022E00456D75 /* WidgetKit.framework */; };
 		BD61F0332EDD022E00456D75 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD61F0322EDD022E00456D75 /* SwiftUI.framework */; };
 		BD61F0422EDD022F00456D75 /* SocialmeshWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BD61F02F2EDD022E00456D75 /* SocialmeshWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -76,6 +86,16 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AI0001012024120800000010 /* AppIntentErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntentErrors.swift; sourceTree = "<group>"; };
+		AI00010120241208000000100 /* ShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsProvider.swift; sourceTree = "<group>"; };
+		AI0001012024120800000020 /* AppIntentsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntentsManager.swift; sourceTree = "<group>"; };
+		AI0001012024120800000030 /* SendMessageIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendMessageIntent.swift; sourceTree = "<group>"; };
+		AI0001012024120800000040 /* SendChannelMessageIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendChannelMessageIntent.swift; sourceTree = "<group>"; };
+		AI0001012024120800000050 /* GetNodeStatusIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetNodeStatusIntent.swift; sourceTree = "<group>"; };
+		AI0001012024120800000060 /* GetOnlineNodesIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetOnlineNodesIntent.swift; sourceTree = "<group>"; };
+		AI0001012024120800000070 /* OpenNodeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenNodeIntent.swift; sourceTree = "<group>"; };
+		AI0001012024120800000080 /* OpenMapIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMapIntent.swift; sourceTree = "<group>"; };
+		AI0001012024120800000090 /* OpenMessagesIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMessagesIntent.swift; sourceTree = "<group>"; };
 		BB8382CB1A4A98DEB6822541 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		BD61F02F2EDD022E00456D75 /* SocialmeshWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SocialmeshWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BD61F0302EDD022E00456D75 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
@@ -89,7 +109,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		BD61F0342EDD022E00456D76 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		BD61F0342EDD022E00456D76 /* Exceptions for "SocialmeshWidgets" folder in "SocialmeshWidgetsExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -99,7 +119,18 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		BD61F0342EDD022E00456D75 /* SocialmeshWidgets */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (BD61F0342EDD022E00456D76 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SocialmeshWidgets; sourceTree = "<group>"; };
+		BD61F0342EDD022E00456D75 /* SocialmeshWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BD61F0342EDD022E00456D76 /* Exceptions for "SocialmeshWidgets" folder in "SocialmeshWidgetsExtension" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = SocialmeshWidgets;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -178,6 +209,7 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				AI0001012024120800000000 /* AppIntents */,
 				BDE822F72EDD030000DE666E /* Runner.entitlements */,
 				97C146FA1CF9000F007C117D /* Main.storyboard */,
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
@@ -202,6 +234,23 @@
 				4B5F4E10BF39ED0B4B8D72FA /* Pods-RunnerTests.profile.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		AI0001012024120800000000 /* AppIntents */ = {
+			isa = PBXGroup;
+			children = (
+				AI0001012024120800000010 /* AppIntentErrors.swift */,
+				AI0001012024120800000020 /* AppIntentsManager.swift */,
+				AI0001012024120800000030 /* SendMessageIntent.swift */,
+				AI0001012024120800000040 /* SendChannelMessageIntent.swift */,
+				AI0001012024120800000050 /* GetNodeStatusIntent.swift */,
+				AI0001012024120800000060 /* GetOnlineNodesIntent.swift */,
+				AI0001012024120800000070 /* OpenNodeIntent.swift */,
+				AI0001012024120800000080 /* OpenMapIntent.swift */,
+				AI0001012024120800000090 /* OpenMessagesIntent.swift */,
+				AI00010120241208000000100 /* ShortcutsProvider.swift */,
+			);
+			path = AppIntents;
 			sourceTree = "<group>";
 		};
 		EFDDA3AC0E4C446E71E36131 /* Frameworks */ = {
@@ -420,13 +469,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -441,13 +486,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -508,6 +549,16 @@
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
+				AI0001012024120800000001 /* AppIntentErrors.swift in Sources */,
+				AI0001012024120800000002 /* AppIntentsManager.swift in Sources */,
+				AI0001012024120800000003 /* SendMessageIntent.swift in Sources */,
+				AI0001012024120800000004 /* SendChannelMessageIntent.swift in Sources */,
+				AI0001012024120800000005 /* GetNodeStatusIntent.swift in Sources */,
+				AI0001012024120800000006 /* GetOnlineNodesIntent.swift in Sources */,
+				AI0001012024120800000007 /* OpenNodeIntent.swift in Sources */,
+				AI0001012024120800000008 /* OpenMapIntent.swift in Sources */,
+				AI0001012024120800000009 /* OpenMessagesIntent.swift in Sources */,
+				AI00010120241208000000010 /* ShortcutsProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -615,6 +666,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = U336GVDWCE;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -638,6 +690,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = U336GVDWCE;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -657,6 +710,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = U336GVDWCE;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -674,6 +728,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = U336GVDWCE;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -808,6 +863,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = U336GVDWCE;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -838,6 +894,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = U336GVDWCE;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
