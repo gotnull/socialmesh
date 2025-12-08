@@ -23,6 +23,19 @@ struct Design {
     static let teal = Color(red: 90/255, green: 200/255, blue: 250/255)
     static let dim = Color(white: 0.4)
     static let dimmer = Color(white: 0.25)
+    
+    // Fonts - SF Mono matches JetBrains Mono style
+    static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        .system(size: size, weight: weight, design: .monospaced)
+    }
+    
+    static func text(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        .system(size: size, weight: weight, design: .default)
+    }
+    
+    static func rounded(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        .system(size: size, weight: weight, design: .rounded)
+    }
 }
 
 @available(iOS 16.2, *)
@@ -82,9 +95,8 @@ struct CompactTrailing: View {
         let nodes = sharedDefault.integer(forKey: context.attributes.prefixedKey("nodesOnline"))
         
         Text("\(nodes)")
-            .font(.system(size: 16, weight: .bold, design: .rounded))
+            .font(Design.mono(16, weight: .bold))
             .foregroundColor(Design.green)
-            .monospacedDigit()
     }
 }
 
@@ -99,7 +111,7 @@ struct MinimalView: View {
             Circle()
                 .strokeBorder(Design.green.opacity(0.3), lineWidth: 2)
             Text("\(nodes)")
-                .font(.system(size: 14, weight: .heavy, design: .rounded))
+                .font(Design.mono(14, weight: .heavy))
                 .foregroundColor(Design.green)
         }
     }
@@ -122,16 +134,15 @@ struct DILeading: View {
                     .fill(isConnected ? Design.green : Design.red)
                     .frame(width: 8, height: 8)
                 Text(shortName)
-                    .font(.system(size: 14, weight: .heavy, design: .monospaced))
+                    .font(Design.mono(14, weight: .heavy))
                     .foregroundColor(.white)
             }
             
             HStack(spacing: 2) {
                 MiniSignalBars(rssi: signal)
                 Text("\(signal)")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .font(Design.mono(11, weight: .semibold))
                     .foregroundColor(signalColor(signal))
-                    .monospacedDigit()
             }
         }
         .padding(.leading, 4)
@@ -164,20 +175,18 @@ struct DITrailing: View {
                         .foregroundColor(Design.green)
                 }
                 Text("\(level)%")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .font(Design.mono(14, weight: .bold))
                     .foregroundColor(batteryColor(level))
-                    .monospacedDigit()
             }
             
             HStack(spacing: 1) {
                 Text("\(nodes)")
-                    .font(.system(size: 13, weight: .heavy, design: .rounded))
+                    .font(Design.mono(13, weight: .heavy))
                     .foregroundColor(Design.green)
                 Text("/\(total)")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .font(Design.mono(11, weight: .medium))
                     .foregroundColor(Design.dim)
             }
-            .monospacedDigit()
         }
         .padding(.trailing, 4)
     }
@@ -212,12 +221,11 @@ struct DIBottom: View {
             // SNR
             HStack(spacing: 2) {
                 Text("SNR")
-                    .font(.system(size: 9, weight: .semibold))
+                    .font(Design.mono(9, weight: .semibold))
                     .foregroundColor(Design.dim)
                 Text("\(snr >= 0 ? "+" : "")\(snr)")
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .font(Design.mono(12, weight: .bold))
                     .foregroundColor(snrColor(snr))
-                    .monospacedDigit()
             }
         }
         .padding(.horizontal, 8)
@@ -286,12 +294,12 @@ struct LockScreenView: View {
                     }
                     
                     Text(shortName)
-                        .font(.system(size: 16, weight: .black, design: .monospaced))
+                        .font(Design.mono(16, weight: .black))
                         .foregroundColor(.white)
                     
                     if !role.isEmpty {
                         Text(role.uppercased())
-                            .font(.system(size: 8, weight: .bold))
+                            .font(Design.mono(8, weight: .bold))
                             .foregroundColor(Design.accent)
                             .padding(.horizontal, 4)
                             .padding(.vertical, 2)
@@ -332,9 +340,8 @@ struct LockScreenView: View {
                         .cornerRadius(1)
                     
                     Text("\(displayBattery)%")
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .font(Design.mono(13, weight: .bold))
                         .foregroundColor(batteryColor)
-                        .monospacedDigit()
                 }
             }
             .padding(.horizontal, 12)
@@ -372,11 +379,10 @@ struct LockScreenView: View {
                         
                         VStack(spacing: -2) {
                             Text("\(signal)")
-                                .font(.system(size: 15, weight: .black, design: .rounded))
+                                .font(Design.mono(15, weight: .black))
                                 .foregroundColor(.white)
-                                .monospacedDigit()
                             Text("dBm")
-                                .font(.system(size: 7, weight: .bold))
+                                .font(Design.mono(7, weight: .bold))
                                 .foregroundColor(Design.dim)
                         }
                     }
@@ -384,12 +390,11 @@ struct LockScreenView: View {
                     // SNR
                     HStack(spacing: 2) {
                         Text("SNR")
-                            .font(.system(size: 8, weight: .bold))
+                            .font(Design.mono(8, weight: .bold))
                             .foregroundColor(Design.dim)
                         Text("\(snr >= 0 ? "+" : "")\(snr)")
-                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .font(Design.mono(11, weight: .bold))
                             .foregroundColor(snrColor)
-                            .monospacedDigit()
                     }
                 }
                 .frame(width: 60)
@@ -399,16 +404,15 @@ struct LockScreenView: View {
                     // Node count
                     HStack(spacing: 0) {
                         Text("\(nodes)")
-                            .font(.system(size: 28, weight: .black, design: .rounded))
+                            .font(Design.mono(28, weight: .black))
                             .foregroundColor(Design.green)
                         Text("/\(totalNodes)")
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .font(Design.mono(16, weight: .medium))
                             .foregroundColor(Design.dim)
                     }
-                    .monospacedDigit()
                     
                     Text("NODES")
-                        .font(.system(size: 8, weight: .bold))
+                        .font(Design.mono(8, weight: .bold))
                         .foregroundColor(Design.dim)
                         .tracking(1.5)
                     
@@ -445,13 +449,12 @@ struct LockScreenView: View {
                                 .font(.system(size: 8))
                                 .foregroundColor(Design.blue)
                             Text(nearestName)
-                                .font(.system(size: 9, weight: .semibold))
+                                .font(Design.mono(9, weight: .semibold))
                                 .foregroundColor(.white)
                                 .lineLimit(1)
                             Text(formatDistance(nearestDistance))
-                                .font(.system(size: 9, weight: .bold, design: .rounded))
+                                .font(Design.mono(9, weight: .bold))
                                 .foregroundColor(Design.blue)
-                                .monospacedDigit()
                         }
                         .padding(.horizontal, 5)
                         .padding(.vertical, 3)
@@ -469,17 +472,17 @@ struct LockScreenView: View {
                 HStack(spacing: 8) {
                     if !hardware.isEmpty {
                         Text(hardware)
-                            .font(.system(size: 9, weight: .medium))
+                            .font(Design.mono(9, weight: .medium))
                             .foregroundColor(Design.dim)
                     }
                     if !firmware.isEmpty {
                         Text("v\(firmware)")
-                            .font(.system(size: 9, weight: .medium, design: .monospaced))
+                            .font(Design.mono(9, weight: .medium))
                             .foregroundColor(Design.dim)
                     }
                     Spacer()
                     Text(deviceName)
-                        .font(.system(size: 9, weight: .medium))
+                        .font(Design.text(9, weight: .medium))
                         .foregroundColor(Design.dim)
                         .lineLimit(1)
                 }
@@ -563,7 +566,7 @@ struct MiniBar: View {
     var body: some View {
         HStack(spacing: 3) {
             Text(label)
-                .font(.system(size: 9, weight: .semibold))
+                .font(Design.mono(9, weight: .semibold))
                 .foregroundColor(Design.dim)
             
             GeometryReader { geo in
@@ -579,9 +582,8 @@ struct MiniBar: View {
             .frame(width: 40, height: 6)
             
             Text(String(format: "%.0f", value))
-                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .font(Design.mono(10, weight: .bold))
                 .foregroundColor(.white)
-                .monospacedDigit()
                 .frame(width: 20, alignment: .trailing)
         }
     }
@@ -607,12 +609,11 @@ struct UtilBar: View {
             
             HStack(spacing: 2) {
                 Text(label)
-                    .font(.system(size: 7, weight: .bold))
+                    .font(Design.mono(7, weight: .bold))
                     .foregroundColor(Design.dim)
                 Text(String(format: "%.0f%%", value))
-                    .font(.system(size: 8, weight: .bold, design: .rounded))
+                    .font(Design.mono(8, weight: .bold))
                     .foregroundColor(color)
-                    .monospacedDigit()
             }
         }
     }
@@ -629,9 +630,8 @@ struct StatPill: View {
                 .font(.system(size: 8, weight: .bold))
                 .foregroundColor(color)
             Text(value)
-                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .font(Design.mono(10, weight: .bold))
                 .foregroundColor(.white)
-                .monospacedDigit()
         }
         .padding(.horizontal, 5)
         .padding(.vertical, 3)
