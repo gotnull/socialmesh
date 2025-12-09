@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../models/subscription_models.dart';
@@ -302,7 +303,19 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       switch (result) {
         case PurchaseResult.success:
           ref.haptics.success();
-          showSuccessSnackBar(context, '${purchase.name} unlocked!');
+          // Check if all features are now unlocked
+          final purchaseState = ref.read(purchaseStateProvider);
+          final allPurchases = OneTimePurchases.allPurchases;
+          final ownedCount = allPurchases
+              .where((p) => purchaseState.hasPurchased(p.productId))
+              .length;
+
+          if (ownedCount == allPurchases.length) {
+            // All features unlocked! Show celebration
+            _showAllUnlockedCelebration();
+          } else {
+            showSuccessSnackBar(context, '${purchase.name} unlocked!');
+          }
         case PurchaseResult.canceled:
           // User canceled - no message needed
           break;
@@ -311,6 +324,74 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           showErrorSnackBar(context, 'Purchase failed. Please try again.');
       }
     }
+  }
+
+  void _showAllUnlockedCelebration() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        backgroundColor: AppTheme.darkCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Lottie animation
+              SizedBox(
+                width: 200,
+                height: 200,
+                child: Lottie.asset(
+                  'assets/lottie/unlocked.json',
+                  repeat: true,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '🎉 All Features Unlocked!',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: context.accentColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'You now have access to everything SocialMesh has to offer. Thank you for your support!',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppTheme.textSecondary,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.accentColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Awesome!',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _restorePurchases() async {

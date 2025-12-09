@@ -27,42 +27,42 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   final List<_OnboardingPage> _pages = [
     _OnboardingPage(
       icon: null,
-      lottieAsset: 'assets/lottie/welcome.json',
-      title: 'Talk Freely',
+      lottieAsset: 'assets/lottie/onboard_mesh.json',
+      title: 'The Mesh',
       description:
-          'Communicate without servers, carriers or\ncorporations. Just you and your community.',
+          'A decentralized network where every device\nbecomes a node. No towers. No subscriptions.',
       accentColor: AppTheme.primaryMagenta,
     ),
     _OnboardingPage(
-      icon: Icons.people_outline,
-      lottieAsset: 'assets/lottie/mesh_network.json',
-      title: 'People-Powered',
+      icon: Icons.chat_bubble_outline,
+      lottieAsset: 'assets/lottie/onboard_chat.json',
+      title: 'Off-Grid Comms',
       description:
-          'Messages travel device to device.\nNo cloud. No middleman. Just direct connection.',
-      accentColor: AccentColors.green,
-    ),
-    _OnboardingPage(
-      icon: Icons.visibility_off_outlined,
-      lottieAsset: 'assets/lottie/privacy.json',
-      title: 'Private by Default',
-      description:
-          'No accounts. No tracking. No data stored.\nYour conversations belong to you.',
-      accentColor: AppTheme.graphBlue,
-    ),
-    _OnboardingPage(
-      icon: Icons.wifi_tethering,
-      lottieAsset: 'assets/lottie/messages.json',
-      title: 'Always Connected',
-      description:
-          'Works without internet or phone signal.\nYour network grows with every device.',
+          'Send messages through the mesh.\nDevice to device. Mile after mile.',
       accentColor: AccentColors.cyan,
     ),
     _OnboardingPage(
-      icon: Icons.bluetooth,
-      lottieAsset: 'assets/lottie/bluetooth.json',
-      title: 'Ready to Join?',
+      icon: Icons.shield_outlined,
+      lottieAsset: 'assets/lottie/onboard_shield.json',
+      title: 'Zero Knowledge',
       description:
-          'Connect your radio and become part\nof a communication network you control.',
+          'No accounts. No tracking. No cloud.\nYour messages never touch the internet.',
+      accentColor: AccentColors.green,
+    ),
+    _OnboardingPage(
+      icon: Icons.hub_outlined,
+      lottieAsset: 'assets/lottie/onboard_connect.json',
+      title: 'Grow the Network',
+      description:
+          'Every device extends the reach.\nBuild infrastructure that belongs to everyone.',
+      accentColor: AppTheme.graphBlue,
+    ),
+    _OnboardingPage(
+      icon: Icons.rocket_launch_outlined,
+      lottieAsset: 'assets/lottie/onboard_launch.json',
+      title: 'Go Live',
+      description:
+          'Connect your radio and join the mesh.\nYour voice. Your network. Your rules.',
       isLastPage: true,
       accentColor: AppTheme.primaryPurple,
     ),
@@ -367,36 +367,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
             builder: (context, child) {
               final glowIntensity = 0.3 + (_pulseController.value * 0.2);
 
-              if (page.useAppIcon) {
-                return Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(32),
-                    boxShadow: [
-                      BoxShadow(
-                        color: page.accentColor.withValues(
-                          alpha: glowIntensity,
-                        ),
-                        blurRadius: 30,
-                        spreadRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(32),
-                    child: Image.asset(
-                      'assets/app_icons/source/socialmesh_icon_1024.png',
-                      width: 140,
-                      height: 140,
-                    ),
-                  ),
-                );
-              }
-
               // Use Lottie animation if available
               if (page.lottieAsset != null) {
                 return Container(
-                  width: 160,
-                  height: 160,
+                  width: 220,
+                  height: 220,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     boxShadow: [
@@ -404,23 +379,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                         color: page.accentColor.withValues(
                           alpha: glowIntensity,
                         ),
-                        blurRadius: 30,
-                        spreadRadius: 5,
+                        blurRadius: 40,
+                        spreadRadius: 10,
                       ),
                     ],
                   ),
-                  child: ColorFiltered(
-                    colorFilter: ColorFilter.mode(
-                      page.accentColor.withValues(alpha: 0.15),
-                      BlendMode.srcATop,
-                    ),
-                    child: Lottie.asset(
-                      page.lottieAsset!,
-                      width: 160,
-                      height: 160,
-                      fit: BoxFit.contain,
-                      repeat: true,
-                    ),
+                  child: Lottie.asset(
+                    page.lottieAsset!,
+                    width: 220,
+                    height: 220,
+                    fit: BoxFit.contain,
+                    repeat: true,
                   ),
                 );
               }
@@ -507,7 +476,6 @@ class _OnboardingPage {
   final String title;
   final String description;
   final bool isLastPage;
-  final bool useAppIcon;
   final Color accentColor;
 
   const _OnboardingPage({
@@ -516,7 +484,6 @@ class _OnboardingPage {
     required this.title,
     required this.description,
     this.isLastPage = false,
-    this.useAppIcon = false,
     this.accentColor = AppTheme.primaryMagenta,
   });
 }
