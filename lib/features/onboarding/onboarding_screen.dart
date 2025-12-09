@@ -31,7 +31,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       title: 'Talk Freely',
       description:
           'Communicate without servers, carriers or\ncorporations. Just you and your community.',
-      useAppIcon: true,
       accentColor: AppTheme.primaryMagenta,
     ),
     _OnboardingPage(
