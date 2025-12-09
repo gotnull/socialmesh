@@ -20,7 +20,9 @@ import 'widgets/channel_activity_widget.dart';
 import 'widgets/mesh_health_widget.dart';
 import 'widgets/node_map_widget.dart';
 import '../../config/revenuecat_config.dart';
+import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
+import '../settings/subscription_screen.dart';
 
 /// Widgets available for free - showcase the feature
 const _freeWidgetTypes = {
@@ -240,6 +242,9 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
     BuildContext context,
     List<DashboardWidgetConfig> widgetConfigs,
   ) {
+    final purchaseState = ref.watch(purchaseStateProvider);
+    final hasWidgetPack = purchaseState.hasFeature(PremiumFeature.homeWidgets);
+
     final enabledWidgets = widgetConfigs.where((w) => w.isVisible).toList()
       ..sort((a, b) {
         // Favorites first, then by order
@@ -252,47 +257,148 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
       return _buildEmptyDashboard(context);
     }
 
-    return ReorderableListView.builder(
-      padding: const EdgeInsets.all(16),
-      buildDefaultDragHandles: false,
-      proxyDecorator: (child, index, animation) {
-        return AnimatedBuilder(
-          animation: animation,
-          builder: (context, child) {
-            final elevation = lerpDouble(0, 8, animation.value) ?? 0;
-            return Material(
-              elevation: elevation,
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
-              child: child,
+    // Calculate how many more widgets are available
+    final totalWidgetTypes = DashboardWidgetType.values.length;
+    final freeWidgetCount = _freeWidgetTypes.length;
+    final premiumWidgetCount = totalWidgetTypes - freeWidgetCount;
+
+    return Column(
+      children: [
+        Expanded(
+          child: ReorderableListView.builder(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              !hasWidgetPack && !_editMode ? 0 : 16,
+            ),
+            buildDefaultDragHandles: false,
+            proxyDecorator: (child, index, animation) {
+              return AnimatedBuilder(
+                animation: animation,
+                builder: (context, child) {
+                  final elevation = lerpDouble(0, 8, animation.value) ?? 0;
+                  return Material(
+                    elevation: elevation,
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(16),
+                    child: child,
+                  );
+                },
+                child: child,
+              );
+            },
+            itemCount: enabledWidgets.length,
+            onReorder: (oldIndex, newIndex) {
+              ref
+                  .read(dashboardWidgetsProvider.notifier)
+                  .reorder(oldIndex, newIndex);
+            },
+            itemBuilder: (context, index) {
+              final config = enabledWidgets[index];
+              return Padding(
+                key: ValueKey(config.id),
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _editMode
+                    ? ReorderableDragStartListener(
+                        index: index,
+                        child: _buildWidgetCard(config),
+                      )
+                    : GestureDetector(
+                        onLongPress: () {
+                          HapticFeedback.mediumImpact();
+                          setState(() => _editMode = true);
+                        },
+                        child: _buildWidgetCard(config),
+                      ),
+              );
+            },
+          ),
+        ),
+        // Upsell card for non-premium users
+        if (!hasWidgetPack && !_editMode)
+          _buildWidgetUpsellCard(premiumWidgetCount),
+      ],
+    );
+  }
+
+  Widget _buildWidgetUpsellCard(int premiumWidgetCount) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
             );
           },
-          child: child,
-        );
-      },
-      itemCount: enabledWidgets.length,
-      onReorder: (oldIndex, newIndex) {
-        ref.read(dashboardWidgetsProvider.notifier).reorder(oldIndex, newIndex);
-      },
-      itemBuilder: (context, index) {
-        final config = enabledWidgets[index];
-        return Padding(
-          key: ValueKey(config.id),
-          padding: const EdgeInsets.only(bottom: 16),
-          child: _editMode
-              ? ReorderableDragStartListener(
-                  index: index,
-                  child: _buildWidgetCard(config),
-                )
-              : GestureDetector(
-                  onLongPress: () {
-                    HapticFeedback.mediumImpact();
-                    setState(() => _editMode = true);
-                  },
-                  child: _buildWidgetCard(config),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  context.accentColor.withValues(alpha: 0.15),
+                  context.accentColor.withValues(alpha: 0.05),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: context.accentColor.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: context.accentColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.widgets_rounded,
+                    color: context.accentColor,
+                    size: 24,
+                  ),
                 ),
-        );
-      },
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Unlock $premiumWidgetCount More Widgets',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: context.accentColor,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Battery, messages, map, and more',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: context.accentColor.withValues(alpha: 0.7),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
