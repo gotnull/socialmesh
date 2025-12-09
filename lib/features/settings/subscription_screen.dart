@@ -73,10 +73,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
             // Complete Pack Bundle (prominent)
             _buildBundleCard(),
-            const SizedBox(height: 24),
 
-            // Divider with "or buy individually" - only show if not all unlocked
+            // Show individual packs section
             if (!allUnlocked) ...[
+              const SizedBox(height: 24),
+              // Divider with "or buy individually"
               Row(
                 children: [
                   Expanded(child: Divider(color: AppTheme.darkBorder)),
@@ -94,9 +95,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-
               // One-time purchases
               _buildOneTimePurchases(),
+            ] else ...[
+              const SizedBox(height: 24),
+              // Show owned packs list when all unlocked
+              _buildOwnedPacksList(),
             ],
 
             // Error message
@@ -658,6 +662,90 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     ],
                   ),
                 ),
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildOwnedPacksList() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Row(
+          children: [
+            Expanded(child: Divider(color: AppTheme.darkBorder)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Included Features',
+                style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+              ),
+            ),
+            Expanded(child: Divider(color: AppTheme.darkBorder)),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // List of owned packs
+        ...OneTimePurchases.allIndividualPurchases.map((purchase) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.darkCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: context.accentColor.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _getPurchaseIcon(purchase.id),
+                    color: context.accentColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      purchase.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 15,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check, size: 14, color: context.accentColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          'OWNED',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: context.accentColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           );
