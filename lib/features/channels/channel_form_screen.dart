@@ -584,7 +584,8 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
-                            keySize == KeySize.none
+                            keySize == KeySize.none ||
+                                    keySize == KeySize.default1
                                 ? Icons.lock_open
                                 : Icons.lock,
                             color: isSelected

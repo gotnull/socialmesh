@@ -88,7 +88,6 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: _getBatteryColor(batteryLevel),
-                          
                         ),
                       ),
                     ],
@@ -162,7 +161,6 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
-                
               ),
             ),
             const SizedBox(height: 8),
@@ -173,7 +171,6 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               style: const TextStyle(
                 fontSize: 14,
                 color: AppTheme.textSecondary,
-                
               ),
               textAlign: TextAlign.center,
             ),
@@ -218,17 +215,12 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              
             ),
           ),
           const SizedBox(height: 8),
           const Text(
             'Please wait while we reconnect',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppTheme.textSecondary,
-              
-            ),
+            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
           ),
         ],
       ),
@@ -357,17 +349,12 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
-                
               ),
             ),
             const SizedBox(height: 8),
             const Text(
               'Customize your dashboard with widgets that matter to you',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppTheme.textSecondary,
-                
-              ),
+              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -501,7 +488,6 @@ class _AddWidgetSheet extends ConsumerWidget {
 
     return Column(
       children: [
-        const DragPill(),
         // Header with title and done button
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -514,7 +500,6 @@ class _AddWidgetSheet extends ConsumerWidget {
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
-                  
                 ),
               ),
               TextButton(
@@ -535,11 +520,7 @@ class _AddWidgetSheet extends ConsumerWidget {
           padding: EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             'Tap to add or remove widgets from your dashboard',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppTheme.textSecondary,
-              
-            ),
+            style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
           ),
         ),
         const SizedBox(height: 16),
@@ -627,9 +608,7 @@ class _WidgetOption extends StatelessWidget {
                 ),
                 child: Icon(
                   info.icon,
-                  color: isAdded
-                      ? context.accentColor
-                      : AppTheme.textSecondary,
+                  color: isAdded ? context.accentColor : AppTheme.textSecondary,
                   size: 22,
                 ),
               ),
@@ -644,7 +623,6 @@ class _WidgetOption extends StatelessWidget {
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: isAdded ? Colors.white : AppTheme.textSecondary,
-                        
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -653,7 +631,6 @@ class _WidgetOption extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         color: AppTheme.textSecondary,
-                        
                       ),
                     ),
                   ],
