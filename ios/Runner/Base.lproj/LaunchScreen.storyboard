@@ -22,7 +22,7 @@
                             heightSizable="YES" />
                         <subviews>
                             <imageView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES"
-                                contentMode="center" image="LaunchImage"
+                                contentMode="scaleAspectFill" image="LaunchImage"
                                 translatesAutoresizingMaskIntoConstraints="NO" id="YRO-k0-Ey4">
                             </imageView>
                         </subviews>
@@ -30,10 +30,17 @@
                             green="0.14901960784313725" blue="0.2" alpha="1" colorSpace="custom"
                             customColorSpace="sRGB" />
                         <constraints>
-                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="centerX"
-                                secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="1a2-6s-vTC" />
-                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="centerY"
-                                secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="4X2-HB-R7a" />
+                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="top"
+                                secondItem="Ze5-6b-2t3" secondAttribute="top" id="top-constraint" />
+                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="bottom"
+                                secondItem="Ze5-6b-2t3" secondAttribute="bottom"
+                                id="bottom-constraint" />
+                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="leading"
+                                secondItem="Ze5-6b-2t3" secondAttribute="leading"
+                                id="leading-constraint" />
+                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="trailing"
+                                secondItem="Ze5-6b-2t3" secondAttribute="trailing"
+                                id="trailing-constraint" />
                         </constraints>
                     </view>
                 </viewController>
@@ -44,6 +51,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="LaunchImage" width="168" height="185" />
+        <image name="LaunchImage" width="440" height="956" />
     </resources>
 </document>
