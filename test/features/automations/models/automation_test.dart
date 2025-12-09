@@ -550,6 +550,7 @@ void main() {
         'Location',
         'Time',
         'Signal',
+        'Manual',
       };
       for (final type in TriggerType.values) {
         expect(
