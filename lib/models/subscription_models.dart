@@ -133,10 +133,11 @@ class PurchaseState {
   const PurchaseState({this.purchasedProductIds = const {}, this.customerId});
 
   /// Check if a specific feature is unlocked
+  /// Also returns true if Complete Pack was purchased
   bool hasFeature(PremiumFeature feature) {
     final purchase = OneTimePurchases.getByFeature(feature);
     if (purchase == null) return false;
-    return purchasedProductIds.contains(purchase.productId);
+    return hasPurchased(purchase.productId);
   }
 
   /// Check if a specific product has been purchased
