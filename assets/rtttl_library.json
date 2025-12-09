@@ -4,33 +4,33 @@
     {
       "filename": "_builtin_meshtastic_default",
       "displayName": "Meshtastic Default",
-      "toneName": "24",
+      "toneName": "Meshtastic Default",
       "artist": "Meshtastic",
-      "rtttl": "24:d=32,o=5,b=565:f6,p,f6,4p,p,f6,p,f6,2p,p,b6,p,b6,p,b6,p,b6,p,b,p,b,p,b,p,b,p,b,p,b,p,b,p,b,1p.,2p.,p",
+      "rtttl": "Meshtastic:d=32,o=5,b=565:f6,p,f6,4p,p,f6,p,f6,2p,p,b6,p,b6,p,b6,p,b6,p,b,p,b,p,b,p,b,p,b,p,b,p,b,p,b,1p.,2p.,p",
       "builtin": true
     },
     {
       "filename": "_builtin_nokia",
       "displayName": "Nokia Ringtone",
-      "toneName": "24",
+      "toneName": "Nokia Ringtone",
       "artist": "Nokia",
-      "rtttl": "24:d=4,o=5,b=180:8e6,8d6,f#,g#,8c#6,8b,d,e,8b,8a,c#,e,2a",
+      "rtttl": "NokiaRingt:d=4,o=5,b=180:8e6,8d6,f#,g#,8c#6,8b,d,e,8b,8a,c#,e,2a",
       "builtin": true
     },
     {
       "filename": "_builtin_zelda",
       "displayName": "Zelda Get Item",
-      "toneName": "24",
+      "toneName": "Zelda Get Item",
       "artist": "Nintendo",
-      "rtttl": "24:d=16,o=5,b=120:g,c6,d6,2g6",
+      "rtttl": "ZeldaGetIt:d=16,o=5,b=120:g,c6,d6,2g6",
       "builtin": true
     },
     {
       "filename": "_builtin_mario_coin",
       "displayName": "Mario Coin",
-      "toneName": "24",
+      "toneName": "Mario Coin",
       "artist": "Nintendo",
-      "rtttl": "24:d=8,o=6,b=200:b,e7",
+      "rtttl": "MarioCoin:d=8,o=6,b=200:b,e7",
       "builtin": true
     },
     {
@@ -44,41 +44,41 @@
     {
       "filename": "_builtin_mario_theme",
       "displayName": "Mario Theme",
-      "toneName": "24",
+      "toneName": "Mario Theme",
       "artist": "Nintendo",
-      "rtttl": "24:d=4,o=5,b=100:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p,8g",
+      "rtttl": "MarioTheme:d=4,o=5,b=100:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p,8g",
       "builtin": true
     },
     {
       "filename": "_builtin_morse_cq",
       "displayName": "Morse CQ",
-      "toneName": "24",
+      "toneName": "Morse CQ",
       "artist": null,
-      "rtttl": "24:d=16,o=6,b=120:8c,p,c,p,8c,p,c,4p,8c,p,8c,p,c,p,8c,8p",
+      "rtttl": "MorseCQ:d=16,o=6,b=120:8c,p,c,p,8c,p,c,4p,8c,p,8c,p,c,p,8c,8p",
       "builtin": true
     },
     {
       "filename": "_builtin_simple_beep",
       "displayName": "Simple Beep",
-      "toneName": "24",
+      "toneName": "Simple Beep",
       "artist": null,
-      "rtttl": "24:d=4,o=5,b=120:c6,p,c6",
+      "rtttl": "SimpleBeep:d=4,o=5,b=120:c6,p,c6",
       "builtin": true
     },
     {
       "filename": "_builtin_alert",
       "displayName": "Alert",
-      "toneName": "24",
+      "toneName": "Alert",
       "artist": null,
-      "rtttl": "24:d=8,o=6,b=140:c,e,g,c7,p,c7,g,e,c",
+      "rtttl": "Alert:d=8,o=6,b=140:c,e,g,c7,p,c7,g,e,c",
       "builtin": true
     },
     {
       "filename": "_builtin_ping",
       "displayName": "Ping",
-      "toneName": "24",
+      "toneName": "Ping",
       "artist": null,
-      "rtttl": "24:d=16,o=6,b=200:e,p,e",
+      "rtttl": "Ping:d=16,o=6,b=200:e,p,e",
       "builtin": true
     },
     {
@@ -2246,10 +2246,10 @@
       "rtttl": "Am180:d=4,o=6,b=140:b5,g5,8a5,8b5,a5,e5,8f_5,8g5,f_5,d5,8f_5,8a5,a5,g5,p,b5,g5,8a5,8b5,a5,e5,8f_5,8g5,f_5,d5,8f_5,8a5,a5,g5"
     },
     {
-      "filename": "\u6aa2can Deniz - Ama D\u64ed Desem.txt",
-      "displayName": "Ama D\u64ed Desem",
+      "filename": "檢can Deniz - Ama D擭 Desem.txt",
+      "displayName": "Ama D擭 Desem",
       "toneName": "AmaDNDe",
-      "artist": "\u6aa2can Deniz",
+      "artist": "檢can Deniz",
       "rtttl": "AmaDNDe:d=4,o=6,b=125:8c,8d_,8f.,16p,8d_,2f,p,8f,8g,8g_,16p,16g,16g_,8g,8f,8d_,8f,8p,8d_,2f.,2p,8g_,8g,8f,2d_,8p,f,8d_,c_.,8p,c_,c,16f,16d_,f,16d_,16p,16d_,16c_,d_,16c_,16p,16c_,16c,c_,16c,16p,c."
     },
     {
@@ -2988,10 +2988,10 @@
       "rtttl": "AsLongAs:d=4,o=5,b=200:4g#5,32p,4g#5,4g5,4f5,4g5,2p,4p,4g5,4g5,4g#5,4a#5,4d#5,4p,2p,2p,4c5,2d#5,32p,4f5,4g5,2f5,32p,4d#5,4d5,2d#5"
     },
     {
-      "filename": "DJ Ti\u7edfto - As The Rush Comes.txt",
+      "filename": "DJ Ti统to - As The Rush Comes.txt",
       "displayName": "As The Rush Comes",
       "toneName": "AsTheRus",
-      "artist": "DJ Ti\u7edfto",
+      "artist": "DJ Ti统to",
       "rtttl": "AsTheRus:d=8,o=5,b=125:c6,16c6,16c6,p,c6,16p,16c6,p,c6,c6,b,16b,16b,p,b,16p,b.,b,b,a,16a,16a,p,a,16p,a,16a,a,a,g,16g,16g,p,g,16p,g,16g,g,g,a,16a,16a,p,a,16p,a,16a,a,a,g,16g,16g,p,g,16p,g,16g,g,g,e,16e,16e,p,e,16p,e,16e,e,e,e,16e,16e,p,e,16p,e,16e,e,e,c6"
     },
     {
@@ -3023,8 +3023,8 @@
       "rtttl": "Asereje:d=4,o=6,b=125:8f_5,8f_5,8f_5,8f_5,8p,p,8f_5,p,8f_5,8f_5,p,8f_5,8f_5,8a_5,8g_5,8f_5,8f_5,8f_5,8f_5,8f_5,8f_5,8a_5,8g_5,8f_5,8f_5,8f_5,8f_5,8f_5,8f_5,8f_5,8f_5,8f_5,8f5,2p"
     },
     {
-      "filename": "Finntroll - Asf\u54b7elns D\u64e0.txt",
-      "displayName": "Asf\u54b7elns D\u64e0",
+      "filename": "Finntroll - Asf咷elns D擠.txt",
+      "displayName": "Asf咷elns D擠",
       "toneName": "AsfGeln",
       "artist": "Finntroll",
       "rtttl": "AsfGeln:d=4,o=6,b=140:8e,8f_,16p,8d_,e,16p,8e,16p,8e,8f_,16p,8d_,e,16p,8e,16p,8f_,8g,16p,8a,b,16p,8b,16p,8b,8c7,16p,8a,b,16p,8b,16p,8e,8f_,16p,8d_,e,16p,8e,16p,8e,8f_,16p,8d_,e,16p,8e,16p,8b5,8c,16p,8a5,b5,16p,8b5,16p,8e,8f_,16p,8g,2e"
@@ -3359,8 +3359,8 @@
       "rtttl": "AyWayZar:d=4,o=6,b=140:8d5,8d5,8a5,a5,a5,8a_5,8a5,8g5,8f5,g5,a5,8a5,8g5,8f5,8e5,f5,g5,8g5,8f5,e5,2e5,32p,8e5,8f5,8g5,g5,g5,8a5,8g5,8f5,8e5,f5,g5,8g5,8f5,8e5,8d5,e5,f5,8f5,8e5,d5,c5"
     },
     {
-      "filename": "Ay Y\u4e83l\u4e75.txt",
-      "displayName": "Ay Y\u4e83l\u4e75",
+      "filename": "Ay Y亃l乵.txt",
+      "displayName": "Ay Y亃l乵",
       "toneName": "AyYzlm",
       "artist": null,
       "rtttl": "AyYzlm:d=4,o=6,b=160:p,8c,8c,c,d,8e,e,8f,8e,8d,8d,8c,b5,8b5,8b5,b5,c,8d,d,8c,8d,8c,d,p,8d,8d,d,e,8f,f,8g,8f,8e,8e,8d,d,8e,e,8e,8e,8d,e,8e,8d,8e,8d,e"
@@ -3380,8 +3380,8 @@
       "rtttl": "Ayla(Gei:d=4,o=6,b=125:16e5,16e5,8c,8b5,2c,8p,16e5,16e5,8b5,8a5,2b5,8p,16e5,16e5,8a5,8g5,2a5,8p,16e5,16e5,8a5,8g5,2d5,8p,16e5,8c,8b5,8c,8c,8c,8c,8c,16e5,16e5,8b5,8a5,8b5,8b5,8b5,8b5,8b5,8p,16e5,16e5,8a5,8g5,8a5,8a5,8a5,8a5,8a5,8p,16e5,16e5,8a5,8g5,2d5"
     },
     {
-      "filename": "Mustafa Sandal Feat Natalia - A\u0445Ka Y\u0413\u0301Rek Gerek.txt",
-      "displayName": "A\u0445Ka Y\u0413\u0301Rek Gerek",
+      "filename": "Mustafa Sandal Feat Natalia - AхKa YЃRek Gerek.txt",
+      "displayName": "AхKa YЃRek Gerek",
       "toneName": "AKaYRe",
       "artist": "Mustafa Sandal Feat Natalia",
       "rtttl": "AKaYRe:d=4,o=6,b=140:d,8c5,8b5,b5,8c,8d5,e5,8d5,8c5,8c5,c5,8c5,c5,8b5,8a5,a5,8b5,8c,d5,8c5,8b5,2b5,8d,8c5,8c5,8b5,8b5,8b5,8c,8d5,e5,8d5,8c5,c5,e5,8e5,8d5,8d5,8c5,c5,8d5,8e5,f_5,8e5,8d5,d5"
@@ -5011,8 +5011,8 @@
       "rtttl": "BeyonceF:d=4,o=6,b=200:16g,16p,16g,g,8f,8d_,8f,8p,8d_,8p,d_,8p,8c,8d_,8p,8c,8d_,8p,8f,2g,8g_7,16a_7,16g_7,8g7,16g_7,16g7,f7,p,8g,8a_,8g,8f,8d_,8f,8p,8d_,8p,d_,8p,8c,8d_,8p,8c,8d_,8p,8f,g,p,g_7,16g_7,16g7,16a_7,16g_7,g7,p,16g,16p,16g,16p,g,8f,8d_,8f,8p,8d_,8p,d_,8p,8c,8d_,8p,8c,8d_,8p,8f,2g,8g_7,16a_7,16g_7,8g7,16g_7,16g7,f7,p,8g,8a_,8g,8f,8d_,8f,8p,8d_,8p,d_,8p,8c,8d_,8p,8c,8d_,8p,8f,g,p,g_7,16g_7,16g7,16a_7,16g_7,g7"
     },
     {
-      "filename": "Be\u544ak Kertmesi.txt",
-      "displayName": "Be\u544ak Kertmesi",
+      "filename": "Be告k Kertmesi.txt",
+      "displayName": "Be告k Kertmesi",
       "toneName": "BeikKer",
       "artist": null,
       "rtttl": "BeikKer:d=4,o=6,b=225:2a,b,2g,2a,b,2g,2a,b,2g,2a,g,2f_,2f_.,2a,b,2g,2a,b,2g,2a,b,2g,2a,g,2f_,2f_.,2g,a,2f_,2g,a,2f_,2g,a,2f_,2g,f_,2e,2d,2g,f_,g,a,2f_,e,2f_,e,2e,2e"
@@ -6278,7 +6278,7 @@
       "rtttl": "Bouree:d=4,o=6,b=180:16g#.,8a#.,b,16a#.,8g#.,g,16g#.,8a#.,d#,16f.,8g.,g#,16f#.,8e.,d#,16c#.,8b.5,a#5,16b.5,8c#.,d#,16c#.,16b.5,16a#.5,g#5,16g#.,8a#.,b,16a#.,8g#.,d#7,16b.,8d#.7,d#,16f.,8g.,g#,16f#.,8e.,d#,16c#.,8b.5,8b5,32b5,32c#,32b5,32c#,16b5,8a#.5,2b5"
     },
     {
-      "filename": "Bach - Bourr\u201aE.txt",
+      "filename": "Bach - Bourr‚E.txt",
       "displayName": "Bourr,E",
       "toneName": "BourrE",
       "artist": "Bach",
@@ -6950,7 +6950,7 @@
       "rtttl": "BumpBump:d=4,o=5,b=180:8g#,8p,8g#,8p,a#,b,g#,d#,c#,8d#,8p,8g#,8p,8g#,8p,a#,b,8g#,8d#,d#,e,d#,8c#,8p,p,8c#6,8d#,8e,8p,e6,d#,c#,8b,c#.6,p,8c#6,8d#,8e,8p,e6,d#,c#,b,8g#,8p,8g#,8p,a#,b,g#"
     },
     {
-      "filename": "Champagne - Burach\u201a.txt",
+      "filename": "Champagne - Burach‚.txt",
       "displayName": "Burach,",
       "toneName": "Burach",
       "artist": "Champagne",
@@ -7167,8 +7167,8 @@
       "rtttl": "Cabaret-:d=4,o=6,b=250:a#5,d#,d,c,b5,a#5,8g,8g,g,b5,a#5,8g,8g,g,b5,a#5,8g,8g,g,a#5,d#,d,c,b5,a#5,8g,8g,g,g,g#,f,d#,d,2a#.,a,b#,a,g,b5,2c."
     },
     {
-      "filename": "Koerdisch - Cade \u20ac\u201cL e\u0302 S\u02c6Ber Bu.txt",
-      "displayName": "Cade \u20ac\"L e\u0302 S\u02c6Ber Bu",
+      "filename": "Koerdisch - Cade €“L ê SˆBer Bu.txt",
+      "displayName": "Cade €\"L ê SˆBer Bu",
       "toneName": "CadeL",
       "artist": "Koerdisch",
       "rtttl": "CadeL:d=4,o=6,b=140:a5,8a5,a5,a5,8a5,8g_5,8b5,8a5,8a5,8g_5,a5,8p,g_5,8a5,8g_5,8f_5,8f_5,8e5,e5,8e5,8d5,8c_5,8d5,e5,8p,d5,8e5,f_5,f_5,8p,c_5,d5,8e5,8e5,8f_5,8e5,8e5,8d5,8d5,8c_5,c_5,8f_5,8e5,8e5,8d5,8d5,8c_5,c_5"
@@ -7643,8 +7643,8 @@
       "rtttl": "Cantaloo:d=4,o=5,b=125:8f,8f,p,8p,8f,8g#,8a#,2a#.,8g#,8a#.,8c6,8d#.,1f,p,8p,8f,8g#,8a#,2a#.,8g#,8a#.,8c6,8d#.,1f,p,p,8c6,8d#6,8c6,8d#6,f"
     },
     {
-      "filename": "Depeche Mode - Can\u2039T Get Enough.txt",
-      "displayName": "Can\u2039T Get Enough",
+      "filename": "Depeche Mode - Can‹T Get Enough.txt",
+      "displayName": "Can‹T Get Enough",
       "toneName": "CanTGet",
       "artist": "Depeche Mode",
       "rtttl": "CanTGet:d=4,o=6,b=112:8g,8p,8g,16g,8g,16g,8g,8a,8a,8g,8p,8g,16g,8g,16g,8g,8a,8a,8c7,8p,8a,8p,8a,8p,8a,8p"
@@ -9785,8 +9785,8 @@
       "rtttl": "DGenerat:d=4,o=5,b=140:8e,8p,8e,d6,8e6,8e6,8e6,8e6,8e,8e,8e,8d6,p,8e,8p,8e,8b,8b,8c6,8c6,b,e,8e6,8d6,e.6,b.,c6,f#,8g,8f#,e,8e6,8d6,e6,8p,c.6,b,2g,16f#,e,8e6,8d6,e.6,b.,c6,f#,8g,8f#,e."
     },
     {
-      "filename": "D\u00a0narfregnir Og JarS\u030cafarir (Reynir c\u030c\u00a2r).txt",
-      "displayName": "D narfregnir Og JarS\u030cafarir (Reynir c\u030c\u00a2r)",
+      "filename": "D narfregnir Og JarŠafarir (Reynir č¢r).txt",
+      "displayName": "D narfregnir Og JarŠafarir (Reynir č¢r)",
       "toneName": "Dnarfre",
       "artist": null,
       "rtttl": "Dnarfre:d=4,o=6,b=100:f5,f5,e5,d5,e5,f5,g5,1c5,f5,f5,f5,e5,d5,e5,f5,g5,1a5,c,c5,b5,a5,b5,c,d5,1g5,f5,f5,e5,d5,e5,f5,g5,1a5"
@@ -9869,7 +9869,7 @@
       "rtttl": "DaftPunk:d=4,o=5,b=125:16f,16p,8g6,8g6,8f6,16g6,16g6,8g6,16c,8p,16p,16c,p,16p,16c,8p,16p,16c,8p,16p,16c,16p,16f,16p,8g6,8g6,8f6,16g6,16g6,8g6,16c,8p,16p,16c,p,16p,16c,8p,16p,16c,8p,16p,16c,16p,16f,16p,8d#6,8d#6,8c6,8d#6,8d#6,c6,16c,16p,8c6,8p,16c,8p,16p,16c,8p,16p,8c6,8d#6,8d#6,c6,16c,16p,16c,p,16p,16c,p,16p,16c,8p,16p,16c,8p,16p,16c,16p,8f,8p,8d#,8p,8c"
     },
     {
-      "filename": "De Zakkenv\u201dllers - Dag Rudi.txt",
+      "filename": "De Zakkenv”llers - Dag Rudi.txt",
       "displayName": "Dag Rudi",
       "toneName": "DagRudi",
       "artist": "De Zakkenv\"llers",
@@ -10709,8 +10709,8 @@
       "rtttl": "DempseyA:d=4,o=5,b=125:8d.6,16c#6,p,8g,8f#,8d6,a,16d6,16d6,p.,16c#6,16c#6,p,8d.6,16c#6,p,8g,8f#,8d6,a,16d6,16d6,8c#6,8d6,2e6,8d.6,16c#6,p,8g,8f#,8d6,a,16d6,16d6,p.,16c#6,16c#6,p,8d.6,16c#6,p,8g,8f#,8d6,a,16d6,16d6,8c#6,8d6,2e6,8e.6,16d6,2p.,8d.6,16c6"
     },
     {
-      "filename": "Koerdisch - Deng\u0152 Blur U Naye.txt",
-      "displayName": "Deng\u0152 Blur U Naye",
+      "filename": "Koerdisch - DengŒ Blur U Naye.txt",
+      "displayName": "DengŒ Blur U Naye",
       "toneName": "DengBlu",
       "artist": "Koerdisch",
       "rtttl": "DengBlu:d=4,o=6,b=112:8a5,8a5,8a5,16a5,32a_5,32c_,32a_5,32c_,16a5,8g_5,8a5,8f5,8a5,8a5,8a5,16a5,32a_5,32c_,32a_5,32c_,16a5,8g_5,8a5,8p,8c_,8c_,8c_,8c_,16c_,16a_5,16c_,16a_5,16c_,16a_5,8a5,8a5,8a5,16a_5,16a5,16a5,32a_5,32c_,32a_5,32c_,16a5,16g_5,16g_5,8a5"
@@ -12578,8 +12578,8 @@
       "rtttl": "Dynasty:d=4,o=5,b=100:8a#.,16f,2f,a#,8f.6,16a#,2a#,8p,8a#,8a#6,8a6,g6,8f.6,16a#,a#,8c6,8d6,d#6,8d6,8c6,8a#,8p,f6,2g6,8f6,8d#6,f6,2g6,8f6,8d#6,a#6,2f6,8d#6,8d6,a#,2c6,8p,16g6,16f6,16d#6,16g6,16d6,16g6,8c6,16g6,16f6,16d#6,16g6,16d6,16g6,8c6,16f6,16d#6,16d6,16f6,16c6,16f6,8a#,16f6"
     },
     {
-      "filename": "Ozcan Deniz - D\u5e74 Desem.txt",
-      "displayName": "D\u5e74 Desem",
+      "filename": "Ozcan Deniz - D年 Desem.txt",
+      "displayName": "D年 Desem",
       "toneName": "DNDesem",
       "artist": "Ozcan Deniz",
       "rtttl": "DNDesem:d=4,o=6,b=160:8c,8d_,8f.,16p,8d_,2f,p,8f,8g,8g_,16g,16g_,8g,8f,8d_,8f,8p,8d_,2f.,8g_,8g,8f,2d_,8p,f,8d_,c_.,8p,c_,c,16f,16d_,f,16d_,16p,16d_,16c_,d_,16c_,16p,16c_,16c,c_,16c,16p,16p,c"
@@ -12683,10 +12683,10 @@
       "rtttl": "Ebeneeze:d=4,o=5,b=100:8e#7,16d#7,16d#6,8p,8e#7,16d#7,16d#6,p,8p,8e#7,16d#7,16d#6,16p,16e#7,16g#7,8e#7,16d#7,16d#6"
     },
     {
-      "filename": "\u20acingenem - Ebru G\ufffdNdes.txt",
+      "filename": "€ingenem - Ebru G�Ndes.txt",
       "displayName": "Ebru GNdes",
       "toneName": "EbruGNd",
-      "artist": "\u20acingenem",
+      "artist": "€ingenem",
       "rtttl": "EbruGNd:d=4,o=6,b=140:g5,8a5,a5,a5,g5,a5,p,8g5,8a5,b5,b5,b5,a5,b5,p,a5,c_5,8c_5,c_5,c_5,p,d_5,b5,c5,b5,a5"
     },
     {
@@ -12921,7 +12921,7 @@
       "rtttl": "Emergenc:d=16,o=5,b=90:f#,f#,4g#,4a,2f#,4p,e,e,e,4f#,4p.,e,e,e,f#,4p,e,e,e,f#,4p,e,e,8c#6,c#6,b,8c#6,e,e,e,f#,2p,e,e,e,f#"
     },
     {
-      "filename": "Kisp\u00a0l \ufffds A Borz - Emese.txt",
+      "filename": "Kisp l �s A Borz - Emese.txt",
       "displayName": "Emese",
       "toneName": "Emese",
       "artist": "Kisp l s A Borz",
@@ -13131,7 +13131,7 @@
       "rtttl": "Equidor:d=4,o=5,b=140:8g.,8d.,8a#,8a,8c6,8a,8f,8g.,8d.,8a#,8a,8c6,8a,8f,8a#.,8f.,8d6,8c6,8d6,8c6,8a,8a#.,8g.,8a#,8a,8a#,8a,8f"
     },
     {
-      "filename": "Feest - Er Is Er \u0090\u0082N Jarig.txt",
+      "filename": "Feest - Er Is Er N Jarig.txt",
       "displayName": "Er Is Er N Jarig",
       "toneName": "ErIsEr",
       "artist": "Feest",
@@ -13754,7 +13754,7 @@
       "rtttl": "Extincti:d=4,o=6,b=63:16c_5,32d_5,16c_5,32d_5,16c_5,32d_5,16c_5,32d_5,16e.5,16d_5,16c_5,16d_.5,32e.5,16c_5,32d_5,16c_5,32d_5,16c_5,32d_5,16c_5,32d_5,16e.5,16d_.5,16c_5,16d_.5,32e.5,16d_5,32e5,16d_5,32e5,16d_5,32e5,16d_5,32e5,16g.5,16f_5,16e5,16f_.5,32g.5,16d_5,16d_5,32e5,16d_5,32e5,16d_5,32e5,16g.5"
     },
     {
-      "filename": "Kisp\u00a0l \ufffds A Borz - Extra Light.txt",
+      "filename": "Kisp l �s A Borz - Extra Light.txt",
       "displayName": "Extra Light",
       "toneName": "ExtraLig",
       "artist": "Kisp l s A Borz",
@@ -14454,7 +14454,7 @@
       "rtttl": "Fighting:d=8,o=6,b=100:16c5,p.,d#,c,d#,c,g,g,4g,d#,c,4d#,d#,f,d.,16c,4a#5,d,a#5,a#5,f,d,a#5,a#5,g5,a#5,a#5,a#5,g,4g,d#,c,d#,c,g,g,4g,d#,c,4d#,d#,f,d.,16c,4a#5,d,a#5,a#5,f,d,a#5,a#5,g5,a#5,a#5,a#5,g,4g,d#,c,d#,c,g,g,4g,d#,c,4d#,d#,f,d.,16c,4a#5,d,a#5,a#5,f,d,a#5,a#5,g5,a#5,a#5,a#5,g,4g"
     },
     {
-      "filename": "Beyonc\u201a Feat. Missy Elliott - Fighting Temtation.txt",
+      "filename": "Beyonc‚ Feat. Missy Elliott - Fighting Temtation.txt",
       "displayName": "Fighting Temtation",
       "toneName": "Fighting",
       "artist": "Beyonc, Feat. Missy Elliott",
@@ -15896,8 +15896,8 @@
       "rtttl": "GamesWit:d=16,o=5,b=63:32p,32b.,b.,8b,b.,32c.6,4b,32b.,b.,8a,g.,4g.,32a.,a.,8a,a.,32b.,4a,32b.,32b.,b.,32a.,32a.,32g.,4g,8p,g.,g.,f#.,f#.,e.,32e.,32e.,d.,d.,e.,8g,32g.,32f#.,f#.,4e.,8d,32d.,d.,4e.,32g"
     },
     {
-      "filename": "Old Noi - Gamli N\u0e02I.txt",
-      "displayName": "Gamli N\u0e02I",
+      "filename": "Old Noi - Gamli NขI.txt",
+      "displayName": "Gamli NขI",
       "toneName": "GamliNI",
       "artist": "Old Noi",
       "rtttl": "GamliNI:d=4,o=6,b=90:8c5,8c5,8c5,8e5,8d5,8d5,8d5,8f5,8e5,8e5,8d5,8d5,c5,8p,8e5,8e5,8e5,8e5,f5,f5,8d5,8d5,8d5,8d5,e5,e5,16p,8c5,8c5,8c5,8e5,8d5,8d5,8d5,8f5,8e5,8e5,8d5,8d5,c5"
@@ -16596,7 +16596,7 @@
       "rtttl": "GladToBe:d=4,o=5,b=125:a,16d6,2d6,a,d6,2b,a,g,16a,a,8d,16f,16a,16p,8g,16f,16g,16p,f,16p,8d,16f,16d6,16p,8c6,a,32p,d6,16g6,2g6,d6,g6,2e6,d6,c6,16d6,d6,16p,8d,16f,16a,16p,8g,16f,16g,16p,f,16p,8d,16f,16d6,16p,8c6,a,32p"
     },
     {
-      "filename": "Tarkan - G\ufffdL\ufffdMse Kaderine (Yak B\ufffdT\ufffdN Fotograflari).txt",
+      "filename": "Tarkan - G�L�Mse Kaderine (Yak B�T�N Fotograflari).txt",
       "displayName": "GLMse Kaderine (Yak BTN Fotograflari)",
       "toneName": "GLMseK",
       "artist": "Tarkan",
@@ -16652,7 +16652,7 @@
       "rtttl": "Gmtv:d=8,o=5,b=160:d#6,d#,d6,d#,c6,g,a#,c6,g#,c6,a#,d#,g#,d#,g,d#,f6,f,d#6,f,d6,a,c6,a#,p,a#6,p,a#,a#,a#6,a#6,a#,g#,g#,c6,4d#6,4f6,4d#6,4a#,4g,4d#,a#4,4c,c6,c6,a#,c6,d6,2d#6"
     },
     {
-      "filename": "G\u0094ksel - G\u0081N\u0081N Birinde.txt",
+      "filename": "Gksel - GNN Birinde.txt",
       "displayName": "GNN Birinde",
       "toneName": "GNNBir",
       "artist": "Gksel",
@@ -17485,7 +17485,7 @@
       "rtttl": "GriefNev:d=4,o=6,b=70:16f_.,32f_,8g,16f_.,2a,8d5,8d5,16b.,16g,16b.,2a,8d5,32d5,16a.,16a.,8g,32f_,16e.,d.,32p,8b5,32b5,16e.,16e.,8f_,32g,2a,8d5,32d5,16f_.,32f_,8g,16f_.,2a,8d5,8d5,16b.,16g,16b.,2a,8d5,32d5,16a.,16a.,8g,32f_,16e.,d.,32p,8b5"
     },
     {
-      "filename": "Udo J\ufffdrgens - Griekse Wijn.txt",
+      "filename": "Udo J�rgens - Griekse Wijn.txt",
       "displayName": "Griekse Wijn",
       "toneName": "GriekseW",
       "artist": "Udo Jrgens",
@@ -17660,7 +17660,7 @@
       "rtttl": "H2TheHiz:d=4,o=5,b=90:8a#,16f#6,16f#6,16d#6,8f#.6,8b,16f#6,16f#6,16d#6,8f#.6,p,8a#,16f#6,16f#6,16d#6,8f#.6,8b,16f#6,16f#6,16d#6,8f#.6,p,8a#,16f#6,16f#6,16d#6,8f#.6,8b,16f#6,16f#6,16d#6,8f#.6,p,8a#,16f#6,16f#6,16d#6,8f#.6,8b,16f#6,16f#6,16d#6,8f#.6"
     },
     {
-      "filename": "Frans Bauer - H\u201a Lekker Ding.txt",
+      "filename": "Frans Bauer - H‚ Lekker Ding.txt",
       "displayName": "H, Lekker Ding",
       "toneName": "HLekker",
       "artist": "Frans Bauer",
@@ -18514,7 +18514,7 @@
       "rtttl": "HebJeEve:d=4,o=6,b=160:8d5,8f5,8a_.5,8a.5,8f5,d5,1p,8d5,8f5,8a_.5,8a.5,8f5,d_5,1p,8d_5,8f5,8a_.5,8a.5,8f5,d_5,8d_5,8f5,8a_.5,8a.5,8f5,d_5,8d_5,8f5,8a_.5,8a.5,8f5,d5,1p,8d5,8f5,8a_.5,8a.5,8f5,d5,1p,8d5,8f5,8a_.5,8a.5,8f5,d_5,1p,8d_5,8f5,8a_.5,8a.5,8f5,d_5,8d_5,8f5,8a_.5,8a.5,8f5,d_5,8a5,8a_5,8c.,16a_5,8p,8a5,2a_.5"
     },
     {
-      "filename": "DJ Jos\u201a - Hecitate.txt",
+      "filename": "DJ Jos‚ - Hecitate.txt",
       "displayName": "Hecitate",
       "toneName": "Hecitate",
       "artist": "DJ Jos,",
@@ -18549,8 +18549,8 @@
       "rtttl": "Helan:d=32,o=5,b=300:4f.2,4g#.2,4c#.2,16f.2,p,16f.2,16d#.2,16p.,16d#.2,p,16d#.2,p,16d#.2,16p.,16d#.2,p,16d#.2,8f.2,16c#.2,16p.,8c#.2,16p.,4f.2,4g#.2,4c#.2,8f.2,16d#.2,16p.,16d#.2,16p.,16d#.2,16p.,16d#.2,16p.,4c#.2,8p.,8c#.2,8d#.2,16g#.,16p.,16g#.,16p.,8g#.,8f.2,16c#.2,16p.,16c#.2,16p.,8c#.2,8d#.2,16g#.,16p.,16g#.,16p.,8g#.,8f.2,16c#.2,16p.,8c#.2,16p.,8f.2,16p.,8g#.2,16p.,4c#.4,16p.,8c#.4,16c.4,16p.,16c.4,16p.,16c.4,16p.,16c.4,16p.,8c#.4,2p."
     },
     {
-      "filename": "Koerdisch - Heleb\u2021E.txt",
-      "displayName": "Heleb\u2021E",
+      "filename": "Koerdisch - Heleb‡E.txt",
+      "displayName": "Heleb‡E",
       "toneName": "HelebE",
       "artist": "Koerdisch",
       "rtttl": "HelebE:d=4,o=6,b=200:b5,8b5,8c,b5,a5,g5,a5,b5,g5,a5,8a5,8b5,a5,g5,f_5,g5,a5,f_5,g5,8g5,8a5,g5,f_5,e5,f_5,g5,e5,f_5,8p,8g5,f_5,e5,d5,e5,2e5,2e5,g5,f_5,8e5,e5,8e5,2e5,e5,e5,e5,f_5,e5,f_5,d5"
@@ -19697,7 +19697,7 @@
       "rtttl": "we-rock:d=4,o=6,b=50:16d#6,32d#6,32c#6,16c6,8c#6,8a#5,16a#5,16d#6,16d#6,32c#6,16c.6,16d#6,32d#6,32c#6,16c6,8c#6,8a#5,16c6,16g#5,8a#.5,16c6,16c#6,16d#6,8f6,16f.6,16f#.6,16d#6,8f.6,16d#6,32d#6,32c#6,16c6,8c#6,8a#5,16a#5,16d#6,16d#6,32c#6,16c.6,16d#6,32d#6,32c#6,16c6,8c#6,8a#5,16c6,16g#5,16a#.5,"
     },
     {
-      "filename": "Tarkan - H\ufffdP.txt",
+      "filename": "Tarkan - H�P.txt",
       "displayName": "HP",
       "toneName": "HP",
       "artist": "Tarkan",
@@ -19935,10 +19935,10 @@
       "rtttl": "Hysteria:d=4,o=6,b=100:16e,8e,8e,8e,2e,8p,8e,8e,d,1f,8f,8f,8e,8f.,8e,8e,2a5,8e,8e,8e,2e,8p,8e,8e.,8d.,1f,8f,8f,8f,8f.,8e.,1e"
     },
     {
-      "filename": "Kisp\u00a0l \u06afs A Borz - H\u00a3Sr\u00a0G\u00a2 H\u060cDver\u0646.txt",
-      "displayName": "H\u00a3Sr G\u00a2 H\u060cDver\u0646",
+      "filename": "Kisp l گs A Borz - H£Sr G¢ H،Dverن.txt",
+      "displayName": "H£Sr G¢ H،Dverن",
       "toneName": "HSrGH",
-      "artist": "Kisp l \u06afs A Borz",
+      "artist": "Kisp l گs A Borz",
       "rtttl": "HSrGH:d=4,o=6,b=140:e5,g5,16g5,16e5,16g5,16f_5,16d5,16d_5,16d5,16f_5,16a5,16f_5,e5,g5,16g5,16e5,16g5,16f_5,16d5,16d_5,16d5,16f_5,16a5,16f_5"
     },
     {
@@ -21734,7 +21734,7 @@
       "rtttl": "InMyArms:d=4,o=6,b=125:8d,a,d,8e,d,8d,a,d,8e,d,8d,a,d,8e,d,8d,a,d,8e,d,8d,a,d,8e,d,8d,a,d,8e,d,8d,a,d,8e,d,8d,a,d,8e,8d"
     },
     {
-      "filename": "No\u201ami - In My Dreams.txt",
+      "filename": "No‚mi - In My Dreams.txt",
       "displayName": "In My Dreams",
       "toneName": "InMyDrea",
       "artist": "No,mi",
@@ -24044,7 +24044,7 @@
       "rtttl": "Kick:d=32,o=5,b=300:16e.,p,e4,p.,e4,p.,16d.,p,e4,8p.,16c.,p,e4,p.,e4,p.,16h.3,8p.,e4,p.,e4,p.,16e.,p,16d.,p,e4,8p.,16c.,p,e4,p.,e4,p.,8h.3,4p.,1p.,8p."
     },
     {
-      "filename": "Kisp\u00a0l \ufffds A Borz - Kicsi Csillag.txt",
+      "filename": "Kisp l �s A Borz - Kicsi Csillag.txt",
       "displayName": "Kicsi Csillag",
       "toneName": "KicsiCsi",
       "artist": "Kisp l s A Borz",
@@ -24828,7 +24828,7 @@
       "rtttl": "LAlizee:d=4,o=6,b=40:32c#7,32d#7,32e7,32f#7,32b,b,16c#7,32c#7,32d#7,32e7,32d#7,32c#7,32f#7,32b,16b.,32f#,32g#7,16f#7,32g#7,16f#.7,32f#7,32g#7,32a#7,32b7,32d#7,d#7,16f#7,32f#7,32g#7,32f#7,32e7,32d#7,32b7,32d#7,16d#.7,32d#7,32g#7,16f#7,32g#7,32f#7,32g#7,32f#7,32f#7,32g#7,32a#7,32b7,32d#7,d#7,16f#7,32f#7,32g#7,32f#7,32e7,32d#7,32b7,32d#7,32d#7,16d#7,32c#7,32b,16c#7,32g#7,8f#.7"
     },
     {
-      "filename": "Alizee - L'aliz\u201a.txt",
+      "filename": "Alizee - L'aliz‚.txt",
       "displayName": "L'aliz,",
       "toneName": "L'aliz",
       "artist": "Alizee",
@@ -24940,7 +24940,7 @@
       "rtttl": "LaVidaLo:d=4,o=5,b=180:g6,g6,8p,8d#6,8f6,8g6,8p,8g#6,8p,g6,p,g6,g6,8p,8d6,8d6,8f6,8p,8f6,8p,d#6,p,g6,g6,8p,8d#6,8f6,8g6,8p,8g#6,8p,g6,p,g6,g6,8p,8d6,8d6,8f6"
     },
     {
-      "filename": "Nek - La Vita \u0090.txt",
+      "filename": "Nek - La Vita .txt",
       "displayName": "La Vita",
       "toneName": "LaVita",
       "artist": "Nek",
@@ -25122,8 +25122,8 @@
       "rtttl": "LangZalZ:d=4,o=5,b=112:c,f,8f.,16f,f,c,a,8a.,16a,a,f,c6,8c.6,16c6,8d6,8c6,8a#,8a,g,g,g,8c.6,16a#,2a,2a#,2c6,d6,a#,2a,2g,2f.,1p,c,f,8f.,16f,f,c,a,8a.,16a,a,f,c6,8c.6,16c6,8d6,8c6,8a#,8a,g,g,g,8c.6,16a#,2a,2a#,2c6,d6,a#,2a,2g,2f."
     },
     {
-      "filename": "Koerdisch - Lanik Lanik Lank\u201cL\u02c6.txt",
-      "displayName": "Lanik Lanik Lank\"L\u02c6",
+      "filename": "Koerdisch - Lanik Lanik Lank“Lˆ.txt",
+      "displayName": "Lanik Lanik Lank\"Lˆ",
       "toneName": "LanikLan",
       "artist": "Koerdisch",
       "rtttl": "LanikLan:d=4,o=6,b=112:8g5,8g5,8g5,16g5,32a_5,32c,32a5,32a_5,16g5,16f5,16e5,8f5,8p,8g5,8g5,8g5,16g5,16a_5,16a5,16g5,16f5,16e5,8f5,8p,8e5,8e5,8e5,16f5,16g5,16g5,16f5,16f5,16e5,8d5,8p,16d5,16d5,8d5,16d5,16e5,16f5,16f5,16e5,16d5,16c5,16b5,8c5"
@@ -26249,7 +26249,7 @@
       "rtttl": "LimpBizk:d=4,o=6,b=225:16d_5,16p,8d_5,8p,8d_5,8p,16d_5,16p,e5,8c.5,16p,e5,16d_5,16p,8d_5,8p,8d_5,8p,16d_5,16p,e5,c_5,e5,16d_5,16p,8d_5,8p,8d_5,8p,16d_5,16p,e5,c_5,e5,16d_5,16p,8d_5,8p,8d_5,8p,16d_5,16p,8e.5,16p,d_7,e7,d_7,c_7,1d_.7,2p,a_,b,a_7,8g_.,16p,g_,2g."
     },
     {
-      "filename": "Lindenstra\u00a0e.txt",
+      "filename": "Lindenstra e.txt",
       "displayName": "Lindenstra e",
       "toneName": "Lindenstrae",
       "artist": null,
@@ -26431,7 +26431,7 @@
       "rtttl": "LiveAnot:d=4,o=5,b=140:8d#7,8p,8d#7,8f#6,8p,8f#6,8p,8f#6,8p,8f#6,8p,8f#6,8p,8g#6,8p,8g#6,8a#6,8p,8a#6,8d#6,8p,8d#6,8p,8d#6,8p,8d#6,8p,8d#6,8p,8p,8f6,8f#6,8p,8f#6,8f#6,8p,8f#6,8p,8f#6,8p,8f#6,8p,8g#6,8p,8f#6,8p,8f6,8a#,8p,8a#,8c#6,8p,8d#6,8p,8a#6,8p,8a#6,8p,8g#6,8p,8f#6,8p,8f6"
     },
     {
-      "filename": "Gerard, Ren\u201a & Gordon - Live At The Arena.txt",
+      "filename": "Gerard, Ren‚ & Gordon - Live At The Arena.txt",
       "displayName": "Live At The Arena",
       "toneName": "LiveAtTh",
       "artist": "Gerard, Ren, & Gordon",
@@ -28405,7 +28405,7 @@
       "rtttl": "Revoluti:d=4,o=6,b=160:c,8c.,8g5,8g5,16g5,8a5,8b5,c,8c.,8g5,8g5,16g5,8a5,8b5,c,8c.,8g5,8g5,16g5,8a5,8b5,d,8d.,8f,8f,16f,8e,8d,8c"
     },
     {
-      "filename": "Tankcsapda - Menyorsz\u00a0G Tourist.txt",
+      "filename": "Tankcsapda - Menyorsz G Tourist.txt",
       "displayName": "Menyorsz G Tourist",
       "toneName": "Menyorsz",
       "artist": "Tankcsapda",
@@ -29987,7 +29987,7 @@
       "rtttl": "MyCultur:d=8,o=7,b=90:g6,g6,4c,4f,g.,4e,1p,4c6,1c6,1c6,c6,d6,e6,g6,g6,4c,4f,g.,e.,1f,e,1d,c.,1c,1p,1b6,1p,1a#6,1p,1f6,g6,g6,4c,4f,g.,4e,1p,c.6,1c6,1p,1c6,c6,d6,e6,g6,g6,4c,4f,g.,e.,1f,e,1d,c"
     },
     {
-      "filename": "Eminem - My Dad\u2019S Gone Crazy..txt",
+      "filename": "Eminem - My Dad’S Gone Crazy..txt",
       "displayName": "My Dad'S Gone Crazy.",
       "toneName": "MyDadSG",
       "artist": "Eminem",
@@ -30302,14 +30302,14 @@
       "rtttl": "Mysterio:d=4,o=5,b=100:16c#6,16e#6,16p,16e#6,16p,16e#6,16p,16e#6,16f#6,16f#6,16p,16p,16f#6,16f#6,16e#6,16c#6,16e#6,16p,16e#6,16p,16e#6,16p,16f#6,16f#6,16p,16f#6"
     },
     {
-      "filename": "Blof - \u0090\u0082N En Alleen.txt",
+      "filename": "Blof - N En Alleen.txt",
       "displayName": "N En Alleen",
       "toneName": "NEnAll",
       "artist": "Blof",
       "rtttl": "NEnAll:d=4,o=6,b=63:8f.,32a_5,16p,32p,32c_,16p,32p,32f5,32p,8f,16p,16d_.,32p,16c_.,32p,g_5,32c,16p,32p,32d_,16p,32p,32d_5,32p,32g_5,16p,32p,32g_5,32p,16f_.5,32p,16g_.5,32p,f,32f_5,16p,32p,32a_5,16p,32p,32a_5,32p,8f,16p,16d_.,32p,16c_.,32p,8g_.5,16p,16f_5,16f5,16f_5,8g_.5"
     },
     {
-      "filename": "Fresh - \ufffdN Is Im\u00a0Dlak.txt",
+      "filename": "Fresh - �N Is Im Dlak.txt",
       "displayName": "N Is Im Dlak",
       "toneName": "NIsImD",
       "artist": "Fresh",
@@ -30400,8 +30400,8 @@
       "rtttl": "Narcotic:d=4,o=6,b=100:8d5,8e5,8d5,8e5,8d5,8e5,16d5,8f5,16p,8e5,8f5,8e5,8f5,8e5,8f5,16g5,8a5,16p,8g5,8a5,8g5,8a5,8g5,8a5,16g5,8e5,16p,8d5,8e5,8d5,16e5,8p,16p,16f5,8p,8e5,16p,8d5,8e5,8d5,8e5,8d5,8e5,16d5,8f5,16p"
     },
     {
-      "filename": "Koerdisch - Nar\u0152N\u02c6.txt",
-      "displayName": "Nar\u0152N\u02c6",
+      "filename": "Koerdisch - NarŒNˆ.txt",
+      "displayName": "NarŒNˆ",
       "toneName": "NarN",
       "artist": "Koerdisch",
       "rtttl": "NarN:d=4,o=6,b=140:8a5,8a5,a5,a5,16a5,16g_5,16a5,16b5,8a5,8g_5,8f5,8f5,8a5,8a5,16a5,16g_5,16a5,16b5,8a5,8g_5,8f5,8f5,8g_5,8f5,8f5,8e5,8f5,8e5,2d5,d5,e5,f5,a5,8g_5,16a5,16b5,8a5,8g_5,8f5,8f5,8g_5,8f5,8f5,8e5,8f5,8e5,e5"
@@ -31534,8 +31534,8 @@
       "rtttl": "NuGaJeDa:d=4,o=6,b=125:c,8c.,16c,16p,8c,16c,c,c,8c.,16c,16p,8c,16c,c,c,8c.,16c,16p,8c,16c,c,c,8c.,16c,16p,8c,16c,c,c,8c.,16c,16p,8c,16c,c,c,8c.,16c,16p,8c,16c,c,c,8c.,16c,16p,8c,16c,c,c,8c.,16c,16p,8c,16c,c"
     },
     {
-      "filename": "Tschaikovsky - Nua\u0301Knackermarsch.txt",
-      "displayName": "Nua\u0301Knackermarsch",
+      "filename": "Tschaikovsky - NuáKnackermarsch.txt",
+      "displayName": "NuáKnackermarsch",
       "toneName": "NuKnack",
       "artist": "Tschaikovsky",
       "rtttl": "NuKnack:d=4,o=6,b=200:a_5,8p,8a_5,8a_5,8a_5,c,8p,8c,p,d,8p,8a_5,p,2c,p,a_5,8p,8a_5,8a_5,8a_5,c,8p,8c,p,d,8p,8a_5,p,2c,p,g_5,8a_5,8g_5,8p,8g5,f5,8d_5,8d5,8p,8a_5,g5,8g_5,8g5,8p,8f5,d_5,8d5,8c5,8p,8d_5,d5,8c5,8b5,8p,8f5,d_5,8d5,8c5,8p,8g5,g_5,8g5,8f5,8p,8d_5,a_5,2p,a_5,8p,8a_5,8a_5,8a_5,c,8p,8c,p,d,8p,8a_5,p,2c,p,a_5,8p,8a_5,8a_5,8a_5,c,8p,8c,p,d,8p,8a_5,p,2c"
@@ -32864,8 +32864,8 @@
       "rtttl": "OyaLele:d=4,o=5,b=125:8f.6,16e6,16d,16p,8d6,d6,16d,16p,8p,8f.6,16e6,16d,16p,8d6,8d.6,16e6,16d,16p,8f6,8g.6,16f6,16c,16p,8e6,e6,16c,16p,8p,8g.6,16f6,16c,16p,8e6,8e.6,16f6,16c,16p,8g6,8f.6,16e6,16a#,16p,8d6,d6,16a#,16p,8p,8a.6,16g6,16f,16p,8f6,f6,16f,16p,8a#6,a6,16a,16p,8a#6,a6,8a,8p,8f.6,16e6,16d,16p,8d6,d6"
     },
     {
-      "filename": "K3 - Oya LS\u030cLS\u030c.txt",
-      "displayName": "Oya LS\u030cLS\u030c",
+      "filename": "K3 - Oya LŠLŠ.txt",
+      "displayName": "Oya LŠLŠ",
       "toneName": "OyaLL",
       "artist": "K3",
       "rtttl": "OyaLL:d=4,o=6,b=125:8f.,16e,16d5,16p,8d,d,16d5,16p,8p,8f.,16e,16d5,16p,8d,8d.,16e,16d5,16p,8f,8g.,16f,16c5,16p,8e,e,16c5,16p,8p,8g.,16f,16c5,16p,8e,8e.,16f,16c5,16p,8g,8f.,16e,16a_5,16p,8d,d,16a_5,16p,8p,8a.,16g,16f5"
@@ -38072,8 +38072,8 @@
       "rtttl": "SexyEyes:d=16,o=6,b=125:b5,8p,32b5,32p,b5,p,32b5,p,32p,f#,8p,32f#,32p,f#,p,f#,p,e,8p,32e,32p,e,p,32e,p,32p,g#,8p,32g#,32p,g#,p,g#,p,f#6,8p,32f#,32p,f#,p,32f#,p,32p,a#,8p,32a#,32p,a#6,p,32a#,p,32p,b,8p,32b"
     },
     {
-      "filename": "Justin Timberlake - Se\u529brita.txt",
-      "displayName": "Se\u529brita",
+      "filename": "Justin Timberlake - Se力rita.txt",
+      "displayName": "Se力rita",
       "toneName": "SeOrita",
       "artist": "Justin Timberlake",
       "rtttl": "SeOrita:d=4,o=6,b=200:c.,8a_5,g_5,p,a_.5,8g_5,g5,p,2g5,2d_5,2c.5,p,c.,8a_5,g_5,p,a_.5,8g_5,g5,p,2g5,2d_5,2f.5,p,c.,8a_5,g_5,p,a_.5,8g_5,g5,p,2g5,2d_5,2c.5,p,c.,8a_5,g_5,p,a_.5,8g_5,g5,p,2g5,2d_5,2f.5,p,c.,8a_5,g_5,p,a_.5,8g_5,g5,p,2g5,2d_5,2c.5,p,c.,8a_5,g_5,p,a_.5,8g_5,g5,p,2g5,2d_5,2f.5,p"
@@ -39087,8 +39087,8 @@
       "rtttl": "SkippyTh:d=4,o=5,b=112:16f,16g,16a,a#,32p,16d,8c,p,16f,16a#,16a#,16a#,16a#,16p,16d,c,32p,16f,16a#,16a#,16a#,8a#,16d,16c,16p,16d,16d#,16p,16c,16d,8p,8f,16p,f."
     },
     {
-      "filename": "Finntroll - Skogens H\u201eMnd V2.txt",
-      "displayName": "Skogens H\u201eMnd V2",
+      "filename": "Finntroll - Skogens H„Mnd V2.txt",
+      "displayName": "Skogens H„Mnd V2",
       "toneName": "SkogensH",
       "artist": "Finntroll",
       "rtttl": "SkogensH:d=4,o=6,b=140:2c_,c_,f_,8c_,8d,8c_,8b5,2c_,2c_,c_,f_,g,e,2f_,2c_,c_,f_,8c_,8d,8c_,8b5,2c_,2c_,c_,f_,c_,a_5,2b5"
@@ -39108,8 +39108,8 @@
       "rtttl": "Slaap:d=4,o=6,b=225:8c5,p,e.,c,8a5,c,8a5,c,8p,8c,8p,2d.,8p,8d5,p,8e,p,e,8c,8c,8p,8a5,c,8p,8c,8p,2d.,8p,8f5,p,8e,p,e,8c,8c,8p,8a5,c,8p,8c,8p,2d.,8p,8g5,p,8e,p,e,8e,8e,8p,8e,d.,e,2c.,8p,c5"
     },
     {
-      "filename": "Finntroll - Slaget Vid Blods\u201eLv.txt",
-      "displayName": "Slaget Vid Blods\u201eLv",
+      "filename": "Finntroll - Slaget Vid Blods„Lv.txt",
+      "displayName": "Slaget Vid Blods„Lv",
       "toneName": "SlagetVi",
       "artist": "Finntroll",
       "rtttl": "SlagetVi:d=4,o=6,b=180:8e,8d,8e,8f_,g,8f_,8e,f_,8e,8d,e,b5,8e,8d,8e,8f_,g,8f_,8e,8f_,8p,8d,8p,e,p,8e,8d,8e,8f_,g,8f_,8e,f_,8e,8d,e,b5,8e,8d,8e,8f_,g,8f_,8e,8f_,8p,8d,8p,e,p"
@@ -45800,7 +45800,7 @@
       "rtttl": "TrishStr:d=4,o=6,b=125:16e5,16e5,16e5,16e5,16g5,16p,16e5,16e5,16p,16e5,2p,16e5,16e5,16e5,16e5,16g5,16p,16e5,16e5,16p,16e5,2p,16e5,16e5,16e5,16e5,16g5,16p,16e5,16e5,16p,16e5,2p,16e5,16e5,16e5,16e5,16g5,16p,16e5,16e5,16p,16e5"
     },
     {
-      "filename": "Konyali - T\ufffdRkiyem.txt",
+      "filename": "Konyali - T�Rkiyem.txt",
       "displayName": "TRkiyem",
       "toneName": "TRkiyem",
       "artist": "Konyali",
@@ -46906,8 +46906,8 @@
       "rtttl": "VainGlor:d=4,o=6,b=125:g.5,16a5,16p,16a_5,16p,16a5,16p,16a_5,16p,8c,a_5,a5,g5,8f.5,16p,g.5,16a5,16p,16a_5,16p,16a5,16p,16a_5,16p,8c,a_5,a5,g5,8a.5,16p,f.5,16g5,16p,16a5,16p,16f5,16p,16g5,16p,16a5,16p,a_5,a5,g5,8f.5,16p,2d,2d_,2a5,a_5,a5"
     },
     {
-      "filename": "Vala\u0328 Vil\u00a0g.txt",
-      "displayName": "Vala\u0328 Vil g",
+      "filename": "Valą Vil g.txt",
+      "displayName": "Valą Vil g",
       "toneName": "ValVil",
       "artist": null,
       "rtttl": "ValVil:d=4,o=6,b=40:c,8c,8c,16p,a_5,a_5,a5,g5,f5,c,c5,8c5,c5,16p,a_5,a_5,8g5,a_5,c,16p,a_5,8p,g_5,8p,d_5,8p,g5,16p,c5,c5,f5,16p,f5,f5"
@@ -49349,7 +49349,7 @@
       "rtttl": "WienerBl:d=4,o=6,b=160:f_.5,8g5,1e,b.5,8c,1c,b.5,8c,2g5,8b5,8c,2g5,8b5,8c,1f5,g_.5,8a5,1f,c_.,8d,1d,a.5,8c,c,b.5,8g5,b5,a.5,8f5,1e5,f_.5,8g5,1e,b.5,8c,1c,b.5,8c,2g5,8b5,8c,2g5,8b5,8c,1f5,g_.5,8a5,1f,c_.,8d,1d,a.5,8c,c,b.5,8g5,a5,g.5,8d5,1c5"
     },
     {
-      "filename": "Andr\u201a Hazes - Wij Houden Van Oranje.txt",
+      "filename": "Andr‚ Hazes - Wij Houden Van Oranje.txt",
       "displayName": "Wij Houden Van Oranje",
       "toneName": "WijHoude",
       "artist": "Andr, Hazes",
@@ -50868,7 +50868,7 @@
       "rtttl": "ZFt.Phar:d=8,o=5,b=160:4g6,4p,2f6,g,4p.,2e6,4b,4p,c,4p.,c,4p.,c,4p.,4g6,4p,2f6,g,4p.,2e6,4b,4p,c,4p.,c,4p.,c,d6,e6,f6,4g6,4p,2f6,g,4p.,g,e6,d6,e6,2b,c,4p.,c,4p.,c,4p.,4g6,4p,2f6,g,4p.,2e6,4b,4p,c,4p.,4c"
     },
     {
-      "filename": "Z\u201a\u201ar Ambetant Maar Sjik!.txt",
+      "filename": "Z‚‚r Ambetant Maar Sjik!.txt",
       "displayName": "Z,,r Ambetant Maar Sjik!",
       "toneName": "ZrAmbe",
       "artist": null,

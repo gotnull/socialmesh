@@ -45,10 +45,20 @@ class RtttlLibraryItem {
 
   /// Get a formatted title for display
   String get formattedTitle {
-    if (artist != null && artist!.isNotEmpty) {
+    // Always prefer displayName if it's meaningful (not empty and not just a number)
+    if (displayName.isNotEmpty && !_isNumericOnly(displayName)) {
       return displayName;
     }
-    return toneName.isNotEmpty ? _formatToneName(toneName) : displayName;
+    // Fall back to formatted toneName, but only if it's meaningful
+    if (toneName.isNotEmpty && !_isNumericOnly(toneName)) {
+      return _formatToneName(toneName);
+    }
+    // Last resort: use whatever we have
+    return displayName.isNotEmpty ? displayName : toneName;
+  }
+
+  static bool _isNumericOnly(String s) {
+    return RegExp(r'^\d+$').hasMatch(s);
   }
 
   /// Get subtitle (artist or tone name if different from title)

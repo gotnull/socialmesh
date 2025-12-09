@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
+import '../../config/revenuecat_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
+import '../../services/audio/rtttl_library_service.dart';
 import '../../services/haptic_service.dart';
 import '../../services/subscription/subscription_service.dart';
 import '../../utils/snackbar.dart';
@@ -17,6 +19,33 @@ class SubscriptionScreen extends ConsumerStatefulWidget {
 }
 
 class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
+  int _ringtoneCount = 0;
+  final _rtttlLibraryService = RtttlLibraryService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRingtoneCount();
+  }
+
+  Future<void> _loadRingtoneCount() async {
+    final count = await _rtttlLibraryService.getToneCount();
+    if (mounted) {
+      setState(() => _ringtoneCount = count);
+    }
+  }
+
+  String get _ringtoneCountFormatted {
+    if (_ringtoneCount == 0) return '10,000+';
+    if (_ringtoneCount >= 1000) {
+      return '${(_ringtoneCount / 1000).toStringAsFixed(1)}k+'.replaceAll(
+        '.0',
+        '',
+      );
+    }
+    return '$_ringtoneCount+';
+  }
+
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(subscriptionLoadingProvider);
@@ -32,6 +61,29 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           children: [
             // Header
             _buildHeader(),
+            const SizedBox(height: 24),
+
+            // Complete Pack Bundle (prominent)
+            _buildBundleCard(),
+            const SizedBox(height: 24),
+
+            // Divider with "or buy individually"
+            Row(
+              children: [
+                Expanded(child: Divider(color: AppTheme.darkBorder)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'or buy individually',
+                    style: TextStyle(
+                      color: AppTheme.textTertiary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                Expanded(child: Divider(color: AppTheme.darkBorder)),
+              ],
+            ),
             const SizedBox(height: 24),
 
             // One-time purchases
@@ -153,6 +205,331 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     );
   }
 
+  Widget _buildBundleCard() {
+    final purchaseState = ref.watch(purchaseStateProvider);
+    final isLoading = ref.watch(subscriptionLoadingProvider);
+
+    // Check if user already owns all individual packs
+    final ownedCount = OneTimePurchases.allIndividualPurchases
+        .where((p) => purchaseState.hasPurchased(p.productId))
+        .length;
+    final ownsAll =
+        ownedCount == OneTimePurchases.allIndividualPurchases.length;
+    final ownsBundle = purchaseState.hasPurchased(
+      RevenueCatConfig.completePackProductId,
+    );
+
+    if (ownsAll || ownsBundle) {
+      // User already has everything - show owned state
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              context.accentColor.withValues(alpha: 0.2),
+              context.accentColor.withValues(alpha: 0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.accentColor.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: context.accentColor.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(Icons.verified, color: context.accentColor, size: 32),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'All Features Unlocked',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: context.accentColor,
+                    ),
+                  ),
+                  const Text(
+                    'Thank you for your support! 🎉',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            context.accentColor.withValues(alpha: 0.25),
+            AppTheme.primaryPurple.withValues(alpha: 0.15),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.accentColor.withValues(alpha: 0.6)),
+        boxShadow: [
+          BoxShadow(
+            color: context.accentColor.withValues(alpha: 0.2),
+            blurRadius: 20,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header with badge
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [context.accentColor, AppTheme.primaryPurple],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.all_inclusive,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Text(
+                            'Complete Pack',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.warningYellow,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'SAVE ${OneTimePurchases.bundleDiscountPercent}%',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.black,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Everything. Forever. One price.',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Feature list
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                _buildBundleFeature(
+                  Icons.palette,
+                  'Theme Pack',
+                  '12 accent colors',
+                ),
+                _buildBundleFeature(
+                  Icons.music_note,
+                  'Ringtone Library',
+                  '$_ringtoneCountFormatted tones',
+                ),
+                _buildBundleFeature(
+                  Icons.widgets,
+                  'Widget Pack',
+                  '9 dashboard widgets',
+                ),
+                _buildBundleFeature(
+                  Icons.auto_awesome,
+                  'Automations',
+                  'Triggers & schedules',
+                ),
+                _buildBundleFeature(
+                  Icons.webhook,
+                  'IFTTT',
+                  '700+ app integrations',
+                ),
+              ],
+            ),
+          ),
+
+          // Price and CTA
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '\$${OneTimePurchases.bundlePrice.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Text(
+                              '\$${OneTimePurchases.allIndividualPurchases.fold<double>(0, (sum, p) => sum + p.price).toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white.withValues(alpha: 0.5),
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        'Save \$${OneTimePurchases.bundleSavings.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppTheme.warningYellow,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading ? null : _purchaseBundle,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: context.accentColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    isLoading ? 'Loading...' : 'Get All',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBundleFeature(IconData icon, String name, String detail) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: context.accentColor),
+          const SizedBox(width: 10),
+          Text(
+            name,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            detail,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _purchaseBundle() async {
+    ref.haptics.buttonTap();
+    final result = await purchaseProduct(
+      ref,
+      RevenueCatConfig.completePackProductId,
+    );
+    if (mounted) {
+      switch (result) {
+        case PurchaseResult.success:
+          ref.haptics.success();
+          _showAllUnlockedCelebration();
+        case PurchaseResult.canceled:
+          break;
+        case PurchaseResult.error:
+          ref.haptics.error();
+          showErrorSnackBar(context, 'Purchase failed. Please try again.');
+      }
+    }
+  }
+
   Widget _buildOneTimePurchases() {
     final purchaseState = ref.watch(purchaseStateProvider);
 
@@ -221,7 +598,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                               ],
                             ),
                             Text(
-                              purchase.description,
+                              _getDescription(purchase),
                               style: const TextStyle(
                                 color: AppTheme.textTertiary,
                                 fontSize: 13,
@@ -277,6 +654,14 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         }),
       ],
     );
+  }
+
+  String _getDescription(OneTimePurchase purchase) {
+    // Dynamic description for ringtone pack with actual count
+    if (purchase.id == 'ringtone_pack') {
+      return '$_ringtoneCountFormatted searchable RTTTL tones';
+    }
+    return purchase.description;
   }
 
   IconData _getPurchaseIcon(String purchaseId) {

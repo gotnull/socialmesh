@@ -37,7 +37,7 @@ class OneTimePurchases {
   static OneTimePurchase get themePack => OneTimePurchase(
     id: 'theme_pack',
     name: 'Theme Pack',
-    description: 'Unlock 12 premium color themes',
+    description: '12 vibrant accent colors to personalize your experience',
     price: 1.99,
     productId: RevenueCatConfig.themePackProductId,
     unlocksFeature: PremiumFeature.premiumThemes,
@@ -45,8 +45,8 @@ class OneTimePurchases {
 
   static OneTimePurchase get ringtonePack => OneTimePurchase(
     id: 'ringtone_pack',
-    name: 'Ringtone Pack',
-    description: '25 additional RTTTL ringtones',
+    name: 'Ringtone Library',
+    description: 'Massive searchable RTTTL library — thousands of tones',
     price: 0.99,
     productId: RevenueCatConfig.ringtonePackProductId,
     unlocksFeature: PremiumFeature.customRingtones,
@@ -55,7 +55,7 @@ class OneTimePurchases {
   static OneTimePurchase get widgetPack => OneTimePurchase(
     id: 'widget_pack',
     name: 'Widget Pack',
-    description: 'Home screen widgets for quick actions',
+    description: '9 dashboard widgets: signal charts, node maps & more',
     price: 2.99,
     productId: RevenueCatConfig.widgetPackProductId,
     unlocksFeature: PremiumFeature.homeWidgets,
@@ -64,7 +64,7 @@ class OneTimePurchases {
   static OneTimePurchase get automationsPack => OneTimePurchase(
     id: 'automations_pack',
     name: 'Automations',
-    description: 'Custom triggers, actions & scheduled tasks',
+    description: 'Auto-reply, scheduled broadcasts, location triggers & more',
     price: 3.99,
     productId: RevenueCatConfig.automationsPackProductId,
     unlocksFeature: PremiumFeature.automations,
@@ -73,11 +73,38 @@ class OneTimePurchases {
   static OneTimePurchase get iftttPack => OneTimePurchase(
     id: 'ifttt_pack',
     name: 'IFTTT Integration',
-    description: 'Connect to 700+ apps via IFTTT',
+    description: 'Connect mesh events to 700+ apps — smart home, Slack & more',
     price: 2.99,
     productId: RevenueCatConfig.iftttPackProductId,
     unlocksFeature: PremiumFeature.iftttIntegration,
   );
+
+  /// Complete Pack - all features bundled at 25% off
+  static const double bundlePrice = 9.99;
+  static double get bundleSavings {
+    final total = allIndividualPurchases.fold<double>(
+      0,
+      (sum, p) => sum + p.price,
+    );
+    return total - bundlePrice;
+  }
+
+  static int get bundleDiscountPercent {
+    final total = allIndividualPurchases.fold<double>(
+      0,
+      (sum, p) => sum + p.price,
+    );
+    return ((1 - bundlePrice / total) * 100).round();
+  }
+
+  /// Individual purchases (excludes bundle)
+  static List<OneTimePurchase> get allIndividualPurchases => <OneTimePurchase>[
+    themePack,
+    ringtonePack,
+    widgetPack,
+    automationsPack,
+    iftttPack,
+  ];
 
   static List<OneTimePurchase> get allPurchases => <OneTimePurchase>[
     themePack,

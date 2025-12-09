@@ -72,6 +72,11 @@ class RevenueCatConfig {
       ? (dotenv.env['TEST_IFTTT_PACK_PRODUCT_ID'] ?? 'prod5249ea0504')
       : (dotenv.env['PROD_IFTTT_PACK_PRODUCT_ID'] ?? 'prod50d4fc8254');
 
+  /// Complete Pack bundle - all features at a discount
+  static String get completePackProductId => useTestProducts
+      ? (dotenv.env['TEST_COMPLETE_PACK_PRODUCT_ID'] ?? 'prod044db2aa2a')
+      : (dotenv.env['PROD_COMPLETE_PACK_PRODUCT_ID'] ?? 'prod044db2aa2a');
+
   /// Get all product IDs as a list
   static List<String> get allProductIds => [
     themePackProductId,
@@ -79,6 +84,7 @@ class RevenueCatConfig {
     widgetPackProductId,
     automationsPackProductId,
     iftttPackProductId,
+    completePackProductId,
   ];
 
   // ============================================================================
