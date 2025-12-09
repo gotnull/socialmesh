@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
-import '../../../core/map_config.dart';
 import '../../../core/theme.dart';
-import '../../../models/mesh_models.dart';
+import '../../../core/widgets/mesh_map_widget.dart';
 import '../../../providers/app_providers.dart';
 
 /// Dashboard widget showing nodes on a mini map
@@ -24,24 +23,21 @@ class NodeMapContent extends ConsumerWidget {
       return _buildEmptyState();
     }
 
-    // Calculate center and bounds
-    LatLng center;
-    double zoom = 12.0;
+    // Convert to marker data
+    final markerData = nodesWithPosition
+        .map((node) => MeshNodeMarkerData.fromNode(node))
+        .toList();
 
+    // Calculate center
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
+    final LatLng center;
+    final double zoom;
     if (myNode?.hasPosition == true) {
       center = LatLng(myNode!.latitude!, myNode.longitude!);
       zoom = 13.0;
     } else {
-      // Average of all positions
-      double avgLat = 0, avgLng = 0;
-      for (final node in nodesWithPosition) {
-        avgLat += node.latitude!;
-        avgLng += node.longitude!;
-      }
-      avgLat /= nodesWithPosition.length;
-      avgLng /= nodesWithPosition.length;
-      center = LatLng(avgLat, avgLng);
+      center = calculateNodesCenter(markerData);
+      zoom = 12.0;
     }
 
     // Use LayoutBuilder to get proper bounded constraints from parent
@@ -58,23 +54,17 @@ class NodeMapContent extends ConsumerWidget {
             borderRadius: BorderRadius.circular(12),
             child: Stack(
               children: [
-                FlutterMap(
-                  options: MapOptions(
-                    initialCenter: center,
-                    initialZoom: zoom,
-                    minZoom: 2,
-                    maxZoom: 16,
-                    backgroundColor: AppTheme.darkBackground,
-                    interactionOptions: const InteractionOptions(
-                      flags: InteractiveFlag
-                          .none, // Disable interactions in widget
-                    ),
-                    onTap: (_, _) => _openFullMap(context),
-                  ),
-                  children: [
-                    // Dark map tiles
-                    MapConfig.darkTileLayer(),
-                    // Node markers
+                // Use shared MeshMapWidget with mini node markers
+                MeshMapWidget(
+                  initialCenter: center,
+                  initialZoom: zoom,
+                  minZoom: 2,
+                  maxZoom: 16,
+                  interactive: false,
+                  animateTiles: false,
+                  onTap: (_, _) => _openFullMap(context),
+                  additionalLayers: [
+                    // Mini node markers
                     MarkerLayer(
                       markers: nodesWithPosition.map((node) {
                         final isMyNode = node.nodeNum == myNodeNum;
@@ -82,7 +72,7 @@ class NodeMapContent extends ConsumerWidget {
                           point: LatLng(node.latitude!, node.longitude!),
                           width: 24,
                           height: 24,
-                          child: _MiniNodeMarker(
+                          child: MiniMeshNodeMarker(
                             node: node,
                             isMyNode: isMyNode,
                           ),
@@ -214,35 +204,5 @@ class NodeMapContent extends ConsumerWidget {
 
   void _openFullMap(BuildContext context) {
     Navigator.of(context).pushNamed('/map');
-  }
-}
-
-/// Compact marker for mini map
-class _MiniNodeMarker extends StatelessWidget {
-  final MeshNode node;
-  final bool isMyNode;
-
-  const _MiniNodeMarker({required this.node, required this.isMyNode});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isMyNode
-        ? context.accentColor
-        : (node.isOnline ? context.accentColor : AppTheme.textTertiary);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.4),
-            blurRadius: 4,
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-    );
   }
 }

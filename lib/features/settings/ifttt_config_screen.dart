@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
-import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/mesh_map_widget.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
 import '../../services/ifttt/ifttt_service.dart';
@@ -622,15 +622,12 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                             child: SizedBox(
                               height: 150,
                               child: IgnorePointer(
-                                child: FlutterMap(
-                                  options: MapOptions(
-                                    initialCenter: LatLng(lat, lon),
-                                    initialZoom: _calculateZoomForRadius(
-                                      radius,
-                                    ),
-                                  ),
-                                  children: [
-                                    MapConfig.darkTileLayer(),
+                                child: MeshMapWidget(
+                                  initialCenter: LatLng(lat, lon),
+                                  initialZoom: _calculateZoomForRadius(radius),
+                                  interactive: false,
+                                  animateTiles: false,
+                                  additionalLayers: [
                                     CircleLayer(
                                       circles: [
                                         CircleMarker(

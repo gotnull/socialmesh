@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/mesh_map_widget.dart';
 import '../../models/mesh_models.dart';
 import '../../models/route.dart' as route_model;
 import '../../providers/app_providers.dart';
@@ -91,33 +91,34 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
         .where((node) => node.hasPosition)
         .toList();
 
+    // Convert to marker data for shared widget
+    final nodeMarkerData = nodesWithPosition
+        .map((node) => MeshNodeMarkerData.fromNode(node))
+        .toList();
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       body: Stack(
         children: [
-          // Map
+          // Map using shared MeshMapWidget
           if (hasLocations && center != null)
-            FlutterMap(
+            MeshMapWidget(
               mapController: _mapController,
-              options: MapOptions(
-                initialCenter: LatLng(center.lat, center.lon),
-                initialZoom: _calculateZoom(route),
-                minZoom: 3,
-                maxZoom: 18,
-                backgroundColor: const Color(0xFF1A1A2E),
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.all,
-                ),
-                onTap: (_, _) {
-                  if (_selectedNode != null) {
-                    setState(() => _selectedNode = null);
-                  }
-                },
-              ),
-              children: [
-                // Tile layer using shared config
-                MapConfig.tileLayerForStyle(_mapStyle),
-
+              mapStyle: _mapStyle,
+              initialCenter: LatLng(center.lat, center.lon),
+              initialZoom: _calculateZoom(route),
+              minZoom: 3,
+              maxZoom: 18,
+              onTap: (_, _) {
+                if (_selectedNode != null) {
+                  setState(() => _selectedNode = null);
+                }
+              },
+              nodeMarkers: _showNodes ? nodeMarkerData : null,
+              selectedNodeNum: _selectedNode?.nodeNum,
+              myNodeNum: myNodeNum,
+              onNodeTap: (node) => setState(() => _selectedNode = node),
+              additionalLayers: [
                 // Route polyline
                 PolylineLayer(
                   polylines: [
@@ -130,31 +131,6 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
                     ),
                   ],
                 ),
-
-                // Mesh node markers (if enabled)
-                if (_showNodes && nodesWithPosition.isNotEmpty)
-                  MarkerLayer(
-                    markers: nodesWithPosition.map((node) {
-                      final isMyNode = node.nodeNum == myNodeNum;
-                      final isSelected = _selectedNode?.nodeNum == node.nodeNum;
-                      return Marker(
-                        point: LatLng(node.latitude!, node.longitude!),
-                        width: isSelected ? 48 : 36,
-                        height: isSelected ? 48 : 36,
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() => _selectedNode = node);
-                            HapticFeedback.selectionClick();
-                          },
-                          child: _NodeMarker(
-                            node: node,
-                            isMyNode: isMyNode,
-                            isSelected: isSelected,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
 
                 // Start/End route markers
                 if (route.locations.isNotEmpty)
@@ -630,63 +606,6 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
       return '${duration.inMinutes}min';
     }
     return '${duration.inHours}h ${duration.inMinutes % 60}m';
-  }
-}
-
-/// Node marker widget matching the main map style
-class _NodeMarker extends StatelessWidget {
-  final MeshNode node;
-  final bool isMyNode;
-  final bool isSelected;
-
-  const _NodeMarker({
-    required this.node,
-    required this.isMyNode,
-    required this.isSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isMyNode
-        ? AppTheme.primaryBlue
-        : (node.isOnline ? AccentColors.green : AppTheme.textTertiary);
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isSelected
-              ? Colors.white
-              : Colors.white.withValues(alpha: 0.8),
-          width: isSelected ? 3 : 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isSelected
-                ? color.withValues(alpha: 0.5)
-                : Colors.black.withValues(alpha: 0.3),
-            blurRadius: isSelected ? 8 : 4,
-            spreadRadius: isSelected ? 2 : 0,
-          ),
-        ],
-      ),
-      child: Center(
-        child: isMyNode
-            ? const Icon(Icons.person, size: 16, color: Colors.white)
-            : Text(
-                (node.shortName?.isNotEmpty ?? false)
-                    ? node.shortName![0].toUpperCase()
-                    : '?',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-      ),
-    );
   }
 }
 

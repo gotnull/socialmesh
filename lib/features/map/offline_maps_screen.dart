@@ -8,7 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import '../../core/theme.dart';
-import '../../core/map_config.dart';
+import '../../core/widgets/mesh_map_widget.dart';
 import '../../utils/snackbar.dart';
 
 /// Screen for downloading and managing offline map regions
@@ -512,21 +512,18 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
       ),
       body: Column(
         children: [
-          // Map for selection
+          // Map for selection using shared MeshMapWidget
           if (_isSelecting || _regions.isEmpty)
             Expanded(
               flex: _isSelecting ? 2 : 1,
               child: Stack(
                 children: [
-                  FlutterMap(
+                  MeshMapWidget(
                     mapController: _mapController,
-                    options: MapOptions(
-                      initialCenter: const LatLng(-33.8688, 151.2093),
-                      initialZoom: 10,
-                      onTap: _onMapTap,
-                    ),
-                    children: [
-                      MapConfig.tileLayerForStyle(MapTileStyle.dark),
+                    initialCenter: const LatLng(-33.8688, 151.2093),
+                    initialZoom: 10,
+                    onTap: _onMapTap,
+                    additionalLayers: [
                       // Selection rectangle
                       if (_selectionStart != null && _selectionEnd != null)
                         PolygonLayer(

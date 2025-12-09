@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme.dart';
-import '../../core/map_config.dart';
+import '../../core/widgets/mesh_map_widget.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
@@ -413,12 +413,11 @@ class _PositionMapViewState extends State<_PositionMapView> {
 
     return Stack(
       children: [
-        FlutterMap(
+        MeshMapWidget(
           mapController: _mapController,
-          options: MapOptions(initialCenter: center, initialZoom: 14),
-          children: [
-            MapConfig.tileLayerForStyle(MapTileStyle.dark),
-
+          initialCenter: center,
+          initialZoom: 14,
+          additionalLayers: [
             // Draw trails
             if (_showTrail)
               PolylineLayer(

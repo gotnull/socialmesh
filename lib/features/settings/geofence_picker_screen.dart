@@ -8,8 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/mesh_map_widget.dart';
 import '../../models/mesh_models.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
@@ -346,28 +346,21 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
       ),
       body: Stack(
         children: [
-          // Map
+          // Map using shared MeshMapWidget
           Listener(
             onPointerDown: _onPointerDown,
             onPointerMove: _onPointerMove,
             onPointerUp: _onPointerUp,
-            child: FlutterMap(
+            child: MeshMapWidget(
               mapController: _mapController,
-              options: MapOptions(
-                initialCenter: _center ?? const LatLng(-33.8688, 151.2093),
-                initialZoom: 13.0,
-                minZoom: 3.0,
-                maxZoom: 18.0,
-                onTap: _onMapTap,
-                onLongPress: _onMapLongPress,
-                interactionOptions: InteractionOptions(
-                  flags: _isDraggingRadius
-                      ? InteractiveFlag.none
-                      : InteractiveFlag.all,
-                ),
-              ),
-              children: [
-                MapConfig.darkTileLayer(),
+              initialCenter: _center ?? const LatLng(-33.8688, 151.2093),
+              initialZoom: 13.0,
+              minZoom: 3.0,
+              maxZoom: 18.0,
+              interactive: !_isDraggingRadius,
+              onTap: _onMapTap,
+              onLongPress: _onMapLongPress,
+              additionalLayers: [
                 // Geofence circle
                 if (_center != null)
                   CircleLayer(
@@ -382,7 +375,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                       ),
                     ],
                   ),
-                // Node markers
+                // Node markers (using custom marker for monitored state)
                 MarkerLayer(
                   rotate: true,
                   markers: allNodesWithPosition.map((n) {
