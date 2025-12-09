@@ -6,6 +6,7 @@ import '../../core/transport.dart' as transport;
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../providers/app_providers.dart';
+import '../device/device_sheet.dart';
 import 'models/dashboard_widget_config.dart';
 import 'providers/dashboard_providers.dart';
 import 'widgets/dashboard_widget.dart';
@@ -456,7 +457,7 @@ class _DeviceButton extends StatelessWidget {
           ),
         ],
       ),
-      onPressed: () => Navigator.of(context).pushNamed('/dashboard'),
+      onPressed: () => showDeviceSheet(context),
       tooltip: 'Device',
     );
   }

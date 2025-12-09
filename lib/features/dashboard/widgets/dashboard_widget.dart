@@ -107,7 +107,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
               ? Colors
                     .transparent // Border handled by CustomPaint
               : isFavorite
-              ? AppTheme.warningYellow
+              ? context.accentColor
               : AppTheme.darkBorder,
           width: 1,
         ),
@@ -147,11 +147,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
         children: [
           if (widget.isEditMode) ...[
             // Drag handle
-            Icon(
-              Icons.drag_indicator,
-              color: AppTheme.textTertiary,
-              size: 20,
-            ),
+            Icon(Icons.drag_indicator, color: AppTheme.textTertiary, size: 20),
             SizedBox(width: 8),
           ],
           // Icon
@@ -172,7 +168,6 @@ class _DashboardWidgetState extends State<DashboardWidget>
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
-                
               ),
             ),
           ),
@@ -286,7 +281,6 @@ class WidgetEmptyState extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 13,
                 color: AppTheme.textTertiary,
-                
               ),
               textAlign: TextAlign.center,
             ),
@@ -300,7 +294,6 @@ class WidgetEmptyState extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: context.accentColor,
-                    
                   ),
                 ),
               ),
@@ -340,7 +333,6 @@ class WidgetLoadingState extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 13,
                 color: AppTheme.textTertiary,
-                
               ),
             ),
           ],
