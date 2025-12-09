@@ -1009,17 +1009,17 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.graphBlue.withValues(alpha: 0.1),
+                color: context.accentColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: AppTheme.graphBlue.withValues(alpha: 0.3),
+                  color: context.accentColor.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
                 children: [
                   Icon(
                     Icons.link,
-                    color: AppTheme.graphBlue.withValues(alpha: 0.8),
+                    color: context.accentColor.withValues(alpha: 0.8),
                     size: 20,
                   ),
                   const SizedBox(width: 12),
@@ -1230,7 +1230,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: _playing
                                     ? AppTheme.errorRed
-                                    : AppTheme.graphBlue,
+                                    : context.accentColor,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16,
@@ -1319,7 +1319,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                         color: AppTheme.darkCard,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: AppTheme.graphBlue.withValues(alpha: 0.3),
+                          color: context.accentColor.withValues(alpha: 0.3),
                         ),
                       ),
                       padding: const EdgeInsets.all(16),
@@ -1329,12 +1329,14 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(
-                              color: AppTheme.graphBlue.withValues(alpha: 0.15),
+                              color: context.accentColor.withValues(
+                                alpha: 0.15,
+                              ),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.library_music,
-                              color: AppTheme.graphBlue,
+                              color: context.accentColor,
                               size: 24,
                             ),
                           ),
@@ -1365,9 +1367,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Icon(
+                          Icon(
                             Icons.arrow_forward_ios,
-                            color: AppTheme.graphBlue,
+                            color: context.accentColor,
                             size: 18,
                           ),
                         ],
@@ -1814,8 +1816,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                                   preset.name,
                                                   style: TextStyle(
                                                     color: isSelected
-                                                        ? AppTheme
-                                                              .primaryMagenta
+                                                        ? context.accentColor
                                                         : Colors.white,
                                                     fontWeight: isSelected
                                                         ? FontWeight.w600
@@ -2243,10 +2244,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: AppTheme.graphBlue,
-                  width: 1,
-                ),
+                borderSide: BorderSide(color: context.accentColor, width: 1),
               ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
@@ -2275,12 +2273,12 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
               ),
               if (_loading) ...[
                 const SizedBox(width: 8),
-                const SizedBox(
+                SizedBox(
                   width: 12,
                   height: 12,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: AppTheme.graphBlue,
+                    color: context.accentColor,
                   ),
                 ),
               ],
@@ -2292,8 +2290,8 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
         // Results list
         Expanded(
           child: _loadingSuggestions && !hasSearch
-              ? const Center(
-                  child: CircularProgressIndicator(color: AppTheme.graphBlue),
+              ? Center(
+                  child: CircularProgressIndicator(color: context.accentColor),
                 )
               : displayList.isEmpty
               ? Center(
@@ -2356,14 +2354,14 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  color: AppTheme.graphBlue.withValues(
+                                  color: context.accentColor.withValues(
                                     alpha: 0.12,
                                   ),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.music_note,
-                                  color: AppTheme.graphBlue,
+                                  color: context.accentColor,
                                   size: 22,
                                 ),
                               ),
