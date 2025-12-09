@@ -64,6 +64,11 @@ class ChannelsScreen extends ConsumerWidget {
               );
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () => Navigator.of(context).pushNamed('/settings'),
+          ),
         ],
       ),
       body: channels.isEmpty

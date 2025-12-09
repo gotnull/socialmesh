@@ -28,6 +28,8 @@ import 'security_config_screen.dart';
 import 'ringtone_screen.dart';
 import 'subscription_screen.dart';
 import 'ifttt_config_screen.dart';
+import 'theme_settings_screen.dart';
+import 'home_widgets_screen.dart';
 import '../automations/automations_screen.dart';
 import 'canned_responses_screen.dart';
 import 'range_test_screen.dart';
@@ -165,10 +167,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           icon: Icons.palette,
           title: 'Themes',
           feature: PremiumFeature.premiumThemes,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-          ),
+          onTap: () {
+            final hasFeature = purchaseState.hasFeature(
+              PremiumFeature.premiumThemes,
+            );
+            if (hasFeature) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ThemeSettingsScreen()),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
+            }
+          },
         ),
         _PremiumFeatureTile(
           icon: Icons.music_note,
@@ -195,10 +209,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           icon: Icons.widgets,
           title: 'Widgets',
           feature: PremiumFeature.homeWidgets,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-          ),
+          onTap: () {
+            final hasFeature = purchaseState.hasFeature(
+              PremiumFeature.homeWidgets,
+            );
+            if (hasFeature) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const HomeWidgetsScreen()),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
+            }
+          },
         ),
         _PremiumFeatureTile(
           icon: Icons.bolt,
@@ -551,6 +577,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               // Device Section
               _SectionHeader(title: 'DEVICE'),
+              _SettingsTile(
+                icon: Icons.bluetooth_searching,
+                title: 'Scan for Devices',
+                subtitle: 'Find and connect to Meshtastic devices',
+                onTap: () => Navigator.pushNamed(context, '/scanner'),
+              ),
               _SettingsTile(
                 icon: Icons.language,
                 title: 'Region / Frequency',

@@ -503,6 +503,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     _measureEnd = null;
                   });
                   break;
+                case 'settings':
+                  Navigator.of(context).pushNamed('/settings');
+                  break;
               }
             },
             itemBuilder: (context) => [
@@ -573,6 +576,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     Text(
                       _measureMode ? 'Exit measure mode' : 'Measure distance',
                     ),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.settings_outlined,
+                      size: 18,
+                      color: AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text('Settings'),
                   ],
                 ),
               ),

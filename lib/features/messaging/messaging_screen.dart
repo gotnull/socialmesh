@@ -93,6 +93,11 @@ class MessagingScreen extends ConsumerWidget {
             icon: const Icon(Icons.edit_square, color: Colors.white),
             onPressed: () => _showNewMessageSheet(context, ref),
           ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, color: Colors.white),
+            tooltip: 'Settings',
+            onPressed: () => Navigator.of(context).pushNamed('/settings'),
+          ),
         ],
       ),
       body: conversations.isEmpty

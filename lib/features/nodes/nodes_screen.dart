@@ -98,6 +98,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
               tooltip: 'Scan Node QR',
               onPressed: () => Navigator.pushNamed(context, '/node-qr-scanner'),
             ),
+            IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: 'Settings',
+              onPressed: () => Navigator.pushNamed(context, '/settings'),
+            ),
           ],
         ),
         body: Column(
@@ -807,14 +812,19 @@ class _NodeDetailsSheet extends ConsumerWidget {
         nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: false));
         if (context.mounted) {
           showSuccessSnackBar(
-              context, '${node.displayName} removed from favorites');
+            context,
+            '${node.displayName} removed from favorites',
+          );
         }
       } else {
         await protocol.setFavoriteNode(node.nodeNum);
         // Update local state
         nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: true));
         if (context.mounted) {
-          showSuccessSnackBar(context, '${node.displayName} added to favorites');
+          showSuccessSnackBar(
+            context,
+            '${node.displayName} added to favorites',
+          );
         }
       }
     } catch (e) {
@@ -1054,7 +1064,9 @@ class _NodeDetailsSheet extends ConsumerWidget {
 
       if (context.mounted) {
         showInfoSnackBar(
-            context, 'Position requested from ${node.displayName}');
+          context,
+          'Position requested from ${node.displayName}',
+        );
       }
     } catch (e) {
       if (context.mounted) {
