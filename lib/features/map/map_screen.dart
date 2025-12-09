@@ -1643,8 +1643,13 @@ class _NodeMarker extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Text(
-            node.shortName?.substring(0, 1).toUpperCase() ??
-                node.nodeNum.toString().substring(0, 1),
+            (node.shortName?.isNotEmpty == true
+                ? node.shortName!.substring(0, 1).toUpperCase()
+                : node.nodeNum
+                      .toRadixString(16)
+                      .characters
+                      .first
+                      .toUpperCase()),
             style: TextStyle(
               fontSize: isSelected ? 16 : 14,
               fontWeight: FontWeight.bold,
@@ -1924,8 +1929,13 @@ class _NodeListItem extends StatelessWidget {
                   alignment: Alignment.center,
                   children: [
                     Text(
-                      node.shortName?.substring(0, 1).toUpperCase() ??
-                          node.nodeNum.toString().substring(0, 1),
+                      (node.shortName?.isNotEmpty == true
+                          ? node.shortName!.substring(0, 1).toUpperCase()
+                          : node.nodeNum
+                                .toRadixString(16)
+                                .characters
+                                .first
+                                .toUpperCase()),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,

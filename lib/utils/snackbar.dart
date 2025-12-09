@@ -66,7 +66,8 @@ void _showSnackBar(
   required Color backgroundColor,
   required Duration duration,
 }) {
-  final messenger = ScaffoldMessenger.of(context);
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  if (messenger == null) return;
 
   final snackBar = SnackBar(
     behavior: SnackBarBehavior.fixed,

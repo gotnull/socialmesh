@@ -231,7 +231,9 @@ class MessagingScreen extends ConsumerWidget {
                   child: Center(
                     child: Text(
                       node.shortName ??
-                          node.nodeNum.toRadixString(16).substring(0, 2),
+                          (node.nodeNum.toRadixString(16).length >= 2
+                              ? node.nodeNum.toRadixString(16).substring(0, 2)
+                              : node.nodeNum.toRadixString(16)),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -324,7 +326,10 @@ class _ConversationTile extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    conversation.shortName ?? conversation.name.substring(0, 2),
+                    conversation.shortName ??
+                        (conversation.name.length >= 2
+                            ? conversation.name.substring(0, 2)
+                            : conversation.name),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
@@ -948,7 +953,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   child: widget.type == ConversationType.channel
                       ? Icon(Icons.tag, color: context.accentColor, size: 18)
                       : Text(
-                          widget.title.substring(0, 2),
+                          widget.title.length >= 2
+                              ? widget.title.substring(0, 2)
+                              : widget.title,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,

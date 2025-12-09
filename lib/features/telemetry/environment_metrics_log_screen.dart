@@ -171,9 +171,9 @@ class _EnvironmentMetricsLogScreenState
 }
 
 enum _GraphMetric {
-  temperature('Temperature', '°C', Icons.thermostat),
-  humidity('Humidity', '%', Icons.water_drop),
-  pressure('Pressure', 'hPa', Icons.compress);
+  temperature('Temp', '°C', Icons.thermostat),
+  humidity('Humid', '%', Icons.water_drop),
+  pressure('Press', 'hPa', Icons.compress);
 
   final String label;
   final String unit;
