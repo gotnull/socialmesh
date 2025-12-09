@@ -1538,8 +1538,6 @@ class _PremiumFeatureTile extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (hasFeature) ...[
-                        Icon(Icons.check, size: 14, color: accentColor),
-                        const SizedBox(width: 4),
                         Text(
                           'OWNED',
                           style: TextStyle(

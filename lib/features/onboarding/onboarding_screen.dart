@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/floating_icons_background.dart';
@@ -25,7 +26,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   final List<_OnboardingPage> _pages = [
     _OnboardingPage(
-      icon: null, // Uses app icon instead
+      icon: null,
+      lottieAsset: 'assets/lottie/welcome.json',
       title: 'Talk Freely',
       description:
           'Communicate without servers, carriers or\ncorporations. Just you and your community.',
@@ -34,6 +36,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     ),
     _OnboardingPage(
       icon: Icons.people_outline,
+      lottieAsset: 'assets/lottie/mesh_network.json',
       title: 'People-Powered',
       description:
           'Messages travel device to device.\nNo cloud. No middleman. Just direct connection.',
@@ -41,6 +44,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     ),
     _OnboardingPage(
       icon: Icons.visibility_off_outlined,
+      lottieAsset: 'assets/lottie/location.json',
       title: 'Private by Default',
       description:
           'No accounts. No tracking. No data stored.\nYour conversations belong to you.',
@@ -48,6 +52,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     ),
     _OnboardingPage(
       icon: Icons.wifi_tethering,
+      lottieAsset: 'assets/lottie/messages.json',
       title: 'Always Connected',
       description:
           'Works without internet or phone signal.\nYour network grows with every device.',
@@ -55,6 +60,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     ),
     _OnboardingPage(
       icon: Icons.bluetooth,
+      lottieAsset: 'assets/lottie/bluetooth.json',
       title: 'Ready to Join?',
       description:
           'Connect your radio and become part\nof a communication network you control.',
@@ -356,7 +362,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Animated icon/image with glow
+          // Animated icon/image with glow - now using Lottie
           AnimatedBuilder(
             animation: _pulseController,
             builder: (context, child) {
@@ -387,6 +393,40 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 );
               }
 
+              // Use Lottie animation if available
+              if (page.lottieAsset != null) {
+                return Container(
+                  width: 160,
+                  height: 160,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: page.accentColor.withValues(
+                          alpha: glowIntensity,
+                        ),
+                        blurRadius: 30,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: ColorFiltered(
+                    colorFilter: ColorFilter.mode(
+                      page.accentColor.withValues(alpha: 0.15),
+                      BlendMode.srcATop,
+                    ),
+                    child: Lottie.asset(
+                      page.lottieAsset!,
+                      width: 160,
+                      height: 160,
+                      fit: BoxFit.contain,
+                      repeat: true,
+                    ),
+                  ),
+                );
+              }
+
+              // Fallback to icon
               return Container(
                 width: 120,
                 height: 120,
@@ -464,6 +504,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
 class _OnboardingPage {
   final IconData? icon;
+  final String? lottieAsset;
   final String title;
   final String description;
   final bool isLastPage;
@@ -472,6 +513,7 @@ class _OnboardingPage {
 
   const _OnboardingPage({
     this.icon,
+    this.lottieAsset,
     required this.title,
     required this.description,
     this.isLastPage = false,
