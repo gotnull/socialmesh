@@ -886,6 +886,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final myNodeNum = ref.watch(myNodeNumProvider);
     final channels = ref.watch(channelsProvider);
 
+    // Debug: Log myNodeNum to help diagnose message direction issues
+    debugPrint(
+      '📨 ConversationScreen: myNodeNum=$myNodeNum, type=${widget.type}, nodeNum=${widget.nodeNum}',
+    );
+
     // Determine if messages are encrypted
     // DMs are always encrypted, channels are encrypted if they have a PSK
     bool isEncrypted = true;
@@ -1119,6 +1124,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                 1 -
                                 index];
                         final isFromMe = message.from == myNodeNum;
+
+                        // Debug: Log message direction calculation
+                        if (index == 0) {
+                          debugPrint(
+                            '📨 Message[0]: from=${message.from}, myNodeNum=$myNodeNum, isFromMe=$isFromMe, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
+                          );
+                        }
+
                         final senderNode = nodes[message.from];
 
                         return _MessageBubble(

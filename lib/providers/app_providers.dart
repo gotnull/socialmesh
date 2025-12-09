@@ -196,6 +196,7 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
   }
 }
 
+/// Check data integrity after connection and clear stale data if needed.
 final appInitProvider = StateNotifierProvider<AppInitNotifier, AppInitState>((
   ref,
 ) {

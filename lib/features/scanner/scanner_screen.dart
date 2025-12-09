@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../core/transport.dart';
 import '../../core/theme.dart';
 import '../../utils/snackbar.dart';
@@ -154,6 +155,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     });
 
     try {
+      // Clean up any stale BLE state before starting scan
+      // This fixes issues where scanner gets stuck after app was backgrounded
+      try {
+        await FlutterBluePlus.stopScan();
+      } catch (_) {
+        // Ignore errors - just ensuring clean state
+      }
+
       final transport = ref.read(transportProvider);
       final scanStream = transport.scan(timeout: const Duration(seconds: 10));
 
