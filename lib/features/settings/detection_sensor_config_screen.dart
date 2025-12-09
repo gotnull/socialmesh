@@ -101,7 +101,7 @@ class _DetectionSensorConfigScreenState
       await protocol.setModuleConfig(moduleConfig);
 
       if (mounted) {
-        showAppSnackBar(context, 'Detection Sensor configuration saved');
+        showSuccessSnackBar(context, 'Detection Sensor configuration saved');
       }
     } catch (e) {
       if (mounted) {

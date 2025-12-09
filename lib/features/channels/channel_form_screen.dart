@@ -292,7 +292,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        showAppSnackBar(
+        showSuccessSnackBar(
           context,
           isEditing ? 'Channel updated' : 'Channel created',
         );
@@ -913,7 +913,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   onPressed: !_isEditingKey
                       ? () {
                           _generateRandomKey();
-                          showAppSnackBar(
+                          showSuccessSnackBar(
                             context,
                             'New key generated',
                             duration: const Duration(seconds: 1),
@@ -935,7 +935,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           Clipboard.setData(
                             ClipboardData(text: _keyController.text),
                           );
-                          showAppSnackBar(
+                          showSuccessSnackBar(
                             context,
                             'Key copied to clipboard',
                             duration: const Duration(seconds: 1),

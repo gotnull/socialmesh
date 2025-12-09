@@ -80,7 +80,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
       );
 
       if (mounted) {
-        showAppSnackBar(context, 'Range test configuration saved');
+        showSuccessSnackBar(context, 'Range test configuration saved');
       }
     } catch (e) {
       if (mounted) {
@@ -224,7 +224,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
           });
 
     if (otherNodes.isEmpty) {
-      showAppSnackBar(context, 'No other nodes available');
+      showInfoSnackBar(context, 'No other nodes available');
       return;
     }
 

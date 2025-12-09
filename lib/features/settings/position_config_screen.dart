@@ -178,7 +178,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
       );
 
       if (mounted) {
-        showAppSnackBar(context, 'Position configuration saved');
+        showSuccessSnackBar(context, 'Position configuration saved');
         Navigator.pop(context);
       }
     } catch (e) {

@@ -69,7 +69,7 @@ class _PaxCounterConfigScreenState
 
       setState(() => _hasChanges = false);
       if (mounted) {
-        showAppSnackBar(context, 'PAX counter config saved');
+        showSuccessSnackBar(context, 'PAX counter config saved');
       }
     } catch (e) {
       if (mounted) {

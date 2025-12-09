@@ -758,7 +758,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
                   ),
                 );
                 Navigator.pop(context);
-                showAppSnackBar(context, 'Node info copied');
+                showSuccessSnackBar(context, 'Node info copied');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.accentColor,
@@ -806,7 +806,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
         // Update local state
         nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: false));
         if (context.mounted) {
-          showAppSnackBar(
+          showSuccessSnackBar(
               context, '${node.displayName} removed from favorites');
         }
       } else {
@@ -814,7 +814,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
         // Update local state
         nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: true));
         if (context.mounted) {
-          showAppSnackBar(context, '${node.displayName} added to favorites');
+          showSuccessSnackBar(context, '${node.displayName} added to favorites');
         }
       }
     } catch (e) {
@@ -868,7 +868,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
               try {
                 await protocol.reboot();
                 if (context.mounted) {
-                  showAppSnackBar(context, 'Device is rebooting...');
+                  showInfoSnackBar(context, 'Device is rebooting...');
                 }
               } catch (e) {
                 if (context.mounted) {
@@ -937,7 +937,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
               try {
                 await protocol.shutdown();
                 if (context.mounted) {
-                  showAppSnackBar(context, 'Device is shutting down...');
+                  showInfoSnackBar(context, 'Device is shutting down...');
                 }
               } catch (e) {
                 if (context.mounted) {
@@ -994,7 +994,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
               try {
                 await protocol.removeNode(node.nodeNum);
                 if (context.mounted) {
-                  showAppSnackBar(context, '${node.displayName} removed');
+                  showSuccessSnackBar(context, '${node.displayName} removed');
                 }
               } catch (e) {
                 if (context.mounted) {
@@ -1015,7 +1015,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
 
   void _setFixedPosition(BuildContext context, WidgetRef ref) async {
     if (!node.hasPosition) {
-      showAppSnackBar(context, 'Node has no position data');
+      showInfoSnackBar(context, 'Node has no position data');
       return;
     }
 
@@ -1031,7 +1031,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
         altitude: node.altitude ?? 0,
       );
       if (context.mounted) {
-        showAppSnackBar(
+        showSuccessSnackBar(
           context,
           'Fixed position set to ${node.displayName}\'s location',
         );
@@ -1053,7 +1053,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
       await protocol.requestPosition(node.nodeNum);
 
       if (context.mounted) {
-        showAppSnackBar(
+        showInfoSnackBar(
             context, 'Position requested from ${node.displayName}');
       }
     } catch (e) {

@@ -332,7 +332,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
       }
 
       if (mounted) {
-        showAppSnackBar(context, 'Channel "${channel.name}" imported');
+        showSuccessSnackBar(context, 'Channel "${channel.name}" imported');
         Navigator.pop(context);
       }
     } catch (e) {

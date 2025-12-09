@@ -139,10 +139,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
           children: [
             Text(
               'This node is already in your list as "${existing.displayName}".',
-              style: TextStyle(
-                color: AppTheme.textSecondary,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
             ),
             if (newName != null && newName != existing.longName) ...[
               SizedBox(height: 12),
@@ -166,7 +163,6 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           color: context.accentColor,
-                          
                         ),
                       ),
                     ),
@@ -186,9 +182,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: context.accentColor,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: context.accentColor),
             child: const Text('Update'),
           ),
         ],
@@ -242,7 +236,6 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
                       style: TextStyle(
                         fontSize: 12,
                         color: context.accentColor,
-                        
                       ),
                     ),
                   ),
@@ -261,9 +254,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: context.accentColor,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: context.accentColor),
             child: const Text('Add Node'),
           ),
         ],
@@ -336,7 +327,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
       nodesNotifier.addOrUpdateNode(node);
 
       if (mounted) {
-        showAppSnackBar(
+        showSuccessSnackBar(
           context,
           existing != null
               ? 'Node "${node.displayName}" updated'
@@ -363,7 +354,6 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            
           ),
         ),
         actions: [
@@ -420,19 +410,11 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.person_add,
-                    size: 32,
-                    color: context.accentColor,
-                  ),
+                  Icon(Icons.person_add, size: 32, color: context.accentColor),
                   SizedBox(height: 12),
                   Text(
                     'Point your camera at a node QR code',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      
-                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 8),
@@ -441,7 +423,6 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
                     style: TextStyle(
                       color: AppTheme.textSecondary,
                       fontSize: 12,
-                      
                     ),
                     textAlign: TextAlign.center,
                   ),

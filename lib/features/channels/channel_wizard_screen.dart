@@ -844,7 +844,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: channelUrl));
-                      showAppSnackBar(
+                      showSuccessSnackBar(
                         context,
                         'Channel URL copied to clipboard',
                       );

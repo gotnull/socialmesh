@@ -94,7 +94,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
       );
 
       if (mounted) {
-        showAppSnackBar(context, 'Display configuration saved');
+        showSuccessSnackBar(context, 'Display configuration saved');
         Navigator.pop(context);
       }
     } catch (e) {

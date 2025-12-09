@@ -89,7 +89,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       );
 
       if (mounted) {
-        showAppSnackBar(context, 'Device configuration saved');
+        showSuccessSnackBar(context, 'Device configuration saved');
         Navigator.pop(context);
       }
     } catch (e) {

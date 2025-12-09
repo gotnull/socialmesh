@@ -127,7 +127,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
 
       if (mounted) {
         setState(() => _hasChanges = false);
-        showAppSnackBar(context, 'Serial configuration saved');
+        showSuccessSnackBar(context, 'Serial configuration saved');
       }
     } catch (e) {
       if (mounted) {

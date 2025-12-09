@@ -5,6 +5,9 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../config/revenuecat_config.dart';
 import '../../models/subscription_models.dart';
 
+/// Result of a purchase attempt
+enum PurchaseResult { success, canceled, error }
+
 /// Service for managing one-time purchases via RevenueCat
 ///
 /// Testing with RevenueCat Sandbox:
@@ -103,29 +106,31 @@ class PurchaseService {
   }
 
   /// Purchase a specific product by ID
-  Future<bool> purchaseProduct(String productId) async {
-    if (!_isInitialized) return false;
+  /// Returns PurchaseResult indicating success, cancellation, or error
+  Future<PurchaseResult> purchaseProduct(String productId) async {
+    if (!_isInitialized) return PurchaseResult.error;
 
     try {
       final products = await Purchases.getProducts([productId]);
       if (products.isEmpty) {
         debugPrint('Product not found: $productId');
-        return false;
+        return PurchaseResult.error;
       }
 
       final customerInfo = await Purchases.purchaseStoreProduct(products.first);
       _updateStateFromCustomerInfo(customerInfo);
-      return true;
+      return PurchaseResult.success;
     } on PurchasesErrorCode catch (e) {
       if (e == PurchasesErrorCode.purchaseCancelledError) {
         debugPrint('User cancelled purchase');
+        return PurchaseResult.canceled;
       } else {
         debugPrint('Purchase error: $e');
+        return PurchaseResult.error;
       }
-      return false;
     } catch (e) {
       debugPrint('Purchase error: $e');
-      return false;
+      return PurchaseResult.error;
     }
   }
 

@@ -98,7 +98,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
       );
 
       if (mounted) {
-        showAppSnackBar(context, 'Network configuration saved');
+        showSuccessSnackBar(context, 'Network configuration saved');
         Navigator.pop(context);
       }
     } catch (e) {

@@ -883,7 +883,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
       await protocol.setRingtone(_rtttlController.text.trim());
 
       if (mounted) {
-        showAppSnackBar(context, 'Ringtone saved to device');
+        showSuccessSnackBar(context, 'Ringtone saved to device');
       }
     } catch (e) {
       if (mounted) {
@@ -923,7 +923,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
         validateRtttl: _validateRtttl,
         onAdd: (preset) {
           ref.read(customRingtonesProvider.notifier).addPreset(preset);
-          showAppSnackBar(context, 'Custom ringtone added');
+          showSuccessSnackBar(context, 'Custom ringtone added');
         },
       ),
     );

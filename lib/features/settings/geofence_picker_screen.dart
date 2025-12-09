@@ -154,7 +154,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
         if (requested == LocationPermission.denied ||
             requested == LocationPermission.deniedForever) {
           if (mounted) {
-            showAppSnackBar(context, 'Location permission denied');
+            showErrorSnackBar(context, 'Location permission denied');
           }
           setState(() => _isLoadingLocation = false);
           return;
@@ -174,7 +174,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
       _mapController.move(newCenter, _mapController.camera.zoom);
     } catch (e) {
       if (mounted) {
-        showAppSnackBar(context, 'Failed to get location: $e');
+        showErrorSnackBar(context, 'Failed to get location: $e');
       }
       setState(() => _isLoadingLocation = false);
     }
@@ -291,7 +291,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
 
   void _confirmGeofence() {
     if (_center == null) {
-      showAppSnackBar(
+      showWarningSnackBar(
         context,
         'Please tap on the map to set a geofence center',
       );

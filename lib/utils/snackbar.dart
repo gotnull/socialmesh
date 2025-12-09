@@ -1,94 +1,181 @@
 import 'package:flutter/material.dart';
 
-/// Shows a success snackbar with accent color background
+/// Snackbar types with associated styling
+enum SnackBarType {
+  success(
+    icon: Icons.check_circle_rounded,
+    backgroundColor: Color(0xFF1B5E20),
+    iconColor: Color(0xFF4CAF50),
+  ),
+  error(
+    icon: Icons.error_rounded,
+    backgroundColor: Color(0xFF7F1D1D),
+    iconColor: Color(0xFFEF5350),
+  ),
+  warning(
+    icon: Icons.warning_rounded,
+    backgroundColor: Color(0xFF7C4700),
+    iconColor: Color(0xFFFFB74D),
+  ),
+  info(
+    icon: Icons.info_rounded,
+    backgroundColor: Color(0xFF0D47A1),
+    iconColor: Color(0xFF64B5F6),
+  );
+
+  final IconData icon;
+  final Color backgroundColor;
+  final Color iconColor;
+
+  const SnackBarType({
+    required this.icon,
+    required this.backgroundColor,
+    required this.iconColor,
+  });
+}
+
+/// Shows a success snackbar with check icon
+void showSuccessSnackBar(
+  BuildContext context,
+  String message, {
+  Duration duration = const Duration(seconds: 3),
+}) {
+  _showStyledSnackBar(
+    context,
+    message,
+    type: SnackBarType.success,
+    duration: duration,
+  );
+}
+
+/// Shows an error snackbar with error icon
+void showErrorSnackBar(
+  BuildContext context,
+  String message, {
+  Duration duration = const Duration(seconds: 4),
+}) {
+  _showStyledSnackBar(
+    context,
+    message,
+    type: SnackBarType.error,
+    duration: duration,
+  );
+}
+
+/// Shows a warning snackbar with warning icon
+void showWarningSnackBar(
+  BuildContext context,
+  String message, {
+  Duration duration = const Duration(seconds: 4),
+}) {
+  _showStyledSnackBar(
+    context,
+    message,
+    type: SnackBarType.warning,
+    duration: duration,
+  );
+}
+
+/// Shows an info snackbar with info icon
+void showInfoSnackBar(
+  BuildContext context,
+  String message, {
+  Duration duration = const Duration(seconds: 3),
+}) {
+  _showStyledSnackBar(
+    context,
+    message,
+    type: SnackBarType.info,
+    duration: duration,
+  );
+}
+
+/// Legacy function for backwards compatibility - use showSuccessSnackBar instead
 void showAppSnackBar(
   BuildContext context,
   String message, {
   String title = 'Success',
   Duration duration = const Duration(seconds: 3),
 }) {
-  _showSnackBar(
-    context,
-    message,
-    backgroundColor: Theme.of(context).colorScheme.primary,
-    duration: duration,
-  );
+  showSuccessSnackBar(context, message, duration: duration);
 }
 
-/// Shows an error snackbar with red background
-void showErrorSnackBar(
+void _showStyledSnackBar(
   BuildContext context,
   String message, {
-  String title = 'Error',
-  Duration duration = const Duration(seconds: 4),
-}) {
-  _showSnackBar(
-    context,
-    message,
-    backgroundColor: Colors.red.shade700,
-    duration: duration,
-  );
-}
-
-/// Shows a warning snackbar with orange background
-void showWarningSnackBar(
-  BuildContext context,
-  String message, {
-  String title = 'Warning',
-  Duration duration = const Duration(seconds: 4),
-}) {
-  _showSnackBar(
-    context,
-    message,
-    backgroundColor: Colors.orange.shade700,
-    duration: duration,
-  );
-}
-
-/// Shows an info snackbar with accent color background
-void showInfoSnackBar(
-  BuildContext context,
-  String message, {
-  String title = 'Info',
-  Duration duration = const Duration(seconds: 3),
-}) {
-  _showSnackBar(
-    context,
-    message,
-    backgroundColor: Theme.of(context).colorScheme.primary,
-    duration: duration,
-  );
-}
-
-void _showSnackBar(
-  BuildContext context,
-  String message, {
-  required Color backgroundColor,
+  required SnackBarType type,
   required Duration duration,
 }) {
   final messenger = ScaffoldMessenger.maybeOf(context);
   if (messenger == null) return;
 
   final snackBar = SnackBar(
-    behavior: SnackBarBehavior.fixed,
-    backgroundColor: backgroundColor,
+    behavior: SnackBarBehavior.floating,
+    backgroundColor: Colors.transparent,
+    elevation: 0,
     duration: duration,
-    content: Row(
-      children: [
-        Expanded(
-          child: Text(
-            message,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
-            ),
+    margin: const EdgeInsets.all(16),
+    padding: EdgeInsets.zero,
+    content: Container(
+      decoration: BoxDecoration(
+        color: type.backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: type.iconColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: type.iconColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(type.icon, color: type.iconColor, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => messenger.hideCurrentSnackBar(),
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.close_rounded,
+                    color: Colors.white.withValues(alpha: 0.7),
+                    size: 18,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        GestureDetector(
-          onTap: () => messenger.hideCurrentSnackBar(),
-          child: const Icon(Icons.close, color: Colors.white, size: 20),
-        ),
-      ],
+      ),
     ),
   );
 

@@ -207,7 +207,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
       if (importedRoute != null) {
         await ref.read(routesProvider.notifier).saveRoute(importedRoute);
         if (mounted) {
-          showAppSnackBar(context, 'Imported: ${importedRoute.name}');
+          showSuccessSnackBar(context, 'Imported: ${importedRoute.name}');
         }
       } else {
         if (mounted) {

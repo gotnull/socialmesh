@@ -92,7 +92,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
       );
 
       if (mounted) {
-        showAppSnackBar(context, 'Power configuration saved');
+        showSuccessSnackBar(context, 'Power configuration saved');
         Navigator.pop(context);
       }
     } catch (e) {

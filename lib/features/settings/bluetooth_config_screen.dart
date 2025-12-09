@@ -100,7 +100,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
       );
 
       if (mounted) {
-        showAppSnackBar(context, 'Bluetooth configuration saved');
+        showSuccessSnackBar(context, 'Bluetooth configuration saved');
         Navigator.pop(context);
       }
     } catch (e) {

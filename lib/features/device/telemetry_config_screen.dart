@@ -123,7 +123,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
 
       setState(() => _hasChanges = false);
       if (mounted) {
-        showAppSnackBar(context, 'Telemetry config saved');
+        showSuccessSnackBar(context, 'Telemetry config saved');
       }
     } catch (e) {
       if (mounted) {

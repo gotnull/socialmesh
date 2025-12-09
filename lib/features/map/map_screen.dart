@@ -316,7 +316,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       await protocol.requestAllPositions();
 
       if (mounted) {
-        showAppSnackBar(context, 'Requesting positions from nodes...');
+        showInfoSnackBar(context, 'Requesting positions from nodes...');
       }
     } finally {
       await Future.delayed(const Duration(seconds: 2));
@@ -373,7 +373,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final lat = point.latitude.toStringAsFixed(6);
     final lng = point.longitude.toStringAsFixed(6);
     Clipboard.setData(ClipboardData(text: '$lat, $lng'));
-    showAppSnackBar(context, 'Coordinates copied to clipboard');
+    showSuccessSnackBar(context, 'Coordinates copied to clipboard');
   }
 
   @override
@@ -2139,7 +2139,10 @@ class _NodeInfoCard extends ConsumerWidget {
       await protocol.requestPosition(node.nodeNum);
 
       if (context.mounted) {
-        showAppSnackBar(context, 'Position requested from ${node.displayName}');
+        showInfoSnackBar(
+          context,
+          'Position requested from ${node.displayName}',
+        );
       }
     } catch (e) {
       if (context.mounted) {

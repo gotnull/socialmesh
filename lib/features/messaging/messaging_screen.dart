@@ -556,7 +556,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       // Show snackbar that message is queued
       if (mounted) {
-        showAppSnackBar(context, 'Message queued - will send when connected');
+        showInfoSnackBar(context, 'Message queued - will send when connected');
       }
       return;
     }
@@ -646,7 +646,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       // Show snackbar that message is queued
       if (mounted) {
-        showAppSnackBar(context, 'Message queued - will send when connected');
+        showInfoSnackBar(context, 'Message queued - will send when connected');
       }
       return;
     }
@@ -855,7 +855,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: channelUrl));
                 Navigator.pop(context);
-                showAppSnackBar(context, 'Channel URL copied to clipboard');
+                showSuccessSnackBar(context, 'Channel URL copied to clipboard');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.accentColor,
@@ -1770,7 +1770,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                     ? () {
                         Clipboard.setData(ClipboardData(text: base64Key));
                         Navigator.pop(context);
-                        showAppSnackBar(context, 'Key copied to clipboard');
+                        showSuccessSnackBar(context, 'Key copied to clipboard');
                       }
                     : null,
                 style: ElevatedButton.styleFrom(

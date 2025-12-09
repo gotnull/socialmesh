@@ -383,7 +383,7 @@ class _ChannelTile extends ConsumerWidget {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: channelUrl));
                 Navigator.pop(context);
-                showAppSnackBar(context, 'Channel URL copied to clipboard');
+                showSuccessSnackBar(context, 'Channel URL copied to clipboard');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.accentColor,
@@ -591,7 +591,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                           ClipboardData(text: widget.base64Key),
                         );
                         Navigator.pop(context);
-                        showAppSnackBar(context, 'Key copied to clipboard');
+                        showSuccessSnackBar(context, 'Key copied to clipboard');
                       }
                     : null,
                 style: ElevatedButton.styleFrom(

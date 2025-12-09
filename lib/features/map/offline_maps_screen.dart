@@ -224,7 +224,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
       });
 
       if (mounted) {
-        showAppSnackBar(context, 'Downloaded $tileCount tiles for "$name"');
+        showSuccessSnackBar(context, 'Downloaded $tileCount tiles for "$name"');
       }
     } catch (e) {
       if (mounted) {
@@ -345,7 +345,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
         setState(() => _regions.remove(region));
 
         if (mounted) {
-          showAppSnackBar(context, 'Deleted "${region.name}"');
+          showSuccessSnackBar(context, 'Deleted "${region.name}"');
         }
       } catch (e) {
         if (mounted) {
@@ -471,7 +471,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
             onPressed: () {
               final name = nameController.text.trim();
               if (name.isEmpty) {
-                showAppSnackBar(context, 'Please enter a name');
+                showWarningSnackBar(context, 'Please enter a name');
                 return;
               }
               Navigator.pop(context);

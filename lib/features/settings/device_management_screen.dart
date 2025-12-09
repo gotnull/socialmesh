@@ -52,7 +52,7 @@ class _DeviceManagementScreenState
     try {
       await action();
       if (mounted) {
-        showAppSnackBar(context, '$actionName command sent');
+        showSuccessSnackBar(context, '$actionName command sent');
       }
     } catch (e) {
       if (mounted) {

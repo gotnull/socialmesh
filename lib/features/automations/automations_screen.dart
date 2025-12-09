@@ -341,7 +341,7 @@ class AutomationsScreen extends ConsumerWidget {
   ) async {
     await ref.read(automationsProvider.notifier).addFromTemplate(templateId);
     if (context.mounted) {
-      showAppSnackBar(context, 'Automation created from template');
+      showSuccessSnackBar(context, 'Automation created from template');
     }
   }
 
@@ -367,7 +367,7 @@ class AutomationsScreen extends ConsumerWidget {
               ref
                   .read(automationsProvider.notifier)
                   .deleteAutomation(automation.id);
-              showAppSnackBar(context, 'Deleted "${automation.name}"');
+              showSuccessSnackBar(context, 'Deleted "${automation.name}"');
             },
             style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
             child: const Text('Delete'),

@@ -483,7 +483,7 @@ class _AutomationEditorScreenState
   Future<void> _save() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      showAppSnackBar(context, 'Please enter a name for this automation');
+      showWarningSnackBar(context, 'Please enter a name for this automation');
       return;
     }
 
@@ -529,7 +529,7 @@ class _AutomationEditorScreenState
 
     if (mounted) {
       Navigator.pop(context);
-      showAppSnackBar(
+      showSuccessSnackBar(
         context,
         _isEditing ? 'Automation updated' : 'Automation created',
       );

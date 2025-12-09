@@ -101,7 +101,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
     await iftttService.saveConfig(config);
 
     if (mounted) {
-      showAppSnackBar(context, 'IFTTT settings saved');
+      showSuccessSnackBar(context, 'IFTTT settings saved');
       Navigator.pop(context);
     }
   }
@@ -143,7 +143,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
 
     if (mounted) {
       if (success) {
-        showAppSnackBar(context, 'Test webhook sent! Check your IFTTT applet.');
+        showSuccessSnackBar(context, 'Test webhook sent! Check your IFTTT applet.');
       } else {
         showErrorSnackBar(
           context,

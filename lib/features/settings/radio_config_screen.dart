@@ -94,7 +94,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
       }
 
       if (mounted) {
-        showAppSnackBar(context, 'Radio configuration saved');
+        showSuccessSnackBar(context, 'Radio configuration saved');
         Navigator.pop(context);
       }
     } catch (e) {

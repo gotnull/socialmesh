@@ -109,7 +109,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
       );
 
       if (mounted) {
-        showAppSnackBar(context, 'MQTT configuration saved');
+        showSuccessSnackBar(context, 'MQTT configuration saved');
         Navigator.pop(context);
       }
     } catch (e) {

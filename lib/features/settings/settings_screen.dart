@@ -11,6 +11,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/legal_document_sheet.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import '../device/region_selection_screen.dart';
@@ -896,6 +897,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 title: 'Socialmesh',
                 subtitle: 'Meshtastic companion app • Version 1.0.0',
               ),
+              _SettingsTile(
+                icon: Icons.help_outline,
+                title: 'Help & Support',
+                subtitle: 'FAQ, troubleshooting, and contact info',
+                onTap: () => LegalDocumentSheet.showSupport(context),
+              ),
+              _SettingsTile(
+                icon: Icons.description_outlined,
+                title: 'Terms of Service',
+                onTap: () => LegalDocumentSheet.showTerms(context),
+              ),
+              _SettingsTile(
+                icon: Icons.privacy_tip_outlined,
+                title: 'Privacy Policy',
+                onTap: () => LegalDocumentSheet.showPrivacy(context),
+              ),
 
               const SizedBox(height: 32),
             ],
@@ -936,7 +953,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
 
     if (context.mounted) {
-      showAppSnackBar(
+      showInfoSnackBar(
         context,
         'Test notification sent - check notification center',
       );
@@ -1195,7 +1212,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     if (confirmed == true && context.mounted) {
       ref.read(messagesProvider.notifier).clearMessages();
-      showAppSnackBar(context, 'Messages cleared');
+      showSuccessSnackBar(context, 'Messages cleared');
     }
   }
 
@@ -1244,7 +1261,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       channelsNotifier.clearChannels();
 
       if (context.mounted) {
-        showAppSnackBar(context, 'All data cleared');
+        showSuccessSnackBar(context, 'All data cleared');
       }
     }
   }
@@ -1344,7 +1361,7 @@ class _SettingsTile extends StatelessWidget {
   final Color? iconColor;
   final String title;
   final Color? titleColor;
-  final String subtitle;
+  final String? subtitle;
   final Widget? trailing;
   final VoidCallback? onTap;
 
@@ -1353,7 +1370,7 @@ class _SettingsTile extends StatelessWidget {
     this.iconColor,
     required this.title,
     this.titleColor,
-    required this.subtitle,
+    this.subtitle,
     this.trailing,
     this.onTap,
   });
@@ -1391,14 +1408,16 @@ class _SettingsTile extends StatelessWidget {
                           color: titleColor ?? Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppTheme.textTertiary,
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textTertiary,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

@@ -89,7 +89,7 @@ class _AmbientLightingConfigScreenState
 
       setState(() => _hasChanges = false);
       if (mounted) {
-        showAppSnackBar(context, 'Ambient lighting saved');
+        showSuccessSnackBar(context, 'Ambient lighting saved');
       }
     } catch (e) {
       if (mounted) {

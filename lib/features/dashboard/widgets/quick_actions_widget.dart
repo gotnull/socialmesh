@@ -98,7 +98,7 @@ class QuickActionsContent extends ConsumerWidget {
       final locationService = ref.read(locationServiceProvider);
       await locationService.sendPositionOnce();
       if (context.mounted) {
-        showAppSnackBar(context, 'Location shared with mesh');
+        showSuccessSnackBar(context, 'Location shared with mesh');
       }
     } catch (e) {
       if (context.mounted) {
@@ -117,7 +117,7 @@ class QuickActionsContent extends ConsumerWidget {
         .toList();
 
     if (otherNodes.isEmpty) {
-      showAppSnackBar(context, 'No other nodes available for traceroute');
+      showInfoSnackBar(context, 'No other nodes available for traceroute');
       return;
     }
 
@@ -132,7 +132,7 @@ class QuickActionsContent extends ConsumerWidget {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.requestAllPositions();
       if (context.mounted) {
-        showAppSnackBar(context, 'Position requests sent to all nodes');
+        showSuccessSnackBar(context, 'Position requests sent to all nodes');
       }
     } catch (e) {
       if (context.mounted) {
@@ -600,7 +600,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                       )
                       .longName ??
                   'node';
-        showAppSnackBar(context, 'Sent to $targetName');
+        showSuccessSnackBar(context, 'Sent to $targetName');
       }
     } catch (e) {
       setState(() => _isSending = false);
@@ -1125,7 +1125,10 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        showAppSnackBar(context, 'Traceroute sent - check messages for response');
+        showInfoSnackBar(
+          context,
+          'Traceroute sent - check messages for response',
+        );
       }
     } catch (e) {
       setState(() => _isSending = false);

@@ -229,7 +229,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
         : const Rect.fromLTWH(0, 0, 100, 100);
 
     try {
-      showAppSnackBar(
+      showInfoSnackBar(
         context,
         'Generating debug export...',
         duration: const Duration(seconds: 1),
@@ -248,7 +248,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
     final logger = ref.read(appLoggerProvider);
     final content = logger.export();
     Clipboard.setData(ClipboardData(text: content));
-    showAppSnackBar(context, 'Log copied to clipboard');
+    showSuccessSnackBar(context, 'Log copied to clipboard');
   }
 
   void _clearLogs() {

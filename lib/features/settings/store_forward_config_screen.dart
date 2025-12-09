@@ -73,7 +73,7 @@ class _StoreForwardConfigScreenState
       );
 
       if (mounted) {
-        showAppSnackBar(context, 'Store & Forward configuration saved');
+        showSuccessSnackBar(context, 'Store & Forward configuration saved');
       }
     } catch (e) {
       if (mounted) {

@@ -615,7 +615,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       }
 
       if (mounted) {
-        showAppSnackBar(context, 'Data cleared');
+        showSuccessSnackBar(context, 'Data cleared');
       }
     } catch (e) {
       if (mounted) {
@@ -662,7 +662,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       await repo.clearLog();
 
       if (mounted) {
-        showAppSnackBar(context, 'All data cleared');
+        showSuccessSnackBar(context, 'All data cleared');
       }
     } catch (e) {
       if (mounted) {
@@ -800,7 +800,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
 
     if (routes.isEmpty) {
       if (mounted) {
-        showAppSnackBar(context, 'No routes to export');
+        showInfoSnackBar(context, 'No routes to export');
       }
       return;
     }
@@ -864,7 +864,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
 
     if (automations.isEmpty) {
       if (mounted) {
-        showAppSnackBar(context, 'No automations to export');
+        showInfoSnackBar(context, 'No automations to export');
       }
       return;
     }
@@ -885,7 +885,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
 
     if (log.isEmpty) {
       if (mounted) {
-        showAppSnackBar(context, 'No automation log entries');
+        showInfoSnackBar(context, 'No automation log entries');
       }
       return;
     }

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/legal_document_sheet.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/haptic_service.dart';
+import '../../services/subscription/subscription_service.dart';
 import '../../utils/snackbar.dart';
 
 class SubscriptionScreen extends ConsumerStatefulWidget {
@@ -23,6 +24,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Upgrades')),
       body: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -66,7 +68,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextButton(
-                    onPressed: () => _openUrl('https://yourapp.com/terms'),
+                    onPressed: () => LegalDocumentSheet.showTerms(context),
                     child: Text(
                       'Terms',
                       style: TextStyle(
@@ -77,7 +79,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   ),
                   Text('•', style: TextStyle(color: AppTheme.textTertiary)),
                   TextButton(
-                    onPressed: () => _openUrl('https://yourapp.com/privacy'),
+                    onPressed: () => LegalDocumentSheet.showPrivacy(context),
                     child: Text(
                       'Privacy',
                       style: TextStyle(
@@ -295,14 +297,18 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   Future<void> _purchaseItem(OneTimePurchase purchase) async {
     ref.haptics.buttonTap();
-    final success = await purchaseProduct(ref, purchase.productId);
+    final result = await purchaseProduct(ref, purchase.productId);
     if (mounted) {
-      if (success) {
-        ref.haptics.success();
-        showAppSnackBar(context, '${purchase.name} unlocked!');
-      } else {
-        ref.haptics.error();
-        showErrorSnackBar(context, 'Purchase failed');
+      switch (result) {
+        case PurchaseResult.success:
+          ref.haptics.success();
+          showSuccessSnackBar(context, '${purchase.name} unlocked!');
+        case PurchaseResult.canceled:
+          // User canceled - no message needed
+          break;
+        case PurchaseResult.error:
+          ref.haptics.error();
+          showErrorSnackBar(context, 'Purchase failed. Please try again.');
       }
     }
   }
@@ -313,17 +319,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     if (mounted) {
       if (success) {
         ref.haptics.success();
-        showAppSnackBar(context, 'Purchases restored successfully');
+        showSuccessSnackBar(context, 'Purchases restored successfully');
       } else {
-        showAppSnackBar(context, 'No purchases to restore');
+        showInfoSnackBar(context, 'No purchases to restore');
       }
-    }
-  }
-
-  Future<void> _openUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 }

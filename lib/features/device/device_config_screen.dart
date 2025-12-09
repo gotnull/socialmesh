@@ -172,7 +172,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
 
       if (mounted) {
         setState(() => _hasChanges = false);
-        showAppSnackBar(
+        showSuccessSnackBar(
           context,
           'Device configuration saved. Device may reboot.',
         );

@@ -86,7 +86,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
       );
 
       if (mounted) {
-        showAppSnackBar(context, 'Security configuration saved');
+        showSuccessSnackBar(context, 'Security configuration saved');
         Navigator.pop(context);
       }
     } catch (e) {

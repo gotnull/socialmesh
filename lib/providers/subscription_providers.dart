@@ -74,10 +74,7 @@ final hasFeatureProvider = Provider.family<bool, PremiumFeature>((
 });
 
 /// Check if a specific product has been purchased
-final hasPurchasedProvider = Provider.family<bool, String>((
-  ref,
-  productId,
-) {
+final hasPurchasedProvider = Provider.family<bool, String>((ref, productId) {
   final state = ref.watch(purchaseStateProvider);
   return state.hasPurchased(productId);
 });
@@ -89,20 +86,21 @@ final subscriptionLoadingProvider = StateProvider<bool>((ref) => false);
 final subscriptionErrorProvider = StateProvider<String?>((ref) => null);
 
 /// Purchase a one-time product
-Future<bool> purchaseProduct(WidgetRef ref, String productId) async {
+/// Returns PurchaseResult indicating success, cancellation, or error
+Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
   ref.read(subscriptionLoadingProvider.notifier).state = true;
   ref.read(subscriptionErrorProvider.notifier).state = null;
 
   try {
     final service = await ref.read(subscriptionServiceProvider.future);
-    final success = await service.purchaseProduct(productId);
-    if (success) {
+    final result = await service.purchaseProduct(productId);
+    if (result == PurchaseResult.success) {
       ref.read(purchaseStateProvider.notifier).refresh();
     }
-    return success;
+    return result;
   } catch (e) {
     ref.read(subscriptionErrorProvider.notifier).state = e.toString();
-    return false;
+    return PurchaseResult.error;
   } finally {
     ref.read(subscriptionLoadingProvider.notifier).state = false;
   }
