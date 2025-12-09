@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/transport.dart' show DeviceConnectionState;
 import '../../providers/app_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../models/subscription_models.dart';
@@ -565,6 +566,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onTap: () => _confirmClearMessages(context, ref),
               ),
               _SettingsTile(
+                icon: Icons.refresh,
+                iconColor: Colors.orange,
+                title: 'Reset local data',
+                titleColor: Colors.orange,
+                subtitle: 'Clear messages and nodes, keep settings',
+                onTap: () => _confirmResetLocalData(context, ref),
+              ),
+              _SettingsTile(
                 icon: Icons.delete_forever,
                 iconColor: AppTheme.errorRed,
                 title: 'Clear all data',
@@ -577,6 +586,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               // Device Section
               _SectionHeader(title: 'DEVICE'),
+              _SettingsTile(
+                icon: Icons.sync,
+                title: 'Force Sync',
+                subtitle: 'Re-sync all data from connected device',
+                onTap: () => _forceSync(context, ref),
+              ),
               _SettingsTile(
                 icon: Icons.bluetooth_searching,
                 title: 'Scan for Devices',
@@ -1245,6 +1260,114 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (confirmed == true && context.mounted) {
       ref.read(messagesProvider.notifier).clearMessages();
       showSuccessSnackBar(context, 'Messages cleared');
+    }
+  }
+
+  Future<void> _confirmResetLocalData(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        title: const Text(
+          'Reset Local Data',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'This will clear all messages and node data, forcing a fresh sync from your device on next connection.\n\n'
+          'Your settings, theme, and preferences will be kept.\n\n'
+          'Use this if nodes show incorrect status or messages appear wrong.',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.orange),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      // Clear messages
+      ref.read(messagesProvider.notifier).clearMessages();
+
+      // Clear nodes
+      ref.read(nodesProvider.notifier).clearNodes();
+
+      // Clear channels (will be re-synced from device)
+      ref.read(channelsProvider.notifier).clearChannels();
+
+      // Clear message storage
+      final messageStorage = await ref.read(messageStorageProvider.future);
+      await messageStorage.clearMessages();
+
+      // Clear node storage
+      final nodeStorage = await ref.read(nodeStorageProvider.future);
+      await nodeStorage.clearNodes();
+
+      if (context.mounted) {
+        showSuccessSnackBar(
+          context,
+          'Local data reset. Reconnect to sync fresh data.',
+        );
+      }
+    }
+  }
+
+  Future<void> _forceSync(BuildContext context, WidgetRef ref) async {
+    final protocol = ref.read(protocolServiceProvider);
+    final transport = ref.read(transportProvider);
+
+    if (transport.state != DeviceConnectionState.connected) {
+      showErrorSnackBar(context, 'Not connected to a device');
+      return;
+    }
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        content: Row(
+          children: [
+            CircularProgressIndicator(color: context.accentColor),
+            const SizedBox(width: 20),
+            const Text(
+              'Syncing from device...',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      // Clear local state first
+      ref.read(messagesProvider.notifier).clearMessages();
+      ref.read(nodesProvider.notifier).clearNodes();
+      ref.read(channelsProvider.notifier).clearChannels();
+
+      // Restart protocol to re-request config from device
+      await protocol.start();
+
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Dismiss loading
+        showSuccessSnackBar(context, 'Sync complete');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Dismiss loading
+        showErrorSnackBar(context, 'Sync failed: $e');
+      }
     }
   }
 
