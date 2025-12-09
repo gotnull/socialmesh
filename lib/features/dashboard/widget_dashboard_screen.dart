@@ -78,6 +78,12 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
           ),
         ),
         actions: [
+          // Add widget button - always visible
+          IconButton(
+            icon: Icon(Icons.add, color: context.accentColor),
+            onPressed: () => _showAddWidgetSheet(context),
+            tooltip: 'Add Widget',
+          ),
           if (!_editMode) ...[
             // Battery indicator
             if (batteryLevel != null && isConnected)
@@ -117,12 +123,6 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               tooltip: 'Settings',
             ),
           ] else ...[
-            // Add widget
-            IconButton(
-              icon: Icon(Icons.add, color: context.accentColor),
-              onPressed: () => _showAddWidgetSheet(context),
-              tooltip: 'Add Widget',
-            ),
             // Done button
             TextButton(
               onPressed: () => setState(() => _editMode = false),
@@ -787,7 +787,9 @@ class _AddWidgetSheet extends ConsumerWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.of(context).pushNamed('/subscription');
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
             },
             style: TextButton.styleFrom(
               backgroundColor: context.accentColor,
@@ -797,7 +799,10 @@ class _AddWidgetSheet extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: Text('Get', style: TextStyle(fontWeight: FontWeight.w600)),
+            child: Text(
+              'Unlock',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
