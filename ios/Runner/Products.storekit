@@ -1,0 +1,144 @@
+{
+  "identifier" : "Products",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "2.99",
+      "familyShareable" : false,
+      "internalID" : "theme_pack",
+      "localizations" : [
+        {
+          "description" : "Unlock all premium themes",
+          "displayName" : "Theme Pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "prod343db31c03",
+      "referenceName" : "Theme Pack",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "ringtone_pack",
+      "localizations" : [
+        {
+          "description" : "Unlock all premium ringtones",
+          "displayName" : "Ringtone Pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "prodc9564f9449",
+      "referenceName" : "Ringtone Pack",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "2.99",
+      "familyShareable" : false,
+      "internalID" : "widget_pack",
+      "localizations" : [
+        {
+          "description" : "Unlock all premium widgets",
+          "displayName" : "Widget Pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "proda8f14c695a",
+      "referenceName" : "Widget Pack",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "3.99",
+      "familyShareable" : false,
+      "internalID" : "automations_pack",
+      "localizations" : [
+        {
+          "description" : "Unlock all automation features",
+          "displayName" : "Automations Pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "prode6eb12f2dc",
+      "referenceName" : "Automations Pack",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "ifttt_pack",
+      "localizations" : [
+        {
+          "description" : "Unlock IFTTT integration",
+          "displayName" : "IFTTT Integration",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "prod5249ea0504",
+      "referenceName" : "IFTTT Integration",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "1234567890",
+    "_developerTeamID" : "XXXXXXXXXX",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

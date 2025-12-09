@@ -34,7 +34,7 @@ class OneTimePurchase {
 }
 
 class OneTimePurchases {
-  static const themePack = OneTimePurchase(
+  static OneTimePurchase get themePack => OneTimePurchase(
     id: 'theme_pack',
     name: 'Theme Pack',
     description: 'Unlock 12 premium color themes',
@@ -43,7 +43,7 @@ class OneTimePurchases {
     unlocksFeature: PremiumFeature.premiumThemes,
   );
 
-  static const ringtonePack = OneTimePurchase(
+  static OneTimePurchase get ringtonePack => OneTimePurchase(
     id: 'ringtone_pack',
     name: 'Ringtone Pack',
     description: '25 additional RTTTL ringtones',
@@ -52,7 +52,7 @@ class OneTimePurchases {
     unlocksFeature: PremiumFeature.customRingtones,
   );
 
-  static const widgetPack = OneTimePurchase(
+  static OneTimePurchase get widgetPack => OneTimePurchase(
     id: 'widget_pack',
     name: 'Widget Pack',
     description: 'Home screen widgets for quick actions',
@@ -61,7 +61,7 @@ class OneTimePurchases {
     unlocksFeature: PremiumFeature.homeWidgets,
   );
 
-  static const automationsPack = OneTimePurchase(
+  static OneTimePurchase get automationsPack => OneTimePurchase(
     id: 'automations_pack',
     name: 'Automations',
     description: 'Custom triggers, actions & scheduled tasks',
@@ -70,7 +70,7 @@ class OneTimePurchases {
     unlocksFeature: PremiumFeature.automations,
   );
 
-  static const iftttPack = OneTimePurchase(
+  static OneTimePurchase get iftttPack => OneTimePurchase(
     id: 'ifttt_pack',
     name: 'IFTTT Integration',
     description: 'Connect to 700+ apps via IFTTT',
@@ -79,7 +79,7 @@ class OneTimePurchases {
     unlocksFeature: PremiumFeature.iftttIntegration,
   );
 
-  static const allPurchases = <OneTimePurchase>[
+  static List<OneTimePurchase> get allPurchases => <OneTimePurchase>[
     themePack,
     ringtonePack,
     widgetPack,
@@ -103,10 +103,7 @@ class PurchaseState {
   final Set<String> purchasedProductIds;
   final String? customerId;
 
-  const PurchaseState({
-    this.purchasedProductIds = const {},
-    this.customerId,
-  });
+  const PurchaseState({this.purchasedProductIds = const {}, this.customerId});
 
   /// Check if a specific feature is unlocked
   bool hasFeature(PremiumFeature feature) {

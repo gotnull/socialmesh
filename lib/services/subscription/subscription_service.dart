@@ -6,6 +6,11 @@ import '../../config/revenuecat_config.dart';
 import '../../models/subscription_models.dart';
 
 /// Service for managing one-time purchases via RevenueCat
+///
+/// Testing with RevenueCat Sandbox:
+/// - iOS: Uses StoreKit Testing or Sandbox Apple ID automatically in debug builds
+/// - Android: Uses Google Play test tracks or license testing
+/// - Debug logs are enabled in debug mode to help troubleshoot
 class PurchaseService {
   final StreamController<PurchaseState> _stateController =
       StreamController<PurchaseState>.broadcast();
@@ -36,10 +41,17 @@ class PurchaseService {
         return;
       }
 
+      // Enable verbose debug logging in debug mode for sandbox testing
+      if (kDebugMode) {
+        await Purchases.setLogLevel(LogLevel.verbose);
+        debugPrint('💰 RevenueCat debug logging enabled for sandbox testing');
+      }
+
       debugPrint('💰 Configuring RevenueCat...');
-      await Purchases.configure(
-        PurchasesConfiguration(apiKey)..appUserID = null, // Anonymous user
-      );
+      final configuration = PurchasesConfiguration(apiKey)
+        ..appUserID = null; // Anonymous user
+
+      await Purchases.configure(configuration);
 
       // Listen for customer info updates
       Purchases.addCustomerInfoUpdateListener(_handleCustomerInfoUpdate);
@@ -175,6 +187,85 @@ class PurchaseService {
   // ============================================================================
   // DEBUG / TESTING
   // ============================================================================
+
+  /// Check if running in sandbox/test mode
+  Future<bool> isSandboxMode() async {
+    if (!_isInitialized) return false;
+    try {
+      final customerInfo = await Purchases.getCustomerInfo();
+      // In sandbox, the environment will be "sandbox"
+      debugPrint('💰 RevenueCat environment: sandbox (debug build)');
+      debugPrint('💰 Customer ID: ${customerInfo.originalAppUserId}');
+      return kDebugMode;
+    } catch (e) {
+      debugPrint('💰 Error checking sandbox mode: $e');
+      return false;
+    }
+  }
+
+  /// Debug: Get available products for testing
+  Future<List<StoreProduct>> debugGetProducts() async {
+    if (!_isInitialized) return [];
+    try {
+      debugPrint(
+        '💰 Using ${RevenueCatConfig.useTestProducts ? "TEST" : "PRODUCTION"} product IDs',
+      );
+      final products = await Purchases.getProducts(
+        RevenueCatConfig.allProductIds,
+      );
+      for (final product in products) {
+        debugPrint(
+          '💰 Product: ${product.identifier} - ${product.priceString}',
+        );
+      }
+      return products;
+    } catch (e) {
+      debugPrint('💰 Error getting products: $e');
+      return [];
+    }
+  }
+
+  /// Debug: Get current offerings for testing
+  Future<Offerings?> debugGetOfferings() async {
+    if (!_isInitialized) return null;
+    try {
+      final offerings = await Purchases.getOfferings();
+      debugPrint('💰 Current offering: ${offerings.current?.identifier}');
+      if (offerings.current != null) {
+        for (final package in offerings.current!.availablePackages) {
+          debugPrint(
+            '💰 Package: ${package.identifier} - ${package.storeProduct.priceString}',
+          );
+        }
+      }
+      return offerings;
+    } catch (e) {
+      debugPrint('💰 Error getting offerings: $e');
+      return null;
+    }
+  }
+
+  /// Debug: Print customer info for testing
+  Future<void> debugPrintCustomerInfo() async {
+    if (!_isInitialized) return;
+    try {
+      final customerInfo = await Purchases.getCustomerInfo();
+      debugPrint('💰 === Customer Info ===');
+      debugPrint('💰 App User ID: ${customerInfo.originalAppUserId}');
+      debugPrint(
+        '💰 Non-subscription transactions: ${customerInfo.nonSubscriptionTransactions.length}',
+      );
+      for (final transaction in customerInfo.nonSubscriptionTransactions) {
+        debugPrint(
+          '💰   - ${transaction.productIdentifier} (${transaction.purchaseDate})',
+        );
+      }
+      debugPrint('💰 Entitlements: ${customerInfo.entitlements.all.keys}');
+      debugPrint('💰 ======================');
+    } catch (e) {
+      debugPrint('💰 Error getting customer info: $e');
+    }
+  }
 
   /// Debug: Add purchase (for testing)
   Future<void> debugAddPurchase(String productId) async {
