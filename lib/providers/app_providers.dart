@@ -157,57 +157,18 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
             _ref.read(autoReconnectStateProvider.notifier).state =
                 AutoReconnectState.success;
 
-            // Check region - if unset AND never configured, need to go through region setup
-            // Skip this check entirely if region was previously configured
-            debugPrint('🔍 Auto-reconnect: Checking region...');
-            final regionWasConfigured = settings.regionConfigured;
+            // Skip region check entirely during auto-reconnect
+            // If we have a lastConnectedDeviceId, user has successfully connected before
+            // The region was either already set on device or user configured it previously
+            // Forcing region selection on every reconnect is wrong - the device retains its config
             debugPrint(
-              '🔍 Auto-reconnect: Region was previously configured: $regionWasConfigured',
+              '✅ Auto-reconnect: Skipping region check (reconnecting to known device)',
             );
 
-            if (!regionWasConfigured) {
-              // First time setup - need to check if device has region configured
-              var region = protocol.currentRegion;
-              debugPrint(
-                '📍 Auto-reconnect: Current region: ${region?.name ?? "null"}',
-              );
-
-              // If region not yet available, request it
-              if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
-                debugPrint('🔍 Auto-reconnect: Requesting LoRa config...');
-                try {
-                  await protocol.getLoRaConfig();
-                  await Future.delayed(const Duration(milliseconds: 500));
-                  region = protocol.currentRegion;
-                } catch (e) {
-                  debugPrint(
-                    '⚠️ Auto-reconnect: Error getting LoRa config: $e',
-                  );
-                }
-              }
-
-              debugPrint(
-                '📍 Auto-reconnect: Final region: ${region?.name ?? "null"}',
-              );
-
-              if (region != null && region != pbenum.RegionCode.UNSET_REGION) {
-                // Device has a valid region set - mark as configured
-                await settings.setRegionConfigured(true);
-                debugPrint(
-                  '✅ Auto-reconnect: Region already set on device, marked as configured',
-                );
-              } else {
-                // Region is UNSET - force user to select region
-                debugPrint(
-                  '⚠️ Auto-reconnect: Region unset, redirecting to region setup',
-                );
-                state = AppInitState.needsRegionSetup;
-                return;
-              }
-            } else {
-              debugPrint(
-                '✅ Auto-reconnect: Skipping region check (previously configured)',
-              );
+            // Mark region as configured since we're reconnecting to a known device
+            if (!settings.regionConfigured) {
+              await settings.setRegionConfigured(true);
+              debugPrint('✅ Auto-reconnect: Marked region as configured');
             }
           } else {
             // Device not found during scan - go to scanner

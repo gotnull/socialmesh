@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -255,66 +257,67 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       // Check if region was previously configured - if so, skip region check
       // This prevents the region popup from appearing on every reconnect
       final settings = await ref.read(settingsServiceProvider.future);
-      final regionWasConfigured = settings.regionConfigured;
+      var regionWasConfigured = settings.regionConfigured;
+
+      // If we have a lastDeviceId, user has connected before, so region must be configured
+      // This handles the case where regionConfigured flag was somehow lost/reset
+      final lastDeviceId = settings.lastDeviceId;
+      if (!regionWasConfigured && lastDeviceId != null) {
+        debugPrint('🔍 Had lastDeviceId but regionConfigured=false, fixing...');
+        await settings.setRegionConfigured(true);
+        regionWasConfigured = true;
+      }
+
       debugPrint('🔍 Region was previously configured: $regionWasConfigured');
 
       bool needsRegionSetup = false;
 
       if (!regionWasConfigured) {
-        // Wait for region to be available (it's requested automatically after config complete)
-        // The LoRa config request happens ~100ms after configComplete, and response takes time
+        // Fresh install scenario: need to wait for device to send its LoRa config
+        // The LoRa config is requested ~100ms after configComplete, response takes time
+        debugPrint('🔍 Fresh install - waiting for device LoRa config...');
+
         pbenum.RegionCode? region = protocol.currentRegion;
-        debugPrint('🔍 Initial region check: ${region?.name ?? "null"}');
+        debugPrint('🔍 Initial region: ${region?.name ?? "null"}');
 
+        // If region not available yet, wait for loraConfigStream with proper timeout
+        // This handles the timing issue where config arrives after our initial check
         if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
-          // Region not yet received or is unset, explicitly request it and wait
-          debugPrint('🔍 Requesting LoRa config for region...');
-
-          // Explicitly request LoRa config (may have been missed)
+          debugPrint('🔍 Waiting for LoRa config stream...');
           try {
+            // Subscribe to stream FIRST, then request config
+            final configFuture = protocol.loraConfigStream.first.timeout(
+              const Duration(seconds: 8),
+              onTimeout: () {
+                debugPrint('⏱️ LoRa config timeout');
+                throw TimeoutException('LoRa config timeout');
+              },
+            );
+
+            // Request LoRa config
             await protocol.getLoRaConfig();
+
+            // Wait for response
+            final loraConfig = await configFuture;
+            region = loraConfig.region;
+            debugPrint('✅ Received LoRa config - region: ${region.name}');
           } catch (e) {
-            debugPrint('⚠️ Error requesting LoRa config: $e');
-          }
-
-          // Give it a moment to arrive
-          await Future.delayed(const Duration(milliseconds: 500));
-          region = protocol.currentRegion;
-          debugPrint('🔍 After explicit request: ${region?.name ?? "null"}');
-
-          // If still not available, wait for stream with timeout
-          if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
-            debugPrint('🔍 Waiting for region stream...');
-            try {
-              region = await protocol.regionStream
-                  .where((r) => r != pbenum.RegionCode.UNSET_REGION)
-                  .first
-                  .timeout(
-                    const Duration(seconds: 5),
-                    onTimeout: () {
-                      debugPrint(
-                        '⏱️ Region timeout, current: ${protocol.currentRegion}',
-                      );
-                      return protocol.currentRegion ??
-                          pbenum.RegionCode.UNSET_REGION;
-                    },
-                  );
-              debugPrint('✅ Received region from stream: ${region.name}');
-            } catch (e) {
-              debugPrint('⚠️ Error waiting for region: $e');
-              region = protocol.currentRegion;
-            }
+            debugPrint('⚠️ Error getting LoRa config: $e');
+            // Fall back to checking currentRegion one more time
+            region = protocol.currentRegion;
+            debugPrint('🔍 Fallback region: ${region?.name ?? "null"}');
           }
         }
 
         debugPrint('📍 Final region decision: ${region?.name ?? "null"}');
 
-        // Check if region is unset - need to configure before using
+        // Only need region setup if region is truly UNSET (never configured on device)
         if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
           needsRegionSetup = true;
         } else {
-          // Region is set, mark as configured for future connections
+          // Device has a valid region - mark as configured for future connections
           await settings.setRegionConfigured(true);
+          debugPrint('✅ Region ${region.name} detected, marked as configured');
         }
       }
 
