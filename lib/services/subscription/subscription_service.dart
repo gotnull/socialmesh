@@ -212,9 +212,7 @@ class PurchaseService {
   Future<List<StoreProduct>> debugGetProducts() async {
     if (!_isInitialized) return [];
     try {
-      debugPrint(
-        '💰 Using ${RevenueCatConfig.useTestProducts ? "TEST" : "PRODUCTION"} product IDs',
-      );
+      debugPrint('💰 Fetching products from RevenueCat');
       final products = await Purchases.getProducts(
         RevenueCatConfig.allProductIds,
       );

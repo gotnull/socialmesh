@@ -144,7 +144,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const SizedBox(height: 2),
                           Text(
                             ownedCount == totalCount
-                                ? 'All features unlocked! 🎉'
+                                ? 'All features unlocked'
                                 : '$ownedCount of $totalCount features unlocked',
                             style: const TextStyle(
                               fontSize: 13,

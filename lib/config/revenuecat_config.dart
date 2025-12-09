@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// RevenueCat configuration loaded from environment variables
@@ -38,44 +37,29 @@ class RevenueCatConfig {
   // Loaded from .env - set USE_TEST_PRODUCTS=true for testing, false for production
   // ============================================================================
 
-  /// Whether to use test product IDs (from .env or defaults to kDebugMode)
-  static bool get useTestProducts {
-    final envValue = dotenv.env['USE_TEST_PRODUCTS'];
-    if (envValue != null) {
-      return envValue.toLowerCase() == 'true';
-    }
-    return kDebugMode;
-  }
-
   /// Theme pack non-consumable product ID
-  static String get themePackProductId => useTestProducts
-      ? (dotenv.env['TEST_THEME_PACK_PRODUCT_ID'] ?? 'prod343db31c03')
-      : (dotenv.env['PROD_THEME_PACK_PRODUCT_ID'] ?? 'prod0da6d733fd');
+  static String get themePackProductId =>
+      dotenv.env['THEME_PACK_PRODUCT_ID'] ?? 'theme_pack';
 
   /// Ringtone pack non-consumable product ID
-  static String get ringtonePackProductId => useTestProducts
-      ? (dotenv.env['TEST_RINGTONE_PACK_PRODUCT_ID'] ?? 'prodc9564f9449')
-      : (dotenv.env['PROD_RINGTONE_PACK_PRODUCT_ID'] ?? 'prod1a7cd06c47');
+  static String get ringtonePackProductId =>
+      dotenv.env['RINGTONE_PACK_PRODUCT_ID'] ?? 'ringtone_pack';
 
   /// Widget pack non-consumable product ID
-  static String get widgetPackProductId => useTestProducts
-      ? (dotenv.env['TEST_WIDGET_PACK_PRODUCT_ID'] ?? 'proda8f14c695a')
-      : (dotenv.env['PROD_WIDGET_PACK_PRODUCT_ID'] ?? 'prod69bcb2bd24');
+  static String get widgetPackProductId =>
+      dotenv.env['WIDGET_PACK_PRODUCT_ID'] ?? 'widget_pack';
 
   /// Automations pack non-consumable product ID
-  static String get automationsPackProductId => useTestProducts
-      ? (dotenv.env['TEST_AUTOMATIONS_PACK_PRODUCT_ID'] ?? 'prode6eb12f2dc')
-      : (dotenv.env['PROD_AUTOMATIONS_PACK_PRODUCT_ID'] ?? 'prod67adcb1f11');
+  static String get automationsPackProductId =>
+      dotenv.env['AUTOMATIONS_PACK_PRODUCT_ID'] ?? 'automations_pack';
 
   /// IFTTT integration non-consumable product ID
-  static String get iftttPackProductId => useTestProducts
-      ? (dotenv.env['TEST_IFTTT_PACK_PRODUCT_ID'] ?? 'prod5249ea0504')
-      : (dotenv.env['PROD_IFTTT_PACK_PRODUCT_ID'] ?? 'prod50d4fc8254');
+  static String get iftttPackProductId =>
+      dotenv.env['IFTTT_PACK_PRODUCT_ID'] ?? 'ifttt_pack';
 
   /// Complete Pack bundle - all features at a discount
-  static String get completePackProductId => useTestProducts
-      ? (dotenv.env['TEST_COMPLETE_PACK_PRODUCT_ID'] ?? 'prod044db2aa2a')
-      : (dotenv.env['PROD_COMPLETE_PACK_PRODUCT_ID'] ?? 'prod044db2aa2a');
+  static String get completePackProductId =>
+      dotenv.env['COMPLETE_PACK_PRODUCT_ID'] ?? 'complete_pack';
 
   /// Get all product IDs as a list
   static List<String> get allProductIds => [

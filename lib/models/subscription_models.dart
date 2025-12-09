@@ -140,8 +140,20 @@ class PurchaseState {
   }
 
   /// Check if a specific product has been purchased
+  /// Also returns true for individual packs if Complete Pack was purchased
   bool hasPurchased(String productId) {
-    return purchasedProductIds.contains(productId);
+    // Direct purchase check
+    if (purchasedProductIds.contains(productId)) return true;
+
+    // If user owns Complete Pack, they have access to all individual packs
+    if (purchasedProductIds.contains(RevenueCatConfig.completePackProductId)) {
+      final individualIds = OneTimePurchases.allIndividualPurchases
+          .map((p) => p.productId)
+          .toSet();
+      if (individualIds.contains(productId)) return true;
+    }
+
+    return false;
   }
 
   PurchaseState copyWith({

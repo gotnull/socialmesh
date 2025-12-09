@@ -50,6 +50,15 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   Widget build(BuildContext context) {
     final isLoading = ref.watch(subscriptionLoadingProvider);
     final error = ref.watch(subscriptionErrorProvider);
+    final purchaseState = ref.watch(purchaseStateProvider);
+
+    // Check if all features are unlocked
+    final ownedCount = OneTimePurchases.allIndividualPurchases
+        .where((p) => purchaseState.hasPurchased(p.productId))
+        .length;
+    final allUnlocked =
+        ownedCount == OneTimePurchases.allIndividualPurchases.length ||
+        purchaseState.hasPurchased(RevenueCatConfig.completePackProductId);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Upgrades')),
@@ -59,35 +68,36 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header
-            _buildHeader(),
-            const SizedBox(height: 24),
+            // Header - only show if not all unlocked
+            if (!allUnlocked) ...[_buildHeader(), const SizedBox(height: 24)],
 
             // Complete Pack Bundle (prominent)
             _buildBundleCard(),
             const SizedBox(height: 24),
 
-            // Divider with "or buy individually"
-            Row(
-              children: [
-                Expanded(child: Divider(color: AppTheme.darkBorder)),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'or buy individually',
-                    style: TextStyle(
-                      color: AppTheme.textTertiary,
-                      fontSize: 12,
+            // Divider with "or buy individually" - only show if not all unlocked
+            if (!allUnlocked) ...[
+              Row(
+                children: [
+                  Expanded(child: Divider(color: AppTheme.darkBorder)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'or buy individually',
+                      style: TextStyle(
+                        color: AppTheme.textTertiary,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
-                ),
-                Expanded(child: Divider(color: AppTheme.darkBorder)),
-              ],
-            ),
-            const SizedBox(height: 24),
+                  Expanded(child: Divider(color: AppTheme.darkBorder)),
+                ],
+              ),
+              const SizedBox(height: 24),
 
-            // One-time purchases
-            _buildOneTimePurchases(),
+              // One-time purchases
+              _buildOneTimePurchases(),
+            ],
 
             // Error message
             if (error != null) ...[
@@ -260,7 +270,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     ),
                   ),
                   const Text(
-                    'Thank you for your support! 🎉',
+                    'Thank you for your support!',
                     style: TextStyle(
                       color: AppTheme.textSecondary,
                       fontSize: 14,
@@ -735,7 +745,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                '🎉 All Features Unlocked!',
+                'All Features Unlocked!',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
