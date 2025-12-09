@@ -520,6 +520,10 @@ class ProtocolService {
           Future.delayed(const Duration(milliseconds: 200), () {
             getPositionConfig();
           });
+          // Request device metadata to get firmware version
+          Future.delayed(const Duration(milliseconds: 300), () {
+            getDeviceMetadata();
+          });
           // Request positions from all nodes including ourselves
           Future.delayed(const Duration(milliseconds: 500), () {
             requestAllPositions();
@@ -754,6 +758,29 @@ class ProtocolService {
           'Received channel response: index=${channel.index}, role=${channel.role.name}',
         );
         _handleChannel(channel);
+      } else if (adminMsg.hasGetDeviceMetadataResponse()) {
+        // Handle device metadata response - update node with firmware version
+        final metadata = adminMsg.getDeviceMetadataResponse;
+        _logger.i(
+          'Received device metadata: firmwareVersion=${metadata.firmwareVersion}, '
+          'hwModel=${metadata.hwModel.name}, hasWifi=${metadata.hasWifi}',
+        );
+
+        // Update our node with the firmware version and other metadata
+        if (_myNodeNum != null && _nodes.containsKey(_myNodeNum)) {
+          final existingNode = _nodes[_myNodeNum]!;
+          final updatedNode = existingNode.copyWith(
+            firmwareVersion: metadata.firmwareVersion.isNotEmpty
+                ? metadata.firmwareVersion
+                : null,
+            hasWifi: metadata.hasWifi,
+            hasBluetooth: metadata.hasBluetooth,
+            hardwareModel: metadata.hwModel.name,
+          );
+          _nodes[_myNodeNum!] = updatedNode;
+          _nodeController.add(updatedNode);
+          _logger.i('Updated node $_myNodeNum with device metadata');
+        }
       }
     } catch (e) {
       _logger.e('Error handling admin message: $e');
