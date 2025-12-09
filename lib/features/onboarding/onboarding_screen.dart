@@ -44,7 +44,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     ),
     _OnboardingPage(
       icon: Icons.visibility_off_outlined,
-      lottieAsset: 'assets/lottie/location.json',
+      lottieAsset: 'assets/lottie/privacy.json',
       title: 'Private by Default',
       description:
           'No accounts. No tracking. No data stored.\nYour conversations belong to you.',
