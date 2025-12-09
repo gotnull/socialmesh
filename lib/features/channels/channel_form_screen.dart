@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
@@ -1086,13 +1087,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
               ],
             ),
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: context.accentColor,
-            inactiveThumbColor: AppTheme.textTertiary,
-            inactiveTrackColor: AppTheme.darkBackground,
-          ),
+          ThemedSwitch(value: value, onChanged: onChanged),
         ],
       ),
     );

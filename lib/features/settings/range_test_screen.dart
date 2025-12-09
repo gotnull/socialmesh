@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
@@ -509,7 +510,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
       ),
       child: Column(
         children: [
-          SwitchListTile(
+          ListTile(
             title: const Text(
               'Enable Range Test Module',
               style: TextStyle(color: Colors.white),
@@ -518,8 +519,10 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
               'Allow this device to participate in range tests',
               style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
             ),
-            value: _enabled,
-            onChanged: (v) => setState(() => _enabled = v),
+            trailing: ThemedSwitch(
+              value: _enabled,
+              onChanged: (v) => setState(() => _enabled = v),
+            ),
           ),
           const Divider(height: 1, color: AppTheme.darkBorder),
           ListTile(
@@ -560,7 +563,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
             ),
           ),
           const Divider(height: 1, color: AppTheme.darkBorder),
-          SwitchListTile(
+          ListTile(
             title: const Text(
               'Save Results to SD',
               style: TextStyle(color: Colors.white),
@@ -569,8 +572,10 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
               'Store test results on device SD card',
               style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
             ),
-            value: _saveResults,
-            onChanged: (v) => setState(() => _saveResults = v),
+            trailing: ThemedSwitch(
+              value: _saveResults,
+              onChanged: (v) => setState(() => _saveResults = v),
+            ),
           ),
         ],
       ),

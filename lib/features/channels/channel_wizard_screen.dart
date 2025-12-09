@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
@@ -751,11 +752,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
             ),
           ),
           SizedBox(width: 16),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeTrackColor: context.accentColor,
-          ),
+          ThemedSwitch(value: value, onChanged: onChanged),
         ],
       ),
     );

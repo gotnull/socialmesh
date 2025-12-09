@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
 
@@ -197,10 +198,8 @@ class _AmbientLightingConfigScreenState
                     ),
                   ],
                 ),
-                Switch(
+                ThemedSwitch(
                   value: _ledState,
-                  activeTrackColor: context.accentColor,
-                  activeThumbColor: Colors.white,
                   onChanged: (value) {
                     setState(() {
                       _ledState = value;

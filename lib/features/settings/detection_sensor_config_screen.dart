@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
@@ -229,7 +230,7 @@ class _DetectionSensorConfigScreenState
       ),
       child: Column(
         children: [
-          SwitchListTile(
+          ListTile(
             title: const Text(
               'Enable Detection Sensor',
               style: TextStyle(color: Colors.white),
@@ -238,8 +239,10 @@ class _DetectionSensorConfigScreenState
               'Monitor GPIO pin and broadcast state changes',
               style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
             ),
-            value: _enabled,
-            onChanged: (v) => setState(() => _enabled = v),
+            trailing: ThemedSwitch(
+              value: _enabled,
+              onChanged: (v) => setState(() => _enabled = v),
+            ),
           ),
           if (_enabled) ...[
             const Divider(height: 1, color: AppTheme.darkBorder),
@@ -355,7 +358,7 @@ class _DetectionSensorConfigScreenState
             onTap: () => _showTriggerTypePicker(),
           ),
           const Divider(height: 1, color: AppTheme.darkBorder),
-          SwitchListTile(
+          ListTile(
             title: const Text(
               'Use Internal Pullup',
               style: TextStyle(color: Colors.white),
@@ -364,11 +367,13 @@ class _DetectionSensorConfigScreenState
               'Enable internal pullup resistor on the pin',
               style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
             ),
-            value: _usePullup,
-            onChanged: (v) => setState(() => _usePullup = v),
+            trailing: ThemedSwitch(
+              value: _usePullup,
+              onChanged: (v) => setState(() => _usePullup = v),
+            ),
           ),
           const Divider(height: 1, color: AppTheme.darkBorder),
-          SwitchListTile(
+          ListTile(
             title: const Text(
               'Send Bell Character',
               style: TextStyle(color: Colors.white),
@@ -377,8 +382,10 @@ class _DetectionSensorConfigScreenState
               'Send bell (\\a) in detection messages',
               style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
             ),
-            value: _sendBell,
-            onChanged: (v) => setState(() => _sendBell = v),
+            trailing: ThemedSwitch(
+              value: _sendBell,
+              onChanged: (v) => setState(() => _sendBell = v),
+            ),
           ),
         ],
       ),

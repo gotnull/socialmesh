@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
 
@@ -195,7 +196,7 @@ class _StoreForwardConfigScreenState
       ),
       child: Column(
         children: [
-          SwitchListTile(
+          ListTile(
             title: const Text(
               'Enable Store & Forward',
               style: TextStyle(color: Colors.white),
@@ -204,11 +205,13 @@ class _StoreForwardConfigScreenState
               'Participate in the S&F network',
               style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
             ),
-            value: _enabled,
-            onChanged: (v) => setState(() => _enabled = v),
+            trailing: ThemedSwitch(
+              value: _enabled,
+              onChanged: (v) => setState(() => _enabled = v),
+            ),
           ),
           const Divider(height: 1, color: AppTheme.darkBorder),
-          SwitchListTile(
+          ListTile(
             title: const Text(
               'Act as Server',
               style: TextStyle(color: Colors.white),
@@ -217,11 +220,13 @@ class _StoreForwardConfigScreenState
               'Store messages for other nodes (uses more RAM)',
               style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
             ),
-            value: _isServer,
-            onChanged: _enabled ? (v) => setState(() => _isServer = v) : null,
+            trailing: ThemedSwitch(
+              value: _isServer,
+              onChanged: _enabled ? (v) => setState(() => _isServer = v) : null,
+            ),
           ),
           const Divider(height: 1, color: AppTheme.darkBorder),
-          SwitchListTile(
+          ListTile(
             title: const Text(
               'Heartbeat',
               style: TextStyle(color: Colors.white),
@@ -230,8 +235,12 @@ class _StoreForwardConfigScreenState
               'Send periodic announcements to the mesh',
               style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
             ),
-            value: _heartbeat,
-            onChanged: _enabled ? (v) => setState(() => _heartbeat = v) : null,
+            trailing: ThemedSwitch(
+              value: _heartbeat,
+              onChanged: _enabled
+                  ? (v) => setState(() => _heartbeat = v)
+                  : null,
+            ),
           ),
         ],
       ),
