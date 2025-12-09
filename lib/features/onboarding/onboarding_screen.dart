@@ -62,7 +62,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       lottieAsset: null,
       title: 'Your Command Center',
       description:
-          'Real-time signal charts. Node maps. Mesh health.\nEverything at a glance.',
+          'Monitor signal strength, battery, node count,\nmessages, range and more. All in real-time.',
       accentColor: AccentColors.orange,
       isWidgetShowcase: true,
     ),
@@ -491,7 +491,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
         return Container(
           width: double.infinity,
-          height: 280,
+          height: 340,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
@@ -519,17 +519,60 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               ),
               child: Column(
                 children: [
-                  // Mini signal strength chart
+                  // Header with "Dashboard" title
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.dashboard_rounded,
+                          color: page.accentColor,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Dashboard',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: page.accentColor.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'LIVE',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: page.accentColor,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Signal strength chart (larger)
                   Expanded(
-                    flex: 3,
+                    flex: 4,
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: _buildMiniSignalChart(page.accentColor),
                     ),
                   ),
-                  // Widget row
+                  const SizedBox(height: 8),
+                  // Top row of widgets
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Row(
                       children: [
                         Expanded(
@@ -540,7 +583,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                             AccentColors.cyan,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: _buildMiniWidget(
                             Icons.battery_5_bar,
@@ -549,13 +592,48 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                             AccentColors.green,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: _buildMiniWidget(
                             Icons.signal_cellular_alt,
                             '-68',
                             'dBm',
                             page.accentColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  // Bottom row of widgets
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildMiniWidget(
+                            Icons.message,
+                            '47',
+                            'Messages',
+                            AppTheme.primaryMagenta,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: _buildMiniWidget(
+                            Icons.map,
+                            '3.2',
+                            'km range',
+                            AppTheme.graphBlue,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: _buildMiniWidget(
+                            Icons.schedule,
+                            '2h',
+                            'Uptime',
+                            AccentColors.purple,
                           ),
                         ),
                       ],
