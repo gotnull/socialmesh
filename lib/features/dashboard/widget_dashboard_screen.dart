@@ -270,7 +270,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               16,
               16,
               16,
-              !hasWidgetPack && !_editMode ? 0 : 16,
+              !hasWidgetPack && !_editMode ? 8 : 16,
             ),
             buildDefaultDragHandles: false,
             proxyDecorator: (child, index, animation) {
@@ -324,7 +324,24 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
 
   Widget _buildWidgetUpsellCard(int premiumWidgetCount) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.accentColor.withValues(alpha: 0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+          BoxShadow(
+            color: context.accentColor.withValues(alpha: 0.1),
+            blurRadius: 20,
+            spreadRadius: -2,
+          ),
+        ],
+      ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -334,30 +351,26 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
             );
           },
           borderRadius: BorderRadius.circular(16),
-          child: Container(
+          child: Padding(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  context.accentColor.withValues(alpha: 0.15),
-                  context.accentColor.withValues(alpha: 0.05),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: context.accentColor.withValues(alpha: 0.3),
-              ),
-            ),
             child: Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.2),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        context.accentColor.withValues(alpha: 0.3),
+                        context.accentColor.withValues(alpha: 0.1),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: context.accentColor.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Icon(
                     Icons.widgets_rounded,
@@ -378,7 +391,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                           color: context.accentColor,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       Text(
                         'Battery, messages, map, and more',
                         style: TextStyle(
@@ -389,10 +402,18 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: context.accentColor.withValues(alpha: 0.7),
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: context.accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: context.accentColor,
+                  ),
                 ),
               ],
             ),
