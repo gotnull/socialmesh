@@ -86,6 +86,13 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
         txPower: _txPower,
       );
 
+      // Mark region as configured if a valid region was set
+      if (_selectedRegion != null &&
+          _selectedRegion != pbenum.RegionCode.UNSET_REGION) {
+        final settings = await ref.read(settingsServiceProvider.future);
+        await settings.setRegionConfigured(true);
+      }
+
       if (mounted) {
         showAppSnackBar(context, 'Radio configuration saved');
         Navigator.pop(context);

@@ -535,6 +535,10 @@ class ProtocolService {
   void _handleMeshPacket(pb.MeshPacket packet) {
     _logger.d('Handling mesh packet from ${packet.from} to ${packet.to}');
 
+    // Update lastHeard for the sender node (keeps node online status accurate)
+    // This ensures any packet from a node updates its online status
+    _updateNodeLastHeard(packet.from);
+
     // Extract and emit SNR from received packets
     if (packet.hasRxSnr()) {
       final snr = packet.rxSnr.toDouble();
@@ -1366,6 +1370,20 @@ class ProtocolService {
       _nodeController.add(updatedNode);
     } catch (e) {
       _logger.e('Error decoding node info: $e');
+    }
+  }
+
+  /// Update lastHeard timestamp for a node (marks it as online)
+  /// This is called for any packet received from a node
+  void _updateNodeLastHeard(int nodeNum) {
+    final node = _nodes[nodeNum];
+    if (node != null) {
+      final updatedNode = node.copyWith(
+        lastHeard: DateTime.now(),
+        isOnline: true,
+      );
+      _nodes[nodeNum] = updatedNode;
+      _nodeController.add(updatedNode);
     }
   }
 

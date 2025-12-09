@@ -158,7 +158,7 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
                 AutoReconnectState.success;
 
             // Check region - if unset AND never configured, need to go through region setup
-            // Skip this check if region was previously configured (avoids popup on reconnect)
+            // Skip this check entirely if region was previously configured
             debugPrint('🔍 Auto-reconnect: Checking region...');
             final regionWasConfigured = settings.regionConfigured;
             debugPrint(
@@ -166,9 +166,14 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
             );
 
             if (!regionWasConfigured) {
+              // First time setup - need to check if device has region configured
               var region = protocol.currentRegion;
+              debugPrint(
+                '📍 Auto-reconnect: Current region: ${region?.name ?? "null"}',
+              );
+
+              // If region not yet available, request it
               if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
-                // Request LoRa config explicitly
                 debugPrint('🔍 Auto-reconnect: Requesting LoRa config...');
                 try {
                   await protocol.getLoRaConfig();
@@ -179,43 +184,30 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
                     '⚠️ Auto-reconnect: Error getting LoRa config: $e',
                   );
                 }
-
-                // If still no region, wait for stream
-                if (region == null ||
-                    region == pbenum.RegionCode.UNSET_REGION) {
-                  debugPrint('🔍 Auto-reconnect: Waiting for region stream...');
-                  try {
-                    region = await protocol.regionStream
-                        .where((r) => r != pbenum.RegionCode.UNSET_REGION)
-                        .first
-                        .timeout(
-                          const Duration(seconds: 5),
-                          onTimeout: () {
-                            return protocol.currentRegion ??
-                                pbenum.RegionCode.UNSET_REGION;
-                          },
-                        );
-                  } catch (e) {
-                    debugPrint(
-                      '⚠️ Auto-reconnect: Error waiting for region: $e',
-                    );
-                    region = protocol.currentRegion;
-                  }
-                }
               }
+
               debugPrint(
                 '📍 Auto-reconnect: Final region: ${region?.name ?? "null"}',
               );
 
-              // If region is still unset and never configured, go to region setup
-              if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
-                debugPrint('⚠️ Auto-reconnect: Region unset, needs setup');
+              if (region != null && region != pbenum.RegionCode.UNSET_REGION) {
+                // Device has a valid region set - mark as configured
+                await settings.setRegionConfigured(true);
+                debugPrint(
+                  '✅ Auto-reconnect: Region already set on device, marked as configured',
+                );
+              } else {
+                // Region is UNSET - force user to select region
+                debugPrint(
+                  '⚠️ Auto-reconnect: Region unset, redirecting to region setup',
+                );
                 state = AppInitState.needsRegionSetup;
                 return;
               }
-
-              // Region is set, mark as configured for future reconnects
-              await settings.setRegionConfigured(true);
+            } else {
+              debugPrint(
+                '✅ Auto-reconnect: Skipping region check (previously configured)',
+              );
             }
           } else {
             // Device not found during scan - go to scanner
@@ -1279,10 +1271,11 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
   final Ref _ref;
   Timer? _stalenessTimer;
 
-  /// Timeout after which a node is considered offline (2 minutes)
-  /// This matches the iOS Meshtastic app's behavior but uses a shorter
-  /// timeout for automation triggers to be more responsive.
-  static const _offlineTimeoutMinutes = 2;
+  /// Timeout after which a node is considered offline (15 minutes)
+  /// The iOS Meshtastic app uses 120 minutes, but we use 15 minutes as a
+  /// reasonable compromise that's responsive while accounting for nodes
+  /// that don't send packets frequently.
+  static const _offlineTimeoutMinutes = 15;
 
   NodesNotifier(this._protocol, this._storage, this._ref) : super({}) {
     _init();
