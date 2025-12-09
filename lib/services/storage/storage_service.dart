@@ -188,6 +188,21 @@ class SettingsService {
   bool get notificationVibrationEnabled =>
       _preferences.getBool('notification_vibration_enabled') ?? true;
 
+  // Haptic Feedback Settings
+  Future<void> setHapticFeedbackEnabled(bool enabled) async {
+    await _preferences.setBool('haptic_feedback_enabled', enabled);
+  }
+
+  bool get hapticFeedbackEnabled =>
+      _preferences.getBool('haptic_feedback_enabled') ?? true;
+
+  // Haptic Feedback Intensity: 0 = light, 1 = medium, 2 = heavy
+  Future<void> setHapticIntensity(int intensity) async {
+    await _preferences.setInt('haptic_intensity', intensity.clamp(0, 2));
+  }
+
+  int get hapticIntensity => _preferences.getInt('haptic_intensity') ?? 1;
+
   // Message history limit
   Future<void> setMessageHistoryLimit(int limit) async {
     await _preferences.setInt('message_history_limit', limit);

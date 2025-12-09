@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
+import '../../services/haptic_service.dart';
 import '../channels/channels_screen.dart';
 import '../messaging/messaging_screen.dart';
 import '../nodes/nodes_screen.dart';
@@ -164,7 +164,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                   showWarningBadge: showWarningBadge && !showReconnectingBadge,
                   showReconnectingBadge: showReconnectingBadge,
                   onTap: () {
-                    HapticFeedback.selectionClick();
+                    ref.haptics.tabChange();
                     // Clear new nodes badge when navigating to Nodes tab
                     if (index == 3) {
                       ref.read(newNodesCountProvider.notifier).state = 0;

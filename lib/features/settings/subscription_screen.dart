@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
+import '../../services/haptic_service.dart';
 import '../../utils/snackbar.dart';
 
 class SubscriptionScreen extends ConsumerStatefulWidget {
@@ -293,20 +294,25 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }
 
   Future<void> _purchaseItem(OneTimePurchase purchase) async {
+    ref.haptics.buttonTap();
     final success = await purchaseProduct(ref, purchase.productId);
     if (mounted) {
       if (success) {
+        ref.haptics.success();
         showAppSnackBar(context, '${purchase.name} unlocked!');
       } else {
+        ref.haptics.error();
         showErrorSnackBar(context, 'Purchase failed');
       }
     }
   }
 
   Future<void> _restorePurchases() async {
+    ref.haptics.buttonTap();
     final success = await restorePurchases(ref);
     if (mounted) {
       if (success) {
+        ref.haptics.success();
         showAppSnackBar(context, 'Purchases restored successfully');
       } else {
         showAppSnackBar(context, 'No purchases to restore');

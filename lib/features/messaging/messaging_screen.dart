@@ -16,6 +16,7 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../services/messaging/offline_queue_service.dart';
+import '../../services/haptic_service.dart';
 import '../channels/channel_form_screen.dart';
 import '../settings/canned_responses_screen.dart';
 
@@ -484,7 +485,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _showQuickResponses() async {
-    HapticFeedback.selectionClick();
+    ref.haptics.buttonTap();
     final settingsService = await ref.read(settingsServiceProvider.future);
     final responses = settingsService.cannedResponses;
     if (!mounted) return;
@@ -533,7 +534,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _messageController.clear();
 
     // Haptic feedback for message send
-    HapticFeedback.lightImpact();
+    ref.haptics.messageSent();
 
     // Check if device is connected
     final connectionState = ref.read(connectionStateProvider);

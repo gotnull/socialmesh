@@ -6,6 +6,7 @@ import '../../providers/subscription_providers.dart';
 import '../../models/subscription_models.dart';
 import '../../services/storage/storage_service.dart';
 import '../../services/notifications/notification_service.dart';
+import '../../services/haptic_service.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animations.dart';
@@ -353,6 +354,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onTap: () =>
                     _showAccentColorPicker(context, ref, settingsService),
               ),
+
+              const SizedBox(height: 16),
+
+              // Haptic Feedback Section
+              const _SectionHeader(title: 'HAPTIC FEEDBACK'),
+              _SettingsTile(
+                icon: Icons.vibration,
+                title: 'Haptic feedback',
+                subtitle: 'Vibration feedback for interactions',
+                trailing: ThemedSwitch(
+                  value: settingsService.hapticFeedbackEnabled,
+                  onChanged: (value) async {
+                    if (value) {
+                      ref.haptics.toggle();
+                    }
+                    await settingsService.setHapticFeedbackEnabled(value);
+                    setState(() {});
+                  },
+                ),
+              ),
+              if (settingsService.hapticFeedbackEnabled)
+                _SettingsTile(
+                  icon: Icons.tune,
+                  title: 'Intensity',
+                  subtitle: HapticIntensity.fromValue(
+                    settingsService.hapticIntensity,
+                  ).label,
+                  onTap: () =>
+                      _showHapticIntensityPicker(context, ref, settingsService),
+                ),
 
               const SizedBox(height: 16),
 
@@ -1013,6 +1044,90 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         },
       ),
     );
+  }
+
+  void _showHapticIntensityPicker(
+    BuildContext context,
+    WidgetRef ref,
+    SettingsService settingsService,
+  ) {
+    final currentIntensity = HapticIntensity.fromValue(
+      settingsService.hapticIntensity,
+    );
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'Haptic Intensity',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            ...HapticIntensity.values.map((intensity) {
+              final isSelected = intensity == currentIntensity;
+              return ListTile(
+                leading: Icon(
+                  isSelected
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                  color: isSelected
+                      ? context.accentColor
+                      : AppTheme.textTertiary,
+                ),
+                title: Text(
+                  intensity.label,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : AppTheme.textSecondary,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                subtitle: Text(
+                  _hapticIntensityDescription(intensity),
+                  style: const TextStyle(
+                    color: AppTheme.textTertiary,
+                    fontSize: 12,
+                  ),
+                ),
+                onTap: () async {
+                  await settingsService.setHapticIntensity(intensity.value);
+                  ref.haptics.toggle();
+                  setState(() {});
+                  if (context.mounted) Navigator.pop(context);
+                },
+              );
+            }),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _hapticIntensityDescription(HapticIntensity intensity) {
+    switch (intensity) {
+      case HapticIntensity.light:
+        return 'Subtle feedback for a gentle touch';
+      case HapticIntensity.medium:
+        return 'Balanced feedback for most interactions';
+      case HapticIntensity.heavy:
+        return 'Strong feedback for clear confirmation';
+    }
   }
 
   void _showHistoryLimitDialog(
