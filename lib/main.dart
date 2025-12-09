@@ -16,7 +16,6 @@ import 'models/mesh_models.dart';
 import 'services/app_intents/app_intents_service.dart';
 import 'features/scanner/scanner_screen.dart';
 import 'features/scanner/widgets/connecting_animation.dart';
-import 'features/dashboard/dashboard_screen.dart';
 import 'features/messaging/messaging_screen.dart';
 import 'features/channels/channels_screen.dart';
 import 'features/nodes/nodes_screen.dart';
@@ -135,7 +134,6 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp> {
       home: const _AppRouter(),
       routes: {
         '/scanner': (context) => const ScannerScreen(),
-        '/dashboard': (context) => const DashboardScreen(),
         '/messages': (context) => const MessagingScreen(),
         '/channels': (context) => const ChannelsScreen(),
         '/nodes': (context) => const NodesScreen(),

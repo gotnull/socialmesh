@@ -47,10 +47,13 @@ class _DeviceSheetContent extends ConsumerWidget {
         autoReconnectState == AutoReconnectState.scanning ||
         autoReconnectState == AutoReconnectState.connecting;
 
+    // Use node's long name if available, otherwise fall back to device name
+    final displayName =
+        myNode?.longName ?? connectedDevice?.name ?? 'No Device';
+
     return Column(
       children: [
-        const DragPill(),
-        // Header
+        // Header (DragPill is added by AppBottomSheet.showScrollable)
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
           child: Row(
@@ -78,7 +81,7 @@ class _DeviceSheetContent extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      connectedDevice?.name ?? 'No Device',
+                      displayName,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
