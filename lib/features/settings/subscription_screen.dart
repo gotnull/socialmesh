@@ -649,7 +649,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            'Owned',
+                            'OWNED',
                             style: TextStyle(
                               color: context.accentColor,
                               fontWeight: FontWeight.w600,
