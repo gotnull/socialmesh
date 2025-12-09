@@ -38,40 +38,42 @@ class DetectionSensorLogScreen extends ConsumerWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              nodeName,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.white.withValues(alpha: 0.7),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                nodeName,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: logsAsync.when(
-              data: (logs) {
-                if (logs.isEmpty) {
-                  return _buildEmptyState('No sensor events recorded yet');
-                }
-                final sortedLogs = logs.reversed.toList();
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: sortedLogs.length,
-                  itemBuilder: (context, index) {
-                    return _DetectionSensorCard(log: sortedLogs[index]);
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+            Expanded(
+              child: logsAsync.when(
+                data: (logs) {
+                  if (logs.isEmpty) {
+                    return _buildEmptyState('No sensor events recorded yet');
+                  }
+                  final sortedLogs = logs.reversed.toList();
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: sortedLogs.length,
+                    itemBuilder: (context, index) {
+                      return _DetectionSensorCard(log: sortedLogs[index]);
+                    },
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('Error: $e')),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -124,7 +126,10 @@ class _DetectionSensorCard extends StatelessWidget {
         color: AppTheme.darkCard,
         borderRadius: BorderRadius.circular(12),
         border: log.detected
-            ? Border.all(color: AccentColors.orange.withValues(alpha: 0.5), width: 1)
+            ? Border.all(
+                color: AccentColors.orange.withValues(alpha: 0.5),
+                width: 1,
+              )
             : null,
       ),
       child: Row(

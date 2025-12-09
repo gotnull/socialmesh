@@ -81,7 +81,7 @@ class _EnvironmentMetricsLogScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Environment History'),
+        title: const Text('Environment'),
         actions: [
           if (_hasActiveFilters)
             IconButton(
@@ -104,65 +104,67 @@ class _EnvironmentMetricsLogScreenState
           ),
         ],
       ),
-      body: logsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, s) => Center(child: Text('Error: $e')),
-        data: (logs) {
-          final filtered = _filterLogs(logs)
-            ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      body: SafeArea(
+        child: logsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, s) => Center(child: Text('Error: $e')),
+          data: (logs) {
+            final filtered = _filterLogs(logs)
+              ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
-          if (filtered.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.thermostat,
-                    size: 64,
-                    color: AppTheme.textTertiary,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _hasActiveFilters
-                        ? 'No metrics match filters'
-                        : 'No environment history',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppTheme.textSecondary,
+            if (filtered.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.thermostat,
+                      size: 64,
+                      color: AppTheme.textTertiary,
                     ),
-                  ),
-                  if (_hasActiveFilters) ...[
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: _clearFilters,
-                      child: const Text('Clear filters'),
+                    const SizedBox(height: 16),
+                    Text(
+                      _hasActiveFilters
+                          ? 'No metrics match filters'
+                          : 'No environment history',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
+                    if (_hasActiveFilters) ...[
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: _clearFilters,
+                        child: const Text('Clear filters'),
+                      ),
+                    ],
                   ],
-                ],
-              ),
+                ),
+              );
+            }
+
+            if (_showGraph) {
+              return _EnvironmentGraphView(
+                logs: filtered,
+                selectedMetric: _selectedMetric,
+                onMetricChanged: (m) => setState(() => _selectedMetric = m),
+              );
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: filtered.length,
+              itemBuilder: (context, index) {
+                final log = filtered[index];
+                final nodeName =
+                    nodes[log.nodeNum]?.displayName ??
+                    '!${log.nodeNum.toRadixString(16).toUpperCase()}';
+
+                return _EnvironmentMetricsCard(log: log, nodeName: nodeName);
+              },
             );
-          }
-
-          if (_showGraph) {
-            return _EnvironmentGraphView(
-              logs: filtered,
-              selectedMetric: _selectedMetric,
-              onMetricChanged: (m) => setState(() => _selectedMetric = m),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: filtered.length,
-            itemBuilder: (context, index) {
-              final log = filtered[index];
-              final nodeName =
-                  nodes[log.nodeNum]?.displayName ??
-                  '!${log.nodeNum.toRadixString(16).toUpperCase()}';
-
-              return _EnvironmentMetricsCard(log: log, nodeName: nodeName);
-            },
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -221,182 +223,199 @@ class _EnvironmentGraphView extends StatelessWidget {
       }
     }
 
-    if (spots.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(selectedMetric.icon, size: 48, color: AppTheme.textTertiary),
-            const SizedBox(height: 16),
-            Text(
-              'No ${selectedMetric.label.toLowerCase()} data',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
-            ),
-          ],
-        ),
-      );
-    }
-
     // Add padding to Y range
-    final yPadding = ((maxY ?? 0) - (minY ?? 0)) * 0.1;
+    final yPadding = spots.isNotEmpty ? ((maxY ?? 0) - (minY ?? 0)) * 0.1 : 0.0;
     minY = (minY ?? 0) - yPadding;
-    maxY = (maxY ?? 0) + yPadding;
+    maxY = (maxY ?? 100) + yPadding;
 
     return Column(
       children: [
-        // Metric selector
+        // Metric selector - always visible with scrollable tabs
         Padding(
           padding: const EdgeInsets.all(16),
-          child: SegmentedButton<_GraphMetric>(
-            segments: _GraphMetric.values
-                .map(
-                  (m) => ButtonSegment(
-                    value: m,
-                    label: Text(m.label),
-                    icon: Icon(m.icon),
-                  ),
-                )
-                .toList(),
-            selected: {selectedMetric},
-            onSelectionChanged: (s) => onMetricChanged(s.first),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SegmentedButton<_GraphMetric>(
+              segments: _GraphMetric.values
+                  .map(
+                    (m) => ButtonSegment(
+                      value: m,
+                      label: Text(m.label),
+                      icon: Icon(m.icon),
+                    ),
+                  )
+                  .toList(),
+              selected: {selectedMetric},
+              onSelectionChanged: (s) => onMetricChanged(s.first),
+            ),
           ),
         ),
 
-        // Stats summary
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _StatsRow(logs: sortedLogs, metric: selectedMetric),
-        ),
+        // Show empty state if no data for selected metric
+        if (spots.isEmpty)
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    selectedMetric.icon,
+                    size: 48,
+                    color: AppTheme.textTertiary,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No ${selectedMetric.label.toLowerCase()} data',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Try selecting a different metric',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else ...[
+          // Stats summary
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _StatsRow(logs: sortedLogs, metric: selectedMetric),
+          ),
 
-        const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-        // Graph
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 8, 24, 16),
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: ((maxY - minY) / 4).clamp(1, 100),
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: AppTheme.darkBorder.withValues(alpha: 0.5),
-                    strokeWidth: 1,
+          // Graph
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 24, 16),
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: ((maxY - minY) / 4).clamp(1, 100),
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: AppTheme.darkBorder.withValues(alpha: 0.5),
+                      strokeWidth: 1,
+                    ),
                   ),
-                ),
-                titlesData: FlTitlesData(
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 32,
-                      interval: math.max(1, spots.length / 6),
-                      getTitlesWidget: (value, meta) {
-                        final index = value.toInt();
-                        if (index < 0 || index >= sortedLogs.length) {
-                          return const SizedBox.shrink();
-                        }
-                        final log = sortedLogs[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            DateFormat('HH:mm').format(log.timestamp),
+                  titlesData: FlTitlesData(
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 32,
+                        interval: math.max(1, spots.length / 6),
+                        getTitlesWidget: (value, meta) {
+                          final index = value.toInt();
+                          if (index < 0 || index >= sortedLogs.length) {
+                            return const SizedBox.shrink();
+                          }
+                          final log = sortedLogs[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              DateFormat('HH:mm').format(log.timestamp),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: AppTheme.textTertiary,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 48,
+                        interval: ((maxY - minY) / 4).clamp(1, 100),
+                        getTitlesWidget: (value, meta) {
+                          return Text(
+                            '${value.toStringAsFixed(1)}${selectedMetric.unit}',
                             style: const TextStyle(
                               fontSize: 10,
                               color: AppTheme.textTertiary,
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 48,
-                      interval: ((maxY - minY) / 4).clamp(1, 100),
-                      getTitlesWidget: (value, meta) {
-                        return Text(
-                          '${value.toStringAsFixed(1)}${selectedMetric.unit}',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: AppTheme.textTertiary,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                minX: 0,
-                maxX: (spots.length - 1).toDouble(),
-                minY: minY,
-                maxY: maxY,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: spots,
-                    isCurved: true,
-                    curveSmoothness: 0.3,
-                    color: _getMetricColor(selectedMetric),
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: spots.length < 30,
-                      getDotPainter: (spot, percent, bar, index) =>
-                          FlDotCirclePainter(
-                            radius: 3,
-                            color: Colors.white,
-                            strokeWidth: 2,
-                            strokeColor: _getMetricColor(selectedMetric),
-                          ),
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          _getMetricColor(
-                            selectedMetric,
-                          ).withValues(alpha: 0.3),
-                          _getMetricColor(
-                            selectedMetric,
-                          ).withValues(alpha: 0.0),
-                        ],
+                          );
+                        },
                       ),
                     ),
                   ),
-                ],
-                lineTouchData: LineTouchData(
-                  touchTooltipData: LineTouchTooltipData(
-                    getTooltipColor: (_) => AppTheme.darkCard,
-                    getTooltipItems: (spots) {
-                      return spots.map((spot) {
-                        final index = spot.x.toInt();
-                        final log = sortedLogs[index];
-                        return LineTooltipItem(
-                          '${spot.y.toStringAsFixed(1)}${selectedMetric.unit}\n${DateFormat('MMM d HH:mm').format(log.timestamp)}',
-                          const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        );
-                      }).toList();
-                    },
+                  borderData: FlBorderData(show: false),
+                  minX: 0,
+                  maxX: (spots.length - 1).toDouble(),
+                  minY: minY,
+                  maxY: maxY,
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
+                      curveSmoothness: 0.3,
+                      color: _getMetricColor(selectedMetric),
+                      barWidth: 3,
+                      isStrokeCapRound: true,
+                      dotData: FlDotData(
+                        show: spots.length < 30,
+                        getDotPainter: (spot, percent, bar, index) =>
+                            FlDotCirclePainter(
+                              radius: 3,
+                              color: Colors.white,
+                              strokeWidth: 2,
+                              strokeColor: _getMetricColor(selectedMetric),
+                            ),
+                      ),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            _getMetricColor(
+                              selectedMetric,
+                            ).withValues(alpha: 0.3),
+                            _getMetricColor(
+                              selectedMetric,
+                            ).withValues(alpha: 0.0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  lineTouchData: LineTouchData(
+                    touchTooltipData: LineTouchTooltipData(
+                      getTooltipColor: (_) => AppTheme.darkCard,
+                      getTooltipItems: (spots) {
+                        return spots.map((spot) {
+                          final index = spot.x.toInt();
+                          final log = sortedLogs[index];
+                          return LineTooltipItem(
+                            '${spot.y.toStringAsFixed(1)}${selectedMetric.unit}\n${DateFormat('MMM d HH:mm').format(log.timestamp)}',
+                            const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        }).toList();
+                      },
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }

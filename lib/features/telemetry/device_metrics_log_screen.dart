@@ -81,7 +81,7 @@ class _DeviceMetricsLogScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Device History'),
+        title: const Text('Device'),
         actions: [
           if (_hasActiveFilters)
             IconButton(
@@ -104,65 +104,67 @@ class _DeviceMetricsLogScreenState
           ),
         ],
       ),
-      body: logsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, s) => Center(child: Text('Error: $e')),
-        data: (logs) {
-          final filtered = _filterLogs(logs)
-            ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      body: SafeArea(
+        child: logsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, s) => Center(child: Text('Error: $e')),
+          data: (logs) {
+            final filtered = _filterLogs(logs)
+              ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
-          if (filtered.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.battery_unknown,
-                    size: 64,
-                    color: AppTheme.textTertiary,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _hasActiveFilters
-                        ? 'No metrics match filters'
-                        : 'No device history',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppTheme.textSecondary,
+            if (filtered.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.battery_unknown,
+                      size: 64,
+                      color: AppTheme.textTertiary,
                     ),
-                  ),
-                  if (_hasActiveFilters) ...[
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: _clearFilters,
-                      child: const Text('Clear filters'),
+                    const SizedBox(height: 16),
+                    Text(
+                      _hasActiveFilters
+                          ? 'No metrics match filters'
+                          : 'No device history',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
+                    if (_hasActiveFilters) ...[
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: _clearFilters,
+                        child: const Text('Clear filters'),
+                      ),
+                    ],
                   ],
-                ],
-              ),
+                ),
+              );
+            }
+
+            if (_showGraph) {
+              return _DeviceGraphView(
+                logs: filtered,
+                selectedMetric: _selectedMetric,
+                onMetricChanged: (m) => setState(() => _selectedMetric = m),
+              );
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: filtered.length,
+              itemBuilder: (context, index) {
+                final log = filtered[index];
+                final nodeName =
+                    nodes[log.nodeNum]?.displayName ??
+                    '!${log.nodeNum.toRadixString(16).toUpperCase()}';
+
+                return _DeviceMetricsCard(log: log, nodeName: nodeName);
+              },
             );
-          }
-
-          if (_showGraph) {
-            return _DeviceGraphView(
-              logs: filtered,
-              selectedMetric: _selectedMetric,
-              onMetricChanged: (m) => setState(() => _selectedMetric = m),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: filtered.length,
-            itemBuilder: (context, index) {
-              final log = filtered[index];
-              final nodeName =
-                  nodes[log.nodeNum]?.displayName ??
-                  '!${log.nodeNum.toRadixString(16).toUpperCase()}';
-
-              return _DeviceMetricsCard(log: log, nodeName: nodeName);
-            },
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -225,20 +227,57 @@ class _DeviceGraphView extends StatelessWidget {
     }
 
     if (spots.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(selectedMetric.icon, size: 48, color: AppTheme.textTertiary),
-            const SizedBox(height: 16),
-            Text(
-              'No ${selectedMetric.label.toLowerCase()} data',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
+      return Column(
+        children: [
+          // Metric selector - always visible
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SegmentedButton<_GraphMetric>(
+                segments: _GraphMetric.values
+                    .map(
+                      (m) => ButtonSegment(
+                        value: m,
+                        label: Text(m.label),
+                        icon: Icon(m.icon),
+                      ),
+                    )
+                    .toList(),
+                selected: {selectedMetric},
+                onSelectionChanged: (s) => onMetricChanged(s.first),
+              ),
             ),
-          ],
-        ),
+          ),
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    selectedMetric.icon,
+                    size: 48,
+                    color: AppTheme.textTertiary,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No ${selectedMetric.label.toLowerCase()} data',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Try selecting a different metric',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       );
     }
 
@@ -589,7 +628,11 @@ class _DeviceMetricsCard extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
-                        value: log.batteryLevel! / 100,
+                        value:
+                            (log.batteryLevel! > 100
+                                ? 100
+                                : log.batteryLevel!) /
+                            100,
                         backgroundColor: AppTheme.darkSurface,
                         color: _getBatteryColor(log.batteryLevel!),
                         minHeight: 8,
@@ -598,7 +641,9 @@ class _DeviceMetricsCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '${log.batteryLevel}%',
+                    log.batteryLevel! > 100
+                        ? 'Charging'
+                        : '${log.batteryLevel}%',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       color: _getBatteryColor(log.batteryLevel!),
                       fontWeight: FontWeight.bold,
@@ -651,6 +696,7 @@ class _DeviceMetricsCard extends StatelessWidget {
   }
 
   IconData _getBatteryIcon(int level) {
+    if (level > 100) return Icons.battery_charging_full;
     if (level <= 10) return Icons.battery_alert;
     if (level <= 20) return Icons.battery_1_bar;
     if (level <= 40) return Icons.battery_2_bar;
@@ -660,6 +706,7 @@ class _DeviceMetricsCard extends StatelessWidget {
   }
 
   Color _getBatteryColor(int level) {
+    if (level > 100) return AccentColors.cyan; // Charging
     if (level <= 10) return AppTheme.errorRed;
     if (level <= 20) return AccentColors.orange;
     if (level <= 40) return AppTheme.warningYellow;

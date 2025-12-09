@@ -246,7 +246,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Position History'),
+        title: const Text('Position'),
         actions: [
           if (_hasActiveFilters)
             IconButton(
@@ -269,77 +269,79 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
           ),
         ],
       ),
-      body: logsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, s) => Center(child: Text('Error: $e')),
-        data: (logs) {
-          final filtered = _filterLogs(logs)
-            ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      body: SafeArea(
+        child: logsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, s) => Center(child: Text('Error: $e')),
+          data: (logs) {
+            final filtered = _filterLogs(logs)
+              ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
-          if (filtered.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.location_off,
-                    size: 64,
-                    color: AppTheme.textTertiary,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _hasActiveFilters
-                        ? 'No positions match filters'
-                        : 'No position history',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppTheme.textSecondary,
+            if (filtered.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.location_off,
+                      size: 64,
+                      color: AppTheme.textTertiary,
                     ),
-                  ),
-                  if (_hasActiveFilters) ...[
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: _clearFilters,
-                      child: const Text('Clear filters'),
+                    const SizedBox(height: 16),
+                    Text(
+                      _hasActiveFilters
+                          ? 'No positions match filters'
+                          : 'No position history',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
+                    if (_hasActiveFilters) ...[
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: _clearFilters,
+                        child: const Text('Clear filters'),
+                      ),
+                    ],
                   ],
-                ],
-              ),
-            );
-          }
-
-          if (_showMap) {
-            return _PositionMapView(logs: filtered, nodes: nodes);
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: filtered.length,
-            itemBuilder: (context, index) {
-              final log = filtered[index];
-              final prevLog = index < filtered.length - 1
-                  ? filtered[index + 1]
-                  : null;
-              final distance = prevLog != null
-                  ? _calculateDistance(
-                      log.latitude,
-                      log.longitude,
-                      prevLog.latitude,
-                      prevLog.longitude,
-                    )
-                  : null;
-
-              final nodeName =
-                  nodes[log.nodeNum]?.displayName ??
-                  '!${log.nodeNum.toRadixString(16).toUpperCase()}';
-
-              return _PositionCard(
-                log: log,
-                nodeName: nodeName,
-                distanceFromPrev: distance,
+                ),
               );
-            },
-          );
-        },
+            }
+
+            if (_showMap) {
+              return _PositionMapView(logs: filtered, nodes: nodes);
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: filtered.length,
+              itemBuilder: (context, index) {
+                final log = filtered[index];
+                final prevLog = index < filtered.length - 1
+                    ? filtered[index + 1]
+                    : null;
+                final distance = prevLog != null
+                    ? _calculateDistance(
+                        log.latitude,
+                        log.longitude,
+                        prevLog.latitude,
+                        prevLog.longitude,
+                      )
+                    : null;
+
+                final nodeName =
+                    nodes[log.nodeNum]?.displayName ??
+                    '!${log.nodeNum.toRadixString(16).toUpperCase()}';
+
+                return _PositionCard(
+                  log: log,
+                  nodeName: nodeName,
+                  distanceFromPrev: distance,
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
