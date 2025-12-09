@@ -141,6 +141,7 @@ class _DeviceSheetContent extends ConsumerWidget {
                 device: connectedDevice,
                 connectionState: connectionState,
                 batteryLevel: batteryLevel,
+                nodeLongName: myNode?.longName,
               ),
               const SizedBox(height: 24),
 
@@ -324,11 +325,13 @@ class _DeviceInfoCard extends StatelessWidget {
   final transport.DeviceInfo? device;
   final transport.DeviceConnectionState connectionState;
   final int? batteryLevel;
+  final String? nodeLongName;
 
   const _DeviceInfoCard({
     required this.device,
     required this.connectionState,
     this.batteryLevel,
+    this.nodeLongName,
   });
 
   @override
@@ -367,6 +370,13 @@ class _DeviceInfoCard extends StatelessWidget {
       ),
       child: InfoTable(
         rows: [
+          if (nodeLongName != null)
+            InfoTableRow(
+              label: 'Node Name',
+              value: nodeLongName!,
+              icon: Icons.person,
+              iconColor: context.accentColor,
+            ),
           InfoTableRow(
             label: 'Device Name',
             value: device?.name ?? 'Unknown',

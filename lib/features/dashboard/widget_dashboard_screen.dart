@@ -19,6 +19,14 @@ import 'widgets/signal_strength_widget.dart';
 import 'widgets/channel_activity_widget.dart';
 import 'widgets/mesh_health_widget.dart';
 import 'widgets/node_map_widget.dart';
+import '../../config/revenuecat_config.dart';
+import '../../providers/subscription_providers.dart';
+
+/// Widgets available for free - showcase the feature
+const _freeWidgetTypes = {
+  DashboardWidgetType.signalStrength,
+  DashboardWidgetType.networkOverview,
+};
 
 /// Customizable widget dashboard with drag/reorder/favorites
 class WidgetDashboardScreen extends ConsumerStatefulWidget {
@@ -486,6 +494,19 @@ class _AddWidgetSheet extends ConsumerWidget {
         .where((c) => c.isVisible)
         .map((c) => c.type)
         .toSet();
+    final hasWidgetPack = ref.watch(
+      hasPurchasedProvider(RevenueCatConfig.widgetPackProductId),
+    );
+
+    // Sort widgets: free first, then premium
+    final sortedTypes = [...DashboardWidgetType.values]
+      ..sort((a, b) {
+        final aFree = _freeWidgetTypes.contains(a);
+        final bFree = _freeWidgetTypes.contains(b);
+        if (aFree && !bFree) return -1;
+        if (!aFree && bFree) return 1;
+        return a.index.compareTo(b.index);
+      });
 
     return Column(
       children: [
@@ -534,17 +555,37 @@ class _AddWidgetSheet extends ConsumerWidget {
               right: 16,
               bottom: MediaQuery.of(context).padding.bottom + 16,
             ),
-            itemCount: DashboardWidgetType.values.length,
+            itemCount:
+                sortedTypes.length +
+                (hasWidgetPack ? 0 : 1), // +1 for upsell card
             itemBuilder: (context, index) {
-              final type = DashboardWidgetType.values[index];
+              // Show upsell card after free widgets
+              if (!hasWidgetPack && index == _freeWidgetTypes.length) {
+                return _buildUpsellCard(context);
+              }
+
+              // Adjust index for items after upsell card
+              final typeIndex =
+                  !hasWidgetPack && index > _freeWidgetTypes.length
+                  ? index - 1
+                  : index;
+              final type = sortedTypes[typeIndex];
               final isAdded = enabledTypes.contains(type);
+              final isFree = _freeWidgetTypes.contains(type);
+              final isLocked = !isFree && !hasWidgetPack;
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: _WidgetOption(
                   type: type,
                   isAdded: isAdded,
+                  isLocked: isLocked,
                   onTap: () {
+                    if (isLocked) {
+                      Navigator.pop(context);
+                      Navigator.of(context).pushNamed('/subscription');
+                      return;
+                    }
                     if (isAdded) {
                       // Find the config and remove it
                       final config = currentConfigs.firstWhere(
@@ -563,17 +604,91 @@ class _AddWidgetSheet extends ConsumerWidget {
       ],
     );
   }
+
+  Widget _buildUpsellCard(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16, top: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            context.accentColor.withValues(alpha: 0.15),
+            context.accentColor.withValues(alpha: 0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.auto_awesome,
+              color: context.accentColor,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Unlock All Widgets',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Get Widget Pack for ${DashboardWidgetType.values.length - _freeWidgetTypes.length} more widgets',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.of(context).pushNamed('/subscription');
+            },
+            style: TextButton.styleFrom(
+              backgroundColor: context.accentColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text('Get', style: TextStyle(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _WidgetOption extends StatelessWidget {
   final DashboardWidgetType type;
   final bool isAdded;
+  final bool isLocked;
   final VoidCallback onTap;
 
   const _WidgetOption({
     required this.type,
     required this.isAdded,
     required this.onTap,
+    this.isLocked = false,
   });
 
   @override
@@ -602,14 +717,20 @@ class _WidgetOption extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: isAdded
+                  color: isLocked
+                      ? AppTheme.darkSurface.withValues(alpha: 0.5)
+                      : isAdded
                       ? context.accentColor.withValues(alpha: 0.15)
                       : AppTheme.darkSurface,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  info.icon,
-                  color: isAdded ? context.accentColor : AppTheme.textSecondary,
+                  isLocked ? Icons.lock_outline : info.icon,
+                  color: isLocked
+                      ? AppTheme.textTertiary
+                      : isAdded
+                      ? context.accentColor
+                      : AppTheme.textSecondary,
                   size: 22,
                 ),
               ),
@@ -618,20 +739,56 @@ class _WidgetOption extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      info.name,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: isAdded ? Colors.white : AppTheme.textSecondary,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            info.name,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: isLocked
+                                  ? AppTheme.textTertiary
+                                  : isAdded
+                                  ? Colors.white
+                                  : AppTheme.textSecondary,
+                            ),
+                          ),
+                        ),
+                        if (isLocked) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: context.accentColor.withValues(
+                                alpha: 0.15,
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'PRO',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: context.accentColor,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(
                       info.description,
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textSecondary,
+                        color: isLocked
+                            ? AppTheme.textTertiary
+                            : AppTheme.textSecondary,
                       ),
                     ),
                   ],
@@ -642,13 +799,25 @@ class _WidgetOption extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: isAdded ? context.accentColor : AppTheme.darkBorder,
+                  color: isLocked
+                      ? AppTheme.darkBorder.withValues(alpha: 0.5)
+                      : isAdded
+                      ? context.accentColor
+                      : AppTheme.darkBorder,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isAdded ? Icons.check : Icons.add,
-                  color: isAdded ? Colors.black : AppTheme.textTertiary,
-                  size: 18,
+                  isLocked
+                      ? Icons.lock
+                      : isAdded
+                      ? Icons.check
+                      : Icons.add,
+                  color: isLocked
+                      ? AppTheme.textTertiary
+                      : isAdded
+                      ? Colors.black
+                      : AppTheme.textTertiary,
+                  size: isLocked ? 14 : 18,
                 ),
               ),
             ],

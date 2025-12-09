@@ -58,6 +58,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       accentColor: AppTheme.graphBlue,
     ),
     _OnboardingPage(
+      icon: Icons.dashboard_customize,
+      lottieAsset: null,
+      title: 'Your Command Center',
+      description:
+          'Real-time signal charts. Node maps. Mesh health.\nEverything at a glance.',
+      accentColor: AccentColors.orange,
+      isWidgetShowcase: true,
+    ),
+    _OnboardingPage(
       icon: Icons.rocket_launch_outlined,
       lottieAsset: 'assets/lottie/onboard_launch.json',
       title: 'Go Live',
@@ -361,75 +370,80 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Animated icon/image with glow - now using Lottie
-          AnimatedBuilder(
-            animation: _pulseController,
-            builder: (context, child) {
-              final glowIntensity = 0.3 + (_pulseController.value * 0.2);
+          // Widget showcase or animated icon
+          if (page.isWidgetShowcase)
+            _buildWidgetShowcase(page)
+          else
+            AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, child) {
+                final glowIntensity = 0.3 + (_pulseController.value * 0.2);
 
-              // Use Lottie animation if available
-              if (page.lottieAsset != null) {
+                // Use Lottie animation if available
+                if (page.lottieAsset != null) {
+                  return Container(
+                    width: 220,
+                    height: 220,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: page.accentColor.withValues(
+                            alpha: glowIntensity,
+                          ),
+                          blurRadius: 40,
+                          spreadRadius: 10,
+                        ),
+                      ],
+                    ),
+                    child: Lottie.asset(
+                      page.lottieAsset!,
+                      width: 220,
+                      height: 220,
+                      fit: BoxFit.contain,
+                      repeat: true,
+                    ),
+                  );
+                }
+
+                // Fallback to icon
                 return Container(
-                  width: 220,
-                  height: 220,
+                  width: 120,
+                  height: 120,
                   decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      colors: [
+                        page.accentColor.withValues(alpha: 0.3),
+                        page.accentColor.withValues(alpha: 0.1),
+                        Colors.transparent,
+                      ],
+                    ),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
                         color: page.accentColor.withValues(
                           alpha: glowIntensity,
                         ),
-                        blurRadius: 40,
-                        spreadRadius: 10,
+                        blurRadius: 25,
+                        spreadRadius: 3,
                       ),
                     ],
                   ),
-                  child: Lottie.asset(
-                    page.lottieAsset!,
-                    width: 220,
-                    height: 220,
-                    fit: BoxFit.contain,
-                    repeat: true,
+                  child: Container(
+                    margin: const EdgeInsets.all(15),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkCard,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: page.accentColor.withValues(alpha: 0.5),
+                        width: 2,
+                      ),
+                    ),
+                    child: Icon(page.icon, size: 48, color: page.accentColor),
                   ),
                 );
-              }
-
-              // Fallback to icon
-              return Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    colors: [
-                      page.accentColor.withValues(alpha: 0.3),
-                      page.accentColor.withValues(alpha: 0.1),
-                      Colors.transparent,
-                    ],
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: page.accentColor.withValues(alpha: glowIntensity),
-                      blurRadius: 25,
-                      spreadRadius: 3,
-                    ),
-                  ],
-                ),
-                child: Container(
-                  margin: const EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: page.accentColor.withValues(alpha: 0.5),
-                      width: 2,
-                    ),
-                  ),
-                  child: Icon(page.icon, size: 48, color: page.accentColor),
-                ),
-              );
-            },
-          ),
+              },
+            ),
           const SizedBox(height: 48),
 
           // Title with shimmer-like gradient
@@ -468,6 +482,171 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       ),
     );
   }
+
+  Widget _buildWidgetShowcase(_OnboardingPage page) {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        final glowIntensity = 0.2 + (_pulseController.value * 0.15);
+
+        return Container(
+          width: double.infinity,
+          height: 280,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: page.accentColor.withValues(alpha: glowIntensity),
+                blurRadius: 30,
+                spreadRadius: 5,
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppTheme.darkCard, AppTheme.darkSurface],
+                ),
+                border: Border.all(
+                  color: page.accentColor.withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                children: [
+                  // Mini signal strength chart
+                  Expanded(
+                    flex: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: _buildMiniSignalChart(page.accentColor),
+                    ),
+                  ),
+                  // Widget row
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildMiniWidget(
+                            Icons.hub,
+                            '12',
+                            'Nodes',
+                            AccentColors.cyan,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildMiniWidget(
+                            Icons.battery_5_bar,
+                            '87%',
+                            'Battery',
+                            AccentColors.green,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildMiniWidget(
+                            Icons.signal_cellular_alt,
+                            '-68',
+                            'dBm',
+                            page.accentColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMiniSignalChart(Color accentColor) {
+    // Animated bar chart simulation
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final barCount = 20;
+        final barWidth = (constraints.maxWidth - (barCount - 1) * 3) / barCount;
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: List.generate(barCount, (index) {
+            // Simulate varying signal strength bars
+            final baseHeight = 0.3 + (index / barCount) * 0.4;
+            final variation = (index % 3 == 0
+                ? 0.2
+                : index % 2 == 0
+                ? 0.1
+                : 0.0);
+            final animatedOffset =
+                _pulseController.value * 0.15 * (index.isEven ? 1 : -1);
+            final height = (baseHeight + variation + animatedOffset).clamp(
+              0.2,
+              1.0,
+            );
+
+            return Container(
+              width: barWidth,
+              height: constraints.maxHeight * height,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(2),
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [accentColor.withValues(alpha: 0.6), accentColor],
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
+  Widget _buildMiniWidget(
+    IconData icon,
+    String value,
+    String label,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _OnboardingPage {
@@ -476,6 +655,7 @@ class _OnboardingPage {
   final String title;
   final String description;
   final bool isLastPage;
+  final bool isWidgetShowcase;
   final Color accentColor;
 
   const _OnboardingPage({
@@ -484,6 +664,7 @@ class _OnboardingPage {
     required this.title,
     required this.description,
     this.isLastPage = false,
+    this.isWidgetShowcase = false,
     this.accentColor = AppTheme.primaryMagenta,
   });
 }
