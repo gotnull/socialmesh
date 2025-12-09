@@ -115,20 +115,110 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   }
 
   /// Handle app returning to foreground
-  /// This cleans up stale BLE state that can cause scanner issues
+  /// This cleans up stale BLE state and triggers reconnect if needed
   Future<void> _handleAppResumed() async {
     debugPrint('📱 App resumed - checking BLE state');
 
     final transport = ref.read(transportProvider);
+    final autoReconnectState = ref.read(autoReconnectStateProvider);
 
     // If we think we're connected, verify the connection is still valid
     if (transport.state == DeviceConnectionState.connected) {
-      // The transport will emit state changes if the connection was lost
-      // while the app was in background - no action needed here
       debugPrint('📱 App resumed - transport reports connected');
-    } else if (transport.state == DeviceConnectionState.disconnected) {
-      // Clean state - scanner should work normally
-      debugPrint('📱 App resumed - transport reports disconnected');
+      return;
+    }
+
+    // If already trying to reconnect, don't interfere
+    if (autoReconnectState == AutoReconnectState.scanning ||
+        autoReconnectState == AutoReconnectState.connecting) {
+      debugPrint('📱 App resumed - reconnect already in progress');
+      return;
+    }
+
+    // If disconnected and we have a saved device, try to reconnect
+    // This handles the case where user turned device back on after auto-reconnect failed
+    try {
+      final settings = await ref.read(settingsServiceProvider.future);
+      final lastDeviceId = settings.lastDeviceId;
+
+      if (lastDeviceId != null && settings.autoReconnect) {
+        debugPrint('📱 App resumed - disconnected, triggering reconnect scan');
+
+        // Reset to idle first to allow reconnect to proceed
+        ref.read(autoReconnectStateProvider.notifier).state =
+            AutoReconnectState.idle;
+
+        // Trigger reconnect by simulating a disconnect event
+        // The autoReconnectManager will pick this up
+        ref.read(autoReconnectStateProvider.notifier).state =
+            AutoReconnectState.scanning;
+
+        // Start the reconnect process
+        _performReconnectOnResume(lastDeviceId);
+      } else {
+        debugPrint(
+          '📱 App resumed - transport reports disconnected (no saved device or auto-reconnect disabled)',
+        );
+      }
+    } catch (e) {
+      debugPrint('📱 App resumed - error checking settings: $e');
+    }
+  }
+
+  /// Perform a single reconnect attempt when app resumes
+  Future<void> _performReconnectOnResume(String deviceId) async {
+    debugPrint('📱 Attempting reconnect on resume for device: $deviceId');
+
+    try {
+      final transport = ref.read(transportProvider);
+
+      // Quick scan to find the device
+      final scanStream = transport.scan(timeout: const Duration(seconds: 8));
+      DeviceInfo? foundDevice;
+
+      await for (final device in scanStream) {
+        if (device.id == deviceId) {
+          foundDevice = device;
+          break;
+        }
+      }
+
+      if (foundDevice != null) {
+        debugPrint('📱 Device found on resume, connecting...');
+        ref.read(autoReconnectStateProvider.notifier).state =
+            AutoReconnectState.connecting;
+
+        await transport.connect(foundDevice);
+
+        if (transport.state == DeviceConnectionState.connected) {
+          final protocol = ref.read(protocolServiceProvider);
+          await protocol.start();
+
+          ref.read(connectedDeviceProvider.notifier).state = foundDevice;
+          ref.read(autoReconnectStateProvider.notifier).state =
+              AutoReconnectState.success;
+
+          // Start location updates
+          final locationService = ref.read(locationServiceProvider);
+          await locationService.startLocationUpdates();
+
+          debugPrint('📱 ✅ Reconnected successfully on resume!');
+
+          await Future.delayed(const Duration(milliseconds: 500));
+          ref.read(autoReconnectStateProvider.notifier).state =
+              AutoReconnectState.idle;
+        } else {
+          throw Exception('Connection failed');
+        }
+      } else {
+        debugPrint('📱 Device not found on resume scan');
+        ref.read(autoReconnectStateProvider.notifier).state =
+            AutoReconnectState.idle;
+      }
+    } catch (e) {
+      debugPrint('📱 Reconnect on resume failed: $e');
+      ref.read(autoReconnectStateProvider.notifier).state =
+          AutoReconnectState.idle;
     }
   }
 
