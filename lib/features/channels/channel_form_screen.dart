@@ -1009,7 +1009,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         children: [
           _buildToggleRow(
             icon: Icons.cloud_upload_outlined,
-            iconColor: AppTheme.graphBlue,
+            iconColor: context.accentColor,
             title: 'Uplink',
             subtitle: 'Forward messages to MQTT server',
             value: _uplinkEnabled,
@@ -1022,7 +1022,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
           ),
           _buildToggleRow(
             icon: Icons.cloud_download_outlined,
-            iconColor: AppTheme.graphBlue,
+            iconColor: context.accentColor,
             title: 'Downlink',
             subtitle: 'Receive messages from MQTT server',
             value: _downlinkEnabled,

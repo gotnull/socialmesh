@@ -40,9 +40,7 @@ class NetworkOverviewContent extends ConsumerWidget {
           Expanded(
             child: _StatItem(
               icon: isConnected ? Icons.check_circle : Icons.error_outline,
-              iconColor: isConnected
-                  ? context.accentColor
-                  : AppTheme.errorRed,
+              iconColor: isConnected ? context.accentColor : AppTheme.errorRed,
               value: isConnected ? 'Online' : 'Offline',
               label: 'Status',
             ),
@@ -52,7 +50,7 @@ class NetworkOverviewContent extends ConsumerWidget {
           Expanded(
             child: _StatItem(
               icon: Icons.people_outline,
-              iconColor: AppTheme.graphBlue,
+              iconColor: context.accentColor,
               value: '$onlineNodes/$totalNodes',
               label: 'Nodes',
             ),
@@ -139,17 +137,12 @@ class _StatItem extends StatelessWidget {
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: Colors.white,
-            
           ),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 11,
-            color: AppTheme.textTertiary,
-            
-          ),
+          style: const TextStyle(fontSize: 11, color: AppTheme.textTertiary),
         ),
       ],
     );

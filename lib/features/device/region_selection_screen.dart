@@ -426,17 +426,17 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.graphBlue.withValues(
+                                  color: context.accentColor.withValues(
                                     alpha: 0.2,
                                   ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'CURRENT',
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
-                                    color: AppTheme.graphBlue,
+                                    color: context.accentColor,
                                   ),
                                 ),
                               ),

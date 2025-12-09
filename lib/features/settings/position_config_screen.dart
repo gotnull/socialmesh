@@ -556,10 +556,10 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.graphBlue.withValues(alpha: 0.1),
+                        color: context.accentColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: AppTheme.graphBlue.withValues(alpha: 0.3),
+                          color: context.accentColor.withValues(alpha: 0.3),
                         ),
                       ),
                       padding: const EdgeInsets.all(16),
@@ -568,7 +568,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                         children: [
                           Icon(
                             Icons.info_outline,
-                            color: AppTheme.graphBlue.withValues(alpha: 0.8),
+                            color: context.accentColor.withValues(alpha: 0.8),
                             size: 20,
                           ),
                           const SizedBox(width: 12),

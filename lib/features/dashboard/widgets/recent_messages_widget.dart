@@ -87,14 +87,12 @@ class _MessageTile extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: isBroadcast
-                  ? context.accentColor.withValues(alpha: 0.15)
-                  : AppTheme.graphBlue.withValues(alpha: 0.15),
+              color: context.accentColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               isBroadcast ? Icons.campaign : Icons.person,
-              color: isBroadcast ? context.accentColor : AppTheme.graphBlue,
+              color: context.accentColor,
               size: 18,
             ),
           ),
@@ -113,7 +111,6 @@ class _MessageTile extends StatelessWidget {
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -125,7 +122,6 @@ class _MessageTile extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppTheme.textTertiary,
-                        
                       ),
                     ),
                   ],
@@ -136,7 +132,6 @@ class _MessageTile extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppTheme.textSecondary,
-                    
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

@@ -83,7 +83,6 @@ class _DeviceSheetContent extends ConsumerWidget {
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
-                        
                       ),
                     ),
                     SizedBox(height: 4),
@@ -111,7 +110,6 @@ class _DeviceSheetContent extends ConsumerWidget {
                                 : isReconnecting
                                 ? AppTheme.warningYellow
                                 : AppTheme.textTertiary,
-                            
                           ),
                         ),
                       ],
@@ -209,7 +207,7 @@ class _DeviceSheetContent extends ConsumerWidget {
         fontSize: 12,
         fontWeight: FontWeight.w600,
         color: AppTheme.textTertiary,
-        
+
         letterSpacing: 1,
       ),
     );
@@ -388,7 +386,7 @@ class _DeviceInfoCard extends StatelessWidget {
             icon: device?.type == transport.TransportType.ble
                 ? Icons.bluetooth
                 : Icons.usb,
-            iconColor: AppTheme.graphBlue,
+            iconColor: context.accentColor,
           ),
           if (device?.address != null)
             InfoTableRow(
@@ -493,7 +491,6 @@ class _ActionTile extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -502,7 +499,6 @@ class _ActionTile extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppTheme.textSecondary,
-                          
                         ),
                       ),
                     ],

@@ -797,7 +797,7 @@ class _NodeMarker extends StatelessWidget {
   Widget build(BuildContext context) {
     final baseColor = isMyNode
         ? context.accentColor
-        : (node.isOnline ? AppTheme.primaryPurple : AppTheme.textTertiary);
+        : (node.isOnline ? context.accentColor : AppTheme.textTertiary);
 
     // Use green border if monitored, white if selected
     final borderColor = isMonitored
@@ -1026,7 +1026,7 @@ class _NodeListItem extends StatelessWidget {
     final node = nodeWithPos.node;
     final baseColor = isMyNode
         ? context.accentColor
-        : (node.isOnline ? AppTheme.primaryPurple : AppTheme.textTertiary);
+        : (node.isOnline ? context.accentColor : AppTheme.textTertiary);
 
     return Material(
       color: isMonitored

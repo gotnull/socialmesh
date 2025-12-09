@@ -67,7 +67,6 @@ class DashboardScreen extends ConsumerWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: _getBatteryColor(batteryLevel),
-                        
                       ),
                     ),
                   ],
@@ -219,7 +218,6 @@ class DashboardScreen extends ConsumerWidget {
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.white,
-                                      
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -231,7 +229,6 @@ class DashboardScreen extends ConsumerWidget {
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: AppTheme.textTertiary,
-                                      
                                     ),
                                   ),
                                 ],
@@ -260,7 +257,7 @@ class DashboardScreen extends ConsumerWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textSecondary,
-                      
+
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -371,11 +368,7 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 child: const Text(
                   'Close',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -471,7 +464,6 @@ class _ActionCard extends StatelessWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -480,7 +472,6 @@ class _ActionCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppTheme.textSecondary,
-                          
                         ),
                       ),
                     ],
@@ -555,7 +546,7 @@ class _DeviceDetailsTable extends StatelessWidget {
             icon: device?.type == transport.TransportType.ble
                 ? Icons.bluetooth
                 : Icons.usb,
-            iconColor: AppTheme.graphBlue,
+            iconColor: context.accentColor,
           ),
           if (device?.address != null)
             InfoTableRow(
