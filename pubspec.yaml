@@ -64,6 +64,7 @@ dependencies:
   # Animations
   animations: ^2.1.1
   skeletonizer: ^1.4.2
+  lottie: ^3.3.1
   flutter_map_marker_cluster: ^1.4.0
   firebase_crashlytics: ^5.0.5
   firebase_core: ^4.2.1
@@ -94,6 +95,7 @@ flutter:
     - .env
     - assets/app_icons/source/
     - assets/rtttl_library.json
+    - assets/lottie/
     - docs/
 
   # An image asset can refer to one or more resolution-specific "variants", see

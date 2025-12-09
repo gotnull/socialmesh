@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/mesh_map_widget.dart';
+import '../../core/widgets/map_controls.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
@@ -380,6 +381,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
   final MapController _mapController = MapController();
   bool _showTrail = true;
   int? _selectedNodeNum;
+  double _currentZoom = 14.0;
 
   List<int> get _nodeNums => widget.logs.map((l) => l.nodeNum).toSet().toList();
 
@@ -416,7 +418,12 @@ class _PositionMapViewState extends State<_PositionMapView> {
         MeshMapWidget(
           mapController: _mapController,
           initialCenter: center,
-          initialZoom: 14,
+          initialZoom: _currentZoom,
+          onPositionChanged: (camera, hasGesture) {
+            if (camera.zoom != _currentZoom) {
+              setState(() => _currentZoom = camera.zoom);
+            }
+          },
           additionalLayers: [
             // Draw trails
             if (_showTrail)
@@ -505,6 +512,41 @@ class _PositionMapViewState extends State<_PositionMapView> {
                   tooltip: 'Toggle trail',
                   onPressed: () => setState(() => _showTrail = !_showTrail),
                 ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Zoom controls
+              MapZoomControls(
+                currentZoom: _currentZoom,
+                minZoom: 3.0,
+                maxZoom: 18.0,
+                showFitAll: true,
+                onZoomIn: () {
+                  final newZoom = (_currentZoom + 1).clamp(3.0, 18.0);
+                  _mapController.move(_mapController.camera.center, newZoom);
+                },
+                onZoomOut: () {
+                  final newZoom = (_currentZoom - 1).clamp(3.0, 18.0);
+                  _mapController.move(_mapController.camera.center, newZoom);
+                },
+                onFitAll: () {
+                  // Fit to all positions
+                  final lats = widget.logs.map((l) => l.latitude).toList();
+                  final lons = widget.logs.map((l) => l.longitude).toList();
+                  if (lats.isNotEmpty) {
+                    final bounds = LatLngBounds(
+                      LatLng(lats.reduce(math.min), lons.reduce(math.min)),
+                      LatLng(lats.reduce(math.max), lons.reduce(math.max)),
+                    );
+                    _mapController.fitCamera(
+                      CameraFit.bounds(
+                        bounds: bounds,
+                        padding: const EdgeInsets.all(50),
+                      ),
+                    );
+                  }
+                },
               ),
             ],
           ),

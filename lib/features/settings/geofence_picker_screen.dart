@@ -10,6 +10,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/theme.dart';
 import '../../core/widgets/mesh_map_widget.dart';
+import '../../core/widgets/map_controls.dart';
 import '../../models/mesh_models.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
@@ -68,6 +69,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
   late final MapController _mapController;
   LatLng? _center;
   double _radiusMeters = 1000.0;
+  double _currentZoom = 13.0;
   bool _isDraggingRadius = false;
   bool _isLoadingLocation = false;
   bool _showNodeList = false;
@@ -354,12 +356,17 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
             child: MeshMapWidget(
               mapController: _mapController,
               initialCenter: _center ?? const LatLng(-33.8688, 151.2093),
-              initialZoom: 13.0,
+              initialZoom: _currentZoom,
               minZoom: 3.0,
               maxZoom: 18.0,
               interactive: !_isDraggingRadius,
               onTap: _onMapTap,
               onLongPress: _onMapLongPress,
+              onPositionChanged: (camera, hasGesture) {
+                if (camera.zoom != _currentZoom) {
+                  setState(() => _currentZoom = camera.zoom);
+                }
+              },
               additionalLayers: [
                 // Geofence circle
                 if (_center != null)
@@ -539,6 +546,26 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                 ),
               ),
             ),
+
+          // Zoom controls
+          Positioned(
+            right: 16,
+            top: 120,
+            child: MapZoomControls(
+              currentZoom: _currentZoom,
+              minZoom: 3.0,
+              maxZoom: 18.0,
+              showFitAll: false,
+              onZoomIn: () {
+                final newZoom = (_currentZoom + 1).clamp(3.0, 18.0);
+                _mapController.move(_mapController.camera.center, newZoom);
+              },
+              onZoomOut: () {
+                final newZoom = (_currentZoom - 1).clamp(3.0, 18.0);
+                _mapController.move(_mapController.camera.center, newZoom);
+              },
+            ),
+          ),
 
           // Node list panel
           AnimatedPositioned(

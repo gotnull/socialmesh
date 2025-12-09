@@ -118,8 +118,8 @@ If any provision of these Terms is found to be unenforceable, the remaining prov
 
 If you have any questions about these Terms, please contact us at:
 
-**Email**: legal@socialmesh.net  
-**Website**: https://socialmesh.net
+**Email**: legal@socialmesh.app  
+**Website**: https://socialmesh.app
 
 ---
 
