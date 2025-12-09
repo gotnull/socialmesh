@@ -5,7 +5,7 @@
   ],
   "products" : [
     {
-      "displayPrice" : "2.99",
+      "displayPrice" : "1.99",
       "familyShareable" : false,
       "internalID" : "theme_pack",
       "localizations" : [
@@ -20,7 +20,7 @@
       "type" : "NonConsumable"
     },
     {
-      "displayPrice" : "1.99",
+      "displayPrice" : "0.99",
       "familyShareable" : false,
       "internalID" : "ringtone_pack",
       "localizations" : [
@@ -65,7 +65,7 @@
       "type" : "NonConsumable"
     },
     {
-      "displayPrice" : "4.99",
+      "displayPrice" : "2.99",
       "familyShareable" : false,
       "internalID" : "ifttt_pack",
       "localizations" : [
