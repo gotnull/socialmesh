@@ -708,11 +708,8 @@ class _AddWidgetSheet extends ConsumerWidget {
                   isAdded: isAdded,
                   isLocked: isLocked,
                   onTap: () {
-                    if (isLocked) {
-                      Navigator.pop(context);
-                      Navigator.of(context).pushNamed('/subscription');
-                      return;
-                    }
+                    // Locked widgets do nothing - user should tap Unlock button
+                    if (isLocked) return;
                     if (isAdded) {
                       // Find the config and remove it
                       final config = currentConfigs.firstWhere(
