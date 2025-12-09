@@ -205,12 +205,12 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
 
   // Taglines to cycle through
   static const _taglines = [
-    'Talk freely',
-    'People-powered network',
-    'Private by default',
-    'No servers. No tracking.',
-    'Communication you control',
-    'Your community. Your network.',
+    'Off-grid communication',
+    'No towers. No subscriptions.',
+    'Your voice. Your network.',
+    'Zero knowledge. Zero tracking.',
+    'Device to device. Mile after mile.',
+    'Build infrastructure together.',
   ];
 
   @override
