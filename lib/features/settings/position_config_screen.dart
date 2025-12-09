@@ -73,19 +73,22 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
         _applyConfig(cachedConfig);
       }
 
-      // Listen for config response
-      _configSubscription?.cancel();
-      _configSubscription = protocol.positionConfigStream.listen((config) {
-        if (mounted) {
-          _applyConfig(config);
-        }
-      });
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription?.cancel();
+        _configSubscription = protocol.positionConfigStream.listen((config) {
+          if (mounted) {
+            _applyConfig(config);
+          }
+        });
 
-      // Request fresh config from device
-      await protocol.getConfig(pb.AdminMessage_ConfigType.POSITION_CONFIG);
+        // Request fresh config from device
+        await protocol.getConfig(pb.AdminMessage_ConfigType.POSITION_CONFIG);
 
-      // Wait a bit for response
-      await Future.delayed(const Duration(milliseconds: 500));
+        // Wait a bit for response
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

@@ -43,6 +43,15 @@ class _AmbientLightingConfigScreenState
 
   Future<void> _loadCurrentConfig() async {
     final protocol = ref.read(protocolServiceProvider);
+
+    // Check if we're connected before trying to load config
+    if (!protocol.isConnected) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+      return;
+    }
+
     final config = await protocol.getAmbientLightingModuleConfig();
     if (config != null && mounted) {
       setState(() {

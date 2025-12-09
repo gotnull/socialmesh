@@ -67,13 +67,16 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
         _applyConfig(cached);
       }
 
-      // Listen for config response
-      _configSubscription = protocol.networkConfigStream.listen((config) {
-        if (mounted) _applyConfig(config);
-      });
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription = protocol.networkConfigStream.listen((config) {
+          if (mounted) _applyConfig(config);
+        });
 
-      // Request fresh config from device
-      await protocol.getConfig(pb.AdminMessage_ConfigType.NETWORK_CONFIG);
+        // Request fresh config from device
+        await protocol.getConfig(pb.AdminMessage_ConfigType.NETWORK_CONFIG);
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

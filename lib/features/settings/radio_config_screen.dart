@@ -59,13 +59,16 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
         _applyConfig(cached);
       }
 
-      // Listen for config response
-      _configSubscription = protocol.loraConfigStream.listen((config) {
-        if (mounted) _applyConfig(config);
-      });
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription = protocol.loraConfigStream.listen((config) {
+          if (mounted) _applyConfig(config);
+        });
 
-      // Request fresh config from device
-      await protocol.getConfig(pb.AdminMessage_ConfigType.LORA_CONFIG);
+        // Request fresh config from device
+        await protocol.getConfig(pb.AdminMessage_ConfigType.LORA_CONFIG);
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -108,7 +111,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            
           ),
         ),
         actions: [
@@ -130,7 +132,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                       style: TextStyle(
                         color: context.accentColor,
                         fontWeight: FontWeight.w600,
-                        
                       ),
                     ),
             ),
@@ -183,7 +184,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w500,
-                              
                             ),
                           ),
                           Container(
@@ -203,7 +203,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                                 color: context.accentColor,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
-                                
                               ),
                             ),
                           ),
@@ -215,7 +214,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                         style: TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 13,
-                          
                         ),
                       ),
                       SizedBox(height: 8),
@@ -247,7 +245,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w500,
-                              
                             ),
                           ),
                           Container(
@@ -267,7 +264,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                                 color: context.accentColor,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
-                                
                               ),
                             ),
                           ),
@@ -279,7 +275,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                         style: TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 13,
-                          
                         ),
                       ),
                       SizedBox(height: 8),
@@ -348,11 +343,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
         children: [
           const Text(
             'Select the region that matches your country\'s regulations',
-            style: TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 13,
-              
-            ),
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
           ),
           const SizedBox(height: 16),
           Container(
@@ -366,7 +357,10 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
               isExpanded: true,
               underline: const SizedBox.shrink(),
               dropdownColor: AppTheme.darkCard,
-              style: const TextStyle(color: Colors.white, fontFamily: 'JetBrainsMono'),
+              style: const TextStyle(
+                color: Colors.white,
+                fontFamily: 'JetBrainsMono',
+              ),
               items: regions.map((r) {
                 return DropdownMenuItem(
                   value: r.$1,
@@ -414,11 +408,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
         children: [
           const Text(
             'All devices in the mesh must use the same preset',
-            style: TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 13,
-              
-            ),
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
           ),
           SizedBox(height: 16),
           ...presets.map((p) {
@@ -449,7 +439,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                                   ? Colors.white
                                   : AppTheme.textSecondary,
                               fontWeight: FontWeight.w500,
-                              
                             ),
                           ),
                           Text(
@@ -457,7 +446,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                             style: const TextStyle(
                               color: AppTheme.textTertiary,
                               fontSize: 13,
-                              
                             ),
                           ),
                         ],
@@ -497,11 +485,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
             child: Text(
               'Changing radio settings will cause the device to reboot. '
               'All devices in your mesh network must use the same region and modem preset.',
-              style: TextStyle(
-                color: AppTheme.textSecondary,
-                fontSize: 13,
-                
-              ),
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
             ),
           ),
         ],
@@ -571,7 +555,6 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -580,7 +563,6 @@ class _SettingsTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppTheme.textTertiary,
-                      
                     ),
                   ),
                 ],

@@ -313,6 +313,9 @@ class ProtocolService {
   /// Configuration complete
   bool get configurationComplete => _configurationComplete;
 
+  /// Check if the transport is connected
+  bool get isConnected => _transport.isConnected;
+
   /// All known nodes
   Map<int, MeshNode> get nodes => Map.unmodifiable(_nodes);
 

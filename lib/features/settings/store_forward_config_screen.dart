@@ -32,6 +32,13 @@ class _StoreForwardConfigScreenState
 
   Future<void> _loadCurrentConfig() async {
     final protocol = ref.read(protocolServiceProvider);
+
+    // Only request from device if connected
+    if (!protocol.isConnected) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
     final config = await protocol.getStoreForwardModuleConfig();
     if (config != null && mounted) {
       setState(() {

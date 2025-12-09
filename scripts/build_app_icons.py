@@ -20,8 +20,10 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_PATH = PROJECT_ROOT / "assets/app_icons/source/socialmesh_icon_1024.png"
+LAUNCH_SOURCE_PATH = PROJECT_ROOT / "assets/launch_screens/launchscreen.png"
 OUTPUT_DIR = PROJECT_ROOT / "assets/app_icons/generated"
 APP_ICONSET_PATH = PROJECT_ROOT / "ios/Runner/Assets.xcassets/AppIcon.appiconset"
+LAUNCH_IMAGESET_PATH = PROJECT_ROOT / "ios/Runner/Assets.xcassets/LaunchImage.imageset"
 
 # Android mipmap directories and their required sizes
 ANDROID_ICON_SPECS = {
@@ -157,11 +159,69 @@ def generate_android_icons() -> None:
     print(f"\nAndroid icons updated in {ANDROID_RES_PATH.resolve()}")
 
 
+def generate_launch_images() -> None:
+    """Generate launch screen images for all iOS device sizes.
+    
+    iPhone 17 Pro Max: 1320x2868 (440x956 @3x)
+    Using larger base sizes to support all modern iPhones.
+    
+    This function scales the source image to fill (maintaining aspect ratio)
+    and crops to fit the target dimensions.
+    """
+    print("\nGenerating launch images...")
+    
+    if not LAUNCH_SOURCE_PATH.exists():
+        print(f"Warning: Launch source image not found at {LAUNCH_SOURCE_PATH}")
+        print("Skipping launch image generation. Please add a source image.")
+        return
+    
+    # Launch image specs: filename -> (width, height)
+    launch_specs = {
+        "LaunchImage.png": (440, 956),
+        "LaunchImage@2x.png": (880, 1912),
+        "LaunchImage@3x.png": (1320, 2868),
+    }
+    
+    LAUNCH_IMAGESET_PATH.mkdir(parents=True, exist_ok=True)
+    
+    for filename, (target_width, target_height) in launch_specs.items():
+        destination = LAUNCH_IMAGESET_PATH / filename
+        print(f"Generating {filename} ({target_width}x{target_height})")
+        
+        # Use ImageMagick to resize filling the area and crop from center
+        subprocess.run(
+            ["magick", str(LAUNCH_SOURCE_PATH), 
+             "-resize", f"{target_width}x{target_height}^",
+             "-gravity", "center",
+             "-extent", f"{target_width}x{target_height}",
+             str(destination)],
+            check=True
+        )
+    
+    # Update Contents.json
+    launch_contents = {
+        "images": [
+            {"idiom": "universal", "filename": "LaunchImage.png", "scale": "1x"},
+            {"idiom": "universal", "filename": "LaunchImage@2x.png", "scale": "2x"},
+            {"idiom": "universal", "filename": "LaunchImage@3x.png", "scale": "3x"},
+        ],
+        "info": {"version": 1, "author": "xcode"},
+    }
+    
+    contents_path = LAUNCH_IMAGESET_PATH / "Contents.json"
+    with contents_path.open("w", encoding="utf-8") as f:
+        json.dump(launch_contents, f, indent=2)
+        f.write("\n")
+    
+    print(f"\nLaunch images updated at {LAUNCH_IMAGESET_PATH.resolve()}")
+
+
 def main() -> None:
     ensure_source_exists()
     generate_icons()
     sync_to_xcode_asset_catalog()
     generate_android_icons()
+    generate_launch_images()
 
 
 if __name__ == "__main__":

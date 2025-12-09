@@ -61,15 +61,18 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
         _applyConfig(cached);
       }
 
-      // Listen for config response
-      _configSubscription = protocol.bluetoothConfigStream.listen((config) {
-        if (mounted) _applyConfig(config);
-      });
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription = protocol.bluetoothConfigStream.listen((config) {
+          if (mounted) _applyConfig(config);
+        });
 
-      // Request fresh config from device
-      await protocol.getConfig(
-        pb_config.AdminMessage_ConfigType.BLUETOOTH_CONFIG,
-      );
+        // Request fresh config from device
+        await protocol.getConfig(
+          pb_config.AdminMessage_ConfigType.BLUETOOTH_CONFIG,
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

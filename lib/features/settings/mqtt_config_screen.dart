@@ -73,15 +73,18 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
         _applyConfig(cached);
       }
 
-      // Listen for config response
-      _configSubscription = protocol.mqttConfigStream.listen((config) {
-        if (mounted) _applyConfig(config);
-      });
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription = protocol.mqttConfigStream.listen((config) {
+          if (mounted) _applyConfig(config);
+        });
 
-      // Request fresh config from device
-      await protocol.getModuleConfig(
-        pb.AdminMessage_ModuleConfigType.MQTT_CONFIG,
-      );
+        // Request fresh config from device
+        await protocol.getModuleConfig(
+          pb.AdminMessage_ModuleConfigType.MQTT_CONFIG,
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

@@ -62,13 +62,16 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
         _applyConfig(cached);
       }
 
-      // Listen for config response
-      _configSubscription = protocol.powerConfigStream.listen((config) {
-        if (mounted) _applyConfig(config);
-      });
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription = protocol.powerConfigStream.listen((config) {
+          if (mounted) _applyConfig(config);
+        });
 
-      // Request fresh config from device
-      await protocol.getConfig(pb.AdminMessage_ConfigType.POWER_CONFIG);
+        // Request fresh config from device
+        await protocol.getConfig(pb.AdminMessage_ConfigType.POWER_CONFIG);
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -123,7 +126,6 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            
           ),
         ),
         actions: [
@@ -145,7 +147,6 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                       style: TextStyle(
                         color: context.accentColor,
                         fontWeight: FontWeight.w600,
-                        
                       ),
                     ),
             ),
@@ -286,7 +287,6 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                           style: TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 13,
-                            
                           ),
                         ),
                       ),
@@ -320,7 +320,6 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w500,
-                
               ),
             ),
             Container(
@@ -335,7 +334,6 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                   color: context.accentColor,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
-                  
                 ),
               ),
             ),
@@ -344,11 +342,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
         const SizedBox(height: 4),
         Text(
           subtitle,
-          style: TextStyle(
-            color: AppTheme.textSecondary,
-            fontSize: 13,
-            
-          ),
+          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
         ),
         SizedBox(height: 8),
         SliderTheme(
@@ -432,7 +426,6 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -441,7 +434,6 @@ class _SettingsTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppTheme.textTertiary,
-                      
                     ),
                   ),
                 ],

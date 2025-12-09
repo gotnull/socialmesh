@@ -57,13 +57,16 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
         _applyConfig(cached);
       }
 
-      // Listen for config response
-      _configSubscription = protocol.securityConfigStream.listen((config) {
-        if (mounted) _applyConfig(config);
-      });
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription = protocol.securityConfigStream.listen((config) {
+          if (mounted) _applyConfig(config);
+        });
 
-      // Request fresh config from device
-      await protocol.getConfig(pb.AdminMessage_ConfigType.SECURITY_CONFIG);
+        // Request fresh config from device
+        await protocol.getConfig(pb.AdminMessage_ConfigType.SECURITY_CONFIG);
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -109,7 +112,6 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            
           ),
         ),
         actions: [
@@ -131,7 +133,6 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                       style: TextStyle(
                         color: context.accentColor,
                         fontWeight: FontWeight.w600,
-                        
                       ),
                     ),
             ),
@@ -192,9 +193,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                 ),
                 _SettingsTile(
                   icon: Icons.security,
-                  iconColor: _adminChannelEnabled
-                      ? context.accentColor
-                      : null,
+                  iconColor: _adminChannelEnabled ? context.accentColor : null,
                   title: 'Admin Channel',
                   subtitle: 'Allow remote admin via admin channel',
                   trailing: ThemedSwitch(
@@ -236,7 +235,6 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                           style: TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 13,
-                            
                           ),
                         ),
                       ),
@@ -311,7 +309,6 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -320,7 +317,6 @@ class _SettingsTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppTheme.textTertiary,
-                      
                     ),
                   ),
                 ],
