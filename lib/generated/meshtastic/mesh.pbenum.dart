@@ -191,9 +191,9 @@ class HardwareModel extends $pb.ProtobufEnum {
   static const HardwareModel HELTEC_MESH_NODE_T114 =
       HardwareModel._(62, _omitEnumNames ? '' : 'HELTEC_MESH_NODE_T114');
   static const HardwareModel SENSECAP_INDICATOR =
-      HardwareModel._(63, _omitEnumNames ? '' : 'SENSECAP_INDICATOR');
+      HardwareModel._(70, _omitEnumNames ? '' : 'SENSECAP_INDICATOR');
   static const HardwareModel TRACKER_T1000_E =
-      HardwareModel._(64, _omitEnumNames ? '' : 'TRACKER_T1000_E');
+      HardwareModel._(71, _omitEnumNames ? '' : 'TRACKER_T1000_E');
   static const HardwareModel RAK3172 =
       HardwareModel._(65, _omitEnumNames ? '' : 'RAK3172');
   static const HardwareModel WIO_E5 =

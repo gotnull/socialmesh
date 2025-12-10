@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:logger/logger.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
+import '../../core/transport.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../core/theme.dart';
 import '../../utils/snackbar.dart';
@@ -257,7 +258,6 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
                       style: TextStyle(
                         fontSize: 12,
                         color: AppTheme.accentOrange,
-                        
                       ),
                     ),
                   ),
@@ -283,9 +283,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: context.accentColor,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: context.accentColor),
             child: const Text('Import'),
           ),
         ],
@@ -315,6 +313,21 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
   }
 
   Future<void> _importChannel(ChannelConfig channel) async {
+    // Check connection state before importing
+    final connectionState = ref.read(connectionStateProvider);
+    final isConnected = connectionState.maybeWhen(
+      data: (state) => state == DeviceConnectionState.connected,
+      orElse: () => false,
+    );
+
+    if (!isConnected) {
+      showErrorSnackBar(context, 'Cannot import channel: Device not connected');
+      setState(() {
+        _isProcessing = false;
+      });
+      return;
+    }
+
     try {
       // Sync to device first - this must succeed
       final protocol = ref.read(protocolServiceProvider);
@@ -357,7 +370,6 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            
           ),
         ),
         actions: [
@@ -422,11 +434,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
                   SizedBox(height: 12),
                   Text(
                     'Point your camera at a Meshtastic channel QR code',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      
-                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 8),
@@ -435,7 +443,6 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
                     style: TextStyle(
                       color: AppTheme.textSecondary,
                       fontSize: 12,
-                      
                     ),
                     textAlign: TextAlign.center,
                   ),

@@ -80,16 +80,34 @@ void main() {
       expect(item.formattedTitle, 'Star Wars Theme');
     });
 
-    test('formattedTitle returns formatted toneName when no artist', () {
-      const item = RtttlLibraryItem(
-        displayName: 'Simple Tone',
-        toneName: 'simple_tone_name',
-        rtttl: 'simple:d=4,o=5,b=120:c',
-        filename: 'simple.rtttl',
-      );
+    test(
+      'formattedTitle returns displayName when it exists (regardless of artist)',
+      () {
+        const item = RtttlLibraryItem(
+          displayName: 'Simple Tone',
+          toneName: 'simple_tone_name',
+          rtttl: 'simple:d=4,o=5,b=120:c',
+          filename: 'simple.rtttl',
+        );
 
-      expect(item.formattedTitle, 'simple tone name');
-    });
+        // displayName takes priority over toneName when it's non-empty
+        expect(item.formattedTitle, 'Simple Tone');
+      },
+    );
+
+    test(
+      'formattedTitle returns formatted toneName when displayName is empty',
+      () {
+        const item = RtttlLibraryItem(
+          displayName: '',
+          toneName: 'simple_tone_name',
+          rtttl: 'simple:d=4,o=5,b=120:c',
+          filename: 'simple.rtttl',
+        );
+
+        expect(item.formattedTitle, 'simple tone name');
+      },
+    );
 
     test('formattedTitle returns displayName when toneName is empty', () {
       const item = RtttlLibraryItem(

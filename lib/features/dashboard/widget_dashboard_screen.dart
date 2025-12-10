@@ -602,10 +602,7 @@ class _DeviceButton extends StatelessWidget {
 class _AddWidgetSheet extends ConsumerWidget {
   final ScrollController scrollController;
   final DashboardWidgetsNotifier widgetsNotifier;
-  final StateNotifierProvider<
-    DashboardWidgetsNotifier,
-    List<DashboardWidgetConfig>
-  >
+  final NotifierProvider<DashboardWidgetsNotifier, List<DashboardWidgetConfig>>
   widgetsProvider;
 
   const _AddWidgetSheet({

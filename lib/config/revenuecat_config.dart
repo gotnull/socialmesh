@@ -34,7 +34,6 @@ class RevenueCatConfig {
 
   // ============================================================================
   // PRODUCT IDS
-  // Loaded from .env - set USE_TEST_PRODUCTS=true for testing, false for production
   // ============================================================================
 
   /// Theme pack non-consumable product ID

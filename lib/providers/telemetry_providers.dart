@@ -166,18 +166,21 @@ final nodeDetectionSensorLogsProvider =
 // ============ Route Providers ============
 
 /// All saved routes
-class RoutesNotifier extends StateNotifier<List<Route>> {
-  final RouteStorageService? _storage;
-
-  RoutesNotifier(this._storage) : super([]) {
-    if (_storage != null) {
-      _loadRoutes();
+class RoutesNotifier extends Notifier<List<Route>> {
+  @override
+  List<Route> build() {
+    final storageAsync = ref.watch(routeStorageProvider);
+    final storage = storageAsync.value;
+    if (storage != null) {
+      _loadRoutes(storage);
     }
+    return [];
   }
 
-  Future<void> _loadRoutes() async {
-    if (_storage == null) return;
-    final routes = await _storage.getRoutes();
+  RouteStorageService? get _storage => ref.read(routeStorageProvider).value;
+
+  Future<void> _loadRoutes(RouteStorageService storage) async {
+    final routes = await storage.getRoutes();
     // Sort by createdAt descending (newest first)
     routes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     state = routes;
@@ -185,49 +188,51 @@ class RoutesNotifier extends StateNotifier<List<Route>> {
 
   Future<void> saveRoute(Route route) async {
     if (_storage == null) return;
-    await _storage.saveRoute(route);
-    final routes = await _storage.getRoutes();
+    await _storage!.saveRoute(route);
+    final routes = await _storage!.getRoutes();
     routes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     state = routes;
   }
 
   Future<void> deleteRoute(String routeId) async {
     if (_storage == null) return;
-    await _storage.deleteRoute(routeId);
-    final routes = await _storage.getRoutes();
+    await _storage!.deleteRoute(routeId);
+    final routes = await _storage!.getRoutes();
     routes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     state = routes;
   }
 
   Future<void> refresh() async {
     if (_storage == null) return;
-    final routes = await _storage.getRoutes();
+    final routes = await _storage!.getRoutes();
     routes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     state = routes;
   }
 }
 
-final routesProvider = StateNotifierProvider<RoutesNotifier, List<Route>>((
-  ref,
-) {
-  final storageAsync = ref.watch(routeStorageProvider);
-  final storage = storageAsync.valueOrNull;
-  return RoutesNotifier(storage);
-});
+final routesProvider = NotifierProvider<RoutesNotifier, List<Route>>(
+  RoutesNotifier.new,
+);
 
 /// Active route being recorded
-class ActiveRouteNotifier extends StateNotifier<Route?> {
-  final RouteStorageService? _storage;
-  final ProtocolService _protocol;
+class ActiveRouteNotifier extends Notifier<Route?> {
   StreamSubscription? _positionSubscription;
 
-  ActiveRouteNotifier(this._storage, this._protocol) : super(null) {
+  @override
+  Route? build() {
+    ref.onDispose(() {
+      _stopLocationTracking();
+    });
     _init();
+    return null;
   }
+
+  RouteStorageService? get _storage => ref.read(routeStorageProvider).value;
+  ProtocolService get _protocol => ref.read(protocolServiceProvider);
 
   Future<void> _init() async {
     if (_storage == null) return;
-    state = await _storage.getActiveRoute();
+    state = await _storage!.getActiveRoute();
     if (state != null) {
       _startLocationTracking();
     }
@@ -236,7 +241,7 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
   Future<void> startRecording(String name, {String? notes, int? color}) async {
     if (_storage == null) return;
     final route = Route(name: name, notes: notes, color: color ?? 0xFF33C758);
-    await _storage.setActiveRoute(route);
+    await _storage!.setActiveRoute(route);
     state = route;
     _startLocationTracking();
   }
@@ -249,8 +254,8 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
     final completedRoute = state!.copyWith(endedAt: DateTime.now());
 
     // Save to permanent storage
-    await _storage.saveRoute(completedRoute);
-    await _storage.setActiveRoute(null);
+    await _storage!.saveRoute(completedRoute);
+    await _storage!.setActiveRoute(null);
 
     final result = state;
     state = null;
@@ -260,7 +265,7 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
   void cancelRecording() async {
     if (_storage == null) return;
     _stopLocationTracking();
-    await _storage.setActiveRoute(null);
+    await _storage!.setActiveRoute(null);
     state = null;
   }
 
@@ -354,7 +359,7 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
         '🛤️ Route: Adding location point #${state!.locations.length + 1}',
       );
       if (_storage != null) {
-        final updated = await _storage.addLocationToActiveRoute(location);
+        final updated = await _storage!.addLocationToActiveRoute(location);
         if (updated != null) {
           state = updated;
           debugPrint('🛤️ Route: Now have ${state!.locations.length} points');
@@ -387,22 +392,11 @@ class ActiveRouteNotifier extends StateNotifier<Route?> {
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
     return r * c;
   }
-
-  @override
-  void dispose() {
-    _stopLocationTracking();
-    super.dispose();
-  }
 }
 
-final activeRouteProvider = StateNotifierProvider<ActiveRouteNotifier, Route?>((
-  ref,
-) {
-  final storageAsync = ref.watch(routeStorageProvider);
-  final protocol = ref.watch(protocolServiceProvider);
-  final storage = storageAsync.valueOrNull;
-  return ActiveRouteNotifier(storage, protocol);
-});
+final activeRouteProvider = NotifierProvider<ActiveRouteNotifier, Route?>(
+  ActiveRouteNotifier.new,
+);
 
 // ============ Tapback Providers ============
 
@@ -424,11 +418,14 @@ final groupedTapbacksProvider =
     });
 
 /// Tapback actions notifier
-class TapbackActionsNotifier extends StateNotifier<void> {
-  final TapbackStorageService? _storage;
-  final ProtocolService _protocol;
+class TapbackActionsNotifier extends Notifier<void> {
+  @override
+  void build() {
+    return;
+  }
 
-  TapbackActionsNotifier(this._storage, this._protocol) : super(null);
+  TapbackStorageService? get _storage => ref.read(tapbackStorageProvider).value;
+  ProtocolService get _protocol => ref.read(protocolServiceProvider);
 
   /// Add a tapback reaction to a message
   Future<void> addTapback({
@@ -444,7 +441,7 @@ class TapbackActionsNotifier extends StateNotifier<void> {
       fromNodeNum: fromNodeNum,
       type: type,
     );
-    await _storage.addTapback(tapback);
+    await _storage!.addTapback(tapback);
 
     // Send tapback as emoji message to the original sender
     if (toNodeNum != null) {
@@ -467,42 +464,42 @@ class TapbackActionsNotifier extends StateNotifier<void> {
     required int fromNodeNum,
   }) async {
     if (_storage == null) return;
-    await _storage.removeTapback(messageId, fromNodeNum);
+    await _storage!.removeTapback(messageId, fromNodeNum);
   }
 }
 
-final tapbackActionsProvider =
-    StateNotifierProvider<TapbackActionsNotifier, void>((ref) {
-      final storageAsync = ref.watch(tapbackStorageProvider);
-      final protocol = ref.watch(protocolServiceProvider);
-      final storage = storageAsync.valueOrNull;
-      return TapbackActionsNotifier(storage, protocol);
-    });
+final tapbackActionsProvider = NotifierProvider<TapbackActionsNotifier, void>(
+  TapbackActionsNotifier.new,
+);
 
 // ============ Telemetry Auto-Logging ============
 
 /// Telemetry logger that automatically saves telemetry to storage when received
-class TelemetryLoggerNotifier extends StateNotifier<bool> {
-  final TelemetryStorageService? _storage;
-  final ProtocolService _protocol;
+class TelemetryLoggerNotifier extends Notifier<bool> {
   StreamSubscription? _nodeSubscription;
 
-  TelemetryLoggerNotifier(this._storage, this._protocol) : super(false) {
-    if (_storage != null) {
-      _startLogging();
+  @override
+  bool build() {
+    ref.onDispose(() {
+      _nodeSubscription?.cancel();
+    });
+    final storageAsync = ref.watch(telemetryStorageProvider);
+    final storage = storageAsync.value;
+    if (storage != null) {
+      _startLogging(storage);
+      return true;
     }
+    return false;
   }
 
-  void _startLogging() {
-    state = true;
+  ProtocolService get _protocol => ref.read(protocolServiceProvider);
 
+  void _startLogging(TelemetryStorageService storage) {
     // Listen to node updates and log telemetry
     _nodeSubscription = _protocol.nodeStream.listen((node) async {
-      if (_storage == null) return;
-
       // Log device metrics if present
       if (node.batteryLevel != null || node.voltage != null) {
-        await _storage.addDeviceMetrics(
+        await storage.addDeviceMetrics(
           DeviceMetricsLog(
             nodeNum: node.nodeNum,
             batteryLevel: node.batteryLevel,
@@ -516,7 +513,7 @@ class TelemetryLoggerNotifier extends StateNotifier<bool> {
 
       // Log environment metrics if present
       if (node.temperature != null || node.humidity != null) {
-        await _storage.addEnvironmentMetrics(
+        await storage.addEnvironmentMetrics(
           EnvironmentMetricsLog(
             nodeNum: node.nodeNum,
             temperature: node.temperature,
@@ -542,7 +539,7 @@ class TelemetryLoggerNotifier extends StateNotifier<bool> {
       if (node.ch1Voltage != null ||
           node.ch2Voltage != null ||
           node.ch3Voltage != null) {
-        await _storage.addPowerMetrics(
+        await storage.addPowerMetrics(
           PowerMetricsLog(
             nodeNum: node.nodeNum,
             ch1Voltage: node.ch1Voltage,
@@ -559,7 +556,7 @@ class TelemetryLoggerNotifier extends StateNotifier<bool> {
       if (node.pm10Standard != null ||
           node.pm25Standard != null ||
           node.co2 != null) {
-        await _storage.addAirQualityMetrics(
+        await storage.addAirQualityMetrics(
           AirQualityMetricsLog(
             nodeNum: node.nodeNum,
             pm10Standard: node.pm10Standard,
@@ -581,7 +578,7 @@ class TelemetryLoggerNotifier extends StateNotifier<bool> {
 
       // Log position if present
       if (node.hasPosition) {
-        await _storage.addPositionLog(
+        await storage.addPositionLog(
           PositionLog(
             nodeNum: node.nodeNum,
             latitude: node.latitude!,
@@ -593,18 +590,8 @@ class TelemetryLoggerNotifier extends StateNotifier<bool> {
       }
     });
   }
-
-  @override
-  void dispose() {
-    _nodeSubscription?.cancel();
-    super.dispose();
-  }
 }
 
-final telemetryLoggerProvider =
-    StateNotifierProvider<TelemetryLoggerNotifier, bool>((ref) {
-      final storageAsync = ref.watch(telemetryStorageProvider);
-      final protocol = ref.watch(protocolServiceProvider);
-      final storage = storageAsync.valueOrNull;
-      return TelemetryLoggerNotifier(storage, protocol);
-    });
+final telemetryLoggerProvider = NotifierProvider<TelemetryLoggerNotifier, bool>(
+  TelemetryLoggerNotifier.new,
+);

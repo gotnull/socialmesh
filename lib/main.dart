@@ -147,13 +147,15 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         debugPrint('📱 App resumed - disconnected, triggering reconnect scan');
 
         // Reset to idle first to allow reconnect to proceed
-        ref.read(autoReconnectStateProvider.notifier).state =
-            AutoReconnectState.idle;
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.idle);
 
         // Trigger reconnect by simulating a disconnect event
         // The autoReconnectManager will pick this up
-        ref.read(autoReconnectStateProvider.notifier).state =
-            AutoReconnectState.scanning;
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.scanning);
 
         // Start the reconnect process
         _performReconnectOnResume(lastDeviceId);
@@ -187,8 +189,9 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
 
       if (foundDevice != null) {
         debugPrint('📱 Device found on resume, connecting...');
-        ref.read(autoReconnectStateProvider.notifier).state =
-            AutoReconnectState.connecting;
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.connecting);
 
         await transport.connect(foundDevice);
 
@@ -202,9 +205,10 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
 
           await protocol.start();
 
-          ref.read(connectedDeviceProvider.notifier).state = foundDevice;
-          ref.read(autoReconnectStateProvider.notifier).state =
-              AutoReconnectState.success;
+          ref.read(connectedDeviceProvider.notifier).setState(foundDevice);
+          ref
+              .read(autoReconnectStateProvider.notifier)
+              .setState(AutoReconnectState.success);
 
           // Start location updates
           final locationService = ref.read(locationServiceProvider);
@@ -213,20 +217,23 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           debugPrint('📱 ✅ Reconnected successfully on resume!');
 
           await Future.delayed(const Duration(milliseconds: 500));
-          ref.read(autoReconnectStateProvider.notifier).state =
-              AutoReconnectState.idle;
+          ref
+              .read(autoReconnectStateProvider.notifier)
+              .setState(AutoReconnectState.idle);
         } else {
           throw Exception('Connection failed');
         }
       } else {
         debugPrint('📱 Device not found on resume scan');
-        ref.read(autoReconnectStateProvider.notifier).state =
-            AutoReconnectState.idle;
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.idle);
       }
     } catch (e) {
       debugPrint('📱 Reconnect on resume failed: $e');
-      ref.read(autoReconnectStateProvider.notifier).state =
-          AutoReconnectState.idle;
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
     }
   }
 
@@ -242,7 +249,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   Future<void> _loadAccentColor() async {
     final settings = await ref.read(settingsServiceProvider.future);
     final colorValue = settings.accentColor;
-    ref.read(accentColorProvider.notifier).state = Color(colorValue);
+    ref.read(accentColorProvider.notifier).setColor(Color(colorValue));
   }
 
   @override

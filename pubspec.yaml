@@ -11,11 +11,11 @@ dependencies:
   flutter:
     sdk: flutter
   
-  # State Management (stay on 2.x for now - 3.x has breaking changes)
-  flutter_riverpod: ^2.6.1
-  riverpod_annotation: ^2.6.1
+  # State Management (3.x with updated API)
+  flutter_riverpod: ^3.0.3
+  riverpod_annotation: ^3.0.3
   
-  # BLE Communication (2.0 only changed license, API is same)
+  # BLE Communication
   flutter_blue_plus: ^2.0.2
   
   # USB Serial Communication
@@ -39,17 +39,17 @@ dependencies:
   
   # UI/UX
   cupertino_icons: ^1.0.8
-  flutter_map: ^7.0.2
+  flutter_map: ^8.2.2
   latlong2: ^0.9.1
   intl: ^0.19.0
   collection: ^1.18.0
-  geolocator: ^13.0.2
+  geolocator: ^14.0.2
   share_plus: ^10.1.4
   
   # Utilities
   logger: ^2.5.0
   uuid: ^4.5.1
-  permission_handler: ^11.4.0
+  permission_handler: ^12.0.1
   fl_chart: ^1.1.1
   url_launcher: ^6.3.1
   http: ^1.2.2
@@ -59,13 +59,13 @@ dependencies:
   live_activities: ^2.4.3
   
   # In-App Purchases (RevenueCat)
-  purchases_flutter: ^8.11.0
+  purchases_flutter: ^9.9.10
   
   # Animations
   animations: ^2.1.1
   skeletonizer: ^1.4.3
   lottie: ^3.3.1
-  flutter_map_marker_cluster: ^1.4.0
+  flutter_map_marker_cluster: ^8.2.2
   firebase_crashlytics: ^5.0.5
   firebase_core: ^4.2.1
 
@@ -74,9 +74,9 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   
-  # Code generation (stay on 2.x to match riverpod 2.x)
+  # Code generation (3.x to match riverpod 3.x)
   build_runner: ^2.4.13
-  riverpod_generator: ^2.6.4
+  riverpod_generator: ^3.0.3
   json_serializable: ^6.9.5
 
 # For information on the generic Dart part of this file, see the

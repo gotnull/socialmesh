@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/transport.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
 
@@ -69,6 +70,11 @@ class _DeviceManagementScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final protocol = ref.watch(protocolServiceProvider);
+    final connectionStateAsync = ref.watch(connectionStateProvider);
+    final isConnected = connectionStateAsync.maybeWhen(
+      data: (state) => state == DeviceConnectionState.connected,
+      orElse: () => false,
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Device Management')),
@@ -77,6 +83,33 @@ class _DeviceManagementScreenState
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                if (!isConnected)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Card(
+                      color: theme.colorScheme.errorContainer,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.warning_rounded,
+                              color: theme.colorScheme.onErrorContainer,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Device not connected. Connect to a device to manage it.',
+                                style: TextStyle(
+                                  color: theme.colorScheme.onErrorContainer,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 _SectionHeader(title: 'POWER'),
                 const SizedBox(height: 8),
                 _ActionCard(
@@ -84,6 +117,7 @@ class _DeviceManagementScreenState
                   iconColor: theme.colorScheme.primary,
                   title: 'Reboot Device',
                   subtitle: 'Restart the device',
+                  enabled: isConnected,
                   onTap: () => _executeAction(
                     'Reboot Device',
                     () => protocol.reboot(delaySeconds: 2),
@@ -97,6 +131,7 @@ class _DeviceManagementScreenState
                   iconColor: theme.colorScheme.secondary,
                   title: 'Shutdown Device',
                   subtitle: 'Turn off the device',
+                  enabled: isConnected,
                   onTap: () => _executeAction(
                     'Shutdown Device',
                     () => protocol.shutdown(delaySeconds: 2),
@@ -112,6 +147,7 @@ class _DeviceManagementScreenState
                   iconColor: theme.colorScheme.tertiary,
                   title: 'Sync Time',
                   subtitle: 'Set device time to current time',
+                  enabled: isConnected,
                   onTap: () => _executeAction(
                     'Sync Time',
                     () => protocol.syncTime(),
@@ -126,6 +162,7 @@ class _DeviceManagementScreenState
                   iconColor: Colors.orange,
                   title: 'Reset Node Database',
                   subtitle: 'Clear all known nodes from memory',
+                  enabled: isConnected,
                   onTap: () => _executeAction(
                     'Reset Node Database',
                     () => protocol.nodeDbReset(),
@@ -139,6 +176,7 @@ class _DeviceManagementScreenState
                   iconColor: Colors.deepOrange,
                   title: 'Factory Reset Config',
                   subtitle: 'Reset all settings to defaults (keeps node DB)',
+                  enabled: isConnected,
                   onTap: () => _executeAction(
                     'Factory Reset Config',
                     () => protocol.factoryResetConfig(),
@@ -154,6 +192,7 @@ class _DeviceManagementScreenState
                   iconColor: theme.colorScheme.error,
                   title: 'Full Factory Reset',
                   subtitle: 'Erase everything and reset device',
+                  enabled: isConnected,
                   onTap: () => _executeAction(
                     'Full Factory Reset',
                     () => protocol.factoryResetDevice(),
@@ -174,6 +213,7 @@ class _DeviceManagementScreenState
                   iconColor: Colors.indigo,
                   title: 'Enter DFU Mode',
                   subtitle: 'Boot into firmware update mode',
+                  enabled: isConnected,
                   onTap: () => _executeAction(
                     'Enter DFU Mode',
                     () => protocol.enterDfuMode(),
@@ -216,6 +256,7 @@ class _ActionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool enabled;
 
   const _ActionCard({
     required this.icon,
@@ -223,56 +264,67 @@ class _ActionCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.enabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final effectiveIconColor = enabled ? iconColor : theme.disabledColor;
+    final effectiveTextColor = enabled ? null : theme.disabledColor;
 
     return Card(
       margin: EdgeInsets.zero,
       child: InkWell(
-        onTap: onTap,
+        onTap: enabled ? onTap : null,
         borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: iconColor.withAlpha(25),
-                  borderRadius: BorderRadius.circular(12),
+        child: Opacity(
+          opacity: enabled ? 1.0 : 0.5,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: effectiveIconColor.withAlpha(25),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: effectiveIconColor),
                 ),
-                child: Icon(icon, color: iconColor),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: effectiveTextColor,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: enabled
+                              ? theme.colorScheme.onSurfaceVariant
+                              : theme.disabledColor,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Icon(
-                Icons.chevron_right,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ],
+                Icon(
+                  Icons.chevron_right,
+                  color: enabled
+                      ? theme.colorScheme.onSurfaceVariant
+                      : theme.disabledColor,
+                ),
+              ],
+            ),
           ),
         ),
       ),

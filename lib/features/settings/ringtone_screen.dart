@@ -490,15 +490,17 @@ const _builtInPresets = [
 
 /// Provider for custom ringtone presets stored in SharedPreferences
 final customRingtonesProvider =
-    StateNotifierProvider<CustomRingtonesNotifier, List<RingtonePreset>>((ref) {
-      return CustomRingtonesNotifier();
-    });
+    NotifierProvider<CustomRingtonesNotifier, List<RingtonePreset>>(
+      CustomRingtonesNotifier.new,
+    );
 
-class CustomRingtonesNotifier extends StateNotifier<List<RingtonePreset>> {
+class CustomRingtonesNotifier extends Notifier<List<RingtonePreset>> {
   static const _prefsKey = 'custom_ringtones';
 
-  CustomRingtonesNotifier() : super([]) {
+  @override
+  List<RingtonePreset> build() {
     _loadPresets();
+    return [];
   }
 
   Future<void> _loadPresets() async {

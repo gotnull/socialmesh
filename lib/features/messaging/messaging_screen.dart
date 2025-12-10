@@ -544,7 +544,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // Check if device is connected
     final connectionState = ref.read(connectionStateProvider);
     final isConnected =
-        connectionState.valueOrNull == DeviceConnectionState.connected;
+        connectionState.value == DeviceConnectionState.connected;
 
     if (!isConnected) {
       // Queue message for later sending
@@ -634,7 +634,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // Check if device is connected
     final connectionState = ref.read(connectionStateProvider);
     final isConnected =
-        connectionState.valueOrNull == DeviceConnectionState.connected;
+        connectionState.value == DeviceConnectionState.connected;
 
     if (!isConnected) {
       // Queue message for later sending

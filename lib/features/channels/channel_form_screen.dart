@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
@@ -203,6 +204,18 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
 
   Future<void> _saveChannel() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Check connection state before saving
+    final connectionState = ref.read(connectionStateProvider);
+    final isConnected = connectionState.maybeWhen(
+      data: (state) => state == DeviceConnectionState.connected,
+      orElse: () => false,
+    );
+
+    if (!isConnected) {
+      showErrorSnackBar(context, 'Cannot save channel: Device not connected');
+      return;
+    }
 
     // Validate key if encryption is enabled
     if (_selectedKeySize != KeySize.none) {

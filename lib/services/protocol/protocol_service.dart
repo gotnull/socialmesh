@@ -72,6 +72,8 @@ class ProtocolService {
   _detectionSensorConfigController;
   final StreamController<pb.ModuleConfig_RangeTestConfig>
   _rangeTestConfigController;
+  final StreamController<pb.ModuleConfig_ExternalNotificationConfig>
+  _externalNotificationConfigController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
@@ -99,6 +101,8 @@ class ProtocolService {
   pb.ModuleConfig_StoreForwardConfig? _currentStoreForwardConfig;
   pb.ModuleConfig_DetectionSensorConfig? _currentDetectionSensorConfig;
   pb.ModuleConfig_RangeTestConfig? _currentRangeTestConfig;
+  pb.ModuleConfig_ExternalNotificationConfig?
+  _currentExternalNotificationConfig;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
   final Random _random = Random();
@@ -154,7 +158,11 @@ class ProtocolService {
       _detectionSensorConfigController =
           StreamController<pb.ModuleConfig_DetectionSensorConfig>.broadcast(),
       _rangeTestConfigController =
-          StreamController<pb.ModuleConfig_RangeTestConfig>.broadcast();
+          StreamController<pb.ModuleConfig_RangeTestConfig>.broadcast(),
+      _externalNotificationConfigController =
+          StreamController<
+            pb.ModuleConfig_ExternalNotificationConfig
+          >.broadcast();
 
   /// Set the BLE device name for hardware model inference
   void setDeviceName(String? name) {
@@ -783,6 +791,16 @@ class ProtocolService {
           );
           _currentRangeTestConfig = rtConfig;
           _rangeTestConfigController.add(rtConfig);
+        }
+
+        // Handle External Notification config
+        if (moduleConfig.hasExternalNotification()) {
+          final extNotifConfig = moduleConfig.externalNotification;
+          _logger.i(
+            'Received External Notification config - enabled: ${extNotifConfig.enabled}',
+          );
+          _currentExternalNotificationConfig = extNotifConfig;
+          _externalNotificationConfigController.add(extNotifConfig);
         }
       } else if (adminMsg.hasGetChannelResponse()) {
         // Handle channel response - update local channel list
@@ -3392,25 +3410,78 @@ class ProtocolService {
     await setModuleConfig(moduleConfig);
   }
 
+  /// Get External Notification module configuration
+  Future<pb.ModuleConfig_ExternalNotificationConfig?>
+  getExternalNotificationModuleConfig() async {
+    // If we already have the config, return it
+    if (_currentExternalNotificationConfig != null) {
+      return _currentExternalNotificationConfig;
+    }
+
+    // Request config from device
+    await getModuleConfig(pb.AdminMessage_ModuleConfigType.EXTNOTIF_CONFIG);
+
+    // Wait for response with timeout
+    try {
+      final config = await _externalNotificationConfigController.stream.first
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => throw TimeoutException(
+              'External notification config request timed out',
+            ),
+          );
+      return config;
+    } catch (e) {
+      _logger.e('Failed to get external notification config: $e');
+      return null;
+    }
+  }
+
   /// Set External Notification module configuration
   Future<void> setExternalNotificationConfig({
     bool? enabled,
+    int? output,
     int? outputMs,
     bool? active,
     bool? alertMessage,
     bool? alertBell,
+    bool? alertMessageVibra,
+    bool? alertMessageBuzzer,
+    bool? alertBellVibra,
+    bool? alertBellBuzzer,
+    int? outputVibra,
+    int? outputBuzzer,
     bool? usePwm,
+    bool? useI2sAsBuzzer,
     int? nagTimeout,
   }) async {
     _logger.i('Setting external notification config');
 
     final extNotifConfig = pb.ModuleConfig_ExternalNotificationConfig();
     if (enabled != null) extNotifConfig.enabled = enabled;
+    if (output != null) extNotifConfig.output = output;
     if (outputMs != null) extNotifConfig.outputMs = outputMs;
     if (active != null) extNotifConfig.active = active;
     if (alertMessage != null) extNotifConfig.alertMessage = alertMessage;
     if (alertBell != null) extNotifConfig.alertBell = alertBell;
+    if (alertMessageVibra != null) {
+      extNotifConfig.alertMessageVibra = alertMessageVibra;
+    }
+    if (alertMessageBuzzer != null) {
+      extNotifConfig.alertMessageBuzzer = alertMessageBuzzer;
+    }
+    if (alertBellVibra != null) {
+      extNotifConfig.alertBellVibra = alertBellVibra;
+    }
+    if (alertBellBuzzer != null) {
+      extNotifConfig.alertBellBuzzer = alertBellBuzzer;
+    }
+    if (outputVibra != null) extNotifConfig.outputVibra = outputVibra;
+    if (outputBuzzer != null) extNotifConfig.outputBuzzer = outputBuzzer;
     if (usePwm != null) extNotifConfig.usePwm = usePwm;
+    if (useI2sAsBuzzer != null) {
+      extNotifConfig.useI2sAsBuzzer = useI2sAsBuzzer;
+    }
     if (nagTimeout != null) extNotifConfig.nagTimeout = nagTimeout;
 
     final moduleConfig = pb.ModuleConfig()
@@ -3981,8 +4052,8 @@ class ProtocolService {
       'STATION_G2': 'Station G2',
       'WIO_WM1110': 'Wio WM1110',
       'WIO_E5': 'Wio E5',
-      'SENSECAP_INDICATOR': 'SenseCAP Indicator',
-      'TRACKER_T1000_E': 'Tracker T1000-E',
+      'SENSECAP_INDICATOR': 'Seeed SenseCAP Indicator',
+      'TRACKER_T1000_E': 'Seeed Card Tracker T1000-E',
       'M5STACK': 'M5Stack',
       'PICOMPUTER_S3': 'Pi Computer S3',
       'RP2040_LORA': 'RP2040 LoRa',

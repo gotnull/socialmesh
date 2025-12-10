@@ -5,21 +5,33 @@ import '../models/dashboard_widget_config.dart';
 
 /// Provider for dashboard widget configurations
 final dashboardWidgetsProvider =
-    StateNotifierProvider<
-      DashboardWidgetsNotifier,
-      List<DashboardWidgetConfig>
-    >((ref) => DashboardWidgetsNotifier());
+    NotifierProvider<DashboardWidgetsNotifier, List<DashboardWidgetConfig>>(
+      DashboardWidgetsNotifier.new,
+    );
+
+/// Edit mode notifier for the dashboard
+class DashboardEditModeNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+  void setEditMode(bool value) => state = value;
+}
 
 /// Edit mode state for the dashboard
-final dashboardEditModeProvider = StateProvider<bool>((ref) => false);
+final dashboardEditModeProvider =
+    NotifierProvider<DashboardEditModeNotifier, bool>(
+      DashboardEditModeNotifier.new,
+    );
 
 /// Notifier to manage dashboard widget configurations
-class DashboardWidgetsNotifier
-    extends StateNotifier<List<DashboardWidgetConfig>> {
+class DashboardWidgetsNotifier extends Notifier<List<DashboardWidgetConfig>> {
   static const String _storageKey = 'dashboard_widgets';
 
-  DashboardWidgetsNotifier() : super([]) {
+  @override
+  List<DashboardWidgetConfig> build() {
     _loadWidgets();
+    return [];
   }
 
   Future<void> _loadWidgets() async {

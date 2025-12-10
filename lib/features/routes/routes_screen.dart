@@ -148,7 +148,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
 
   void _exportRoute(route_model.Route route) async {
     final storageAsync = ref.read(routeStorageProvider);
-    final storage = storageAsync.valueOrNull;
+    final storage = storageAsync.value;
     if (storage == null) return;
 
     // Get the render box for sharePositionOrigin (required on iPad) before async
@@ -200,7 +200,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
 
       final gpxContent = String.fromCharCodes(file.bytes!);
       final storageAsync = ref.read(routeStorageProvider);
-      final storage = storageAsync.valueOrNull;
+      final storage = storageAsync.value;
       if (storage == null) return;
 
       final importedRoute = storage.importRouteFromGpx(gpxContent);

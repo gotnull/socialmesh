@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/theme.dart';
+import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
@@ -186,6 +187,18 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
 
   Future<void> _saveChannel() async {
     if (_isSaving) return;
+
+    // Check connection state before saving
+    final connectionState = ref.read(connectionStateProvider);
+    final isConnected = connectionState.maybeWhen(
+      data: (state) => state == DeviceConnectionState.connected,
+      orElse: () => false,
+    );
+
+    if (!isConnected) {
+      showErrorSnackBar(context, 'Cannot save channel: Device not connected');
+      return;
+    }
 
     setState(() {
       _isSaving = true;

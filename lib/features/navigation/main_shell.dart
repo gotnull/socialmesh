@@ -189,7 +189,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                     ref.haptics.tabChange();
                     // Clear new nodes badge when navigating to Nodes tab
                     if (index == 3) {
-                      ref.read(newNodesCountProvider.notifier).state = 0;
+                      ref.read(newNodesCountProvider.notifier).reset();
                     }
                     setState(() => _currentIndex = index);
                   },

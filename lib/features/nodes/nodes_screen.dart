@@ -7,6 +7,7 @@ import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../../core/transport.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animated_list_item.dart';
@@ -835,6 +836,18 @@ class _NodeDetailsSheet extends ConsumerWidget {
   }
 
   void _showRebootConfirmation(BuildContext context, WidgetRef ref) {
+    // Check connection state before showing reboot dialog
+    final connectionState = ref.read(connectionStateProvider);
+    final isConnected = connectionState.maybeWhen(
+      data: (state) => state == DeviceConnectionState.connected,
+      orElse: () => false,
+    );
+
+    if (!isConnected) {
+      showErrorSnackBar(context, 'Cannot reboot: Device not connected');
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -904,6 +917,18 @@ class _NodeDetailsSheet extends ConsumerWidget {
   }
 
   void _showShutdownConfirmation(BuildContext context, WidgetRef ref) {
+    // Check connection state before showing shutdown dialog
+    final connectionState = ref.read(connectionStateProvider);
+    final isConnected = connectionState.maybeWhen(
+      data: (state) => state == DeviceConnectionState.connected,
+      orElse: () => false,
+    );
+
+    if (!isConnected) {
+      showErrorSnackBar(context, 'Cannot shutdown: Device not connected');
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(

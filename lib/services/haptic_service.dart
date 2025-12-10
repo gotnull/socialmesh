@@ -53,7 +53,7 @@ class HapticService {
   /// Trigger haptic feedback based on type and user settings
   Future<void> trigger(HapticType type) async {
     final settingsAsync = _ref.read(settingsServiceProvider);
-    final settings = settingsAsync.valueOrNull;
+    final settings = settingsAsync.value;
     if (settings == null) return;
 
     // Check if haptics are enabled

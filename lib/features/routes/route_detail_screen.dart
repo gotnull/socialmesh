@@ -559,7 +559,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
 
     try {
       final storageAsync = ref.read(routeStorageProvider);
-      final storage = storageAsync.valueOrNull;
+      final storage = storageAsync.value;
       if (storage == null) {
         if (mounted) {
           showErrorSnackBar(context, 'Storage not available');

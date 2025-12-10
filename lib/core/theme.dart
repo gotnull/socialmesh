@@ -68,8 +68,18 @@ const appTaglines = [
   'Build infrastructure together.',
 ];
 
+/// Notifier for accent color
+class AccentColorNotifier extends Notifier<Color> {
+  @override
+  Color build() => AccentColors.magenta;
+
+  void setColor(Color color) => state = color;
+}
+
 /// Provider for the current accent color
-final accentColorProvider = StateProvider<Color>((ref) => AccentColors.magenta);
+final accentColorProvider = NotifierProvider<AccentColorNotifier, Color>(
+  AccentColorNotifier.new,
+);
 
 class AppTheme {
   // Font families

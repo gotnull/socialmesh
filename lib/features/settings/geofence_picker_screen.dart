@@ -215,7 +215,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
     if (_center == null) return false;
 
     // Get center screen position
-    final centerScreen = _mapController.camera.latLngToScreenPoint(_center!);
+    final centerScreen = _mapController.camera.latLngToScreenOffset(_center!);
 
     // Calculate the radius in screen pixels
     // Use a point at the edge of the geofence to find screen radius
@@ -224,12 +224,12 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
       _radiusMeters,
       90, // Due east
     );
-    final edgeScreen = _mapController.camera.latLngToScreenPoint(edgePoint);
-    final screenRadius = (edgeScreen.x - centerScreen.x).abs();
+    final edgeScreen = _mapController.camera.latLngToScreenOffset(edgePoint);
+    final screenRadius = (edgeScreen.dx - centerScreen.dx).abs();
 
     // Distance from touch to center
-    final dx = screenPoint.dx - centerScreen.x;
-    final dy = screenPoint.dy - centerScreen.y;
+    final dx = screenPoint.dx - centerScreen.dx;
+    final dy = screenPoint.dy - centerScreen.dy;
     final distanceFromCenter = math.sqrt(dx * dx + dy * dy);
 
     // Check if within threshold of the edge
@@ -272,8 +272,8 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
   void _onPointerMove(PointerMoveEvent event) {
     if (_isDraggingRadius && _center != null) {
       // Convert screen position to map position
-      final point = _mapController.camera.pointToLatLng(
-        math.Point(event.localPosition.dx, event.localPosition.dy),
+      final point = _mapController.camera.screenOffsetToLatLng(
+        Offset(event.localPosition.dx, event.localPosition.dy),
       );
 
       final newRadius = _calculateDistance(_center!, point);

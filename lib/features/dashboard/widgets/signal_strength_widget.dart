@@ -55,9 +55,9 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
     final channelUtilAsync = ref.read(currentChannelUtilProvider);
     final now = DateTime.now();
 
-    final rssiValue = rssiAsync.valueOrNull?.toDouble() ?? -90.0;
-    final snrValue = snrAsync.valueOrNull ?? 0.0;
-    final channelUtilValue = channelUtilAsync.valueOrNull ?? 0.0;
+    final rssiValue = rssiAsync.value?.toDouble() ?? -90.0;
+    final snrValue = snrAsync.value ?? 0.0;
+    final channelUtilValue = channelUtilAsync.value ?? 0.0;
 
     _signalHistory.add(
       MultiSignalData(

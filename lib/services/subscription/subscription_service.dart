@@ -117,8 +117,10 @@ class PurchaseService {
         return PurchaseResult.error;
       }
 
-      final customerInfo = await Purchases.purchaseStoreProduct(products.first);
-      _updateStateFromCustomerInfo(customerInfo);
+      final result = await Purchases.purchase(
+        PurchaseParams.storeProduct(products.first),
+      );
+      _updateStateFromCustomerInfo(result.customerInfo);
       return PurchaseResult.success;
     } on PurchasesErrorCode catch (e) {
       if (e == PurchasesErrorCode.purchaseCancelledError) {

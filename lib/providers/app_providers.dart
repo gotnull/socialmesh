@@ -44,10 +44,9 @@ enum AppInitState {
   error,
 }
 
-class AppInitNotifier extends StateNotifier<AppInitState> {
-  final Ref _ref;
-
-  AppInitNotifier(this._ref) : super(AppInitState.uninitialized);
+class AppInitNotifier extends Notifier<AppInitState> {
+  @override
+  AppInitState build() => AppInitState.uninitialized;
 
   /// Manually set state to initialized (e.g., after successful connection from scanner)
   void setInitialized() {
@@ -68,18 +67,18 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
       await NotificationService().initialize();
 
       // Initialize storage services
-      await _ref.read(settingsServiceProvider.future);
-      await _ref.read(messageStorageProvider.future);
-      await _ref.read(nodeStorageProvider.future);
+      await ref.read(settingsServiceProvider.future);
+      await ref.read(messageStorageProvider.future);
+      await ref.read(nodeStorageProvider.future);
 
       // Initialize IFTTT service
-      await _ref.read(iftttServiceProvider).init();
+      await ref.read(iftttServiceProvider).init();
 
       // Initialize automation engine (loads automations from storage)
-      await _ref.read(automationEngineInitProvider.future);
+      await ref.read(automationEngineInitProvider.future);
 
       // Check for onboarding completion
-      final settings = await _ref.read(settingsServiceProvider.future);
+      final settings = await ref.read(settingsServiceProvider.future);
       if (!settings.onboardingComplete) {
         state = AppInitState.needsOnboarding;
         return;
@@ -91,10 +90,11 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
       final shouldAutoReconnect = settings.autoReconnect;
 
       if (lastDeviceId != null && shouldAutoReconnect) {
-        _ref.read(autoReconnectStateProvider.notifier).state =
-            AutoReconnectState.scanning;
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.scanning);
 
-        final transport = _ref.read(transportProvider);
+        final transport = ref.read(transportProvider);
         try {
           DeviceInfo? lastDevice;
 
@@ -119,8 +119,9 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
               );
             }
 
-            _ref.read(autoReconnectStateProvider.notifier).state =
-                AutoReconnectState.connecting;
+            ref
+                .read(autoReconnectStateProvider.notifier)
+                .setState(AutoReconnectState.connecting);
             await transport.connect(lastDevice);
 
             // Verify connection was successful at BLE level
@@ -129,7 +130,7 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
             }
 
             // Start protocol service
-            final protocol = _ref.read(protocolServiceProvider);
+            final protocol = ref.read(protocolServiceProvider);
             debugPrint('🔵 AppInit: Calling protocol.start()...');
 
             // Set device info for hardware model inference
@@ -153,15 +154,16 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
             }
 
             // Start phone GPS location updates
-            final locationService = _ref.read(locationServiceProvider);
+            final locationService = ref.read(locationServiceProvider);
             await locationService.startLocationUpdates();
 
-            _ref.read(connectedDeviceProvider.notifier).state = lastDevice;
+            ref.read(connectedDeviceProvider.notifier).setState(lastDevice);
             debugPrint(
               '🎯 Auto-reconnect: Setting autoReconnectState to success',
             );
-            _ref.read(autoReconnectStateProvider.notifier).state =
-                AutoReconnectState.success;
+            ref
+                .read(autoReconnectStateProvider.notifier)
+                .setState(AutoReconnectState.success);
 
             // Skip region check entirely during auto-reconnect
             // If we have a lastConnectedDeviceId, user has successfully connected before
@@ -178,15 +180,17 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
             }
           } else {
             // Device not found during scan - go to scanner
-            _ref.read(autoReconnectStateProvider.notifier).state =
-                AutoReconnectState.idle;
+            ref
+                .read(autoReconnectStateProvider.notifier)
+                .setState(AutoReconnectState.idle);
             state = AppInitState.needsScanner;
             return;
           }
         } catch (e) {
           debugPrint('Auto-reconnect failed: $e');
-          _ref.read(autoReconnectStateProvider.notifier).state =
-              AutoReconnectState.failed;
+          ref
+              .read(autoReconnectStateProvider.notifier)
+              .setState(AutoReconnectState.failed);
           // Connection failed (user cancelled PIN, timeout, etc.) - go to scanner
           state = AppInitState.needsScanner;
           return;
@@ -203,11 +207,9 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
 }
 
 /// Check data integrity after connection and clear stale data if needed.
-final appInitProvider = StateNotifierProvider<AppInitNotifier, AppInitState>((
-  ref,
-) {
-  return AppInitNotifier(ref);
-});
+final appInitProvider = NotifierProvider<AppInitNotifier, AppInitState>(
+  AppInitNotifier.new,
+);
 
 // Storage services
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
@@ -216,7 +218,16 @@ final secureStorageProvider = Provider<SecureStorageService>((ref) {
 });
 
 /// Settings refresh trigger - increment this to force settings UI to rebuild
-final settingsRefreshProvider = StateProvider<int>((ref) => 0);
+class SettingsRefreshNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void refresh() => state++;
+}
+
+final settingsRefreshProvider = NotifierProvider<SettingsRefreshNotifier, int>(
+  SettingsRefreshNotifier.new,
+);
 
 /// Cached settings service instance
 SettingsService? _cachedSettingsService;
@@ -256,9 +267,17 @@ final nodeStorageProvider = FutureProvider<NodeStorageService>((ref) async {
 });
 
 // Transport
-final transportTypeProvider = StateProvider<TransportType>((ref) {
-  return TransportType.ble;
-});
+class TransportTypeNotifier extends Notifier<TransportType> {
+  @override
+  TransportType build() => TransportType.ble;
+
+  void setType(TransportType type) => state = type;
+}
+
+final transportTypeProvider =
+    NotifierProvider<TransportTypeNotifier, TransportType>(
+      TransportTypeNotifier.new,
+    );
 
 final transportProvider = Provider<DeviceTransport>((ref) {
   final type = ref.watch(transportTypeProvider);
@@ -290,17 +309,45 @@ final connectionStateProvider = StreamProvider<DeviceConnectionState>((
 });
 
 // Currently connected device
-final connectedDeviceProvider = StateProvider<DeviceInfo?>((ref) => null);
+class ConnectedDeviceNotifier extends Notifier<DeviceInfo?> {
+  @override
+  DeviceInfo? build() => null;
+
+  void setState(DeviceInfo? device) => state = device;
+}
+
+final connectedDeviceProvider =
+    NotifierProvider<ConnectedDeviceNotifier, DeviceInfo?>(
+      ConnectedDeviceNotifier.new,
+    );
 
 // Auto-reconnect state
 enum AutoReconnectState { idle, scanning, connecting, failed, success }
 
-final autoReconnectStateProvider = StateProvider<AutoReconnectState>((ref) {
-  return AutoReconnectState.idle;
-});
+class AutoReconnectStateNotifier extends Notifier<AutoReconnectState> {
+  @override
+  AutoReconnectState build() => AutoReconnectState.idle;
+
+  void setState(AutoReconnectState newState) => state = newState;
+}
+
+final autoReconnectStateProvider =
+    NotifierProvider<AutoReconnectStateNotifier, AutoReconnectState>(
+      AutoReconnectStateNotifier.new,
+    );
 
 // Store the last known device ID for reconnection attempts
-final _lastConnectedDeviceIdProvider = StateProvider<String?>((ref) => null);
+class LastConnectedDeviceIdNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setId(String? id) => state = id;
+}
+
+final _lastConnectedDeviceIdProvider =
+    NotifierProvider<LastConnectedDeviceIdNotifier, String?>(
+      LastConnectedDeviceIdNotifier.new,
+    );
 
 // Auto-reconnect manager - monitors connection and attempts to reconnect on unexpected disconnect
 final autoReconnectManagerProvider = Provider<void>((ref) {
@@ -313,7 +360,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
     );
     if (next != null) {
       debugPrint('🔄 Storing device ID for reconnect: ${next.id}');
-      ref.read(_lastConnectedDeviceIdProvider.notifier).state = next.id;
+      ref.read(_lastConnectedDeviceIdProvider.notifier).setId(next.id);
     }
   });
 
@@ -341,8 +388,9 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
         debugPrint(
           '🔄 ✅ Connection restored while reconnecting - resetting to idle',
         );
-        ref.read(autoReconnectStateProvider.notifier).state =
-            AutoReconnectState.idle;
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.idle);
         return;
       }
 
@@ -360,8 +408,9 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
         debugPrint('🔄 🚀 Device disconnected, STARTING reconnect...');
 
         // Set state to scanning immediately to prevent duplicate triggers
-        ref.read(autoReconnectStateProvider.notifier).state =
-            AutoReconnectState.scanning;
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.scanning);
 
         // Run reconnect in a separate async function to avoid listener issues
         _performReconnect(ref, lastDeviceId);
@@ -395,8 +444,9 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
     debugPrint('🔄 Auto-reconnect setting: ${settings.autoReconnect}');
     if (!settings.autoReconnect) {
       debugPrint('🔄 Auto-reconnect disabled in settings');
-      ref.read(autoReconnectStateProvider.notifier).state =
-          AutoReconnectState.idle;
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
       return;
     }
 
@@ -503,8 +553,9 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 
       if (foundDevice != null) {
         debugPrint('🔄 Device found! Connecting...');
-        ref.read(autoReconnectStateProvider.notifier).state =
-            AutoReconnectState.connecting;
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.connecting);
 
         try {
           await transport.connect(foundDevice);
@@ -529,8 +580,9 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           if (transport.state != DeviceConnectionState.connected) {
             debugPrint('🔄 ❌ Connection dropped after connect, retrying...');
             if (attempt < maxRetries) {
-              ref.read(autoReconnectStateProvider.notifier).state =
-                  AutoReconnectState.scanning;
+              ref
+                  .read(autoReconnectStateProvider.notifier)
+                  .setState(AutoReconnectState.scanning);
               await Future.delayed(const Duration(seconds: 3));
               continue; // Try again
             }
@@ -538,7 +590,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           }
 
           // Update connected device
-          ref.read(connectedDeviceProvider.notifier).state = foundDevice;
+          ref.read(connectedDeviceProvider.notifier).setState(foundDevice);
 
           // Check if cancelled before starting protocol
           if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
@@ -571,8 +623,9 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
               '🔄 ❌ Connection dropped after protocol start, retrying...',
             );
             if (attempt < maxRetries) {
-              ref.read(autoReconnectStateProvider.notifier).state =
-                  AutoReconnectState.scanning;
+              ref
+                  .read(autoReconnectStateProvider.notifier)
+                  .setState(AutoReconnectState.scanning);
               await Future.delayed(const Duration(seconds: 3));
               continue; // Try again
             }
@@ -585,20 +638,23 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 
           // Final check - if we're still connected, declare success
           if (transport.state == DeviceConnectionState.connected) {
-            ref.read(autoReconnectStateProvider.notifier).state =
-                AutoReconnectState.success;
+            ref
+                .read(autoReconnectStateProvider.notifier)
+                .setState(AutoReconnectState.success);
             debugPrint('🔄 ✅ Reconnection successful and stable!');
 
             // Reset to idle
             await Future.delayed(const Duration(milliseconds: 500));
-            ref.read(autoReconnectStateProvider.notifier).state =
-                AutoReconnectState.idle;
+            ref
+                .read(autoReconnectStateProvider.notifier)
+                .setState(AutoReconnectState.idle);
             return; // Success!
           } else {
             debugPrint('🔄 ❌ Connection dropped at final check');
             if (attempt < maxRetries) {
-              ref.read(autoReconnectStateProvider.notifier).state =
-                  AutoReconnectState.scanning;
+              ref
+                  .read(autoReconnectStateProvider.notifier)
+                  .setState(AutoReconnectState.scanning);
               await Future.delayed(const Duration(seconds: 3));
               continue;
             }
@@ -613,8 +669,9 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
             return;
           }
           if (attempt < maxRetries) {
-            ref.read(autoReconnectStateProvider.notifier).state =
-                AutoReconnectState.scanning;
+            ref
+                .read(autoReconnectStateProvider.notifier)
+                .setState(AutoReconnectState.scanning);
             await Future.delayed(const Duration(seconds: 3));
             continue;
           }
@@ -630,19 +687,22 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 
     // All retries exhausted
     debugPrint('🔄 ❌ Failed to reconnect after $maxRetries attempts');
-    ref.read(autoReconnectStateProvider.notifier).state =
-        AutoReconnectState.failed;
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.failed);
 
     // Don't clear the device ID - user might want to manually reconnect
     // Just reset to idle after showing failure
     await Future.delayed(const Duration(seconds: 2));
-    ref.read(autoReconnectStateProvider.notifier).state =
-        AutoReconnectState.idle;
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.idle);
   } catch (e, stackTrace) {
     debugPrint('🔄 ❌ Unexpected error during reconnect: $e');
     debugPrint('🔄 Stack trace: $stackTrace');
-    ref.read(autoReconnectStateProvider.notifier).state =
-        AutoReconnectState.idle;
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.idle);
   }
 }
 
@@ -737,19 +797,27 @@ final liveActivityServiceProvider = Provider<LiveActivityService>((ref) {
 });
 
 // Live Activity manager - monitors connection and updates Live Activity
-class LiveActivityManagerNotifier extends StateNotifier<bool> {
-  final LiveActivityService _liveActivityService;
-  final Ref _ref;
+class LiveActivityManagerNotifier extends Notifier<bool> {
   StreamSubscription<double>? _channelUtilSubscription;
+  late LiveActivityService _liveActivityService;
 
-  LiveActivityManagerNotifier(this._liveActivityService, this._ref)
-    : super(false) {
+  @override
+  bool build() {
+    _liveActivityService = ref.watch(liveActivityServiceProvider);
+
+    // Set up disposal
+    ref.onDispose(() {
+      _channelUtilSubscription?.cancel();
+      _liveActivityService.endAllActivities();
+    });
+
     _init();
+    return false;
   }
 
   void _init() {
     // Listen for connection state changes
-    _ref.listen<AsyncValue<DeviceConnectionState>>(connectionStateProvider, (
+    ref.listen<AsyncValue<DeviceConnectionState>>(connectionStateProvider, (
       previous,
       current,
     ) {
@@ -764,17 +832,17 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
     }, fireImmediately: true);
 
     // Listen for node updates to refresh battery/signal/online count
-    _ref.listen<Map<int, MeshNode>>(nodesProvider, (previous, current) {
+    ref.listen<Map<int, MeshNode>>(nodesProvider, (previous, current) {
       if (!state || !_liveActivityService.isActive) return;
       _updateFromNodes(current);
     });
   }
 
   Future<void> _startLiveActivity() async {
-    final connectedDevice = _ref.read(connectedDeviceProvider);
-    final myNodeNum = _ref.read(myNodeNumProvider);
-    final nodes = _ref.read(nodesProvider);
-    final protocol = _ref.read(protocolServiceProvider);
+    final connectedDevice = ref.read(connectedDeviceProvider);
+    final myNodeNum = ref.read(myNodeNumProvider);
+    final nodes = ref.read(nodesProvider);
+    final protocol = ref.read(protocolServiceProvider);
 
     // Get my node info for display
     MeshNode? myNode;
@@ -838,8 +906,8 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
       ) {
         if (!_liveActivityService.isActive) return;
 
-        final currentNodes = _ref.read(nodesProvider);
-        final currentMyNodeNum = _ref.read(myNodeNumProvider);
+        final currentNodes = ref.read(nodesProvider);
+        final currentMyNodeNum = ref.read(myNodeNumProvider);
         final currentNode = currentMyNodeNum != null
             ? currentNodes[currentMyNodeNum]
             : null;
@@ -878,7 +946,7 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
   }
 
   void _updateFromNodes(Map<int, MeshNode> nodes) {
-    final myNodeNum = _ref.read(myNodeNumProvider);
+    final myNodeNum = ref.read(myNodeNumProvider);
     if (myNodeNum == null) return;
 
     final myNode = nodes[myNodeNum];
@@ -949,36 +1017,34 @@ class LiveActivityManagerNotifier extends StateNotifier<bool> {
     state = false;
     debugPrint('📱 Ended Live Activity - device disconnected');
   }
-
-  @override
-  void dispose() {
-    _channelUtilSubscription?.cancel();
-    _liveActivityService.endAllActivities();
-    super.dispose();
-  }
 }
 
 final liveActivityManagerProvider =
-    StateNotifierProvider<LiveActivityManagerNotifier, bool>((ref) {
-      final liveActivityService = ref.watch(liveActivityServiceProvider);
-      return LiveActivityManagerNotifier(liveActivityService, ref);
-    });
+    NotifierProvider<LiveActivityManagerNotifier, bool>(
+      LiveActivityManagerNotifier.new,
+    );
 
 // Messages with persistence
-class MessagesNotifier extends StateNotifier<List<Message>> {
-  final ProtocolService _protocol;
-  final MessageStorageService? _storage;
-  final Ref _ref;
+class MessagesNotifier extends Notifier<List<Message>> {
   final Map<int, String> _packetToMessageId = {};
+  MessageStorageService? _storage;
 
-  MessagesNotifier(this._protocol, this._storage, this._ref) : super([]) {
-    _init();
+  @override
+  List<Message> build() {
+    final protocol = ref.watch(protocolServiceProvider);
+    final storageAsync = ref.watch(messageStorageProvider);
+    _storage = storageAsync.value;
+
+    // Initialize asynchronously
+    _init(protocol);
+
+    return [];
   }
 
-  Future<void> _init() async {
+  Future<void> _init(ProtocolService protocol) async {
     // Load persisted messages
     if (_storage != null) {
-      final savedMessages = await _storage.loadMessages();
+      final savedMessages = await _storage!.loadMessages();
       if (savedMessages.isNotEmpty) {
         state = savedMessages;
         debugPrint('📨 Loaded ${savedMessages.length} messages from storage');
@@ -986,7 +1052,7 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
     }
 
     // Listen for new messages
-    _protocol.messageStream.listen((message) {
+    protocol.messageStream.listen((message) {
       // Skip sent messages - they're handled via optimistic UI in messaging_screen
       if (message.sent) {
         return;
@@ -1000,15 +1066,15 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
     });
 
     // Listen for delivery status updates
-    _protocol.deliveryStream.listen(_handleDeliveryUpdate);
+    protocol.deliveryStream.listen(_handleDeliveryUpdate);
   }
 
   void _notifyNewMessage(Message message) {
     debugPrint('🔔 _notifyNewMessage called for message from ${message.from}');
 
     // Check master notification toggle
-    final settingsAsync = _ref.read(settingsServiceProvider);
-    final settings = settingsAsync.valueOrNull;
+    final settingsAsync = ref.read(settingsServiceProvider);
+    final settings = settingsAsync.value;
     if (settings == null) {
       debugPrint('🔔 Settings not available, skipping notification');
       return;
@@ -1019,7 +1085,7 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
     }
 
     // Get sender name from nodes
-    final nodes = _ref.read(nodesProvider);
+    final nodes = ref.read(nodesProvider);
     final senderNode = nodes[message.from];
     final senderName = senderNode?.displayName ?? 'Unknown';
     debugPrint('🔔 Sender: $senderName');
@@ -1038,7 +1104,7 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
       }
 
       // Channel message notification
-      final channels = _ref.read(channelsProvider);
+      final channels = ref.read(channelsProvider);
       final channel = channels
           .where((c) => c.index == message.channel)
           .firstOrNull;
@@ -1088,11 +1154,11 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
     String senderName,
     bool isChannelMessage,
   ) {
-    final engine = _ref.read(automationEngineProvider);
+    final engine = ref.read(automationEngineProvider);
 
     String? channelName;
     if (isChannelMessage) {
-      final channels = _ref.read(channelsProvider);
+      final channels = ref.read(channelsProvider);
       final channel = channels
           .where((c) => c.index == message.channel)
           .firstOrNull;
@@ -1118,7 +1184,7 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
     String senderName,
     bool isChannelMessage,
   ) {
-    final iftttService = _ref.read(iftttServiceProvider);
+    final iftttService = ref.read(iftttServiceProvider);
     debugPrint(
       'IFTTT: Checking message trigger - isActive=${iftttService.isActive}',
     );
@@ -1129,7 +1195,7 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
 
     String? channelName;
     if (isChannelMessage) {
-      final channels = _ref.read(channelsProvider);
+      final channels = ref.read(channelsProvider);
       final channel = channels
           .where((c) => c.index == message.channel)
           .firstOrNull;
@@ -1229,21 +1295,14 @@ class MessagesNotifier extends StateNotifier<List<Message>> {
   }
 }
 
-final messagesProvider = StateNotifierProvider<MessagesNotifier, List<Message>>(
-  (ref) {
-    final protocol = ref.watch(protocolServiceProvider);
-    final storageAsync = ref.watch(messageStorageProvider);
-    final storage = storageAsync.valueOrNull;
-    return MessagesNotifier(protocol, storage, ref);
-  },
+final messagesProvider = NotifierProvider<MessagesNotifier, List<Message>>(
+  MessagesNotifier.new,
 );
 
 // Nodes
-class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
-  final ProtocolService _protocol;
-  final NodeStorageService? _storage;
-  final Ref _ref;
+class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   Timer? _stalenessTimer;
+  NodeStorageService? _storage;
 
   /// Timeout after which a node is considered offline (15 minutes)
   /// The iOS Meshtastic app uses 120 minutes, but we use 15 minutes as a
@@ -1251,14 +1310,27 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
   /// that don't send packets frequently.
   static const _offlineTimeoutMinutes = 15;
 
-  NodesNotifier(this._protocol, this._storage, this._ref) : super({}) {
-    _init();
+  @override
+  Map<int, MeshNode> build() {
+    final protocol = ref.watch(protocolServiceProvider);
+    final storageAsync = ref.watch(nodeStorageProvider);
+    _storage = storageAsync.value;
+
+    // Set up disposal
+    ref.onDispose(() {
+      _stalenessTimer?.cancel();
+    });
+
+    // Initialize asynchronously
+    _init(protocol);
+
+    return {};
   }
 
-  Future<void> _init() async {
+  Future<void> _init(ProtocolService protocol) async {
     // Load persisted nodes (with their positions) first
     if (_storage != null) {
-      final savedNodes = await _storage.loadNodes();
+      final savedNodes = await _storage!.loadNodes();
       if (savedNodes.isNotEmpty) {
         debugPrint('📍 Loaded ${savedNodes.length} nodes from storage');
         final nodeMap = <int, MeshNode>{};
@@ -1276,7 +1348,7 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
 
     // Then merge with existing nodes from protocol service
     // Protocol nodes take precedence but preserve stored positions if new nodes don't have them
-    final protocolNodes = Map<int, MeshNode>.from(_protocol.nodes);
+    final protocolNodes = Map<int, MeshNode>.from(protocol.nodes);
     for (final entry in protocolNodes.entries) {
       var node = entry.value;
       final existing = state[entry.key];
@@ -1298,7 +1370,7 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
     );
 
     // Listen for new nodes
-    _protocol.nodeStream.listen((node) {
+    protocol.nodeStream.listen((node) {
       final isNewNode = !state.containsKey(node.nodeNum);
       final existing = state[node.nodeNum];
 
@@ -1318,9 +1390,9 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
 
       // Increment new nodes counter if this is a genuinely new node
       if (isNewNode) {
-        _ref.read(newNodesCountProvider.notifier).state++;
+        ref.read(newNodesCountProvider.notifier).increment();
         // Trigger notification for new node discovery
-        _ref.read(nodeDiscoveryNotifierProvider.notifier).notifyNewNode(node);
+        ref.read(nodeDiscoveryNotifierProvider.notifier).notifyNewNode(node);
       }
 
       // Trigger IFTTT webhook for node updates
@@ -1369,14 +1441,14 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
   }
 
   void _triggerIftttForNode(MeshNode node, MeshNode? previousNode) {
-    final iftttService = _ref.read(iftttServiceProvider);
+    final iftttService = ref.read(iftttServiceProvider);
     if (!iftttService.isActive) return;
 
     iftttService.processNodeUpdate(node, previousNode: previousNode);
   }
 
   void _triggerAutomationForNode(MeshNode node, MeshNode? previousNode) {
-    final engine = _ref.read(automationEngineProvider);
+    final engine = ref.read(automationEngineProvider);
     engine.processNodeUpdate(node, previousNode: previousNode);
   }
 
@@ -1395,45 +1467,37 @@ class NodesNotifier extends StateNotifier<Map<int, MeshNode>> {
     state = {};
     _storage?.clearNodes();
   }
-
-  @override
-  void dispose() {
-    _stalenessTimer?.cancel();
-    super.dispose();
-  }
 }
 
-final nodesProvider = StateNotifierProvider<NodesNotifier, Map<int, MeshNode>>((
-  ref,
-) {
-  final protocol = ref.watch(protocolServiceProvider);
-  final storageAsync = ref.watch(nodeStorageProvider);
-  final storage = storageAsync.valueOrNull;
-  return NodesNotifier(protocol, storage, ref);
-});
+final nodesProvider = NotifierProvider<NodesNotifier, Map<int, MeshNode>>(
+  NodesNotifier.new,
+);
 
 // Channels
-class ChannelsNotifier extends StateNotifier<List<ChannelConfig>> {
-  final ProtocolService _protocol;
+class ChannelsNotifier extends Notifier<List<ChannelConfig>> {
+  @override
+  List<ChannelConfig> build() {
+    final protocol = ref.watch(protocolServiceProvider);
 
-  ChannelsNotifier(this._protocol) : super([]) {
     debugPrint(
-      '🔵 ChannelsNotifier constructor - protocol has ${_protocol.channels.length} channels',
+      '🔵 ChannelsNotifier build - protocol has ${protocol.channels.length} channels',
     );
-    for (var c in _protocol.channels) {
+    for (var c in protocol.channels) {
       debugPrint(
         '  Channel ${c.index}: name="${c.name}", psk.length=${c.psk.length}',
       );
     }
 
     // Initialize with existing channels (include Primary, exclude DISABLED)
-    state = _protocol.channels
+    final initial = protocol.channels
         .where((c) => c.index == 0 || c.role != 'DISABLED')
         .toList();
-    debugPrint('🔵 ChannelsNotifier initialized with ${state.length} channels');
+    debugPrint(
+      '🔵 ChannelsNotifier initialized with ${initial.length} channels',
+    );
 
     // Listen for future channel updates
-    _protocol.channelStream.listen((channel) {
+    protocol.channelStream.listen((channel) {
       debugPrint(
         '🔵 ChannelsNotifier received channel update: index=${channel.index}, name="${channel.name}"',
       );
@@ -1451,6 +1515,8 @@ class ChannelsNotifier extends StateNotifier<List<ChannelConfig>> {
       }
       debugPrint('  Total channels now: ${state.length}');
     });
+
+    return initial;
   }
 
   void setChannel(ChannelConfig channel) {
@@ -1476,29 +1542,31 @@ class ChannelsNotifier extends StateNotifier<List<ChannelConfig>> {
 }
 
 final channelsProvider =
-    StateNotifierProvider<ChannelsNotifier, List<ChannelConfig>>((ref) {
-      final protocol = ref.watch(protocolServiceProvider);
-      return ChannelsNotifier(protocol);
-    });
+    NotifierProvider<ChannelsNotifier, List<ChannelConfig>>(
+      ChannelsNotifier.new,
+    );
 
 // My node number - updates when received from device
-class MyNodeNumNotifier extends StateNotifier<int?> {
-  final ProtocolService _protocol;
+class MyNodeNumNotifier extends Notifier<int?> {
+  @override
+  int? build() {
+    final protocol = ref.watch(protocolServiceProvider);
 
-  MyNodeNumNotifier(this._protocol) : super(null) {
     // Initialize with existing myNodeNum from protocol service
-    state = _protocol.myNodeNum;
+    final initial = protocol.myNodeNum;
 
-    _protocol.myNodeNumStream.listen((nodeNum) {
+    // Listen for updates
+    protocol.myNodeNumStream.listen((nodeNum) {
       state = nodeNum;
     });
+
+    return initial;
   }
 }
 
-final myNodeNumProvider = StateNotifierProvider<MyNodeNumNotifier, int?>((ref) {
-  final protocol = ref.watch(protocolServiceProvider);
-  return MyNodeNumNotifier(protocol);
-});
+final myNodeNumProvider = NotifierProvider<MyNodeNumNotifier, int?>(
+  MyNodeNumNotifier.new,
+);
 
 /// Unread messages count provider
 /// Returns the count of messages that were received from other nodes
@@ -1519,31 +1587,39 @@ final hasUnreadMessagesProvider = Provider<bool>((ref) {
 
 /// New nodes count - tracks number of newly discovered nodes since last check
 /// Reset when user views the Nodes tab
-final newNodesCountProvider = StateProvider<int>((ref) => 0);
+class NewNodesCountNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void increment() => state++;
+  void reset() => state = 0;
+}
+
+final newNodesCountProvider = NotifierProvider<NewNodesCountNotifier, int>(
+  NewNodesCountNotifier.new,
+);
 
 /// Node discovery notifier - triggers notifications when new nodes are found
-class NodeDiscoveryNotifier extends StateNotifier<MeshNode?> {
-  final NotificationService _notificationService;
-  final Ref _ref;
-
-  NodeDiscoveryNotifier(this._notificationService, this._ref) : super(null);
+class NodeDiscoveryNotifier extends Notifier<MeshNode?> {
+  @override
+  MeshNode? build() => null;
 
   Future<void> notifyNewNode(MeshNode node) async {
     // Always update state to trigger UI animations (discovery cards)
     state = node;
 
     // Only show local notifications when app is fully initialized (not during startup/connecting)
-    final appState = _ref.read(appInitProvider);
+    final appState = ref.read(appInitProvider);
     if (appState != AppInitState.initialized) return;
 
     // Check master notification toggle and new node setting
-    final settingsAsync = _ref.read(settingsServiceProvider);
-    final settings = settingsAsync.valueOrNull;
+    final settingsAsync = ref.read(settingsServiceProvider);
+    final settings = settingsAsync.value;
     if (settings == null) return;
     if (!settings.notificationsEnabled) return;
     if (!settings.newNodeNotificationsEnabled) return;
 
-    await _notificationService.showNewNodeNotification(
+    await NotificationService().showNewNodeNotification(
       node,
       playSound: settings.notificationSoundEnabled,
       vibrate: settings.notificationVibrationEnabled,
@@ -1552,9 +1628,9 @@ class NodeDiscoveryNotifier extends StateNotifier<MeshNode?> {
 }
 
 final nodeDiscoveryNotifierProvider =
-    StateNotifierProvider<NodeDiscoveryNotifier, MeshNode?>((ref) {
-      return NodeDiscoveryNotifier(NotificationService(), ref);
-    });
+    NotifierProvider<NodeDiscoveryNotifier, MeshNode?>(
+      NodeDiscoveryNotifier.new,
+    );
 
 /// Current device region - stream that emits region updates
 final deviceRegionProvider = StreamProvider<pbenum.RegionCode>((ref) async* {

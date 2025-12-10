@@ -1,7 +1,22 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/models/subscription_models.dart';
 
 void main() {
+  setUpAll(() {
+    // Initialize dotenv with test values for RevenueCat product IDs
+    dotenv.loadFromString(
+      envString: '''
+THEME_PACK_PRODUCT_ID=theme_pack
+RINGTONE_PACK_PRODUCT_ID=ringtone_pack
+WIDGET_PACK_PRODUCT_ID=widget_pack
+AUTOMATIONS_PACK_PRODUCT_ID=automations_pack
+IFTTT_PACK_PRODUCT_ID=ifttt_pack
+COMPLETE_PACK_PRODUCT_ID=complete_pack
+''',
+    );
+  });
+
   group('PremiumFeature', () {
     test('has all expected values', () {
       expect(
@@ -54,7 +69,7 @@ void main() {
 
     test('ringtonePack has correct properties', () {
       expect(OneTimePurchases.ringtonePack.id, 'ringtone_pack');
-      expect(OneTimePurchases.ringtonePack.name, 'Ringtone Pack');
+      expect(OneTimePurchases.ringtonePack.name, 'Ringtone Library');
       expect(OneTimePurchases.ringtonePack.price, 0.99);
       expect(
         OneTimePurchases.ringtonePack.unlocksFeature,
@@ -93,27 +108,13 @@ void main() {
     });
 
     test('allPurchases contains all purchases', () {
-      expect(OneTimePurchases.allPurchases.length, 5);
-      expect(
-        OneTimePurchases.allPurchases,
-        contains(OneTimePurchases.themePack),
-      );
-      expect(
-        OneTimePurchases.allPurchases,
-        contains(OneTimePurchases.ringtonePack),
-      );
-      expect(
-        OneTimePurchases.allPurchases,
-        contains(OneTimePurchases.widgetPack),
-      );
-      expect(
-        OneTimePurchases.allPurchases,
-        contains(OneTimePurchases.automationsPack),
-      );
-      expect(
-        OneTimePurchases.allPurchases,
-        contains(OneTimePurchases.iftttPack),
-      );
+      final allIds = OneTimePurchases.allPurchases.map((p) => p.id).toSet();
+      expect(allIds.length, 5);
+      expect(allIds, contains('theme_pack'));
+      expect(allIds, contains('ringtone_pack'));
+      expect(allIds, contains('widget_pack'));
+      expect(allIds, contains('automations_pack'));
+      expect(allIds, contains('ifttt_pack'));
     });
 
     test('getByProductId returns correct purchase', () {

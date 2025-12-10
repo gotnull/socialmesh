@@ -109,10 +109,26 @@ class AppLogger {
 /// Provider for app logger
 final appLoggerProvider = Provider<AppLogger>((ref) => AppLogger());
 
+/// Notifier for filtered log levels
+class FilteredLogsNotifier extends Notifier<List<LogLevel>> {
+  @override
+  List<LogLevel> build() => LogLevel.values.toList();
+
+  void setFilters(List<LogLevel> filters) => state = filters;
+  void toggleFilter(LogLevel level) {
+    if (state.contains(level)) {
+      state = state.where((l) => l != level).toList();
+    } else {
+      state = [...state, level];
+    }
+  }
+}
+
 /// Provider for filtered logs
-final filteredLogsProvider = StateProvider<List<LogLevel>>(
-  (ref) => LogLevel.values.toList(),
-);
+final filteredLogsProvider =
+    NotifierProvider<FilteredLogsNotifier, List<LogLevel>>(
+      FilteredLogsNotifier.new,
+    );
 
 class AppLogScreen extends ConsumerStatefulWidget {
   const AppLogScreen({super.key});
@@ -192,8 +208,9 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
             ),
             TextButton(
               onPressed: () {
-                ref.read(filteredLogsProvider.notifier).state = selected
-                    .toList();
+                ref
+                    .read(filteredLogsProvider.notifier)
+                    .setFilters(selected.toList());
                 Navigator.pop(context);
               },
               child: Text(

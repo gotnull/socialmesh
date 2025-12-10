@@ -7,12 +7,10 @@ import 'automation_engine.dart';
 import 'automation_repository.dart';
 import 'models/automation.dart';
 
-/// Provider for the automation repository (ChangeNotifier for reactive updates)
-final automationRepositoryProvider =
-    ChangeNotifierProvider<AutomationRepository>((ref) {
-      final repository = AutomationRepository();
-      return repository;
-    });
+/// Provider for the automation repository
+final automationRepositoryProvider = Provider<AutomationRepository>((ref) {
+  return AutomationRepository();
+});
 
 /// Provider for initializing the repository
 final automationRepositoryInitProvider = FutureProvider<AutomationRepository>((
@@ -66,35 +64,29 @@ final automationEngineInitProvider = FutureProvider<AutomationEngine>((
 
 /// Provider for the list of automations
 final automationsProvider =
-    StateNotifierProvider<AutomationsNotifier, AsyncValue<List<Automation>>>((
-      ref,
-    ) {
-      final repository = ref.watch(automationRepositoryProvider);
-      return AutomationsNotifier(repository, ref);
-    });
+    NotifierProvider<AutomationsNotifier, AsyncValue<List<Automation>>>(
+      AutomationsNotifier.new,
+    );
 
 /// State notifier for automations
-class AutomationsNotifier extends StateNotifier<AsyncValue<List<Automation>>> {
-  final AutomationRepository _repository;
-
-  AutomationsNotifier(this._repository, Ref ref)
-    : super(const AsyncValue.loading()) {
+class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
+  @override
+  AsyncValue<List<Automation>> build() {
+    final repository = ref.watch(automationRepositoryProvider);
+    repository.addListener(_onRepositoryChanged);
+    ref.onDispose(() {
+      repository.removeListener(_onRepositoryChanged);
+    });
     _loadAutomations();
-    // Listen to repository changes (e.g., from engine recordTrigger)
-    _repository.addListener(_onRepositoryChanged);
+    return const AsyncValue.loading();
   }
+
+  AutomationRepository get _repository =>
+      ref.read(automationRepositoryProvider);
 
   void _onRepositoryChanged() {
     // Update state with latest automations when repository changes
-    if (mounted) {
-      state = AsyncValue.data(_repository.automations);
-    }
-  }
-
-  @override
-  void dispose() {
-    _repository.removeListener(_onRepositoryChanged);
-    super.dispose();
+    state = AsyncValue.data(_repository.automations);
   }
 
   Future<void> _loadAutomations() async {

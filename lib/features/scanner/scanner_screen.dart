@@ -221,11 +221,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       if (!mounted) return;
 
-      ref.read(connectedDeviceProvider.notifier).state = device;
+      ref.read(connectedDeviceProvider.notifier).setState(device);
 
       // Save device for auto-reconnect
       final settingsServiceAsync = ref.read(settingsServiceProvider);
-      final settingsService = settingsServiceAsync.valueOrNull;
+      final settingsService = settingsServiceAsync.value;
       if (settingsService != null) {
         final deviceType = device.type == TransportType.ble ? 'ble' : 'usb';
         await settingsService.setLastDevice(
@@ -351,8 +351,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       // Reset auto-reconnect state to idle on successful manual connection
       // This clears any previous failed state from auto-reconnect attempts
-      ref.read(autoReconnectStateProvider.notifier).state =
-          AutoReconnectState.idle;
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
 
       // Ensure offline queue is initialized and process any pending messages
       final queue = ref.read(offlineQueueProvider);

@@ -165,7 +165,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           return BouncyTap(
             onTap: () async {
               HapticFeedback.selectionClick();
-              ref.read(accentColorProvider.notifier).state = color;
+              ref.read(accentColorProvider.notifier).setColor(color);
               await settingsService.setAccentColor(color.toARGB32());
             },
             scaleFactor: 0.9,

@@ -14,9 +14,9 @@ class SignalChartContent extends ConsumerWidget {
     final snrAsync = ref.watch(currentSnrProvider);
     final channelUtilAsync = ref.watch(currentChannelUtilProvider);
 
-    final rssi = rssiAsync.valueOrNull;
-    final snr = snrAsync.valueOrNull;
-    final channelUtil = channelUtilAsync.valueOrNull;
+    final rssi = rssiAsync.value;
+    final snr = snrAsync.value;
+    final channelUtil = channelUtilAsync.value;
 
     if (rssi == null && snr == null) {
       return const WidgetEmptyState(

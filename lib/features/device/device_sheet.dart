@@ -312,7 +312,7 @@ class _DeviceSheetContent extends ConsumerWidget {
       final transport = ref.read(transportProvider);
       await transport.disconnect();
 
-      ref.read(connectedDeviceProvider.notifier).state = null;
+      ref.read(connectedDeviceProvider.notifier).setState(null);
 
       if (context.mounted) {
         Navigator.pop(context); // Close the sheet

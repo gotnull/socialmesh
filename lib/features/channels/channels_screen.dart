@@ -6,6 +6,7 @@ import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../../core/transport.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animated_list_item.dart';
 import '../../core/widgets/animations.dart';
@@ -411,6 +412,18 @@ class _ChannelTile extends ConsumerWidget {
   }
 
   void _deleteChannel(BuildContext context, WidgetRef ref) {
+    // Check connection state before showing delete dialog
+    final connectionState = ref.read(connectionStateProvider);
+    final isConnected = connectionState.maybeWhen(
+      data: (state) => state == DeviceConnectionState.connected,
+      orElse: () => false,
+    );
+
+    if (!isConnected) {
+      showErrorSnackBar(context, 'Cannot delete channel: Device not connected');
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(

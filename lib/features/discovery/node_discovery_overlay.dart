@@ -7,8 +7,8 @@ import '../../providers/app_providers.dart';
 
 /// Provider to track discovered nodes for the overlay animation
 final discoveredNodesQueueProvider =
-    StateNotifierProvider<DiscoveredNodesNotifier, List<DiscoveredNodeEntry>>(
-      (ref) => DiscoveredNodesNotifier(),
+    NotifierProvider<DiscoveredNodesNotifier, List<DiscoveredNodeEntry>>(
+      DiscoveredNodesNotifier.new,
     );
 
 class DiscoveredNodeEntry {
@@ -20,8 +20,9 @@ class DiscoveredNodeEntry {
     : id = '${node.nodeNum}_${discoveredAt.millisecondsSinceEpoch}';
 }
 
-class DiscoveredNodesNotifier extends StateNotifier<List<DiscoveredNodeEntry>> {
-  DiscoveredNodesNotifier() : super([]);
+class DiscoveredNodesNotifier extends Notifier<List<DiscoveredNodeEntry>> {
+  @override
+  List<DiscoveredNodeEntry> build() => [];
 
   void addNode(MeshNode node) {
     final entry = DiscoveredNodeEntry(node: node, discoveredAt: DateTime.now());
@@ -139,7 +140,6 @@ class _ConnectingIndicator extends StatelessWidget {
               color: context.accentColor,
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              
             ),
           ),
         ],
@@ -280,11 +280,7 @@ class _AnimatedNodeCardState extends State<_AnimatedNodeCard>
                 children: [
                   Row(
                     children: [
-                      Icon(
-                        Icons.radar,
-                        color: context.accentColor,
-                        size: 14,
-                      ),
+                      Icon(Icons.radar, color: context.accentColor, size: 14),
                       SizedBox(width: 6),
                       Text(
                         'Node Discovered',
@@ -292,7 +288,7 @@ class _AnimatedNodeCardState extends State<_AnimatedNodeCard>
                           color: context.accentColor,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          
+
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -305,7 +301,6 @@ class _AnimatedNodeCardState extends State<_AnimatedNodeCard>
                       color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -430,14 +425,9 @@ class _PulsingNodeIconState extends State<_PulsingNodeIcon>
                       color: context.accentColor,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      
                     ),
                   )
-                : Icon(
-                    Icons.person,
-                    color: context.accentColor,
-                    size: 22,
-                  ),
+                : Icon(Icons.person, color: context.accentColor, size: 22),
           ),
         );
       },

@@ -21,19 +21,19 @@ final subscriptionServiceProvider = FutureProvider<PurchaseService>((
 
 /// Current purchase state - auto-refreshes from service
 final purchaseStateProvider =
-    StateNotifierProvider<PurchaseStateNotifier, PurchaseState>((ref) {
-      return PurchaseStateNotifier(ref);
-    });
+    NotifierProvider<PurchaseStateNotifier, PurchaseState>(
+      PurchaseStateNotifier.new,
+    );
 
-class PurchaseStateNotifier extends StateNotifier<PurchaseState> {
-  final Ref _ref;
-
-  PurchaseStateNotifier(this._ref) : super(PurchaseState.initial) {
+class PurchaseStateNotifier extends Notifier<PurchaseState> {
+  @override
+  PurchaseState build() {
     _init();
+    return PurchaseState.initial;
   }
 
   Future<void> _init() async {
-    final service = await _ref.read(subscriptionServiceProvider.future);
+    final service = await ref.read(subscriptionServiceProvider.future);
     state = service.currentState;
 
     // Listen for state changes
@@ -44,21 +44,21 @@ class PurchaseStateNotifier extends StateNotifier<PurchaseState> {
 
   /// Refresh purchases from RevenueCat
   Future<void> refresh() async {
-    final service = await _ref.read(subscriptionServiceProvider.future);
+    final service = await ref.read(subscriptionServiceProvider.future);
     await service.refreshPurchases();
     state = service.currentState;
   }
 
   /// For debug/testing - add purchase
   Future<void> debugAddPurchase(String productId) async {
-    final service = await _ref.read(subscriptionServiceProvider.future);
+    final service = await ref.read(subscriptionServiceProvider.future);
     await service.debugAddPurchase(productId);
     state = service.currentState;
   }
 
   /// For debug/testing - reset purchases
   Future<void> debugReset() async {
-    final service = await _ref.read(subscriptionServiceProvider.future);
+    final service = await ref.read(subscriptionServiceProvider.future);
     await service.debugReset();
     state = service.currentState;
   }
@@ -79,17 +79,40 @@ final hasPurchasedProvider = Provider.family<bool, String>((ref, productId) {
   return state.hasPurchased(productId);
 });
 
+/// Notifier for subscription loading state
+class SubscriptionLoadingNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setLoading(bool value) => state = value;
+}
+
 /// Purchase loading state for async operations
-final subscriptionLoadingProvider = StateProvider<bool>((ref) => false);
+final subscriptionLoadingProvider =
+    NotifierProvider<SubscriptionLoadingNotifier, bool>(
+      SubscriptionLoadingNotifier.new,
+    );
+
+/// Notifier for subscription error state
+class SubscriptionErrorNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setError(String? error) => state = error;
+  void clear() => state = null;
+}
 
 /// Purchase error state
-final subscriptionErrorProvider = StateProvider<String?>((ref) => null);
+final subscriptionErrorProvider =
+    NotifierProvider<SubscriptionErrorNotifier, String?>(
+      SubscriptionErrorNotifier.new,
+    );
 
 /// Purchase a one-time product
 /// Returns PurchaseResult indicating success, cancellation, or error
 Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
-  ref.read(subscriptionLoadingProvider.notifier).state = true;
-  ref.read(subscriptionErrorProvider.notifier).state = null;
+  ref.read(subscriptionLoadingProvider.notifier).setLoading(true);
+  ref.read(subscriptionErrorProvider.notifier).clear();
 
   try {
     final service = await ref.read(subscriptionServiceProvider.future);
@@ -99,17 +122,17 @@ Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
     }
     return result;
   } catch (e) {
-    ref.read(subscriptionErrorProvider.notifier).state = e.toString();
+    ref.read(subscriptionErrorProvider.notifier).setError(e.toString());
     return PurchaseResult.error;
   } finally {
-    ref.read(subscriptionLoadingProvider.notifier).state = false;
+    ref.read(subscriptionLoadingProvider.notifier).setLoading(false);
   }
 }
 
 /// Restore purchases
 Future<bool> restorePurchases(WidgetRef ref) async {
-  ref.read(subscriptionLoadingProvider.notifier).state = true;
-  ref.read(subscriptionErrorProvider.notifier).state = null;
+  ref.read(subscriptionLoadingProvider.notifier).setLoading(true);
+  ref.read(subscriptionErrorProvider.notifier).clear();
 
   try {
     final service = await ref.read(subscriptionServiceProvider.future);
@@ -119,9 +142,9 @@ Future<bool> restorePurchases(WidgetRef ref) async {
     }
     return success;
   } catch (e) {
-    ref.read(subscriptionErrorProvider.notifier).state = e.toString();
+    ref.read(subscriptionErrorProvider.notifier).setError(e.toString());
     return false;
   } finally {
-    ref.read(subscriptionLoadingProvider.notifier).state = false;
+    ref.read(subscriptionLoadingProvider.notifier).setLoading(false);
   }
 }

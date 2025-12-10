@@ -20,8 +20,8 @@ class MeshHealthContent extends ConsumerWidget {
       orElse: () => false,
     );
 
-    final rssi = rssiAsync.valueOrNull;
-    final channelUtil = channelUtilAsync.valueOrNull;
+    final rssi = rssiAsync.value;
+    final channelUtil = channelUtilAsync.value;
 
     // Calculate health score (0-100)
     final healthScore = _calculateHealthScore(

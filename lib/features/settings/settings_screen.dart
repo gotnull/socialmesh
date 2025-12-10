@@ -36,6 +36,7 @@ import 'canned_responses_screen.dart';
 import 'range_test_screen.dart';
 import 'store_forward_config_screen.dart';
 import 'detection_sensor_config_screen.dart';
+import 'external_notification_config_screen.dart';
 import '../map/offline_maps_screen.dart';
 import 'data_export_screen.dart';
 import '../device/serial_config_screen.dart';
@@ -753,6 +754,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (_) => const DetectionSensorConfigScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.notifications_active,
+                title: 'External Notification',
+                subtitle: 'Configure buzzers, LEDs, and vibration alerts',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ExternalNotificationConfigScreen(),
                   ),
                 ),
               ),

@@ -42,7 +42,7 @@ class DebugExportService {
       final autoReconnectState = _ref.read(autoReconnectStateProvider);
 
       export['connection'] = {
-        'state': connectionState.valueOrNull?.name ?? 'unknown',
+        'state': connectionState.value?.name ?? 'unknown',
         'autoReconnectState': autoReconnectState.name,
         'connectedDevice': connectedDevice != null
             ? {
@@ -61,7 +61,7 @@ class DebugExportService {
     try {
       final protocol = _ref.read(protocolServiceProvider);
       final myNodeNum = _ref.read(myNodeNumProvider);
-      final region = _ref.read(deviceRegionProvider).valueOrNull;
+      final region = _ref.read(deviceRegionProvider).value;
 
       export['protocol'] = {
         'myNodeNum': myNodeNum,
