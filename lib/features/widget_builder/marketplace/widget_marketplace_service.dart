@@ -1,23 +1,27 @@
 import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import '../models/widget_schema.dart';
 
 /// Service for interacting with the widget marketplace
 class WidgetMarketplaceService {
-  // Base URL for the marketplace API - can be configured via environment
+  // Base URL for the marketplace API - configured via .env
   final String baseUrl;
   final Logger _logger;
   final http.Client _client;
 
-  /// Get the appropriate base URL for the current platform
+  /// Get the base URL from environment or use platform-specific fallback
   static String get _defaultBaseUrl {
-    // Production URL - uncomment when deployed
-    // return 'https://api.socialmesh.app/widgets';
+    // First check .env configuration
+    final envUrl = dotenv.env['MARKETPLACE_URL'];
+    if (envUrl != null && envUrl.isNotEmpty) {
+      return envUrl;
+    }
 
-    // Local development
+    // Fallback for local development without .env
     if (kDebugMode) {
       if (kIsWeb) {
         return 'http://localhost:3001/widgets';
@@ -29,6 +33,8 @@ class WidgetMarketplaceService {
         return 'http://localhost:3001/widgets';
       }
     }
+
+    // Production fallback
     return 'https://api.socialmesh.app/widgets';
   }
 
