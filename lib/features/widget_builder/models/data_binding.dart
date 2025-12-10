@@ -519,6 +519,11 @@ class DataBindingEngine {
   Map<int, MeshNode>? _allNodes;
   List<Message>? _messages;
 
+  /// Device-level data (from protocol streams, not node data)
+  int? _deviceRssi;
+  double? _deviceSnr;
+  double? _deviceChannelUtil;
+
   /// Update context with current node data
   void setCurrentNode(MeshNode? node) {
     _currentNode = node;
@@ -532,6 +537,13 @@ class DataBindingEngine {
   /// Update context with messages
   void setMessages(List<Message>? messages) {
     _messages = messages;
+  }
+
+  /// Update context with device-level signal data (from protocol streams)
+  void setDeviceSignal({int? rssi, double? snr, double? channelUtil}) {
+    _deviceRssi = rssi;
+    _deviceSnr = snr;
+    _deviceChannelUtil = channelUtil;
   }
 
   /// Resolve a binding to its current value
@@ -621,6 +633,23 @@ class DataBindingEngine {
         return _resolveNetworkPath(fieldPath);
       case 'messages':
         return _resolveMessagesPath(fieldPath);
+      case 'device':
+        return _resolveDevicePath(fieldPath);
+      default:
+        return null;
+    }
+  }
+
+  /// Resolve device-level fields (from protocol streams)
+  dynamic _resolveDevicePath(String field) {
+    switch (field) {
+      case 'rssi':
+        return _deviceRssi;
+      case 'snr':
+        return _deviceSnr;
+      case 'channelUtil':
+      case 'channelUtilization':
+        return _deviceChannelUtil;
       default:
         return null;
     }

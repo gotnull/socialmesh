@@ -109,9 +109,19 @@ class IconRenderer extends StatelessWidget {
       'message': Icons.message,
       'chat': Icons.chat,
       'chat_bubble': Icons.chat_bubble,
+      'chat_bubble_outline': Icons.chat_bubble_outline,
       'send': Icons.send,
       'mail': Icons.mail,
       'notifications': Icons.notifications,
+      'notifications_active': Icons.notifications_active,
+
+      // People
+      'person': Icons.person,
+      'person_outline': Icons.person_outline,
+      'people': Icons.people,
+      'people_outline': Icons.people_outline,
+      'group': Icons.group,
+      'groups': Icons.groups,
 
       // Navigation
       'map': Icons.map,
@@ -120,6 +130,8 @@ class IconRenderer extends StatelessWidget {
       'near_me': Icons.near_me,
       'directions': Icons.directions,
       'terrain': Icons.terrain,
+      'route': Icons.route,
+      'alt_route': Icons.alt_route,
 
       // Actions
       'settings': Icons.settings,
@@ -127,11 +139,21 @@ class IconRenderer extends StatelessWidget {
       'warning': Icons.warning,
       'error': Icons.error,
       'check_circle': Icons.check_circle,
+      'check_circle_outline': Icons.check_circle_outline,
       'cancel': Icons.cancel,
       'refresh': Icons.refresh,
       'sync': Icons.sync,
       'power': Icons.power,
       'power_settings_new': Icons.power_settings_new,
+      'flash_on': Icons.flash_on,
+      'flash_off': Icons.flash_off,
+      'bolt': Icons.bolt,
+
+      // Time
+      'schedule': Icons.schedule,
+      'access_time': Icons.access_time,
+      'history': Icons.history,
+      'update': Icons.update,
 
       // Misc
       'speed': Icons.speed,
@@ -584,14 +606,19 @@ class ChartRenderer extends StatelessWidget {
 }
 
 /// Renders a basic shape (rectangle, circle, divider)
+/// Supports optional child rendering for shapes that contain other elements
 class ShapeRenderer extends StatelessWidget {
   final ElementSchema element;
   final Color accentColor;
+  final Color borderColor;
+  final Widget? child;
 
   const ShapeRenderer({
     super.key,
     required this.element,
     required this.accentColor,
+    required this.borderColor,
+    this.child,
   });
 
   @override
@@ -617,6 +644,7 @@ class ShapeRenderer extends StatelessWidget {
                   )
                 : null,
           ),
+          child: child != null ? Center(child: child) : null,
         );
 
       case ShapeType.circle:
@@ -634,6 +662,7 @@ class ShapeRenderer extends StatelessWidget {
                   )
                 : null,
           ),
+          child: child != null ? Center(child: child) : null,
         );
 
       case ShapeType.roundedRect:
@@ -652,20 +681,21 @@ class ShapeRenderer extends StatelessWidget {
                   )
                 : null,
           ),
+          child: child != null ? Center(child: child) : null,
         );
 
       case ShapeType.dividerHorizontal:
         return Container(
           width: element.style.width,
           height: element.style.height ?? 1,
-          color: color.withValues(alpha: 0.3),
+          color: element.style.backgroundColorValue ?? borderColor,
         );
 
       case ShapeType.dividerVertical:
         return Container(
           width: element.style.width ?? 1,
           height: element.style.height,
-          color: color.withValues(alpha: 0.3),
+          color: element.style.backgroundColorValue ?? borderColor,
         );
     }
   }

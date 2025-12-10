@@ -8,6 +8,8 @@ class WidgetStorageService {
   static const _storageKey = 'custom_widgets';
   static const _installedKey = 'installed_widgets';
   static const _seededKey = 'seeded_widgets';
+  static const _seedVersionKey = 'seeded_widgets_version';
+  static const _currentSeedVersion = 8; // Divider uses theme border color
 
   final Logger _logger;
   SharedPreferences? _prefs;
@@ -22,18 +24,25 @@ class WidgetStorageService {
 
   /// Seed default widgets on first launch so users have examples
   Future<void> _seedDefaultWidgets() async {
-    final alreadySeeded = _preferences.getBool(_seededKey) ?? false;
-    if (alreadySeeded) return;
+    final lastVersion = _preferences.getInt(_seedVersionKey) ?? 0;
+    if (lastVersion >= _currentSeedVersion) return;
 
-    _logger.i('Seeding default widgets for first launch');
+    _logger.i('Seeding widgets: version $lastVersion -> $_currentSeedVersion');
 
-    // Save all template widgets as user widgets
+    // Get existing widget names to avoid duplicates
+    final existingWidgets = await getWidgets();
+    final existingNames = existingWidgets.map((w) => w.name).toSet();
+
+    // Save all template widgets that don't already exist
     for (final template in WidgetTemplates.all()) {
-      await saveWidget(template);
+      if (!existingNames.contains(template.name)) {
+        await saveWidget(template);
+        _logger.d('Seeded widget: ${template.name}');
+      }
     }
 
-    await _preferences.setBool(_seededKey, true);
-    _logger.i('Default widgets seeded successfully');
+    await _preferences.setInt(_seedVersionKey, _currentSeedVersion);
+    _logger.i('Default widgets seeded successfully (v$_currentSeedVersion)');
   }
 
   SharedPreferences get _preferences {
@@ -200,12 +209,13 @@ class WidgetStorageService {
     await _preferences.remove(_storageKey);
     await _preferences.remove(_installedKey);
     await _preferences.remove(_seededKey);
+    await _preferences.remove(_seedVersionKey);
     _logger.i('Cleared all custom widgets');
   }
 
   /// Re-seed default widgets (for testing or resetting to defaults)
   Future<void> reseedDefaults() async {
-    await _preferences.setBool(_seededKey, false);
+    await _preferences.setInt(_seedVersionKey, 0);
     await _seedDefaultWidgets();
   }
 }
@@ -329,7 +339,7 @@ class WidgetTemplates {
                   ElementSchema(
                     type: ElementType.text,
                     binding: const BindingSchema(
-                      path: 'node.snr',
+                      path: 'device.snr',
                       format: '{value} dB',
                       defaultValue: '--',
                     ),
@@ -355,7 +365,7 @@ class WidgetTemplates {
                   ElementSchema(
                     type: ElementType.text,
                     binding: const BindingSchema(
-                      path: 'node.rssi',
+                      path: 'device.rssi',
                       format: '{value} dBm',
                       defaultValue: '--',
                     ),
@@ -480,8 +490,9 @@ class WidgetTemplates {
       tags: ['node', 'info', 'status'],
       root: ElementSchema(
         type: ElementType.column,
-        style: const StyleSchema(padding: 12, spacing: 8),
+        style: const StyleSchema(padding: 12, spacing: 10),
         children: [
+          // Header with icon and node name
           ElementSchema(
             type: ElementType.row,
             children: [
@@ -509,17 +520,33 @@ class WidgetTemplates {
               ),
             ],
           ),
+          // Role label with value
           ElementSchema(
             type: ElementType.row,
-            style: const StyleSchema(spacing: 16),
             children: [
+              ElementSchema(
+                type: ElementType.text,
+                text: 'Role: ',
+                style: const StyleSchema(textColor: '#666666', fontSize: 12),
+              ),
               ElementSchema(
                 type: ElementType.text,
                 binding: const BindingSchema(
                   path: 'node.role',
                   defaultValue: '--',
                 ),
-                style: const StyleSchema(textColor: '#888888', fontSize: 12),
+                style: const StyleSchema(textColor: '#AAAAAA', fontSize: 12),
+              ),
+            ],
+          ),
+          // Hardware model
+          ElementSchema(
+            type: ElementType.row,
+            children: [
+              ElementSchema(
+                type: ElementType.text,
+                text: 'Device: ',
+                style: const StyleSchema(textColor: '#666666', fontSize: 12),
               ),
               ElementSchema(
                 type: ElementType.text,
@@ -527,17 +554,33 @@ class WidgetTemplates {
                   path: 'node.hardwareModel',
                   defaultValue: '--',
                 ),
-                style: const StyleSchema(textColor: '#888888', fontSize: 12),
+                style: const StyleSchema(textColor: '#AAAAAA', fontSize: 12),
               ),
             ],
           ),
+          // Last heard with label
           ElementSchema(
-            type: ElementType.text,
-            binding: const BindingSchema(
-              path: 'node.lastHeard',
-              defaultValue: 'Never',
-            ),
-            style: const StyleSchema(textColor: '#666666', fontSize: 11),
+            type: ElementType.row,
+            children: [
+              ElementSchema(
+                type: ElementType.icon,
+                iconName: 'schedule',
+                iconSize: 12,
+                style: const StyleSchema(textColor: '#555555'),
+              ),
+              ElementSchema(
+                type: ElementType.spacer,
+                style: const StyleSchema(width: 4),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                binding: const BindingSchema(
+                  path: 'node.lastHeard',
+                  defaultValue: 'Never',
+                ),
+                style: const StyleSchema(textColor: '#555555', fontSize: 11),
+              ),
+            ],
           ),
         ],
       ),
@@ -638,6 +681,7 @@ class WidgetTemplates {
       nodeInfoWidget(),
       gpsWidget(),
       networkOverviewWidget(),
+      quickActionsWidget(),
     ];
   }
 
@@ -691,11 +735,7 @@ class WidgetTemplates {
           ElementSchema(
             type: ElementType.shape,
             shapeType: ShapeType.dividerVertical,
-            style: const StyleSchema(
-              height: 50,
-              width: 1,
-              backgroundColor: '#333333',
-            ),
+            style: const StyleSchema(height: 50, width: 1),
           ),
           // Nodes
           ElementSchema(
@@ -731,11 +771,7 @@ class WidgetTemplates {
           ElementSchema(
             type: ElementType.shape,
             shapeType: ShapeType.dividerVertical,
-            style: const StyleSchema(
-              height: 50,
-              width: 1,
-              backgroundColor: '#333333',
-            ),
+            style: const StyleSchema(height: 50, width: 1),
           ),
           // Messages
           ElementSchema(
@@ -764,6 +800,200 @@ class WidgetTemplates {
                 type: ElementType.text,
                 text: 'Messages',
                 style: const StyleSchema(fontSize: 11, textColor: '#888888'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Quick actions widget template - displays quick action buttons
+  static WidgetSchema quickActionsWidget() {
+    return WidgetSchema(
+      name: 'Quick Actions',
+      description: 'Common mesh actions at a glance',
+      tags: ['actions', 'quick', 'compose', 'send'],
+      size: CustomWidgetSize.medium,
+      root: ElementSchema(
+        type: ElementType.column,
+        style: const StyleSchema(padding: 12, spacing: 12),
+        children: [
+          // Header row
+          ElementSchema(
+            type: ElementType.row,
+            children: [
+              ElementSchema(
+                type: ElementType.icon,
+                iconName: 'flash_on',
+                iconSize: 20,
+                style: const StyleSchema(textColor: '#FBBF24'),
+              ),
+              ElementSchema(
+                type: ElementType.spacer,
+                style: const StyleSchema(width: 8),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                text: 'Quick Actions',
+                style: const StyleSchema(
+                  textColor: '#FFFFFF',
+                  fontSize: 14,
+                  fontWeight: 'w600',
+                ),
+              ),
+            ],
+          ),
+          // Action buttons row
+          ElementSchema(
+            type: ElementType.row,
+            style: const StyleSchema(
+              mainAxisAlignment: MainAxisAlignmentOption.spaceAround,
+            ),
+            children: [
+              // Message action
+              ElementSchema(
+                type: ElementType.column,
+                style: const StyleSchema(alignment: AlignmentOption.center),
+                children: [
+                  ElementSchema(
+                    type: ElementType.shape,
+                    shapeType: ShapeType.circle,
+                    style: const StyleSchema(
+                      width: 44,
+                      height: 44,
+                      backgroundColor: '#1E3A5F',
+                    ),
+                    children: [
+                      ElementSchema(
+                        type: ElementType.icon,
+                        iconName: 'send',
+                        iconSize: 20,
+                        style: const StyleSchema(textColor: '#4F6AF6'),
+                      ),
+                    ],
+                  ),
+                  ElementSchema(
+                    type: ElementType.spacer,
+                    style: const StyleSchema(height: 4),
+                  ),
+                  ElementSchema(
+                    type: ElementType.text,
+                    text: 'Message',
+                    style: const StyleSchema(
+                      textColor: '#888888',
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+              // Location action
+              ElementSchema(
+                type: ElementType.column,
+                style: const StyleSchema(alignment: AlignmentOption.center),
+                children: [
+                  ElementSchema(
+                    type: ElementType.shape,
+                    shapeType: ShapeType.circle,
+                    style: const StyleSchema(
+                      width: 44,
+                      height: 44,
+                      backgroundColor: '#1E3A5F',
+                    ),
+                    children: [
+                      ElementSchema(
+                        type: ElementType.icon,
+                        iconName: 'location_on',
+                        iconSize: 20,
+                        style: const StyleSchema(textColor: '#22C55E'),
+                      ),
+                    ],
+                  ),
+                  ElementSchema(
+                    type: ElementType.spacer,
+                    style: const StyleSchema(height: 4),
+                  ),
+                  ElementSchema(
+                    type: ElementType.text,
+                    text: 'Location',
+                    style: const StyleSchema(
+                      textColor: '#888888',
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+              // Traceroute action
+              ElementSchema(
+                type: ElementType.column,
+                style: const StyleSchema(alignment: AlignmentOption.center),
+                children: [
+                  ElementSchema(
+                    type: ElementType.shape,
+                    shapeType: ShapeType.circle,
+                    style: const StyleSchema(
+                      width: 44,
+                      height: 44,
+                      backgroundColor: '#1E3A5F',
+                    ),
+                    children: [
+                      ElementSchema(
+                        type: ElementType.icon,
+                        iconName: 'route',
+                        iconSize: 20,
+                        style: const StyleSchema(textColor: '#F97316'),
+                      ),
+                    ],
+                  ),
+                  ElementSchema(
+                    type: ElementType.spacer,
+                    style: const StyleSchema(height: 4),
+                  ),
+                  ElementSchema(
+                    type: ElementType.text,
+                    text: 'Trace',
+                    style: const StyleSchema(
+                      textColor: '#888888',
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+              // Request positions action
+              ElementSchema(
+                type: ElementType.column,
+                style: const StyleSchema(alignment: AlignmentOption.center),
+                children: [
+                  ElementSchema(
+                    type: ElementType.shape,
+                    shapeType: ShapeType.circle,
+                    style: const StyleSchema(
+                      width: 44,
+                      height: 44,
+                      backgroundColor: '#1E3A5F',
+                    ),
+                    children: [
+                      ElementSchema(
+                        type: ElementType.icon,
+                        iconName: 'refresh',
+                        iconSize: 20,
+                        style: const StyleSchema(textColor: '#06B6D4'),
+                      ),
+                    ],
+                  ),
+                  ElementSchema(
+                    type: ElementType.spacer,
+                    style: const StyleSchema(height: 4),
+                  ),
+                  ElementSchema(
+                    type: ElementType.text,
+                    text: 'Refresh',
+                    style: const StyleSchema(
+                      textColor: '#888888',
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

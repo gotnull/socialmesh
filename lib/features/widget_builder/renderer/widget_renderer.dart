@@ -15,6 +15,11 @@ class WidgetRenderer extends StatelessWidget {
   final String? selectedElementId;
   final void Function(String elementId)? onElementTap;
 
+  /// Device-level signal data (from protocol streams)
+  final int? deviceRssi;
+  final double? deviceSnr;
+  final double? deviceChannelUtil;
+
   const WidgetRenderer({
     super.key,
     required this.schema,
@@ -24,6 +29,9 @@ class WidgetRenderer extends StatelessWidget {
     this.isPreview = false,
     this.selectedElementId,
     this.onElementTap,
+    this.deviceRssi,
+    this.deviceSnr,
+    this.deviceChannelUtil,
   });
 
   @override
@@ -32,6 +40,11 @@ class WidgetRenderer extends StatelessWidget {
     final bindingEngine = DataBindingEngine();
     bindingEngine.setCurrentNode(node);
     bindingEngine.setAllNodes(allNodes);
+    bindingEngine.setDeviceSignal(
+      rssi: deviceRssi,
+      snr: deviceSnr,
+      channelUtil: deviceChannelUtil,
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -143,7 +156,7 @@ class _ElementRenderer extends StatelessWidget {
         return _buildMap();
 
       case ElementType.shape:
-        return ShapeRenderer(element: element, accentColor: accentColor);
+        return _buildShape();
 
       case ElementType.conditional:
         return _buildConditional();
@@ -270,6 +283,46 @@ class _ElementRenderer extends StatelessWidget {
           onElementTap: onElementTap,
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildShape() {
+    // Build child widget if shape has children (e.g., circle with icon inside)
+    Widget? childWidget;
+    if (element.children.isNotEmpty) {
+      // For shapes, we typically have a single centered child
+      if (element.children.length == 1) {
+        childWidget = _ElementRenderer(
+          element: element.children.first,
+          bindingEngine: bindingEngine,
+          accentColor: accentColor,
+          isPreview: isPreview,
+          selectedElementId: selectedElementId,
+          onElementTap: onElementTap,
+        );
+      } else {
+        // Multiple children - stack them
+        childWidget = Stack(
+          alignment: Alignment.center,
+          children: element.children.map((child) {
+            return _ElementRenderer(
+              element: child,
+              bindingEngine: bindingEngine,
+              accentColor: accentColor,
+              isPreview: isPreview,
+              selectedElementId: selectedElementId,
+              onElementTap: onElementTap,
+            );
+          }).toList(),
+        );
+      }
+    }
+
+    return ShapeRenderer(
+      element: element,
+      accentColor: accentColor,
+      borderColor: AppTheme.darkBorder,
+      child: childWidget,
     );
   }
 

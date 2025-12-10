@@ -8,11 +8,14 @@ void main() {
 
   group('WidgetStorageService', () {
     late WidgetStorageService service;
+    late int seededWidgetCount;
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       service = WidgetStorageService();
       await service.init();
+      // Store the count of seeded widgets as baseline
+      seededWidgetCount = (await service.getWidgets()).length;
     });
 
     WidgetSchema createTestWidget({String name = 'Test Widget', String? id}) {
@@ -32,8 +35,8 @@ void main() {
         await service.saveWidget(widget);
 
         final widgets = await service.getWidgets();
-        expect(widgets.length, 1);
-        expect(widgets.first.name, 'Test Widget');
+        expect(widgets.length, seededWidgetCount + 1);
+        expect(widgets.any((w) => w.name == 'Test Widget'), isTrue);
       });
 
       test('updates an existing widget with same ID', () async {
@@ -49,8 +52,8 @@ void main() {
         await service.saveWidget(updated);
 
         final widgets = await service.getWidgets();
-        expect(widgets.length, 1);
-        expect(widgets.first.name, 'Updated Widget');
+        expect(widgets.length, seededWidgetCount + 1);
+        expect(widgets.any((w) => w.name == 'Updated Widget'), isTrue);
       });
 
       test('saves multiple widgets', () async {
@@ -59,7 +62,7 @@ void main() {
         await service.saveWidget(createTestWidget(name: 'Widget 3'));
 
         final widgets = await service.getWidgets();
-        expect(widgets.length, 3);
+        expect(widgets.length, seededWidgetCount + 3);
       });
     });
 
@@ -81,17 +84,17 @@ void main() {
     });
 
     group('getWidgets', () {
-      test('returns empty list when no widgets saved', () async {
+      test('returns seeded widgets after init', () async {
         final widgets = await service.getWidgets();
-        expect(widgets, isEmpty);
+        expect(widgets.length, seededWidgetCount);
       });
 
-      test('returns all saved widgets', () async {
+      test('returns all saved widgets including seeded', () async {
         await service.saveWidget(createTestWidget(name: 'Widget 1'));
         await service.saveWidget(createTestWidget(name: 'Widget 2'));
 
         final widgets = await service.getWidgets();
-        expect(widgets.length, 2);
+        expect(widgets.length, seededWidgetCount + 2);
         expect(
           widgets.map((w) => w.name),
           containsAll(['Widget 1', 'Widget 2']),
@@ -107,7 +110,8 @@ void main() {
         await service.deleteWidget(widget.id);
 
         final widgets = await service.getWidgets();
-        expect(widgets, isEmpty);
+        expect(widgets.length, seededWidgetCount);
+        expect(widgets.any((w) => w.id == widget.id), isFalse);
       });
 
       test('does not throw when deleting non-existent ID', () async {
@@ -116,7 +120,7 @@ void main() {
         await service.deleteWidget('non-existent-id');
 
         final widgets = await service.getWidgets();
-        expect(widgets.length, 1);
+        expect(widgets.length, seededWidgetCount + 1);
       });
     });
 
@@ -138,7 +142,7 @@ void main() {
         await service.duplicateWidget(original.id);
 
         final widgets = await service.getWidgets();
-        expect(widgets.length, 2);
+        expect(widgets.length, seededWidgetCount + 2);
       });
 
       test('throws when widget not found', () async {
@@ -185,7 +189,7 @@ void main() {
         await service.importWidget(json);
 
         final widgets = await service.getWidgets();
-        expect(widgets.length, 1);
+        expect(widgets.length, seededWidgetCount + 1);
       });
 
       test('throws on invalid JSON', () async {
@@ -195,11 +199,14 @@ void main() {
 
     group('marketplace widgets', () {
       test('installMarketplaceWidget saves and tracks widget', () async {
+        final widgetsBefore = await service.getWidgets();
+        final countBefore = widgetsBefore.length;
+
         final widget = createTestWidget();
         await service.installMarketplaceWidget(widget);
 
-        final widgets = await service.getWidgets();
-        expect(widgets.length, 1);
+        final widgetsAfter = await service.getWidgets();
+        expect(widgetsAfter.length, countBefore + 1);
 
         final isMarketplace = await service.isMarketplaceWidget(widget.id);
         expect(isMarketplace, isTrue);
@@ -293,6 +300,15 @@ void main() {
       expect(widget.tags, contains('gps'));
     });
 
+    test('quickActionsWidget creates valid schema', () {
+      final widget = WidgetTemplates.quickActionsWidget();
+
+      expect(widget.name, 'Quick Actions');
+      expect(widget.root.type, ElementType.column);
+      expect(widget.tags, contains('actions'));
+      expect(widget.size, CustomWidgetSize.medium);
+    });
+
     test('all templates have unique root elements', () {
       final templates = [
         WidgetTemplates.batteryWidget(),
@@ -300,6 +316,7 @@ void main() {
         WidgetTemplates.environmentWidget(),
         WidgetTemplates.nodeInfoWidget(),
         WidgetTemplates.gpsWidget(),
+        WidgetTemplates.quickActionsWidget(),
       ];
 
       // Each template should have a root with children

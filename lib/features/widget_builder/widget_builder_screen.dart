@@ -195,6 +195,12 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     final myNodeNum = ref.watch(myNodeNumProvider);
     final node = myNodeNum != null ? nodes[myNodeNum] : null;
 
+    // Check if this widget is already on the dashboard
+    final dashboardWidgets = ref.watch(dashboardWidgetsProvider);
+    final isOnDashboard = dashboardWidgets.any(
+      (w) => w.schemaId == schema.id && w.isVisible,
+    );
+
     return Card(
       color: AppTheme.darkCard,
       margin: const EdgeInsets.only(bottom: 16),
@@ -264,19 +270,31 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
                     color: AppTheme.darkCard,
                     onSelected: (action) => _handleAction(action, schema),
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'add_to_dashboard',
+                      PopupMenuItem(
+                        value: isOnDashboard
+                            ? 'remove_from_dashboard'
+                            : 'add_to_dashboard',
                         child: Row(
                           children: [
                             Icon(
-                              Icons.dashboard_customize,
+                              isOnDashboard
+                                  ? Icons.dashboard_outlined
+                                  : Icons.dashboard_customize,
                               size: 18,
-                              color: Colors.white,
+                              color: isOnDashboard
+                                  ? AppTheme.errorRed
+                                  : Colors.white,
                             ),
-                            SizedBox(width: 8),
+                            const SizedBox(width: 8),
                             Text(
-                              'Add to Dashboard',
-                              style: TextStyle(color: Colors.white),
+                              isOnDashboard
+                                  ? 'Remove from Dashboard'
+                                  : 'Add to Dashboard',
+                              style: TextStyle(
+                                color: isOnDashboard
+                                    ? AppTheme.errorRed
+                                    : Colors.white,
+                              ),
                             ),
                           ],
                         ),
@@ -444,6 +462,9 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
       case 'add_to_dashboard':
         _addToDashboard(schema);
         break;
+      case 'remove_from_dashboard':
+        _removeFromDashboard(schema);
+        break;
       case 'edit':
         _editWidget(schema);
         break;
@@ -470,21 +491,29 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
     ref.read(dashboardWidgetsProvider.notifier).addCustomWidget(config);
 
-    // Store navigator before showing snackbar
-    final navigator = Navigator.of(context);
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${schema.name} added to Dashboard'),
         backgroundColor: AppTheme.successGreen,
         behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'View',
-          textColor: Colors.white,
-          onPressed: () {
-            navigator.pop();
-          },
-        ),
+      ),
+    );
+  }
+
+  void _removeFromDashboard(WidgetSchema schema) {
+    final dashboardWidgets = ref.read(dashboardWidgetsProvider);
+    final widgetToRemove = dashboardWidgets.firstWhere(
+      (w) => w.schemaId == schema.id && w.isVisible,
+      orElse: () => throw StateError('Widget not found on dashboard'),
+    );
+
+    ref.read(dashboardWidgetsProvider.notifier).removeWidget(widgetToRemove.id);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${schema.name} removed from Dashboard'),
+        backgroundColor: AppTheme.textSecondary,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
