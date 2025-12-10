@@ -11,12 +11,12 @@ dependencies:
   flutter:
     sdk: flutter
   
-  # State Management
-  flutter_riverpod: ^2.5.1
-  riverpod_annotation: ^2.3.5
+  # State Management (stay on 2.x for now - 3.x has breaking changes)
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
   
-  # BLE Communication
-  flutter_blue_plus: ^1.32.7
+  # BLE Communication (2.0 only changed license, API is same)
+  flutter_blue_plus: ^2.0.2
   
   # USB Serial Communication
   usb_serial: ^0.5.2
@@ -27,11 +27,11 @@ dependencies:
   
   # Storage
   flutter_secure_storage: ^9.2.2
-  shared_preferences: ^2.2.3
+  shared_preferences: ^2.5.4
   sqflite: ^2.3.3
   path_provider: ^2.1.4
   path: ^1.9.0
-  file_picker: ^8.0.0
+  file_picker: ^8.3.7
   
   # QR Code
   qr_flutter: ^4.1.0
@@ -43,27 +43,27 @@ dependencies:
   latlong2: ^0.9.1
   intl: ^0.19.0
   collection: ^1.18.0
-  geolocator: ^12.0.0
+  geolocator: ^13.0.2
   share_plus: ^10.1.4
   
   # Utilities
-  logger: ^2.4.0
-  uuid: ^4.4.2
-  permission_handler: ^11.3.1
+  logger: ^2.5.0
+  uuid: ^4.5.1
+  permission_handler: ^11.4.0
   fl_chart: ^1.1.1
-  url_launcher: ^6.3.0
-  http: ^1.2.0
+  url_launcher: ^6.3.1
+  http: ^1.2.2
   flutter_dotenv: ^6.0.0
   flutter_local_notifications: ^19.5.0
   just_audio: ^0.10.5
   live_activities: ^2.4.3
   
   # In-App Purchases (RevenueCat)
-  purchases_flutter: ^8.4.1
+  purchases_flutter: ^8.11.0
   
   # Animations
   animations: ^2.1.1
-  skeletonizer: ^1.4.2
+  skeletonizer: ^1.4.3
   lottie: ^3.3.1
   flutter_map_marker_cluster: ^1.4.0
   firebase_crashlytics: ^5.0.5
@@ -74,10 +74,10 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   
-  # Code generation
-  build_runner: ^2.4.11
-  riverpod_generator: ^2.4.0
-  json_serializable: ^6.8.0
+  # Code generation (stay on 2.x to match riverpod 2.x)
+  build_runner: ^2.4.13
+  riverpod_generator: ^2.6.4
+  json_serializable: ^6.9.5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

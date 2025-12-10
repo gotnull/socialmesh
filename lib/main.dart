@@ -8,7 +8,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'firebase_options.dart';
 import 'core/theme.dart';
+import 'core/constants.dart';
 import 'core/transport.dart';
+import 'core/widgets/animated_tagline.dart';
 import 'providers/app_providers.dart';
 import 'providers/telemetry_providers.dart';
 import 'providers/subscription_providers.dart';
@@ -192,6 +194,12 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
 
         if (transport.state == DeviceConnectionState.connected) {
           final protocol = ref.read(protocolServiceProvider);
+
+          // Set device info for hardware model inference
+          protocol.setDeviceName(foundDevice.name);
+          protocol.setBleModelNumber(transport.bleModelNumber);
+          protocol.setBleManufacturerName(transport.bleManufacturerName);
+
           await protocol.start();
 
           ref.read(connectedDeviceProvider.notifier).state = foundDevice;
@@ -327,16 +335,6 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
-  // Taglines to cycle through
-  static const _taglines = [
-    'Off-grid communication.',
-    'No towers. No subscriptions.',
-    'Your voice. Your network.',
-    'Zero knowledge. Zero tracking.',
-    'Device to device. Mile after mile.',
-    'Build infrastructure together.',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -387,7 +385,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                   ClipRRect(
                     borderRadius: BorderRadius.circular(24),
                     child: Image.asset(
-                      'assets/app_icons/source/socialmesh_icon_1024.png',
+                      AssetPaths.appIcon,
                       width: 120,
                       height: 120,
                     ),
@@ -402,7 +400,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _AnimatedTagline(taglines: _taglines),
+                  const AnimatedTagline(taglines: appTaglines),
                   const SizedBox(height: 48),
                   // Animated status indicator
                   _buildStatusIndicator(statusInfo),
@@ -874,100 +872,6 @@ class _ErrorScreen extends ConsumerWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Animated tagline that cycles through different phrases with fade+slide
-class _AnimatedTagline extends StatefulWidget {
-  final List<String> taglines;
-
-  const _AnimatedTagline({required this.taglines});
-
-  /// Duration each tagline is displayed
-  static const displayDuration = Duration(seconds: 3);
-
-  /// Duration of the fade/slide animation
-  static const animationDuration = Duration(milliseconds: 400);
-
-  @override
-  State<_AnimatedTagline> createState() => _AnimatedTaglineState();
-}
-
-class _AnimatedTaglineState extends State<_AnimatedTagline>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-  int _currentIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: _AnimatedTagline.animationDuration,
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-
-    // Start with the first tagline visible
-    _controller.forward();
-
-    // Start cycling
-    _startCycling();
-  }
-
-  void _startCycling() {
-    Future.delayed(_AnimatedTagline.displayDuration, () {
-      if (!mounted) return;
-      _cycleToNext();
-    });
-  }
-
-  Future<void> _cycleToNext() async {
-    // Fade out
-    await _controller.reverse();
-    if (!mounted) return;
-
-    // Change text
-    setState(() {
-      _currentIndex = (_currentIndex + 1) % widget.taglines.length;
-    });
-
-    // Fade in
-    await _controller.forward();
-    if (!mounted) return;
-
-    // Schedule next cycle
-    _startCycling();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: Text(
-          widget.taglines[_currentIndex],
-          style: const TextStyle(fontSize: 16, color: AppTheme.textSecondary),
         ),
       ),
     );

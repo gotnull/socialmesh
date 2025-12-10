@@ -70,6 +70,12 @@ class UiConstants {
   static const int longAnimationDurationMs = 400;
 }
 
+/// Asset paths
+class AssetPaths {
+  static const String appIcon =
+      'assets/app_icons/source/socialmesh_icon_1024.png';
+}
+
 /// TTL presets for ephemeral content
 enum ContentTtl {
   oneHour(1, '1 hour'),

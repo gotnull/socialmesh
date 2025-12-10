@@ -39,6 +39,12 @@ class UsbTransport implements DeviceTransport {
   @override
   bool get isConnected => _state == DeviceConnectionState.connected;
 
+  @override
+  String? get bleModelNumber => null; // Not available for USB transport
+
+  @override
+  String? get bleManufacturerName => null; // Not available for USB transport
+
   void _updateState(DeviceConnectionState newState) {
     if (_state != newState) {
       _state = newState;

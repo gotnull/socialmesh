@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../core/transport.dart';
 import '../../core/theme.dart';
+import '../../core/constants.dart';
+import '../../core/widgets/animated_tagline.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
@@ -236,6 +238,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       // Start protocol service and wait for configuration
       final protocol = ref.read(protocolServiceProvider);
       debugPrint('🟡 Scanner screen - protocol instance: ${protocol.hashCode}');
+
+      // Set device info for hardware model inference (for devices like T1000-E that return UNSET)
+      protocol.setDeviceName(device.name);
+      protocol.setBleModelNumber(transport.bleModelNumber);
+      protocol.setBleManufacturerName(transport.bleManufacturerName);
+
       await protocol.start();
 
       // Verify protocol actually received configuration from device
@@ -263,29 +271,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         return;
       }
 
-      // Check if region was previously configured - if so, skip region check
-      // This prevents the region popup from appearing on every reconnect
+      // ALWAYS check the actual device region - firmware updates can reset it!
+      // Don't assume "connected before = region configured" - that's wrong.
       final settings = await ref.read(settingsServiceProvider.future);
-      var regionWasConfigured = settings.regionConfigured;
 
-      // If we have a lastDeviceId, user has connected before, so region must be configured
-      // This handles the case where regionConfigured flag was somehow lost/reset
-      final lastDeviceId = settings.lastDeviceId;
-      if (!regionWasConfigured && lastDeviceId != null) {
-        debugPrint('🔍 Had lastDeviceId but regionConfigured=false, fixing...');
-        await settings.setRegionConfigured(true);
-        regionWasConfigured = true;
-      }
-
-      debugPrint('🔍 Region was previously configured: $regionWasConfigured');
+      debugPrint(
+        '🔍 Checking device region (always check - firmware may have reset it)...',
+      );
 
       bool needsRegionSetup = false;
 
-      if (!regionWasConfigured) {
-        // Fresh install scenario: need to wait for device to send its LoRa config
-        // The LoRa config is requested ~100ms after configComplete, response takes time
-        debugPrint('🔍 Fresh install - waiting for device LoRa config...');
-
+      // Always check region from device - firmware updates can reset it
+      {
         pbenum.RegionCode? region = protocol.currentRegion;
         debugPrint('🔍 Initial region: ${region?.name ?? "null"}');
 
@@ -320,11 +317,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
         debugPrint('📍 Final region decision: ${region?.name ?? "null"}');
 
-        // Only need region setup if region is truly UNSET (never configured on device)
+        // Need region setup if region is UNSET (not configured on device)
+        // This can happen on fresh install OR after firmware update/reset
         if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
           needsRegionSetup = true;
+          debugPrint('⚠️ Region is UNSET - need to configure!');
         } else {
-          // Device has a valid region - mark as configured for future connections
+          // Device has a valid region - mark as configured
           await settings.setRegionConfigured(true);
           debugPrint('✅ Region ${region.name} detected, marked as configured');
         }
@@ -364,6 +363,23 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     } catch (e) {
       if (!mounted) return;
 
+      // Force cleanup on error to ensure clean state for retry
+      try {
+        final transport = ref.read(transportProvider);
+        await transport.disconnect();
+      } catch (_) {
+        // Ignore cleanup errors
+      }
+
+      // Also stop any active BLE scan
+      try {
+        await FlutterBluePlus.stopScan();
+      } catch (_) {
+        // Ignore
+      }
+
+      if (!mounted) return;
+
       final message = e.toString().replaceFirst('Exception: ', '');
 
       if (!isAutoReconnect) {
@@ -391,11 +407,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: Image.asset(
-            'assets/app_icons/source/socialmesh_icon_1024.png',
-            width: 120,
-            height: 120,
-          ),
+          child: Image.asset(AssetPaths.appIcon, width: 120, height: 120),
         ),
         const SizedBox(height: 32),
         const Text(
@@ -407,11 +419,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Privacy-first mesh social',
-          style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
-        ),
-        SizedBox(height: 48),
+        const AnimatedTagline(taglines: appTaglines),
+        const SizedBox(height: 48),
         // Status indicator
         SizedBox(
           width: 48,

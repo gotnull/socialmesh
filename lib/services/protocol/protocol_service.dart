@@ -107,6 +107,9 @@ class ProtocolService {
   // Track pending messages by packet ID for delivery status updates
   final Map<int, String> _pendingMessages = {}; // packetId -> messageId
 
+  // BLE device name for hardware model inference
+  String? _deviceName;
+
   ProtocolService(this._transport, {Logger? logger})
     : _logger = logger ?? Logger(),
       _framer = PacketFramer(logger: logger),
@@ -152,6 +155,31 @@ class ProtocolService {
           StreamController<pb.ModuleConfig_DetectionSensorConfig>.broadcast(),
       _rangeTestConfigController =
           StreamController<pb.ModuleConfig_RangeTestConfig>.broadcast();
+
+  /// Set the BLE device name for hardware model inference
+  void setDeviceName(String? name) {
+    _deviceName = name;
+    _logger.i('Device name set to: $name');
+  }
+
+  /// Set the BLE model number (from Device Information Service 0x180A)
+  void setBleModelNumber(String? modelNumber) {
+    _bleModelNumber = modelNumber;
+    if (modelNumber != null) {
+      _logger.i('BLE model number set to: $modelNumber');
+    }
+  }
+
+  /// Set the BLE manufacturer name (from Device Information Service 0x180A)
+  void setBleManufacturerName(String? manufacturerName) {
+    _bleManufacturerName = manufacturerName;
+    if (manufacturerName != null) {
+      _logger.i('BLE manufacturer name set to: $manufacturerName');
+    }
+  }
+
+  String? _bleModelNumber;
+  String? _bleManufacturerName;
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -492,6 +520,11 @@ class ProtocolService {
         _handleNodeInfo(fromRadio.nodeInfo);
       } else if (fromRadio.hasChannel()) {
         _handleChannel(fromRadio.channel);
+      } else if (fromRadio.hasConfig()) {
+        // Handle config sent during initial boot - this includes LoRa config with region!
+        _handleFromRadioConfig(fromRadio.config);
+      } else if (fromRadio.hasMetadata()) {
+        _handleFromRadioMetadata(fromRadio.metadata);
       } else if (fromRadio.hasConfigCompleteId()) {
         debugPrint(
           '🎉 Protocol: Configuration complete! ID: ${fromRadio.configCompleteId}',
@@ -761,6 +794,10 @@ class ProtocolService {
       } else if (adminMsg.hasGetDeviceMetadataResponse()) {
         // Handle device metadata response - update node with firmware version
         final metadata = adminMsg.getDeviceMetadataResponse;
+        debugPrint(
+          '📋 Received device metadata: firmware="${metadata.firmwareVersion}", '
+          'hwModel=${metadata.hwModel.name}',
+        );
         _logger.i(
           'Received device metadata: firmwareVersion=${metadata.firmwareVersion}, '
           'hwModel=${metadata.hwModel.name}, hasWifi=${metadata.hasWifi}',
@@ -769,13 +806,32 @@ class ProtocolService {
         // Update our node with the firmware version and other metadata
         if (_myNodeNum != null && _nodes.containsKey(_myNodeNum)) {
           final existingNode = _nodes[_myNodeNum]!;
+
+          // Determine hardware model - use metadata if valid, otherwise infer
+          String? hwModelName;
+          if (metadata.hwModel != pb.HardwareModel.UNSET) {
+            hwModelName = _formatHardwareModel(metadata.hwModel);
+            _logger.i('Hardware model from metadata: $hwModelName');
+          } else {
+            // Try to infer from BLE model number or device name
+            _logger.i(
+              'Hardware model UNSET in metadata, attempting to infer (bleModel="$_bleModelNumber", deviceName="$_deviceName")',
+            );
+            hwModelName = _inferHardwareModel();
+            if (hwModelName == null) {
+              _logger.w(
+                'Could not infer hardware model - device firmware may need update',
+              );
+            }
+          }
+
           final updatedNode = existingNode.copyWith(
             firmwareVersion: metadata.firmwareVersion.isNotEmpty
                 ? metadata.firmwareVersion
                 : null,
             hasWifi: metadata.hasWifi,
             hasBluetooth: metadata.hasBluetooth,
-            hardwareModel: metadata.hwModel.name,
+            hardwareModel: hwModelName ?? existingNode.hardwareModel,
           );
           _nodes[_myNodeNum!] = updatedNode;
           _nodeController.add(updatedNode);
@@ -786,6 +842,131 @@ class ProtocolService {
       _logger.e('Error handling admin message: $e');
     }
   }
+
+  /// Handle Config from FromRadio (sent during initial config boot sequence)
+  /// This includes LoRa config with the region!
+  void _handleFromRadioConfig(pb.Config config) {
+    // Handle LoRa config - this is where we get the region during initial boot
+    if (config.hasLora()) {
+      final loraConfig = config.lora;
+      debugPrint(
+        '📡 FromRadio LoRa config: region=${loraConfig.region.name}, '
+        'modemPreset=${loraConfig.modemPreset.name}',
+      );
+      _currentRegion = loraConfig.region;
+      _currentLoraConfig = loraConfig;
+      _regionController.add(loraConfig.region);
+      _loraConfigController.add(loraConfig);
+    }
+
+    // Handle Position config
+    if (config.hasPosition()) {
+      final posConfig = config.position;
+      debugPrint(
+        '📍 FromRadio Position config: gpsEnabled=${posConfig.gpsEnabled}, '
+        'gpsMode=${posConfig.gpsMode}',
+      );
+      _currentPositionConfig = posConfig;
+      _positionConfigController.add(posConfig);
+    }
+
+    // Handle Device config
+    if (config.hasDevice()) {
+      final deviceConfig = config.device;
+      debugPrint('📱 FromRadio Device config: role=${deviceConfig.role.name}');
+      _currentDeviceConfig = deviceConfig;
+      _deviceConfigController.add(deviceConfig);
+    }
+
+    // Handle Power config
+    if (config.hasPower()) {
+      final powerConfig = config.power;
+      _currentPowerConfig = powerConfig;
+      _powerConfigController.add(powerConfig);
+    }
+
+    // Handle Network config
+    if (config.hasNetwork()) {
+      final networkConfig = config.network;
+      _currentNetworkConfig = networkConfig;
+      _networkConfigController.add(networkConfig);
+    }
+
+    // Handle Bluetooth config
+    if (config.hasBluetooth()) {
+      final btConfig = config.bluetooth;
+      _currentBluetoothConfig = btConfig;
+      _bluetoothConfigController.add(btConfig);
+    }
+
+    // Handle Display config
+    if (config.hasDisplay()) {
+      final displayConfig = config.display;
+      _currentDisplayConfig = displayConfig;
+      _displayConfigController.add(displayConfig);
+    }
+
+    // Handle Security config
+    if (config.hasSecurity()) {
+      final secConfig = config.security;
+      _currentSecurityConfig = secConfig;
+      _securityConfigController.add(secConfig);
+    }
+  }
+
+  /// Handle DeviceMetadata from FromRadio (sent during initial config)
+  void _handleFromRadioMetadata(pb.DeviceMetadata metadata) {
+    debugPrint(
+      '📋 FromRadio metadata: firmware="${metadata.firmwareVersion}", '
+      'hwModel=${metadata.hwModel.name}',
+    );
+    _logger.i(
+      'FromRadio metadata: firmwareVersion=${metadata.firmwareVersion}, '
+      'hwModel=${metadata.hwModel.name}, hasWifi=${metadata.hasWifi}',
+    );
+
+    // Update our node with the firmware version and other metadata
+    if (_myNodeNum != null && _nodes.containsKey(_myNodeNum)) {
+      final existingNode = _nodes[_myNodeNum]!;
+
+      // Determine hardware model - use metadata if valid, otherwise infer
+      String? hwModelName;
+      if (metadata.hwModel != pb.HardwareModel.UNSET) {
+        hwModelName = _formatHardwareModel(metadata.hwModel);
+        _logger.i('Hardware model from FromRadio metadata: $hwModelName');
+      } else {
+        // Try to infer from BLE model number or device name
+        _logger.i(
+          'Hardware model UNSET in FromRadio metadata, attempting to infer',
+        );
+        hwModelName = _inferHardwareModel();
+      }
+
+      final updatedNode = existingNode.copyWith(
+        firmwareVersion: metadata.firmwareVersion.isNotEmpty
+            ? metadata.firmwareVersion
+            : null,
+        hasWifi: metadata.hasWifi,
+        hasBluetooth: metadata.hasBluetooth,
+        hardwareModel: hwModelName ?? existingNode.hardwareModel,
+      );
+      _nodes[_myNodeNum!] = updatedNode;
+      _nodeController.add(updatedNode);
+      debugPrint(
+        '📋 Updated node $_myNodeNum with FromRadio metadata: '
+        'firmware="${updatedNode.firmwareVersion}", hw="${updatedNode.hardwareModel}"',
+      );
+    } else {
+      // myNodeNum not set yet - store metadata for later
+      debugPrint(
+        '📋 FromRadio metadata received before myNodeNum set - caching',
+      );
+      _pendingMetadata = metadata;
+    }
+  }
+
+  /// Cached metadata received before myNodeNum was set
+  pb.DeviceMetadata? _pendingMetadata;
 
   /// Handle text message
   void _handleTextMessage(pb.MeshPacket packet, pb.Data data) {
@@ -1359,10 +1540,16 @@ class ProtocolService {
       final avatarColor = colors[packet.from % colors.length];
 
       // Extract hardware model from user
-      final hwModel =
-          user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET
-          ? _formatHardwareModel(user.hwModel)
-          : null;
+      String? hwModel;
+      if (user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET) {
+        hwModel = _formatHardwareModel(user.hwModel);
+      } else if (packet.from == _myNodeNum) {
+        // For our own node, try to infer from BLE model number or device name
+        hwModel = _inferHardwareModel();
+        if (hwModel != null) {
+          _logger.i('Hardware model UNSET in User packet, inferred: $hwModel');
+        }
+      }
 
       // Extract role from user
       final role = user.hasRole() ? user.role.name : 'CLIENT';
@@ -1420,6 +1607,13 @@ class ProtocolService {
     debugPrint('🔢 Protocol: My node number set to: $_myNodeNum');
     _logger.i('My node number: $_myNodeNum');
     _myNodeNumController.add(_myNodeNum!);
+
+    // Apply any pending metadata that was received before myNodeNum was set
+    if (_pendingMetadata != null) {
+      debugPrint('📋 Applying pending FromRadio metadata...');
+      _handleFromRadioMetadata(_pendingMetadata!);
+      _pendingMetadata = null;
+    }
 
     // Request our own position after a short delay
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -2529,6 +2723,7 @@ class ProtocolService {
       throw StateError('Cannot get metadata: not connected');
     }
 
+    debugPrint('📋 Requesting device metadata...');
     _logger.i('Requesting device metadata');
 
     final adminMsg = pb.AdminMessage()..getDeviceMetadataRequest = true;
@@ -3636,6 +3831,104 @@ class ProtocolService {
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Infer hardware model from BLE device name
+  /// Returns null if unable to determine
+  String? _inferHardwareModelFromDeviceName(String? deviceName) {
+    if (deviceName == null || deviceName.isEmpty) return null;
+
+    final nameLower = deviceName.toLowerCase();
+
+    // Map of device name patterns to hardware model display names
+    // Patterns are checked in order, more specific patterns first
+    final patterns = <String, String>{
+      't1000-e': 'Tracker T1000-E',
+      't1000e': 'Tracker T1000-E',
+      'sensecap indicator': 'SenseCAP Indicator',
+      'sensecap': 'SenseCAP Indicator', // Generic SenseCAP fallback
+      't-beam supreme': 'T-Beam Supreme',
+      'tbeam supreme': 'T-Beam Supreme',
+      't-beam s3': 'LilyGo T-Beam S3 Core',
+      'tbeam s3': 'LilyGo T-Beam S3 Core',
+      't-beam': 'T-Beam',
+      'tbeam': 'T-Beam',
+      't-echo': 'T-Echo',
+      'techo': 'T-Echo',
+      't-deck': 'T-Deck',
+      'tdeck': 'T-Deck',
+      't-watch': 'T-Watch S3',
+      'twatch': 'T-Watch S3',
+      't-lora': 'T-LoRa V2',
+      'tlora': 'T-LoRa V2',
+      'heltec v3': 'Heltec V3',
+      'heltec wireless tracker': 'Heltec Wireless Tracker',
+      'heltec wireless paper': 'Heltec Wireless Paper',
+      'heltec mesh node': 'Heltec Mesh Node T114',
+      'heltec capsule': 'Heltec Capsule Sensor V3',
+      'heltec vision master': 'Heltec Vision Master T190',
+      'heltec': 'Heltec V3', // Generic Heltec fallback
+      'rak4631': 'RAK4631',
+      'rak meshtastic': 'RAK4631',
+      'rak': 'RAK4631', // Generic RAK fallback
+      'wio wm1110': 'Wio WM1110',
+      'wio tracker': 'Wio WM1110',
+      'nano g2': 'Nano G2 Ultra',
+      'nano g1': 'Nano G1',
+      'station g2': 'Station G2',
+      'station g1': 'Station G1',
+      'rp2040': 'RP2040 LoRa',
+      'pico': 'Raspberry Pi Pico',
+      'chatter': 'Chatter 2',
+      'picomputer': 'Pi Computer S3',
+    };
+
+    for (final entry in patterns.entries) {
+      if (nameLower.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+
+    return null;
+  }
+
+  /// Infer hardware model from any available source
+  /// Checks BLE model number first (most reliable), then manufacturer name, then device name
+  String? _inferHardwareModel() {
+    // First try BLE model number from Device Information Service
+    if (_bleModelNumber != null && _bleModelNumber!.isNotEmpty) {
+      final inferred = _inferHardwareModelFromDeviceName(_bleModelNumber);
+      if (inferred != null) {
+        _logger.i(
+          'Inferred hardware from BLE model number "$_bleModelNumber": $inferred',
+        );
+        return inferred;
+      }
+    }
+
+    // Try manufacturer name - SenseCAP/Seeed devices
+    if (_bleManufacturerName != null && _bleManufacturerName!.isNotEmpty) {
+      final mfgLower = _bleManufacturerName!.toLowerCase();
+      if (mfgLower.contains('sensecap') || mfgLower.contains('seeed')) {
+        _logger.i(
+          'Inferred hardware from manufacturer "$_bleManufacturerName": Tracker T1000-E',
+        );
+        return 'Tracker T1000-E';
+      }
+    }
+
+    // Fall back to device name
+    if (_deviceName != null && _deviceName!.isNotEmpty) {
+      final inferred = _inferHardwareModelFromDeviceName(_deviceName);
+      if (inferred != null) {
+        _logger.i(
+          'Inferred hardware from device name "$_deviceName": $inferred',
+        );
+        return inferred;
+      }
+    }
+
+    return null;
   }
 
   /// Format hardware model enum to readable string

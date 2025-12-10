@@ -14,9 +14,10 @@
 ## Code Quality
 - Do not leave placeholders or temporary comments.
 - Fully implement features or remove incomplete ones.
-- Resolve all warnings and errors.
+- Resolve ALL issues from `flutter analyze` including info, warning, and error levels.
 - Replace deprecated APIs without suppression flags.
-- Code must pass `flutter analyze` cleanly.
+- Code must pass `flutter analyze` with zero issues of any severity.
+- Use `debugPrint()` instead of `print()` for debug logging.
 - Ensure every feature is fully wired and functional end to end.
 
 ## Systematic Verification (CRITICAL)

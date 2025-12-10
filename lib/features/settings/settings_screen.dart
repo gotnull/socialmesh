@@ -165,27 +165,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         const SizedBox(height: 8),
         // Premium feature tiles
         _PremiumFeatureTile(
-          icon: Icons.palette,
-          title: 'Themes',
-          feature: PremiumFeature.premiumThemes,
-          onTap: () {
-            final hasFeature = purchaseState.hasFeature(
-              PremiumFeature.premiumThemes,
-            );
-            if (hasFeature) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ThemeSettingsScreen()),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-              );
-            }
-          },
-        ),
-        _PremiumFeatureTile(
           icon: Icons.music_note,
           title: 'Ringtones',
           feature: PremiumFeature.customRingtones,
@@ -197,6 +176,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const RingtoneScreen()),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
+            }
+          },
+        ),
+        _PremiumFeatureTile(
+          icon: Icons.palette,
+          title: 'Themes',
+          feature: PremiumFeature.premiumThemes,
+          onTap: () {
+            final hasFeature = purchaseState.hasFeature(
+              PremiumFeature.premiumThemes,
+            );
+            if (hasFeature) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ThemeSettingsScreen()),
               );
             } else {
               Navigator.push(
@@ -357,30 +357,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     setState(() {});
                   },
                 ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Appearance Section
-              const _SectionHeader(title: 'APPEARANCE'),
-              _SettingsTile(
-                icon: Icons.palette_outlined,
-                title: 'Accent color',
-                subtitle: AccentColors.nameFor(ref.watch(accentColorProvider)),
-                trailing: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: ref.watch(accentColorProvider),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      width: 2,
-                    ),
-                  ),
-                ),
-                onTap: () =>
-                    _showAccentColorPicker(context, ref, settingsService),
               ),
 
               const SizedBox(height: 16),
@@ -599,9 +575,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onTap: () => Navigator.pushNamed(context, '/scanner'),
               ),
               _SettingsTile(
-                icon: Icons.language,
+                icon:
+                    regionAsync.whenOrNull(
+                          data: (r) => r == pbenum.RegionCode.UNSET_REGION,
+                        ) ==
+                        true
+                    ? Icons.warning_amber_rounded
+                    : Icons.language,
+                iconColor:
+                    regionAsync.whenOrNull(
+                          data: (r) => r == pbenum.RegionCode.UNSET_REGION,
+                        ) ==
+                        true
+                    ? Colors.orange
+                    : null,
                 title: 'Region / Frequency',
                 subtitle: regionSubtitle,
+                subtitleColor:
+                    regionAsync.whenOrNull(
+                          data: (r) => r == pbenum.RegionCode.UNSET_REGION,
+                        ) ==
+                        true
+                    ? Colors.orange
+                    : null,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -1007,109 +1003,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  void _showAccentColorPicker(
-    BuildContext context,
-    WidgetRef ref,
-    SettingsService settingsService,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.darkCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => Consumer(
-        builder: (context, ref, _) {
-          final currentColor = ref.watch(accentColorProvider);
-          return SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    'Accent Color',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: AccentColors.all.map((color) {
-                      final isSelected =
-                          color.toARGB32() == currentColor.toARGB32();
-                      return BouncyTap(
-                        onTap: () async {
-                          HapticFeedback.selectionClick();
-                          ref.read(accentColorProvider.notifier).state = color;
-                          await settingsService.setAccentColor(
-                            color.toARGB32(),
-                          );
-                          if (context.mounted) Navigator.pop(context);
-                        },
-                        scaleFactor: 0.9,
-                        child: AnimatedScale(
-                          scale: isSelected ? 1.15 : 1.0,
-                          duration: const Duration(milliseconds: 200),
-                          curve: Curves.easeOutBack,
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: color,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.white.withValues(alpha: 0.2),
-                                width: isSelected ? 3 : 2,
-                              ),
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: color.withValues(alpha: 0.6),
-                                        blurRadius: 12,
-                                        spreadRadius: 4,
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 200),
-                              child: isSelected
-                                  ? const Icon(
-                                      Icons.check,
-                                      key: ValueKey('check'),
-                                      color: Colors.white,
-                                      size: 24,
-                                    )
-                                  : const SizedBox.shrink(
-                                      key: ValueKey('empty'),
-                                    ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   void _showHapticIntensityPicker(
     BuildContext context,
     WidgetRef ref,
@@ -1356,6 +1249,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ref.read(nodesProvider.notifier).clearNodes();
       ref.read(channelsProvider.notifier).clearChannels();
 
+      // Get device info for hardware model inference
+      final connectedDevice = ref.read(connectedDeviceProvider);
+      if (connectedDevice != null) {
+        protocol.setDeviceName(connectedDevice.name);
+        protocol.setBleModelNumber(transport.bleModelNumber);
+        protocol.setBleManufacturerName(transport.bleManufacturerName);
+      }
+
       // Restart protocol to re-request config from device
       await protocol.start();
 
@@ -1517,6 +1418,7 @@ class _SettingsTile extends StatelessWidget {
   final String title;
   final Color? titleColor;
   final String? subtitle;
+  final Color? subtitleColor;
   final Widget? trailing;
   final VoidCallback? onTap;
 
@@ -1526,6 +1428,7 @@ class _SettingsTile extends StatelessWidget {
     required this.title,
     this.titleColor,
     this.subtitle,
+    this.subtitleColor,
     this.trailing,
     this.onTap,
   });
@@ -1567,9 +1470,9 @@ class _SettingsTile extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           subtitle!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: AppTheme.textTertiary,
+                            color: subtitleColor ?? AppTheme.textTertiary,
                           ),
                         ),
                       ],

@@ -131,6 +131,12 @@ class AppInitNotifier extends StateNotifier<AppInitState> {
             // Start protocol service
             final protocol = _ref.read(protocolServiceProvider);
             debugPrint('🔵 AppInit: Calling protocol.start()...');
+
+            // Set device info for hardware model inference
+            protocol.setDeviceName(lastDevice.name);
+            protocol.setBleModelNumber(transport.bleModelNumber);
+            protocol.setBleManufacturerName(transport.bleManufacturerName);
+
             await protocol.start();
             debugPrint(
               '🔵 AppInit: protocol.start() returned, myNodeNum=${protocol.myNodeNum}',
@@ -543,6 +549,12 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           // Restart protocol service
           debugPrint('🔄 Starting protocol service...');
           final protocol = ref.read(protocolServiceProvider);
+
+          // Set device info for hardware model inference
+          protocol.setDeviceName(foundDevice.name);
+          protocol.setBleModelNumber(transport.bleModelNumber);
+          protocol.setBleManufacturerName(transport.bleManufacturerName);
+
           await protocol.start();
           debugPrint('🔄 Protocol service started!');
 

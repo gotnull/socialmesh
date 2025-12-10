@@ -409,14 +409,14 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             child: Column(
               children: [
                 _buildBundleFeature(
-                  Icons.palette,
-                  'Theme Pack',
-                  '12 accent colors',
-                ),
-                _buildBundleFeature(
                   Icons.music_note,
                   'Ringtone Library',
                   '$_ringtoneCountFormatted tones',
+                ),
+                _buildBundleFeature(
+                  Icons.palette,
+                  'Theme Pack',
+                  '12 accent colors',
                 ),
                 _buildBundleFeature(
                   Icons.widgets,

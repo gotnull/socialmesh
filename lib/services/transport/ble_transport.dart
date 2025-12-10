@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:logger/logger.dart';
 import '../../core/transport.dart';
@@ -26,6 +27,23 @@ class BleTransport implements DeviceTransport {
   static const String _toRadioUuid = 'f75c76d2-129e-4dad-a1dd-7866124401e7';
   static const String _fromRadioUuid = '2c55e69e-4993-11ed-b878-0242ac120002';
   static const String _fromNumUuid = 'ed9da18c-a800-4f66-a670-aa7547e34453';
+
+  // Device Information Service UUIDs (standard BLE)
+  static const String _deviceInfoServiceUuid = '180a';
+  static const String _modelNumberUuid = '2a24';
+  static const String _manufacturerNameUuid = '2a29';
+
+  // Cached device info from Device Information Service
+  String? _bleModelNumber;
+  String? _bleManufacturerName;
+
+  /// Get the BLE model number read from Device Information Service
+  @override
+  String? get bleModelNumber => _bleModelNumber;
+
+  /// Get the BLE manufacturer name read from Device Information Service
+  @override
+  String? get bleManufacturerName => _bleManufacturerName;
 
   BleTransport({Logger? logger})
     : _logger = logger ?? Logger(),
@@ -161,10 +179,19 @@ class BleTransport implements DeviceTransport {
 
   @override
   Future<void> connect(DeviceInfo device) async {
-    if (_state == DeviceConnectionState.connected ||
-        _state == DeviceConnectionState.connecting) {
-      _logger.w('Already connected or connecting');
+    // Force cleanup any stale state before connecting
+    // This fixes issues where PIN cancellation leaves BLE in a weird state
+    if (_state == DeviceConnectionState.connecting) {
+      _logger.w('Already connecting - forcing cleanup first');
+      await disconnect();
+      await Future.delayed(const Duration(milliseconds: 300));
+    } else if (_state == DeviceConnectionState.connected) {
+      _logger.w('Already connected');
       return;
+    } else if (_state == DeviceConnectionState.error) {
+      _logger.w('Was in error state - cleaning up first');
+      await disconnect();
+      await Future.delayed(const Duration(milliseconds: 300));
     }
 
     _updateState(DeviceConnectionState.connecting);
@@ -180,10 +207,14 @@ class BleTransport implements DeviceTransport {
           (d) => d.remoteId.toString() == device.id,
         );
 
-        // If device is already connected from another app, disconnect first
+        // If device is already connected from another app or stale connection, disconnect first
         if (_device!.isConnected) {
           _logger.w('Device already connected, forcing disconnect...');
-          await _device!.disconnect();
+          try {
+            await _device!.disconnect();
+          } catch (e) {
+            _logger.w('Pre-connect disconnect error (ignored): $e');
+          }
           await Future.delayed(const Duration(milliseconds: 500));
         }
       } catch (e) {
@@ -192,7 +223,7 @@ class BleTransport implements DeviceTransport {
 
       // Connect to device - simple and reliable
       _logger.d('Initiating BLE connection...');
-      await _device!.connect(autoConnect: false);
+      await _device!.connect(license: License.free, autoConnect: false);
 
       // Device is now connected, discover services immediately
       _logger.i('Connection established, discovering services...');
@@ -236,6 +267,9 @@ class BleTransport implements DeviceTransport {
           _logger.d('  Characteristic: ${char.uuid}');
         }
       }
+
+      // Try to read model number from Device Information Service (0x180A)
+      await _readDeviceModelNumber(services);
 
       // Find Meshtastic service
       final service = services.firstWhere(
@@ -295,6 +329,51 @@ class BleTransport implements DeviceTransport {
       await disconnect();
       _updateState(DeviceConnectionState.error);
       rethrow;
+    }
+  }
+
+  /// Read device info from Device Information Service (0x180A)
+  Future<void> _readDeviceModelNumber(List<BluetoothService> services) async {
+    debugPrint('📱 BLE: Searching for Device Information Service (0x180A)...');
+    try {
+      // Find Device Information Service
+      final deviceInfoService = services.cast<BluetoothService?>().firstWhere(
+        (s) => s?.uuid.toString().toLowerCase() == _deviceInfoServiceUuid,
+        orElse: () => null,
+      );
+
+      if (deviceInfoService == null) {
+        debugPrint('📱 BLE: Device Information Service (0x180A) not found');
+        _logger.d('Device Information Service (0x180A) not found');
+        return;
+      }
+      debugPrint('📱 BLE: Found Device Information Service');
+
+      // Read all characteristics for debugging
+      for (final char in deviceInfoService.characteristics) {
+        try {
+          final data = await char.read();
+          final value = String.fromCharCodes(data).trim();
+          debugPrint('📱 BLE Device Info ${char.uuid}: "$value" (raw: $data)');
+
+          final uuid = char.uuid.toString().toLowerCase();
+          if (uuid == _modelNumberUuid) {
+            _bleModelNumber = value;
+          } else if (uuid == _manufacturerNameUuid) {
+            _bleManufacturerName = value;
+          }
+        } catch (e) {
+          debugPrint('📱 BLE: Could not read ${char.uuid}: $e');
+        }
+      }
+
+      debugPrint(
+        '📱 BLE: Model="$_bleModelNumber", '
+        'Manufacturer="$_bleManufacturerName"',
+      );
+    } catch (e) {
+      debugPrint('📱 BLE Device Info read error: $e');
+      _logger.d('Could not read device info: $e');
     }
   }
 
@@ -436,11 +515,13 @@ class BleTransport implements DeviceTransport {
 
   @override
   Future<void> disconnect() async {
-    if (_state == DeviceConnectionState.disconnected) {
-      return;
-    }
+    // Don't skip cleanup based on state - force full cleanup every time
+    // This fixes issues where PIN cancellation leaves stale BLE state
+    final wasDisconnected = _state == DeviceConnectionState.disconnected;
 
-    _updateState(DeviceConnectionState.disconnecting);
+    if (!wasDisconnected) {
+      _updateState(DeviceConnectionState.disconnecting);
+    }
 
     try {
       _pollingTimer?.cancel();
@@ -450,7 +531,11 @@ class BleTransport implements DeviceTransport {
       await _deviceStateSubscription?.cancel();
 
       if (_device != null) {
-        await _device!.disconnect();
+        try {
+          await _device!.disconnect();
+        } catch (e) {
+          _logger.w('Device disconnect error (ignored): $e');
+        }
       }
 
       _device = null;
@@ -458,12 +543,20 @@ class BleTransport implements DeviceTransport {
       _rxCharacteristic = null;
       _characteristicSubscription = null;
       _deviceStateSubscription = null;
+      _fromNumSubscription = null;
+      _consecutiveAuthErrors = 0;
 
-      _updateState(DeviceConnectionState.disconnected);
-      _logger.i('Disconnected');
+      if (!wasDisconnected) {
+        _updateState(DeviceConnectionState.disconnected);
+        _logger.i('Disconnected');
+      }
     } catch (e) {
       _logger.e('Disconnect error: $e');
-      _updateState(DeviceConnectionState.error);
+      // Still clean up state even on error
+      _device = null;
+      _txCharacteristic = null;
+      _rxCharacteristic = null;
+      _updateState(DeviceConnectionState.disconnected);
     }
   }
 

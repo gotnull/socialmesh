@@ -11,6 +11,7 @@ import '../nodes/nodes_screen.dart';
 import '../map/map_screen.dart';
 import '../dashboard/widget_dashboard_screen.dart';
 import '../scanner/scanner_screen.dart';
+import '../device/region_selection_screen.dart';
 
 /// Main navigation shell with bottom navigation bar
 class MainShell extends ConsumerStatefulWidget {
@@ -73,6 +74,16 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     // Auto-reconnect and live activity managers are now watched at app level in main.dart
 
+    // Watch for UNSET region - firmware updates can reset it!
+    // BUT only if we haven't already marked region as configured (user set it before)
+    // During auto-reconnect, the region might briefly show UNSET before config loads
+    final needsRegionSetup = ref.watch(needsRegionSetupProvider);
+    final regionConfigured =
+        settingsAsync.whenOrNull(
+          data: (settings) => settings.regionConfigured,
+        ) ??
+        false;
+
     final isConnected = connectionStateAsync.when(
       data: (state) => state == DeviceConnectionState.connected,
       loading: () => false,
@@ -93,6 +104,17 @@ class _MainShellState extends ConsumerState<MainShell> {
     // If connected (even with auto-reconnect disabled), show the main app
     if (!isConnected && !isReconnecting && !autoReconnectEnabled) {
       return const ScannerScreen(isInline: true);
+    }
+
+    // If connected but region is UNSET, force region selection
+    // This catches firmware updates/resets that clear the region
+    // BUT: skip this during auto-reconnect if user already configured region before
+    // The device config might not have loaded yet, and we don't want a loop
+    if (isConnected && needsRegionSetup && !regionConfigured) {
+      debugPrint(
+        '⚠️ MainShell: Connected but region is UNSET and not configured - forcing region setup',
+      );
+      return const RegionSelectionScreen(isInitialSetup: true);
     }
 
     // Build the main scaffold

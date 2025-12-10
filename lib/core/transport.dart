@@ -82,6 +82,14 @@ abstract class DeviceTransport {
   /// Returns null if not supported or not connected
   Future<int?> readRssi();
 
+  /// Get the BLE device model number from Device Information Service
+  /// Returns null if not available (USB transport or not read yet)
+  String? get bleModelNumber => null;
+
+  /// Get the BLE manufacturer name from Device Information Service
+  /// Returns null if not available (USB transport or not read yet)
+  String? get bleManufacturerName => null;
+
   /// Dispose resources
   Future<void> dispose();
 

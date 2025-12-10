@@ -58,6 +58,16 @@ class AccentColors {
   }
 }
 
+/// App taglines shown on splash/connecting screens
+const appTaglines = [
+  'Off-grid communication.',
+  'No towers. No subscriptions.',
+  'Your voice. Your network.',
+  'Zero knowledge. Zero tracking.',
+  'Device to device. Mile after mile.',
+  'Build infrastructure together.',
+];
+
 /// Provider for the current accent color
 final accentColorProvider = StateProvider<Color>((ref) => AccentColors.magenta);
 
