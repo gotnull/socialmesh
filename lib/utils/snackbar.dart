@@ -90,6 +90,15 @@ void showInfoSnackBar(
   );
 }
 
+/// Shows a loading snackbar with spinner
+void showLoadingSnackBar(
+  BuildContext context,
+  String message, {
+  Duration duration = const Duration(seconds: 3),
+}) {
+  _showLoadingSnackBar(context, message, duration: duration);
+}
+
 /// Legacy function for backwards compatibility - use showSuccessSnackBar instead
 void showAppSnackBar(
   BuildContext context,
@@ -169,6 +178,85 @@ void _showStyledSnackBar(
                     Icons.close_rounded,
                     color: Colors.white.withValues(alpha: 0.7),
                     size: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(snackBar);
+}
+
+void _showLoadingSnackBar(
+  BuildContext context,
+  String message, {
+  required Duration duration,
+}) {
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  if (messenger == null) return;
+
+  final snackBar = SnackBar(
+    behavior: SnackBarBehavior.floating,
+    backgroundColor: Colors.transparent,
+    elevation: 0,
+    duration: duration,
+    margin: const EdgeInsets.all(16),
+    padding: EdgeInsets.zero,
+    content: Container(
+      decoration: BoxDecoration(
+        color: SnackBarType.info.backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: SnackBarType.info.iconColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: SnackBarType.info.iconColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Center(
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                    height: 1.3,
                   ),
                 ),
               ),

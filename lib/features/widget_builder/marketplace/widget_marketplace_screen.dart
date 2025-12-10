@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../marketplace/widget_marketplace_service.dart';
 import '../storage/widget_storage_service.dart';
 import '../../../core/theme.dart';
+import '../../../utils/snackbar.dart';
 
 /// Marketplace browse screen
 class WidgetMarketplaceScreen extends ConsumerStatefulWidget {
@@ -243,23 +244,47 @@ class _WidgetMarketplaceScreenState
     return Card(
       color: AppTheme.darkCard,
       margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: context.accentColor.withValues(alpha: 0.2),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: context.accentColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(10),
+          ),
           child: Icon(
             _getCategoryIcon(category),
             color: context.accentColor,
-            size: 20,
+            size: 22,
           ),
         ),
         title: Text(
           WidgetCategories.getDisplayName(category),
           style: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
           ),
         ),
-        trailing: Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+        subtitle: Text(
+          'Browse $category widgets',
+          style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+        ),
+        trailing: Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: AppTheme.darkBackground,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            Icons.arrow_forward_ios_rounded,
+            color: AppTheme.textTertiary,
+            size: 14,
+          ),
+        ),
         onTap: () => _openCategory(category),
       ),
     );
@@ -318,10 +343,10 @@ class _WidgetMarketplaceScreenState
     }
 
     return GridView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.85,
+        childAspectRatio: 0.75,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
       ),
@@ -381,73 +406,104 @@ class _MarketplaceWidgetCard extends StatelessWidget {
     return Card(
       color: AppTheme.darkCard,
       clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail placeholder
-            Container(
-              height: 80,
-              color: AppTheme.darkBackground,
-              child: Center(
-                child: Icon(
-                  Icons.widgets,
-                  size: 32,
-                  color: context.accentColor.withValues(alpha: 0.5),
+            // Thumbnail/Preview
+            Expanded(
+              flex: 3,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBackground,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Icon(
+                        _getCategoryIcon(widget.category),
+                        size: 40,
+                        color: context.accentColor.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    // Category badge
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.accentColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          widget.category,
+                          style: TextStyle(
+                            color: context.accentColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            // Info
+            // Info section
             Expanded(
+              flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    // Name
                     Text(
                       widget.name,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
+                        height: 1.2,
                       ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'by ${widget.author}',
-                      style: TextStyle(
-                        color: AppTheme.textTertiary,
-                        fontSize: 11,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const Spacer(),
+                    // Stats row
                     Row(
                       children: [
                         Icon(
-                          Icons.star,
+                          Icons.star_rounded,
                           size: 14,
                           color: AppTheme.warningYellow,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 3),
                         Text(
                           widget.rating.toStringAsFixed(1),
                           style: TextStyle(
                             color: AppTheme.textSecondary,
-                            fontSize: 12,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         const Spacer(),
                         Icon(
-                          Icons.download,
-                          size: 14,
+                          Icons.download_rounded,
+                          size: 13,
                           color: AppTheme.textTertiary,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 3),
                         Text(
                           _formatDownloads(widget.downloads),
                           style: TextStyle(
@@ -465,6 +521,25 @@ class _MarketplaceWidgetCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'status':
+        return Icons.battery_std_rounded;
+      case 'sensors':
+        return Icons.thermostat_rounded;
+      case 'connectivity':
+        return Icons.signal_cellular_alt_rounded;
+      case 'navigation':
+        return Icons.navigation_rounded;
+      case 'network':
+        return Icons.hub_rounded;
+      case 'messaging':
+        return Icons.message_rounded;
+      default:
+        return Icons.widgets_rounded;
+    }
   }
 
   String _formatDownloads(int count) {
@@ -707,22 +782,15 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
       await storage.installMarketplaceWidget(schema);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${widget.marketplaceWidget.name} installed!'),
-            backgroundColor: AppTheme.successGreen,
-          ),
+        showSuccessSnackBar(
+          context,
+          '${widget.marketplaceWidget.name} installed!',
         );
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to install: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to install: $e');
       }
     } finally {
       if (mounted) {
@@ -798,10 +866,10 @@ class _CategoryScreen extends StatelessWidget {
           }
 
           return GridView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.85,
+              childAspectRatio: 0.75,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),

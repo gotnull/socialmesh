@@ -6,6 +6,7 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../models/mesh_models.dart';
 import '../../../services/audio/rtttl_library_service.dart';
 import '../../../services/audio/rtttl_player.dart';
+import '../../../utils/snackbar.dart';
 import '../models/automation.dart';
 import 'variable_text_field.dart';
 
@@ -801,28 +802,11 @@ class _ActionEditorState extends State<ActionEditor> {
 
     final player = RtttlPlayer();
     try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              const SizedBox(width: 12),
-              Text('Playing "${widget.action.soundName}"...'),
-            ],
-          ),
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      showLoadingSnackBar(context, 'Playing "${widget.action.soundName}"...');
       await player.play(rtttl);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to play sound: $e')));
+        showErrorSnackBar(context, 'Failed to play sound: $e');
       }
     } finally {
       await player.dispose();

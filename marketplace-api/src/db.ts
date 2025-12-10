@@ -56,6 +56,7 @@ export class Database {
     const count = this.db.prepare('SELECT COUNT(*) as count FROM widgets').get() as { count: number };
     if (count.count > 0) return;
 
+    // Widget schemas matching the Flutter app's WidgetSchema format
     const sampleWidgets: Array<Omit<Widget, 'id' | 'createdAt' | 'updatedAt'> & { schema: WidgetSchema }> = [
       {
         name: 'Battery Gauge Pro',
@@ -75,30 +76,32 @@ export class Database {
           description: 'Beautiful animated battery indicator',
           version: '1.2.0',
           tags: ['battery', 'gauge', 'animated'],
-          size: { width: 2, height: 2 },
+          size: 'medium',
           root: {
             type: 'column',
-            style: { padding: 16, spacing: 8, backgroundColor: '#1E1E1E', borderRadius: 12 },
+            style: { padding: 12, spacing: 8 },
             children: [
               {
                 type: 'row',
                 style: { mainAxisAlignment: 'spaceBetween' },
                 children: [
-                  { type: 'icon', properties: { iconName: 'battery_full' }, style: { iconSize: 24, color: '#4ADE80' } },
-                  { type: 'text', properties: { text: 'Battery' }, style: { fontSize: 14, fontWeight: 'w600', color: '#FFFFFF' } },
+                  { type: 'icon', iconName: 'battery_full', iconSize: 20, style: { textColor: '#4ADE80' } },
+                  { type: 'text', text: 'Battery', style: { fontSize: 14, fontWeight: 'w600', textColor: '#FFFFFF' } },
                 ],
               },
               {
-                type: 'gauge',
-                binding: { source: 'node.batteryLevel' },
-                properties: { gaugeType: 'radial', min: 0, max: 100 },
-                style: { gaugeColor: '#4ADE80' },
-                layout: { width: 80, height: 80 },
+                type: 'text',
+                binding: { path: 'node.batteryLevel', format: '{value}%', defaultValue: '--' },
+                style: { fontSize: 32, fontWeight: 'bold', textColor: '#FFFFFF' },
               },
               {
-                type: 'text',
-                binding: { source: 'node.batteryLevel', format: 'percent' },
-                style: { fontSize: 28, fontWeight: 'bold', color: '#FFFFFF' },
+                type: 'gauge',
+                gaugeType: 'linear',
+                gaugeMin: 0,
+                gaugeMax: 100,
+                gaugeColor: '#4ADE80',
+                binding: { path: 'node.batteryLevel' },
+                style: { height: 6 },
               },
             ],
           },
@@ -122,17 +125,17 @@ export class Database {
           description: 'Complete weather display',
           version: '2.0.0',
           tags: ['weather', 'temperature', 'environment'],
-          size: { width: 2, height: 2 },
+          size: 'medium',
           root: {
             type: 'column',
-            style: { padding: 16, spacing: 12, backgroundColor: '#1E1E1E', borderRadius: 12 },
+            style: { padding: 12, spacing: 12 },
             children: [
               {
                 type: 'row',
                 children: [
-                  { type: 'icon', properties: { iconName: 'thermostat' }, style: { iconSize: 20, color: '#F97316' } },
+                  { type: 'icon', iconName: 'thermostat', iconSize: 20, style: { textColor: '#F97316' } },
                   { type: 'spacer', style: { width: 8 } },
-                  { type: 'text', properties: { text: 'Weather' }, style: { fontSize: 14, fontWeight: 'w600', color: '#FFFFFF' } },
+                  { type: 'text', text: 'Environment', style: { fontSize: 14, fontWeight: 'w600', textColor: '#FFFFFF' } },
                 ],
               },
               {
@@ -143,16 +146,16 @@ export class Database {
                     type: 'column',
                     style: { alignment: 'center' },
                     children: [
-                      { type: 'text', binding: { source: 'environment.temperature', format: 'suffix', suffix: '°' }, style: { fontSize: 24, fontWeight: 'bold', color: '#EF4444' } },
-                      { type: 'text', properties: { text: 'Temp' }, style: { fontSize: 10, color: '#808080' } },
+                      { type: 'icon', iconName: 'thermostat', iconSize: 24, style: { textColor: '#EF4444' } },
+                      { type: 'text', binding: { path: 'node.temperature', format: '{value}°C', defaultValue: '--' }, style: { fontSize: 20, fontWeight: 'w600', textColor: '#FFFFFF' } },
                     ],
                   },
                   {
                     type: 'column',
                     style: { alignment: 'center' },
                     children: [
-                      { type: 'text', binding: { source: 'environment.relativeHumidity', format: 'percent' }, style: { fontSize: 24, fontWeight: 'bold', color: '#06B6D4' } },
-                      { type: 'text', properties: { text: 'Humidity' }, style: { fontSize: 10, color: '#808080' } },
+                      { type: 'icon', iconName: 'water_drop', iconSize: 24, style: { textColor: '#06B6D4' } },
+                      { type: 'text', binding: { path: 'node.humidity', format: '{value}%', defaultValue: '--' }, style: { fontSize: 20, fontWeight: 'w600', textColor: '#FFFFFF' } },
                     ],
                   },
                 ],
@@ -176,35 +179,40 @@ export class Database {
         isFeatured: false,
         schema: {
           name: 'Signal Radar',
-          description: 'Animated radar-style signal strength visualization',
+          description: 'Signal strength visualization',
           version: '1.0.0',
-          tags: ['signal', 'radar', 'animated'],
-          size: { width: 2, height: 2 },
+          tags: ['signal', 'snr', 'rssi'],
+          size: 'medium',
           root: {
             type: 'column',
-            style: { padding: 16, spacing: 12, backgroundColor: '#1E1E1E', borderRadius: 12 },
+            style: { padding: 12, spacing: 8 },
             children: [
               {
                 type: 'row',
                 children: [
-                  { type: 'icon', properties: { iconName: 'radar' }, style: { iconSize: 20, color: '#8B5CF6' } },
+                  { type: 'icon', iconName: 'signal_cellular_alt', iconSize: 20, style: { textColor: '#4F6AF6' } },
                   { type: 'spacer', style: { width: 8 } },
-                  { type: 'text', properties: { text: 'Signal' }, style: { fontSize: 14, fontWeight: 'w600', color: '#FFFFFF' } },
+                  { type: 'text', text: 'Signal', style: { fontSize: 14, fontWeight: 'w600', textColor: '#FFFFFF' } },
                 ],
-              },
-              {
-                type: 'gauge',
-                binding: { source: 'node.snr' },
-                properties: { gaugeType: 'radial', min: -20, max: 15 },
-                style: { gaugeColor: '#8B5CF6' },
-                layout: { width: 80, height: 80 },
               },
               {
                 type: 'row',
                 style: { mainAxisAlignment: 'spaceBetween' },
                 children: [
-                  { type: 'text', binding: { source: 'node.snr', format: 'suffix', suffix: ' dB' }, style: { fontSize: 14, color: '#FFFFFF' } },
-                  { type: 'text', binding: { source: 'node.rssi', format: 'suffix', suffix: ' dBm' }, style: { fontSize: 14, color: '#808080' } },
+                  {
+                    type: 'column',
+                    children: [
+                      { type: 'text', text: 'SNR', style: { textColor: '#888888', fontSize: 11 } },
+                      { type: 'text', binding: { path: 'device.snr', format: '{value} dB', defaultValue: '--' }, style: { textColor: '#FFFFFF', fontSize: 18, fontWeight: 'w600' } },
+                    ],
+                  },
+                  {
+                    type: 'column',
+                    children: [
+                      { type: 'text', text: 'RSSI', style: { textColor: '#888888', fontSize: 11 } },
+                      { type: 'text', binding: { path: 'device.rssi', format: '{value} dBm', defaultValue: '--' }, style: { textColor: '#FFFFFF', fontSize: 18, fontWeight: 'w600' } },
+                    ],
+                  },
                 ],
               },
             ],
@@ -229,24 +237,30 @@ export class Database {
           description: 'Shows direction and distance to node',
           version: '1.1.0',
           tags: ['navigation', 'compass', 'direction'],
-          size: { width: 2, height: 2 },
+          size: 'medium',
           root: {
             type: 'column',
-            style: { padding: 16, spacing: 8, backgroundColor: '#1E1E1E', borderRadius: 12 },
+            style: { padding: 12, spacing: 8 },
             children: [
               {
                 type: 'row',
                 children: [
-                  { type: 'icon', properties: { iconName: 'explore' }, style: { iconSize: 20, color: '#22C55E' } },
+                  { type: 'icon', iconName: 'explore', iconSize: 20, style: { textColor: '#22C55E' } },
                   { type: 'spacer', style: { width: 8 } },
-                  { type: 'text', properties: { text: 'Compass' }, style: { fontSize: 14, fontWeight: 'w600', color: '#FFFFFF' } },
+                  { type: 'text', text: 'Compass', style: { fontSize: 14, fontWeight: 'w600', textColor: '#FFFFFF' } },
                 ],
               },
-              { type: 'icon', properties: { iconName: 'navigation' }, style: { iconSize: 64, color: '#22C55E' } },
+              {
+                type: 'row',
+                style: { mainAxisAlignment: 'center' },
+                children: [
+                  { type: 'icon', iconName: 'navigation', iconSize: 48, style: { textColor: '#22C55E' } },
+                ],
+              },
               {
                 type: 'text',
-                binding: { source: 'node.distanceKm', format: 'suffix', suffix: ' km' },
-                style: { fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' },
+                binding: { path: 'node.bearing', format: '{value}°', defaultValue: '--' },
+                style: { fontSize: 24, fontWeight: 'bold', textColor: '#FFFFFF' },
               },
             ],
           },
@@ -270,16 +284,40 @@ export class Database {
           description: 'Mini map showing nearby nodes',
           version: '1.0.0',
           tags: ['map', 'mesh', 'network'],
-          size: { width: 2, height: 2 },
+          size: 'large',
           root: {
-            type: 'container',
-            style: { backgroundColor: '#1E1E1E', borderRadius: 12 },
+            type: 'column',
+            style: { padding: 12, spacing: 8 },
             children: [
               {
-                type: 'map',
-                binding: { source: 'position.latitude' },
-                properties: { showMarkers: true, zoomLevel: 14 },
-                layout: { width: null, height: 150 },
+                type: 'row',
+                children: [
+                  { type: 'icon', iconName: 'map', iconSize: 20, style: { textColor: '#4F6AF6' } },
+                  { type: 'spacer', style: { width: 8 } },
+                  { type: 'text', text: 'Mesh Map', style: { fontSize: 14, fontWeight: 'w600', textColor: '#FFFFFF' } },
+                ],
+              },
+              {
+                type: 'row',
+                style: { mainAxisAlignment: 'spaceAround' },
+                children: [
+                  {
+                    type: 'column',
+                    style: { alignment: 'center' },
+                    children: [
+                      { type: 'text', binding: { path: 'network.totalNodes', defaultValue: '0' }, style: { fontSize: 24, fontWeight: 'bold', textColor: '#FFFFFF' } },
+                      { type: 'text', text: 'Nodes', style: { fontSize: 11, textColor: '#888888' } },
+                    ],
+                  },
+                  {
+                    type: 'column',
+                    style: { alignment: 'center' },
+                    children: [
+                      { type: 'text', binding: { path: 'network.onlineNodes', defaultValue: '0' }, style: { fontSize: 24, fontWeight: 'bold', textColor: '#4ADE80' } },
+                      { type: 'text', text: 'Online', style: { fontSize: 11, textColor: '#888888' } },
+                    ],
+                  },
+                ],
               },
             ],
           },
@@ -303,33 +341,33 @@ export class Database {
           description: 'Detailed power metrics',
           version: '1.3.0',
           tags: ['power', 'voltage', 'current'],
-          size: { width: 2, height: 2 },
+          size: 'medium',
           root: {
             type: 'column',
-            style: { padding: 16, spacing: 8, backgroundColor: '#1E1E1E', borderRadius: 12 },
+            style: { padding: 12, spacing: 8 },
             children: [
               {
                 type: 'row',
                 children: [
-                  { type: 'icon', properties: { iconName: 'electric_bolt' }, style: { iconSize: 20, color: '#FBBF24' } },
+                  { type: 'icon', iconName: 'electric_bolt', iconSize: 20, style: { textColor: '#FBBF24' } },
                   { type: 'spacer', style: { width: 8 } },
-                  { type: 'text', properties: { text: 'Power' }, style: { fontSize: 14, fontWeight: 'w600', color: '#FFFFFF' } },
+                  { type: 'text', text: 'Power', style: { fontSize: 14, fontWeight: 'w600', textColor: '#FFFFFF' } },
                 ],
               },
               {
                 type: 'row',
                 style: { mainAxisAlignment: 'spaceBetween' },
                 children: [
-                  { type: 'text', properties: { text: 'Voltage' }, style: { fontSize: 12, color: '#808080' } },
-                  { type: 'text', binding: { source: 'power.voltage', format: 'suffix', suffix: 'V' }, style: { fontSize: 12, color: '#FFFFFF' } },
+                  { type: 'text', text: 'Voltage', style: { fontSize: 12, textColor: '#888888' } },
+                  { type: 'text', binding: { path: 'power.voltage', format: '{value}V', defaultValue: '--' }, style: { fontSize: 12, textColor: '#FFFFFF' } },
                 ],
               },
               {
                 type: 'row',
                 style: { mainAxisAlignment: 'spaceBetween' },
                 children: [
-                  { type: 'text', properties: { text: 'Current' }, style: { fontSize: 12, color: '#808080' } },
-                  { type: 'text', binding: { source: 'power.current', format: 'suffix', suffix: 'mA' }, style: { fontSize: 12, color: '#FFFFFF' } },
+                  { type: 'text', text: 'Current', style: { fontSize: 12, textColor: '#888888' } },
+                  { type: 'text', binding: { path: 'power.current', format: '{value}mA', defaultValue: '--' }, style: { fontSize: 12, textColor: '#FFFFFF' } },
                 ],
               },
             ],
@@ -354,32 +392,34 @@ export class Database {
           description: 'Air quality monitoring',
           version: '1.0.0',
           tags: ['air', 'quality', 'iaq'],
-          size: { width: 2, height: 2 },
+          size: 'medium',
           root: {
             type: 'column',
-            style: { padding: 16, spacing: 12, backgroundColor: '#1E1E1E', borderRadius: 12 },
+            style: { padding: 12, spacing: 12 },
             children: [
               {
                 type: 'row',
                 children: [
-                  { type: 'icon', properties: { iconName: 'air' }, style: { iconSize: 20, color: '#67C23A' } },
+                  { type: 'icon', iconName: 'air', iconSize: 20, style: { textColor: '#22C55E' } },
                   { type: 'spacer', style: { width: 8 } },
-                  { type: 'text', properties: { text: 'Air Quality' }, style: { fontSize: 14, fontWeight: 'w600', color: '#FFFFFF' } },
+                  { type: 'text', text: 'Air Quality', style: { fontSize: 14, fontWeight: 'w600', textColor: '#FFFFFF' } },
                 ],
               },
               {
                 type: 'gauge',
-                binding: { source: 'airQuality.iaq' },
-                properties: { gaugeType: 'radial', min: 0, max: 500 },
-                style: { gaugeColor: '#67C23A' },
-                layout: { width: 60, height: 60 },
+                gaugeType: 'linear',
+                gaugeMin: 0,
+                gaugeMax: 500,
+                gaugeColor: '#22C55E',
+                binding: { path: 'airQuality.iaq' },
+                style: { height: 8 },
               },
               {
                 type: 'row',
                 style: { mainAxisAlignment: 'spaceBetween' },
                 children: [
-                  { type: 'text', properties: { text: 'PM2.5' }, style: { fontSize: 12, color: '#808080' } },
-                  { type: 'text', binding: { source: 'airQuality.pm25' }, style: { fontSize: 12, color: '#FFFFFF' } },
+                  { type: 'text', text: 'PM2.5', style: { fontSize: 12, textColor: '#888888' } },
+                  { type: 'text', binding: { path: 'airQuality.pm25', defaultValue: '--' }, style: { fontSize: 12, textColor: '#FFFFFF' } },
                 ],
               },
             ],
@@ -404,25 +444,28 @@ export class Database {
           description: 'Real-time message statistics',
           version: '1.0.0',
           tags: ['messages', 'stats', 'counter'],
-          size: { width: 2, height: 1 },
+          size: 'medium',
           root: {
             type: 'row',
-            style: { padding: 16, backgroundColor: '#1E1E1E', borderRadius: 12, mainAxisAlignment: 'spaceBetween' },
+            style: { padding: 16, mainAxisAlignment: 'spaceBetween' },
             children: [
               {
                 type: 'column',
                 style: { spacing: 4 },
                 children: [
-                  { type: 'text', binding: { source: 'messages.totalCount' }, style: { fontSize: 28, fontWeight: 'bold', color: '#FFFFFF' } },
-                  { type: 'text', properties: { text: 'Messages' }, style: { fontSize: 12, color: '#808080' } },
+                  { type: 'icon', iconName: 'chat_bubble_outline', iconSize: 24, style: { textColor: '#4F6AF6' } },
+                  { type: 'text', binding: { path: 'messaging.recentCount', defaultValue: '0' }, style: { fontSize: 28, fontWeight: 'bold', textColor: '#FFFFFF' } },
+                  { type: 'text', text: 'Messages', style: { fontSize: 12, textColor: '#888888' } },
                 ],
               },
               {
-                type: 'chart',
-                binding: { source: 'messages.hourlyCount' },
-                properties: { chartType: 'sparkline' },
-                style: { chartColor: '#67C23A' },
-                layout: { width: 80, height: 40 },
+                type: 'column',
+                style: { spacing: 4 },
+                children: [
+                  { type: 'icon', iconName: 'group', iconSize: 24, style: { textColor: '#22C55E' } },
+                  { type: 'text', binding: { path: 'messaging.channelCount', defaultValue: '0' }, style: { fontSize: 28, fontWeight: 'bold', textColor: '#FFFFFF' } },
+                  { type: 'text', text: 'Channels', style: { fontSize: 12, textColor: '#888888' } },
+                ],
               },
             ],
           },

@@ -19,26 +19,25 @@ export interface Widget {
 export interface WidgetSchema {
   name: string;
   description?: string;
-  version: string;
+  version?: string;
   tags?: string[];
-  size?: { width: number; height: number };
+  size?: string | { width: number; height: number };
   root: ElementSchema;
+  [key: string]: unknown;
 }
 
 export interface ElementSchema {
   type: string;
-  properties?: Record<string, unknown>;
-  binding?: BindingSchema;
-  style?: Record<string, unknown>;
-  layout?: Record<string, unknown>;
-  children?: ElementSchema[];
+  // Allow any properties for flexibility with Flutter app schema
+  [key: string]: unknown;
 }
 
 export interface BindingSchema {
-  source: string;
+  path?: string;
+  source?: string;
   format?: string;
-  suffix?: string;
   defaultValue?: unknown;
+  [key: string]: unknown;
 }
 
 export interface MarketplaceResponse {
