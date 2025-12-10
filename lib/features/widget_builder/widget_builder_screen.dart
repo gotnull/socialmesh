@@ -9,6 +9,7 @@ import 'marketplace/widget_marketplace_service.dart';
 import 'renderer/widget_renderer.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/auth_providers.dart';
 import '../../utils/snackbar.dart';
 import '../dashboard/models/dashboard_widget_config.dart';
 import '../dashboard/providers/dashboard_providers.dart';
@@ -659,9 +660,30 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     WidgetSchema schema,
     String category,
   ) async {
-    // For now, use a simple token based on device ID
-    // In production, this would use proper auth
-    final authToken = DateTime.now().millisecondsSinceEpoch.toString();
+    // Get the Firebase auth token
+    final authService = ref.read(authServiceProvider);
+
+    // If user is not signed in, sign in anonymously
+    if (!authService.isSignedIn) {
+      try {
+        await authService.signInAnonymously();
+      } catch (e) {
+        if (mounted) {
+          showErrorSnackBar(context, 'Failed to authenticate: $e');
+        }
+        return;
+      }
+    }
+
+    final authToken = await authService.getIdToken();
+    if (authToken == null) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to get authentication token');
+      }
+      return;
+    }
+
+    if (!mounted) return;
 
     try {
       showLoadingSnackBar(context, 'Submitting ${schema.name}...');
@@ -669,11 +691,13 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
       final marketplaceService = WidgetMarketplaceService();
 
       // Create a schema with the selected category
-      // The WidgetSchema.toJson() will be sent to the server
       await marketplaceService.uploadWidget(schema, authToken);
 
       if (mounted) {
-        showSuccessSnackBar(context, '${schema.name} submitted successfully!');
+        showSuccessSnackBar(
+          context,
+          '${schema.name} submitted! It will appear after review.',
+        );
       }
     } catch (e) {
       if (mounted) {

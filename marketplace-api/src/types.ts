@@ -11,9 +11,21 @@ export interface Widget {
   ratingCount: number;
   tags: string[];
   category: string | null;
+  status: string;
   createdAt: string;
   updatedAt: string;
   isFeatured: boolean;
+}
+
+export interface Report {
+  id: string;
+  widgetId: string;
+  widgetName: string;
+  userId: string;
+  reason: string;
+  status: string;
+  createdAt: string;
+  resolvedAt: string | null;
 }
 
 export interface WidgetSchema {

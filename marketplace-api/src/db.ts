@@ -1,6 +1,6 @@
 import BetterSqlite3 from 'better-sqlite3';
 import { v4 as uuidv4 } from 'uuid';
-import type { Widget, WidgetSchema, MarketplaceResponse } from './types';
+import type { Widget, WidgetSchema, MarketplaceResponse, Report } from './types';
 
 export class Database {
   private db: BetterSqlite3.Database;
@@ -29,6 +29,8 @@ export class Database {
         tags TEXT,
         category TEXT,
         schema TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'approved',
+        rejection_reason TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         is_featured INTEGER DEFAULT 0
@@ -44,12 +46,33 @@ export class Database {
         UNIQUE(widget_id, user_id)
       );
 
+      CREATE TABLE IF NOT EXISTS reports (
+        id TEXT PRIMARY KEY,
+        widget_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TEXT NOT NULL,
+        resolved_at TEXT,
+        FOREIGN KEY (widget_id) REFERENCES widgets(id)
+      );
+
       CREATE INDEX IF NOT EXISTS idx_widgets_category ON widgets(category);
       CREATE INDEX IF NOT EXISTS idx_widgets_downloads ON widgets(downloads DESC);
       CREATE INDEX IF NOT EXISTS idx_widgets_rating ON widgets(rating DESC);
       CREATE INDEX IF NOT EXISTS idx_widgets_created ON widgets(created_at DESC);
       CREATE INDEX IF NOT EXISTS idx_widgets_featured ON widgets(is_featured);
+      CREATE INDEX IF NOT EXISTS idx_widgets_status ON widgets(status);
+      CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
     `);
+
+    // Add status column if it doesn't exist (migration for existing DBs)
+    try {
+      this.db.prepare('SELECT status FROM widgets LIMIT 1').get();
+    } catch {
+      this.db.exec("ALTER TABLE widgets ADD COLUMN status TEXT NOT NULL DEFAULT 'approved'");
+      this.db.exec('ALTER TABLE widgets ADD COLUMN rejection_reason TEXT');
+    }
   }
 
   private seedSampleWidgets() {
@@ -70,6 +93,7 @@ export class Database {
         ratingCount: 156,
         tags: ['battery', 'gauge', 'animated', 'status'],
         category: 'status',
+        status: 'approved',
         isFeatured: true,
         schema: {
           name: 'Battery Gauge Pro',
@@ -119,6 +143,7 @@ export class Database {
         ratingCount: 89,
         tags: ['weather', 'temperature', 'humidity', 'environment'],
         category: 'sensors',
+        status: 'approved',
         isFeatured: true,
         schema: {
           name: 'Weather Station',
@@ -176,6 +201,7 @@ export class Database {
         ratingCount: 45,
         tags: ['signal', 'radar', 'animated', 'snr'],
         category: 'connectivity',
+        status: 'approved',
         isFeatured: false,
         schema: {
           name: 'Signal Radar',
@@ -231,6 +257,7 @@ export class Database {
         ratingCount: 67,
         tags: ['navigation', 'compass', 'direction', 'distance'],
         category: 'navigation',
+        status: 'approved',
         isFeatured: true,
         schema: {
           name: 'Node Compass',
@@ -278,6 +305,7 @@ export class Database {
         ratingCount: 112,
         tags: ['map', 'mesh', 'network', 'nodes'],
         category: 'navigation',
+        status: 'approved',
         isFeatured: true,
         schema: {
           name: 'Mesh Network Map',
@@ -335,6 +363,7 @@ export class Database {
         ratingCount: 38,
         tags: ['power', 'voltage', 'current', 'metrics'],
         category: 'power',
+        status: 'approved',
         isFeatured: false,
         schema: {
           name: 'Power Monitor',
@@ -386,6 +415,7 @@ export class Database {
         ratingCount: 28,
         tags: ['air', 'quality', 'iaq', 'pm25', 'co2'],
         category: 'sensors',
+        status: 'approved',
         isFeatured: false,
         schema: {
           name: 'Air Quality Index',
@@ -438,6 +468,7 @@ export class Database {
         ratingCount: 52,
         tags: ['messages', 'stats', 'counter', 'chart'],
         category: 'messaging',
+        status: 'approved',
         isFeatured: false,
         schema: {
           name: 'Message Counter',
@@ -510,12 +541,13 @@ export class Database {
     category?: string;
     sortBy?: string;
     search?: string;
+    status?: string;
   } = {}): MarketplaceResponse {
-    const { page = 1, limit = 20, category, sortBy = 'downloads', search } = options;
+    const { page = 1, limit = 20, category, sortBy = 'downloads', search, status = 'approved' } = options;
     const offset = (page - 1) * limit;
 
-    let whereClause = '1=1';
-    const params: (string | number)[] = [];
+    let whereClause = 'status = ?';
+    const params: (string | number)[] = [status];
 
     if (category) {
       whereClause += ' AND category = ?';
@@ -545,7 +577,7 @@ export class Database {
     const total = countResult.total;
 
     const rows = this.db.prepare(`
-      SELECT id, name, description, author, author_id, version, thumbnail_url, downloads, rating, rating_count, tags, category, created_at, updated_at, is_featured
+      SELECT id, name, description, author, author_id, version, thumbnail_url, downloads, rating, rating_count, tags, category, status, created_at, updated_at, is_featured
       FROM widgets
       WHERE ${whereClause}
       ORDER BY ${orderClause}
@@ -564,9 +596,9 @@ export class Database {
 
   getFeatured(): Widget[] {
     const rows = this.db.prepare(`
-      SELECT id, name, description, author, author_id, version, thumbnail_url, downloads, rating, rating_count, tags, category, created_at, updated_at, is_featured
+      SELECT id, name, description, author, author_id, version, thumbnail_url, downloads, rating, rating_count, tags, category, status, created_at, updated_at, is_featured
       FROM widgets
-      WHERE is_featured = 1
+      WHERE is_featured = 1 AND status = 'approved'
       ORDER BY downloads DESC
       LIMIT 10
     `).all() as WidgetRow[];
@@ -576,7 +608,7 @@ export class Database {
 
   getWidget(id: string): Widget | null {
     const row = this.db.prepare(`
-      SELECT id, name, description, author, author_id, version, thumbnail_url, downloads, rating, rating_count, tags, category, created_at, updated_at, is_featured
+      SELECT id, name, description, author, author_id, version, thumbnail_url, downloads, rating, rating_count, tags, category, status, created_at, updated_at, is_featured
       FROM widgets
       WHERE id = ?
     `).get(id) as WidgetRow | undefined;
@@ -602,13 +634,15 @@ export class Database {
     tags?: string[];
     category?: string;
     schema: WidgetSchema;
+    status?: 'pending' | 'approved' | 'rejected';
   }): Widget {
     const id = uuidv4();
     const now = new Date().toISOString();
+    const status = widget.status || 'pending'; // Default to pending for user submissions
 
     this.db.prepare(`
-      INSERT INTO widgets (id, name, description, author, author_id, version, tags, category, schema, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO widgets (id, name, description, author, author_id, version, tags, category, schema, status, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       widget.name,
@@ -619,6 +653,7 @@ export class Database {
       JSON.stringify(widget.tags || []),
       widget.category || null,
       JSON.stringify(widget.schema),
+      status,
       now,
       now
     );
@@ -676,10 +711,98 @@ export class Database {
       ratingCount: row.rating_count,
       tags: JSON.parse(row.tags || '[]'),
       category: row.category,
+      status: row.status,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       isFeatured: row.is_featured === 1,
     };
+  }
+
+  // Report methods
+  reportWidget(widgetId: string, userId: string, reason: string): void {
+    this.db.prepare(`
+      INSERT INTO reports (id, widget_id, user_id, reason, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(uuidv4(), widgetId, userId, reason, new Date().toISOString());
+  }
+
+  getReports(status: string = 'pending'): Report[] {
+    const rows = this.db.prepare(`
+      SELECT r.*, w.name as widget_name
+      FROM reports r
+      JOIN widgets w ON r.widget_id = w.id
+      WHERE r.status = ?
+      ORDER BY r.created_at DESC
+    `).all(status) as ReportRow[];
+
+    return rows.map(row => ({
+      id: row.id,
+      widgetId: row.widget_id,
+      widgetName: row.widget_name,
+      userId: row.user_id,
+      reason: row.reason,
+      status: row.status,
+      createdAt: row.created_at,
+      resolvedAt: row.resolved_at,
+    }));
+  }
+
+  resolveReport(reportId: string, status: 'resolved' | 'dismissed'): void {
+    this.db.prepare(`
+      UPDATE reports SET status = ?, resolved_at = ? WHERE id = ?
+    `).run(status, new Date().toISOString(), reportId);
+  }
+
+  // Admin methods
+  getPendingWidgets(): Widget[] {
+    const rows = this.db.prepare(`
+      SELECT id, name, description, author, author_id, version, thumbnail_url, downloads, rating, rating_count, tags, category, status, created_at, updated_at, is_featured
+      FROM widgets
+      WHERE status = 'pending'
+      ORDER BY created_at ASC
+    `).all() as WidgetRow[];
+
+    return rows.map(this.rowToWidget);
+  }
+
+  approveWidget(id: string): boolean {
+    const result = this.db.prepare(`
+      UPDATE widgets SET status = 'approved', updated_at = ? WHERE id = ? AND status = 'pending'
+    `).run(new Date().toISOString(), id);
+
+    return result.changes > 0;
+  }
+
+  rejectWidget(id: string, reason: string): boolean {
+    const result = this.db.prepare(`
+      UPDATE widgets SET status = 'rejected', rejection_reason = ?, updated_at = ? WHERE id = ? AND status = 'pending'
+    `).run(reason, new Date().toISOString(), id);
+
+    return result.changes > 0;
+  }
+
+  deleteWidget(id: string): boolean {
+    const result = this.db.prepare('DELETE FROM widgets WHERE id = ?').run(id);
+    return result.changes > 0;
+  }
+
+  setFeatured(id: string, featured: boolean): boolean {
+    const result = this.db.prepare(`
+      UPDATE widgets SET is_featured = ?, updated_at = ? WHERE id = ?
+    `).run(featured ? 1 : 0, new Date().toISOString(), id);
+
+    return result.changes > 0;
+  }
+
+  getUserWidgets(userId: string): Widget[] {
+    const rows = this.db.prepare(`
+      SELECT id, name, description, author, author_id, version, thumbnail_url, downloads, rating, rating_count, tags, category, status, created_at, updated_at, is_featured
+      FROM widgets
+      WHERE author_id = ?
+      ORDER BY created_at DESC
+    `).all(userId) as WidgetRow[];
+
+    return rows.map(this.rowToWidget);
   }
 
   close(): void {
@@ -700,7 +823,19 @@ interface WidgetRow {
   rating_count: number;
   tags: string | null;
   category: string | null;
+  status: string;
   created_at: string;
   updated_at: string;
   is_featured: number;
+}
+
+interface ReportRow {
+  id: string;
+  widget_id: string;
+  widget_name: string;
+  user_id: string;
+  reason: string;
+  status: string;
+  created_at: string;
+  resolved_at: string | null;
 }

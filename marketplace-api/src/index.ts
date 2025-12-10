@@ -5,10 +5,15 @@ import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { widgetsRouter } from './routes/widgets';
+import { adminRouter } from './routes/admin';
 import { Database } from './db';
+import { initializeFirebase } from './firebase';
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Initialize Firebase Admin SDK
+initializeFirebase();
 
 // Initialize database
 const db = new Database(process.env.DATABASE_PATH || './data/marketplace.db');
@@ -40,6 +45,7 @@ app.get('/health', (_req, res) => {
 
 // API routes
 app.use('/widgets', widgetsRouter(db));
+app.use('/admin', adminRouter(db));
 
 // Error handling
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

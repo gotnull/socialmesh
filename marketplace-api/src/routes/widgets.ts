@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import type { Database } from '../db';
+import { requireAuth } from '../middleware/auth';
 
 const BrowseQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
@@ -80,27 +81,17 @@ export function widgetsRouter(db: Database): Router {
     res.json(schema);
   });
 
-  // Upload widget (requires auth header for user identification)
-  router.post('/upload', (req: Request, res: Response) => {
+  // Upload widget (requires authentication)
+  router.post('/upload', requireAuth(), (req: Request, res: Response) => {
     try {
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        res.status(401).json({ error: 'Authentication required' });
-        return;
-      }
-
-      // In production, validate the token and extract user info
-      // For now, use a simple user ID from the token
-      const token = authHeader.slice(7);
-      const userId = `user-${token.slice(0, 8)}`;
-      const userName = 'Anonymous'; // Would come from auth system
+      const user = req.user!;
 
       const body = UploadSchema.parse(req.body);
       const widget = db.createWidget({
         name: body.name,
         description: body.description,
-        author: userName,
-        authorId: userId,
+        author: user.name || user.email || 'Anonymous',
+        authorId: user.uid,
         version: body.version,
         tags: body.tags,
         category: body.category,
@@ -124,13 +115,9 @@ export function widgetsRouter(db: Database): Router {
   });
 
   // Rate widget
-  router.post('/:id/rate', (req: Request, res: Response) => {
+  router.post('/:id/rate', requireAuth(), (req: Request, res: Response) => {
     try {
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        res.status(401).json({ error: 'Authentication required' });
-        return;
-      }
+      const user = req.user!;
 
       const widget = db.getWidget(req.params.id);
       if (!widget) {
@@ -138,11 +125,8 @@ export function widgetsRouter(db: Database): Router {
         return;
       }
 
-      const token = authHeader.slice(7);
-      const userId = `user-${token.slice(0, 8)}`;
-
       const body = RatingSchema.parse(req.body);
-      db.rateWidget(req.params.id, userId, body.rating);
+      db.rateWidget(req.params.id, user.uid, body.rating);
 
       res.json({ success: true });
     } catch (error) {
@@ -154,13 +138,9 @@ export function widgetsRouter(db: Database): Router {
     }
   });
 
-  // Report widget (placeholder)
-  router.post('/:id/report', (req: Request, res: Response) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({ error: 'Authentication required' });
-      return;
-    }
+  // Report widget
+  router.post('/:id/report', requireAuth(), (req: Request, res: Response) => {
+    const user = req.user!;
 
     const widget = db.getWidget(req.params.id);
     if (!widget) {
@@ -168,9 +148,16 @@ export function widgetsRouter(db: Database): Router {
       return;
     }
 
-    // In production, store the report for review
-    console.log(`Widget ${req.params.id} reported: ${req.body.reason}`);
+    // Store the report for review
+    db.reportWidget(req.params.id, user.uid, req.body.reason || 'No reason provided');
     res.json({ success: true });
+  });
+
+  // Get user's own widgets (My Submissions)
+  router.get('/user/mine', requireAuth(), (req: Request, res: Response) => {
+    const user = req.user!;
+    const widgets = db.getUserWidgets(user.uid);
+    res.json(widgets);
   });
 
   return router;

@@ -574,6 +574,127 @@ class WidgetMarketplaceService {
       ),
     ];
   }
+
+  // ============ Admin Methods ============
+
+  /// Get the base URL for admin endpoints (without /widgets suffix)
+  String get _adminBaseUrl {
+    // Remove /widgets suffix to get base API URL
+    if (baseUrl.endsWith('/widgets')) {
+      return '${baseUrl.substring(0, baseUrl.length - 8)}/admin';
+    }
+    return '$baseUrl/admin';
+  }
+
+  /// Get pending widgets for review (admin only)
+  Future<List<MarketplaceWidget>> getPendingWidgets(String authToken) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$_adminBaseUrl/pending'),
+        headers: {'Authorization': 'Bearer $authToken'},
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as List<dynamic>;
+        return json
+            .map(
+              (item) =>
+                  MarketplaceWidget.fromJson(item as Map<String, dynamic>),
+            )
+            .toList();
+      } else if (response.statusCode == 401) {
+        throw MarketplaceException('Authentication required');
+      } else if (response.statusCode == 403) {
+        throw MarketplaceException('Admin access required');
+      } else {
+        throw MarketplaceException('Failed to get pending widgets');
+      }
+    } catch (e) {
+      if (e is MarketplaceException) rethrow;
+      _logger.e('Get pending widgets error: $e');
+      rethrow;
+    }
+  }
+
+  /// Approve a widget (admin only)
+  Future<void> approveWidget(String id, String authToken) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('$_adminBaseUrl/widgets/$id/approve'),
+        headers: {'Authorization': 'Bearer $authToken'},
+      );
+
+      if (response.statusCode != 200) {
+        if (response.statusCode == 401) {
+          throw MarketplaceException('Authentication required');
+        } else if (response.statusCode == 403) {
+          throw MarketplaceException('Admin access required');
+        } else {
+          throw MarketplaceException('Failed to approve widget');
+        }
+      }
+    } catch (e) {
+      if (e is MarketplaceException) rethrow;
+      _logger.e('Approve widget error: $e');
+      rethrow;
+    }
+  }
+
+  /// Reject a widget (admin only)
+  Future<void> rejectWidget(String id, String reason, String authToken) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('$_adminBaseUrl/widgets/$id/reject'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
+        body: jsonEncode({'reason': reason}),
+      );
+
+      if (response.statusCode != 200) {
+        if (response.statusCode == 401) {
+          throw MarketplaceException('Authentication required');
+        } else if (response.statusCode == 403) {
+          throw MarketplaceException('Admin access required');
+        } else {
+          throw MarketplaceException('Failed to reject widget');
+        }
+      }
+    } catch (e) {
+      if (e is MarketplaceException) rethrow;
+      _logger.e('Reject widget error: $e');
+      rethrow;
+    }
+  }
+
+  /// Get user's own widgets (My Submissions)
+  Future<List<MarketplaceWidget>> getMyWidgets(String authToken) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/user/mine'),
+        headers: {'Authorization': 'Bearer $authToken'},
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as List<dynamic>;
+        return json
+            .map(
+              (item) =>
+                  MarketplaceWidget.fromJson(item as Map<String, dynamic>),
+            )
+            .toList();
+      } else if (response.statusCode == 401) {
+        throw MarketplaceException('Authentication required');
+      } else {
+        throw MarketplaceException('Failed to get your widgets');
+      }
+    } catch (e) {
+      if (e is MarketplaceException) rethrow;
+      _logger.e('Get my widgets error: $e');
+      rethrow;
+    }
+  }
 }
 
 /// Response from marketplace browse/search
@@ -618,6 +739,7 @@ class MarketplaceWidget {
   final int ratingCount;
   final List<String> tags;
   final String category;
+  final String status;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -634,6 +756,7 @@ class MarketplaceWidget {
     required this.ratingCount,
     required this.tags,
     required this.category,
+    this.status = 'approved',
     required this.createdAt,
     required this.updatedAt,
   });
@@ -654,6 +777,7 @@ class MarketplaceWidget {
           (json['tags'] as List<dynamic>?)?.map((t) => t as String).toList() ??
           [],
       category: json['category'] as String? ?? 'general',
+      status: json['status'] as String? ?? 'approved',
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : DateTime.now(),
