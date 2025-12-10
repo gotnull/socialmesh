@@ -13,12 +13,12 @@ import 'widgets/dashboard_widget.dart';
 import 'widgets/network_overview_widget.dart';
 import 'widgets/recent_messages_widget.dart';
 import 'widgets/nearby_nodes_widget.dart';
-import 'widgets/battery_status_widget.dart';
 import 'widgets/quick_actions_widget.dart';
 import 'widgets/signal_strength_widget.dart';
 import 'widgets/channel_activity_widget.dart';
 import 'widgets/mesh_health_widget.dart';
 import 'widgets/node_map_widget.dart';
+import 'widgets/schema_widget_content.dart';
 import '../../config/revenuecat_config.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
@@ -28,6 +28,7 @@ import '../settings/subscription_screen.dart';
 const _freeWidgetTypes = {
   DashboardWidgetType.signalStrength,
   DashboardWidgetType.networkOverview,
+  DashboardWidgetType.custom, // Custom widgets are free
 };
 
 /// Customizable widget dashboard with drag/reorder/favorites
@@ -246,12 +247,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
     final hasWidgetPack = purchaseState.hasFeature(PremiumFeature.homeWidgets);
 
     final enabledWidgets = widgetConfigs.where((w) => w.isVisible).toList()
-      ..sort((a, b) {
-        // Favorites first, then by order
-        if (a.isFavorite && !b.isFavorite) return -1;
-        if (!a.isFavorite && b.isFavorite) return 1;
-        return a.order.compareTo(b.order);
-      });
+      ..sort((a, b) => a.order.compareTo(b.order));
 
     if (enabledWidgets.isEmpty && !_editMode) {
       return _buildEmptyDashboard(context);
@@ -424,7 +420,12 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
   }
 
   Widget _buildWidgetCard(DashboardWidgetConfig config) {
-    final content = _getWidgetContent(config.type);
+    // Custom widgets render with minimal wrapper - just the content with edit mode support
+    if (config.type == DashboardWidgetType.custom && config.schemaId != null) {
+      return _buildCustomWidgetCard(config);
+    }
+
+    final content = _getWidgetContent(config);
     final trailing = config.type == DashboardWidgetType.signalStrength
         ? buildLiveIndicator()
         : null;
@@ -443,16 +444,64 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
     );
   }
 
-  Widget _getWidgetContent(DashboardWidgetType type) {
-    switch (type) {
+  /// Build a custom widget with edit mode support but no card wrapper
+  Widget _buildCustomWidgetCard(DashboardWidgetConfig config) {
+    final content = SchemaWidgetContent(schemaId: config.schemaId!);
+
+    if (!_editMode) {
+      return content;
+    }
+
+    // Edit mode: add dashed border and remove button
+    return CustomPaint(
+      painter: DashedBorderPainter(
+        color: context.accentColor.withValues(alpha: 0.6),
+        strokeWidth: 2,
+        dashWidth: 8,
+        dashSpace: 4,
+        borderRadius: 16,
+      ),
+      child: Stack(
+        children: [
+          Padding(padding: const EdgeInsets.all(4), child: content),
+          // Remove button
+          Positioned(
+            top: 8,
+            right: 8,
+            child: GestureDetector(
+              onTap: () {
+                ref
+                    .read(dashboardWidgetsProvider.notifier)
+                    .removeWidget(config.id);
+              },
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: AppTheme.errorRed.withValues(alpha: 0.9),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.close, size: 16, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _getWidgetContent(DashboardWidgetConfig config) {
+    // Handle custom schema-based widgets
+    if (config.type == DashboardWidgetType.custom && config.schemaId != null) {
+      return SchemaWidgetContent(schemaId: config.schemaId!);
+    }
+
+    switch (config.type) {
       case DashboardWidgetType.networkOverview:
         return const NetworkOverviewContent();
       case DashboardWidgetType.recentMessages:
         return const RecentMessagesContent();
       case DashboardWidgetType.nearbyNodes:
         return const NearbyNodesContent();
-      case DashboardWidgetType.batteryStatus:
-        return const BatteryStatusContent();
       case DashboardWidgetType.quickCompose:
         return const QuickActionsContent();
       case DashboardWidgetType.channelActivity:
@@ -463,6 +512,14 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
         return const SignalStrengthContent();
       case DashboardWidgetType.nodeMap:
         return const NodeMapContent();
+      case DashboardWidgetType.custom:
+        // If no schemaId, show error
+        return const Center(
+          child: Text(
+            'Widget not found',
+            style: TextStyle(color: Colors.white54),
+          ),
+        );
     }
   }
 
@@ -623,14 +680,18 @@ class _AddWidgetSheet extends ConsumerWidget {
     );
 
     // Sort widgets: free first, then premium
-    final sortedTypes = [...DashboardWidgetType.values]
-      ..sort((a, b) {
-        final aFree = _freeWidgetTypes.contains(a);
-        final bFree = _freeWidgetTypes.contains(b);
-        if (aFree && !bFree) return -1;
-        if (!aFree && bFree) return 1;
-        return a.index.compareTo(b.index);
-      });
+    // Filter out 'custom' type - those are added from Widget Builder, not here
+    final sortedTypes =
+        DashboardWidgetType.values
+            .where((t) => t != DashboardWidgetType.custom)
+            .toList()
+          ..sort((a, b) {
+            final aFree = _freeWidgetTypes.contains(a);
+            final bFree = _freeWidgetTypes.contains(b);
+            if (aFree && !bFree) return -1;
+            if (!aFree && bFree) return 1;
+            return a.index.compareTo(b.index);
+          });
 
     return Column(
       children: [

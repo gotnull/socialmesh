@@ -1,0 +1,495 @@
+import 'package:flutter/material.dart';
+import '../models/widget_schema.dart';
+import '../models/data_binding.dart';
+import 'primitive_renderers.dart';
+import '../../../core/theme.dart';
+import '../../../models/mesh_models.dart';
+
+/// Main widget renderer - interprets WidgetSchema and builds Flutter widgets
+class WidgetRenderer extends StatelessWidget {
+  final WidgetSchema schema;
+  final MeshNode? node;
+  final Map<int, MeshNode>? allNodes;
+  final Color accentColor;
+  final bool isPreview;
+  final String? selectedElementId;
+  final void Function(String elementId)? onElementTap;
+
+  const WidgetRenderer({
+    super.key,
+    required this.schema,
+    this.node,
+    this.allNodes,
+    required this.accentColor,
+    this.isPreview = false,
+    this.selectedElementId,
+    this.onElementTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Create binding engine with current context
+    final bindingEngine = DataBindingEngine();
+    bindingEngine.setCurrentNode(node);
+    bindingEngine.setAllNodes(allNodes);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: _ElementRenderer(
+        element: schema.root,
+        bindingEngine: bindingEngine,
+        accentColor: accentColor,
+        isPreview: isPreview,
+        selectedElementId: selectedElementId,
+        onElementTap: onElementTap,
+      ),
+    );
+  }
+}
+
+/// Internal element renderer - recursively renders elements
+class _ElementRenderer extends StatelessWidget {
+  final ElementSchema element;
+  final DataBindingEngine bindingEngine;
+  final Color accentColor;
+  final bool isPreview;
+  final String? selectedElementId;
+  final void Function(String elementId)? onElementTap;
+
+  const _ElementRenderer({
+    required this.element,
+    required this.bindingEngine,
+    required this.accentColor,
+    this.isPreview = false,
+    this.selectedElementId,
+    this.onElementTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Check condition first
+    if (element.condition != null) {
+      final conditionMet = bindingEngine.evaluateCondition(element.condition!);
+      if (!conditionMet) {
+        return const SizedBox.shrink();
+      }
+    }
+
+    // Build the element widget
+    Widget child = _buildElement(context);
+
+    // Apply styling wrapper
+    child = _applyStyle(child);
+
+    // Add selection highlight in editor mode
+    if (isPreview && onElementTap != null) {
+      final isSelected = selectedElementId == element.id;
+      child = GestureDetector(
+        onTap: () => onElementTap!(element.id),
+        child: Container(
+          decoration: isSelected
+              ? BoxDecoration(
+                  border: Border.all(color: accentColor, width: 2),
+                  borderRadius: BorderRadius.circular(4),
+                )
+              : null,
+          child: child,
+        ),
+      );
+    }
+
+    return child;
+  }
+
+  Widget _buildElement(BuildContext context) {
+    switch (element.type) {
+      case ElementType.text:
+        return TextRenderer(
+          element: element,
+          bindingEngine: bindingEngine,
+          accentColor: accentColor,
+        );
+
+      case ElementType.icon:
+        return IconRenderer(
+          element: element,
+          bindingEngine: bindingEngine,
+          accentColor: accentColor,
+        );
+
+      case ElementType.image:
+        return _buildImage();
+
+      case ElementType.gauge:
+        return GaugeRenderer(
+          element: element,
+          bindingEngine: bindingEngine,
+          accentColor: accentColor,
+        );
+
+      case ElementType.chart:
+        return ChartRenderer(
+          element: element,
+          bindingEngine: bindingEngine,
+          accentColor: accentColor,
+        );
+
+      case ElementType.map:
+        return _buildMap();
+
+      case ElementType.shape:
+        return ShapeRenderer(element: element, accentColor: accentColor);
+
+      case ElementType.conditional:
+        return _buildConditional();
+
+      case ElementType.container:
+        return _buildContainer();
+
+      case ElementType.row:
+        return _buildRow();
+
+      case ElementType.column:
+        return _buildColumn();
+
+      case ElementType.spacer:
+        return SpacerRenderer(element: element);
+
+      case ElementType.stack:
+        return _buildStack();
+    }
+  }
+
+  Widget _buildImage() {
+    if (element.imageAsset != null) {
+      return Image.asset(
+        element.imageAsset!,
+        width: element.style.width,
+        height: element.style.height,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(),
+      );
+    }
+
+    if (element.imageUrl != null) {
+      return Image.network(
+        element.imageUrl!,
+        width: element.style.width,
+        height: element.style.height,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(),
+        loadingBuilder: (_, child, progress) {
+          if (progress == null) return child;
+          return _buildImagePlaceholder();
+        },
+      );
+    }
+
+    return _buildImagePlaceholder();
+  }
+
+  Widget _buildImagePlaceholder() {
+    return Container(
+      width: element.style.width ?? 40,
+      height: element.style.height ?? 40,
+      decoration: BoxDecoration(
+        color: AppTheme.darkBorder,
+        borderRadius: BorderRadius.circular(element.style.borderRadius ?? 4),
+      ),
+      child: Icon(
+        Icons.image_outlined,
+        color: AppTheme.textTertiary,
+        size: (element.style.width ?? 40) * 0.5,
+      ),
+    );
+  }
+
+  Widget _buildMap() {
+    // Placeholder for mini map - actual map implementation would use flutter_map
+    return Container(
+      width: element.style.width,
+      height: element.style.height ?? 100,
+      decoration: BoxDecoration(
+        color: AppTheme.darkBackground,
+        borderRadius: BorderRadius.circular(element.style.borderRadius ?? 8),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Stack(
+        children: [
+          // Grid pattern to simulate map
+          CustomPaint(
+            size: Size(
+              element.style.width ?? double.infinity,
+              element.style.height ?? 100,
+            ),
+            painter: _MapGridPainter(),
+          ),
+          // Center marker
+          Center(child: Icon(Icons.location_on, color: accentColor, size: 24)),
+          // Label
+          Positioned(
+            left: 8,
+            bottom: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppTheme.darkCard.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'Map View',
+                style: TextStyle(color: AppTheme.textTertiary, fontSize: 10),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConditional() {
+    // For conditional elements, render children
+    if (element.children.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: element.children.map((child) {
+        return _ElementRenderer(
+          element: child,
+          bindingEngine: bindingEngine,
+          accentColor: accentColor,
+          isPreview: isPreview,
+          selectedElementId: selectedElementId,
+          onElementTap: onElementTap,
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildContainer() {
+    final children = element.children.map((child) {
+      return _ElementRenderer(
+        element: child,
+        bindingEngine: bindingEngine,
+        accentColor: accentColor,
+        isPreview: isPreview,
+        selectedElementId: selectedElementId,
+        onElementTap: onElementTap,
+      );
+    }).toList();
+
+    if (children.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    if (children.length == 1) {
+      return children.first;
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment:
+          element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.start,
+      children: children,
+    );
+  }
+
+  Widget _buildRow() {
+    final spacing = element.style.spacing ?? 0;
+    final children = <Widget>[];
+
+    for (var i = 0; i < element.children.length; i++) {
+      final child = element.children[i];
+      Widget childWidget = _ElementRenderer(
+        element: child,
+        bindingEngine: bindingEngine,
+        accentColor: accentColor,
+        isPreview: isPreview,
+        selectedElementId: selectedElementId,
+        onElementTap: onElementTap,
+      );
+
+      // Wrap in Expanded if style.expanded is true
+      if (child.style.expanded == true) {
+        childWidget = Expanded(flex: child.style.flex ?? 1, child: childWidget);
+      }
+
+      children.add(childWidget);
+
+      // Add spacing between children (not after last)
+      if (spacing > 0 && i < element.children.length - 1) {
+        children.add(SizedBox(width: spacing));
+      }
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment:
+          element.style.mainAxisAlignmentValue ?? MainAxisAlignment.start,
+      crossAxisAlignment:
+          element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.center,
+      children: children,
+    );
+  }
+
+  Widget _buildColumn() {
+    final spacing = element.style.spacing ?? 0;
+    final children = <Widget>[];
+
+    for (var i = 0; i < element.children.length; i++) {
+      final child = element.children[i];
+      Widget childWidget = _ElementRenderer(
+        element: child,
+        bindingEngine: bindingEngine,
+        accentColor: accentColor,
+        isPreview: isPreview,
+        selectedElementId: selectedElementId,
+        onElementTap: onElementTap,
+      );
+
+      // Wrap in Expanded if style.expanded is true
+      if (child.style.expanded == true) {
+        childWidget = Expanded(flex: child.style.flex ?? 1, child: childWidget);
+      }
+
+      children.add(childWidget);
+
+      // Add spacing between children (not after last)
+      if (spacing > 0 && i < element.children.length - 1) {
+        children.add(SizedBox(height: spacing));
+      }
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment:
+          element.style.mainAxisAlignmentValue ?? MainAxisAlignment.start,
+      crossAxisAlignment:
+          element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.start,
+      children: children,
+    );
+  }
+
+  Widget _buildStack() {
+    return Stack(
+      alignment: element.style.alignmentValue ?? Alignment.center,
+      children: element.children.map((child) {
+        return _ElementRenderer(
+          element: child,
+          bindingEngine: bindingEngine,
+          accentColor: accentColor,
+          isPreview: isPreview,
+          selectedElementId: selectedElementId,
+          onElementTap: onElementTap,
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _applyStyle(Widget child) {
+    // Apply padding
+    if (element.style.paddingInsets != null) {
+      child = Padding(padding: element.style.paddingInsets!, child: child);
+    }
+
+    // Apply container decoration
+    if (element.style.backgroundColorValue != null ||
+        element.style.borderWidth != null ||
+        element.style.borderRadius != null) {
+      child = Container(
+        decoration: BoxDecoration(
+          color: element.style.backgroundColorValue,
+          borderRadius: element.style.borderRadius != null
+              ? BorderRadius.circular(element.style.borderRadius!)
+              : null,
+          border: element.style.borderWidth != null
+              ? Border.all(
+                  color: element.style.borderColorValue ?? AppTheme.darkBorder,
+                  width: element.style.borderWidth!,
+                )
+              : null,
+        ),
+        child: child,
+      );
+    }
+
+    // Apply explicit size constraints
+    if (element.style.width != null || element.style.height != null) {
+      child = SizedBox(
+        width: element.style.width,
+        height: element.style.height,
+        child: child,
+      );
+    }
+
+    // Apply margin
+    if (element.style.marginInsets != null) {
+      child = Padding(padding: element.style.marginInsets!, child: child);
+    }
+
+    // Apply opacity
+    if (element.style.opacity != null) {
+      child = Opacity(opacity: element.style.opacity!, child: child);
+    }
+
+    return child;
+  }
+}
+
+/// Custom painter for map grid background
+class _MapGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppTheme.darkBorder.withValues(alpha: 0.3)
+      ..strokeWidth = 1;
+
+    const gridSize = 20.0;
+
+    // Draw vertical lines
+    for (double x = 0; x <= size.width; x += gridSize) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+
+    // Draw horizontal lines
+    for (double y = 0; y <= size.height; y += gridSize) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Wrapper widget that provides live data to WidgetRenderer
+class LiveWidgetRenderer extends StatelessWidget {
+  final WidgetSchema schema;
+  final MeshNode? node;
+  final Map<int, MeshNode>? allNodes;
+  final Color accentColor;
+
+  const LiveWidgetRenderer({
+    super.key,
+    required this.schema,
+    this.node,
+    this.allNodes,
+    required this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return WidgetRenderer(
+      schema: schema,
+      node: node,
+      allNodes: allNodes,
+      accentColor: accentColor,
+    );
+  }
+}

@@ -6,11 +6,11 @@ enum DashboardWidgetType {
   networkOverview,
   recentMessages,
   nearbyNodes,
-  batteryStatus,
   channelActivity,
   meshHealth,
   quickCompose,
   nodeMap,
+  custom, // Schema-based custom widgets from Widget Builder
 }
 
 /// Size options for widgets
@@ -28,6 +28,7 @@ class DashboardWidgetConfig {
   final int order;
   final bool isFavorite;
   final bool isVisible;
+  final String? schemaId; // For custom widgets - references WidgetSchema ID
 
   const DashboardWidgetConfig({
     required this.id,
@@ -36,6 +37,7 @@ class DashboardWidgetConfig {
     this.order = 0,
     this.isFavorite = false,
     this.isVisible = true,
+    this.schemaId,
   });
 
   DashboardWidgetConfig copyWith({
@@ -45,6 +47,7 @@ class DashboardWidgetConfig {
     int? order,
     bool? isFavorite,
     bool? isVisible,
+    String? schemaId,
   }) {
     return DashboardWidgetConfig(
       id: id ?? this.id,
@@ -53,6 +56,7 @@ class DashboardWidgetConfig {
       order: order ?? this.order,
       isFavorite: isFavorite ?? this.isFavorite,
       isVisible: isVisible ?? this.isVisible,
+      schemaId: schemaId ?? this.schemaId,
     );
   }
 
@@ -63,6 +67,7 @@ class DashboardWidgetConfig {
     'order': order,
     'isFavorite': isFavorite,
     'isVisible': isVisible,
+    if (schemaId != null) 'schemaId': schemaId,
   };
 
   factory DashboardWidgetConfig.fromJson(Map<String, dynamic> json) {
@@ -79,6 +84,7 @@ class DashboardWidgetConfig {
       order: json['order'] as int? ?? 0,
       isFavorite: json['isFavorite'] as bool? ?? false,
       isVisible: json['isVisible'] as bool? ?? true,
+      schemaId: json['schemaId'] as String?,
     );
   }
 }
@@ -141,14 +147,6 @@ class WidgetRegistry {
       supportedSizes: [WidgetSize.medium, WidgetSize.large],
     ),
     WidgetTypeInfo(
-      type: DashboardWidgetType.batteryStatus,
-      name: 'Battery Status',
-      description: 'Your device battery level and health',
-      icon: Icons.battery_std,
-      defaultSize: WidgetSize.small,
-      supportedSizes: [WidgetSize.small, WidgetSize.medium],
-    ),
-    WidgetTypeInfo(
       type: DashboardWidgetType.channelActivity,
       name: 'Channel Activity',
       description: 'Active channels and recent traffic',
@@ -178,6 +176,14 @@ class WidgetRegistry {
       icon: Icons.map,
       defaultSize: WidgetSize.large,
       supportedSizes: [WidgetSize.medium, WidgetSize.large],
+    ),
+    WidgetTypeInfo(
+      type: DashboardWidgetType.custom,
+      name: 'Custom Widget',
+      description: 'Schema-based widget from Widget Builder',
+      icon: Icons.widgets,
+      defaultSize: WidgetSize.medium,
+      supportedSizes: [WidgetSize.small, WidgetSize.medium, WidgetSize.large],
     ),
   ];
 

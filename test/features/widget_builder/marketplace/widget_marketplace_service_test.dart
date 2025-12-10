@@ -1,0 +1,415 @@
+import 'dart:convert';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:socialmesh/features/widget_builder/marketplace/widget_marketplace_service.dart';
+import 'package:socialmesh/features/widget_builder/models/widget_schema.dart';
+
+void main() {
+  group('WidgetMarketplaceService', () {
+    late WidgetMarketplaceService service;
+
+    group('browse', () {
+      test('returns widgets on successful response', () async {
+        final mockClient = MockClient((request) async {
+          expect(request.url.path, contains('/browse'));
+          return http.Response(
+            jsonEncode({
+              'widgets': [
+                {
+                  'id': 'widget-1',
+                  'name': 'Test Widget',
+                  'description': 'A test widget',
+                  'author': 'TestAuthor',
+                  'authorId': 'user-1',
+                  'version': '1.0.0',
+                  'downloads': 100,
+                  'rating': 4.5,
+                  'ratingCount': 10,
+                  'tags': ['test'],
+                  'category': 'general',
+                  'createdAt': '2024-01-01T00:00:00Z',
+                  'updatedAt': '2024-01-15T00:00:00Z',
+                },
+              ],
+              'total': 1,
+              'page': 1,
+              'hasMore': false,
+            }),
+            200,
+          );
+        });
+
+        service = WidgetMarketplaceService(
+          baseUrl: 'http://test.com/widgets',
+          client: mockClient,
+        );
+
+        final response = await service.browse();
+
+        expect(response.widgets.length, 1);
+        expect(response.widgets.first.name, 'Test Widget');
+        expect(response.total, 1);
+        expect(response.hasMore, false);
+      });
+
+      test('includes query parameters', () async {
+        final mockClient = MockClient((request) async {
+          expect(request.url.queryParameters['page'], '2');
+          expect(request.url.queryParameters['limit'], '10');
+          expect(request.url.queryParameters['category'], 'sensors');
+          expect(request.url.queryParameters['sort'], 'popular');
+          expect(request.url.queryParameters['q'], 'battery');
+
+          return http.Response(
+            jsonEncode({
+              'widgets': [],
+              'total': 0,
+              'page': 2,
+              'hasMore': false,
+            }),
+            200,
+          );
+        });
+
+        service = WidgetMarketplaceService(
+          baseUrl: 'http://test.com/widgets',
+          client: mockClient,
+        );
+
+        await service.browse(
+          page: 2,
+          limit: 10,
+          category: 'sensors',
+          sortBy: 'popular',
+          search: 'battery',
+        );
+      });
+
+      test('returns mock data on error', () async {
+        final mockClient = MockClient((request) async {
+          throw Exception('Network error');
+        });
+
+        service = WidgetMarketplaceService(
+          baseUrl: 'http://test.com/widgets',
+          client: mockClient,
+        );
+
+        final response = await service.browse();
+
+        // Should return mock data on error
+        expect(response.widgets, isNotEmpty);
+      });
+    });
+
+    group('getFeatured', () {
+      test('returns featured widgets on success', () async {
+        final mockClient = MockClient((request) async {
+          expect(request.url.path, contains('/featured'));
+          return http.Response(
+            jsonEncode([
+              {
+                'id': 'featured-1',
+                'name': 'Featured Widget',
+                'description': 'A featured widget',
+                'author': 'FeaturedAuthor',
+                'authorId': 'user-1',
+                'version': '2.0.0',
+                'downloads': 500,
+                'rating': 4.8,
+                'ratingCount': 100,
+                'tags': ['featured', 'popular'],
+                'category': 'status',
+                'createdAt': '2024-01-01T00:00:00Z',
+                'updatedAt': '2024-01-15T00:00:00Z',
+              },
+            ]),
+            200,
+          );
+        });
+
+        service = WidgetMarketplaceService(
+          baseUrl: 'http://test.com/widgets',
+          client: mockClient,
+        );
+
+        final featured = await service.getFeatured();
+
+        expect(featured.length, 1);
+        expect(featured.first.name, 'Featured Widget');
+        expect(featured.first.rating, 4.8);
+      });
+
+      test('returns mock data on error', () async {
+        final mockClient = MockClient((request) async {
+          throw Exception('Network error');
+        });
+
+        service = WidgetMarketplaceService(
+          baseUrl: 'http://test.com/widgets',
+          client: mockClient,
+        );
+
+        final featured = await service.getFeatured();
+
+        // Should return mock data on error
+        expect(featured, isNotEmpty);
+      });
+    });
+
+    group('getWidget', () {
+      test('returns widget details on success', () async {
+        final mockClient = MockClient((request) async {
+          expect(request.url.path, contains('/widget-123'));
+          return http.Response(
+            jsonEncode({
+              'id': 'widget-123',
+              'name': 'Detailed Widget',
+              'description': 'Full widget details',
+              'author': 'DetailAuthor',
+              'authorId': 'user-1',
+              'version': '1.5.0',
+              'downloads': 250,
+              'rating': 4.2,
+              'ratingCount': 25,
+              'tags': ['detail'],
+              'category': 'sensors',
+              'createdAt': '2024-01-01T00:00:00Z',
+              'updatedAt': '2024-01-15T00:00:00Z',
+            }),
+            200,
+          );
+        });
+
+        service = WidgetMarketplaceService(
+          baseUrl: 'http://test.com/widgets',
+          client: mockClient,
+        );
+
+        final widget = await service.getWidget('widget-123');
+
+        expect(widget.id, 'widget-123');
+        expect(widget.name, 'Detailed Widget');
+        expect(widget.version, '1.5.0');
+      });
+
+      test('throws on 404', () async {
+        final mockClient = MockClient((request) async {
+          return http.Response('Not found', 404);
+        });
+
+        service = WidgetMarketplaceService(
+          baseUrl: 'http://test.com/widgets',
+          client: mockClient,
+        );
+
+        expect(
+          () => service.getWidget('non-existent'),
+          throwsA(isA<MarketplaceException>()),
+        );
+      });
+    });
+
+    group('downloadWidget', () {
+      test('returns widget schema on success', () async {
+        final mockClient = MockClient((request) async {
+          expect(request.url.path, contains('/widget-123/download'));
+          return http.Response(
+            jsonEncode({
+              'id': 'widget-123',
+              'name': 'Downloaded Widget',
+              'description': 'Widget schema for download',
+              'version': '1.0.0',
+              'root': {'type': 'text', 'text': 'Hello World'},
+            }),
+            200,
+          );
+        });
+
+        service = WidgetMarketplaceService(
+          baseUrl: 'http://test.com/widgets',
+          client: mockClient,
+        );
+
+        final schema = await service.downloadWidget('widget-123');
+
+        expect(schema.name, 'Downloaded Widget');
+        expect(schema.root.type, ElementType.text);
+      });
+
+      test('returns mock schema for known IDs on error', () async {
+        final mockClient = MockClient((request) async {
+          throw Exception('Network error');
+        });
+
+        service = WidgetMarketplaceService(
+          baseUrl: 'http://test.com/widgets',
+          client: mockClient,
+        );
+
+        // Should return mock schema for known mock IDs
+        final schema = await service.downloadWidget('battery-gauge-pro');
+        expect(schema.name, 'Battery Gauge Pro');
+      });
+
+      test('throws on unknown ID when network fails', () async {
+        final mockClient = MockClient((request) async {
+          throw Exception('Network error');
+        });
+
+        service = WidgetMarketplaceService(
+          baseUrl: 'http://test.com/widgets',
+          client: mockClient,
+        );
+
+        expect(
+          () => service.downloadWidget('unknown-widget-id'),
+          throwsA(isA<MarketplaceException>()),
+        );
+      });
+    });
+  });
+
+  group('MarketplaceResponse', () {
+    test('fromJson parses correctly', () {
+      final json = {
+        'widgets': [
+          {
+            'id': 'w1',
+            'name': 'Widget 1',
+            'description': 'Description 1',
+            'author': 'Author',
+            'authorId': 'a1',
+            'version': '1.0.0',
+            'downloads': 50,
+            'rating': 4.0,
+            'ratingCount': 5,
+            'tags': ['tag1'],
+            'category': 'general',
+            'createdAt': '2024-01-01T00:00:00Z',
+            'updatedAt': '2024-01-01T00:00:00Z',
+          },
+        ],
+        'total': 100,
+        'page': 3,
+        'hasMore': true,
+      };
+
+      final response = MarketplaceResponse.fromJson(json);
+
+      expect(response.widgets.length, 1);
+      expect(response.total, 100);
+      expect(response.page, 3);
+      expect(response.hasMore, true);
+    });
+
+    test('hasMore defaults to false when missing', () {
+      final json = {'widgets': [], 'total': 0, 'page': 1};
+
+      final response = MarketplaceResponse.fromJson(json);
+
+      expect(response.hasMore, false);
+    });
+  });
+
+  group('MarketplaceWidget', () {
+    test('fromJson parses all fields', () {
+      final json = {
+        'id': 'test-id',
+        'name': 'Test Widget',
+        'description': 'A test description',
+        'author': 'TestAuthor',
+        'authorId': 'user-123',
+        'version': '2.1.0',
+        'thumbnailUrl': 'https://example.com/thumb.png',
+        'downloads': 1234,
+        'rating': 4.75,
+        'ratingCount': 89,
+        'tags': ['one', 'two', 'three'],
+        'category': 'sensors',
+        'createdAt': '2024-03-15T10:30:00Z',
+        'updatedAt': '2024-03-20T14:45:00Z',
+      };
+
+      final widget = MarketplaceWidget.fromJson(json);
+
+      expect(widget.id, 'test-id');
+      expect(widget.name, 'Test Widget');
+      expect(widget.description, 'A test description');
+      expect(widget.author, 'TestAuthor');
+      expect(widget.authorId, 'user-123');
+      expect(widget.version, '2.1.0');
+      expect(widget.thumbnailUrl, 'https://example.com/thumb.png');
+      expect(widget.downloads, 1234);
+      expect(widget.rating, 4.75);
+      expect(widget.ratingCount, 89);
+      expect(widget.tags, ['one', 'two', 'three']);
+      expect(widget.category, 'sensors');
+      expect(widget.createdAt.year, 2024);
+      expect(widget.updatedAt.month, 3);
+    });
+
+    test('fromJson handles missing optional fields', () {
+      final json = {
+        'id': 'minimal-id',
+        'name': 'Minimal Widget',
+        'author': 'Author',
+        'authorId': 'user-1',
+      };
+
+      final widget = MarketplaceWidget.fromJson(json);
+
+      expect(widget.id, 'minimal-id');
+      expect(widget.description, '');
+      expect(widget.version, '1.0.0');
+      expect(widget.thumbnailUrl, isNull);
+      expect(widget.downloads, 0);
+      expect(widget.rating, 0.0);
+      expect(widget.ratingCount, 0);
+      expect(widget.tags, isEmpty);
+      expect(widget.category, 'general');
+    });
+  });
+
+  group('MarketplaceException', () {
+    test('toString includes message', () {
+      final exception = MarketplaceException('Something went wrong');
+      expect(
+        exception.toString(),
+        'MarketplaceException: Something went wrong',
+      );
+    });
+
+    test('message is accessible', () {
+      final exception = MarketplaceException('Error message');
+      expect(exception.message, 'Error message');
+    });
+  });
+
+  group('WidgetCategories', () {
+    test('all categories are defined', () {
+      expect(WidgetCategories.all, contains(WidgetCategories.status));
+      expect(WidgetCategories.all, contains(WidgetCategories.sensors));
+      expect(WidgetCategories.all, contains(WidgetCategories.connectivity));
+      expect(WidgetCategories.all, contains(WidgetCategories.navigation));
+      expect(WidgetCategories.all, contains(WidgetCategories.network));
+      expect(WidgetCategories.all, contains(WidgetCategories.messaging));
+      expect(WidgetCategories.all, contains(WidgetCategories.general));
+    });
+
+    test('getDisplayName returns human readable names', () {
+      expect(WidgetCategories.getDisplayName('status'), 'Status');
+      expect(WidgetCategories.getDisplayName('sensors'), 'Sensors');
+      expect(WidgetCategories.getDisplayName('connectivity'), 'Connectivity');
+      expect(WidgetCategories.getDisplayName('navigation'), 'Navigation');
+      expect(WidgetCategories.getDisplayName('network'), 'Network');
+      expect(WidgetCategories.getDisplayName('messaging'), 'Messaging');
+      expect(WidgetCategories.getDisplayName('general'), 'General');
+    });
+
+    test('getDisplayName returns input for unknown category', () {
+      expect(WidgetCategories.getDisplayName('unknown'), 'unknown');
+    });
+  });
+}

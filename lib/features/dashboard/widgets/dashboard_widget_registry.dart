@@ -9,7 +9,6 @@ enum DashboardWidgetType {
   recentMessages,
   activeNodes,
   meshHealth,
-  batteryStatus,
   gpsPosition,
   channelActivity,
   networkTopology,
@@ -197,15 +196,6 @@ class DashboardWidgetRegistry {
     ),
 
     // Device Info
-    const DashboardWidgetConfig(
-      type: DashboardWidgetType.batteryStatus,
-      id: 'battery_status',
-      title: 'Battery Status',
-      description: 'Device battery level and charging state',
-      icon: Icons.battery_full,
-      size: DashboardWidgetSize.small,
-      tags: {'battery', 'device'},
-    ),
     const DashboardWidgetConfig(
       type: DashboardWidgetType.gpsPosition,
       id: 'gps_position',

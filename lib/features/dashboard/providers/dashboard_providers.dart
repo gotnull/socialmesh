@@ -107,6 +107,16 @@ class DashboardWidgetsNotifier extends Notifier<List<DashboardWidgetConfig>> {
     _saveWidgets();
   }
 
+  /// Add a custom widget configuration (for schema-based widgets)
+  void addCustomWidget(DashboardWidgetConfig config) {
+    final newWidget = config.copyWith(
+      id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+      order: state.length,
+    );
+    state = [...state, newWidget];
+    _saveWidgets();
+  }
+
   void removeWidget(String id) {
     state = state.where((w) => w.id != id).toList();
     _reorderAfterRemoval();

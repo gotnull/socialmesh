@@ -13,6 +13,7 @@ class DashboardWidget extends StatefulWidget {
   final VoidCallback? onFavorite;
   final VoidCallback? onTap;
   final Widget? trailing;
+  final bool showHeader;
 
   const DashboardWidget({
     super.key,
@@ -23,6 +24,7 @@ class DashboardWidget extends StatefulWidget {
     this.onFavorite,
     this.onTap,
     this.trailing,
+    this.showHeader = true,
   });
 
   @override
@@ -71,7 +73,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
     // Use custom paint for dashed border in edit mode
     Widget content = widget.isEditMode
         ? CustomPaint(
-            painter: _DashedBorderPainter(
+            painter: DashedBorderPainter(
               color: context.accentColor.withValues(alpha: 0.6),
               strokeWidth: 2,
               dashWidth: 8,
@@ -120,7 +122,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildHeader(info),
+              if (widget.showHeader) _buildHeader(info),
               Flexible(child: widget.child),
             ],
           ),
@@ -343,14 +345,14 @@ class WidgetLoadingState extends StatelessWidget {
 }
 
 /// Custom painter for dashed border in edit mode
-class _DashedBorderPainter extends CustomPainter {
+class DashedBorderPainter extends CustomPainter {
   final Color color;
   final double strokeWidth;
   final double dashWidth;
   final double dashSpace;
   final double borderRadius;
 
-  _DashedBorderPainter({
+  DashedBorderPainter({
     required this.color,
     required this.strokeWidth,
     required this.dashWidth,
@@ -392,7 +394,7 @@ class _DashedBorderPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) {
+  bool shouldRepaint(covariant DashedBorderPainter oldDelegate) {
     return oldDelegate.color != color ||
         oldDelegate.strokeWidth != strokeWidth ||
         oldDelegate.dashWidth != dashWidth ||

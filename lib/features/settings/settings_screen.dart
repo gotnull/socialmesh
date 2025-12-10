@@ -54,6 +54,7 @@ import '../telemetry/air_quality_log_screen.dart';
 import '../telemetry/pax_counter_log_screen.dart';
 import '../telemetry/detection_sensor_log_screen.dart';
 import '../routes/routes_screen.dart';
+import '../widget_builder/widget_builder_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -261,6 +262,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const IftttConfigScreen()),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
+            }
+          },
+        ),
+        _PremiumFeatureTile(
+          icon: Icons.dashboard_customize,
+          title: 'Widget Builder',
+          feature: PremiumFeature.homeWidgets,
+          onTap: () {
+            final hasFeature = purchaseState.hasFeature(
+              PremiumFeature.homeWidgets,
+            );
+            if (hasFeature) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const WidgetBuilderScreen()),
               );
             } else {
               Navigator.push(
