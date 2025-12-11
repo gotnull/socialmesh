@@ -4,6 +4,8 @@ import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
 import '../renderer/widget_renderer.dart';
 import '../../../core/theme.dart';
+import 'selectors/icon_selector.dart';
+import 'selectors/binding_selector.dart';
 
 /// Widget builder editor screen with drag-drop canvas
 class WidgetEditorScreen extends ConsumerStatefulWidget {
@@ -21,6 +23,11 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   String? _selectedElementId;
   bool _showPreview = false;
   bool _showToolbox = true;
+
+  // Track if we're in portrait mode
+  bool get _isPortrait =>
+      MediaQuery.of(context).orientation == Orientation.portrait;
+  bool get _isNarrow => MediaQuery.of(context).size.width < 600;
 
   @override
   void initState() {
@@ -42,24 +49,539 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Use different layouts for portrait/narrow vs landscape/wide
+    if (_isPortrait || _isNarrow) {
+      return _buildPortraitLayout();
+    }
+    return _buildLandscapeLayout();
+  }
+
+  /// Portrait layout - full screen canvas with bottom sheets for tools/properties
+  Widget _buildPortraitLayout() {
+    return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      appBar: _buildCompactAppBar(),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Widget info bar with size selector
+            _buildCompactInfoBar(),
+            // Canvas takes all remaining space
+            Expanded(child: _buildFullscreenCanvas()),
+          ],
+        ),
+      ),
+      // Bottom navigation for tools
+      bottomNavigationBar: _buildBottomToolbar(),
+    );
+  }
+
+  /// Landscape layout - side-by-side panels
+  Widget _buildLandscapeLayout() {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                // Left: Toolbox
-                if (_showToolbox) _buildToolbox(),
-                // Center: Canvas
-                Expanded(child: _buildCanvas()),
-                // Right: Property Inspector
-                if (_selectedElementId != null) _buildPropertyInspector(),
-              ],
+      body: SafeArea(
+        child: Row(
+          children: [
+            // Left: Toolbox
+            if (_showToolbox) _buildToolbox(),
+            // Center: Canvas
+            Expanded(child: _buildCanvas()),
+            // Right: Property Inspector
+            if (_selectedElementId != null) _buildPropertyInspector(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  AppBar _buildCompactAppBar() {
+    return AppBar(
+      backgroundColor: AppTheme.darkBackground,
+      leadingWidth: 40,
+      title: GestureDetector(
+        onTap: _editWidgetName,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                _schema.name,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.edit, size: 14, color: AppTheme.textTertiary),
+          ],
+        ),
+      ),
+      actions: [
+        // Toggle preview
+        IconButton(
+          icon: Icon(
+            _showPreview ? Icons.edit : Icons.preview,
+            color: _showPreview ? context.accentColor : Colors.white,
+            size: 22,
+          ),
+          onPressed: () => setState(() {
+            _showPreview = !_showPreview;
+            if (_showPreview) _selectedElementId = null;
+          }),
+          tooltip: _showPreview ? 'Edit Mode' : 'Preview Mode',
+        ),
+        // Save button
+        TextButton.icon(
+          onPressed: _saveWidget,
+          icon: Icon(Icons.save, color: context.accentColor, size: 20),
+          label: Text(
+            'Save',
+            style: TextStyle(
+              color: context.accentColor,
+              fontWeight: FontWeight.w600,
             ),
           ),
+        ),
+        const SizedBox(width: 4),
+      ],
+    );
+  }
+
+  Widget _buildCompactInfoBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        border: Border(bottom: BorderSide(color: AppTheme.darkBorder)),
+      ),
+      child: Row(
+        children: [
+          // Size selector - takes priority
+          Expanded(child: _buildCompactSizeSelector()),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCompactSizeSelector() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildSizeOption(CustomWidgetSize.small, 'S'),
+        const SizedBox(width: 8),
+        _buildSizeOption(CustomWidgetSize.medium, 'M'),
+        const SizedBox(width: 8),
+        _buildSizeOption(CustomWidgetSize.large, 'L'),
+      ],
+    );
+  }
+
+  Widget _buildFullscreenCanvas() {
+    return Container(
+      color: AppTheme.darkBackground,
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: DragTarget<ElementType>(
+            onAcceptWithDetails: (details) => _addElement(details.data),
+            builder: (context, candidateData, rejectedData) {
+              final isHovering = candidateData.isNotEmpty;
+              // Scale widget to fit screen while maintaining aspect ratio
+              final screenWidth = MediaQuery.of(context).size.width - 32;
+              final widgetWidth = _getWidgetWidth();
+              final scale = screenWidth < widgetWidth
+                  ? screenWidth / widgetWidth
+                  : 1.0;
+
+              return Transform.scale(
+                scale: scale,
+                child: Container(
+                  width: widgetWidth,
+                  height: _getWidgetHeight(),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkCard,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isHovering
+                          ? context.accentColor
+                          : AppTheme.darkBorder,
+                      width: isHovering ? 2 : 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: _showPreview
+                      ? _buildPreviewContent()
+                      : _buildEditableContent(),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomToolbar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        border: Border(top: BorderSide(color: AppTheme.darkBorder)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            children: [
+              // Add element button
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: _showElementPicker,
+                  icon: const Icon(Icons.add, size: 20),
+                  label: const Text('Add Element'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: context.accentColor,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              if (_selectedElementId != null) ...[
+                const SizedBox(width: 8),
+                // Edit selected element
+                OutlinedButton.icon(
+                  onPressed: _showPropertySheet,
+                  icon: const Icon(Icons.tune, size: 20),
+                  label: const Text('Edit'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: BorderSide(color: AppTheme.darkBorder),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Delete selected element
+                IconButton(
+                  onPressed: () => _deleteElement(_selectedElementId!),
+                  icon: Icon(Icons.delete_outline, color: AppTheme.errorRed),
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppTheme.darkBackground,
+                    padding: const EdgeInsets.all(12),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showElementPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkCard,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Column(
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Title
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.widgets_outlined,
+                    size: 20,
+                    color: context.accentColor,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Add Element',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Element grid
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  _buildElementPickerSection('Layout', [
+                    _ToolboxItem(ElementType.row, 'Row', Icons.view_column),
+                    _ToolboxItem(
+                      ElementType.column,
+                      'Column',
+                      Icons.view_agenda,
+                    ),
+                    _ToolboxItem(
+                      ElementType.container,
+                      'Container',
+                      Icons.crop_square,
+                    ),
+                    _ToolboxItem(ElementType.stack, 'Stack', Icons.layers),
+                    _ToolboxItem(ElementType.spacer, 'Spacer', Icons.space_bar),
+                  ]),
+                  _buildElementPickerSection('Content', [
+                    _ToolboxItem(ElementType.text, 'Text', Icons.text_fields),
+                    _ToolboxItem(
+                      ElementType.icon,
+                      'Icon',
+                      Icons.emoji_emotions_outlined,
+                    ),
+                    _ToolboxItem(ElementType.image, 'Image', Icons.image),
+                    _ToolboxItem(ElementType.shape, 'Shape', Icons.square),
+                  ]),
+                  _buildElementPickerSection('Data Display', [
+                    _ToolboxItem(ElementType.gauge, 'Gauge', Icons.speed),
+                    _ToolboxItem(ElementType.chart, 'Chart', Icons.show_chart),
+                    _ToolboxItem(ElementType.map, 'Map', Icons.map),
+                  ]),
+                  _buildElementPickerSection('Logic', [
+                    _ToolboxItem(
+                      ElementType.conditional,
+                      'Conditional',
+                      Icons.rule,
+                    ),
+                  ]),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildElementPickerSection(String title, List<_ToolboxItem> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 8, bottom: 12),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textTertiary,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: items.map((item) => _buildElementPickerChip(item)).toList(),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildElementPickerChip(_ToolboxItem item) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.pop(context);
+          _addElement(item.type);
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppTheme.darkBackground,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppTheme.darkBorder),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(item.icon, size: 18, color: context.accentColor),
+              const SizedBox(width: 8),
+              Text(
+                item.label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPropertySheet() {
+    if (_selectedElementId == null) return;
+    final element = _findElementById(_schema.root, _selectedElementId!);
+    if (element == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkCard,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.85,
+        expand: false,
+        builder: (context, scrollController) => StatefulBuilder(
+          builder: (context, setSheetState) => Column(
+            children: [
+              // Handle + Live preview row
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Column(
+                  children: [
+                    // Drag handle
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkBorder,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Mini widget preview
+                    Container(
+                      height: 80,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkBackground,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppTheme.darkBorder),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: SizedBox(
+                            width: _getWidgetWidth(),
+                            height: _getWidgetHeight(),
+                            child: WidgetRenderer(
+                              schema: _schema,
+                              accentColor: context.accentColor,
+                              usePlaceholderData: true,
+                              isPreview: false,
+                              enableActions: false,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Title row
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Icon(Icons.tune, size: 18, color: context.accentColor),
+                    const SizedBox(width: 8),
+                    Text(
+                      _getElementTypeName(element.type),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _deleteElement(element.id);
+                      },
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: AppTheme.errorRed,
+                        size: 20,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: AppTheme.darkBorder),
+              // Properties
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    _buildPropertySection(
+                      'Content',
+                      _buildContentProperties(element),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildPropertySection(
+                      'Data Binding',
+                      _buildBindingProperties(element),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildPropertySection(
+                      'Style',
+                      _buildStyleProperties(element),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -552,19 +1074,21 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
 
       case ElementType.icon:
         properties.add(
-          _buildDropdownField(
+          _buildIconSelectorField(
             label: 'Icon',
             value: element.iconName ?? 'help_outline',
-            options: _commonIconNames,
             onChanged: (value) =>
                 _updateElement(element.id, element.copyWith(iconName: value)),
           ),
         );
         properties.add(const SizedBox(height: 8));
         properties.add(
-          _buildNumberField(
+          _buildSliderField(
             label: 'Size',
             value: element.iconSize ?? 24,
+            min: 12,
+            max: 96,
+            unit: 'px',
             onChanged: (value) =>
                 _updateElement(element.id, element.copyWith(iconSize: value)),
           ),
@@ -587,18 +1111,22 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         );
         properties.add(const SizedBox(height: 8));
         properties.add(
-          _buildNumberField(
+          _buildSliderField(
             label: 'Min',
             value: element.gaugeMin ?? 0,
+            min: -100,
+            max: 100,
             onChanged: (value) =>
                 _updateElement(element.id, element.copyWith(gaugeMin: value)),
           ),
         );
         properties.add(const SizedBox(height: 8));
         properties.add(
-          _buildNumberField(
+          _buildSliderField(
             label: 'Max',
             value: element.gaugeMax ?? 100,
+            min: 0,
+            max: 1000,
             onChanged: (value) =>
                 _updateElement(element.id, element.copyWith(gaugeMax: value)),
           ),
@@ -646,12 +1174,11 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
 
   List<Widget> _buildBindingProperties(ElementSchema element) {
     return [
-      _buildDropdownField(
+      _buildBindingSelectorField(
         label: 'Bind to',
         value: element.binding?.path ?? '',
-        options: ['', ...BindingRegistry.bindings.map((b) => b.path)],
         onChanged: (value) {
-          if (value.isEmpty) {
+          if (value == null || value.isEmpty) {
             _updateElement(
               element.id,
               ElementSchema(
@@ -716,9 +1243,14 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
 
   List<Widget> _buildStyleProperties(ElementSchema element) {
     return [
-      _buildNumberField(
+      _buildSliderField(
         label: 'Width',
         value: element.style.width ?? 0,
+        min: 0,
+        max: 400,
+        unit: 'px',
+        allowZero: true,
+        zeroLabel: 'Auto',
         onChanged: (value) => _updateElement(
           element.id,
           element.copyWith(
@@ -726,10 +1258,15 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           ),
         ),
       ),
-      const SizedBox(height: 8),
-      _buildNumberField(
+      const SizedBox(height: 12),
+      _buildSliderField(
         label: 'Height',
         value: element.style.height ?? 0,
+        min: 0,
+        max: 400,
+        unit: 'px',
+        allowZero: true,
+        zeroLabel: 'Auto',
         onChanged: (value) => _updateElement(
           element.id,
           element.copyWith(
@@ -737,10 +1274,15 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           ),
         ),
       ),
-      const SizedBox(height: 8),
-      _buildNumberField(
+      const SizedBox(height: 12),
+      _buildSliderField(
         label: 'Padding',
         value: element.style.padding ?? 0,
+        min: 0,
+        max: 48,
+        unit: 'px',
+        allowZero: true,
+        zeroLabel: 'None',
         onChanged: (value) => _updateElement(
           element.id,
           element.copyWith(
@@ -748,7 +1290,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           ),
         ),
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: 12),
       _buildColorField(
         label: 'Text Color',
         value: element.style.textColor ?? '#FFFFFF',
@@ -757,10 +1299,13 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           element.copyWith(style: element.style.copyWith(textColor: value)),
         ),
       ),
-      const SizedBox(height: 8),
-      _buildNumberField(
+      const SizedBox(height: 12),
+      _buildSliderField(
         label: 'Font Size',
         value: element.style.fontSize ?? 14,
+        min: 8,
+        max: 72,
+        unit: 'sp',
         onChanged: (value) => _updateElement(
           element.id,
           element.copyWith(
@@ -810,43 +1355,64 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     );
   }
 
-  Widget _buildNumberField({
+  Widget _buildSliderField({
     required String label,
     required double value,
+    required double min,
+    required double max,
     required void Function(double) onChanged,
+    String? unit,
+    bool allowZero = false,
+    String? zeroLabel,
   }) {
+    final accentColor = context.accentColor;
+    final displayValue = value.round();
+    final isZero = displayValue == 0 && allowZero;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+        Row(
+          children: [
+            Text(
+              label,
+              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppTheme.darkBackground,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                isZero ? (zeroLabel ?? '0') : '$displayValue${unit ?? ''}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: isZero ? AppTheme.textSecondary : accentColor,
+                  fontFamily: isZero ? null : 'monospace',
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 4),
-        TextField(
-          controller: TextEditingController(text: value.toString()),
-          keyboardType: TextInputType.number,
-          onChanged: (text) {
-            final parsed = double.tryParse(text);
-            if (parsed != null) onChanged(parsed);
-          },
-          style: const TextStyle(color: Colors.white, fontSize: 13),
-          decoration: InputDecoration(
-            isDense: true,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 8,
-            ),
-            filled: true,
-            fillColor: AppTheme.darkBackground,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
-              borderSide: BorderSide(color: AppTheme.darkBorder),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
-              borderSide: BorderSide(color: AppTheme.darkBorder),
-            ),
+        SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: accentColor,
+            inactiveTrackColor: AppTheme.darkBorder,
+            thumbColor: accentColor,
+            overlayColor: accentColor.withValues(alpha: 0.2),
+            trackHeight: 4,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+          ),
+          child: Slider(
+            value: value.clamp(min, max),
+            min: min,
+            max: max,
+            onChanged: (newValue) => onChanged(newValue.roundToDouble()),
           ),
         ),
       ],
@@ -897,6 +1463,204 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildIconSelectorField({
+    required String label,
+    required String value,
+    required void Function(String) onChanged,
+  }) {
+    // Get the icon data for the current value
+    final iconData = _getIconData(value);
+    final accentColor = context.accentColor;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+        ),
+        const SizedBox(height: 4),
+        InkWell(
+          onTap: () async {
+            final result = await IconSelector.show(
+              context: context,
+              selectedIcon: value,
+            );
+            if (result != null) {
+              onChanged(result);
+            }
+          },
+          borderRadius: BorderRadius.circular(4),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: AppTheme.darkBorder),
+            ),
+            child: Row(
+              children: [
+                Icon(iconData, size: 20, color: accentColor),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    value,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_drop_down,
+                  color: AppTheme.textSecondary,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBindingSelectorField({
+    required String label,
+    required String value,
+    required void Function(String?) onChanged,
+  }) {
+    // Find the binding definition for display
+    final binding = value.isNotEmpty
+        ? BindingRegistry.bindings.where((b) => b.path == value).firstOrNull
+        : null;
+    final accentColor = context.accentColor;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+        ),
+        const SizedBox(height: 4),
+        InkWell(
+          onTap: () async {
+            final result = await BindingSelector.show(
+              context: context,
+              selectedPath: value,
+            );
+            if (result != null) {
+              onChanged(result.isEmpty ? null : result);
+            }
+          },
+          borderRadius: BorderRadius.circular(4),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: AppTheme.darkBorder),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  binding != null ? Icons.link : Icons.link_off,
+                  size: 18,
+                  color: binding != null ? accentColor : AppTheme.textSecondary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        binding?.label ?? '(none)',
+                        style: TextStyle(
+                          color: binding != null
+                              ? Colors.white
+                              : AppTheme.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                      if (binding != null)
+                        Text(
+                          binding.path,
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 10,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_drop_down,
+                  color: AppTheme.textSecondary,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  IconData _getIconData(String iconName) {
+    const iconMap = {
+      'battery_full': Icons.battery_full,
+      'battery_alert': Icons.battery_alert,
+      'battery_charging_full': Icons.battery_charging_full,
+      'bolt': Icons.bolt,
+      'signal_cellular_alt': Icons.signal_cellular_alt,
+      'wifi': Icons.wifi,
+      'bluetooth': Icons.bluetooth,
+      'gps_fixed': Icons.gps_fixed,
+      'thermostat': Icons.thermostat,
+      'water_drop': Icons.water_drop,
+      'air': Icons.air,
+      'cloud': Icons.cloud,
+      'wb_sunny': Icons.wb_sunny,
+      'hub': Icons.hub,
+      'router': Icons.router,
+      'devices': Icons.devices,
+      'lan': Icons.lan,
+      'message': Icons.message,
+      'chat': Icons.chat,
+      'send': Icons.send,
+      'map': Icons.map,
+      'navigation': Icons.navigation,
+      'explore': Icons.explore,
+      'near_me': Icons.near_me,
+      'location_on': Icons.location_on,
+      'route': Icons.route,
+      'settings': Icons.settings,
+      'info': Icons.info,
+      'warning': Icons.warning,
+      'error': Icons.error,
+      'check_circle': Icons.check_circle,
+      'speed': Icons.speed,
+      'timeline': Icons.timeline,
+      'trending_up': Icons.trending_up,
+      'trending_down': Icons.trending_down,
+      'show_chart': Icons.show_chart,
+      'analytics': Icons.analytics,
+      'favorite': Icons.favorite,
+      'star': Icons.star,
+      'bookmark': Icons.bookmark,
+      'thumb_up': Icons.thumb_up,
+      'flash_on': Icons.flash_on,
+      'refresh': Icons.refresh,
+      'edit': Icons.edit,
+      'delete': Icons.delete,
+      'add': Icons.add,
+      'remove': Icons.remove,
+      'notifications': Icons.notifications,
+      'call': Icons.call,
+      'compress': Icons.compress,
+      'help_outline': Icons.help_outline,
+    };
+    return iconMap[iconName] ?? Icons.help_outline;
   }
 
   Widget _buildColorField({
@@ -1188,43 +1952,6 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     widget.onSave?.call(_schema);
     Navigator.of(context).pop(_schema);
   }
-
-  static const _commonIconNames = [
-    'battery_full',
-    'battery_alert',
-    'signal_cellular_alt',
-    'wifi',
-    'bluetooth',
-    'gps_fixed',
-    'thermostat',
-    'water_drop',
-    'air',
-    'cloud',
-    'wb_sunny',
-    'hub',
-    'router',
-    'devices',
-    'message',
-    'chat',
-    'send',
-    'map',
-    'navigation',
-    'explore',
-    'near_me',
-    'settings',
-    'info',
-    'warning',
-    'error',
-    'check_circle',
-    'speed',
-    'timeline',
-    'trending_up',
-    'trending_down',
-    'show_chart',
-    'favorite',
-    'star',
-    'help_outline',
-  ];
 }
 
 class _ToolboxItem {

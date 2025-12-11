@@ -9,7 +9,7 @@ class WidgetStorageService {
   static const _installedKey = 'installed_widgets';
   static const _seededKey = 'seeded_widgets';
   static const _seedVersionKey = 'seeded_widgets_version';
-  static const _currentSeedVersion = 8; // Divider uses theme border color
+  static const _currentSeedVersion = 9; // Quick Actions with tap actions
 
   final Logger _logger;
   SharedPreferences? _prefs;
@@ -388,13 +388,14 @@ class WidgetTemplates {
   static WidgetSchema environmentWidget() {
     return WidgetSchema(
       name: 'Environment',
-      description: 'Temperature and humidity display',
-      tags: ['environment', 'temperature', 'humidity', 'sensors'],
+      description: 'Temperature, humidity, and pressure display',
+      tags: ['environment', 'temperature', 'humidity', 'pressure', 'sensors'],
       size: CustomWidgetSize.medium,
       root: ElementSchema(
         type: ElementType.column,
         style: const StyleSchema(padding: 12, spacing: 12),
         children: [
+          // Header row
           ElementSchema(
             type: ElementType.row,
             children: [
@@ -419,12 +420,14 @@ class WidgetTemplates {
               ),
             ],
           ),
+          // Metrics row - 3 items with separators, centered
           ElementSchema(
             type: ElementType.row,
             style: const StyleSchema(
-              mainAxisAlignment: MainAxisAlignmentOption.spaceAround,
+              mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
             ),
             children: [
+              // Temperature
               ElementSchema(
                 type: ElementType.column,
                 style: const StyleSchema(alignment: AlignmentOption.center),
@@ -432,24 +435,46 @@ class WidgetTemplates {
                   ElementSchema(
                     type: ElementType.icon,
                     iconName: 'thermostat',
-                    iconSize: 24,
+                    iconSize: 22,
                     style: const StyleSchema(textColor: '#EF4444'),
+                  ),
+                  ElementSchema(
+                    type: ElementType.spacer,
+                    style: const StyleSchema(height: 4),
                   ),
                   ElementSchema(
                     type: ElementType.text,
                     binding: const BindingSchema(
                       path: 'node.temperature',
-                      format: '{value}°C',
+                      format: '{value}°',
                       defaultValue: '--',
                     ),
                     style: const StyleSchema(
                       textColor: '#FFFFFF',
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: 'w600',
+                    ),
+                  ),
+                  ElementSchema(
+                    type: ElementType.text,
+                    text: 'Temp',
+                    style: const StyleSchema(
+                      textColor: '#9CA3AF',
+                      fontSize: 10,
                     ),
                   ),
                 ],
               ),
+              // Separator
+              ElementSchema(
+                type: ElementType.container,
+                style: const StyleSchema(
+                  width: 1,
+                  height: 40,
+                  backgroundColor: '#374151',
+                ),
+              ),
+              // Humidity
               ElementSchema(
                 type: ElementType.column,
                 style: const StyleSchema(alignment: AlignmentOption.center),
@@ -457,8 +482,12 @@ class WidgetTemplates {
                   ElementSchema(
                     type: ElementType.icon,
                     iconName: 'water_drop',
-                    iconSize: 24,
+                    iconSize: 22,
                     style: const StyleSchema(textColor: '#06B6D4'),
+                  ),
+                  ElementSchema(
+                    type: ElementType.spacer,
+                    style: const StyleSchema(height: 4),
                   ),
                   ElementSchema(
                     type: ElementType.text,
@@ -469,8 +498,63 @@ class WidgetTemplates {
                     ),
                     style: const StyleSchema(
                       textColor: '#FFFFFF',
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: 'w600',
+                    ),
+                  ),
+                  ElementSchema(
+                    type: ElementType.text,
+                    text: 'Humidity',
+                    style: const StyleSchema(
+                      textColor: '#9CA3AF',
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+              // Separator
+              ElementSchema(
+                type: ElementType.container,
+                style: const StyleSchema(
+                  width: 1,
+                  height: 40,
+                  backgroundColor: '#374151',
+                ),
+              ),
+              // Barometric Pressure
+              ElementSchema(
+                type: ElementType.column,
+                style: const StyleSchema(alignment: AlignmentOption.center),
+                children: [
+                  ElementSchema(
+                    type: ElementType.icon,
+                    iconName: 'speed',
+                    iconSize: 22,
+                    style: const StyleSchema(textColor: '#8B5CF6'),
+                  ),
+                  ElementSchema(
+                    type: ElementType.spacer,
+                    style: const StyleSchema(height: 4),
+                  ),
+                  ElementSchema(
+                    type: ElementType.text,
+                    binding: const BindingSchema(
+                      path: 'node.pressure',
+                      format: '{value}',
+                      defaultValue: '--',
+                    ),
+                    style: const StyleSchema(
+                      textColor: '#FFFFFF',
+                      fontSize: 18,
+                      fontWeight: 'w600',
+                    ),
+                  ),
+                  ElementSchema(
+                    type: ElementType.text,
+                    text: 'hPa',
+                    style: const StyleSchema(
+                      textColor: '#9CA3AF',
+                      fontSize: 10,
                     ),
                   ),
                 ],
@@ -855,6 +939,12 @@ class WidgetTemplates {
               ElementSchema(
                 type: ElementType.column,
                 style: const StyleSchema(alignment: AlignmentOption.center),
+                action: const ActionSchema(
+                  type: ActionType.sendMessage,
+                  requiresNodeSelection: true,
+                  requiresChannelSelection: true,
+                  label: 'Quick Message',
+                ),
                 children: [
                   ElementSchema(
                     type: ElementType.shape,
@@ -891,6 +981,10 @@ class WidgetTemplates {
               ElementSchema(
                 type: ElementType.column,
                 style: const StyleSchema(alignment: AlignmentOption.center),
+                action: const ActionSchema(
+                  type: ActionType.shareLocation,
+                  label: 'Share Location',
+                ),
                 children: [
                   ElementSchema(
                     type: ElementType.shape,
@@ -927,6 +1021,11 @@ class WidgetTemplates {
               ElementSchema(
                 type: ElementType.column,
                 style: const StyleSchema(alignment: AlignmentOption.center),
+                action: const ActionSchema(
+                  type: ActionType.traceroute,
+                  requiresNodeSelection: true,
+                  label: 'Traceroute',
+                ),
                 children: [
                   ElementSchema(
                     type: ElementType.shape,
@@ -963,6 +1062,10 @@ class WidgetTemplates {
               ElementSchema(
                 type: ElementType.column,
                 style: const StyleSchema(alignment: AlignmentOption.center),
+                action: const ActionSchema(
+                  type: ActionType.requestPositions,
+                  label: 'Request Positions',
+                ),
                 children: [
                   ElementSchema(
                     type: ElementType.shape,

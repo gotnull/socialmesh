@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
 import 'primitive_renderers.dart';
+import 'widget_action_handler.dart';
 import '../../../core/theme.dart';
 import '../../../models/mesh_models.dart';
 
 /// Main widget renderer - interprets WidgetSchema and builds Flutter widgets
-class WidgetRenderer extends StatelessWidget {
+class WidgetRenderer extends ConsumerWidget {
   final WidgetSchema schema;
   final MeshNode? node;
   final Map<int, MeshNode>? allNodes;
@@ -15,6 +17,9 @@ class WidgetRenderer extends StatelessWidget {
   final bool usePlaceholderData;
   final String? selectedElementId;
   final void Function(String elementId)? onElementTap;
+
+  /// Whether to enable action handling (disabled in editor preview)
+  final bool enableActions;
 
   /// Device-level signal data (from protocol streams)
   final int? deviceRssi;
@@ -31,13 +36,14 @@ class WidgetRenderer extends StatelessWidget {
     this.usePlaceholderData = false,
     this.selectedElementId,
     this.onElementTap,
+    this.enableActions = true,
     this.deviceRssi,
     this.deviceSnr,
     this.deviceChannelUtil,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Create binding engine with current context
     final bindingEngine = DataBindingEngine();
     bindingEngine.setUsePlaceholderData(usePlaceholderData);
@@ -63,6 +69,8 @@ class WidgetRenderer extends StatelessWidget {
         isPreview: isPreview,
         selectedElementId: selectedElementId,
         onElementTap: onElementTap,
+        enableActions: enableActions && !isPreview,
+        ref: ref,
       ),
     );
   }
@@ -76,14 +84,18 @@ class _ElementRenderer extends StatelessWidget {
   final bool isPreview;
   final String? selectedElementId;
   final void Function(String elementId)? onElementTap;
+  final bool enableActions;
+  final WidgetRef ref;
 
   const _ElementRenderer({
     required this.element,
     required this.bindingEngine,
     required this.accentColor,
+    required this.ref,
     this.isPreview = false,
     this.selectedElementId,
     this.onElementTap,
+    this.enableActions = false,
   });
 
   @override
@@ -116,6 +128,14 @@ class _ElementRenderer extends StatelessWidget {
               : null,
           child: child,
         ),
+      );
+    }
+    // Add action handling for runtime mode
+    else if (enableActions && element.action != null) {
+      child = GestureDetector(
+        onTap: () =>
+            WidgetActionHandler.handleAction(context, ref, element.action!),
+        child: child,
       );
     }
 
@@ -284,6 +304,8 @@ class _ElementRenderer extends StatelessWidget {
           isPreview: isPreview,
           selectedElementId: selectedElementId,
           onElementTap: onElementTap,
+          enableActions: enableActions,
+          ref: ref,
         );
       }).toList(),
     );
@@ -302,6 +324,8 @@ class _ElementRenderer extends StatelessWidget {
           isPreview: isPreview,
           selectedElementId: selectedElementId,
           onElementTap: onElementTap,
+          enableActions: enableActions,
+          ref: ref,
         );
       } else {
         // Multiple children - stack them
@@ -315,6 +339,8 @@ class _ElementRenderer extends StatelessWidget {
               isPreview: isPreview,
               selectedElementId: selectedElementId,
               onElementTap: onElementTap,
+              enableActions: enableActions,
+              ref: ref,
             );
           }).toList(),
         );
@@ -338,6 +364,8 @@ class _ElementRenderer extends StatelessWidget {
         isPreview: isPreview,
         selectedElementId: selectedElementId,
         onElementTap: onElementTap,
+        enableActions: enableActions,
+        ref: ref,
       );
     }).toList();
 
@@ -370,6 +398,8 @@ class _ElementRenderer extends StatelessWidget {
         isPreview: isPreview,
         selectedElementId: selectedElementId,
         onElementTap: onElementTap,
+        enableActions: enableActions,
+        ref: ref,
       );
 
       // Wrap in Expanded if style.expanded is true
@@ -408,6 +438,8 @@ class _ElementRenderer extends StatelessWidget {
         isPreview: isPreview,
         selectedElementId: selectedElementId,
         onElementTap: onElementTap,
+        enableActions: enableActions,
+        ref: ref,
       );
 
       // Wrap in Expanded if style.expanded is true
@@ -444,6 +476,8 @@ class _ElementRenderer extends StatelessWidget {
           isPreview: isPreview,
           selectedElementId: selectedElementId,
           onElementTap: onElementTap,
+          enableActions: enableActions,
+          ref: ref,
         );
       }).toList(),
     );

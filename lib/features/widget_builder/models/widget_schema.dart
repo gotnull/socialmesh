@@ -48,6 +48,19 @@ enum ConditionalOperator {
   isNotEmpty,
 }
 
+/// Action types for tappable elements
+enum ActionType {
+  none, // No action
+  sendMessage, // Open quick message sheet
+  shareLocation, // Share current location
+  traceroute, // Open traceroute sheet
+  requestPositions, // Request positions from all nodes
+  sos, // Open SOS confirmation
+  navigate, // Navigate to a screen
+  openUrl, // Open external URL
+  copyToClipboard, // Copy bound value
+}
+
 /// Text alignment options
 enum TextAlignOption { left, center, right, justify }
 
@@ -483,6 +496,50 @@ class BindingSchema {
   }
 }
 
+/// Action configuration for tappable elements
+class ActionSchema {
+  final ActionType type;
+  final String? navigateTo; // Screen/route name for navigate action
+  final String? url; // URL for openUrl action
+  final bool? requiresNodeSelection; // Whether to show node picker first
+  final bool? requiresChannelSelection; // Whether to show channel picker first
+  final String? label; // Button label override
+
+  const ActionSchema({
+    required this.type,
+    this.navigateTo,
+    this.url,
+    this.requiresNodeSelection,
+    this.requiresChannelSelection,
+    this.label,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'type': type.name,
+    if (navigateTo != null) 'navigateTo': navigateTo,
+    if (url != null) 'url': url,
+    if (requiresNodeSelection != null)
+      'requiresNodeSelection': requiresNodeSelection,
+    if (requiresChannelSelection != null)
+      'requiresChannelSelection': requiresChannelSelection,
+    if (label != null) 'label': label,
+  };
+
+  factory ActionSchema.fromJson(Map<String, dynamic> json) {
+    return ActionSchema(
+      type: ActionType.values.firstWhere(
+        (e) => e.name == json['type'],
+        orElse: () => ActionType.none,
+      ),
+      navigateTo: json['navigateTo'] as String?,
+      url: json['url'] as String?,
+      requiresNodeSelection: json['requiresNodeSelection'] as bool?,
+      requiresChannelSelection: json['requiresChannelSelection'] as bool?,
+      label: json['label'] as String?,
+    );
+  }
+}
+
 /// Conditional configuration for conditional elements
 class ConditionalSchema {
   final String bindingPath; // Data path to evaluate
@@ -520,6 +577,7 @@ class ElementSchema {
   final StyleSchema style;
   final BindingSchema? binding;
   final ConditionalSchema? condition;
+  final ActionSchema? action; // Tap action for this element
   final List<ElementSchema> children;
 
   // Type-specific properties
@@ -545,6 +603,7 @@ class ElementSchema {
     this.style = const StyleSchema(),
     this.binding,
     this.condition,
+    this.action,
     this.children = const [],
     this.text,
     this.iconName,
@@ -569,6 +628,7 @@ class ElementSchema {
     StyleSchema? style,
     BindingSchema? binding,
     ConditionalSchema? condition,
+    ActionSchema? action,
     List<ElementSchema>? children,
     String? text,
     String? iconName,
@@ -592,6 +652,7 @@ class ElementSchema {
       style: style ?? this.style,
       binding: binding ?? this.binding,
       condition: condition ?? this.condition,
+      action: action ?? this.action,
       children: children ?? this.children,
       text: text ?? this.text,
       iconName: iconName ?? this.iconName,
@@ -617,6 +678,7 @@ class ElementSchema {
     'style': style.toJson(),
     if (binding != null) 'binding': binding!.toJson(),
     if (condition != null) 'condition': condition!.toJson(),
+    if (action != null) 'action': action!.toJson(),
     if (children.isNotEmpty)
       'children': children.map((c) => c.toJson()).toList(),
     if (text != null) 'text': text,
@@ -654,6 +716,9 @@ class ElementSchema {
           ? ConditionalSchema.fromJson(
               json['condition'] as Map<String, dynamic>,
             )
+          : null,
+      action: json['action'] != null
+          ? ActionSchema.fromJson(json['action'] as Map<String, dynamic>)
           : null,
       children:
           (json['children'] as List<dynamic>?)

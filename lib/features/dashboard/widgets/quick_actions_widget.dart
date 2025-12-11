@@ -5,6 +5,7 @@ import '../../../core/theme.dart';
 import '../../../utils/snackbar.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../providers/app_providers.dart';
 import '../../../core/transport.dart';
 import '../../../models/mesh_models.dart';
@@ -36,7 +37,7 @@ class QuickActionsContent extends ConsumerWidget {
                   icon: Icons.send,
                   label: 'Quick\nMessage',
                   enabled: isConnected,
-                  onTap: () => _showQuickMessageDialog(context, ref),
+                  onTap: () => _showQuickMessageSheet(context, ref),
                 ),
               ),
               const SizedBox(width: 8),
@@ -54,7 +55,7 @@ class QuickActionsContent extends ConsumerWidget {
                   icon: Icons.route,
                   label: 'Traceroute',
                   enabled: isConnected,
-                  onTap: () => _showTracerouteDialog(context, ref),
+                  onTap: () => _showTracerouteSheet(context, ref),
                 ),
               ),
               const SizedBox(width: 8),
@@ -72,24 +73,26 @@ class QuickActionsContent extends ConsumerWidget {
           // Second row: SOS button
           _SosButton(
             enabled: isConnected,
-            onTap: () => _showSosConfirmation(context, ref),
+            onTap: () => _showSosSheet(context, ref),
           ),
         ],
       ),
     );
   }
 
-  void _showSosConfirmation(BuildContext context, WidgetRef ref) {
-    showDialog(
+  void _showSosSheet(BuildContext context, WidgetRef ref) {
+    AppBottomSheet.show(
       context: context,
-      builder: (context) => _SosConfirmationDialog(ref: ref),
+      padding: EdgeInsets.zero,
+      child: _SosSheetContent(ref: ref),
     );
   }
 
-  void _showQuickMessageDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+  void _showQuickMessageSheet(BuildContext context, WidgetRef ref) {
+    AppBottomSheet.show(
       context: context,
-      builder: (context) => _QuickMessageDialog(ref: ref),
+      padding: EdgeInsets.zero,
+      child: _QuickMessageSheetContent(ref: ref),
     );
   }
 
@@ -107,23 +110,11 @@ class QuickActionsContent extends ConsumerWidget {
     }
   }
 
-  void _showTracerouteDialog(BuildContext context, WidgetRef ref) {
-    final nodes = ref.read(nodesProvider);
-    final myNodeNum = ref.read(myNodeNumProvider);
-
-    // Filter out own node
-    final otherNodes = nodes.values
-        .where((n) => n.nodeNum != myNodeNum)
-        .toList();
-
-    if (otherNodes.isEmpty) {
-      showInfoSnackBar(context, 'No other nodes available for traceroute');
-      return;
-    }
-
-    showDialog(
+  void _showTracerouteSheet(BuildContext context, WidgetRef ref) {
+    AppBottomSheet.show(
       context: context,
-      builder: (context) => _TracerouteDialog(nodes: otherNodes, ref: ref),
+      padding: EdgeInsets.zero,
+      child: _TracerouteSheetContent(ref: ref),
     );
   }
 
@@ -188,7 +179,6 @@ class _ActionButton extends StatelessWidget {
                 fontSize: 9,
                 fontWeight: FontWeight.w600,
                 color: color,
-
                 height: 1.1,
               ),
               textAlign: TextAlign.center,
@@ -257,17 +247,20 @@ class _SosButton extends StatelessWidget {
   }
 }
 
-/// SOS confirmation dialog with safety checks
-class _SosConfirmationDialog extends StatefulWidget {
+// ===========================================================================
+// SOS BOTTOM SHEET
+// ===========================================================================
+
+class _SosSheetContent extends StatefulWidget {
   final WidgetRef ref;
 
-  const _SosConfirmationDialog({required this.ref});
+  const _SosSheetContent({required this.ref});
 
   @override
-  State<_SosConfirmationDialog> createState() => _SosConfirmationDialogState();
+  State<_SosSheetContent> createState() => _SosSheetContentState();
 }
 
-class _SosConfirmationDialogState extends State<_SosConfirmationDialog> {
+class _SosSheetContentState extends State<_SosSheetContent> {
   bool _isSending = false;
   int _countdown = 5;
   bool _canSend = false;
@@ -296,8 +289,6 @@ class _SosConfirmationDialogState extends State<_SosConfirmationDialog> {
     if (!_canSend || _isSending) return;
 
     setState(() => _isSending = true);
-
-    // Haptic feedback for emergency action
     HapticFeedback.heavyImpact();
 
     try {
@@ -380,146 +371,185 @@ class _SosConfirmationDialogState extends State<_SosConfirmationDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppTheme.darkSurface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppTheme.errorRed.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.emergency,
-              color: AppTheme.errorRed,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Text(
-            'Emergency SOS',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.errorRed.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.errorRed.withValues(alpha: 0.3),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 12, 0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.errorRed.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.emergency, color: AppTheme.errorRed, size: 24),
               ),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'This will:',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+              const SizedBox(width: 12),
+              const Text(
+                'Emergency SOS',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
                 ),
-                SizedBox(height: 8),
-                Text(
-                  '• Broadcast an emergency message to ALL nodes on the mesh\n'
-                  '• Include your current location if available\n'
-                  '• Trigger IFTTT webhook (if configured)',
-                  style: TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 13,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _canSend
-                ? 'Ready to send emergency alert'
-                : 'Please wait $_countdown seconds...',
-            style: TextStyle(
-              color: _canSend ? AppTheme.errorRed : AppTheme.textTertiary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isSending ? null : () => Navigator.pop(context),
-          child: Text(
-            'Cancel',
-            style: TextStyle(
-              color: AppTheme.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close, color: AppTheme.textTertiary),
+              ),
+            ],
           ),
         ),
-        ElevatedButton(
-          onPressed: _canSend && !_isSending ? _sendSos : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.errorRed,
-            foregroundColor: Colors.white,
-            disabledBackgroundColor: AppTheme.darkBorder,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: _isSending
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
+
+        const Divider(height: 1, color: AppTheme.darkBorder),
+
+        // Content
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Warning box
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.errorRed.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.errorRed.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.emergency, size: 18),
-                    const SizedBox(width: 8),
-                    Text(
-                      _canSend ? 'Send SOS' : '$_countdown',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
+                    const Text(
+                      'This will:',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    _buildBulletPoint('Broadcast an emergency message to ALL nodes'),
+                    _buildBulletPoint('Include your current location if available'),
+                    _buildBulletPoint('Trigger IFTTT webhook (if configured)'),
                   ],
                 ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Countdown / Ready state
+              Center(
+                child: Text(
+                  _canSend
+                      ? 'Ready to send emergency alert'
+                      : 'Please wait $_countdown seconds...',
+                  style: TextStyle(
+                    color: _canSend ? AppTheme.errorRed : AppTheme.textTertiary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Action buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _isSending ? null : () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.textSecondary,
+                        side: const BorderSide(color: AppTheme.darkBorder),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _canSend && !_isSending ? _sendSos : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.errorRed,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: AppTheme.darkBorder,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _isSending
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.emergency, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _canSend ? 'Send SOS' : '$_countdown',
+                                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
+        SizedBox(height: MediaQuery.of(context).padding.bottom),
       ],
+    );
+  }
+
+  Widget _buildBulletPoint(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('• ', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13, height: 1.4),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _QuickMessageDialog extends StatefulWidget {
+// ===========================================================================
+// QUICK MESSAGE BOTTOM SHEET
+// ===========================================================================
+
+class _QuickMessageSheetContent extends StatefulWidget {
   final WidgetRef ref;
 
-  const _QuickMessageDialog({required this.ref});
+  const _QuickMessageSheetContent({required this.ref});
 
   @override
-  State<_QuickMessageDialog> createState() => _QuickMessageDialogState();
+  State<_QuickMessageSheetContent> createState() => _QuickMessageSheetContentState();
 }
 
-class _QuickMessageDialogState extends State<_QuickMessageDialog> {
+class _QuickMessageSheetContentState extends State<_QuickMessageSheetContent> {
   final _controller = TextEditingController();
   int _selectedPreset = -1;
   bool _isSending = false;
@@ -539,7 +569,6 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
     final myNodeNum = widget.ref.read(myNodeNumProvider);
     return nodes.values.where((n) => n.nodeNum != myNodeNum).toList()
       ..sort((a, b) {
-        // Online nodes first, then by name
         if (a.isOnline != b.isOnline) return a.isOnline ? -1 : 1;
         final aName = a.longName ?? a.shortName ?? '';
         final bName = b.longName ?? b.shortName ?? '';
@@ -577,7 +606,7 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
       );
       widget.ref.read(messagesProvider.notifier).addMessage(pendingMessage);
 
-      // Send via protocol - pre-track before sending to avoid race condition
+      // Send via protocol
       await protocol.sendMessageWithPreTracking(
         text: messageText,
         to: targetAddress,
@@ -610,6 +639,23 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
     }
   }
 
+  void _showNodeSelector() async {
+    final selection = await NodeSelectorSheet.show(
+      context,
+      title: 'Send to',
+      allowBroadcast: true,
+      initialSelection: _selectedNodeNum,
+      broadcastLabel: 'All Nodes',
+      broadcastSubtitle: 'Broadcast to everyone on channel',
+    );
+
+    if (selection != null && mounted) {
+      setState(() {
+        _selectedNodeNum = selection.isBroadcast ? null : selection.nodeNum;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final nodes = _availableNodes;
@@ -629,490 +675,268 @@ class _QuickMessageDialogState extends State<_QuickMessageDialog> {
                   .shortName ??
               '!${_selectedNodeNum!.toRadixString(16)}';
 
-    return Dialog(
-      backgroundColor: AppTheme.darkSurface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Container(
-        width: double.maxFinite,
-        constraints: const BoxConstraints(maxWidth: 340),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.send_rounded,
-                    color: context.accentColor,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Quick Message',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close, color: AppTheme.textTertiary),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Recipient selector
-            const Text(
-              'TO',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textTertiary,
-                letterSpacing: 1,
-              ),
-            ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => _showNodePicker(context, nodes),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.darkBackground,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.darkBorder),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: _selectedNodeNum == null
-                            ? context.accentColor.withValues(alpha: 0.15)
-                            : context.accentColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        _selectedNodeNum == null
-                            ? Icons.broadcast_on_personal
-                            : Icons.person,
-                        color: _selectedNodeNum == null
-                            ? context.accentColor
-                            : context.accentColor,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            selectedName,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            _selectedNodeNum == null
-                                ? 'Broadcast to everyone'
-                                : 'Direct message',
-                            style: TextStyle(
-                              color: AppTheme.textTertiary,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.keyboard_arrow_down,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Quick presets
-            const Text(
-              'QUICK REPLIES',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textTertiary,
-                letterSpacing: 1,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: List.generate(_presets.length, (index) {
-                final isSelected = _selectedPreset == index;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedPreset = index;
-                      _controller.text = _presets[index];
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? context.accentColor.withValues(alpha: 0.15)
-                          : AppTheme.darkBackground,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isSelected
-                            ? context.accentColor
-                            : AppTheme.darkBorder,
-                      ),
-                    ),
-                    child: Text(
-                      _presets[index],
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: isSelected
-                            ? context.accentColor
-                            : AppTheme.textSecondary,
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Custom message input
-            TextField(
-              controller: _controller,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              decoration: InputDecoration(
-                hintText: 'Type a message...',
-                hintStyle: TextStyle(
-                  color: AppTheme.textTertiary,
-                  fontSize: 14,
-                ),
-                filled: true,
-                fillColor: AppTheme.darkBackground,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppTheme.darkBorder),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppTheme.darkBorder),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: context.accentColor),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 14,
-                ),
-                counterStyle: TextStyle(
-                  color: AppTheme.textTertiary,
-                  fontSize: 11,
-                ),
-              ),
-              maxLength: 200,
-              maxLines: 3,
-              minLines: 1,
-              onChanged: (_) => setState(() => _selectedPreset = -1),
-            ),
-
-            SizedBox(height: 16),
-
-            // Send button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _controller.text.isNotEmpty && !_isSending
-                    ? _sendMessage
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.accentColor,
-                  foregroundColor: Colors.black,
-                  disabledBackgroundColor: AppTheme.darkBorder,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: _isSending
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.black,
-                        ),
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.send_rounded, size: 18),
-                          const SizedBox(width: 8),
-                          Text(
-                            _selectedNodeNum == null ? 'Broadcast' : 'Send',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showNodePicker(BuildContext context, List<MeshNode> nodes) {
-    AppBottomSheet.show(
-      context: context,
-      padding: EdgeInsets.zero,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.5,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
-              child: Row(
-                children: [
-                  Text(
-                    'Send to',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      'Done',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1, color: AppTheme.darkBorder),
-            // Broadcast option
-            _buildRecipientTile(
-              icon: Icons.broadcast_on_personal,
-              iconColor: context.accentColor,
-              title: 'All Nodes',
-              subtitle: 'Broadcast to everyone on channel',
-              isSelected: _selectedNodeNum == null,
-              onTap: () {
-                setState(() => _selectedNodeNum = null);
-                Navigator.pop(context);
-              },
-            ),
-            if (nodes.isNotEmpty) ...[
-              const Divider(height: 1, color: AppTheme.darkBorder),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      'DIRECT MESSAGE',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textTertiary,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${nodes.length} nodes',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppTheme.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            // Node list
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: nodes.length,
-                itemBuilder: (context, index) {
-                  final node = nodes[index];
-                  final displayName =
-                      node.longName ??
-                      node.shortName ??
-                      '!${node.nodeNum.toRadixString(16)}';
-                  return _buildRecipientTile(
-                    icon: Icons.person,
-                    iconColor: node.isOnline
-                        ? context.accentColor
-                        : AppTheme.textTertiary,
-                    title: displayName,
-                    subtitle: node.shortName ?? 'Unknown',
-                    isSelected: _selectedNodeNum == node.nodeNum,
-                    isOnline: node.isOnline,
-                    onTap: () {
-                      setState(() => _selectedNodeNum = node.nodeNum);
-                      Navigator.pop(context);
-                    },
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: MediaQuery.of(context).padding.bottom),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecipientTile({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required bool isSelected,
-    bool isOnline = false,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          color: isSelected
-              ? context.accentColor.withValues(alpha: 0.08)
-              : Colors.transparent,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 12, 0),
           child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.15),
+                  color: context.accentColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Stack(
-                  children: [
-                    Center(child: Icon(icon, color: iconColor, size: 22)),
-                    if (isOnline)
-                      Positioned(
-                        right: 2,
-                        bottom: 2,
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: context.accentColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppTheme.darkSurface,
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
+                child: Icon(Icons.send_rounded, color: context.accentColor, size: 22),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Quick Message',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: isSelected ? context.accentColor : Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: AppTheme.textTertiary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close, color: AppTheme.textTertiary),
               ),
-              if (isSelected)
-                Icon(Icons.check_circle, color: context.accentColor, size: 22),
             ],
           ),
         ),
-      ),
+
+        const Divider(height: 1, color: AppTheme.darkBorder),
+
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Recipient selector
+              const Text(
+                'TO',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textTertiary,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: _showNodeSelector,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.darkBorder),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: context.accentColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          _selectedNodeNum == null ? Icons.broadcast_on_personal : Icons.person,
+                          color: context.accentColor,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              selectedName,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              _selectedNodeNum == null ? 'Broadcast to everyone' : 'Direct message',
+                              style: const TextStyle(color: AppTheme.textTertiary, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.keyboard_arrow_down, color: AppTheme.textSecondary),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Quick presets
+              const Text(
+                'QUICK REPLIES',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textTertiary,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: List.generate(_presets.length, (index) {
+                  final isSelected = _selectedPreset == index;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedPreset = index;
+                        _controller.text = _presets[index];
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? context.accentColor.withValues(alpha: 0.15)
+                            : AppTheme.darkBackground,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected ? context.accentColor : AppTheme.darkBorder,
+                        ),
+                      ),
+                      child: Text(
+                        _presets[index],
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: isSelected ? context.accentColor : AppTheme.textSecondary,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Custom message input
+              TextField(
+                controller: _controller,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'Type a message...',
+                  hintStyle: const TextStyle(color: AppTheme.textTertiary, fontSize: 14),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppTheme.darkBorder),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppTheme.darkBorder),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: context.accentColor),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  counterStyle: const TextStyle(color: AppTheme.textTertiary, fontSize: 11),
+                ),
+                maxLength: 200,
+                maxLines: 3,
+                minLines: 1,
+                onChanged: (_) => setState(() => _selectedPreset = -1),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Send button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _controller.text.isNotEmpty && !_isSending ? _sendMessage : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.accentColor,
+                    foregroundColor: Colors.black,
+                    disabledBackgroundColor: AppTheme.darkBorder,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: _isSending
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.send_rounded, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              _selectedNodeNum == null ? 'Broadcast' : 'Send',
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: MediaQuery.of(context).padding.bottom),
+      ],
     );
   }
 }
 
-class _TracerouteDialog extends StatefulWidget {
-  final List<MeshNode> nodes;
+// ===========================================================================
+// TRACEROUTE BOTTOM SHEET
+// ===========================================================================
+
+class _TracerouteSheetContent extends StatefulWidget {
   final WidgetRef ref;
 
-  const _TracerouteDialog({required this.nodes, required this.ref});
+  const _TracerouteSheetContent({required this.ref});
 
   @override
-  State<_TracerouteDialog> createState() => _TracerouteDialogState();
+  State<_TracerouteSheetContent> createState() => _TracerouteSheetContentState();
 }
 
-class _TracerouteDialogState extends State<_TracerouteDialog> {
+class _TracerouteSheetContentState extends State<_TracerouteSheetContent> {
   int? _selectedNodeNum;
   bool _isSending = false;
+  String? _selectedNodeName;
+
+  void _showNodeSelector() async {
+    final selection = await NodeSelectorSheet.show(
+      context,
+      title: 'Select Target Node',
+      allowBroadcast: false,
+      initialSelection: _selectedNodeNum,
+    );
+
+    if (selection != null && !selection.isBroadcast && mounted) {
+      final nodes = widget.ref.read(nodesProvider);
+      final node = nodes[selection.nodeNum];
+      setState(() {
+        _selectedNodeNum = selection.nodeNum;
+        _selectedNodeName = node?.longName ?? node?.shortName ?? '!${selection.nodeNum!.toRadixString(16)}';
+      });
+    }
+  }
 
   Future<void> _sendTraceroute() async {
     if (_selectedNodeNum == null) return;
@@ -1125,10 +949,7 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        showInfoSnackBar(
-          context,
-          'Traceroute sent - check messages for response',
-        );
+        showInfoSnackBar(context, 'Traceroute sent - check messages for response');
       }
     } catch (e) {
       setState(() => _isSending = false);
@@ -1140,193 +961,185 @@ class _TracerouteDialogState extends State<_TracerouteDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppTheme.darkSurface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text(
-        'Traceroute',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Select a node to trace the route to:',
-              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              constraints: const BoxConstraints(maxHeight: 200),
-              decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppTheme.darkBorder),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 12, 0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.route, color: context.accentColor, size: 22),
               ),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: widget.nodes.length,
-                itemBuilder: (context, index) {
-                  final node = widget.nodes[index];
-                  final isSelected = _selectedNodeNum == node.nodeNum;
-                  final displayName =
-                      node.longName ??
-                      node.shortName ??
-                      '!${node.nodeNum.toRadixString(16)}';
-                  final isFirst = index == 0;
-                  final isLast = index == widget.nodes.length - 1;
+              const SizedBox(width: 12),
+              const Text(
+                'Traceroute',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close, color: AppTheme.textTertiary),
+              ),
+            ],
+          ),
+        ),
 
-                  return Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.vertical(
-                        top: isFirst ? const Radius.circular(10) : Radius.zero,
-                        bottom: isLast
-                            ? const Radius.circular(10)
-                            : Radius.zero,
-                      ),
-                      onTap: () {
-                        setState(() => _selectedNodeNum = node.nodeNum);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? context.accentColor.withValues(alpha: 0.15)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.vertical(
-                            top: isFirst
-                                ? const Radius.circular(10)
-                                : Radius.zero,
-                            bottom: isLast
-                                ? const Radius.circular(10)
-                                : Radius.zero,
-                          ),
-                          border: Border(
-                            bottom: BorderSide(
-                              color: index < widget.nodes.length - 1
-                                  ? AppTheme.darkBorder.withValues(alpha: 0.5)
-                                  : Colors.transparent,
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? context.accentColor
-                                    : AppTheme.darkBorder,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  node.shortName
-                                          ?.substring(0, 1)
-                                          .toUpperCase() ??
-                                      '?',
-                                  style: TextStyle(
-                                    color: isSelected
-                                        ? Colors.black
-                                        : Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    displayName,
-                                    style: TextStyle(
-                                      color: isSelected
-                                          ? context.accentColor
-                                          : Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  if (node.shortName != null &&
-                                      node.longName != null)
-                                    Text(
-                                      node.shortName!,
-                                      style: TextStyle(
-                                        color: AppTheme.textTertiary,
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            if (node.isOnline)
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: context.accentColor,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                          ],
-                        ),
+        const Divider(height: 1, color: AppTheme.darkBorder),
+
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Explanation
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.accentColor.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: context.accentColor, size: 20),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Traceroute discovers the path packets take to reach a node through the mesh network.',
+                        style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, height: 1.4),
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isSending ? null : () => Navigator.pop(context),
-          child: Text(
-            'Cancel',
-            style: TextStyle(color: AppTheme.textSecondary),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: _selectedNodeNum != null && !_isSending
-              ? _sendTraceroute
-              : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: context.accentColor,
-            foregroundColor: Colors.black,
-            disabledBackgroundColor: AppTheme.darkBorder,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: _isSending
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.black,
-                  ),
-                )
-              : const Text(
-                  'Trace',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                  ],
                 ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Node selector
+              const Text(
+                'TARGET NODE',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textTertiary,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: _showNodeSelector,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _selectedNodeNum != null
+                          ? context.accentColor.withValues(alpha: 0.5)
+                          : AppTheme.darkBorder,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: _selectedNodeNum != null
+                              ? context.accentColor.withValues(alpha: 0.15)
+                              : AppTheme.darkBorder.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          _selectedNodeNum != null ? Icons.person : Icons.person_add_outlined,
+                          color: _selectedNodeNum != null ? context.accentColor : AppTheme.textTertiary,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _selectedNodeNum != null
+                              ? _selectedNodeName ?? 'Selected'
+                              : 'Tap to select a node',
+                          style: TextStyle(
+                            color: _selectedNodeNum != null ? Colors.white : AppTheme.textTertiary,
+                            fontSize: 15,
+                            fontWeight: _selectedNodeNum != null ? FontWeight.w500 : FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.keyboard_arrow_right,
+                        color: _selectedNodeNum != null ? context.accentColor : AppTheme.textTertiary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Action buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _isSending ? null : () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.textSecondary,
+                        side: const BorderSide(color: AppTheme.darkBorder),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _selectedNodeNum != null && !_isSending ? _sendTraceroute : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.accentColor,
+                        foregroundColor: Colors.black,
+                        disabledBackgroundColor: AppTheme.darkBorder,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: _isSending
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.route, size: 18),
+                                SizedBox(width: 8),
+                                Text('Trace', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
+        SizedBox(height: MediaQuery.of(context).padding.bottom),
       ],
     );
   }
