@@ -35,6 +35,7 @@ import 'features/timeline/timeline_screen.dart';
 import 'features/presence/presence_screen.dart';
 import 'features/discovery/node_discovery_overlay.dart';
 import 'features/routes/route_detail_screen.dart';
+import 'features/globe/globe_screen.dart';
 import 'models/route.dart' as route_model;
 
 Future<void> main() async {
@@ -286,6 +287,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         '/nodes': (context) => const NodesScreen(),
         '/node-qr-scanner': (context) => const NodeQrScannerScreen(),
         '/map': (context) => const MapScreen(),
+        '/globe': (context) => const GlobeScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/qr-import': (context) => const QrImportScreen(),
         '/channel-qr-scanner': (context) => const QrImportScreen(),

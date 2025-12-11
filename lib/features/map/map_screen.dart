@@ -503,6 +503,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     _measureEnd = null;
                   });
                   break;
+                case 'globe':
+                  Navigator.of(context).pushNamed('/globe');
+                  break;
                 case 'settings':
                   Navigator.of(context).pushNamed('/settings');
                   break;
@@ -576,6 +579,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     Text(
                       _measureMode ? 'Exit measure mode' : 'Measure distance',
                     ),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'globe',
+                child: Row(
+                  children: [
+                    Icon(Icons.public, size: 18, color: AppTheme.textSecondary),
+                    const SizedBox(width: 8),
+                    const Text('3D Globe View'),
                   ],
                 ),
               ),
