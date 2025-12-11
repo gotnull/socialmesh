@@ -93,7 +93,7 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
       ),
       body: Stack(
         children: [
-          // Globe
+          // Globe - fullscreen
           Positioned.fill(
             child: MeshGlobe(
               key: _globeKey,
@@ -108,110 +108,29 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
             ),
           ),
 
-          // Node list overlay
+          // Node count badge - top left
           Positioned(
             left: 16,
             top: 16,
-            bottom: 100,
-            width: 200,
             child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: AppTheme.darkCard.withAlpha(200),
-                borderRadius: BorderRadius.circular(12),
+                color: AppTheme.darkCard.withAlpha(220),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppTheme.darkBorder),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.public,
-                          size: 16,
-                          color: context.accentColor,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${nodesList.length} nodes',
-                          style: const TextStyle(
-                            color: AppTheme.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'JetBrainsMono',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1, color: AppTheme.darkBorder),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      itemCount: nodesList.length,
-                      itemBuilder: (context, index) {
-                        final node = nodesList[index];
-                        final isSelected =
-                            _selectedNode?.nodeNum == node.nodeNum;
-                        final isMyNode = node.nodeNum == myNodeNum;
-                        final nodeColor = Color(node.avatarColor ?? 0xFF42A5F5);
-
-                        return InkWell(
-                          onTap: () => _onNodeSelected(node),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            color: isSelected
-                                ? context.accentColor.withAlpha(30)
-                                : null,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: nodeColor,
-                                    shape: BoxShape.circle,
-                                    boxShadow: node.isOnline
-                                        ? [
-                                            BoxShadow(
-                                              color: nodeColor.withAlpha(100),
-                                              blurRadius: 4,
-                                              spreadRadius: 1,
-                                            ),
-                                          ]
-                                        : null,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    node.displayName,
-                                    style: TextStyle(
-                                      color: isSelected
-                                          ? context.accentColor
-                                          : AppTheme.textPrimary,
-                                      fontSize: 12,
-                                      fontFamily: 'JetBrainsMono',
-                                      fontWeight: isMyNode
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                if (isMyNode)
-                                  Icon(
-                                    Icons.person,
-                                    size: 12,
-                                    color: context.accentColor,
-                                  ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+                  Icon(Icons.public, size: 14, color: context.accentColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${nodesList.length} nodes',
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'JetBrainsMono',
                     ),
                   ),
                 ],
@@ -219,15 +138,19 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
             ),
           ),
 
-          // Selected node info panel - using shared NodeInfoCard in compact mode
+          // Selected node info card at bottom
           if (_selectedNode != null)
             Positioned(
+              left: 16,
               right: 16,
               bottom: 16,
               child: NodeInfoCard(
                 node: _selectedNode!,
                 isMyNode: _selectedNode!.nodeNum == myNodeNum,
-                compact: true,
+                onClose: () => setState(() => _selectedNode = null),
+                onMessage: () {
+                  // TODO: Navigate to chat
+                },
               ),
             ),
 

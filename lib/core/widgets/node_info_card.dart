@@ -130,6 +130,19 @@ class NodeInfoCard extends ConsumerWidget {
                 const SizedBox(width: 8),
                 Icon(Icons.person, size: 14, color: context.accentColor),
               ],
+              if (onClose != null) ...[
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, size: 16),
+                    color: AppTheme.textTertiary,
+                    onPressed: onClose,
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
             ],
           ),
           if (node.hasPosition) ...[
