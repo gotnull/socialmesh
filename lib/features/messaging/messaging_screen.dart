@@ -1329,7 +1329,7 @@ class _MessageBubble extends StatelessWidget {
       case MessageSource.automation:
         return 'Automation';
       case MessageSource.siri:
-        return 'Siri';
+        return 'Shortcut';
       case MessageSource.reaction:
         return 'Notification';
       case MessageSource.tapback:
@@ -1364,7 +1364,6 @@ class _MessageBubble extends StatelessWidget {
     if (icon == null || label == null) return null;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 4, right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: _getSourceColor().withValues(alpha: 0.85),
@@ -1402,8 +1401,18 @@ class _MessageBubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // Source badge above message (Siri, Automation, etc.)
-            if (sourceBadge != null) sourceBadge,
+            // Source badge above message (Shortcut, Automation, etc.)
+            // Wrapped in Row to match message bubble alignment
+            if (sourceBadge != null)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: sourceBadge,
+                  ),
+                ],
+              ),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

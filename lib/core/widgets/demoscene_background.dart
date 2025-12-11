@@ -47,81 +47,8 @@ class _DemosceneBackgroundState extends State<DemosceneBackground>
   // Starfield data - pre-generated for performance
   late final List<_Star> _stars;
 
-  // Sine wave bob data
-  static const List<_BobData> _bobs = [
-    _BobData(
-      icon: Icons.router,
-      color: AccentColors.green,
-      size: 36,
-      phase: 0.0,
-      amplitude: 0.15,
-      speed: 1.0,
-      yOffset: 0.2,
-    ),
-    _BobData(
-      icon: Icons.wifi_tethering,
-      color: AppTheme.primaryMagenta,
-      size: 32,
-      phase: 0.5,
-      amplitude: 0.12,
-      speed: 1.3,
-      yOffset: 0.35,
-    ),
-    _BobData(
-      icon: Icons.cell_tower,
-      color: AppTheme.graphBlue,
-      size: 40,
-      phase: 1.0,
-      amplitude: 0.18,
-      speed: 0.8,
-      yOffset: 0.5,
-    ),
-    _BobData(
-      icon: Icons.bluetooth,
-      color: AppTheme.graphBlue,
-      size: 28,
-      phase: 1.5,
-      amplitude: 0.1,
-      speed: 1.5,
-      yOffset: 0.65,
-    ),
-    _BobData(
-      icon: Icons.sensors,
-      color: AppTheme.warningYellow,
-      size: 34,
-      phase: 2.0,
-      amplitude: 0.14,
-      speed: 1.1,
-      yOffset: 0.8,
-    ),
-    _BobData(
-      icon: Icons.radio,
-      color: AppTheme.primaryMagenta,
-      size: 30,
-      phase: 2.5,
-      amplitude: 0.16,
-      speed: 0.9,
-      yOffset: 0.25,
-    ),
-    _BobData(
-      icon: Icons.hub,
-      color: AccentColors.green,
-      size: 26,
-      phase: 3.0,
-      amplitude: 0.11,
-      speed: 1.4,
-      yOffset: 0.45,
-    ),
-    _BobData(
-      icon: Icons.satellite_alt,
-      color: AppTheme.warningYellow,
-      size: 32,
-      phase: 3.5,
-      amplitude: 0.13,
-      speed: 1.2,
-      yOffset: 0.7,
-    ),
-  ];
+  // Mesh network nodes - positioned around the screen
+  late final List<_MeshNode> _meshNodes;
 
   @override
   void initState() {
@@ -130,13 +57,13 @@ class _DemosceneBackgroundState extends State<DemosceneBackground>
     // Main animation controller for coordinated effects
     _mainController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 8),
+      duration: const Duration(seconds: 12),
     )..repeat();
 
     // Copper bars cycle faster for that classic effect
     _copperController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 6),
     )..repeat();
 
     // Starfield moves continuously
@@ -146,7 +73,10 @@ class _DemosceneBackgroundState extends State<DemosceneBackground>
     )..repeat();
 
     // Generate starfield
-    _stars = _generateStars(150);
+    _stars = _generateStars(120);
+
+    // Generate mesh network nodes
+    _meshNodes = _generateMeshNodes();
   }
 
   List<_Star> _generateStars(int count) {
@@ -159,6 +89,76 @@ class _DemosceneBackgroundState extends State<DemosceneBackground>
         brightness: random.nextDouble() * 0.5 + 0.5,
       );
     });
+  }
+
+  List<_MeshNode> _generateMeshNodes() {
+    // Create nodes in a distributed pattern
+    return [
+      _MeshNode(
+        baseX: 0.15,
+        baseY: 0.18,
+        icon: Icons.router,
+        color: AccentColors.green,
+        size: 32,
+        phase: 0.0,
+      ),
+      _MeshNode(
+        baseX: 0.85,
+        baseY: 0.15,
+        icon: Icons.wifi_tethering,
+        color: AppTheme.primaryMagenta,
+        size: 28,
+        phase: 0.7,
+      ),
+      _MeshNode(
+        baseX: 0.5,
+        baseY: 0.35,
+        icon: Icons.cell_tower,
+        color: AppTheme.graphBlue,
+        size: 36,
+        phase: 1.4,
+      ),
+      _MeshNode(
+        baseX: 0.2,
+        baseY: 0.55,
+        icon: Icons.sensors,
+        color: AppTheme.warningYellow,
+        size: 26,
+        phase: 2.1,
+      ),
+      _MeshNode(
+        baseX: 0.75,
+        baseY: 0.5,
+        icon: Icons.bluetooth,
+        color: AppTheme.graphBlue,
+        size: 30,
+        phase: 2.8,
+      ),
+      _MeshNode(
+        baseX: 0.4,
+        baseY: 0.72,
+        icon: Icons.hub,
+        color: AccentColors.green,
+        size: 28,
+        phase: 3.5,
+      ),
+      _MeshNode(
+        baseX: 0.88,
+        baseY: 0.75,
+        icon: Icons.radio,
+        color: AppTheme.primaryMagenta,
+        size: 30,
+        phase: 4.2,
+      ),
+      _MeshNode(
+        baseX: 0.12,
+        baseY: 0.85,
+        icon: Icons.satellite_alt,
+        color: AppTheme.warningYellow,
+        size: 32,
+        phase: 4.9,
+      ),
+    ];
   }
 
   @override
@@ -178,7 +178,7 @@ class _DemosceneBackgroundState extends State<DemosceneBackground>
         // Base dark background
         Container(color: AppTheme.darkBackground),
 
-        // Copper bars layer
+        // Copper bars layer (constrained band)
         if (widget.showCopperBars)
           AnimatedBuilder(
             animation: _copperController,
@@ -210,15 +210,18 @@ class _DemosceneBackgroundState extends State<DemosceneBackground>
             },
           ),
 
-        // Sine wave bobs layer
+        // Mesh network layer - nodes connected with animated lines
         if (widget.showSineWaveBobs)
           AnimatedBuilder(
             animation: _mainController,
             builder: (context, child) {
-              return Stack(
-                children: _bobs
-                    .map((bob) => _buildSineWaveBob(bob, size))
-                    .toList(),
+              return CustomPaint(
+                size: size,
+                painter: _MeshNetworkPainter(
+                  nodes: _meshNodes,
+                  progress: _mainController.value,
+                  pageOffset: widget.pageOffset,
+                ),
               );
             },
           ),
@@ -233,79 +236,11 @@ class _DemosceneBackgroundState extends State<DemosceneBackground>
       ],
     );
   }
-
-  Widget _buildSineWaveBob(_BobData bob, Size screenSize) {
-    final time = _mainController.value * 2 * math.pi * bob.speed;
-
-    // Classic sine wave movement across screen
-    final sineX = math.sin(time + bob.phase) * screenSize.width * bob.amplitude;
-
-    // Secondary vertical sine for Lissajous-like motion
-    final sineY = math.cos(time * 0.7 + bob.phase) * 20;
-
-    // Bob position moves horizontally in sine pattern
-    final baseX = screenSize.width * 0.5 + sineX;
-    final baseY = screenSize.height * bob.yOffset + sineY;
-
-    // Gentle rotation
-    final rotation = math.sin(time * 0.5 + bob.phase) * 0.3;
-
-    // Pulsing opacity and scale for that demoscene feel
-    final pulse = 0.6 + math.sin(time * 2 + bob.phase) * 0.2;
-    final scale = 0.9 + math.sin(time * 1.5 + bob.phase) * 0.1;
-
-    // Color cycling effect (subtle)
-    final hueShift = math.sin(time * 0.3 + bob.phase) * 0.1;
-
-    return Positioned(
-      left: baseX - bob.size / 2 - widget.pageOffset * 30,
-      top: baseY - bob.size / 2,
-      child: Transform.rotate(
-        angle: rotation,
-        child: Transform.scale(
-          scale: scale,
-          child: _buildGlowingIcon(bob, pulse, hueShift),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGlowingIcon(_BobData bob, double opacity, double hueShift) {
-    // Apply subtle hue shift for color cycling
-    final hsv = HSVColor.fromColor(bob.color);
-    final shiftedColor = hsv
-        .withHue((hsv.hue + hueShift * 360) % 360)
-        .toColor();
-
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          // Outer glow
-          BoxShadow(
-            color: shiftedColor.withValues(alpha: opacity * 0.4),
-            blurRadius: bob.size * 0.8,
-            spreadRadius: bob.size * 0.2,
-          ),
-          // Inner glow
-          BoxShadow(
-            color: shiftedColor.withValues(alpha: opacity * 0.6),
-            blurRadius: bob.size * 0.3,
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: Icon(
-        bob.icon,
-        size: bob.size,
-        color: shiftedColor.withValues(alpha: opacity),
-      ),
-    );
-  }
 }
 
 /// Copper bars painter - creates horizontal animated color gradient bars
 /// with plasma-like undulation effect inspired by classic Amiga demos
+/// Now contained to a band in the middle of the screen
 class _CopperBarsPainter extends CustomPainter {
   final double progress;
   final double pageOffset;
@@ -337,20 +272,23 @@ class _CopperBarsPainter extends CustomPainter {
       const Color(0xFFFF0080), // Back to pink
     ];
 
-    // More bars for smoother gradient effect
-    const barCount = 24;
-    final barHeight = size.height / barCount;
+    // Constrain copper bars to middle band of screen
+    const barCount = 8;
+    final bandHeight = size.height * 0.25; // Only 25% of screen height
+    final barHeight = bandHeight / barCount;
     final time = progress * math.pi * 2;
+
+    // Animate the band position with a slow sine wave
+    final bandY = size.height * 0.35 + math.sin(time * 0.3) * size.height * 0.1;
 
     for (int i = 0; i < barCount; i++) {
       // Plasma-like sine wave creates undulating color bands
-      final wave1 = math.sin(time + i * 0.3);
-      final wave2 = math.sin(time * 1.3 + i * 0.2);
-      final wave3 = math.cos(time * 0.7 + i * 0.4);
-      final combinedWave = (wave1 + wave2 + wave3) / 3;
+      final wave1 = math.sin(time + i * 0.4);
+      final wave2 = math.sin(time * 1.3 + i * 0.3);
+      final combinedWave = (wave1 + wave2) / 2;
 
       // Calculate color index with plasma-like smoothness
-      final colorProgress = (i / barCount + progress + combinedWave * 0.1);
+      final colorProgress = (i / barCount + progress + combinedWave * 0.15);
       final colorIndex = (colorProgress * colors.length) % colors.length;
       final colorIndexInt = colorIndex.floor();
       final colorBlend = colorIndex - colorIndexInt;
@@ -360,28 +298,30 @@ class _CopperBarsPainter extends CustomPainter {
       final color2 = colors[(colorIndexInt + 1) % colors.length];
       final blendedColor = Color.lerp(color1, color2, colorBlend)!;
 
-      // Intensity waves for that classic copper bar shimmer
-      final intensity = 0.06 + (combinedWave * 0.5 + 0.5) * 0.08;
+      // Intensity based on position in band (fade at edges)
+      final posInBand = i / (barCount - 1);
+      final edgeFade = math.sin(posInBand * math.pi); // 0 at edges, 1 in middle
+      final intensity = (0.05 + (combinedWave * 0.5 + 0.5) * 0.06) * edgeFade;
 
       // Position with slight sine wave horizontal offset (raster effect)
-      final barY = i * barHeight;
-      final xOffset = math.sin(time * 2 + i * 0.2) * 5 - pageOffset * 0.5;
+      final barY = bandY + i * barHeight;
+      final xOffset = math.sin(time * 2 + i * 0.3) * 8 - pageOffset * 0.5;
 
       // Create gradient for this bar - brighter center, faded edges
       final gradient = ui.Gradient.linear(
         Offset(xOffset, barY),
         Offset(xOffset, barY + barHeight),
         [
-          blendedColor.withValues(alpha: intensity * 0.2),
+          blendedColor.withValues(alpha: intensity * 0.3),
           blendedColor.withValues(alpha: intensity),
-          blendedColor.withValues(alpha: intensity * 0.2),
+          blendedColor.withValues(alpha: intensity * 0.3),
         ],
         [0.0, 0.5, 1.0],
       );
 
       paint.shader = gradient;
       canvas.drawRect(
-        Rect.fromLTWH(0, barY, size.width, barHeight * 1.1),
+        Rect.fromLTWH(0, barY, size.width, barHeight * 1.2),
         paint,
       );
     }
@@ -395,6 +335,7 @@ class _CopperBarsPainter extends CustomPainter {
 }
 
 /// Starfield painter - creates a 3D star field zooming effect
+/// Classic demoscene starfield with streak trails
 class _StarfieldPainter extends CustomPainter {
   final List<_Star> stars;
   final double progress;
@@ -408,51 +349,82 @@ class _StarfieldPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final centerX = size.width / 2 - pageOffset * 20;
+    final centerX = size.width / 2 - pageOffset * 30;
     final centerY = size.height / 2;
 
     for (final star in stars) {
       // Simulate z-movement (stars coming towards viewer)
-      final z = (star.z + progress) % 1.0;
+      final z = (star.z + progress * 2) % 1.0;
       final invertedZ = 1.0 - z; // Closer stars have lower z after inversion
 
+      // Skip very distant stars for performance
+      if (invertedZ > 0.95) continue;
+
       // Project 3D position to 2D (perspective projection)
-      final scale = 1.0 / (invertedZ + 0.1);
-      final projectedX = centerX + (star.x - 0.5) * size.width * scale * 0.8;
-      final projectedY = centerY + (star.y - 0.5) * size.height * scale * 0.8;
+      final perspectiveScale = 1.0 / (invertedZ + 0.05);
+      final projectedX =
+          centerX + (star.x - 0.5) * size.width * perspectiveScale * 0.9;
+      final projectedY =
+          centerY + (star.y - 0.5) * size.height * perspectiveScale * 0.9;
 
       // Skip if outside screen
-      if (projectedX < -10 ||
-          projectedX > size.width + 10 ||
-          projectedY < -10 ||
-          projectedY > size.height + 10) {
+      if (projectedX < -20 ||
+          projectedX > size.width + 20 ||
+          projectedY < -20 ||
+          projectedY > size.height + 20) {
         continue;
       }
 
       // Star size and brightness based on z-depth
-      final starSize = (1.0 - invertedZ) * 3.0 + 0.5;
-      final brightness = star.brightness * (1.0 - invertedZ * 0.5);
+      // Closer stars are bigger and brighter
+      final starSize = (1.0 - invertedZ) * 4.0 + 0.3;
+      final brightness = star.brightness * (1.0 - invertedZ * 0.3);
 
-      // Draw star with subtle trail for motion blur effect
-      final paint = Paint()
-        ..color = Colors.white.withValues(alpha: brightness * 0.8)
+      // Calculate velocity direction (away from center)
+      final dx = projectedX - centerX;
+      final dy = projectedY - centerY;
+      final dist = math.sqrt(dx * dx + dy * dy);
+      final normalizedDx = dist > 0 ? dx / dist : 0.0;
+      final normalizedDy = dist > 0 ? dy / dist : 0.0;
+
+      // Motion trail length based on proximity
+      final trailLength = starSize * 6 * (1.0 - invertedZ);
+
+      // Draw motion streak with gradient
+      final trailPaint = Paint()
         ..strokeCap = StrokeCap.round
-        ..strokeWidth = starSize;
+        ..strokeWidth = starSize * 0.8;
 
-      // Motion trail (line towards center)
-      final trailLength = starSize * 3 * (1.0 - invertedZ);
-      final dx = (projectedX - centerX).sign * trailLength;
-      final dy = (projectedY - centerY).sign * trailLength;
+      // Draw trail with fading opacity
+      for (int t = 4; t >= 0; t--) {
+        final trailFactor = t / 4.0;
+        final tx = projectedX - normalizedDx * trailLength * trailFactor;
+        final ty = projectedY - normalizedDy * trailLength * trailFactor;
 
-      canvas.drawLine(
+        trailPaint.color = Colors.white.withValues(
+          alpha: brightness * (1.0 - trailFactor) * 0.4,
+        );
+        canvas.drawCircle(
+          Offset(tx, ty),
+          starSize * (1.0 - trailFactor * 0.5),
+          trailPaint,
+        );
+      }
+
+      // Bright star point with subtle color tint
+      final starPaint = Paint()
+        ..color = Color.lerp(
+          Colors.white,
+          star.brightness > 0.7
+              ? const Color(0xFF88CCFF)
+              : const Color(0xFFFFFFCC),
+          0.3,
+        )!.withValues(alpha: brightness);
+      canvas.drawCircle(
         Offset(projectedX, projectedY),
-        Offset(projectedX - dx * 0.5, projectedY - dy * 0.5),
-        paint,
+        starSize * 0.8,
+        starPaint,
       );
-
-      // Brighter star point
-      paint.color = Colors.white.withValues(alpha: brightness);
-      canvas.drawCircle(Offset(projectedX, projectedY), starSize * 0.6, paint);
     }
   }
 
@@ -467,16 +439,148 @@ class _StarfieldPainter extends CustomPainter {
 class _ScanlinesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.black.withValues(alpha: 0.08);
+    final paint = Paint()..color = Colors.black.withValues(alpha: 0.06);
 
-    // Draw horizontal scanlines every 3 pixels for subtle CRT effect
-    for (double y = 0; y < size.height; y += 3) {
+    // Draw horizontal scanlines every 4 pixels for subtle CRT effect
+    for (double y = 0; y < size.height; y += 4) {
       canvas.drawRect(Rect.fromLTWH(0, y, size.width, 1), paint);
     }
   }
 
   @override
   bool shouldRepaint(_ScanlinesPainter oldDelegate) => false;
+}
+
+/// Mesh network painter - draws nodes and animated connecting lines
+class _MeshNetworkPainter extends CustomPainter {
+  final List<_MeshNode> nodes;
+  final double progress;
+  final double pageOffset;
+
+  _MeshNetworkPainter({
+    required this.nodes,
+    required this.progress,
+    required this.pageOffset,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final time = progress * math.pi * 2;
+
+    // Calculate animated positions for each node
+    final positions = <Offset>[];
+    final nodeColors = <Color>[];
+
+    for (final node in nodes) {
+      // Gentle floating motion
+      final floatX = math.sin(time * 0.5 + node.phase) * 15;
+      final floatY = math.cos(time * 0.4 + node.phase * 1.3) * 12;
+
+      final x = size.width * node.baseX + floatX - pageOffset * 20;
+      final y = size.height * node.baseY + floatY;
+
+      positions.add(Offset(x, y));
+      nodeColors.add(node.color);
+    }
+
+    // Draw mesh connections (lines between nearby nodes)
+    final connectionPaint = Paint()
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    // Connect nodes that are within range
+    const maxDistance = 280.0;
+
+    for (int i = 0; i < positions.length; i++) {
+      for (int j = i + 1; j < positions.length; j++) {
+        final p1 = positions[i];
+        final p2 = positions[j];
+        final dx = p2.dx - p1.dx;
+        final dy = p2.dy - p1.dy;
+        final distance = math.sqrt(dx * dx + dy * dy);
+
+        if (distance < maxDistance) {
+          // Fade based on distance
+          final distanceFade = 1.0 - (distance / maxDistance);
+
+          // Animated pulse along the connection
+          final pulsePhase = (time * 0.8 + i * 0.5 + j * 0.3) % (math.pi * 2);
+          final pulse = (math.sin(pulsePhase) * 0.5 + 0.5) * 0.4 + 0.2;
+
+          // Blend colors from both nodes
+          final blendedColor = Color.lerp(nodeColors[i], nodeColors[j], 0.5)!;
+
+          connectionPaint.color = blendedColor.withValues(
+            alpha: distanceFade * pulse * 0.5,
+          );
+          connectionPaint.strokeWidth = 1.5 + distanceFade * 1.0;
+
+          canvas.drawLine(p1, p2, connectionPaint);
+
+          // Draw animated "data packet" traveling along connection
+          final packetProgress = ((time * 0.3 + i * 0.7 + j * 0.4) % 1.0);
+          final packetX = p1.dx + dx * packetProgress;
+          final packetY = p1.dy + dy * packetProgress;
+
+          final packetPaint = Paint()
+            ..color = blendedColor.withValues(alpha: distanceFade * 0.6)
+            ..style = PaintingStyle.fill;
+
+          canvas.drawCircle(
+            Offset(packetX, packetY),
+            2.5 + distanceFade * 1.5,
+            packetPaint,
+          );
+        }
+      }
+    }
+
+    // Draw nodes on top
+    for (int i = 0; i < nodes.length; i++) {
+      final node = nodes[i];
+      final pos = positions[i];
+
+      // Pulsing glow
+      final pulse = 0.5 + math.sin(time * 1.5 + node.phase) * 0.3;
+
+      // Outer glow
+      final glowPaint = Paint()
+        ..color = node.color.withValues(alpha: pulse * 0.3)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+      canvas.drawCircle(pos, node.size * 0.6, glowPaint);
+
+      // Inner glow
+      final innerGlowPaint = Paint()
+        ..color = node.color.withValues(alpha: pulse * 0.5)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      canvas.drawCircle(pos, node.size * 0.4, innerGlowPaint);
+
+      // Draw icon using TextPainter for Icons
+      final iconPainter = TextPainter(
+        text: TextSpan(
+          text: String.fromCharCode(node.icon.codePoint),
+          style: TextStyle(
+            fontSize: node.size * 0.8,
+            fontFamily: node.icon.fontFamily,
+            package: node.icon.fontPackage,
+            color: node.color.withValues(alpha: pulse + 0.3),
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      iconPainter.layout();
+      iconPainter.paint(
+        canvas,
+        Offset(pos.dx - iconPainter.width / 2, pos.dy - iconPainter.height / 2),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_MeshNetworkPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.pageOffset != pageOffset;
+  }
 }
 
 /// Star data for starfield
@@ -494,23 +598,21 @@ class _Star {
   });
 }
 
-/// Bob data for sine wave icons
-class _BobData {
+/// Mesh node data
+class _MeshNode {
+  final double baseX; // Base X position (0.0 to 1.0)
+  final double baseY; // Base Y position (0.0 to 1.0)
   final IconData icon;
   final Color color;
   final double size;
-  final double phase; // Phase offset in radians
-  final double amplitude; // Movement amplitude as fraction of screen width
-  final double speed; // Animation speed multiplier
-  final double yOffset; // Vertical position as fraction of screen height
+  final double phase; // Animation phase offset
 
-  const _BobData({
+  const _MeshNode({
+    required this.baseX,
+    required this.baseY,
     required this.icon,
     required this.color,
     required this.size,
     required this.phase,
-    required this.amplitude,
-    required this.speed,
-    required this.yOffset,
   });
 }

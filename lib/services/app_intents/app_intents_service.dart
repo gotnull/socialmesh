@@ -16,6 +16,11 @@ class AppIntentsService {
   final Ref _ref;
   bool _isSetup = false;
 
+  // Deduplication: track recent message sends to prevent duplicate sends
+  // Key: "nodeNum:text", Value: timestamp of last send
+  final Map<String, DateTime> _recentSends = {};
+  static const _dedupeWindow = Duration(seconds: 3);
+
   AppIntentsService(this._ref);
 
   /// Initialize the App Intents handler
@@ -26,6 +31,24 @@ class AppIntentsService {
     _channel.setMethodCallHandler(_handleMethodCall);
     _isSetup = true;
     AppLogging.debug('AppIntentsService: Setup complete');
+  }
+
+  /// Check if this message was recently sent (to prevent duplicates)
+  bool _isDuplicateSend(String key) {
+    final lastSend = _recentSends[key];
+    if (lastSend == null) return false;
+
+    final elapsed = DateTime.now().difference(lastSend);
+    return elapsed < _dedupeWindow;
+  }
+
+  /// Mark a message as sent
+  void _markSent(String key) {
+    _recentSends[key] = DateTime.now();
+
+    // Clean up old entries
+    final cutoff = DateTime.now().subtract(_dedupeWindow * 2);
+    _recentSends.removeWhere((_, time) => time.isBefore(cutoff));
   }
 
   Future<dynamic> _handleMethodCall(MethodCall call) async {
@@ -96,6 +119,16 @@ class AppIntentsService {
       throw Exception('Missing message or nodeNum');
     }
 
+    // Deduplicate: prevent sending the same message twice in quick succession
+    final dedupeKey = 'dm:$nodeNum:$message';
+    if (_isDuplicateSend(dedupeKey)) {
+      AppLogging.debug(
+        'AppIntentsService: Skipping duplicate send to $nodeNum',
+      );
+      return {'sent': true, 'deduplicated': true};
+    }
+    _markSent(dedupeKey);
+
     final transport = _ref.read(transportProvider);
     if (!transport.isConnected) {
       throw Exception('Not connected to a node');
@@ -121,6 +154,16 @@ class AppIntentsService {
     if (message == null) {
       throw Exception('Missing message');
     }
+
+    // Deduplicate: prevent sending the same message twice in quick succession
+    final dedupeKey = 'ch:$channelIndex:$message';
+    if (_isDuplicateSend(dedupeKey)) {
+      AppLogging.debug(
+        'AppIntentsService: Skipping duplicate send to channel $channelIndex',
+      );
+      return {'sent': true, 'deduplicated': true};
+    }
+    _markSent(dedupeKey);
 
     final transport = _ref.read(transportProvider);
     if (!transport.isConnected) {
