@@ -56,10 +56,23 @@ class _GridWidgetCanvasState extends State<GridWidgetCanvas> {
   @override
   void didUpdateWidget(GridWidgetCanvas oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Clear drag state when schema changes (after a successful drop)
-    // This prevents stuck drag state
-    if (widget.schema != oldWidget.schema) {
-      _clearDragState();
+    // Only clear drag state if the element positions actually changed
+    // (indicating a successful drop), not just on selection changes
+    if (_draggingElementId != null) {
+      final oldElement = oldWidget.schema.elements
+          .cast<GridElement?>()
+          .firstWhere((e) => e?.id == _draggingElementId, orElse: () => null);
+      final newElement = widget.schema.elements.cast<GridElement?>().firstWhere(
+        (e) => e?.id == _draggingElementId,
+        orElse: () => null,
+      );
+      // Only clear if the dragged element's position actually changed
+      if (oldElement != null &&
+          newElement != null &&
+          (oldElement.row != newElement.row ||
+              oldElement.column != newElement.column)) {
+        _clearDragState();
+      }
     }
   }
 
@@ -77,14 +90,10 @@ class _GridWidgetCanvasState extends State<GridWidgetCanvas> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onTapOutside,
-      behavior: HitTestBehavior.opaque,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return _buildGrid(context, constraints);
-        },
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return _buildGrid(context, constraints);
+      },
     );
   }
 
@@ -203,6 +212,7 @@ class _GridWidgetCanvasState extends State<GridWidgetCanvas> {
 
         cells.add(
           Positioned(
+            key: ValueKey('empty_${row}_$col'),
             left: left,
             top: top,
             width: _cellWidth,
@@ -227,11 +237,16 @@ class _GridWidgetCanvasState extends State<GridWidgetCanvas> {
           'EmptyCell($row,$col) onWillAccept: element=${details.data} '
           '(${element.rowSpan}x${element.columnSpan}) -> canPlace=$canPlace',
         );
-        // Only update state if position actually changed (prevents blinking)
+        // Update preview position without triggering immediate rebuild
+        // Use post-frame callback to avoid interrupting drag gesture
         if (canPlace && (_previewRow != row || _previewCol != col)) {
-          setState(() {
-            _previewRow = row;
-            _previewCol = col;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _draggingElementId != null) {
+              setState(() {
+                _previewRow = row;
+                _previewCol = col;
+              });
+            }
           });
         }
         return canPlace;
@@ -318,6 +333,7 @@ class _GridWidgetCanvasState extends State<GridWidgetCanvas> {
       final isDragging = _draggingElementId == element.id;
 
       return Positioned(
+        key: ValueKey('element_${element.id}'),
         left: left,
         top: top,
         width: width,
@@ -439,10 +455,13 @@ class _GridWidgetCanvasState extends State<GridWidgetCanvas> {
               'size=${element.rowSpan}x${element.columnSpan}',
             );
             HapticFeedback.mediumImpact();
-            setState(() {
-              _draggingElementId = element.id;
-              _previewRow = element.row;
-              _previewCol = element.column;
+            // Set drag state directly without causing rebuild during gesture
+            _draggingElementId = element.id;
+            _previewRow = element.row;
+            _previewCol = element.column;
+            // Defer the actual setState to after the gesture is fully started
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) setState(() {});
             });
           },
           onDragEnd: (details) {

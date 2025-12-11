@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:socialmesh/core/logging.dart';
 
 import '../../providers/app_providers.dart';
+import 'automation_debug_service.dart';
 import 'automation_engine.dart';
 import 'automation_repository.dart';
 import 'models/automation.dart';
@@ -26,6 +27,7 @@ final automationRepositoryInitProvider = FutureProvider<AutomationRepository>((
 final automationEngineProvider = Provider<AutomationEngine>((ref) {
   final repository = ref.watch(automationRepositoryProvider);
   final iftttService = ref.watch(iftttServiceProvider);
+  final protocol = ref.watch(protocolServiceProvider);
 
   // Get the notification plugin instance
   final notifications = FlutterLocalNotificationsPlugin();
@@ -34,6 +36,29 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
     repository: repository,
     iftttService: iftttService,
     notifications: notifications,
+    onSendMessage: (nodeNum, message) async {
+      try {
+        await protocol.sendMessage(text: message, to: nodeNum);
+        return true;
+      } catch (e) {
+        AppLogging.automations('Failed to send message to node $nodeNum: $e');
+        return false;
+      }
+    },
+    onSendToChannel: (channelIndex, message) async {
+      try {
+        // Channel 0 is broadcast, send to all nodes
+        await protocol.sendMessage(
+          text: message,
+          to: 0xFFFFFFFF, // Broadcast address
+          channel: channelIndex,
+        );
+        return true;
+      } catch (e) {
+        AppLogging.automations('Failed to send to channel $channelIndex: $e');
+        return false;
+      }
+    },
   );
 
   ref.onDispose(() {
@@ -174,3 +199,16 @@ class AutomationStats {
     this.recentExecutions = const [],
   });
 }
+
+/// Provider for the automation debug service
+final automationDebugServiceProvider = Provider<AutomationDebugService>((ref) {
+  return AutomationDebugService();
+});
+
+/// Provider for debug evaluations (reactive)
+final automationDebugEvaluationsProvider = Provider<List<AutomationEvaluation>>(
+  (ref) {
+    final debugService = ref.watch(automationDebugServiceProvider);
+    return debugService.evaluations;
+  },
+);

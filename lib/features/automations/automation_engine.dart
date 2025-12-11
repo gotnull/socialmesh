@@ -44,6 +44,10 @@ class AutomationEngine {
   final Map<int, DateTime> _nodeLastHeard = {};
   final Map<int, (double, double)> _nodePositions = {};
 
+  // Hysteresis: track which battery low alerts have fired per node+automation
+  // Key: "nodeNum_automationId", Value: true if fired (reset when battery goes above threshold)
+  final Map<String, bool> _firedBatteryLowAlerts = {};
+
   // Throttling for repeated triggers
   final Map<String, DateTime> _lastTriggerTimes = {};
   static const _minTriggerInterval = Duration(minutes: 1);
@@ -79,7 +83,9 @@ class AutomationEngine {
     Automation automation,
     AutomationEvent event,
   ) async {
-    AppLogging.automations('AutomationEngine: Manual execution of "${automation.name}"');
+    AppLogging.automations(
+      'AutomationEngine: Manual execution of "${automation.name}"',
+    );
     await _executeAutomation(automation, event);
   }
 
@@ -124,31 +130,49 @@ class AutomationEngine {
     if (node.batteryLevel != null) {
       _nodeBatteryLevels[node.nodeNum] = node.batteryLevel!;
 
-      // Battery low check - check each automation's threshold individually
-      if (previousBattery != null && node.batteryLevel! < previousBattery) {
-        // Battery is decreasing - check if it crossed any threshold
-        final batteryLowAutomations = automations
-            .where((a) => a.trigger.type == TriggerType.batteryLow)
-            .toList();
+      // Battery low check with hysteresis - only fire on threshold CROSSING
+      final batteryLowAutomations = automations
+          .where((a) => a.trigger.type == TriggerType.batteryLow)
+          .toList();
 
-        for (final automation in batteryLowAutomations) {
-          final threshold = automation.trigger.batteryThreshold;
-          // Fire if previous was above threshold and current is at or below
-          if (previousBattery > threshold && node.batteryLevel! <= threshold) {
+      for (final automation in batteryLowAutomations) {
+        final threshold = automation.trigger.batteryThreshold;
+        final hysteresisKey = '${node.nodeNum}_${automation.id}';
+
+        // If this is the FIRST time we see this node's battery, initialize hysteresis state
+        // Don't fire on first sight - we don't know if it "crossed" or was already below
+        if (previousBattery == null) {
+          _firedBatteryLowAlerts[hysteresisKey] =
+              node.batteryLevel! <= threshold;
+          continue;
+        }
+
+        // Reset fired state when battery goes above threshold (with small buffer)
+        if (node.batteryLevel! > threshold + 5) {
+          if (_firedBatteryLowAlerts[hysteresisKey] == true) {
             AppLogging.automations(
-              '🔋 Battery crossed threshold $threshold: $previousBattery -> ${node.batteryLevel}',
+              '🔋 Battery recovered above $threshold+5: resetting hysteresis for ${automation.name}',
             );
-            await _processEvent(
-              AutomationEvent(
-                type: TriggerType.batteryLow,
-                nodeNum: node.nodeNum,
-                nodeName: node.displayName,
-                batteryLevel: node.batteryLevel,
-              ),
-            );
-            // Only fire once per node update (the _shouldTrigger will filter by node if needed)
-            break;
+            _firedBatteryLowAlerts[hysteresisKey] = false;
           }
+        }
+
+        // Fire only on CROSSING: previous was above threshold, now at or below
+        if (previousBattery > threshold &&
+            node.batteryLevel! <= threshold &&
+            _firedBatteryLowAlerts[hysteresisKey] != true) {
+          AppLogging.automations(
+            '🔋 Battery crossed threshold $threshold: $previousBattery -> ${node.batteryLevel} (firing ${automation.name})',
+          );
+          _firedBatteryLowAlerts[hysteresisKey] = true;
+          await _processEvent(
+            AutomationEvent(
+              type: TriggerType.batteryLow,
+              nodeNum: node.nodeNum,
+              nodeName: node.displayName,
+              batteryLevel: node.batteryLevel,
+            ),
+          );
         }
       }
 
@@ -256,7 +280,9 @@ class AutomationEngine {
         .where((a) => a.enabled && a.trigger.type == event.type)
         .toList();
 
-    AppLogging.automations('AutomationEngine: Processing ${event.type.name} event');
+    AppLogging.automations(
+      'AutomationEngine: Processing ${event.type.name} event',
+    );
     AppLogging.automations(
       '🤖 AutomationEngine: Found ${automations.length} matching automations',
     );
@@ -264,7 +290,9 @@ class AutomationEngine {
     for (final automation in automations) {
       AppLogging.automations('AutomationEngine: Checking "${automation.name}"');
       if (_shouldTrigger(automation, event)) {
-        AppLogging.automations('AutomationEngine: TRIGGERING "${automation.name}"');
+        AppLogging.automations(
+          'AutomationEngine: TRIGGERING "${automation.name}"',
+        );
         await _executeAutomation(automation, event);
       } else {
         AppLogging.automations(
@@ -300,7 +328,9 @@ class AutomationEngine {
       case TriggerType.batteryLow:
         if (event.batteryLevel == null ||
             event.batteryLevel! > trigger.batteryThreshold) {
-          AppLogging.automations('_shouldTrigger: Battery level not below threshold');
+          AppLogging.automations(
+            '_shouldTrigger: Battery level not below threshold',
+          );
           return false;
         }
         break;
@@ -424,7 +454,9 @@ class AutomationEngine {
       await _repository.recordTrigger(automation.id);
     } catch (e) {
       errorMessage = e.toString();
-      AppLogging.automations('AutomationEngine: Error executing automation: $e');
+      AppLogging.automations(
+        'AutomationEngine: Error executing automation: $e',
+      );
     }
 
     // Determine overall success (all actions succeeded and no error)
@@ -580,7 +612,9 @@ class AutomationEngine {
               soundFileName = await NotificationSoundService.instance
                   .prepareSoundFromRtttl(customSoundRtttl);
             } catch (e) {
-              AppLogging.automations('Failed to prepare notification sound: $e');
+              AppLogging.automations(
+                'Failed to prepare notification sound: $e',
+              );
             }
           }
 
@@ -621,6 +655,17 @@ class AutomationEngine {
               errorMessage: 'No webhook event name specified',
             );
           }
+
+          // Check if IFTTT is configured before attempting
+          if (!_iftttService.isActive) {
+            return ActionResult(
+              actionName: actionName,
+              success: false,
+              errorMessage:
+                  'IFTTT not configured - enable IFTTT and set webhook key in settings',
+            );
+          }
+
           // Build value1, value2, value3 from event data
           String? value1;
           String? value2;
@@ -660,7 +705,7 @@ class AutomationEngine {
             success: webhookSuccess,
             errorMessage: webhookSuccess
                 ? null
-                : 'Webhook request failed - check IFTTT key configuration',
+                : 'Webhook request failed - check network connection',
           );
 
         case ActionType.logEvent:
