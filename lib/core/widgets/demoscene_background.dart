@@ -178,6 +178,20 @@ class _DemosceneBackgroundState extends State<DemosceneBackground>
         // Base dark background
         Container(color: AppTheme.darkBackground),
 
+        // 3D Perspective floor at bottom (Lawnmower Man style!)
+        AnimatedBuilder(
+          animation: _mainController,
+          builder: (context, child) {
+            return CustomPaint(
+              size: size,
+              painter: _PerspectiveFloorPainter(
+                progress: _mainController.value,
+                pageOffset: widget.pageOffset,
+              ),
+            );
+          },
+        ),
+
         // Copper bars layer (constrained band)
         if (widget.showCopperBars)
           AnimatedBuilder(
@@ -329,6 +343,190 @@ class _CopperBarsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_CopperBarsPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.pageOffset != pageOffset;
+  }
+}
+
+/// 3D Perspective floor painter - Lawnmower Man / early 90s demo style
+/// Creates a scrolling grid floor with rotating turbine/gear element
+class _PerspectiveFloorPainter extends CustomPainter {
+  final double progress;
+  final double pageOffset;
+
+  _PerspectiveFloorPainter({required this.progress, required this.pageOffset});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final floorTop = size.height * 0.72; // Floor starts at 72% down
+    final floorHeight = size.height - floorTop;
+    final centerX = size.width / 2 - pageOffset * 10;
+    final horizon = floorTop;
+    final time = progress * math.pi * 2;
+
+    // Save canvas state for clipping
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(0, floorTop, size.width, floorHeight));
+
+    // Draw perspective grid
+    final gridPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    // Scrolling offset for forward motion effect
+    final scrollOffset = (progress * 8) % 1.0;
+
+    // Draw horizontal lines (receding into distance)
+    const horizontalLines = 12;
+    for (int i = 0; i <= horizontalLines; i++) {
+      // Perspective: lines closer together near horizon
+      final t = (i + scrollOffset) / horizontalLines;
+      final perspectiveT = math.pow(t, 2.2); // Non-linear for perspective
+      final y = horizon + perspectiveT * floorHeight;
+
+      // Fade based on distance (closer = brighter)
+      final brightness = t * 0.5;
+      final hue = (time * 0.1 + t * 0.3) % 1.0;
+
+      gridPaint.color = HSVColor.fromAHSV(
+        brightness,
+        hue * 360,
+        0.8,
+        1.0,
+      ).toColor();
+
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    // Draw vertical lines (converging to vanishing point)
+    const verticalLines = 16;
+    for (int i = -verticalLines ~/ 2; i <= verticalLines ~/ 2; i++) {
+      // Lines converge at center horizon
+      final xAtHorizon = centerX;
+      final xAtBottom = centerX + i * (size.width / verticalLines) * 1.5;
+
+      // Fade based on distance from center
+      final distFromCenter = (i.abs() / (verticalLines / 2));
+      final brightness = (1.0 - distFromCenter * 0.5) * 0.4;
+      final hue = (time * 0.15 + distFromCenter * 0.2) % 1.0;
+
+      gridPaint.color = HSVColor.fromAHSV(
+        brightness,
+        hue * 360,
+        0.7,
+        1.0,
+      ).toColor();
+
+      canvas.drawLine(
+        Offset(xAtHorizon, horizon),
+        Offset(xAtBottom, size.height),
+        gridPaint,
+      );
+    }
+
+    canvas.restore();
+
+    // Draw rotating 3D turbine/gear at the horizon
+    _drawTurbine(canvas, size, centerX, horizon, time);
+  }
+
+  void _drawTurbine(
+    Canvas canvas,
+    Size size,
+    double centerX,
+    double horizon,
+    double time,
+  ) {
+    final turbineY = horizon + 15;
+    final turbineRadius = size.width * 0.12;
+
+    // Rotation angle
+    final rotation = time * 1.5;
+
+    canvas.save();
+    canvas.translate(centerX, turbineY);
+    canvas.rotate(rotation);
+
+    // Draw gear teeth / turbine blades
+    const bladeCount = 8;
+    final bladePaint = Paint()..style = PaintingStyle.fill;
+
+    for (int i = 0; i < bladeCount; i++) {
+      final angle = (i / bladeCount) * math.pi * 2;
+
+      // Blade gradient based on angle for 3D effect
+      final depth = math.cos(angle + rotation * 0.5) * 0.5 + 0.5;
+      final brightness = 0.3 + depth * 0.4;
+
+      // Cycle through demoscene colors
+      final hue = ((i / bladeCount) + progress * 0.5) % 1.0;
+      bladePaint.color = HSVColor.fromAHSV(
+        brightness,
+        hue * 360,
+        0.8,
+        1.0,
+      ).toColor();
+
+      // Draw blade as a tapered shape
+      final innerRadius = turbineRadius * 0.3;
+      final outerRadius = turbineRadius;
+      final bladeWidth = math.pi / bladeCount * 0.7;
+
+      final path = Path();
+      path.moveTo(
+        math.cos(angle - bladeWidth * 0.3) * innerRadius,
+        math.sin(angle - bladeWidth * 0.3) * innerRadius,
+      );
+      path.lineTo(
+        math.cos(angle - bladeWidth) * outerRadius,
+        math.sin(angle - bladeWidth) * outerRadius,
+      );
+      path.lineTo(
+        math.cos(angle + bladeWidth) * outerRadius,
+        math.sin(angle + bladeWidth) * outerRadius,
+      );
+      path.lineTo(
+        math.cos(angle + bladeWidth * 0.3) * innerRadius,
+        math.sin(angle + bladeWidth * 0.3) * innerRadius,
+      );
+      path.close();
+
+      canvas.drawPath(path, bladePaint);
+    }
+
+    // Center hub with glow
+    final hubPaint = Paint()
+      ..color = AppTheme.primaryMagenta.withValues(alpha: 0.8)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    canvas.drawCircle(Offset.zero, turbineRadius * 0.25, hubPaint);
+
+    hubPaint
+      ..color = Colors.white.withValues(alpha: 0.9)
+      ..maskFilter = null;
+    canvas.drawCircle(Offset.zero, turbineRadius * 0.15, hubPaint);
+
+    // Inner detail ring
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = AppTheme.primaryMagenta.withValues(alpha: 0.6);
+    canvas.drawCircle(Offset.zero, turbineRadius * 0.5, ringPaint);
+
+    canvas.restore();
+
+    // Add glow effect behind turbine
+    final glowPaint = Paint()
+      ..color = AppTheme.primaryMagenta.withValues(alpha: 0.15)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
+    canvas.drawCircle(
+      Offset(centerX, turbineY),
+      turbineRadius * 1.2,
+      glowPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_PerspectiveFloorPainter oldDelegate) {
     return oldDelegate.progress != progress ||
         oldDelegate.pageOffset != pageOffset;
   }

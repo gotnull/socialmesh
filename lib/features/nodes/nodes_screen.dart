@@ -197,12 +197,17 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
   }
 
   void _showNodeDetails(BuildContext context, MeshNode node, bool isMyNode) {
-    AppBottomSheet.show(
-      context: context,
-      padding: EdgeInsets.zero,
-      child: _NodeDetailsSheet(node: node, isMyNode: isMyNode),
-    );
+    showNodeDetailsSheet(context, node, isMyNode);
   }
+}
+
+/// Shows the node details bottom sheet. Can be called from any screen.
+void showNodeDetailsSheet(BuildContext context, MeshNode node, bool isMyNode) {
+  AppBottomSheet.show(
+    context: context,
+    padding: EdgeInsets.zero,
+    child: NodeDetailsSheet(node: node, isMyNode: isMyNode),
+  );
 }
 
 class _NodeCard extends StatelessWidget {
@@ -651,11 +656,16 @@ class _NodeCard extends StatelessWidget {
   }
 }
 
-class _NodeDetailsSheet extends ConsumerWidget {
+/// Node details bottom sheet - can be used from any screen
+class NodeDetailsSheet extends ConsumerWidget {
   final MeshNode node;
   final bool isMyNode;
 
-  const _NodeDetailsSheet({required this.node, required this.isMyNode});
+  const NodeDetailsSheet({
+    super.key,
+    required this.node,
+    required this.isMyNode,
+  });
 
   Color _getAvatarColor() {
     if (node.avatarColor != null) {

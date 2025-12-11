@@ -20,6 +20,7 @@ import '../../services/messaging/offline_queue_service.dart';
 import '../../services/haptic_service.dart';
 import '../channels/channel_form_screen.dart';
 import '../settings/canned_responses_screen.dart';
+import '../nodes/nodes_screen.dart';
 
 /// Conversation type enum
 enum ConversationType { channel, directMessage }
@@ -479,6 +480,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         _searchFocusNode.requestFocus();
       }
     });
+  }
+
+  void _showNodeDetails() {
+    if (widget.type != ConversationType.directMessage ||
+        widget.nodeNum == null) {
+      return;
+    }
+    final nodes = ref.read(nodesProvider);
+    final node = nodes[widget.nodeNum];
+    if (node != null) {
+      showNodeDetailsSheet(context, node, false);
+    }
   }
 
   @override
@@ -953,60 +966,66 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               }
             },
           ),
-          title: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: widget.type == ConversationType.channel
-                      ? context.accentColor.withValues(alpha: 0.2)
-                      : widget.avatarColor != null
-                      ? Color(widget.avatarColor!)
-                      : AppTheme.graphPurple,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: widget.type == ConversationType.channel
-                      ? Icon(Icons.tag, color: context.accentColor, size: 18)
-                      : Text(
-                          widget.title.length >= 2
-                              ? widget.title.substring(0, 2)
-                              : widget.title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
+          title: GestureDetector(
+            onTap: widget.type == ConversationType.directMessage
+                ? _showNodeDetails
+                : null,
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: widget.type == ConversationType.channel
+                        ? context.accentColor.withValues(alpha: 0.2)
+                        : widget.avatarColor != null
+                        ? Color(widget.avatarColor!)
+                        : AppTheme.graphPurple,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: widget.type == ConversationType.channel
+                        ? Icon(Icons.tag, color: context.accentColor, size: 18)
+                        : Text(
+                            widget.title.length >= 2
+                                ? widget.title.substring(0, 2)
+                                : widget.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
                       ),
-                    ),
-                    Text(
-                      widget.type == ConversationType.channel
-                          ? 'Channel'
-                          : 'Direct Message',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textTertiary,
+                      Text(
+                        widget.type == ConversationType.channel
+                            ? 'Channel'
+                            : 'Direct Message',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textTertiary,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             IconButton(
@@ -1593,7 +1612,7 @@ class _MessageBubble extends StatelessWidget {
             ),
           Flexible(
             child: Container(
-              margin: EdgeInsets.only(right: 64, left: showSender ? 0 : 40),
+              margin: const EdgeInsets.only(right: 64),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: AppTheme.darkCard,
