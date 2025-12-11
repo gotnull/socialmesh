@@ -206,14 +206,17 @@ class MeshGlobeState extends State<MeshGlobe> {
     final name =
         node.shortName ?? node.longName ?? '!${node.nodeNum.toRadixString(16)}';
 
-    // Use Listener with PointerDown to capture taps before the parent
-    // Earth3D's GestureDetector can intercept them via onScaleStart.
-    // Listener receives pointer events directly without gesture arena competition.
+    // The parent Earth3D has a GestureDetector with onScaleStart that captures
+    // all gestures. To intercept taps on nodes, we need to use Listener which
+    // receives raw pointer events BEFORE the gesture arena processes them.
     return Listener(
       behavior: HitTestBehavior.opaque,
-      onPointerDown: (event) {
+      onPointerUp: (event) {
+        // Only trigger on short taps (not drags)
+        debugPrint(
+          '=== NODE POINTER UP: ${node.longName ?? node.shortName} ===',
+        );
         HapticFeedback.selectionClick();
-        debugPrint('Node tapped: ${node.longName ?? node.shortName}');
         widget.onNodeSelected?.call(node);
       },
       child: Container(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/mesh_globe.dart';
 import '../../core/widgets/node_info_card.dart';
+import '../../core/widgets/node_selector_sheet.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../messaging/messaging_screen.dart';
@@ -107,32 +108,50 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
             ),
           ),
 
-          // Node count badge - top left
+          // Node count badge - top left (tap to open node selector)
           Positioned(
             left: 16,
             top: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppTheme.darkCard.withAlpha(220),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppTheme.darkBorder),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.public, size: 14, color: context.accentColor),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${nodesList.length} nodes',
-                    style: const TextStyle(
-                      color: AppTheme.textPrimary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'JetBrainsMono',
+            child: GestureDetector(
+              onTap: () async {
+                final selection = await NodeSelectorSheet.show(
+                  context,
+                  title: 'Select Node',
+                  allowBroadcast: false,
+                );
+                if (selection != null && selection.nodeNum != null) {
+                  final node = nodes[selection.nodeNum];
+                  if (node != null && node.hasPosition) {
+                    _onNodeSelected(node);
+                  }
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkCard.withAlpha(220),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppTheme.darkBorder),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.public, size: 14, color: context.accentColor),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${nodesList.length} nodes',
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'JetBrainsMono',
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
