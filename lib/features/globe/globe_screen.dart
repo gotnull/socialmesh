@@ -47,10 +47,16 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
   }
 
   void _onNodeSelected(MeshNode node) {
-    setState(() {
-      _selectedNode = node;
-    });
+    // Rotate to the node first
     _globeKey.currentState?.rotateToNode(node);
+    // Show the info card after a brief delay to let the rotation start
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        setState(() {
+          _selectedNode = node;
+        });
+      }
+    });
   }
 
   @override
