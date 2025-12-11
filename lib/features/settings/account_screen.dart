@@ -19,19 +19,20 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     final authState = ref.watch(authStateProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Account'),
-      ),
+      appBar: AppBar(title: const Text('Account')),
       body: authState.when(
-        data: (user) => user != null
-            ? _SignedInView(user: user)
-            : const _SignedOutView(),
+        data: (user) =>
+            user != null ? _SignedInView(user: user) : const _SignedOutView(),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text('Error: $error'),
               const SizedBox(height: 16),
@@ -116,13 +117,16 @@ class _SignedOutView extends ConsumerWidget {
       builder: (context) => const _EmailSignInDialog(isCreateAccount: false),
     );
     if (result == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Signed in successfully!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Signed in successfully!')));
     }
   }
 
-  Future<void> _showCreateAccountDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showCreateAccountDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => const _EmailSignInDialog(isCreateAccount: true),
@@ -139,15 +143,15 @@ class _SignedOutView extends ConsumerWidget {
       final authService = ref.read(authServiceProvider);
       await authService.signInAnonymously();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Signed in as guest')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Signed in as guest')));
       }
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.message}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
       }
     }
   }
@@ -296,7 +300,8 @@ class _SignedInView extends ConsumerWidget {
   Future<void> _linkEmailAccount(BuildContext context, WidgetRef ref) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => const _EmailSignInDialog(isCreateAccount: true, isLinking: true),
+      builder: (context) =>
+          const _EmailSignInDialog(isCreateAccount: true, isLinking: true),
     );
     if (result == true && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -338,15 +343,15 @@ class _SignedInView extends ConsumerWidget {
         final authService = ref.read(authServiceProvider);
         await authService.updateDisplayName(result);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Display name updated')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Display name updated')));
         }
       } on FirebaseAuthException catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${e.message}')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
         }
       }
     }
@@ -385,9 +390,9 @@ class _SignedInView extends ConsumerWidget {
         }
       } on FirebaseAuthException catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${e.message}')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
         }
       }
     }
@@ -399,7 +404,9 @@ class _SignedInView extends ConsumerWidget {
       builder: (context) => AlertDialog(
         title: const Text('Sign Out'),
         content: user.isAnonymous
-            ? const Text('As a guest, signing out will lose any unsaved work. Continue?')
+            ? const Text(
+                'As a guest, signing out will lose any unsaved work. Continue?',
+              )
             : const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
@@ -449,15 +456,15 @@ class _SignedInView extends ConsumerWidget {
         final authService = ref.read(authServiceProvider);
         await authService.deleteAccount();
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Account deleted')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Account deleted')));
         }
       } on FirebaseAuthException catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${e.message}')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
         }
       }
     }

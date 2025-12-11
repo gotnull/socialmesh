@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/transport.dart' show DeviceConnectionState;
 import '../../providers/app_providers.dart';
+import '../../providers/auth_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../models/subscription_models.dart';
 import '../../services/storage/storage_service.dart';
@@ -970,10 +971,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               // Account Section
               _SectionHeader(title: 'ACCOUNT'),
-              _SettingsTile(
-                icon: Icons.account_circle,
-                title: 'Marketplace Account',
-                subtitle: 'Sign in to submit & manage widgets',
+              _AccountTile(
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const AccountScreen()),
@@ -1651,6 +1649,60 @@ class _PremiumFeatureTile extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Account tile showing current auth status
+class _AccountTile extends ConsumerWidget {
+  final VoidCallback? onTap;
+
+  const _AccountTile({this.onTap});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateProvider);
+
+    return authState.when(
+      data: (user) {
+        String subtitle;
+        IconData icon;
+        Color? iconColor;
+
+        if (user == null) {
+          subtitle = 'Sign in to submit & manage widgets';
+          icon = Icons.account_circle_outlined;
+          iconColor = AppTheme.textSecondary;
+        } else if (user.isAnonymous) {
+          subtitle = 'Guest account';
+          icon = Icons.person_outline;
+          iconColor = AppTheme.textSecondary;
+        } else {
+          subtitle = user.email ?? 'Signed in';
+          icon = Icons.account_circle;
+          iconColor = context.accentColor;
+        }
+
+        return _SettingsTile(
+          icon: icon,
+          iconColor: iconColor,
+          title: 'Marketplace Account',
+          subtitle: subtitle,
+          onTap: onTap,
+        );
+      },
+      loading: () => _SettingsTile(
+        icon: Icons.account_circle_outlined,
+        title: 'Marketplace Account',
+        subtitle: 'Loading...',
+        onTap: onTap,
+      ),
+      error: (error, stack) => _SettingsTile(
+        icon: Icons.account_circle_outlined,
+        title: 'Marketplace Account',
+        subtitle: 'Sign in to submit & manage widgets',
+        onTap: onTap,
       ),
     );
   }
