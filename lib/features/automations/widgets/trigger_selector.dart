@@ -125,72 +125,102 @@ class _TriggerSelectorState extends State<TriggerSelector> {
   Widget _buildTriggerConfig(BuildContext context) {
     switch (widget.trigger.type) {
       case TriggerType.batteryLow:
-        return _buildSliderConfig(
-          context,
-          label: 'Battery threshold',
-          value: widget.trigger.batteryThreshold.toDouble(),
-          min: 5,
-          max: 50,
-          suffix: '%',
-          onChanged: (value) {
-            widget.onChanged(
-              widget.trigger.copyWith(
-                config: {
-                  ...widget.trigger.config,
-                  'batteryThreshold': value.round(),
-                },
-              ),
-            );
-          },
+        return Column(
+          children: [
+            _buildSliderConfig(
+              context,
+              label: 'Battery threshold',
+              value: widget.trigger.batteryThreshold.toDouble(),
+              min: 5,
+              max: 50,
+              suffix: '%',
+              onChanged: (value) {
+                widget.onChanged(
+                  widget.trigger.copyWith(
+                    config: {
+                      ...widget.trigger.config,
+                      'batteryThreshold': value.round(),
+                    },
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+            _buildNodeFilterConfig(context),
+          ],
         );
+
+      case TriggerType.batteryFull:
+        return _buildNodeFilterConfig(context);
 
       case TriggerType.messageContains:
         return _buildKeywordConfig(context);
 
       case TriggerType.geofenceEnter:
       case TriggerType.geofenceExit:
-        return _buildGeofenceConfig(context);
+        return Column(
+          children: [
+            _buildGeofenceConfig(context),
+            const SizedBox(height: 8),
+            _buildNodeFilterConfig(context),
+          ],
+        );
 
       case TriggerType.nodeSilent:
-        return _buildSliderConfig(
-          context,
-          label: 'Silent duration',
-          value: widget.trigger.silentMinutes.toDouble(),
-          min: 5,
-          max: 120,
-          suffix: ' min',
-          divisions: 23,
-          onChanged: (value) {
-            widget.onChanged(
-              widget.trigger.copyWith(
-                config: {
-                  ...widget.trigger.config,
-                  'silentMinutes': value.round(),
-                },
-              ),
-            );
-          },
+        return Column(
+          children: [
+            _buildSliderConfig(
+              context,
+              label: 'Silent duration',
+              value: widget.trigger.silentMinutes.toDouble(),
+              min: 5,
+              max: 120,
+              suffix: ' min',
+              divisions: 23,
+              onChanged: (value) {
+                widget.onChanged(
+                  widget.trigger.copyWith(
+                    config: {
+                      ...widget.trigger.config,
+                      'silentMinutes': value.round(),
+                    },
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+            _buildNodeFilterConfig(context),
+          ],
         );
 
       case TriggerType.signalWeak:
-        return _buildSliderConfig(
-          context,
-          label: 'Signal threshold (SNR)',
-          value: widget.trigger.signalThreshold.toDouble(),
-          min: -20,
-          max: 0,
-          suffix: ' dB',
-          onChanged: (value) {
-            widget.onChanged(
-              widget.trigger.copyWith(
-                config: {
-                  ...widget.trigger.config,
-                  'signalThreshold': value.round(),
-                },
-              ),
-            );
-          },
+        return Column(
+          children: [
+            _buildSliderConfig(
+              context,
+              label: 'Signal threshold (SNR)',
+              value: widget.trigger.signalThreshold.toDouble(),
+              min: -20,
+              max: 0,
+              suffix: ' dB',
+              onChanged: (value) {
+                widget.onChanged(
+                  widget.trigger.copyWith(
+                    config: {
+                      ...widget.trigger.config,
+                      'signalThreshold': value.round(),
+                    },
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+            _buildNodeFilterConfig(context),
+          ],
         );
+
+      case TriggerType.positionChanged:
+        return _buildNodeFilterConfig(context);
 
       case TriggerType.nodeOnline:
       case TriggerType.nodeOffline:

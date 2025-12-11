@@ -348,17 +348,46 @@ class _CopperBarsPainter extends CustomPainter {
   }
 }
 
-/// 3D Perspective floor painter - Lawnmower Man / early 90s demo style
-/// Creates a scrolling grid floor with rotating turbine/gear element
+/// 3D Perspective terrain painter - Classic demoscene vector landscape
+/// Creates a scrolling polygonal terrain with varying heights flying over effect
 class _PerspectiveFloorPainter extends CustomPainter {
   final double progress;
   final double pageOffset;
+
+  // Pre-generated terrain heightmap (seeded for consistency)
+  static final List<List<double>> _heightMap = _generateHeightMap();
+
+  static List<List<double>> _generateHeightMap() {
+    final random = math.Random(42);
+    const gridX = 20;
+    const gridZ = 24;
+    final map = <List<double>>[];
+
+    for (int z = 0; z < gridZ; z++) {
+      final row = <double>[];
+      for (int x = 0; x < gridX; x++) {
+        // Base terrain with multiple frequencies for natural look
+        final nx = x / gridX;
+        final nz = z / gridZ;
+
+        // Multiple octaves of "noise" using sin waves
+        final height = math.sin(nx * math.pi * 3 + nz * 2) * 0.4 +
+            math.sin(nx * math.pi * 6 + nz * 4) * 0.2 +
+            math.sin(nz * math.pi * 5) * 0.3 +
+            random.nextDouble() * 0.3;
+
+        row.add(height);
+      }
+      map.add(row);
+    }
+    return map;
+  }
 
   _PerspectiveFloorPainter({required this.progress, required this.pageOffset});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final floorTop = size.height * 0.72; // Floor starts at 72% down
+    final floorTop = size.height * 0.65;
     final floorHeight = size.height - floorTop;
     final centerX = size.width / 2 - pageOffset * 10;
     final horizon = floorTop;
@@ -366,163 +395,136 @@ class _PerspectiveFloorPainter extends CustomPainter {
 
     // Save canvas state for clipping
     canvas.save();
-    canvas.clipRect(Rect.fromLTWH(0, floorTop, size.width, floorHeight));
+    canvas.clipRect(Rect.fromLTWH(0, floorTop - 20, size.width, floorHeight + 40));
 
-    // Draw perspective grid
-    final gridPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
+    // Scrolling offset for flying forward effect
+    final scrollZ = (progress * 6) % 1.0;
 
-    // Scrolling offset for forward motion effect
-    final scrollOffset = (progress * 8) % 1.0;
+    const gridX = 18;
+    const gridZ = 16;
+    final cellWidth = size.width * 1.4 / gridX;
 
-    // Draw horizontal lines (receding into distance)
-    const horizontalLines = 12;
-    for (int i = 0; i <= horizontalLines; i++) {
-      // Perspective: lines closer together near horizon
-      final t = (i + scrollOffset) / horizontalLines;
-      final perspectiveT = math.pow(t, 2.2); // Non-linear for perspective
-      final y = horizon + perspectiveT * floorHeight;
+    // Draw terrain from back to front (painter's algorithm)
+    for (int z = gridZ - 1; z >= 0; z--) {
+      for (int x = 0; x < gridX - 1; x++) {
+        // Get heights from heightmap with scrolling offset
+        final mapZ = ((z + (scrollZ * 6).floor()) % _heightMap.length);
+        final mapZ1 = ((z + 1 + (scrollZ * 6).floor()) % _heightMap.length);
+        final mapX = x % _heightMap[0].length;
+        final mapX1 = (x + 1) % _heightMap[0].length;
 
-      // Fade based on distance (closer = brighter)
-      final brightness = t * 0.5;
-      final hue = (time * 0.1 + t * 0.3) % 1.0;
+        // Animate heights subtly over time
+        final animOffset = math.sin(time * 0.3 + x * 0.2 + z * 0.15) * 0.15;
 
-      gridPaint.color = HSVColor.fromAHSV(
-        brightness,
-        hue * 360,
-        0.8,
-        1.0,
-      ).toColor();
+        final h00 = _heightMap[mapZ][mapX] + animOffset;
+        final h10 = _heightMap[mapZ][mapX1] + animOffset;
+        final h01 = _heightMap[mapZ1][mapX] + animOffset;
+        final h11 = _heightMap[mapZ1][mapX1] + animOffset;
 
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+        // Perspective projection
+        final zNear = (z + scrollZ % 1.0) / gridZ;
+        final zFar = (z + 1 + scrollZ % 1.0) / gridZ;
+
+        // Non-linear perspective (exponential for more dramatic effect)
+        final perspNear = math.pow(zNear, 1.8);
+        final perspFar = math.pow(zFar, 1.8);
+
+        // Y position (depth into screen)
+        final yNear = horizon + perspNear * floorHeight * 0.9;
+        final yFar = horizon + perspFar * floorHeight * 0.9;
+
+        // X spread (wider at bottom/near)
+        final spreadNear = 0.1 + perspNear * 1.2;
+        final spreadFar = 0.1 + perspFar * 1.2;
+
+        final xOffset = (x - gridX / 2) * cellWidth;
+        final xOffsetNext = (x + 1 - gridX / 2) * cellWidth;
+
+        // Calculate quad vertices with height offset
+        final heightScale = floorHeight * 0.25;
+        final p00 = Offset(
+          centerX + xOffset * spreadNear,
+          yNear - h00 * heightScale * (1 - perspNear),
+        );
+        final p10 = Offset(
+          centerX + xOffsetNext * spreadNear,
+          yNear - h10 * heightScale * (1 - perspNear),
+        );
+        final p01 = Offset(
+          centerX + xOffset * spreadFar,
+          yFar - h01 * heightScale * (1 - perspFar),
+        );
+        final p11 = Offset(
+          centerX + xOffsetNext * spreadFar,
+          yFar - h11 * heightScale * (1 - perspFar),
+        );
+
+        // Calculate face normal for shading (simplified - based on average height)
+        final avgHeight = (h00 + h10 + h01 + h11) / 4;
+        final heightDiff = ((h00 + h10) - (h01 + h11)) / 2; // Forward slope
+
+        // Demoscene color palette based on height and position
+        final hue = ((x / gridX * 0.3 + z / gridZ * 0.2 + progress * 0.2 + avgHeight * 0.2) % 1.0) * 360;
+
+        // Brightness based on depth and slope (simulate lighting from above)
+        final depthFade = 1.0 - perspNear * 0.7;
+        final slopeBrightness = 0.3 + (heightDiff + 0.5).clamp(0.0, 1.0) * 0.4;
+        final brightness = depthFade * slopeBrightness;
+
+        // Fill color with demoscene palette
+        final fillColor = HSVColor.fromAHSV(
+          brightness.clamp(0.1, 0.8),
+          hue,
+          0.75,
+          1.0,
+        ).toColor();
+
+        // Draw filled quad
+        final fillPaint = Paint()
+          ..style = PaintingStyle.fill
+          ..color = fillColor;
+
+        final quadPath = Path()
+          ..moveTo(p01.dx, p01.dy) // Start far left
+          ..lineTo(p11.dx, p11.dy) // Far right
+          ..lineTo(p10.dx, p10.dy) // Near right
+          ..lineTo(p00.dx, p00.dy) // Near left
+          ..close();
+
+        canvas.drawPath(quadPath, fillPaint);
+
+        // Draw edge lines for vector look
+        final edgePaint = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.8
+          ..color = fillColor.withValues(alpha: brightness * 0.9 + 0.2);
+
+        // Only draw visible edges (near and right edges, occasionally top)
+        canvas.drawLine(p00, p10, edgePaint); // Near edge
+        if (x == gridX - 2) {
+          canvas.drawLine(p10, p11, edgePaint); // Right edge
+        }
+      }
     }
 
-    // Draw vertical lines (converging to vanishing point)
-    const verticalLines = 16;
-    for (int i = -verticalLines ~/ 2; i <= verticalLines ~/ 2; i++) {
-      // Lines converge at center horizon
-      final xAtHorizon = centerX;
-      final xAtBottom = centerX + i * (size.width / verticalLines) * 1.5;
-
-      // Fade based on distance from center
-      final distFromCenter = (i.abs() / (verticalLines / 2));
-      final brightness = (1.0 - distFromCenter * 0.5) * 0.4;
-      final hue = (time * 0.15 + distFromCenter * 0.2) % 1.0;
-
-      gridPaint.color = HSVColor.fromAHSV(
-        brightness,
-        hue * 360,
-        0.7,
-        1.0,
-      ).toColor();
-
-      canvas.drawLine(
-        Offset(xAtHorizon, horizon),
-        Offset(xAtBottom, size.height),
-        gridPaint,
+    // Draw horizon glow
+    final horizonGlowPaint = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(0, horizon - 30),
+        Offset(0, horizon + 20),
+        [
+          AppTheme.primaryMagenta.withValues(alpha: 0.0),
+          AppTheme.primaryMagenta.withValues(alpha: 0.3),
+          AppTheme.primaryMagenta.withValues(alpha: 0.0),
+        ],
+        [0.0, 0.5, 1.0],
       );
-    }
-
-    canvas.restore();
-
-    // Draw rotating 3D turbine/gear at the horizon
-    _drawTurbine(canvas, size, centerX, horizon, time);
-  }
-
-  void _drawTurbine(
-    Canvas canvas,
-    Size size,
-    double centerX,
-    double horizon,
-    double time,
-  ) {
-    final turbineY = horizon + 15;
-    final turbineRadius = size.width * 0.12;
-
-    // Rotation angle
-    final rotation = time * 1.5;
-
-    canvas.save();
-    canvas.translate(centerX, turbineY);
-    canvas.rotate(rotation);
-
-    // Draw gear teeth / turbine blades
-    const bladeCount = 8;
-    final bladePaint = Paint()..style = PaintingStyle.fill;
-
-    for (int i = 0; i < bladeCount; i++) {
-      final angle = (i / bladeCount) * math.pi * 2;
-
-      // Blade gradient based on angle for 3D effect
-      final depth = math.cos(angle + rotation * 0.5) * 0.5 + 0.5;
-      final brightness = 0.3 + depth * 0.4;
-
-      // Cycle through demoscene colors
-      final hue = ((i / bladeCount) + progress * 0.5) % 1.0;
-      bladePaint.color = HSVColor.fromAHSV(
-        brightness,
-        hue * 360,
-        0.8,
-        1.0,
-      ).toColor();
-
-      // Draw blade as a tapered shape
-      final innerRadius = turbineRadius * 0.3;
-      final outerRadius = turbineRadius;
-      final bladeWidth = math.pi / bladeCount * 0.7;
-
-      final path = Path();
-      path.moveTo(
-        math.cos(angle - bladeWidth * 0.3) * innerRadius,
-        math.sin(angle - bladeWidth * 0.3) * innerRadius,
-      );
-      path.lineTo(
-        math.cos(angle - bladeWidth) * outerRadius,
-        math.sin(angle - bladeWidth) * outerRadius,
-      );
-      path.lineTo(
-        math.cos(angle + bladeWidth) * outerRadius,
-        math.sin(angle + bladeWidth) * outerRadius,
-      );
-      path.lineTo(
-        math.cos(angle + bladeWidth * 0.3) * innerRadius,
-        math.sin(angle + bladeWidth * 0.3) * innerRadius,
-      );
-      path.close();
-
-      canvas.drawPath(path, bladePaint);
-    }
-
-    // Center hub with glow
-    final hubPaint = Paint()
-      ..color = AppTheme.primaryMagenta.withValues(alpha: 0.8)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-    canvas.drawCircle(Offset.zero, turbineRadius * 0.25, hubPaint);
-
-    hubPaint
-      ..color = Colors.white.withValues(alpha: 0.9)
-      ..maskFilter = null;
-    canvas.drawCircle(Offset.zero, turbineRadius * 0.15, hubPaint);
-
-    // Inner detail ring
-    final ringPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..color = AppTheme.primaryMagenta.withValues(alpha: 0.6);
-    canvas.drawCircle(Offset.zero, turbineRadius * 0.5, ringPaint);
-
-    canvas.restore();
-
-    // Add glow effect behind turbine
-    final glowPaint = Paint()
-      ..color = AppTheme.primaryMagenta.withValues(alpha: 0.15)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
-    canvas.drawCircle(
-      Offset(centerX, turbineY),
-      turbineRadius * 1.2,
-      glowPaint,
+    canvas.drawRect(
+      Rect.fromLTWH(0, horizon - 30, size.width, 50),
+      horizonGlowPaint,
     );
+
+    canvas.restore();
   }
 
   @override
