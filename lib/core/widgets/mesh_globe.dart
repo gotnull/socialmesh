@@ -73,10 +73,10 @@ class MeshGlobeState extends State<MeshGlobe> {
   bool _isInitialized = false;
   bool _hasError = false;
 
-  // Globe parameters
+  // Globe parameters - COBE/Stripe-like sizing
   static const double _globeRadius = 2.0;
-  static const double _markerSize = 0.08;
-  static const double _markerHeight = 0.15;
+  static const double _markerRadius = 0.08; // Glowing dot markers
+  static const double _markerGlowRadius = 0.15; // Outer glow
 
   // Rotation state
   double _phi = 0.0;
@@ -227,18 +227,28 @@ class MeshGlobeState extends State<MeshGlobe> {
   }
 
   void _createGlobeSphere() {
-    // Create the main globe sphere
+    // Create the main globe sphere - darker, more contrast
     final geometry = three.SphereGeometry(_globeRadius, 64, 64);
 
     final material = three.MeshPhongMaterial.fromMap({
-      'color': widget.baseColor.toARGB32() & 0xFFFFFF,
-      'transparent': true,
-      'opacity': 0.95,
-      'shininess': 5,
+      'color': 0x0a0a1a, // Very dark blue-black
+      'transparent': false,
+      'shininess': 2,
     });
 
     final sphere = three.Mesh(geometry, material);
     _globeGroup!.add(sphere);
+
+    // Add subtle rim lighting effect with second sphere
+    final rimGeometry = three.SphereGeometry(_globeRadius * 1.002, 64, 64);
+    final rimMaterial = three.MeshBasicMaterial.fromMap({
+      'color': widget.markerColor.toARGB32() & 0xFFFFFF,
+      'transparent': true,
+      'opacity': 0.03,
+      'side': three.BackSide,
+    });
+    final rimSphere = three.Mesh(rimGeometry, rimMaterial);
+    _globeGroup!.add(rimSphere);
   }
 
   void _createDotPattern() {
@@ -246,9 +256,14 @@ class MeshGlobeState extends State<MeshGlobe> {
     // Similar to COBE's approach for uniform sphere distribution
     _dotsGroup = three.Group();
 
-    final dotGeometry = three.SphereGeometry(0.015, 6, 6);
+    final dotGeometry = three.SphereGeometry(0.018, 8, 8);
     final dotMaterial = three.MeshBasicMaterial.fromMap({
-      'color': widget.dotColor.toARGB32() & 0xFFFFFF,
+      'color': 0x3a3a5a, // Brighter dots
+    });
+
+    // Dim dot for ocean areas
+    final oceanDotMaterial = three.MeshBasicMaterial.fromMap({
+      'color': 0x1a1a2a, // Very dim for ocean
     });
 
     // Golden angle in radians (pi * (3 - sqrt(5)))
@@ -267,17 +282,18 @@ class MeshGlobeState extends State<MeshGlobe> {
       final lat = math.asin(y) * 180 / math.pi;
       final lon = math.atan2(z, x) * 180 / math.pi;
 
-      // Simple land mask - show dots for major landmasses
-      // This is a simplified approximation
-      if (_isLand(lat, lon)) {
-        final dot = three.Mesh(dotGeometry, dotMaterial);
-        dot.position.setValues(
-          x * (_globeRadius + 0.01),
-          y * (_globeRadius + 0.01),
-          z * (_globeRadius + 0.01),
-        );
-        _dotsGroup!.add(dot);
-      }
+      // Show all dots but land dots are brighter
+      final isOnLand = _isLand(lat, lon);
+      final dot = three.Mesh(
+        dotGeometry,
+        isOnLand ? dotMaterial : oceanDotMaterial,
+      );
+      dot.position.setValues(
+        x * (_globeRadius + 0.01),
+        y * (_globeRadius + 0.01),
+        z * (_globeRadius + 0.01),
+      );
+      _dotsGroup!.add(dot);
     }
 
     _globeGroup!.add(_dotsGroup!);
@@ -353,52 +369,46 @@ class MeshGlobeState extends State<MeshGlobe> {
   }
 
   void _createMarker(MeshNode node) {
-    // Convert lat/long to 3D position on sphere
+    // Convert lat/long to 3D position on sphere surface
     final pos = _latLongToPosition(node.latitude!, node.longitude!);
 
-    // Create marker pin
-    final pinGeometry = three.CylinderGeometry(
-      _markerSize * 0.3, // top radius
-      _markerSize * 0.1, // bottom radius
-      _markerHeight,
-      8,
-    );
+    // Stripe/COBE style: glowing dot marker (no pins)
+    final color =
+        (node.avatarColor ?? widget.markerColor.toARGB32()) & 0xFFFFFF;
 
-    final color = (node.avatarColor ?? 0xFF42A5F5) & 0xFFFFFF;
-    final pinMaterial = three.MeshPhongMaterial.fromMap({
-      'color': color,
-      'emissive': node.isOnline ? (color & 0x333333) : 0x000000,
-    });
-
-    final pin = three.Mesh(pinGeometry, pinMaterial);
-
-    // Create head (sphere on top)
-    final headGeometry = three.SphereGeometry(_markerSize * 0.5, 12, 12);
-    final headMaterial = three.MeshPhongMaterial.fromMap({
-      'color': color,
-      'emissive': node.isOnline ? (color & 0x444444) : 0x000000,
-    });
-
-    final head = three.Mesh(headGeometry, headMaterial);
-    head.position.y = _markerHeight / 2 + _markerSize * 0.3;
-
-    // Create group for the marker
+    // Create glowing marker group
     final markerGroup = three.Group();
-    markerGroup.add(pin);
-    markerGroup.add(head);
 
-    // Position on globe surface
-    markerGroup.position.setFrom(pos);
+    // Outer glow (larger, semi-transparent)
+    final glowGeometry = three.SphereGeometry(_markerGlowRadius, 16, 16);
+    final glowMaterial = three.MeshBasicMaterial.fromMap({
+      'color': color,
+      'transparent': true,
+      'opacity': node.isOnline ? 0.4 : 0.2,
+    });
+    final glow = three.Mesh(glowGeometry, glowMaterial);
+    markerGroup.add(glow);
 
-    // Orient marker to point outward from globe center
-    markerGroup.lookAt(three.Vector3(0, 0, 0));
-    markerGroup.rotateX(math.pi / 2);
+    // Inner core (smaller, bright)
+    final coreGeometry = three.SphereGeometry(_markerRadius, 16, 16);
+    final coreMaterial = three.MeshBasicMaterial.fromMap({
+      'color': node.isOnline ? 0xFFFFFF : color, // White core when online
+      'transparent': false,
+    });
+    final core = three.Mesh(coreGeometry, coreMaterial);
+    markerGroup.add(core);
+
+    // Position marker slightly above globe surface
+    final surfacePos = pos.clone();
+    surfacePos.normalize();
+    surfacePos.scale(_globeRadius + 0.02);
+    markerGroup.position.setFrom(surfacePos);
 
     _markersGroup!.add(markerGroup);
 
-    // Store for raycasting
+    // Store for raycasting - use the glow sphere for easier tapping
     _markerMeshes.add(
-      _MarkerMeshData(node: node, mesh: head, group: markerGroup),
+      _MarkerMeshData(node: node, mesh: glow, group: markerGroup),
     );
   }
 
@@ -422,12 +432,12 @@ class MeshGlobeState extends State<MeshGlobe> {
   }
 
   void _createConnection(MeshNode from, MeshNode to) {
-    // Get 3D positions
+    // Get 3D positions on globe surface
     final fromPos = _latLongToPosition(from.latitude!, from.longitude!);
     final toPos = _latLongToPosition(to.latitude!, to.longitude!);
 
-    // Create arc curve between points
-    final points = _createArcPoints(fromPos, toPos, 32);
+    // Create arc curve between points - more segments for smoother curve
+    final points = _createArcPoints(fromPos, toPos, 64);
 
     final geometry = three.BufferGeometry();
     final positions = <double>[];
@@ -439,14 +449,25 @@ class MeshGlobeState extends State<MeshGlobe> {
       three.Float32BufferAttribute.fromList(positions, 3),
     );
 
+    // Brighter, more visible connection line
     final material = three.LineBasicMaterial.fromMap({
       'color': widget.connectionColor.toARGB32() & 0xFFFFFF,
       'transparent': true,
-      'opacity': 0.6,
+      'opacity': 0.8,
+      'linewidth': 2.0, // Note: may not work on all platforms
     });
 
     final line = three.Line(geometry, material);
     _connectionsGroup!.add(line);
+
+    // Add a second thicker glow line for visibility
+    final glowMaterial = three.LineBasicMaterial.fromMap({
+      'color': widget.connectionColor.toARGB32() & 0xFFFFFF,
+      'transparent': true,
+      'opacity': 0.3,
+    });
+    final glowLine = three.Line(geometry.clone(), glowMaterial);
+    _connectionsGroup!.add(glowLine);
   }
 
   List<three.Vector3> _createArcPoints(
