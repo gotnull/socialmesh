@@ -1,8 +1,8 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/mesh_globe.dart';
+import '../../core/widgets/node_info_card.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 
@@ -19,7 +19,7 @@ class GlobeScreen extends ConsumerStatefulWidget {
 
 class _GlobeScreenState extends ConsumerState<GlobeScreen> {
   final GlobalKey<MeshGlobeState> _globeKey = GlobalKey();
-  GlobeNodeMarker? _selectedNode;
+  MeshNode? _selectedNode;
   bool _showConnections = true;
 
   @override
@@ -37,77 +37,24 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
     final nodes = ref.read(nodesProvider);
     final node = nodes[nodeNum];
     if (node != null && node.hasPosition) {
-      final marker = GlobeNodeMarker.fromNode(node);
-      _globeKey.currentState?.rotateToNode(marker);
+      _globeKey.currentState?.rotateToNode(node);
       setState(() {
-        _selectedNode = marker;
+        _selectedNode = node;
       });
     }
   }
 
-  List<GlobeNodeMarker> _getMarkers(Map<int, MeshNode> nodes) {
-    return nodes.values
-        .where((node) => node.hasPosition)
-        .map((node) => GlobeNodeMarker.fromNode(node))
-        .toList();
-  }
-
-  List<GlobeConnection> _getConnections(List<GlobeNodeMarker> markers) {
-    if (!_showConnections || markers.length < 2) return [];
-
-    // Create connections between all nodes
-    // In a real implementation, this would be based on actual mesh connections
-    final connections = <GlobeConnection>[];
-
-    for (int i = 0; i < markers.length - 1; i++) {
-      for (int j = i + 1; j < markers.length; j++) {
-        final distance = _calculateDistance(
-          markers[i].latitude,
-          markers[i].longitude,
-          markers[j].latitude,
-          markers[j].longitude,
-        );
-        connections.add(
-          GlobeConnection(from: markers[i], to: markers[j], distance: distance),
-        );
-      }
-    }
-
-    return connections;
-  }
-
-  double _calculateDistance(
-    double lat1,
-    double lon1,
-    double lat2,
-    double lon2,
-  ) {
-    // Haversine formula for distance in km
-    const earthRadius = 6371.0;
-    final dLat = (lat2 - lat1) * math.pi / 180;
-    final dLon = (lon2 - lon1) * math.pi / 180;
-    final a =
-        math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(lat1 * math.pi / 180) *
-            math.cos(lat2 * math.pi / 180) *
-            math.sin(dLon / 2) *
-            math.sin(dLon / 2);
-    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-    return earthRadius * c;
-  }
-
-  void _onNodeSelected(GlobeNodeMarker marker) {
+  void _onNodeSelected(MeshNode node) {
     setState(() {
-      _selectedNode = marker;
+      _selectedNode = node;
     });
-    _globeKey.currentState?.rotateToNode(marker);
+    _globeKey.currentState?.rotateToNode(node);
   }
 
   @override
   Widget build(BuildContext context) {
     final nodes = ref.watch(nodesProvider);
-    final markers = _getMarkers(nodes);
-    final connections = _getConnections(markers);
+    final nodesList = nodes.values.where((n) => n.hasPosition).toList();
     final myNodeNum = ref.watch(myNodeNumProvider);
 
     return Scaffold(
@@ -146,12 +93,12 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
       ),
       body: Stack(
         children: [
-          // Globe - needs to fill the entire space
+          // Globe
           Positioned.fill(
             child: MeshGlobe(
               key: _globeKey,
-              markers: markers,
-              connections: connections,
+              nodes: nodesList,
+              showConnections: _showConnections,
               onNodeSelected: _onNodeSelected,
               autoRotateSpeed: _selectedNode == null ? 0.2 : 0.0,
               baseColor: const Color(0xFF16213e),
@@ -186,7 +133,7 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '${markers.length} nodes',
+                          '${nodesList.length} nodes',
                           style: const TextStyle(
                             color: AppTheme.textPrimary,
                             fontWeight: FontWeight.w600,
@@ -200,15 +147,16 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
                   Expanded(
                     child: ListView.builder(
                       padding: const EdgeInsets.symmetric(vertical: 4),
-                      itemCount: markers.length,
+                      itemCount: nodesList.length,
                       itemBuilder: (context, index) {
-                        final marker = markers[index];
+                        final node = nodesList[index];
                         final isSelected =
-                            _selectedNode?.nodeNum == marker.nodeNum;
-                        final isMyNode = marker.nodeNum == myNodeNum;
+                            _selectedNode?.nodeNum == node.nodeNum;
+                        final isMyNode = node.nodeNum == myNodeNum;
+                        final nodeColor = Color(node.avatarColor ?? 0xFF42A5F5);
 
                         return InkWell(
-                          onTap: () => _onNodeSelected(marker),
+                          onTap: () => _onNodeSelected(node),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -223,14 +171,12 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
                                   width: 8,
                                   height: 8,
                                   decoration: BoxDecoration(
-                                    color: marker.color,
+                                    color: nodeColor,
                                     shape: BoxShape.circle,
-                                    boxShadow: marker.isOnline
+                                    boxShadow: node.isOnline
                                         ? [
                                             BoxShadow(
-                                              color: marker.color.withAlpha(
-                                                100,
-                                              ),
+                                              color: nodeColor.withAlpha(100),
                                               blurRadius: 4,
                                               spreadRadius: 1,
                                             ),
@@ -241,7 +187,7 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    marker.name,
+                                    node.displayName,
                                     style: TextStyle(
                                       color: isSelected
                                           ? context.accentColor
@@ -273,91 +219,20 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
             ),
           ),
 
-          // Selected node info panel
+          // Selected node info panel - using shared NodeInfoCard in compact mode
           if (_selectedNode != null)
             Positioned(
               right: 16,
               bottom: 16,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.darkCard.withAlpha(230),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: context.accentColor.withAlpha(100)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: _selectedNode!.color,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _selectedNode!.name,
-                          style: TextStyle(
-                            color: context.accentColor,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'JetBrainsMono',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Lat: ${_selectedNode!.latitude.toStringAsFixed(4)}°',
-                      style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 12,
-                        fontFamily: 'JetBrainsMono',
-                      ),
-                    ),
-                    Text(
-                      'Lon: ${_selectedNode!.longitude.toStringAsFixed(4)}°',
-                      style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 12,
-                        fontFamily: 'JetBrainsMono',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _selectedNode!.isOnline ? Icons.wifi : Icons.wifi_off,
-                          size: 14,
-                          color: _selectedNode!.isOnline
-                              ? AppTheme.successGreen
-                              : AppTheme.textTertiary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _selectedNode!.isOnline ? 'Online' : 'Offline',
-                          style: TextStyle(
-                            color: _selectedNode!.isOnline
-                                ? AppTheme.successGreen
-                                : AppTheme.textTertiary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              child: NodeInfoCard(
+                node: _selectedNode!,
+                isMyNode: _selectedNode!.nodeNum == myNodeNum,
+                compact: true,
               ),
             ),
 
           // Empty state
-          if (markers.isEmpty)
+          if (nodesList.isEmpty)
             Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,

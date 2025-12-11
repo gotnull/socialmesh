@@ -5,56 +5,17 @@ import 'package:three_js/three_js.dart' as three;
 import '../../models/mesh_models.dart';
 import '../theme.dart';
 
-/// Data for a node marker on the globe
-class GlobeNodeMarker {
-  final int nodeNum;
-  final String name;
-  final double latitude;
-  final double longitude;
-  final Color color;
-  final bool isOnline;
-
-  const GlobeNodeMarker({
-    required this.nodeNum,
-    required this.name,
-    required this.latitude,
-    required this.longitude,
-    required this.color,
-    this.isOnline = true,
-  });
-
-  factory GlobeNodeMarker.fromNode(MeshNode node) {
-    return GlobeNodeMarker(
-      nodeNum: node.nodeNum,
-      name: node.displayName,
-      latitude: node.latitude ?? 0,
-      longitude: node.longitude ?? 0,
-      color: Color(node.avatarColor ?? 0xFF42A5F5),
-      isOnline: node.isOnline,
-    );
-  }
-}
-
-/// Connection line between two nodes
-class GlobeConnection {
-  final GlobeNodeMarker from;
-  final GlobeNodeMarker to;
-  final double? distance; // in km
-
-  const GlobeConnection({required this.from, required this.to, this.distance});
-}
-
 /// 3D Interactive Globe widget showing mesh node positions
 /// Inspired by Stripe's globe and COBE library
 class MeshGlobe extends StatefulWidget {
-  /// List of node markers to display
-  final List<GlobeNodeMarker> markers;
+  /// List of nodes to display (must have position data)
+  final List<MeshNode> nodes;
 
-  /// List of connections between nodes
-  final List<GlobeConnection> connections;
+  /// Whether to show connection lines between nodes
+  final bool showConnections;
 
-  /// Called when a node marker is tapped
-  final void Function(GlobeNodeMarker marker)? onNodeSelected;
+  /// Called when a node is tapped
+  final void Function(MeshNode node)? onNodeSelected;
 
   /// Auto-rotate speed (0 to disable)
   final double autoRotateSpeed;
@@ -88,8 +49,8 @@ class MeshGlobe extends StatefulWidget {
 
   const MeshGlobe({
     super.key,
-    this.markers = const [],
-    this.connections = const [],
+    this.nodes = const [],
+    this.showConnections = true,
     this.onNodeSelected,
     this.autoRotateSpeed = 0.2,
     this.enabled = true,
@@ -163,8 +124,8 @@ class MeshGlobeState extends State<MeshGlobe> {
 
     // Update markers if changed
     if (_isInitialized &&
-        (widget.markers != oldWidget.markers ||
-            widget.connections != oldWidget.connections)) {
+        (widget.nodes != oldWidget.nodes ||
+            widget.showConnections != oldWidget.showConnections)) {
       _updateMarkers();
       _updateConnections();
     }
@@ -383,15 +344,17 @@ class MeshGlobeState extends State<MeshGlobe> {
     }
     _markerMeshes.clear();
 
-    // Create new markers
-    for (final marker in widget.markers) {
-      _createMarker(marker);
+    // Create new markers for nodes with position data
+    for (final node in widget.nodes) {
+      if (node.hasPosition) {
+        _createMarker(node);
+      }
     }
   }
 
-  void _createMarker(GlobeNodeMarker marker) {
+  void _createMarker(MeshNode node) {
     // Convert lat/long to 3D position on sphere
-    final pos = _latLongToPosition(marker.latitude, marker.longitude);
+    final pos = _latLongToPosition(node.latitude!, node.longitude!);
 
     // Create marker pin
     final pinGeometry = three.CylinderGeometry(
@@ -401,10 +364,10 @@ class MeshGlobeState extends State<MeshGlobe> {
       8,
     );
 
-    final color = marker.color.toARGB32() & 0xFFFFFF;
+    final color = (node.avatarColor ?? 0xFF42A5F5) & 0xFFFFFF;
     final pinMaterial = three.MeshPhongMaterial.fromMap({
       'color': color,
-      'emissive': marker.isOnline ? (color & 0x333333) : 0x000000,
+      'emissive': node.isOnline ? (color & 0x333333) : 0x000000,
     });
 
     final pin = three.Mesh(pinGeometry, pinMaterial);
@@ -413,7 +376,7 @@ class MeshGlobeState extends State<MeshGlobe> {
     final headGeometry = three.SphereGeometry(_markerSize * 0.5, 12, 12);
     final headMaterial = three.MeshPhongMaterial.fromMap({
       'color': color,
-      'emissive': marker.isOnline ? (color & 0x444444) : 0x000000,
+      'emissive': node.isOnline ? (color & 0x444444) : 0x000000,
     });
 
     final head = three.Mesh(headGeometry, headMaterial);
@@ -435,7 +398,7 @@ class MeshGlobeState extends State<MeshGlobe> {
 
     // Store for raycasting
     _markerMeshes.add(
-      _MarkerMeshData(marker: marker, mesh: head, group: markerGroup),
+      _MarkerMeshData(node: node, mesh: head, group: markerGroup),
     );
   }
 
@@ -447,25 +410,24 @@ class MeshGlobeState extends State<MeshGlobe> {
       _connectionsGroup!.remove(_connectionsGroup!.children.first);
     }
 
-    // Create new connections
-    for (final connection in widget.connections) {
-      _createConnection(connection);
+    if (!widget.showConnections) return;
+
+    // Create connections between all nodes with position
+    final nodesWithPos = widget.nodes.where((n) => n.hasPosition).toList();
+    for (int i = 0; i < nodesWithPos.length - 1; i++) {
+      for (int j = i + 1; j < nodesWithPos.length; j++) {
+        _createConnection(nodesWithPos[i], nodesWithPos[j]);
+      }
     }
   }
 
-  void _createConnection(GlobeConnection connection) {
+  void _createConnection(MeshNode from, MeshNode to) {
     // Get 3D positions
-    final from = _latLongToPosition(
-      connection.from.latitude,
-      connection.from.longitude,
-    );
-    final to = _latLongToPosition(
-      connection.to.latitude,
-      connection.to.longitude,
-    );
+    final fromPos = _latLongToPosition(from.latitude!, from.longitude!);
+    final toPos = _latLongToPosition(to.latitude!, to.longitude!);
 
     // Create arc curve between points
-    final points = _createArcPoints(from, to, 32);
+    final points = _createArcPoints(fromPos, toPos, 32);
 
     final geometry = three.BufferGeometry();
     final positions = <double>[];
@@ -603,8 +565,10 @@ class MeshGlobeState extends State<MeshGlobe> {
   }
 
   /// Rotate to focus on a specific node
-  void rotateToNode(GlobeNodeMarker marker, {bool animate = true}) {
-    rotateToLocation(marker.latitude, marker.longitude, animate: animate);
+  void rotateToNode(MeshNode node, {bool animate = true}) {
+    if (node.hasPosition) {
+      rotateToLocation(node.latitude!, node.longitude!, animate: animate);
+    }
   }
 
   void _handlePanStart(DragStartDetails details) {
@@ -673,7 +637,7 @@ class MeshGlobeState extends State<MeshGlobe> {
         orElse: () => _markerMeshes.first,
       );
 
-      widget.onNodeSelected?.call(markerData.marker);
+      widget.onNodeSelected?.call(markerData.node);
       return;
     }
 
@@ -686,7 +650,7 @@ class MeshGlobeState extends State<MeshGlobe> {
   void _selectClosestMarkerToTap(Offset tapPosition, Size screenSize) {
     if (_markerMeshes.isEmpty || _globeGroup == null) return;
 
-    GlobeNodeMarker? closestMarker;
+    MeshNode? closestNode;
     double closestDistance = double.infinity;
 
     // Threshold in screen pixels for tap tolerance
@@ -715,12 +679,12 @@ class MeshGlobeState extends State<MeshGlobe> {
 
       if (distance < closestDistance && distance < tapThreshold) {
         closestDistance = distance;
-        closestMarker = markerData.marker;
+        closestNode = markerData.node;
       }
     }
 
-    if (closestMarker != null) {
-      widget.onNodeSelected?.call(closestMarker);
+    if (closestNode != null) {
+      widget.onNodeSelected?.call(closestNode);
     }
   }
 
@@ -768,12 +732,12 @@ class MeshGlobeState extends State<MeshGlobe> {
 
 /// Internal class to track marker meshes for raycasting
 class _MarkerMeshData {
-  final GlobeNodeMarker marker;
+  final MeshNode node;
   final three.Mesh mesh;
   final three.Group group;
 
   _MarkerMeshData({
-    required this.marker,
+    required this.node,
     required this.mesh,
     required this.group,
   });
