@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'models/widget_schema.dart';
+import 'models/grid_widget_schema.dart';
 import 'storage/widget_storage_service.dart';
+import 'storage/grid_widget_storage_service.dart';
 import 'editor/simple_widget_builder.dart';
+import 'editor/grid_widget_builder.dart';
 import 'marketplace/widget_marketplace_screen.dart';
 import 'marketplace/widget_marketplace_service.dart';
 import 'renderer/widget_renderer.dart';
+import 'renderer/grid_widget_renderer.dart';
 import '../../core/theme.dart';
 import '../../providers/auth_providers.dart';
 import '../../utils/snackbar.dart';
@@ -26,8 +30,10 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _storageService = WidgetStorageService();
+  final _gridStorageService = GridWidgetStorageService();
   List<WidgetSchema> _myWidgets = [];
-  List<WidgetSchema> _templates = [];
+  List<GridWidgetSchema> _myGridWidgets = [];
+  List<GridWidgetSchema> _gridTemplates = [];
   bool _isLoading = true;
 
   @override
@@ -48,11 +54,14 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
     try {
       await _storageService.init();
+      await _gridStorageService.init();
       final widgets = await _storageService.getWidgets();
+      final gridWidgets = await _gridStorageService.getWidgets();
 
       setState(() {
         _myWidgets = widgets;
-        _templates = WidgetTemplates.all();
+        _myGridWidgets = gridWidgets;
+        _gridTemplates = GridWidgetTemplates.all();
         _isLoading = false;
       });
     } catch (e) {
@@ -114,7 +123,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
   }
 
   Widget _buildMyWidgetsTab() {
-    if (_myWidgets.isEmpty) {
+    // Only show grid widgets (legacy widgets are hidden)
+    if (_myGridWidgets.isEmpty) {
       return _buildEmptyState(
         icon: Icons.widgets_outlined,
         title: 'No Custom Widgets',
@@ -134,9 +144,9 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
       onRefresh: _loadWidgets,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: _myWidgets.length,
+        itemCount: _myGridWidgets.length,
         itemBuilder: (context, index) {
-          return _buildWidgetCard(_myWidgets[index], isTemplate: false);
+          return _buildGridWidgetCard(_myGridWidgets[index], isTemplate: false);
         },
       ),
     );
@@ -145,9 +155,9 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
   Widget _buildTemplatesTab() {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _templates.length,
+      itemCount: _gridTemplates.length,
       itemBuilder: (context, index) {
-        return _buildWidgetCard(_templates[index], isTemplate: true);
+        return _buildGridWidgetCard(_gridTemplates[index], isTemplate: true);
       },
     );
   }
@@ -387,6 +397,202 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     );
   }
 
+  Widget _buildGridWidgetCard(
+    GridWidgetSchema schema, {
+    required bool isTemplate,
+  }) {
+    // Check if this widget is already on the dashboard
+    final dashboardWidgets = ref.watch(dashboardWidgetsProvider);
+    final isOnDashboard = dashboardWidgets.any(
+      (w) => w.schemaId == schema.id && w.isVisible,
+    );
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Widget preview with placeholder data
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+            ),
+            child: SizedBox(
+              height: 100,
+              child: GridWidgetRenderer(
+                schema: schema,
+                node: null,
+                allNodes: null,
+                accentColor: context.accentColor,
+                usePlaceholderData: true,
+              ),
+            ),
+          ),
+          // Info section
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            schema.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: context.accentColor.withAlpha(30),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              schema.size.label.toUpperCase(),
+                              style: TextStyle(
+                                color: context.accentColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (schema.description != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          schema.description!,
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 13,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                // Actions
+                if (isTemplate)
+                  FilledButton(
+                    onPressed: () => _useGridTemplate(schema),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: context.accentColor,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                    ),
+                    child: const Text('Use'),
+                  )
+                else
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert, color: AppTheme.textSecondary),
+                    color: AppTheme.darkCard,
+                    onSelected: (action) =>
+                        _handleGridAction(action, schema, isOnDashboard),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: isOnDashboard
+                            ? 'remove_from_dashboard'
+                            : 'add_to_dashboard',
+                        child: Row(
+                          children: [
+                            Icon(
+                              isOnDashboard
+                                  ? Icons.dashboard_outlined
+                                  : Icons.dashboard_customize,
+                              size: 18,
+                              color: isOnDashboard
+                                  ? AppTheme.errorRed
+                                  : Colors.white,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              isOnDashboard
+                                  ? 'Remove from Dashboard'
+                                  : 'Add to Dashboard',
+                              style: TextStyle(
+                                color: isOnDashboard
+                                    ? AppTheme.errorRed
+                                    : Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, size: 18, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text('Edit', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'duplicate',
+                        child: Row(
+                          children: [
+                            Icon(Icons.copy, size: 18, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text(
+                              'Duplicate',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete,
+                              size: 18,
+                              color: AppTheme.errorRed,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Delete',
+                              style: TextStyle(color: AppTheme.errorRed),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmptyState({
     required IconData icon,
     required String title,
@@ -420,12 +626,30 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
   }
 
   void _createNewWidget() async {
-    final result = await Navigator.push<WidgetSchema>(
+    final result = await Navigator.push<GridWidgetSchema>(
       context,
       MaterialPageRoute(
-        builder: (context) => SimpleWidgetBuilder(
+        builder: (context) => GridWidgetBuilder(
           onSave: (schema) async {
-            await _storageService.saveWidget(schema);
+            await _gridStorageService.saveWidget(schema);
+          },
+        ),
+      ),
+    );
+
+    if (result != null) {
+      await _loadWidgets();
+    }
+  }
+
+  void _editGridWidget(GridWidgetSchema schema) async {
+    final result = await Navigator.push<GridWidgetSchema>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GridWidgetBuilder(
+          initialSchema: schema,
+          onSave: (updated) async {
+            await _gridStorageService.saveWidget(updated);
           },
         ),
       ),
@@ -480,6 +704,121 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
       await _loadWidgets();
       _tabController.animateTo(0); // Switch to My Widgets tab
     }
+  }
+
+  void _useGridTemplate(GridWidgetSchema template) async {
+    // Create a copy of the template
+    final copy = template.copyWith(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: '${template.name} (Copy)',
+    );
+
+    final result = await Navigator.push<GridWidgetSchema>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GridWidgetBuilder(
+          initialSchema: copy,
+          onSave: (schema) async {
+            await _gridStorageService.saveWidget(schema);
+          },
+        ),
+      ),
+    );
+
+    if (result != null) {
+      await _loadWidgets();
+      _tabController.animateTo(0); // Switch to My Widgets tab
+    }
+  }
+
+  void _handleGridAction(
+    String action,
+    GridWidgetSchema schema,
+    bool isOnDashboard,
+  ) async {
+    switch (action) {
+      case 'add_to_dashboard':
+        _addGridToDashboard(schema);
+        break;
+      case 'remove_from_dashboard':
+        _removeGridFromDashboard(schema);
+        break;
+      case 'edit':
+        _editGridWidget(schema);
+        break;
+      case 'duplicate':
+        await _gridStorageService.duplicateWidget(schema.id);
+        await _loadWidgets();
+        break;
+      case 'delete':
+        final confirm = await _showDeleteConfirmation();
+        if (confirm) {
+          await _gridStorageService.deleteWidget(schema.id);
+          await _loadWidgets();
+        }
+        break;
+    }
+  }
+
+  void _addGridToDashboard(GridWidgetSchema schema) {
+    final config = DashboardWidgetConfig(
+      id: 'grid_${DateTime.now().millisecondsSinceEpoch}',
+      type: DashboardWidgetType.custom,
+      schemaId: schema.id,
+    );
+
+    ref.read(dashboardWidgetsProvider.notifier).addCustomWidget(config);
+
+    if (mounted) {
+      showSuccessSnackBar(context, '${schema.name} added to Dashboard');
+    }
+  }
+
+  void _removeGridFromDashboard(GridWidgetSchema schema) {
+    final dashboardNotifier = ref.read(dashboardWidgetsProvider.notifier);
+    final widgets = ref.read(dashboardWidgetsProvider);
+    final widget = widgets.cast<DashboardWidgetConfig?>().firstWhere(
+      (w) => w?.schemaId == schema.id,
+      orElse: () => null,
+    );
+    if (widget != null) {
+      dashboardNotifier.removeWidget(widget.id);
+      showSuccessSnackBar(context, 'Removed from dashboard');
+    }
+  }
+
+  Future<bool> _showDeleteConfirmation() async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: AppTheme.darkCard,
+            title: const Text(
+              'Delete Widget',
+              style: TextStyle(color: Colors.white),
+            ),
+            content: const Text(
+              'Are you sure you want to delete this widget? This cannot be undone.',
+              style: TextStyle(color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: AppTheme.textSecondary),
+                ),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.errorRed,
+                ),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   void _handleAction(String action, WidgetSchema schema) async {

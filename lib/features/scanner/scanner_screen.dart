@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import '../../core/logging.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,7 +53,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     // In that case, don't retry - just show the scanner
     final autoReconnectState = ref.read(autoReconnectStateProvider);
     if (autoReconnectState == AutoReconnectState.failed) {
-      debugPrint(
+      AppLogging.debug(
         '🔄 Auto-reconnect: skipping - already failed during app init',
       );
       _startScan();
@@ -63,7 +65,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     try {
       settingsService = await ref.read(settingsServiceProvider.future);
     } catch (e) {
-      debugPrint('Failed to load settings service: $e');
+      AppLogging.debug('Failed to load settings service: $e');
       _startScan();
       return;
     }
@@ -89,7 +91,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       _autoReconnecting = true;
     });
 
-    debugPrint(
+    AppLogging.debug(
       '🔄 Auto-reconnect: looking for device $lastDeviceId ($lastDeviceType)',
     );
 
@@ -101,7 +103,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       await for (final device in scanStream) {
         if (!mounted) break;
-        debugPrint(
+        AppLogging.debug(
           '🔄 Auto-reconnect: found ${device.id} - checking if matches',
         );
         if (device.id == lastDeviceId) {
@@ -123,11 +125,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       if (!mounted) return;
 
       if (lastDevice != null) {
-        debugPrint('🔄 Auto-reconnect: device found, connecting...');
+        AppLogging.debug('🔄 Auto-reconnect: device found, connecting...');
         // Found the device, try to connect
         await _connectToDevice(lastDevice, isAutoReconnect: true);
       } else {
-        debugPrint(
+        AppLogging.debug(
           '🔄 Auto-reconnect: device not found, starting regular scan',
         );
         // Device not found, start regular scan
@@ -137,7 +139,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         _startScan();
       }
     } catch (e) {
-      debugPrint('🔄 Auto-reconnect failed: $e');
+      AppLogging.debug('🔄 Auto-reconnect failed: $e');
       if (mounted) {
         setState(() {
           _autoReconnecting = false;
@@ -237,7 +239,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       // Start protocol service and wait for configuration
       final protocol = ref.read(protocolServiceProvider);
-      debugPrint('🟡 Scanner screen - protocol instance: ${protocol.hashCode}');
+      AppLogging.debug('🟡 Scanner screen - protocol instance: ${protocol.hashCode}');
 
       // Set device info for hardware model inference (for devices like T1000-E that return UNSET)
       protocol.setDeviceName(device.name);
@@ -249,7 +251,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       // Verify protocol actually received configuration from device
       // If PIN was cancelled or authentication failed, myNodeNum will be null
       if (protocol.myNodeNum == null) {
-        debugPrint(
+        AppLogging.debug(
           '🔴 Scanner: No config received - authentication may have failed',
         );
         await transport.disconnect();
@@ -275,7 +277,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       // Don't assume "connected before = region configured" - that's wrong.
       final settings = await ref.read(settingsServiceProvider.future);
 
-      debugPrint(
+      AppLogging.debug(
         '🔍 Checking device region (always check - firmware may have reset it)...',
       );
 
@@ -284,18 +286,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       // Always check region from device - firmware updates can reset it
       {
         pbenum.RegionCode? region = protocol.currentRegion;
-        debugPrint('🔍 Initial region: ${region?.name ?? "null"}');
+        AppLogging.debug('🔍 Initial region: ${region?.name ?? "null"}');
 
         // If region not available yet, wait for loraConfigStream with proper timeout
         // This handles the timing issue where config arrives after our initial check
         if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
-          debugPrint('🔍 Waiting for LoRa config stream...');
+          AppLogging.debug('🔍 Waiting for LoRa config stream...');
           try {
             // Subscribe to stream FIRST, then request config
             final configFuture = protocol.loraConfigStream.first.timeout(
               const Duration(seconds: 8),
               onTimeout: () {
-                debugPrint('⏱️ LoRa config timeout');
+                AppLogging.debug('⏱️ LoRa config timeout');
                 throw TimeoutException('LoRa config timeout');
               },
             );
@@ -306,26 +308,26 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
             // Wait for response
             final loraConfig = await configFuture;
             region = loraConfig.region;
-            debugPrint('✅ Received LoRa config - region: ${region.name}');
+            AppLogging.debug('✅ Received LoRa config - region: ${region.name}');
           } catch (e) {
-            debugPrint('⚠️ Error getting LoRa config: $e');
+            AppLogging.debug('⚠️ Error getting LoRa config: $e');
             // Fall back to checking currentRegion one more time
             region = protocol.currentRegion;
-            debugPrint('🔍 Fallback region: ${region?.name ?? "null"}');
+            AppLogging.debug('🔍 Fallback region: ${region?.name ?? "null"}');
           }
         }
 
-        debugPrint('📍 Final region decision: ${region?.name ?? "null"}');
+        AppLogging.nodes('Final region decision: ${region?.name ?? "null"}');
 
         // Need region setup if region is UNSET (not configured on device)
         // This can happen on fresh install OR after firmware update/reset
         if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
           needsRegionSetup = true;
-          debugPrint('⚠️ Region is UNSET - need to configure!');
+          AppLogging.debug('⚠️ Region is UNSET - need to configure!');
         } else {
           // Device has a valid region - mark as configured
           await settings.setRegionConfigured(true);
-          debugPrint('✅ Region ${region.name} detected, marked as configured');
+          AppLogging.debug('✅ Region ${region.name} detected, marked as configured');
         }
       }
 

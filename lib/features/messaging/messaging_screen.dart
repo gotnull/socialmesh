@@ -1,3 +1,4 @@
+import '../../core/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -887,7 +888,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final channels = ref.watch(channelsProvider);
 
     // Debug: Log myNodeNum to help diagnose message direction issues
-    debugPrint(
+    AppLogging.messages(
       '📨 ConversationScreen: myNodeNum=$myNodeNum, type=${widget.type}, nodeNum=${widget.nodeNum}',
     );
 
@@ -1127,7 +1128,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
                         // Debug: Log message direction calculation
                         if (index == 0) {
-                          debugPrint(
+                          AppLogging.messages(
                             '📨 Message[0]: from=${message.from}, myNodeNum=$myNodeNum, isFromMe=$isFromMe, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
                           );
                         }

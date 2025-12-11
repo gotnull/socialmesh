@@ -1,5 +1,5 @@
+import '../../core/logging.dart';
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import '../../models/mesh_models.dart';
 
 /// A pending message waiting to be sent when connection is restored
@@ -81,7 +81,7 @@ class OfflineQueueService {
     _sendCallback = sendCallback;
     _updateCallback = updateCallback;
     _readyToSendCallback = readyToSendCallback;
-    debugPrint('📤 OfflineQueueService initialized');
+    AppLogging.messages('📤 OfflineQueueService initialized');
   }
 
   /// Update connection state - triggers queue processing when connected
@@ -90,7 +90,7 @@ class OfflineQueueService {
     _isConnected = isConnected;
 
     if (!wasConnected && isConnected && _queue.isNotEmpty) {
-      debugPrint(
+      AppLogging.messages(
         '📤 Connection restored, processing ${_queue.length} queued messages',
       );
       _processQueue();
@@ -100,7 +100,7 @@ class OfflineQueueService {
   /// Manually trigger queue processing (e.g., after late initialization)
   void processQueueIfNeeded() {
     if (_isConnected && _queue.isNotEmpty && !_isProcessing) {
-      debugPrint(
+      AppLogging.messages(
         '📤 Manual trigger: processing ${_queue.length} queued messages',
       );
       _processQueue();
@@ -111,7 +111,7 @@ class OfflineQueueService {
   void enqueue(QueuedMessage message) {
     _queue.add(message);
     _queueController.add(List.unmodifiable(_queue));
-    debugPrint(
+    AppLogging.messages(
       '📤 Message queued: ${message.id}, queue size: ${_queue.length}',
     );
 
@@ -125,14 +125,14 @@ class OfflineQueueService {
   void remove(String messageId) {
     _queue.removeWhere((m) => m.id == messageId);
     _queueController.add(List.unmodifiable(_queue));
-    debugPrint('📤 Message removed from queue: $messageId');
+    AppLogging.messages('📤 Message removed from queue: $messageId');
   }
 
   /// Clear all queued messages
   void clear() {
     _queue.clear();
     _queueController.add(List.unmodifiable(_queue));
-    debugPrint('📤 Queue cleared');
+    AppLogging.messages('📤 Queue cleared');
   }
 
   /// Process the queue - send all pending messages
@@ -143,30 +143,30 @@ class OfflineQueueService {
     if (_readyToSendCallback != null) {
       var attempts = 0;
       while (!_readyToSendCallback!() && attempts < 50) {
-        debugPrint(
+        AppLogging.messages(
           '📤 Waiting for protocol to be ready... (${attempts + 1}/50)',
         );
         await Future.delayed(const Duration(milliseconds: 200));
         attempts++;
         if (!_isConnected) {
-          debugPrint('📤 Disconnected while waiting, aborting queue');
+          AppLogging.messages('📤 Disconnected while waiting, aborting queue');
           return;
         }
       }
       if (!_readyToSendCallback!()) {
-        debugPrint('📤 Protocol not ready after 10s, aborting queue');
+        AppLogging.messages('📤 Protocol not ready after 10s, aborting queue');
         return;
       }
     }
 
     _isProcessing = true;
-    debugPrint('📤 Processing queue of ${_queue.length} messages');
+    AppLogging.messages('📤 Processing queue of ${_queue.length} messages');
 
     while (_queue.isNotEmpty && _isConnected) {
       final message = _queue.first;
 
       try {
-        debugPrint('📤 Sending queued message: ${message.id}');
+        AppLogging.messages('📤 Sending queued message: ${message.id}');
 
         final packetId = await _sendCallback!(
           text: message.text,
@@ -187,12 +187,12 @@ class OfflineQueueService {
         _queue.removeAt(0);
         _queueController.add(List.unmodifiable(_queue));
 
-        debugPrint('📤 Queued message sent successfully: ${message.id}');
+        AppLogging.messages('📤 Queued message sent successfully: ${message.id}');
 
         // Small delay between messages to avoid overwhelming the device
         await Future.delayed(const Duration(milliseconds: 100));
       } catch (e) {
-        debugPrint('📤 Failed to send queued message: ${message.id} - $e');
+        AppLogging.messages('📤 Failed to send queued message: ${message.id} - $e');
         message.retryCount++;
 
         if (message.retryCount >= 3) {
@@ -217,7 +217,7 @@ class OfflineQueueService {
     }
 
     _isProcessing = false;
-    debugPrint('📤 Queue processing complete, ${_queue.length} remaining');
+    AppLogging.messages('📤 Queue processing complete, ${_queue.length} remaining');
   }
 
   /// Dispose resources

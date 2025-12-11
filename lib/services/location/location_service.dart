@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+
+import '../../core/logging.dart';
 import 'package:geolocator/geolocator.dart';
 import '../protocol/protocol_service.dart';
 
@@ -24,7 +25,7 @@ class LocationService {
   Future<bool> checkPermissions() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      debugPrint('📍 Location services are disabled');
+      AppLogging.nodes('Location services are disabled');
       return false;
     }
 
@@ -32,13 +33,13 @@ class LocationService {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        debugPrint('📍 Location permission denied');
+        AppLogging.nodes('Location permission denied');
         return false;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      debugPrint('📍 Location permission permanently denied');
+      AppLogging.nodes('Location permission permanently denied');
       return false;
     }
 
@@ -58,12 +59,12 @@ class LocationService {
       );
 
       _lastPosition = position;
-      debugPrint(
+      AppLogging.debug(
         '📍 Got phone GPS position: ${position.latitude}, ${position.longitude}',
       );
       return position;
     } catch (e) {
-      debugPrint('📍 Error getting location: $e');
+      AppLogging.nodes('Error getting location: $e');
       return null;
     }
   }
@@ -74,12 +75,12 @@ class LocationService {
 
     final hasPermission = await checkPermissions();
     if (!hasPermission) {
-      debugPrint('📍 Cannot start location updates - no permission');
+      AppLogging.nodes('Cannot start location updates - no permission');
       return;
     }
 
     _isRunning = true;
-    debugPrint('📍 Starting periodic location updates');
+    AppLogging.nodes('Starting periodic location updates');
 
     // Send initial position immediately
     await _sendCurrentPosition();
@@ -96,7 +97,7 @@ class LocationService {
     _locationTimer?.cancel();
     _locationTimer = null;
     _isRunning = false;
-    debugPrint('📍 Stopped location updates');
+    AppLogging.nodes('Stopped location updates');
   }
 
   /// Send current phone GPS position to the mesh
@@ -104,7 +105,7 @@ class LocationService {
     try {
       final position = await getCurrentPosition();
       if (position == null) {
-        debugPrint('📍 No position to send');
+        AppLogging.nodes('No position to send');
         return;
       }
 
@@ -115,11 +116,11 @@ class LocationService {
         altitude: position.altitude.toInt(),
       );
 
-      debugPrint(
+      AppLogging.debug(
         '📍 Sent phone GPS to mesh: ${position.latitude}, ${position.longitude}',
       );
     } catch (e) {
-      debugPrint('📍 Error sending position: $e');
+      AppLogging.nodes('Error sending position: $e');
     }
   }
 

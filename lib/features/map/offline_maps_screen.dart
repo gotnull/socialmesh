@@ -1,3 +1,4 @@
+import '../../core/logging.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -70,7 +71,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
         setState(() => _regions.addAll(regions));
       }
     } catch (e) {
-      debugPrint('Error loading offline regions: $e');
+      AppLogging.maps('Error loading offline regions: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -291,7 +292,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
             }
           } catch (e) {
             // Skip failed tiles
-            debugPrint('Failed to download tile $zoom/$x/$y: $e');
+            AppLogging.maps('Failed to download tile $zoom/$x/$y: $e');
           }
         }
 

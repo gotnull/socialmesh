@@ -1,3 +1,4 @@
+import '../../core/logging.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -40,17 +41,17 @@ class PurchaseService {
           : RevenueCatConfig.androidApiKey;
 
       if (apiKey.isEmpty) {
-        debugPrint('💰 RevenueCat API key not configured');
+        AppLogging.subscriptions('💰 RevenueCat API key not configured');
         return;
       }
 
       // Enable verbose debug logging in debug mode for sandbox testing
       if (kDebugMode) {
         await Purchases.setLogLevel(LogLevel.verbose);
-        debugPrint('💰 RevenueCat debug logging enabled for sandbox testing');
+        AppLogging.subscriptions('💰 RevenueCat debug logging enabled for sandbox testing');
       }
 
-      debugPrint('💰 Configuring RevenueCat...');
+      AppLogging.subscriptions('💰 Configuring RevenueCat...');
       final configuration = PurchasesConfiguration(apiKey)
         ..appUserID = null; // Anonymous user
 
@@ -60,12 +61,12 @@ class PurchaseService {
       Purchases.addCustomerInfoUpdateListener(_handleCustomerInfoUpdate);
 
       _isInitialized = true;
-      debugPrint('💰 RevenueCat SDK initialized successfully');
+      AppLogging.subscriptions('💰 RevenueCat SDK initialized successfully');
 
       // Get initial customer info
       await refreshPurchases();
     } catch (e) {
-      debugPrint('💰 Error initializing RevenueCat: $e');
+      AppLogging.subscriptions('💰 Error initializing RevenueCat: $e');
     }
   }
 
@@ -113,7 +114,7 @@ class PurchaseService {
     try {
       final products = await Purchases.getProducts([productId]);
       if (products.isEmpty) {
-        debugPrint('Product not found: $productId');
+        AppLogging.subscriptions('Product not found: $productId');
         return PurchaseResult.error;
       }
 
@@ -124,14 +125,14 @@ class PurchaseService {
       return PurchaseResult.success;
     } on PurchasesErrorCode catch (e) {
       if (e == PurchasesErrorCode.purchaseCancelledError) {
-        debugPrint('User cancelled purchase');
+        AppLogging.subscriptions('User cancelled purchase');
         return PurchaseResult.canceled;
       } else {
-        debugPrint('Purchase error: $e');
+        AppLogging.subscriptions('Purchase error: $e');
         return PurchaseResult.error;
       }
     } catch (e) {
-      debugPrint('Purchase error: $e');
+      AppLogging.subscriptions('Purchase error: $e');
       return PurchaseResult.error;
     }
   }
@@ -144,7 +145,7 @@ class PurchaseService {
       final customerInfo = await Purchases.getCustomerInfo();
       _updateStateFromCustomerInfo(customerInfo);
     } catch (e) {
-      debugPrint('Error refreshing purchases: $e');
+      AppLogging.subscriptions('Error refreshing purchases: $e');
     }
   }
 
@@ -157,7 +158,7 @@ class PurchaseService {
       _updateStateFromCustomerInfo(customerInfo);
       return customerInfo.nonSubscriptionTransactions.isNotEmpty;
     } catch (e) {
-      debugPrint('Error restoring purchases: $e');
+      AppLogging.subscriptions('Error restoring purchases: $e');
       return false;
     }
   }
@@ -170,7 +171,7 @@ class PurchaseService {
       final result = await Purchases.logIn(userId);
       _updateStateFromCustomerInfo(result.customerInfo);
     } catch (e) {
-      debugPrint('Error logging in: $e');
+      AppLogging.subscriptions('Error logging in: $e');
     }
   }
 
@@ -182,7 +183,7 @@ class PurchaseService {
       final customerInfo = await Purchases.logOut();
       _updateStateFromCustomerInfo(customerInfo);
     } catch (e) {
-      debugPrint('Error logging out: $e');
+      AppLogging.subscriptions('Error logging out: $e');
     }
   }
 
@@ -201,11 +202,11 @@ class PurchaseService {
     try {
       final customerInfo = await Purchases.getCustomerInfo();
       // In sandbox, the environment will be "sandbox"
-      debugPrint('💰 RevenueCat environment: sandbox (debug build)');
-      debugPrint('💰 Customer ID: ${customerInfo.originalAppUserId}');
+      AppLogging.subscriptions('💰 RevenueCat environment: sandbox (debug build)');
+      AppLogging.subscriptions('💰 Customer ID: ${customerInfo.originalAppUserId}');
       return kDebugMode;
     } catch (e) {
-      debugPrint('💰 Error checking sandbox mode: $e');
+      AppLogging.subscriptions('💰 Error checking sandbox mode: $e');
       return false;
     }
   }
@@ -214,18 +215,18 @@ class PurchaseService {
   Future<List<StoreProduct>> debugGetProducts() async {
     if (!_isInitialized) return [];
     try {
-      debugPrint('💰 Fetching products from RevenueCat');
+      AppLogging.subscriptions('💰 Fetching products from RevenueCat');
       final products = await Purchases.getProducts(
         RevenueCatConfig.allProductIds,
       );
       for (final product in products) {
-        debugPrint(
+        AppLogging.subscriptions(
           '💰 Product: ${product.identifier} - ${product.priceString}',
         );
       }
       return products;
     } catch (e) {
-      debugPrint('💰 Error getting products: $e');
+      AppLogging.subscriptions('💰 Error getting products: $e');
       return [];
     }
   }
@@ -235,17 +236,17 @@ class PurchaseService {
     if (!_isInitialized) return null;
     try {
       final offerings = await Purchases.getOfferings();
-      debugPrint('💰 Current offering: ${offerings.current?.identifier}');
+      AppLogging.subscriptions('💰 Current offering: ${offerings.current?.identifier}');
       if (offerings.current != null) {
         for (final package in offerings.current!.availablePackages) {
-          debugPrint(
+          AppLogging.subscriptions(
             '💰 Package: ${package.identifier} - ${package.storeProduct.priceString}',
           );
         }
       }
       return offerings;
     } catch (e) {
-      debugPrint('💰 Error getting offerings: $e');
+      AppLogging.subscriptions('💰 Error getting offerings: $e');
       return null;
     }
   }
@@ -255,20 +256,20 @@ class PurchaseService {
     if (!_isInitialized) return;
     try {
       final customerInfo = await Purchases.getCustomerInfo();
-      debugPrint('💰 === Customer Info ===');
-      debugPrint('💰 App User ID: ${customerInfo.originalAppUserId}');
-      debugPrint(
+      AppLogging.subscriptions('💰 === Customer Info ===');
+      AppLogging.subscriptions('💰 App User ID: ${customerInfo.originalAppUserId}');
+      AppLogging.subscriptions(
         '💰 Non-subscription transactions: ${customerInfo.nonSubscriptionTransactions.length}',
       );
       for (final transaction in customerInfo.nonSubscriptionTransactions) {
-        debugPrint(
+        AppLogging.subscriptions(
           '💰   - ${transaction.productIdentifier} (${transaction.purchaseDate})',
         );
       }
-      debugPrint('💰 Entitlements: ${customerInfo.entitlements.all.keys}');
-      debugPrint('💰 ======================');
+      AppLogging.subscriptions('💰 Entitlements: ${customerInfo.entitlements.all.keys}');
+      AppLogging.subscriptions('💰 ======================');
     } catch (e) {
-      debugPrint('💰 Error getting customer info: $e');
+      AppLogging.subscriptions('💰 Error getting customer info: $e');
     }
   }
 

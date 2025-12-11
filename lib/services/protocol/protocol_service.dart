@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
+import '../../core/logging.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_models.dart';
 import '../../models/device_error.dart';
@@ -360,7 +360,7 @@ class ProtocolService {
 
   /// Start listening to transport and wait for configuration
   Future<void> start() async {
-    debugPrint('🔵 Protocol.start() called - instance: $hashCode');
+    AppLogging.debug('🔵 Protocol.start() called - instance: $hashCode');
     _logger.i('Starting protocol service');
 
     _configCompleter = Completer<void>();
@@ -410,7 +410,7 @@ class ProtocolService {
       waitingForConfig = true;
 
       // Wait for config to complete with timeout
-      debugPrint('⏳ Protocol: Waiting for configCompleteId...');
+      AppLogging.protocol('Protocol: Waiting for configCompleteId...');
       await _configCompleter!.future.timeout(
         const Duration(seconds: 30),
         onTimeout: () {
@@ -419,9 +419,9 @@ class ProtocolService {
           );
         },
       );
-      debugPrint('✅ Protocol: Configuration was received');
+      AppLogging.debug('✅ Protocol: Configuration was received');
     } catch (e) {
-      debugPrint('❌ Protocol: Configuration failed: $e');
+      AppLogging.debug('❌ Protocol: Configuration failed: $e');
       // Convert FlutterBluePlus auth errors to user-friendly message
       final errorStr = e.toString().toLowerCase();
       if (errorStr.contains('authentication') ||
@@ -518,7 +518,7 @@ class ProtocolService {
 
       // Debug: log which payload variant we got
       final variant = fromRadio.whichPayloadVariant();
-      debugPrint('📦 Protocol: FromRadio payload variant: $variant');
+      AppLogging.protocol('FromRadio payload variant: $variant');
 
       if (fromRadio.hasPacket()) {
         _handleMeshPacket(fromRadio.packet);
@@ -534,8 +534,8 @@ class ProtocolService {
       } else if (fromRadio.hasMetadata()) {
         _handleFromRadioMetadata(fromRadio.metadata);
       } else if (fromRadio.hasConfigCompleteId()) {
-        debugPrint(
-          '🎉 Protocol: Configuration complete! ID: ${fromRadio.configCompleteId}',
+        AppLogging.protocol(
+          'Configuration complete! ID: ${fromRadio.configCompleteId}',
         );
         _logger.i('Configuration complete: ${fromRadio.configCompleteId}');
         _configurationComplete = true;
@@ -645,7 +645,7 @@ class ProtocolService {
         // Handle Position config
         if (config.hasPosition()) {
           final posConfig = config.position;
-          debugPrint(
+          AppLogging.debug(
             '📍 Received Position config: '
             'gpsEnabled=${posConfig.gpsEnabled}, '
             'gpsMode=${posConfig.gpsMode}, '
@@ -812,7 +812,7 @@ class ProtocolService {
       } else if (adminMsg.hasGetDeviceMetadataResponse()) {
         // Handle device metadata response - update node with firmware version
         final metadata = adminMsg.getDeviceMetadataResponse;
-        debugPrint(
+        AppLogging.debug(
           '📋 Received device metadata: firmware="${metadata.firmwareVersion}", '
           'hwModel=${metadata.hwModel.name}',
         );
@@ -867,7 +867,7 @@ class ProtocolService {
     // Handle LoRa config - this is where we get the region during initial boot
     if (config.hasLora()) {
       final loraConfig = config.lora;
-      debugPrint(
+      AppLogging.debug(
         '📡 FromRadio LoRa config: region=${loraConfig.region.name}, '
         'modemPreset=${loraConfig.modemPreset.name}',
       );
@@ -880,7 +880,7 @@ class ProtocolService {
     // Handle Position config
     if (config.hasPosition()) {
       final posConfig = config.position;
-      debugPrint(
+      AppLogging.debug(
         '📍 FromRadio Position config: gpsEnabled=${posConfig.gpsEnabled}, '
         'gpsMode=${posConfig.gpsMode}',
       );
@@ -891,7 +891,9 @@ class ProtocolService {
     // Handle Device config
     if (config.hasDevice()) {
       final deviceConfig = config.device;
-      debugPrint('📱 FromRadio Device config: role=${deviceConfig.role.name}');
+      AppLogging.liveActivity(
+        'FromRadio Device config: role=${deviceConfig.role.name}',
+      );
       _currentDeviceConfig = deviceConfig;
       _deviceConfigController.add(deviceConfig);
     }
@@ -934,7 +936,7 @@ class ProtocolService {
 
   /// Handle DeviceMetadata from FromRadio (sent during initial config)
   void _handleFromRadioMetadata(pb.DeviceMetadata metadata) {
-    debugPrint(
+    AppLogging.debug(
       '📋 FromRadio metadata: firmware="${metadata.firmwareVersion}", '
       'hwModel=${metadata.hwModel.name}',
     );
@@ -970,13 +972,13 @@ class ProtocolService {
       );
       _nodes[_myNodeNum!] = updatedNode;
       _nodeController.add(updatedNode);
-      debugPrint(
+      AppLogging.debug(
         '📋 Updated node $_myNodeNum with FromRadio metadata: '
         'firmware="${updatedNode.firmwareVersion}", hw="${updatedNode.hardwareModel}"',
       );
     } else {
       // myNodeNum not set yet - store metadata for later
-      debugPrint(
+      AppLogging.debug(
         '📋 FromRadio metadata received before myNodeNum set - caching',
       );
       _pendingMetadata = metadata;
@@ -1433,7 +1435,7 @@ class ProtocolService {
           (position.latitudeI != 0 && position.longitudeI != 0) && !isApplePark;
 
       if (ProtocolDebugFlags.logPosition) {
-        debugPrint(
+        AppLogging.debug(
           '📍 POSITION_APP from !${packet.from.toRadixString(16)}: '
           'latI=${position.latitudeI}, lngI=${position.longitudeI}, '
           'lat=${position.latitudeI / 1e7}, lng=${position.longitudeI / 1e7}, '
@@ -1622,13 +1624,13 @@ class ProtocolService {
   /// Handle my node info
   void _handleMyNodeInfo(pb.MyNodeInfo myInfo) {
     _myNodeNum = myInfo.myNodeNum;
-    debugPrint('🔢 Protocol: My node number set to: $_myNodeNum');
+    AppLogging.protocol('Protocol: My node number set to: $_myNodeNum');
     _logger.i('My node number: $_myNodeNum');
     _myNodeNumController.add(_myNodeNum!);
 
     // Apply any pending metadata that was received before myNodeNum was set
     if (_pendingMetadata != null) {
-      debugPrint('📋 Applying pending FromRadio metadata...');
+      AppLogging.protocol('Applying pending FromRadio metadata...');
       _handleFromRadioMetadata(_pendingMetadata!);
       _pendingMetadata = null;
     }
@@ -1649,18 +1651,18 @@ class ProtocolService {
 
     // DEBUG: Log position status with debugPrint so it shows in console
     if (ProtocolDebugFlags.logPosition) {
-      debugPrint(
+      AppLogging.debug(
         '📍 NodeInfo ${nodeInfo.num.toRadixString(16)}: hasPosition=${nodeInfo.hasPosition()}',
       );
       if (nodeInfo.hasPosition()) {
         final pos = nodeInfo.position;
-        debugPrint(
+        AppLogging.debug(
           '📍 NodeInfo ${nodeInfo.num.toRadixString(16)} POSITION: '
           'latI=${pos.latitudeI}, lngI=${pos.longitudeI}, '
           'lat=${pos.latitudeI / 1e7}, lng=${pos.longitudeI / 1e7}',
         );
       } else {
-        debugPrint(
+        AppLogging.debug(
           '📍 NodeInfo ${nodeInfo.num.toRadixString(16)} has NO position data',
         );
       }
@@ -1797,7 +1799,7 @@ class ProtocolService {
 
   /// Handle channel configuration
   void _handleChannel(pb.Channel channel) {
-    debugPrint(
+    AppLogging.debug(
       '📡 Channel ${channel.index} received from device: '
       'role=${channel.role.name}, name="${channel.hasSettings() ? channel.settings.name : ""}", '
       'psk=${channel.hasSettings() ? channel.settings.psk.length : 0} bytes',
@@ -2086,7 +2088,7 @@ class ProtocolService {
           );
           _nodes[_myNodeNum!] = updatedNode;
           _nodeController.add(updatedNode);
-          debugPrint(
+          AppLogging.debug(
             '📍 Updated MY node position locally: $latitude, $longitude',
           );
         }
@@ -2244,7 +2246,7 @@ class ProtocolService {
     }
 
     try {
-      debugPrint(
+      AppLogging.debug(
         '📡 Setting channel ${config.index}: "${config.name}" (role: ${config.role})',
       );
 
@@ -2283,7 +2285,7 @@ class ProtocolService {
         ..settings = channelSettings
         ..role = role;
 
-      debugPrint(
+      AppLogging.debug(
         '📡 Channel protobuf: index=${channel.index}, role=${channel.role.name}, '
         'name="${channel.settings.name}", psk=${channel.settings.psk.length} bytes',
       );
@@ -2305,18 +2307,18 @@ class ProtocolService {
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
-      debugPrint('📡 Channel ${config.index} sent to device');
+      AppLogging.channels('Channel ${config.index} sent to device');
 
       // Small delay before commit
       await Future.delayed(const Duration(milliseconds: 200));
 
       // Commit the transaction - this triggers the save to flash
       await _commitEditSettings();
-      debugPrint('📡 Channel settings committed to flash');
+      AppLogging.channels('Channel settings committed to flash');
 
       // Wait a bit then request the channel back to verify
       await Future.delayed(const Duration(milliseconds: 500));
-      debugPrint('📡 Verifying channel ${config.index}...');
+      AppLogging.channels('Verifying channel ${config.index}...');
       await getChannel(config.index);
     } catch (e) {
       _logger.e('Error setting channel: $e');
@@ -2741,7 +2743,7 @@ class ProtocolService {
       throw StateError('Cannot get metadata: not connected');
     }
 
-    debugPrint('📋 Requesting device metadata...');
+    AppLogging.protocol('Requesting device metadata...');
     _logger.i('Requesting device metadata');
 
     final adminMsg = pb.AdminMessage()..getDeviceMetadataRequest = true;

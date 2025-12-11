@@ -1,3 +1,4 @@
+import '../../core/logging.dart';
 import 'dart:io';
 import 'dart:math';
 
@@ -67,7 +68,7 @@ class NotificationSoundService {
     // Check if already exists
     final file = File(path);
     if (await file.exists()) {
-      debugPrint('NotificationSoundService: Sound already cached: $filename');
+      AppLogging.audio('NotificationSoundService: Sound already cached: $filename');
       return filename;
     }
 
@@ -75,17 +76,17 @@ class NotificationSoundService {
       // Parse and convert RTTTL to WAV
       final wavData = _convertRtttlToWav(rtttl);
       if (wavData == null) {
-        debugPrint('NotificationSoundService: Failed to convert RTTTL');
+        AppLogging.audio('NotificationSoundService: Failed to convert RTTTL');
         return null;
       }
 
       // Save to file
       await file.writeAsBytes(wavData);
-      debugPrint('NotificationSoundService: Saved sound to $path');
+      AppLogging.audio('NotificationSoundService: Saved sound to $path');
 
       return filename;
     } catch (e) {
-      debugPrint('NotificationSoundService: Error preparing sound: $e');
+      AppLogging.audio('NotificationSoundService: Error preparing sound: $e');
       return null;
     }
   }
@@ -101,7 +102,7 @@ class NotificationSoundService {
 
       return _generateWav(parsed);
     } catch (e) {
-      debugPrint('NotificationSoundService: RTTTL conversion error: $e');
+      AppLogging.audio('NotificationSoundService: RTTTL conversion error: $e');
       return null;
     }
   }
@@ -356,9 +357,9 @@ class NotificationSoundService {
     for (final file in toDelete) {
       try {
         await file.delete();
-        debugPrint('NotificationSoundService: Deleted old sound: ${file.path}');
+        AppLogging.audio('NotificationSoundService: Deleted old sound: ${file.path}');
       } catch (e) {
-        debugPrint('NotificationSoundService: Failed to delete: $e');
+        AppLogging.audio('NotificationSoundService: Failed to delete: $e');
       }
     }
   }

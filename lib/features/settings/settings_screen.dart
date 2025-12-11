@@ -1,3 +1,4 @@
+import '../../core/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1013,16 +1014,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _testNotification(BuildContext context) async {
-    debugPrint('🔔 Test notification button tapped');
+    AppLogging.settings('🔔 Test notification button tapped');
     final notificationService = NotificationService();
 
     // First ensure initialized
-    debugPrint('🔔 Initializing notification service...');
+    AppLogging.settings('🔔 Initializing notification service...');
     await notificationService.initialize();
-    debugPrint('🔔 Notification service initialized');
+    AppLogging.settings('🔔 Notification service initialized');
 
     // Show a test DM notification
-    debugPrint('🔔 Showing test notification...');
+    AppLogging.settings('🔔 Showing test notification...');
     try {
       await notificationService.showNewMessageNotification(
         senderName: 'Gotnull',
@@ -1033,9 +1034,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         playSound: true,
         vibrate: true,
       );
-      debugPrint('🔔 Test notification show() completed');
+      AppLogging.settings('🔔 Test notification show() completed');
     } catch (e) {
-      debugPrint('🔔 Test notification error: $e');
+      AppLogging.settings('🔔 Test notification error: $e');
       if (context.mounted) {
         showErrorSnackBar(context, 'Notification error: $e');
       }

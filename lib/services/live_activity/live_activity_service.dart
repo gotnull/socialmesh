@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:live_activities/live_activities.dart';
 import 'package:live_activities/models/activity_update.dart';
+import '../../core/logging.dart';
 
 /// Service for managing iOS Live Activities
 /// Shows device connection status on Lock Screen and Dynamic Island
@@ -38,9 +38,9 @@ class LiveActivityService {
           .listen(_onActivityUpdate);
 
       _initialized = true;
-      debugPrint('📱 LiveActivityService initialized');
+      AppLogging.liveActivity('LiveActivityService initialized');
     } catch (e) {
-      debugPrint('📱 Failed to initialize LiveActivityService: $e');
+      AppLogging.liveActivity('Failed to initialize LiveActivityService: $e');
     }
   }
 
@@ -48,19 +48,21 @@ class LiveActivityService {
   void _onActivityUpdate(ActivityUpdate update) {
     update.map(
       active: (active) {
-        debugPrint('📱 Live Activity active: ${active.activityId}');
+        AppLogging.liveActivity('Live Activity active: ${active.activityId}');
       },
       ended: (ended) {
-        debugPrint('📱 Live Activity ended: ${ended.activityId}');
+        AppLogging.liveActivity('Live Activity ended: ${ended.activityId}');
         if (ended.activityId == _currentActivityId) {
           _currentActivityId = null;
         }
       },
       stale: (stale) {
-        debugPrint('📱 Live Activity stale: ${stale.activityId}');
+        AppLogging.liveActivity('Live Activity stale: ${stale.activityId}');
       },
       unknown: (unknown) {
-        debugPrint('📱 Live Activity unknown state: ${unknown.activityId}');
+        AppLogging.liveActivity(
+          'Live Activity unknown state: ${unknown.activityId}',
+        );
       },
     );
   }
@@ -93,27 +95,27 @@ class LiveActivityService {
     double? longitude,
   }) async {
     if (!isSupported) {
-      debugPrint('📱 Live Activities not supported on this platform');
+      AppLogging.liveActivity('Live Activities not supported on this platform');
       return false;
     }
 
     if (!_initialized) {
-      debugPrint('📱 Initializing LiveActivityService...');
+      AppLogging.liveActivity('Initializing LiveActivityService...');
       await initialize();
-      debugPrint('📱 LiveActivityService initialized: $_initialized');
+      AppLogging.liveActivity('LiveActivityService initialized: $_initialized');
     }
 
     // Check if activities are enabled
     final enabled = await areActivitiesEnabled();
-    debugPrint('📱 Live Activities enabled by user: $enabled');
+    AppLogging.liveActivity('Live Activities enabled by user: $enabled');
     if (!enabled) {
-      debugPrint('📱 Live Activities are disabled by user');
+      AppLogging.liveActivity('Live Activities are disabled by user');
       return false;
     }
 
     // End any existing activity first
     if (_currentActivityId != null) {
-      debugPrint('📱 Ending existing activity: $_currentActivityId');
+      AppLogging.liveActivity('Ending existing activity: $_currentActivityId');
       await endActivity();
     }
 
@@ -145,7 +147,9 @@ class LiveActivityService {
         longitude: longitude,
       );
 
-      debugPrint('📱 Creating Live Activity with data: $activityData');
+      AppLogging.liveActivity(
+        'Creating Live Activity with data: $activityData',
+      );
 
       _currentActivityId = await _liveActivitiesPlugin.createActivity(
         _activityId,
@@ -153,25 +157,25 @@ class LiveActivityService {
         removeWhenAppIsKilled: false,
       );
 
-      debugPrint('📱 createActivity returned: $_currentActivityId');
+      AppLogging.liveActivity('createActivity returned: $_currentActivityId');
 
       if (_currentActivityId != null) {
-        debugPrint('📱 ✅ Started Live Activity: $_currentActivityId');
+        AppLogging.liveActivity('✅ Started Live Activity: $_currentActivityId');
         return true;
       } else {
-        debugPrint(
-          '📱 ❌ createActivity returned null - activity was not created',
+        AppLogging.liveActivity(
+          '❌ createActivity returned null - activity was not created',
         );
       }
     } catch (e, stackTrace) {
-      debugPrint('📱 ❌ Failed to start Live Activity: $e');
-      debugPrint('📱 Stack trace: $stackTrace');
+      AppLogging.liveActivity('❌ Failed to start Live Activity: $e');
+      AppLogging.liveActivity('Stack trace: $stackTrace');
       // Common causes:
       // - ActivityInput error 0: App Group mismatch or provisioning issue
       // - No Dynamic Island on device (still works on Lock Screen)
       // - Widget extension not properly installed
-      debugPrint(
-        '📱 💡 Tip: Ensure App Group "group.com.gotnull.socialmesh" '
+      AppLogging.liveActivity(
+        '💡 Tip: Ensure App Group "group.com.gotnull.socialmesh" '
         'is configured in both main app and widget extension provisioning profiles',
       );
     }
@@ -260,10 +264,10 @@ class LiveActivityService {
         activityData,
       );
 
-      debugPrint('📱 Updated Live Activity');
+      AppLogging.liveActivity('Updated Live Activity');
       return true;
     } catch (e) {
-      debugPrint('📱 Failed to update Live Activity: $e');
+      AppLogging.liveActivity('Failed to update Live Activity: $e');
     }
 
     return false;
@@ -275,10 +279,10 @@ class LiveActivityService {
 
     try {
       await _liveActivitiesPlugin.endActivity(_currentActivityId!);
-      debugPrint('📱 Ended Live Activity: $_currentActivityId');
+      AppLogging.liveActivity('Ended Live Activity: $_currentActivityId');
       _currentActivityId = null;
     } catch (e) {
-      debugPrint('📱 Failed to end Live Activity: $e');
+      AppLogging.liveActivity('Failed to end Live Activity: $e');
     }
   }
 
@@ -289,9 +293,9 @@ class LiveActivityService {
     try {
       await _liveActivitiesPlugin.endAllActivities();
       _currentActivityId = null;
-      debugPrint('📱 Ended all Live Activities');
+      AppLogging.liveActivity('Ended all Live Activities');
     } catch (e) {
-      debugPrint('📱 Failed to end all Live Activities: $e');
+      AppLogging.liveActivity('Failed to end all Live Activities: $e');
     }
   }
 
@@ -302,7 +306,7 @@ class LiveActivityService {
     try {
       return await _liveActivitiesPlugin.areActivitiesEnabled();
     } catch (e) {
-      debugPrint('📱 Failed to check Live Activities status: $e');
+      AppLogging.liveActivity('Failed to check Live Activities status: $e');
       return false;
     }
   }

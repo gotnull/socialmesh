@@ -1,6 +1,6 @@
+import '../../core/logging.dart';
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../models/mesh_models.dart';
 
@@ -111,7 +111,7 @@ class NotificationService {
           badge: true,
           sound: true,
         );
-        debugPrint('🔔 iOS notification permissions granted: $granted');
+        AppLogging.notifications('🔔 iOS notification permissions granted: $granted');
       }
     }
 
@@ -122,16 +122,16 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin
           >();
       final granted = await androidPlugin?.requestNotificationsPermission();
-      debugPrint('🔔 Android notification permissions granted: $granted');
+      AppLogging.notifications('🔔 Android notification permissions granted: $granted');
     }
 
     _initialized = true;
-    debugPrint('🔔 NotificationService initialized successfully');
+    AppLogging.notifications('🔔 NotificationService initialized successfully');
   }
 
   /// Handle notification tap or action
   void _onNotificationResponse(NotificationResponse response) {
-    debugPrint(
+    AppLogging.notifications(
       '🔔 Notification response: action=${response.actionId}, payload=${response.payload}',
     );
 
@@ -148,7 +148,7 @@ class NotificationService {
 
     // Handle regular notification tap - could navigate to specific screen
     if (payload != null) {
-      debugPrint('🔔 Notification tapped with payload: $payload');
+      AppLogging.notifications('🔔 Notification tapped with payload: $payload');
       // Could navigate to nodes screen, message thread, etc.
     }
   }
@@ -156,7 +156,7 @@ class NotificationService {
   /// Handle a reaction action from notification
   void _handleReactionAction(String? payload, String emoji) {
     if (payload == null) {
-      debugPrint('🔔 Reaction action without payload, ignoring');
+      AppLogging.notifications('🔔 Reaction action without payload, ignoring');
       return;
     }
 
@@ -175,17 +175,17 @@ class NotificationService {
     }
 
     if (nodeNum == null) {
-      debugPrint('🔔 Could not parse node number from payload: $payload');
+      AppLogging.notifications('🔔 Could not parse node number from payload: $payload');
       return;
     }
 
-    debugPrint('🔔 Sending $emoji reaction to node $nodeNum');
+    AppLogging.notifications('🔔 Sending $emoji reaction to node $nodeNum');
 
     // Call the reaction callback if set
     if (onReactionSelected != null) {
       onReactionSelected!(nodeNum, emoji);
     } else {
-      debugPrint('🔔 No reaction callback set, cannot send reaction');
+      AppLogging.notifications('🔔 No reaction callback set, cannot send reaction');
     }
   }
 
@@ -196,7 +196,7 @@ class NotificationService {
     bool vibrate = true,
   }) async {
     if (!_initialized) {
-      debugPrint(
+      AppLogging.notifications(
         '🔔 NotificationService not initialized, skipping notification',
       );
       return;
@@ -246,7 +246,7 @@ class NotificationService {
       payload: 'node:${node.nodeNum}',
     );
 
-    debugPrint('🔔 Showed notification for node: $nodeName');
+    AppLogging.notifications('🔔 Showed notification for node: $nodeName');
   }
 
   /// Show notification for new message
@@ -258,11 +258,11 @@ class NotificationService {
     bool playSound = true,
     bool vibrate = true,
   }) async {
-    debugPrint(
+    AppLogging.notifications(
       '🔔 showNewMessageNotification called - initialized: $_initialized',
     );
     if (!_initialized) {
-      debugPrint(
+      AppLogging.notifications(
         '🔔 NotificationService not initialized, skipping DM notification',
       );
       return;
@@ -310,7 +310,7 @@ class NotificationService {
         ? '${message.substring(0, 100)}...'
         : message;
 
-    debugPrint('🔔 Calling _notifications.show() for DM from $senderName');
+    AppLogging.notifications('🔔 Calling _notifications.show() for DM from $senderName');
     try {
       // Use modulo to keep ID within 32-bit signed int range
       // Offset by 1000000 to avoid collision with node notifications
@@ -331,9 +331,9 @@ class NotificationService {
         notificationDetails,
         payload: 'dm:$fromNodeNum',
       );
-      debugPrint('🔔 Successfully showed DM notification from: $senderName');
+      AppLogging.notifications('🔔 Successfully showed DM notification from: $senderName');
     } catch (e) {
-      debugPrint('🔔 Error showing DM notification: $e');
+      AppLogging.notifications('🔔 Error showing DM notification: $e');
       rethrow;
     }
   }
@@ -409,7 +409,7 @@ class NotificationService {
       payload: 'channel:$channelIndex:$fromNodeNum',
     );
 
-    debugPrint('🔔 Showed channel notification: $senderName in $channelName');
+    AppLogging.notifications('🔔 Showed channel notification: $senderName in $channelName');
   }
 
   /// Cancel all notifications

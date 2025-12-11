@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/logging.dart';
 import '../models/telemetry_log.dart';
 import '../models/route.dart';
 import '../models/tapback.dart';
@@ -270,33 +270,33 @@ class ActiveRouteNotifier extends Notifier<Route?> {
   }
 
   void _startLocationTracking() {
-    debugPrint('🛤️ Route: Starting location tracking');
+    AppLogging.debug('🛤️ Route: Starting location tracking');
     // Listen to position updates from nodes (including phone GPS positions)
     _positionSubscription = _protocol.nodeStream.listen((node) async {
       if (state == null) {
-        debugPrint('🛤️ Route: No active route, skipping');
+        AppLogging.debug('🛤️ Route: No active route, skipping');
         return;
       }
       if (!node.hasPosition) {
-        debugPrint('🛤️ Route: Node ${node.nodeNum} has no position, skipping');
+        AppLogging.debug('🛤️ Route: Node ${node.nodeNum} has no position, skipping');
         return;
       }
 
       // Track position updates from our own node
       final myNodeNum = _protocol.myNodeNum;
-      debugPrint(
+      AppLogging.debug(
         '🛤️ Route: Got position from node ${node.nodeNum}, myNodeNum=$myNodeNum',
       );
 
       // Skip if this isn't our node (but allow if myNodeNum is null during setup)
       if (myNodeNum != null && node.nodeNum != myNodeNum) {
-        debugPrint('🛤️ Route: Skipping - not our node');
+        AppLogging.debug('🛤️ Route: Skipping - not our node');
         return;
       }
 
       final newLat = node.latitude!;
       final newLon = node.longitude!;
-      debugPrint(
+      AppLogging.debug(
         '🛤️ Route: New position: $newLat, $newLon (precision=${node.precisionBits})',
       );
 
@@ -314,14 +314,14 @@ class ActiveRouteNotifier extends Notifier<Route?> {
 
         // Skip duplicate positions (same lat/lon as last point)
         if (lastLoc.latitude == newLat && lastLoc.longitude == newLon) {
-          debugPrint('🛤️ Route: Skipping - duplicate position');
+          AppLogging.debug('🛤️ Route: Skipping - duplicate position');
           return;
         }
 
         // Skip if distance is unreasonably large (> 500m) - likely precision truncation
         // Position precision bits can cause coordinates to jump by kilometers
         if (distance > 500) {
-          debugPrint(
+          AppLogging.debug(
             '🛤️ Route: Skipping - distance too large (${distance.toStringAsFixed(0)}m > 500m limit)',
           );
           return;
@@ -330,13 +330,13 @@ class ActiveRouteNotifier extends Notifier<Route?> {
         // Only check speed if we have meaningful time difference (at least 1 second)
         if (timeDiff >= 1) {
           final speed = distance / timeDiff; // meters per second
-          debugPrint(
+          AppLogging.debug(
             '🛤️ Route: Distance=${distance.toStringAsFixed(1)}m, timeDiff=${timeDiff}s, speed=${speed.toStringAsFixed(1)}m/s',
           );
 
           // Skip if speed > 50 m/s (180 km/h) - likely GPS error
           if (speed > 50) {
-            debugPrint(
+            AppLogging.debug(
               '🛤️ Route: Skipping - GPS jump detected (speed too high)',
             );
             return;
@@ -344,7 +344,7 @@ class ActiveRouteNotifier extends Notifier<Route?> {
         }
       } else {
         // First point - log it
-        debugPrint('🛤️ Route: Recording first point');
+        AppLogging.debug('🛤️ Route: Recording first point');
       }
 
       final location = RouteLocation(
@@ -355,14 +355,14 @@ class ActiveRouteNotifier extends Notifier<Route?> {
         speed: node.groundSpeed?.toInt(),
       );
 
-      debugPrint(
+      AppLogging.debug(
         '🛤️ Route: Adding location point #${state!.locations.length + 1}',
       );
       if (_storage != null) {
         final updated = await _storage!.addLocationToActiveRoute(location);
         if (updated != null) {
           state = updated;
-          debugPrint('🛤️ Route: Now have ${state!.locations.length} points');
+          AppLogging.debug('🛤️ Route: Now have ${state!.locations.length} points');
         }
       }
     });
@@ -451,9 +451,11 @@ class TapbackActionsNotifier extends Notifier<void> {
           to: toNodeNum,
           wantAck: true,
         );
-        debugPrint('📱 Sent tapback ${type.emoji} to node $toNodeNum');
+        AppLogging.liveActivity(
+          'Sent tapback ${type.emoji} to node $toNodeNum',
+        );
       } catch (e) {
-        debugPrint('📱 Failed to send tapback: $e');
+        AppLogging.liveActivity('Failed to send tapback: $e');
       }
     }
   }

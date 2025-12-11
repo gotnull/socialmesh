@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/logging.dart';
 import '../../models/mesh_models.dart' show MeshNode;
 import '../../services/ifttt/ifttt_service.dart';
 import '../../services/audio/rtttl_player.dart';
@@ -63,14 +64,14 @@ class AutomationEngine {
   /// Start the automation engine
   void start() {
     _startSilentNodeMonitor();
-    debugPrint('AutomationEngine: Started');
+    AppLogging.automations('AutomationEngine: Started');
   }
 
   /// Stop the automation engine
   void stop() {
     _silentNodeTimer?.cancel();
     _silentNodeTimer = null;
-    debugPrint('AutomationEngine: Stopped');
+    AppLogging.automations('AutomationEngine: Stopped');
   }
 
   /// Execute an automation manually (e.g., from Siri Shortcuts)
@@ -78,7 +79,7 @@ class AutomationEngine {
     Automation automation,
     AutomationEvent event,
   ) async {
-    debugPrint('AutomationEngine: Manual execution of "${automation.name}"');
+    AppLogging.automations('AutomationEngine: Manual execution of "${automation.name}"');
     await _executeAutomation(automation, event);
   }
 
@@ -123,18 +124,32 @@ class AutomationEngine {
     if (node.batteryLevel != null) {
       _nodeBatteryLevels[node.nodeNum] = node.batteryLevel!;
 
-      // Battery low check
-      if (previousBattery != null &&
-          previousBattery > 20 &&
-          node.batteryLevel! <= 20) {
-        await _processEvent(
-          AutomationEvent(
-            type: TriggerType.batteryLow,
-            nodeNum: node.nodeNum,
-            nodeName: node.displayName,
-            batteryLevel: node.batteryLevel,
-          ),
-        );
+      // Battery low check - check each automation's threshold individually
+      if (previousBattery != null && node.batteryLevel! < previousBattery) {
+        // Battery is decreasing - check if it crossed any threshold
+        final batteryLowAutomations = automations
+            .where((a) => a.trigger.type == TriggerType.batteryLow)
+            .toList();
+
+        for (final automation in batteryLowAutomations) {
+          final threshold = automation.trigger.batteryThreshold;
+          // Fire if previous was above threshold and current is at or below
+          if (previousBattery > threshold && node.batteryLevel! <= threshold) {
+            AppLogging.automations(
+              '🔋 Battery crossed threshold $threshold: $previousBattery -> ${node.batteryLevel}',
+            );
+            await _processEvent(
+              AutomationEvent(
+                type: TriggerType.batteryLow,
+                nodeNum: node.nodeNum,
+                nodeName: node.displayName,
+                batteryLevel: node.batteryLevel,
+              ),
+            );
+            // Only fire once per node update (the _shouldTrigger will filter by node if needed)
+            break;
+          }
+        }
       }
 
       // Battery full check
@@ -241,18 +256,18 @@ class AutomationEngine {
         .where((a) => a.enabled && a.trigger.type == event.type)
         .toList();
 
-    debugPrint('🤖 AutomationEngine: Processing ${event.type.name} event');
-    debugPrint(
+    AppLogging.automations('AutomationEngine: Processing ${event.type.name} event');
+    AppLogging.automations(
       '🤖 AutomationEngine: Found ${automations.length} matching automations',
     );
 
     for (final automation in automations) {
-      debugPrint('🤖 AutomationEngine: Checking "${automation.name}"');
+      AppLogging.automations('AutomationEngine: Checking "${automation.name}"');
       if (_shouldTrigger(automation, event)) {
-        debugPrint('🤖 AutomationEngine: TRIGGERING "${automation.name}"');
+        AppLogging.automations('AutomationEngine: TRIGGERING "${automation.name}"');
         await _executeAutomation(automation, event);
       } else {
-        debugPrint(
+        AppLogging.automations(
           '🤖 AutomationEngine: Skipped "${automation.name}" (conditions not met)',
         );
       }
@@ -268,13 +283,13 @@ class AutomationEngine {
     final lastTrigger = _lastTriggerTimes[throttleKey];
     if (lastTrigger != null &&
         DateTime.now().difference(lastTrigger) < _minTriggerInterval) {
-      debugPrint('🤖 _shouldTrigger: Throttled');
+      AppLogging.automations('_shouldTrigger: Throttled');
       return false;
     }
 
     // Check node filter
     if (trigger.nodeNum != null && trigger.nodeNum != event.nodeNum) {
-      debugPrint(
+      AppLogging.automations(
         '🤖 _shouldTrigger: Node filter mismatch (trigger=${trigger.nodeNum}, event=${event.nodeNum})',
       );
       return false;
@@ -285,14 +300,14 @@ class AutomationEngine {
       case TriggerType.batteryLow:
         if (event.batteryLevel == null ||
             event.batteryLevel! > trigger.batteryThreshold) {
-          debugPrint('🤖 _shouldTrigger: Battery level not below threshold');
+          AppLogging.automations('_shouldTrigger: Battery level not below threshold');
           return false;
         }
         break;
 
       case TriggerType.messageContains:
         if (trigger.keyword == null || event.messageText == null) {
-          debugPrint(
+          AppLogging.automations(
             '🤖 _shouldTrigger: messageContains - keyword=${trigger.keyword}, message=${event.messageText}',
           );
           return false;
@@ -300,12 +315,12 @@ class AutomationEngine {
         final keywordLower = trigger.keyword!.toLowerCase();
         final messageLower = event.messageText!.toLowerCase();
         if (!messageLower.contains(keywordLower)) {
-          debugPrint(
+          AppLogging.automations(
             '🤖 _shouldTrigger: messageContains - "$messageLower" does not contain "$keywordLower"',
           );
           return false;
         }
-        debugPrint(
+        AppLogging.automations(
           '🤖 _shouldTrigger: messageContains - MATCH! "$messageLower" contains "$keywordLower"',
         );
         break;
@@ -385,7 +400,7 @@ class AutomationEngine {
     Automation automation,
     AutomationEvent event,
   ) async {
-    debugPrint('AutomationEngine: Executing "${automation.name}"');
+    AppLogging.automations('AutomationEngine: Executing "${automation.name}"');
 
     // Update throttle
     final throttleKey = '${automation.id}_${event.type.name}';
@@ -400,7 +415,7 @@ class AutomationEngine {
         final result = await _executeAction(action, event, automation);
         actionsExecuted.add(action.type.displayName);
         actionResults.add(result);
-        debugPrint(
+        AppLogging.automations(
           'AutomationEngine: Action "${action.type.displayName}" - ${result.success ? "SUCCESS" : "FAILED: ${result.errorMessage}"}',
         );
       }
@@ -409,7 +424,7 @@ class AutomationEngine {
       await _repository.recordTrigger(automation.id);
     } catch (e) {
       errorMessage = e.toString();
-      debugPrint('AutomationEngine: Error executing automation: $e');
+      AppLogging.automations('AutomationEngine: Error executing automation: $e');
     }
 
     // Determine overall success (all actions succeeded and no error)
@@ -565,7 +580,7 @@ class AutomationEngine {
               soundFileName = await NotificationSoundService.instance
                   .prepareSoundFromRtttl(customSoundRtttl);
             } catch (e) {
-              debugPrint('Failed to prepare notification sound: $e');
+              AppLogging.automations('Failed to prepare notification sound: $e');
             }
           }
 
@@ -591,7 +606,7 @@ class AutomationEngine {
             try {
               await player.play(customSoundRtttl);
             } catch (e) {
-              debugPrint('Failed to play notification sound: $e');
+              AppLogging.automations('Failed to play notification sound: $e');
             } finally {
               await player.dispose();
             }

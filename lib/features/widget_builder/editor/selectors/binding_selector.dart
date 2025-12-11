@@ -15,9 +15,11 @@ class BindingSelector extends StatefulWidget {
   });
 
   /// Show the binding selector as a bottom sheet
+  /// If [numericOnly] is true, only show numeric bindings (int, double)
   static Future<String?> show({
     required BuildContext context,
     String? selectedPath,
+    bool numericOnly = false,
   }) {
     return AppBottomSheet.showScrollable<String>(
       context: context,
@@ -26,6 +28,7 @@ class BindingSelector extends StatefulWidget {
       builder: (scrollController) => _BindingSelectorContent(
         selectedPath: selectedPath,
         scrollController: scrollController,
+        numericOnly: numericOnly,
       ),
     );
   }
@@ -44,10 +47,12 @@ class _BindingSelectorState extends State<BindingSelector> {
 class _BindingSelectorContent extends StatefulWidget {
   final String? selectedPath;
   final ScrollController scrollController;
+  final bool numericOnly;
 
   const _BindingSelectorContent({
     this.selectedPath,
     required this.scrollController,
+    this.numericOnly = false,
   });
 
   @override
@@ -63,6 +68,13 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
   List<BindingDefinition> get _filteredBindings {
     final query = _searchQuery.toLowerCase();
     var bindings = BindingRegistry.bindings.toList();
+
+    // Filter to numeric types only if required (for gauges and charts)
+    if (widget.numericOnly) {
+      bindings = bindings
+          .where((b) => b.valueType == int || b.valueType == double)
+          .toList();
+    }
 
     if (_selectedCategory != null) {
       bindings = bindings

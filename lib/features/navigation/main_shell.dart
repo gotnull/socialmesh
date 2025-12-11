@@ -1,3 +1,4 @@
+import '../../core/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
@@ -111,7 +112,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     // BUT: skip this during auto-reconnect if user already configured region before
     // The device config might not have loaded yet, and we don't want a loop
     if (isConnected && needsRegionSetup && !regionConfigured) {
-      debugPrint(
+      AppLogging.app(
         '⚠️ MainShell: Connected but region is UNSET and not configured - forcing region setup',
       );
       return const RegionSelectionScreen(isInitialSetup: true);

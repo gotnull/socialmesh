@@ -1,3 +1,4 @@
+import '../../core/logging.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,11 +50,11 @@ final firmwareCheckProvider = FutureProvider.autoDispose<FirmwareInfo?>((
         downloadUrl: htmlUrl,
       );
     } else {
-      debugPrint('Failed to fetch firmware info: ${response.statusCode}');
+      AppLogging.firmware('Failed to fetch firmware info: ${response.statusCode}');
       return null;
     }
   } catch (e) {
-    debugPrint('Error fetching firmware info: $e');
+    AppLogging.firmware('Error fetching firmware info: $e');
     return null;
   }
 });

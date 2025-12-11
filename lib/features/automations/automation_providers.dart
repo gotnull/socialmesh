@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter/foundation.dart';
+import 'package:socialmesh/core/logging.dart';
 
 import '../../providers/app_providers.dart';
 import 'automation_engine.dart';
@@ -57,7 +57,7 @@ final automationEngineInitProvider = FutureProvider<AutomationEngine>((
   // Start the engine (for silent node monitoring, etc.)
   engine.start();
 
-  debugPrint('AutomationEngine: Initialized and started');
+  AppLogging.automations('AutomationEngine: Initialized and started');
 
   return engine;
 });

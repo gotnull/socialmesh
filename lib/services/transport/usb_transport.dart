@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:logger/logger.dart';
+import '../../core/logging.dart';
 import '../../core/transport.dart';
 
 /// USB Serial implementation of DeviceTransport
 class UsbTransport implements DeviceTransport {
-  final Logger _logger;
+  late final Logger _logger;
   final StreamController<DeviceConnectionState> _stateController;
   final StreamController<List<int>> _dataController;
 
@@ -16,10 +17,11 @@ class UsbTransport implements DeviceTransport {
 
   DeviceConnectionState _state = DeviceConnectionState.disconnected;
 
-  UsbTransport({Logger? logger})
-    : _logger = logger ?? Logger(),
-      _stateController = StreamController<DeviceConnectionState>.broadcast(),
-      _dataController = StreamController<List<int>>.broadcast();
+  UsbTransport()
+    : _stateController = StreamController<DeviceConnectionState>.broadcast(),
+      _dataController = StreamController<List<int>>.broadcast() {
+    _logger = AppLogging.bleLogger; // USB uses same logging config
+  }
 
   @override
   TransportType get type => TransportType.usb;

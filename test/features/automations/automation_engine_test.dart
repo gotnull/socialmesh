@@ -338,6 +338,51 @@ void main() {
       expect(sentMessages.first.$2, contains('15%'));
     });
 
+    test('triggers batteryLow with custom threshold (10%)', () async {
+      final automation = Automation(
+        id: 'test-battery-low-10',
+        name: 'Battery Critical Alert',
+        trigger: const AutomationTrigger(
+          type: TriggerType.batteryLow,
+          config: {'batteryThreshold': 10},
+        ),
+        actions: const [
+          AutomationAction(
+            type: ActionType.sendMessage,
+            config: {
+              'targetNodeNum': 999,
+              'messageText': '{{node.name}} battery critical at {{battery}}',
+            },
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      // First update - battery at 13%
+      final nodeAboveThreshold = MeshNode(
+        nodeNum: 123,
+        shortName: 'TEST',
+        longName: 'Test Node',
+        batteryLevel: 13,
+        lastHeard: DateTime.now(),
+      );
+      await engine.processNodeUpdate(nodeAboveThreshold);
+      expect(sentMessages, isEmpty);
+
+      // Second update - battery drops to 10% (crosses threshold)
+      final nodeBelowThreshold = MeshNode(
+        nodeNum: 123,
+        shortName: 'TEST',
+        longName: 'Test Node',
+        batteryLevel: 10,
+        lastHeard: DateTime.now(),
+      );
+      await engine.processNodeUpdate(nodeBelowThreshold);
+
+      expect(sentMessages, isNotEmpty);
+      expect(sentMessages.first.$2, contains('10%'));
+    });
+
     test('does not trigger batteryLow if already below threshold', () async {
       final automation = Automation(
         id: 'test-battery-low',

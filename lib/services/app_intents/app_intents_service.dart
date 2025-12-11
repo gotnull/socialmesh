@@ -1,6 +1,6 @@
+import '../../core/logging.dart';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,11 +24,11 @@ class AppIntentsService {
 
     _channel.setMethodCallHandler(_handleMethodCall);
     _isSetup = true;
-    debugPrint('AppIntentsService: Setup complete');
+    AppLogging.debug('AppIntentsService: Setup complete');
   }
 
   Future<dynamic> _handleMethodCall(MethodCall call) async {
-    debugPrint('AppIntentsService: Received ${call.method}');
+    AppLogging.debug('AppIntentsService: Received ${call.method}');
 
     switch (call.method) {
       case 'handleIntent':
@@ -269,7 +269,7 @@ class AppIntentsService {
         'error': error,
       });
     } catch (e) {
-      debugPrint('AppIntentsService: Failed to send result: $e');
+      AppLogging.debug('AppIntentsService: Failed to send result: $e');
     }
   }
 

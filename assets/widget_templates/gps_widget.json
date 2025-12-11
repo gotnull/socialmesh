@@ -1,13 +1,13 @@
 {
-  "id": "ab9a8af1-aa83-483e-b9cf-0b7edacb2396",
+  "id": "eea9a07d-5703-4cc9-be8b-44299ca85a4e",
   "name": "GPS Position",
   "description": "Show GPS coordinates and satellites",
   "version": "1.0.0",
-  "createdAt": "2025-12-11T16:20:27.151364",
-  "updatedAt": "2025-12-11T16:20:27.151364",
+  "createdAt": "2025-12-11T21:05:49.706563",
+  "updatedAt": "2025-12-11T21:05:49.706563",
   "size": "medium",
   "root": {
-    "id": "a1a03375-f45a-4504-b14b-a896811792e2",
+    "id": "5e3d89f9-04fb-4b2c-bc21-aa773297daf7",
     "type": "column",
     "style": {
       "padding": 12.0,
@@ -15,12 +15,12 @@
     },
     "children": [
       {
-        "id": "ad0f22de-ab8f-499d-94a0-197e8f1c5fe3",
+        "id": "0069239a-a686-4775-80a3-3f922ecf48f7",
         "type": "row",
         "style": {},
         "children": [
           {
-            "id": "8a27772d-ad44-468c-bcfd-c3f250e9d588",
+            "id": "73b380b2-26af-43f3-bbc7-787b7fe9bc28",
             "type": "icon",
             "style": {
               "textColor": "#22C55E"
@@ -29,14 +29,14 @@
             "iconSize": 20.0
           },
           {
-            "id": "1bdddfae-3f5c-44eb-a16f-c4a3915f9473",
+            "id": "5c735be6-63ab-4756-a41d-b3abf2312612",
             "type": "spacer",
             "style": {
               "width": 8.0
             }
           },
           {
-            "id": "75fabde5-c020-4e1e-ac36-1bf716572e1c",
+            "id": "6580c4b7-e463-4d70-9e23-f1d9264d7e6c",
             "type": "text",
             "style": {
               "textColor": "#FFFFFF",
@@ -46,14 +46,14 @@
             "text": "GPS"
           },
           {
-            "id": "fe423e48-7680-4a26-9b3a-b0ec17c7cf3a",
+            "id": "997d3abd-f6db-46c6-810d-368955c0cccd",
             "type": "spacer",
             "style": {
               "expanded": true
             }
           },
           {
-            "id": "5377524a-f0f3-4fc9-8232-b4491c9c6557",
+            "id": "15b4aafa-8912-4f8f-999a-d48f8b69b308",
             "type": "text",
             "style": {
               "textColor": "#888888",
@@ -68,14 +68,14 @@
         ]
       },
       {
-        "id": "84b75173-fbea-4d55-bb0c-19b609ed2086",
+        "id": "102edd5e-aeae-4111-881a-168899c96019",
         "type": "row",
         "style": {
           "spacing": 16.0
         },
         "children": [
           {
-            "id": "7ea1b8c4-9d63-4d82-b62a-69c403f28c9f",
+            "id": "d03990cb-1f38-4caa-8225-d995585b955f",
             "type": "text",
             "style": {
               "textColor": "#FFFFFF",
@@ -88,7 +88,7 @@
             }
           },
           {
-            "id": "db2fd4a8-2239-4929-9f11-d0661a53c402",
+            "id": "1147e97e-b42a-451f-9ee4-f746ce6d3ade",
             "type": "text",
             "style": {
               "textColor": "#FFFFFF",
@@ -103,7 +103,7 @@
         ]
       },
       {
-        "id": "a1e40e9c-5443-4802-bf7d-8dbeff14c755",
+        "id": "23f747f4-5c3c-43d3-bdb9-b113b8a54b30",
         "type": "text",
         "style": {
           "textColor": "#888888",

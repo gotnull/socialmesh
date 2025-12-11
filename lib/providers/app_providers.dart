@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
+import '../core/logging.dart';
 import '../core/transport.dart';
 import '../services/transport/ble_transport.dart';
 import '../services/transport/usb_transport.dart';
@@ -131,7 +131,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
 
             // Start protocol service
             final protocol = ref.read(protocolServiceProvider);
-            debugPrint('🔵 AppInit: Calling protocol.start()...');
+            AppLogging.app('AppInit: Calling protocol.start()...');
 
             // Set device info for hardware model inference
             protocol.setDeviceName(lastDevice.name);
@@ -139,14 +139,14 @@ class AppInitNotifier extends Notifier<AppInitState> {
             protocol.setBleManufacturerName(transport.bleManufacturerName);
 
             await protocol.start();
-            debugPrint(
+            AppLogging.debug(
               '🔵 AppInit: protocol.start() returned, myNodeNum=${protocol.myNodeNum}',
             );
 
             // Verify protocol actually received configuration from device
             // If PIN was cancelled or authentication failed, myNodeNum will be null
             if (protocol.myNodeNum == null) {
-              debugPrint('❌ AppInit: myNodeNum is NULL - throwing exception');
+              AppLogging.debug('❌ AppInit: myNodeNum is NULL - throwing exception');
               await transport.disconnect();
               throw Exception(
                 'Authentication failed - no configuration received',
@@ -158,7 +158,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
             await locationService.startLocationUpdates();
 
             ref.read(connectedDeviceProvider.notifier).setState(lastDevice);
-            debugPrint(
+            AppLogging.debug(
               '🎯 Auto-reconnect: Setting autoReconnectState to success',
             );
             ref
@@ -169,14 +169,14 @@ class AppInitNotifier extends Notifier<AppInitState> {
             // If we have a lastConnectedDeviceId, user has successfully connected before
             // The region was either already set on device or user configured it previously
             // Forcing region selection on every reconnect is wrong - the device retains its config
-            debugPrint(
+            AppLogging.debug(
               '✅ Auto-reconnect: Skipping region check (reconnecting to known device)',
             );
 
             // Mark region as configured since we're reconnecting to a known device
             if (!settings.regionConfigured) {
               await settings.setRegionConfigured(true);
-              debugPrint('✅ Auto-reconnect: Marked region as configured');
+              AppLogging.debug('✅ Auto-reconnect: Marked region as configured');
             }
           } else {
             // Device not found during scan - go to scanner
@@ -187,7 +187,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
             return;
           }
         } catch (e) {
-          debugPrint('Auto-reconnect failed: $e');
+          AppLogging.debug('Auto-reconnect failed: $e');
           ref
               .read(autoReconnectStateProvider.notifier)
               .setState(AutoReconnectState.failed);
@@ -197,10 +197,10 @@ class AppInitNotifier extends Notifier<AppInitState> {
         }
       }
 
-      debugPrint('🎯 AppInitNotifier: Setting state to initialized');
+      AppLogging.debug('🎯 AppInitNotifier: Setting state to initialized');
       state = AppInitState.initialized;
     } catch (e) {
-      debugPrint('App initialization failed: $e');
+      AppLogging.debug('App initialization failed: $e');
       state = AppInitState.error;
     }
   }
@@ -240,8 +240,8 @@ final settingsServiceProvider = FutureProvider<SettingsService>((ref) async {
   if (_cachedSettingsService != null) {
     return _cachedSettingsService!;
   }
-
   final logger = ref.watch(loggerProvider);
+
   final service = SettingsService(logger: logger);
   await service.init();
   _cachedSettingsService = service;
@@ -281,13 +281,12 @@ final transportTypeProvider =
 
 final transportProvider = Provider<DeviceTransport>((ref) {
   final type = ref.watch(transportTypeProvider);
-  final logger = ref.watch(loggerProvider);
 
   switch (type) {
     case TransportType.ble:
-      return BleTransport(logger: logger);
+      return BleTransport();
     case TransportType.usb:
-      return UsbTransport(logger: logger);
+      return UsbTransport();
   }
 });
 
@@ -351,15 +350,15 @@ final _lastConnectedDeviceIdProvider =
 
 // Auto-reconnect manager - monitors connection and attempts to reconnect on unexpected disconnect
 final autoReconnectManagerProvider = Provider<void>((ref) {
-  debugPrint('🔄 AUTO-RECONNECT MANAGER INITIALIZED');
+  AppLogging.connection('AUTO-RECONNECT MANAGER INITIALIZED');
 
   // Track the last connected device ID when we connect
   ref.listen<DeviceInfo?>(connectedDeviceProvider, (previous, next) {
-    debugPrint(
+    AppLogging.debug(
       '🔄 connectedDeviceProvider changed: ${previous?.id} -> ${next?.id}',
     );
     if (next != null) {
-      debugPrint('🔄 Storing device ID for reconnect: ${next.id}');
+      AppLogging.connection('Storing device ID for reconnect: ${next.id}');
       ref.read(_lastConnectedDeviceIdProvider.notifier).setId(next.id);
     }
   });
@@ -369,13 +368,13 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
     previous,
     next,
   ) {
-    debugPrint('🔄 connectionStateProvider changed: $previous -> $next');
+    AppLogging.connection('connectionStateProvider changed: $previous -> $next');
 
     next.whenData((state) {
       final lastDeviceId = ref.read(_lastConnectedDeviceIdProvider);
       final autoReconnectState = ref.read(autoReconnectStateProvider);
 
-      debugPrint(
+      AppLogging.debug(
         '🔄 Connection state: $state (lastDeviceId: $lastDeviceId, '
         'reconnectState: $autoReconnectState)',
       );
@@ -385,7 +384,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
       if (state == DeviceConnectionState.connected &&
           (autoReconnectState == AutoReconnectState.scanning ||
               autoReconnectState == AutoReconnectState.connecting)) {
-        debugPrint(
+        AppLogging.debug(
           '🔄 ✅ Connection restored while reconnecting - resetting to idle',
         );
         ref
@@ -400,12 +399,12 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
           autoReconnectState == AutoReconnectState.idle ||
           autoReconnectState == AutoReconnectState.success;
 
-      debugPrint('🔄 Can attempt reconnect: $canAttemptReconnect');
+      AppLogging.connection('Can attempt reconnect: $canAttemptReconnect');
 
       if (state == DeviceConnectionState.disconnected &&
           lastDeviceId != null &&
           canAttemptReconnect) {
-        debugPrint('🔄 🚀 Device disconnected, STARTING reconnect...');
+        AppLogging.connection('🚀 Device disconnected, STARTING reconnect...');
 
         // Set state to scanning immediately to prevent duplicate triggers
         ref
@@ -415,7 +414,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
         // Run reconnect in a separate async function to avoid listener issues
         _performReconnect(ref, lastDeviceId);
       } else {
-        debugPrint('🔄 NOT attempting reconnect - conditions not met');
+        AppLogging.connection('NOT attempting reconnect - conditions not met');
       }
     });
   });
@@ -423,27 +422,27 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
 
 /// Performs the actual reconnection logic
 Future<void> _performReconnect(Ref ref, String deviceId) async {
-  debugPrint('🔄 _performReconnect STARTED for device: $deviceId');
+  AppLogging.connection('_performReconnect STARTED for device: $deviceId');
 
   try {
     // Wait for device to reboot (Meshtastic devices take ~8-15 seconds)
-    debugPrint('🔄 Waiting 10s for device to reboot...');
+    AppLogging.connection('Waiting 10s for device to reboot...');
     await Future.delayed(const Duration(seconds: 10));
 
     // Check if cancelled
     final currentState = ref.read(autoReconnectStateProvider);
-    debugPrint('🔄 After delay, reconnect state is: $currentState');
+    AppLogging.connection('After delay, reconnect state is: $currentState');
     if (currentState == AutoReconnectState.idle) {
-      debugPrint('🔄 Reconnect cancelled (state is idle)');
+      AppLogging.connection('Reconnect cancelled (state is idle)');
       return;
     }
 
     // Check settings for auto-reconnect preference
-    debugPrint('🔄 Checking settings...');
+    AppLogging.connection('Checking settings...');
     final settings = await ref.read(settingsServiceProvider.future);
-    debugPrint('🔄 Auto-reconnect setting: ${settings.autoReconnect}');
+    AppLogging.connection('Auto-reconnect setting: ${settings.autoReconnect}');
     if (!settings.autoReconnect) {
-      debugPrint('🔄 Auto-reconnect disabled in settings');
+      AppLogging.connection('Auto-reconnect disabled in settings');
       ref
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.idle);
@@ -451,27 +450,27 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
     }
 
     final transport = ref.read(transportProvider);
-    debugPrint('🔄 Got transport, current state: ${transport.state}');
+    AppLogging.connection('Got transport, current state: ${transport.state}');
 
     // Try up to 8 times (device may take a while to become discoverable after reboot)
     const maxRetries = 8;
     for (int attempt = 1; attempt <= maxRetries; attempt++) {
       // Check if cancelled
       if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
-        debugPrint('🔄 Reconnect cancelled');
+        AppLogging.connection('Reconnect cancelled');
         return;
       }
 
-      debugPrint('🔄 Scan attempt $attempt/$maxRetries for device: $deviceId');
+      AppLogging.connection('Scan attempt $attempt/$maxRetries for device: $deviceId');
 
       DeviceInfo? foundDevice;
 
       try {
-        debugPrint('🔄 Stopping any existing scan...');
+        AppLogging.connection('Stopping any existing scan...');
         await FlutterBluePlus.stopScan();
         await Future.delayed(const Duration(milliseconds: 500));
 
-        debugPrint('🔄 Starting fresh BLE scan...');
+        AppLogging.connection('Starting fresh BLE scan...');
 
         // Use FlutterBluePlus directly for more control
         final completer = Completer<DeviceInfo?>();
@@ -486,17 +485,17 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           withServices: [Guid(serviceUuid)],
         );
 
-        debugPrint('🔄 Scan started, listening for results...');
+        AppLogging.connection('Scan started, listening for results...');
 
         // Listen to scan results
         subscription = FlutterBluePlus.scanResults.listen(
           (results) {
             for (final r in results) {
               final foundId = r.device.remoteId.toString();
-              debugPrint('🔄 Found device: $foundId (looking for $deviceId)');
+              AppLogging.connection('Found device: $foundId (looking for $deviceId)');
 
               if (foundId == deviceId && !completer.isCompleted) {
-                debugPrint('🔄 ✓ Target device found!');
+                AppLogging.connection('✓ Target device found!');
                 final deviceInfo = DeviceInfo(
                   id: foundId,
                   name: r.device.platformName.isNotEmpty
@@ -511,7 +510,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
             }
           },
           onError: (e) {
-            debugPrint('🔄 Scan stream error: $e');
+            AppLogging.connection('Scan stream error: $e');
             if (!completer.isCompleted) {
               completer.complete(null);
             }
@@ -521,38 +520,38 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         // Also listen for scan completion
         FlutterBluePlus.isScanning.listen((isScanning) {
           if (!isScanning && !completer.isCompleted) {
-            debugPrint('🔄 Scan completed (isScanning = false)');
+            AppLogging.connection('Scan completed (isScanning = false)');
             completer.complete(null);
           }
         });
 
         // Wait for result or scan completion
-        debugPrint('🔄 Waiting for scan result (15s timeout)...');
+        AppLogging.connection('Waiting for scan result (15s timeout)...');
         foundDevice = await completer.future.timeout(
           const Duration(seconds: 16),
           onTimeout: () {
-            debugPrint('🔄 Completer timeout reached');
+            AppLogging.connection('Completer timeout reached');
             return null;
           },
         );
-        debugPrint('🔄 Got scan result: ${foundDevice?.id}');
+        AppLogging.connection('Got scan result: ${foundDevice?.id}');
 
         // Clean up
         await FlutterBluePlus.stopScan();
         subscription.cancel();
-        debugPrint('🔄 Cleanup done');
+        AppLogging.connection('Cleanup done');
       } catch (e, stack) {
-        debugPrint('🔄 Scan error: $e');
-        debugPrint('🔄 Stack: $stack');
+        AppLogging.connection('Scan error: $e');
+        AppLogging.connection('Stack: $stack');
         try {
           await FlutterBluePlus.stopScan();
         } catch (_) {}
       }
 
-      debugPrint('🔄 After scan. foundDevice: ${foundDevice != null}');
+      AppLogging.connection('After scan. foundDevice: ${foundDevice != null}');
 
       if (foundDevice != null) {
-        debugPrint('🔄 Device found! Connecting...');
+        AppLogging.connection('Device found! Connecting...');
         ref
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.connecting);
@@ -562,23 +561,23 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 
           // Check if cancelled (connection may have been restored by another path)
           if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
-            debugPrint('🔄 Reconnect cancelled (already connected)');
+            AppLogging.connection('Reconnect cancelled (already connected)');
             return;
           }
 
           // Wait a moment for connection to stabilize
-          debugPrint('🔄 Waiting for connection to stabilize...');
+          AppLogging.connection('Waiting for connection to stabilize...');
           await Future.delayed(const Duration(seconds: 2));
 
           // Check if cancelled again
           if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
-            debugPrint('🔄 Reconnect cancelled (already connected)');
+            AppLogging.connection('Reconnect cancelled (already connected)');
             return;
           }
 
           // Check if still connected
           if (transport.state != DeviceConnectionState.connected) {
-            debugPrint('🔄 ❌ Connection dropped after connect, retrying...');
+            AppLogging.connection('❌ Connection dropped after connect, retrying...');
             if (attempt < maxRetries) {
               ref
                   .read(autoReconnectStateProvider.notifier)
@@ -594,12 +593,12 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 
           // Check if cancelled before starting protocol
           if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
-            debugPrint('🔄 Reconnect cancelled (already connected)');
+            AppLogging.connection('Reconnect cancelled (already connected)');
             return;
           }
 
           // Restart protocol service
-          debugPrint('🔄 Starting protocol service...');
+          AppLogging.connection('Starting protocol service...');
           final protocol = ref.read(protocolServiceProvider);
 
           // Set device info for hardware model inference
@@ -608,18 +607,18 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           protocol.setBleManufacturerName(transport.bleManufacturerName);
 
           await protocol.start();
-          debugPrint('🔄 Protocol service started!');
+          AppLogging.connection('Protocol service started!');
 
           // Check if cancelled after protocol start
           if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
-            debugPrint('🔄 Reconnect cancelled (already connected)');
+            AppLogging.connection('Reconnect cancelled (already connected)');
             return;
           }
 
           // Check again if still connected after protocol start
           await Future.delayed(const Duration(milliseconds: 500));
           if (transport.state != DeviceConnectionState.connected) {
-            debugPrint(
+            AppLogging.debug(
               '🔄 ❌ Connection dropped after protocol start, retrying...',
             );
             if (attempt < maxRetries) {
@@ -641,7 +640,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
             ref
                 .read(autoReconnectStateProvider.notifier)
                 .setState(AutoReconnectState.success);
-            debugPrint('🔄 ✅ Reconnection successful and stable!');
+            AppLogging.connection('✅ Reconnection successful and stable!');
 
             // Reset to idle
             await Future.delayed(const Duration(milliseconds: 500));
@@ -650,7 +649,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
                 .setState(AutoReconnectState.idle);
             return; // Success!
           } else {
-            debugPrint('🔄 ❌ Connection dropped at final check');
+            AppLogging.connection('❌ Connection dropped at final check');
             if (attempt < maxRetries) {
               ref
                   .read(autoReconnectStateProvider.notifier)
@@ -660,10 +659,10 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
             }
           }
         } catch (e) {
-          debugPrint('🔄 ❌ Connect error: $e');
+          AppLogging.connection('❌ Connect error: $e');
           // Check if we should abort (connection restored via another path)
           if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
-            debugPrint(
+            AppLogging.debug(
               '🔄 Reconnect cancelled (already connected), ignoring error',
             );
             return;
@@ -677,7 +676,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           }
         }
       } else {
-        debugPrint('🔄 Device not found in attempt $attempt, waiting 5s...');
+        AppLogging.connection('Device not found in attempt $attempt, waiting 5s...');
         if (attempt < maxRetries) {
           // Wait longer before next retry - device may still be rebooting
           await Future.delayed(const Duration(seconds: 5));
@@ -686,7 +685,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
     }
 
     // All retries exhausted
-    debugPrint('🔄 ❌ Failed to reconnect after $maxRetries attempts');
+    AppLogging.connection('❌ Failed to reconnect after $maxRetries attempts');
     ref
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.failed);
@@ -698,8 +697,8 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.idle);
   } catch (e, stackTrace) {
-    debugPrint('🔄 ❌ Unexpected error during reconnect: $e');
-    debugPrint('🔄 Stack trace: $stackTrace');
+    AppLogging.connection('❌ Unexpected error during reconnect: $e');
+    AppLogging.connection('Stack trace: $stackTrace');
     ref
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.idle);
@@ -736,7 +735,7 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
   final logger = ref.watch(loggerProvider);
   final service = ProtocolService(transport, logger: logger);
 
-  debugPrint(
+  AppLogging.debug(
     '🟢 ProtocolService provider created - instance: ${service.hashCode}',
   );
 
@@ -744,17 +743,17 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
   NotificationService().onReactionSelected =
       (int toNodeNum, String emoji) async {
         try {
-          debugPrint('🔔 Sending reaction "$emoji" to node $toNodeNum');
+          AppLogging.app('Sending reaction "$emoji" to node $toNodeNum');
           await service.sendMessage(text: emoji, to: toNodeNum, wantAck: true);
-          debugPrint('🔔 Reaction sent successfully');
+          AppLogging.app('Reaction sent successfully');
         } catch (e) {
-          debugPrint('🔔 Failed to send reaction: $e');
+          AppLogging.app('Failed to send reaction: $e');
         }
       };
 
   // Keep the service alive for the lifetime of the app
   ref.onDispose(() {
-    debugPrint(
+    AppLogging.debug(
       '🔴 ProtocolService being disposed - instance: ${service.hashCode}',
     );
     // Clear the callback when disposing
@@ -864,7 +863,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     // Find nearest node with distance
     final nearestNode = _findNearestNode(nodes, myNodeNum);
 
-    debugPrint(
+    AppLogging.debug(
       '📱 Starting Live Activity: device=$deviceName, shortName=$shortName, '
       'battery=$batteryLevel%, rssi=$rssi, snr=$snr, nodes=$onlineCount/$totalCount',
     );
@@ -956,7 +955,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     final totalCount = nodes.length;
     final nearestNode = _findNearestNode(nodes, myNodeNum);
 
-    debugPrint('📱 Live Activity update: nodes=$onlineCount/$totalCount');
+    AppLogging.debug('📱 Live Activity update: nodes=$onlineCount/$totalCount');
 
     _liveActivityService.updateActivity(
       deviceName: myNode.longName,
@@ -1015,7 +1014,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     _channelUtilSubscription = null;
     await _liveActivityService.endActivity();
     state = false;
-    debugPrint('📱 Ended Live Activity - device disconnected');
+    AppLogging.debug('📱 Ended Live Activity - device disconnected');
   }
 }
 
@@ -1047,7 +1046,9 @@ class MessagesNotifier extends Notifier<List<Message>> {
       final savedMessages = await _storage!.loadMessages();
       if (savedMessages.isNotEmpty) {
         state = savedMessages;
-        debugPrint('📨 Loaded ${savedMessages.length} messages from storage');
+        AppLogging.messages(
+          'Loaded ${savedMessages.length} messages from storage',
+        );
       }
     }
 
@@ -1070,17 +1071,17 @@ class MessagesNotifier extends Notifier<List<Message>> {
   }
 
   void _notifyNewMessage(Message message) {
-    debugPrint('🔔 _notifyNewMessage called for message from ${message.from}');
+    AppLogging.app('_notifyNewMessage called for message from ${message.from}');
 
     // Check master notification toggle
     final settingsAsync = ref.read(settingsServiceProvider);
     final settings = settingsAsync.value;
     if (settings == null) {
-      debugPrint('🔔 Settings not available, skipping notification');
+      AppLogging.app('Settings not available, skipping notification');
       return;
     }
     if (!settings.notificationsEnabled) {
-      debugPrint('🔔 Notifications disabled in settings');
+      AppLogging.app('Notifications disabled in settings');
       return;
     }
 
@@ -1088,18 +1089,18 @@ class MessagesNotifier extends Notifier<List<Message>> {
     final nodes = ref.read(nodesProvider);
     final senderNode = nodes[message.from];
     final senderName = senderNode?.displayName ?? 'Unknown';
-    debugPrint('🔔 Sender: $senderName');
+    AppLogging.app('Sender: $senderName');
 
     // Check if it's a channel message or direct message
     final isChannelMessage = message.channel != null && message.channel! > 0;
-    debugPrint(
+    AppLogging.debug(
       '🔔 Is channel message: $isChannelMessage (channel: ${message.channel})',
     );
 
     if (isChannelMessage) {
       // Check channel message setting
       if (!settings.channelMessageNotificationsEnabled) {
-        debugPrint('🔔 Channel notifications disabled');
+        AppLogging.app('Channel notifications disabled');
         return;
       }
 
@@ -1110,7 +1111,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
           .firstOrNull;
       final channelName = channel?.name ?? 'Channel ${message.channel}';
 
-      debugPrint(
+      AppLogging.debug(
         '🔔 Showing channel notification: $senderName in $channelName',
       );
       NotificationService().showChannelMessageNotification(
@@ -1126,12 +1127,12 @@ class MessagesNotifier extends Notifier<List<Message>> {
     } else {
       // Check direct message setting
       if (!settings.directMessageNotificationsEnabled) {
-        debugPrint('🔔 DM notifications disabled');
+        AppLogging.app('DM notifications disabled');
         return;
       }
 
       // Direct message notification
-      debugPrint('🔔 Showing DM notification from: $senderName');
+      AppLogging.app('Showing DM notification from: $senderName');
       NotificationService().showNewMessageNotification(
         senderName: senderName,
         senderShortName: senderNode?.shortName,
@@ -1176,7 +1177,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       senderName: senderName,
       channelName: channelName,
     );
-    debugPrint('🤖 Automation: Processed message from $senderName');
+    AppLogging.automations('Automation: Processed message from $senderName');
   }
 
   void _triggerIftttForMessage(
@@ -1185,11 +1186,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
     bool isChannelMessage,
   ) {
     final iftttService = ref.read(iftttServiceProvider);
-    debugPrint(
+    AppLogging.debug(
       'IFTTT: Checking message trigger - isActive=${iftttService.isActive}',
     );
     if (!iftttService.isActive) {
-      debugPrint('IFTTT: Not active, skipping message trigger');
+      AppLogging.ifttt(' Not active, skipping message trigger');
       return;
     }
 
@@ -1210,23 +1211,23 @@ class MessagesNotifier extends Notifier<List<Message>> {
   }
 
   void _handleDeliveryUpdate(MessageDeliveryUpdate update) {
-    debugPrint(
+    AppLogging.debug(
       '📨 Delivery update received: packetId=${update.packetId}, '
       'delivered=${update.delivered}, error=${update.error?.message}',
     );
-    debugPrint(
+    AppLogging.debug(
       '📨 Currently tracking packets: ${_packetToMessageId.keys.toList()}',
     );
 
     final messageId = _packetToMessageId[update.packetId];
     if (messageId == null) {
-      debugPrint('📨 ❌ Delivery update for unknown packet ${update.packetId}');
+      AppLogging.debug('📨 ❌ Delivery update for unknown packet ${update.packetId}');
       return;
     }
 
     final messageIndex = state.indexWhere((m) => m.id == messageId);
     if (messageIndex == -1) {
-      debugPrint('📨 ❌ Delivery update for message not in state: $messageId');
+      AppLogging.debug('📨 ❌ Delivery update for message not in state: $messageId');
       return;
     }
 
@@ -1235,7 +1236,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // If message is already delivered, ignore subsequent updates (especially failures)
     // This handles the case where we get ACK followed by a timeout/error packet
     if (message.status == MessageStatus.delivered) {
-      debugPrint(
+      AppLogging.debug(
         '📨 ⏭️ Ignoring update for already-delivered message: $messageId',
       );
       return;
@@ -1257,16 +1258,16 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // Stop tracking after successful delivery to ignore future error packets
     if (update.isSuccess) {
       _packetToMessageId.remove(update.packetId);
-      debugPrint('📨 ✅ Message delivered, stopped tracking: $messageId');
+      AppLogging.debug('📨 ✅ Message delivered, stopped tracking: $messageId');
     } else {
-      debugPrint('📨 ❌ Message failed: $messageId - ${update.error?.message}');
+      AppLogging.debug('📨 ❌ Message failed: $messageId - ${update.error?.message}');
     }
   }
 
   void trackPacket(int packetId, String messageId) {
     _packetToMessageId[packetId] = messageId;
-    debugPrint('📨 Tracking packet $packetId -> message $messageId');
-    debugPrint(
+    AppLogging.debug('📨 Tracking packet $packetId -> message $messageId');
+    AppLogging.debug(
       '📨 Current tracked packets: ${_packetToMessageId.keys.toList()}',
     );
   }
@@ -1332,12 +1333,12 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     if (_storage != null) {
       final savedNodes = await _storage!.loadNodes();
       if (savedNodes.isNotEmpty) {
-        debugPrint('📍 Loaded ${savedNodes.length} nodes from storage');
+        AppLogging.nodes('Loaded ${savedNodes.length} nodes from storage');
         final nodeMap = <int, MeshNode>{};
         for (final node in savedNodes) {
           nodeMap[node.nodeNum] = node;
           if (node.hasPosition) {
-            debugPrint(
+            AppLogging.debug(
               '📍 Node ${node.nodeNum} has stored position: ${node.latitude}, ${node.longitude}',
             );
           }
@@ -1417,7 +1418,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
 
       // Check if node is stale (hasn't been heard from in _offlineTimeoutMinutes)
       if (node.lastHeard!.isBefore(cutoff)) {
-        debugPrint(
+        AppLogging.debug(
           '⚠️ Node ${node.displayName} (${node.nodeNum}) went offline - '
           'last heard ${now.difference(node.lastHeard!).inMinutes}m ago',
         );
@@ -1479,11 +1480,11 @@ class ChannelsNotifier extends Notifier<List<ChannelConfig>> {
   List<ChannelConfig> build() {
     final protocol = ref.watch(protocolServiceProvider);
 
-    debugPrint(
+    AppLogging.debug(
       '🔵 ChannelsNotifier build - protocol has ${protocol.channels.length} channels',
     );
     for (var c in protocol.channels) {
-      debugPrint(
+      AppLogging.debug(
         '  Channel ${c.index}: name="${c.name}", psk.length=${c.psk.length}',
       );
     }
@@ -1492,28 +1493,28 @@ class ChannelsNotifier extends Notifier<List<ChannelConfig>> {
     final initial = protocol.channels
         .where((c) => c.index == 0 || c.role != 'DISABLED')
         .toList();
-    debugPrint(
+    AppLogging.debug(
       '🔵 ChannelsNotifier initialized with ${initial.length} channels',
     );
 
     // Listen for future channel updates
     protocol.channelStream.listen((channel) {
-      debugPrint(
+      AppLogging.debug(
         '🔵 ChannelsNotifier received channel update: index=${channel.index}, name="${channel.name}"',
       );
       final index = state.indexWhere((c) => c.index == channel.index);
       if (index >= 0) {
-        debugPrint('  Updating existing channel at position $index');
+        AppLogging.debug('  Updating existing channel at position $index');
         state = [
           ...state.sublist(0, index),
           channel,
           ...state.sublist(index + 1),
         ];
       } else {
-        debugPrint('  Adding new channel');
+        AppLogging.debug('  Adding new channel');
         state = [...state, channel];
       }
-      debugPrint('  Total channels now: ${state.length}');
+      AppLogging.debug('  Total channels now: ${state.length}');
     });
 
     return initial;

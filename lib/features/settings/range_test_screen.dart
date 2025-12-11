@@ -1,3 +1,4 @@
+import '../../core/logging.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -187,7 +188,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
         to: _selectedTargetNode!,
       );
     } catch (e) {
-      debugPrint('Error sending range test packet: $e');
+      AppLogging.settings('Error sending range test packet: $e');
     }
   }
 

@@ -1,13 +1,13 @@
 {
-  "id": "4ddc5b93-0f35-42e1-8e4b-97866b1256b0",
+  "id": "2ea15d30-bce2-4378-9bff-431246810f5d",
   "name": "Signal Strength",
   "description": "Display SNR and RSSI",
   "version": "1.0.0",
-  "createdAt": "2025-12-11T16:20:27.148184",
-  "updatedAt": "2025-12-11T16:20:27.148184",
+  "createdAt": "2025-12-11T21:05:49.700249",
+  "updatedAt": "2025-12-11T21:05:49.700249",
   "size": "medium",
   "root": {
-    "id": "75888178-9b4e-476a-a1fd-f4a3553f3819",
+    "id": "60820ede-0275-4bfe-ae8c-df9686454332",
     "type": "column",
     "style": {
       "padding": 12.0,
@@ -15,12 +15,12 @@
     },
     "children": [
       {
-        "id": "f778adde-69b6-4681-9981-87553b13290b",
+        "id": "68e37210-89b8-4c71-8f0a-dcb34e3e9e63",
         "type": "row",
         "style": {},
         "children": [
           {
-            "id": "4afb77d9-9d61-46bb-a7c5-f86a8088ee32",
+            "id": "1a8aefb8-4ea0-441e-a44b-921971a6a71a",
             "type": "icon",
             "style": {
               "textColor": "#4F6AF6"
@@ -29,14 +29,14 @@
             "iconSize": 20.0
           },
           {
-            "id": "ec50a172-5058-4883-9d63-07e681d35929",
+            "id": "0bbb2b43-df92-4a61-9fa6-1d9deddc26e1",
             "type": "spacer",
             "style": {
               "width": 8.0
             }
           },
           {
-            "id": "38b6e648-cfc3-4724-9bca-a4ab76c223c4",
+            "id": "6c0fb92e-41eb-433b-8105-6bef242af965",
             "type": "text",
             "style": {
               "textColor": "#FFFFFF",
@@ -48,19 +48,19 @@
         ]
       },
       {
-        "id": "0ac6a8be-39d3-41cc-a676-8d02cfbacdf7",
+        "id": "2c64009b-d40a-4c1a-8e34-c03b9f936291",
         "type": "row",
         "style": {
           "mainAxisAlignment": "spaceBetween"
         },
         "children": [
           {
-            "id": "b2d53cb0-6a3d-49df-a0dd-44c3f954fecf",
+            "id": "fc9b1f87-4a84-48c9-a4e3-651a271793b3",
             "type": "column",
             "style": {},
             "children": [
               {
-                "id": "b3eac560-c5fd-4c88-84f5-bc8cecff85f3",
+                "id": "7b6b9906-7ed8-4d03-8aad-487b9d3e146a",
                 "type": "text",
                 "style": {
                   "textColor": "#888888",
@@ -69,7 +69,7 @@
                 "text": "SNR"
               },
               {
-                "id": "90301df2-c3f2-4a20-b055-2f94d01563b9",
+                "id": "d0db3998-ffec-4bbd-a368-9f48cf6a4eab",
                 "type": "text",
                 "style": {
                   "textColor": "#FFFFFF",
@@ -85,12 +85,12 @@
             ]
           },
           {
-            "id": "81a7932d-e6d8-4998-b088-db95274972dd",
+            "id": "303f10a4-c219-4924-82e8-451c62c64313",
             "type": "column",
             "style": {},
             "children": [
               {
-                "id": "739a2db0-a0e3-4f03-ae84-6a552c922232",
+                "id": "7fa1f9b1-4dd3-4d66-a042-a679ed519f0c",
                 "type": "text",
                 "style": {
                   "textColor": "#888888",
@@ -99,7 +99,7 @@
                 "text": "RSSI"
               },
               {
-                "id": "b83c08d0-5f77-450c-a227-62bc9e1068d8",
+                "id": "a9b177f6-7990-4eef-a94f-039a9031aace",
                 "type": "text",
                 "style": {
                   "textColor": "#FFFFFF",

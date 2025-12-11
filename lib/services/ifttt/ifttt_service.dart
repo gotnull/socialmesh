@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/core/logging.dart';
 import '../../models/mesh_models.dart';
 
 /// IFTTT trigger types
@@ -174,7 +174,7 @@ class IftttService {
         final json = jsonDecode(jsonString) as Map<String, dynamic>;
         _config = IftttConfig.fromJson(json);
       } catch (e) {
-        debugPrint('IFTTT: Error loading config: $e');
+        AppLogging.ifttt('IFTTT: Error loading config: $e');
       }
     }
   }
@@ -184,7 +184,7 @@ class IftttService {
     _config = config;
     final jsonString = jsonEncode(config.toJson());
     await _prefs?.setString(_configKey, jsonString);
-    debugPrint('IFTTT: Config saved');
+    AppLogging.ifttt('IFTTT: Config saved');
   }
 
   /// Check if IFTTT is properly configured and enabled
@@ -207,7 +207,7 @@ class IftttService {
       if (value2 != null) body['value2'] = value2;
       if (value3 != null) body['value3'] = value3;
 
-      debugPrint('IFTTT: Triggering $eventName');
+      AppLogging.ifttt('IFTTT: Triggering $eventName');
 
       final response = await http.post(
         Uri.parse(url),
@@ -216,14 +216,16 @@ class IftttService {
       );
 
       if (response.statusCode == 200) {
-        debugPrint('IFTTT: Webhook triggered successfully');
+        AppLogging.ifttt('IFTTT: Webhook triggered successfully');
         return true;
       } else {
-        debugPrint('IFTTT: Webhook failed with status ${response.statusCode}');
+        AppLogging.ifttt(
+          'IFTTT: Webhook failed with status ${response.statusCode}',
+        );
         return false;
       }
     } catch (e) {
-      debugPrint('IFTTT: Error triggering webhook: $e');
+      AppLogging.ifttt('IFTTT: Error triggering webhook: $e');
       return false;
     }
   }
@@ -234,15 +236,15 @@ class IftttService {
     required String message,
     String? channelName,
   }) async {
-    debugPrint(
+    AppLogging.debug(
       'IFTTT: triggerMessageReceived called - messageReceived=${_config.messageReceived}',
     );
     if (!_config.messageReceived) {
-      debugPrint('IFTTT: Message trigger disabled in config');
+      AppLogging.ifttt('IFTTT: Message trigger disabled in config');
       return false;
     }
 
-    debugPrint(
+    AppLogging.debug(
       'IFTTT: Sending message webhook - sender=$senderName, msg=$message',
     );
     return _triggerWebhook(
@@ -305,13 +307,15 @@ class IftttService {
     required double longitude,
   }) async {
     if (!_config.positionUpdate) {
-      debugPrint('IFTTT: Position update disabled in config');
+      AppLogging.ifttt('IFTTT: Position update disabled in config');
       return false;
     }
 
     // If no geofence is configured, trigger on every position update
     if (_config.geofenceLat == null || _config.geofenceLon == null) {
-      debugPrint('IFTTT: No geofence configured, triggering position update');
+      AppLogging.ifttt(
+        'IFTTT: No geofence configured, triggering position update',
+      );
       return _triggerWebhook(
         eventName: 'meshtastic_position',
         value1: nodeName,
@@ -322,7 +326,7 @@ class IftttService {
 
     // Only trigger for the monitored node if one is specified
     if (_config.geofenceNodeNum != null && _config.geofenceNodeNum != nodeNum) {
-      debugPrint('IFTTT: Position update ignored - not monitored node');
+      AppLogging.ifttt('IFTTT: Position update ignored - not monitored node');
       return false;
     }
 
@@ -343,7 +347,7 @@ class IftttService {
 
     // Only trigger when transitioning from inside to outside
     if (isInsideGeofence || !wasInside) {
-      debugPrint(
+      AppLogging.debug(
         'IFTTT: Position update ignored - no geofence transition (inside=$isInsideGeofence, wasInside=$wasInside)',
       );
       return false;
@@ -354,12 +358,14 @@ class IftttService {
     if (lastAlert != null &&
         DateTime.now().difference(lastAlert).inMinutes <
             _config.geofenceThrottleMinutes) {
-      debugPrint('IFTTT: Position update throttled');
+      AppLogging.ifttt('IFTTT: Position update throttled');
       return false;
     }
     _lastGeofenceAlert[nodeNum] = DateTime.now();
 
-    debugPrint('IFTTT: Triggering geofence alert - $nodeName left geofence');
+    AppLogging.ifttt(
+      'IFTTT: Triggering geofence alert - $nodeName left geofence',
+    );
     return _triggerWebhook(
       eventName: 'meshtastic_position',
       value1: nodeName,

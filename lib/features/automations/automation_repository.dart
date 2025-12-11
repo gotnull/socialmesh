@@ -1,3 +1,4 @@
+import '../../core/logging.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,11 +33,11 @@ class AutomationRepository extends ChangeNotifier {
         _automations = list
             .map((item) => Automation.fromJson(item as Map<String, dynamic>))
             .toList();
-        debugPrint(
+        AppLogging.automations(
           'AutomationRepository: Loaded ${_automations.length} automations',
         );
       } catch (e) {
-        debugPrint('AutomationRepository: Error loading automations: $e');
+        AppLogging.automations('AutomationRepository: Error loading automations: $e');
         _automations = [];
       }
     }
@@ -54,7 +55,7 @@ class AutomationRepository extends ChangeNotifier {
             )
             .toList();
       } catch (e) {
-        debugPrint('AutomationRepository: Error loading log: $e');
+        AppLogging.automations('AutomationRepository: Error loading log: $e');
         _log = [];
       }
     }
@@ -74,7 +75,7 @@ class AutomationRepository extends ChangeNotifier {
   Future<void> addAutomation(Automation automation) async {
     _automations.add(automation);
     await _saveAutomations();
-    debugPrint('AutomationRepository: Added automation "${automation.name}"');
+    AppLogging.automations('AutomationRepository: Added automation "${automation.name}"');
   }
 
   /// Update an existing automation
@@ -83,7 +84,7 @@ class AutomationRepository extends ChangeNotifier {
     if (index != -1) {
       _automations[index] = automation;
       await _saveAutomations();
-      debugPrint(
+      AppLogging.automations(
         'AutomationRepository: Updated automation "${automation.name}"',
       );
     }
@@ -93,7 +94,7 @@ class AutomationRepository extends ChangeNotifier {
   Future<void> deleteAutomation(String id) async {
     _automations.removeWhere((a) => a.id == id);
     await _saveAutomations();
-    debugPrint('AutomationRepository: Deleted automation $id');
+    AppLogging.automations('AutomationRepository: Deleted automation $id');
   }
 
   /// Get an automation by ID
@@ -179,7 +180,7 @@ class AutomationRepository extends ChangeNotifier {
       await _saveAutomations();
       return imported.length;
     } catch (e) {
-      debugPrint('AutomationRepository: Error importing: $e');
+      AppLogging.automations('AutomationRepository: Error importing: $e');
       return 0;
     }
   }

@@ -1,13 +1,13 @@
 {
-  "id": "b02c73ff-269a-474c-82f5-5bb96b6dbca9",
+  "id": "3321cdd5-09fb-49d1-a209-ad2aed66f59a",
   "name": "Environment",
   "description": "Temperature, humidity, and pressure display",
   "version": "1.0.0",
-  "createdAt": "2025-12-11T16:20:27.149672",
-  "updatedAt": "2025-12-11T16:20:27.149673",
+  "createdAt": "2025-12-11T21:05:49.702944",
+  "updatedAt": "2025-12-11T21:05:49.702945",
   "size": "medium",
   "root": {
-    "id": "9d31c6a7-13eb-4101-ab55-dbd3d42c1931",
+    "id": "40b13e45-7203-4034-a67e-d3ac3c2cb79e",
     "type": "column",
     "style": {
       "padding": 12.0,
@@ -15,12 +15,12 @@
     },
     "children": [
       {
-        "id": "dc63d7aa-f8a4-4b00-a7fd-0f2a914a6456",
+        "id": "01470c32-c0e9-428a-ab95-786f7933471e",
         "type": "row",
         "style": {},
         "children": [
           {
-            "id": "a5ca7a5b-63a7-43e4-b5d4-20ac3dac014a",
+            "id": "1dd1b356-7edc-47ff-b5a1-eeadf04dff8d",
             "type": "icon",
             "style": {
               "textColor": "#F97316"
@@ -29,14 +29,14 @@
             "iconSize": 20.0
           },
           {
-            "id": "22f1bf32-ce3b-4060-9bf0-067ce470086b",
+            "id": "950d6670-77c7-47e1-96b3-e42d7282294d",
             "type": "spacer",
             "style": {
               "width": 8.0
             }
           },
           {
-            "id": "d2390d06-baa4-42f6-8eff-dafacb75cccc",
+            "id": "20c29132-2593-44b1-9dd6-c509930b38bf",
             "type": "text",
             "style": {
               "textColor": "#FFFFFF",
@@ -48,21 +48,21 @@
         ]
       },
       {
-        "id": "d93fea6f-472c-43f4-b560-17ed75e4aa6e",
+        "id": "46d6e63d-48f7-4a06-abd5-7bcac2732806",
         "type": "row",
         "style": {
           "mainAxisAlignment": "spaceEvenly"
         },
         "children": [
           {
-            "id": "36917ea1-0d8e-42b1-8c64-d6b65d0d604f",
+            "id": "29b9a9b4-7240-413e-8771-adbed44645a5",
             "type": "column",
             "style": {
               "alignment": "center"
             },
             "children": [
               {
-                "id": "ecdd34e0-077d-4559-9f9b-f482e9d397d2",
+                "id": "b58f8e08-7d6a-439b-9a0a-ae8edaab093f",
                 "type": "icon",
                 "style": {
                   "textColor": "#EF4444"
@@ -71,14 +71,14 @@
                 "iconSize": 22.0
               },
               {
-                "id": "b62b1608-e699-4ba5-9783-68ebc3ac3785",
+                "id": "eef475a2-cdc9-4a27-9273-ec3a5adaacae",
                 "type": "spacer",
                 "style": {
                   "height": 4.0
                 }
               },
               {
-                "id": "a2c9208c-cc13-4b8d-96dc-36d375a039cb",
+                "id": "ad6d898c-1a2f-4d75-bda7-d792154f2447",
                 "type": "text",
                 "style": {
                   "textColor": "#FFFFFF",
@@ -92,7 +92,7 @@
                 }
               },
               {
-                "id": "d16b2efc-e28c-43cc-9b71-40c4064b79dd",
+                "id": "611a7076-cee0-428d-9e78-3a97175a4d51",
                 "type": "text",
                 "style": {
                   "textColor": "#9CA3AF",
@@ -103,7 +103,7 @@
             ]
           },
           {
-            "id": "8c05a934-4372-4e1e-b82b-fee61b444e54",
+            "id": "74ae1114-4802-416f-af48-ad378df1ad0d",
             "type": "container",
             "style": {
               "width": 1.0,
@@ -112,14 +112,14 @@
             }
           },
           {
-            "id": "68485de0-380e-470b-aee9-95364d1e4371",
+            "id": "473bb17b-4b6b-4f64-b8cc-1c95241b1468",
             "type": "column",
             "style": {
               "alignment": "center"
             },
             "children": [
               {
-                "id": "e3c3c3bc-8727-433f-bfc7-2d576b01e513",
+                "id": "52524efe-322c-4fe0-a061-dd62c3030fd0",
                 "type": "icon",
                 "style": {
                   "textColor": "#06B6D4"
@@ -128,14 +128,14 @@
                 "iconSize": 22.0
               },
               {
-                "id": "05a9257d-a84f-4580-9aaa-1035f046f5fc",
+                "id": "7f119662-cd52-49a2-865b-edc1ef4a1d07",
                 "type": "spacer",
                 "style": {
                   "height": 4.0
                 }
               },
               {
-                "id": "d75339bd-4709-4dfe-873a-4b97b80759eb",
+                "id": "3c76d268-6551-4b61-885a-67ae6adfaa43",
                 "type": "text",
                 "style": {
                   "textColor": "#FFFFFF",
@@ -149,7 +149,7 @@
                 }
               },
               {
-                "id": "7a131629-4109-4d98-9059-377ca46c1a26",
+                "id": "a6b55436-34af-4137-8459-4f0f2e95c42e",
                 "type": "text",
                 "style": {
                   "textColor": "#9CA3AF",
@@ -160,7 +160,7 @@
             ]
           },
           {
-            "id": "57f335de-fc3f-4f1b-88ab-11c4bf0735e2",
+            "id": "ff1f4e59-7384-45f3-a904-271d1efccba1",
             "type": "container",
             "style": {
               "width": 1.0,
@@ -169,14 +169,14 @@
             }
           },
           {
-            "id": "8d0292e2-4bef-4c5d-88d5-5caa1a7d9f41",
+            "id": "4bed9c2a-bd02-4eb2-8dd6-8c769ab84542",
             "type": "column",
             "style": {
               "alignment": "center"
             },
             "children": [
               {
-                "id": "9e899618-460a-47b6-b5a7-225d9955b624",
+                "id": "1114e790-d746-4440-a4fe-dcc87d5ac9b4",
                 "type": "icon",
                 "style": {
                   "textColor": "#8B5CF6"
@@ -185,14 +185,14 @@
                 "iconSize": 22.0
               },
               {
-                "id": "01532df9-4b51-4c9d-809e-45fda977a953",
+                "id": "ecc63b8b-251e-4d65-84c8-35c065afbf21",
                 "type": "spacer",
                 "style": {
                   "height": 4.0
                 }
               },
               {
-                "id": "ee95d0a6-ca8e-4aea-a2ba-59f47c7d73d9",
+                "id": "72a9f59d-552b-4d6c-86b2-3c993d2bf91c",
                 "type": "text",
                 "style": {
                   "textColor": "#FFFFFF",
@@ -206,7 +206,7 @@
                 }
               },
               {
-                "id": "5111eeed-5be4-4a70-88da-24cc41b5537e",
+                "id": "df3b3367-4c24-4638-86cd-a052820d0fe2",
                 "type": "text",
                 "style": {
                   "textColor": "#9CA3AF",

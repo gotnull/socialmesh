@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,6 +11,7 @@ import 'firebase_options.dart';
 import 'core/theme.dart';
 import 'core/constants.dart';
 import 'core/transport.dart';
+import 'core/logging.dart';
 import 'core/widgets/animated_tagline.dart';
 import 'providers/app_providers.dart';
 import 'providers/telemetry_providers.dart';
@@ -41,6 +43,8 @@ Future<void> main() async {
   // Load environment variables
   await dotenv.load(fileName: '.env');
 
+  FlutterBluePlus.setLogLevel(LogLevel.none);
+
   // Initialize Firebase in background - don't block app startup
   // This ensures the app works fully offline
   _initializeFirebaseInBackground();
@@ -58,7 +62,7 @@ Future<void> _initializeFirebaseInBackground() async {
     ).timeout(
       const Duration(seconds: 5),
       onTimeout: () {
-        debugPrint('Firebase init timed out - continuing offline');
+        AppLogging.debug('Firebase init timed out - continuing offline');
         throw TimeoutException('Firebase initialization timed out');
       },
     );
@@ -74,7 +78,7 @@ Future<void> _initializeFirebaseInBackground() async {
   } catch (e) {
     // Firebase failed to initialize (no internet, timeout, etc.)
     // App continues working fully offline - this is expected behavior
-    debugPrint('Firebase unavailable: $e - app running in offline mode');
+    AppLogging.debug('Firebase unavailable: $e - app running in offline mode');
   }
 }
 
@@ -119,21 +123,21 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   /// Handle app returning to foreground
   /// This cleans up stale BLE state and triggers reconnect if needed
   Future<void> _handleAppResumed() async {
-    debugPrint('📱 App resumed - checking BLE state');
+    AppLogging.liveActivity('App resumed - checking BLE state');
 
     final transport = ref.read(transportProvider);
     final autoReconnectState = ref.read(autoReconnectStateProvider);
 
     // If we think we're connected, verify the connection is still valid
     if (transport.state == DeviceConnectionState.connected) {
-      debugPrint('📱 App resumed - transport reports connected');
+      AppLogging.liveActivity('App resumed - transport reports connected');
       return;
     }
 
     // If already trying to reconnect, don't interfere
     if (autoReconnectState == AutoReconnectState.scanning ||
         autoReconnectState == AutoReconnectState.connecting) {
-      debugPrint('📱 App resumed - reconnect already in progress');
+      AppLogging.liveActivity('App resumed - reconnect already in progress');
       return;
     }
 
@@ -144,7 +148,9 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       final lastDeviceId = settings.lastDeviceId;
 
       if (lastDeviceId != null && settings.autoReconnect) {
-        debugPrint('📱 App resumed - disconnected, triggering reconnect scan');
+        AppLogging.liveActivity(
+          'App resumed - disconnected, triggering reconnect scan',
+        );
 
         // Reset to idle first to allow reconnect to proceed
         ref
@@ -160,18 +166,20 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         // Start the reconnect process
         _performReconnectOnResume(lastDeviceId);
       } else {
-        debugPrint(
+        AppLogging.debug(
           '📱 App resumed - transport reports disconnected (no saved device or auto-reconnect disabled)',
         );
       }
     } catch (e) {
-      debugPrint('📱 App resumed - error checking settings: $e');
+      AppLogging.liveActivity('App resumed - error checking settings: $e');
     }
   }
 
   /// Perform a single reconnect attempt when app resumes
   Future<void> _performReconnectOnResume(String deviceId) async {
-    debugPrint('📱 Attempting reconnect on resume for device: $deviceId');
+    AppLogging.liveActivity(
+      'Attempting reconnect on resume for device: $deviceId',
+    );
 
     try {
       final transport = ref.read(transportProvider);
@@ -188,7 +196,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       }
 
       if (foundDevice != null) {
-        debugPrint('📱 Device found on resume, connecting...');
+        AppLogging.liveActivity('Device found on resume, connecting...');
         ref
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.connecting);
@@ -214,7 +222,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           final locationService = ref.read(locationServiceProvider);
           await locationService.startLocationUpdates();
 
-          debugPrint('📱 ✅ Reconnected successfully on resume!');
+          AppLogging.liveActivity('✅ Reconnected successfully on resume!');
 
           await Future.delayed(const Duration(milliseconds: 500));
           ref
@@ -224,13 +232,13 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           throw Exception('Connection failed');
         }
       } else {
-        debugPrint('📱 Device not found on resume scan');
+        AppLogging.liveActivity('Device not found on resume scan');
         ref
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.idle);
       }
     } catch (e) {
-      debugPrint('📱 Reconnect on resume failed: $e');
+      AppLogging.liveActivity('Reconnect on resume failed: $e');
       ref
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.idle);
@@ -240,9 +248,9 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   Future<void> _initializePurchases() async {
     try {
       await ref.read(subscriptionServiceProvider.future);
-      debugPrint('💰 RevenueCat initialized');
+      AppLogging.debug('💰 RevenueCat initialized');
     } catch (e) {
-      debugPrint('💰 RevenueCat init failed: $e');
+      AppLogging.debug('💰 RevenueCat init failed: $e');
     }
   }
 

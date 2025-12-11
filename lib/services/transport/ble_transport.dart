@@ -1,12 +1,12 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:logger/logger.dart';
+import '../../core/logging.dart';
 import '../../core/transport.dart';
 
 /// BLE implementation of DeviceTransport
 class BleTransport implements DeviceTransport {
-  final Logger _logger;
+  late final Logger _logger;
   final StreamController<DeviceConnectionState> _stateController;
   final StreamController<List<int>> _dataController;
 
@@ -45,10 +45,11 @@ class BleTransport implements DeviceTransport {
   @override
   String? get bleManufacturerName => _bleManufacturerName;
 
-  BleTransport({Logger? logger})
-    : _logger = logger ?? Logger(),
-      _stateController = StreamController<DeviceConnectionState>.broadcast(),
-      _dataController = StreamController<List<int>>.broadcast();
+  BleTransport()
+    : _stateController = StreamController<DeviceConnectionState>.broadcast(),
+      _dataController = StreamController<List<int>>.broadcast() {
+    _logger = AppLogging.bleLogger;
+  }
 
   @override
   TransportType get type => TransportType.ble;
@@ -334,7 +335,7 @@ class BleTransport implements DeviceTransport {
 
   /// Read device info from Device Information Service (0x180A)
   Future<void> _readDeviceModelNumber(List<BluetoothService> services) async {
-    debugPrint('📱 BLE: Searching for Device Information Service (0x180A)...');
+    AppLogging.ble('Searching for Device Information Service (0x180A)...');
     try {
       // Find Device Information Service
       final deviceInfoService = services.cast<BluetoothService?>().firstWhere(
@@ -343,18 +344,18 @@ class BleTransport implements DeviceTransport {
       );
 
       if (deviceInfoService == null) {
-        debugPrint('📱 BLE: Device Information Service (0x180A) not found');
+        AppLogging.ble('Device Information Service (0x180A) not found');
         _logger.d('Device Information Service (0x180A) not found');
         return;
       }
-      debugPrint('📱 BLE: Found Device Information Service');
+      AppLogging.ble('Found Device Information Service');
 
       // Read all characteristics for debugging
       for (final char in deviceInfoService.characteristics) {
         try {
           final data = await char.read();
           final value = String.fromCharCodes(data).trim();
-          debugPrint('📱 BLE Device Info ${char.uuid}: "$value" (raw: $data)');
+          AppLogging.ble('Device Info ${char.uuid}: "$value" (raw: $data)');
 
           final uuid = char.uuid.toString().toLowerCase();
           if (uuid == _modelNumberUuid) {
@@ -363,16 +364,16 @@ class BleTransport implements DeviceTransport {
             _bleManufacturerName = value;
           }
         } catch (e) {
-          debugPrint('📱 BLE: Could not read ${char.uuid}: $e');
+          AppLogging.ble('Could not read ${char.uuid}: $e');
         }
       }
 
-      debugPrint(
-        '📱 BLE: Model="$_bleModelNumber", '
+      AppLogging.ble(
+        'Model="$_bleModelNumber", '
         'Manufacturer="$_bleManufacturerName"',
       );
     } catch (e) {
-      debugPrint('📱 BLE Device Info read error: $e');
+      AppLogging.ble('Device Info read error: $e');
       _logger.d('Could not read device info: $e');
     }
   }

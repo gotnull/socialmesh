@@ -1,13 +1,13 @@
 {
-  "id": "4b6dd341-22eb-4722-9073-3c270a9d3691",
+  "id": "d9725995-1fb2-4988-b30a-f9086f4314c2",
   "name": "Battery Status",
   "description": "Display battery level with gauge",
   "version": "1.0.0",
-  "createdAt": "2025-12-11T16:20:27.147332",
-  "updatedAt": "2025-12-11T16:20:27.147333",
+  "createdAt": "2025-12-11T21:05:49.698839",
+  "updatedAt": "2025-12-11T21:05:49.698840",
   "size": "medium",
   "root": {
-    "id": "c7008f50-8d8f-4fa3-a75b-bd022ce39205",
+    "id": "7d470d14-8d11-48f8-a490-425f3a7024e2",
     "type": "column",
     "style": {
       "padding": 12.0,
@@ -15,14 +15,14 @@
     },
     "children": [
       {
-        "id": "1064079b-2c24-49ce-b24a-ac83e13bd3a3",
+        "id": "5eb57d07-9049-4b34-9679-39a649a2bfb0",
         "type": "row",
         "style": {
           "mainAxisAlignment": "spaceBetween"
         },
         "children": [
           {
-            "id": "4fabfe9f-84ee-42ae-996a-b3da0886687b",
+            "id": "630457f2-60e5-4636-8a0d-5b1f2f28cdea",
             "type": "icon",
             "style": {
               "textColor": "#4ADE80"
@@ -31,7 +31,7 @@
             "iconSize": 20.0
           },
           {
-            "id": "7bac9880-5486-4a91-b436-042a99471d3e",
+            "id": "bf16fd0f-9c98-4086-9148-2418bd6c2908",
             "type": "text",
             "style": {
               "textColor": "#FFFFFF",
@@ -46,7 +46,7 @@
         ]
       },
       {
-        "id": "72809065-d6e3-4841-ba5a-f9a1cc9ab12c",
+        "id": "5de054c8-eaa9-4acc-a5d0-ee6108fdc130",
         "type": "text",
         "style": {
           "textColor": "#FFFFFF",
@@ -60,7 +60,7 @@
         }
       },
       {
-        "id": "c2ef1da8-590b-4742-ad60-09a6ffc13cd3",
+        "id": "6030000f-2269-4b8b-ae61-38b1157c7866",
         "type": "gauge",
         "style": {
           "height": 6.0
