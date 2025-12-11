@@ -503,6 +503,7 @@ class WidgetMarketplaceService {
         ratingCount: 156,
         tags: ['battery', 'gauge', 'animated'],
         category: 'status',
+        isFeatured: true,
         createdAt: DateTime.now().subtract(const Duration(days: 30)),
         updatedAt: DateTime.now().subtract(const Duration(days: 5)),
       ),
@@ -520,6 +521,7 @@ class WidgetMarketplaceService {
         ratingCount: 89,
         tags: ['weather', 'temperature', 'environment'],
         category: 'sensors',
+        isFeatured: true,
         createdAt: DateTime.now().subtract(const Duration(days: 60)),
         updatedAt: DateTime.now().subtract(const Duration(days: 10)),
       ),
@@ -536,6 +538,7 @@ class WidgetMarketplaceService {
         ratingCount: 45,
         tags: ['signal', 'radar', 'animated'],
         category: 'connectivity',
+        isFeatured: true,
         createdAt: DateTime.now().subtract(const Duration(days: 15)),
         updatedAt: DateTime.now().subtract(const Duration(days: 2)),
       ),
@@ -552,6 +555,7 @@ class WidgetMarketplaceService {
         ratingCount: 67,
         tags: ['navigation', 'compass', 'direction'],
         category: 'navigation',
+        isFeatured: true,
         createdAt: DateTime.now().subtract(const Duration(days: 45)),
         updatedAt: DateTime.now().subtract(const Duration(days: 8)),
       ),
@@ -569,6 +573,7 @@ class WidgetMarketplaceService {
         ratingCount: 34,
         tags: ['network', 'statistics', 'packets'],
         category: 'network',
+        isFeatured: true,
         createdAt: DateTime.now().subtract(const Duration(days: 20)),
         updatedAt: DateTime.now().subtract(const Duration(days: 3)),
       ),
@@ -740,6 +745,7 @@ class MarketplaceWidget {
   final List<String> tags;
   final String category;
   final String status;
+  final bool isFeatured;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -757,6 +763,7 @@ class MarketplaceWidget {
     required this.tags,
     required this.category,
     this.status = 'approved',
+    this.isFeatured = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -778,6 +785,7 @@ class MarketplaceWidget {
           [],
       category: json['category'] as String? ?? 'general',
       status: json['status'] as String? ?? 'approved',
+      isFeatured: json['isFeatured'] as bool? ?? false,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : DateTime.now(),

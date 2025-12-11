@@ -524,6 +524,14 @@ class DataBindingEngine {
   double? _deviceSnr;
   double? _deviceChannelUtil;
 
+  /// Whether to use placeholder data instead of live data
+  bool _usePlaceholderData = false;
+
+  /// Enable placeholder data mode for previews
+  void setUsePlaceholderData(bool value) {
+    _usePlaceholderData = value;
+  }
+
   /// Update context with current node data
   void setCurrentNode(MeshNode? node) {
     _currentNode = node;
@@ -620,6 +628,11 @@ class DataBindingEngine {
 
   /// Internal: resolve a binding path to a value
   dynamic _resolvePath(String path) {
+    // If placeholder mode is enabled, return sample data
+    if (_usePlaceholderData) {
+      return _getPlaceholderValue(path);
+    }
+
     final parts = path.split('.');
     if (parts.isEmpty) return null;
 
@@ -635,6 +648,89 @@ class DataBindingEngine {
         return _resolveMessagesPath(fieldPath);
       case 'device':
         return _resolveDevicePath(fieldPath);
+      default:
+        return null;
+    }
+  }
+
+  /// Get placeholder values for preview mode
+  dynamic _getPlaceholderValue(String path) {
+    switch (path) {
+      // Node info
+      case 'node.longName':
+        return 'Node Name';
+      case 'node.shortName':
+        return 'NODE';
+      case 'node.nodeNum':
+        return 12345678;
+      case 'node.isOnline':
+        return true;
+      case 'node.role':
+        return 'CLIENT';
+      case 'node.hardwareModel':
+        return 'T-Beam';
+      case 'node.firmwareVersion':
+        return '2.3.0';
+
+      // Power
+      case 'node.batteryLevel':
+        return 75;
+      case 'node.voltage':
+        return 3.85;
+      case 'node.isCharging':
+        return false;
+
+      // Signal
+      case 'node.snr':
+      case 'device.snr':
+        return 8.5;
+      case 'node.rssi':
+      case 'device.rssi':
+        return -85;
+      case 'device.channelUtil':
+      case 'device.channelUtilization':
+        return 15.0;
+
+      // Environment
+      case 'node.temperature':
+        return 22.5;
+      case 'node.humidity':
+        return 45.0;
+      case 'node.pressure':
+        return 1013.25;
+
+      // GPS
+      case 'node.latitude':
+        return -33.8688;
+      case 'node.longitude':
+        return 151.2093;
+      case 'node.altitude':
+        return 58.0;
+      case 'node.speed':
+        return 0.0;
+      case 'node.heading':
+        return 180;
+      case 'node.distance':
+        return 1250.0;
+
+      // Network
+      case 'network.nodeCount':
+      case 'network.totalNodes':
+        return 5;
+      case 'network.onlineCount':
+        return 3;
+      case 'network.offlineCount':
+        return 2;
+
+      // Messages
+      case 'messages.count':
+      case 'messages.totalCount':
+        return 42;
+      case 'messages.sentCount':
+        return 18;
+      case 'messages.receivedCount':
+        return 24;
+
       default:
         return null;
     }

@@ -102,6 +102,8 @@ class _WidgetMarketplaceScreenState
           indicatorColor: context.accentColor,
           labelColor: context.accentColor,
           unselectedLabelColor: AppTheme.textSecondary,
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
           tabs: const [
             Tab(text: 'Featured'),
             Tab(text: 'Popular'),
@@ -342,14 +344,9 @@ class _WidgetMarketplaceScreenState
       );
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
+    // Use list view for consistent full-width cards
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
       itemCount: widgets.length,
       itemBuilder: (context, index) {
         return _MarketplaceWidgetCard(
@@ -394,7 +391,7 @@ class _WidgetMarketplaceScreenState
   }
 }
 
-/// Marketplace widget card
+/// Marketplace widget card - full width, consistent styling
 class _MarketplaceWidgetCard extends StatelessWidget {
   final MarketplaceWidget widget;
   final VoidCallback onTap;
@@ -403,121 +400,229 @@ class _MarketplaceWidgetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: AppTheme.darkCard,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Thumbnail/Preview
-            Expanded(
-              flex: 3,
-              child: Container(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Preview area with icon and category
+              Container(
                 width: double.infinity,
+                height: 100,
                 decoration: BoxDecoration(
                   color: AppTheme.darkBackground,
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
+                    top: Radius.circular(16),
                   ),
                 ),
                 child: Stack(
                   children: [
+                    // Center icon
                     Center(
-                      child: Icon(
-                        _getCategoryIcon(widget.category),
-                        size: 40,
-                        color: context.accentColor.withValues(alpha: 0.4),
+                      child: Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: context.accentColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          _getCategoryIcon(widget.category),
+                          size: 32,
+                          color: context.accentColor,
+                        ),
                       ),
                     ),
                     // Category badge
                     Positioned(
-                      top: 8,
-                      left: 8,
+                      top: 12,
+                      left: 12,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                          horizontal: 10,
+                          vertical: 5,
                         ),
                         decoration: BoxDecoration(
                           color: context.accentColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           widget.category,
                           style: TextStyle(
                             color: context.accentColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ),
+                    // Featured badge
+                    if (widget.isFeatured)
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.warningYellow.withValues(
+                              alpha: 0.2,
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.star_rounded,
+                                size: 12,
+                                color: AppTheme.warningYellow,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Featured',
+                                style: TextStyle(
+                                  color: AppTheme.warningYellow,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
-            ),
-            // Info section
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(10),
+              // Info section
+              Padding(
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Name
+                    // Name and author
                     Text(
                       widget.name,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 13,
+                        fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        height: 1.2,
                       ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'by ${widget.author}',
+                      style: TextStyle(
+                        color: AppTheme.textTertiary,
+                        fontSize: 12,
+                      ),
+                    ),
+                    if (widget.description.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.description,
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 13,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    const SizedBox(height: 12),
                     // Stats row
                     Row(
                       children: [
-                        Icon(
-                          Icons.star_rounded,
-                          size: 14,
-                          color: AppTheme.warningYellow,
+                        // Rating
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkBackground,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.star_rounded,
+                                size: 14,
+                                color: AppTheme.warningYellow,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                widget.rating.toStringAsFixed(1),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 3),
-                        Text(
-                          widget.rating.toStringAsFixed(1),
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
+                        const SizedBox(width: 8),
+                        // Downloads
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkBackground,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.download_rounded,
+                                size: 14,
+                                color: AppTheme.textSecondary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _formatDownloads(widget.downloads),
+                                style: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const Spacer(),
+                        // Chevron
                         Icon(
-                          Icons.download_rounded,
-                          size: 13,
+                          Icons.chevron_right_rounded,
                           color: AppTheme.textTertiary,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          _formatDownloads(widget.downloads),
-                          style: TextStyle(
-                            color: AppTheme.textTertiary,
-                            fontSize: 11,
-                          ),
+                          size: 20,
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

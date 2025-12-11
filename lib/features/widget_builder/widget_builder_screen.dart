@@ -8,7 +8,6 @@ import 'marketplace/widget_marketplace_screen.dart';
 import 'marketplace/widget_marketplace_service.dart';
 import 'renderer/widget_renderer.dart';
 import '../../core/theme.dart';
-import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
 import '../../utils/snackbar.dart';
 import '../dashboard/models/dashboard_widget_config.dart';
@@ -190,38 +189,47 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
   }
 
   Widget _buildWidgetCard(WidgetSchema schema, {required bool isTemplate}) {
-    final nodes = ref.watch(nodesProvider);
-    final myNodeNum = ref.watch(myNodeNumProvider);
-    final node = myNodeNum != null ? nodes[myNodeNum] : null;
-
     // Check if this widget is already on the dashboard
     final dashboardWidgets = ref.watch(dashboardWidgetsProvider);
     final isOnDashboard = dashboardWidgets.any(
       (w) => w.schemaId == schema.id && w.isVisible,
     );
 
-    return Card(
-      color: AppTheme.darkCard,
-      margin: const EdgeInsets.only(bottom: 16),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Widget preview
+          // Widget preview with placeholder data
           Container(
-            height: 120,
-            padding: const EdgeInsets.all(12),
-            color: AppTheme.darkBackground,
-            child: WidgetRenderer(
-              schema: schema,
-              node: node,
-              allNodes: nodes,
-              accentColor: context.accentColor,
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+            ),
+            child: SizedBox(
+              height: 100,
+              child: WidgetRenderer(
+                schema: schema,
+                node: null,
+                allNodes: null,
+                accentColor: context.accentColor,
+                usePlaceholderData: true,
+              ),
             ),
           ),
           // Info section
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Expanded(
@@ -242,7 +250,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
                           schema.description!,
                           style: TextStyle(
                             color: AppTheme.textSecondary,
-                            fontSize: 12,
+                            fontSize: 13,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -253,15 +261,16 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
                 ),
                 // Actions
                 if (isTemplate)
-                  TextButton(
+                  FilledButton(
                     onPressed: () => _useTemplate(schema),
-                    child: Text(
-                      'Use',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontWeight: FontWeight.w600,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: context.accentColor,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
                       ),
                     ),
+                    child: const Text('Use'),
                   )
                 else
                   PopupMenuButton<String>(

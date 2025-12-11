@@ -12,6 +12,7 @@ class WidgetRenderer extends StatelessWidget {
   final Map<int, MeshNode>? allNodes;
   final Color accentColor;
   final bool isPreview;
+  final bool usePlaceholderData;
   final String? selectedElementId;
   final void Function(String elementId)? onElementTap;
 
@@ -27,6 +28,7 @@ class WidgetRenderer extends StatelessWidget {
     this.allNodes,
     required this.accentColor,
     this.isPreview = false,
+    this.usePlaceholderData = false,
     this.selectedElementId,
     this.onElementTap,
     this.deviceRssi,
@@ -38,6 +40,7 @@ class WidgetRenderer extends StatelessWidget {
   Widget build(BuildContext context) {
     // Create binding engine with current context
     final bindingEngine = DataBindingEngine();
+    bindingEngine.setUsePlaceholderData(usePlaceholderData);
     bindingEngine.setCurrentNode(node);
     bindingEngine.setAllNodes(allNodes);
     bindingEngine.setDeviceSignal(
