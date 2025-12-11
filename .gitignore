@@ -18,6 +18,10 @@ meshtastic-ios/
 .env.local
 .env.*.local
 
+# Firebase Admin SDK service account keys (NEVER commit these!)
+*-firebase-adminsdk-*.json
+firebase-service-account.json
+
 # IntelliJ related
 *.iml
 *.ipr

@@ -12,7 +12,12 @@
           "package_name": "com.gotnull.socialmesh"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "571509151050-l31jv6opqqp7brse8kfl7fp4v0mvod2p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCw_mJqrlJNTAjQDLIknLphzEcmGdAN-wg"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "571509151050-cs65eqto1lm48p1ttjaoh90t5gs3f4nh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "571509151050-7fa2c8p7b88ibpkd3hcpgr85v5kl7cjf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.gotnull.socialmesh"
+              }
+            }
+          ]
         }
       }
     }

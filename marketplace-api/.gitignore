@@ -7,3 +7,8 @@ data/
 .env
 .env.local
 .DS_Store
+
+# Firebase service account credentials (NEVER commit these!)
+firebase-service-account.json
+*-firebase-adminsdk-*.json
+serviceAccountKey.json

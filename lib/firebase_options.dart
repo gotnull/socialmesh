@@ -63,6 +63,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '571509151050',
     projectId: 'social-mesh-app',
     storageBucket: 'social-mesh-app.firebasestorage.app',
+    iosClientId: '571509151050-7fa2c8p7b88ibpkd3hcpgr85v5kl7cjf.apps.googleusercontent.com',
     iosBundleId: 'com.gotnull.socialmesh',
   );
 
