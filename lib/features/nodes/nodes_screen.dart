@@ -758,10 +758,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
             child: ElevatedButton.icon(
               onPressed: () {
                 Clipboard.setData(
-                  ClipboardData(
-                    text:
-                        '${node.displayName}\nNode: !${node.nodeNum.toRadixString(16)}',
-                  ),
+                  ClipboardData(text: '!${node.nodeNum.toRadixString(16)}'),
                 );
                 Navigator.pop(context);
                 showSuccessSnackBar(context, 'Node info copied');
@@ -776,7 +773,7 @@ class _NodeDetailsSheet extends ConsumerWidget {
               ),
               icon: const Icon(Icons.copy, size: 20),
               label: const Text(
-                'Copy Node Info',
+                'Copy Node ID',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
             ),

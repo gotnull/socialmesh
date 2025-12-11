@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/logging.dart';
+import '../models/mesh_models.dart';
 import '../models/telemetry_log.dart';
 import '../models/route.dart';
 import '../models/tapback.dart';
@@ -278,7 +279,9 @@ class ActiveRouteNotifier extends Notifier<Route?> {
         return;
       }
       if (!node.hasPosition) {
-        AppLogging.debug('🛤️ Route: Node ${node.nodeNum} has no position, skipping');
+        AppLogging.debug(
+          '🛤️ Route: Node ${node.nodeNum} has no position, skipping',
+        );
         return;
       }
 
@@ -362,7 +365,9 @@ class ActiveRouteNotifier extends Notifier<Route?> {
         final updated = await _storage!.addLocationToActiveRoute(location);
         if (updated != null) {
           state = updated;
-          AppLogging.debug('🛤️ Route: Now have ${state!.locations.length} points');
+          AppLogging.debug(
+            '🛤️ Route: Now have ${state!.locations.length} points',
+          );
         }
       }
     });
@@ -450,6 +455,7 @@ class TapbackActionsNotifier extends Notifier<void> {
           text: type.emoji,
           to: toNodeNum,
           wantAck: true,
+          source: MessageSource.tapback,
         );
         AppLogging.liveActivity(
           'Sent tapback ${type.emoji} to node $toNodeNum',

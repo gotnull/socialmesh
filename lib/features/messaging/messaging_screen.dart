@@ -533,6 +533,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       channel: channel,
       sent: true,
       status: MessageStatus.pending,
+      source: MessageSource.manual,
     );
 
     // Add to messages immediately for optimistic UI
@@ -578,6 +579,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           channel: widget.channelIndex ?? 0,
           wantAck: false,
           messageId: messageId,
+          source: MessageSource.manual,
         );
         // Channel messages don't get ACKs, so no tracking needed
       } else {
@@ -592,6 +594,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           onPacketIdGenerated: (id) {
             ref.read(messagesProvider.notifier).trackPacket(id, messageId);
           },
+          source: MessageSource.manual,
         );
       }
 
@@ -668,6 +671,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           channel: message.channel ?? 0,
           wantAck: false,
           messageId: message.id,
+          source: message.source, // Preserve original source
         );
         // Broadcast messages don't get ACKs, no tracking needed
       } else {
@@ -681,6 +685,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           onPacketIdGenerated: (id) {
             ref.read(messagesProvider.notifier).trackPacket(id, message.id);
           },
+          source: message.source, // Preserve original source
         );
       }
 
@@ -1301,12 +1306,47 @@ class _MessageBubble extends StatelessWidget {
     return sanitized.length > 4 ? sanitized.substring(0, 4) : sanitized;
   }
 
+  /// Get icon data for message source (only for non-manual sources)
+  IconData? _getSourceIcon() {
+    switch (message.source) {
+      case MessageSource.automation:
+        return Icons.auto_awesome;
+      case MessageSource.siri:
+        return Icons.mic;
+      case MessageSource.reaction:
+        return Icons.notifications_active;
+      case MessageSource.tapback:
+        return Icons.thumb_up_alt;
+      case MessageSource.manual:
+      case MessageSource.unknown:
+        return null;
+    }
+  }
+
+  /// Get tooltip text for message source
+  String? _getSourceTooltip() {
+    switch (message.source) {
+      case MessageSource.automation:
+        return 'Sent by automation';
+      case MessageSource.siri:
+        return 'Sent via Siri';
+      case MessageSource.reaction:
+        return 'Notification reaction';
+      case MessageSource.tapback:
+        return 'Tapback reaction';
+      case MessageSource.manual:
+      case MessageSource.unknown:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final timeFormat = DateFormat('h:mm a');
     final isFailed = message.isFailed;
     final isPending = message.isPending;
     final isDelivered = message.status == MessageStatus.delivered;
+    final sourceIcon = _getSourceIcon();
 
     if (isFromMe) {
       return Padding(
@@ -1352,6 +1392,18 @@ class _MessageBubble extends StatelessWidget {
                                 Icons.lock,
                                 size: 11,
                                 color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                              const SizedBox(width: 3),
+                            ],
+                            // Source indicator (automation, siri, reaction, tapback)
+                            if (sourceIcon != null) ...[
+                              Tooltip(
+                                message: _getSourceTooltip() ?? '',
+                                child: Icon(
+                                  sourceIcon,
+                                  size: 11,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                ),
                               ),
                               const SizedBox(width: 3),
                             ],

@@ -53,3 +53,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Test-generated widget templates
+assets/widget_templates/*.json

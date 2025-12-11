@@ -414,6 +414,7 @@ class MessageStorageService {
       'sent': message.sent,
       'received': message.received,
       'acked': message.acked,
+      'source': message.source.name,
     };
   }
 
@@ -428,6 +429,15 @@ class MessageStorageService {
       sent: json['sent'] as bool? ?? false,
       received: json['received'] as bool? ?? false,
       acked: json['acked'] as bool? ?? false,
+      source: _parseMessageSource(json['source'] as String?),
+    );
+  }
+
+  MessageSource _parseMessageSource(String? name) {
+    if (name == null) return MessageSource.unknown;
+    return MessageSource.values.firstWhere(
+      (e) => e.name == name,
+      orElse: () => MessageSource.unknown,
     );
   }
 }

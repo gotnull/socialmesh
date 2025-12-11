@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/automations/automation_providers.dart';
 import '../../features/automations/models/automation.dart';
+import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 
 /// Service to handle iOS App Intents (Siri Shortcuts integration)
@@ -101,7 +102,12 @@ class AppIntentsService {
     }
 
     final protocol = _ref.read(protocolServiceProvider);
-    await protocol.sendMessage(text: message, to: nodeNum, channel: 0);
+    await protocol.sendMessage(
+      text: message,
+      to: nodeNum,
+      channel: 0,
+      source: MessageSource.siri,
+    );
 
     return {'sent': true};
   }
@@ -128,6 +134,7 @@ class AppIntentsService {
       text: message,
       to: 0xFFFFFFFF,
       channel: channelIndex,
+      source: MessageSource.siri,
     );
 
     return {'sent': true};

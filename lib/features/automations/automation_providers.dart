@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:socialmesh/core/logging.dart';
 
+import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import 'automation_debug_service.dart';
 import 'automation_engine.dart';
@@ -38,7 +39,11 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
     notifications: notifications,
     onSendMessage: (nodeNum, message) async {
       try {
-        await protocol.sendMessage(text: message, to: nodeNum);
+        await protocol.sendMessage(
+          text: message,
+          to: nodeNum,
+          source: MessageSource.automation,
+        );
         return true;
       } catch (e) {
         AppLogging.automations('Failed to send message to node $nodeNum: $e');
@@ -52,6 +57,7 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
           text: message,
           to: 0xFFFFFFFF, // Broadcast address
           channel: channelIndex,
+          source: MessageSource.automation,
         );
         return true;
       } catch (e) {

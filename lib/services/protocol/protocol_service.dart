@@ -1897,6 +1897,7 @@ class ProtocolService {
     int channel = 0,
     bool wantAck = true,
     String? messageId,
+    MessageSource source = MessageSource.unknown,
   }) async {
     // Validate we're ready to send
     if (_myNodeNum == null) {
@@ -1945,6 +1946,7 @@ class ProtocolService {
         sent: true,
         packetId: packetId,
         status: wantAck ? MessageStatus.pending : MessageStatus.sent,
+        source: source,
       );
 
       _messageController.add(message);
@@ -1966,6 +1968,7 @@ class ProtocolService {
     bool wantAck = true,
     String? messageId,
     required void Function(int packetId) onPacketIdGenerated,
+    MessageSource source = MessageSource.unknown,
   }) async {
     // Validate we're ready to send
     if (_myNodeNum == null) {
@@ -2020,6 +2023,7 @@ class ProtocolService {
         sent: true,
         packetId: packetId,
         status: wantAck ? MessageStatus.pending : MessageStatus.sent,
+        source: source,
       );
 
       _messageController.add(message);

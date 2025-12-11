@@ -756,7 +756,12 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
       (int toNodeNum, String emoji) async {
         try {
           AppLogging.app('Sending reaction "$emoji" to node $toNodeNum');
-          await service.sendMessage(text: emoji, to: toNodeNum, wantAck: true);
+          await service.sendMessage(
+            text: emoji,
+            to: toNodeNum,
+            wantAck: true,
+            source: MessageSource.reaction,
+          );
           AppLogging.app('Reaction sent successfully');
         } catch (e) {
           AppLogging.app('Failed to send reaction: $e');
