@@ -239,7 +239,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       // Start protocol service and wait for configuration
       final protocol = ref.read(protocolServiceProvider);
-      AppLogging.debug('🟡 Scanner screen - protocol instance: ${protocol.hashCode}');
+      AppLogging.debug(
+        '🟡 Scanner screen - protocol instance: ${protocol.hashCode}',
+      );
 
       // Set device info for hardware model inference (for devices like T1000-E that return UNSET)
       protocol.setDeviceName(device.name);
@@ -327,7 +329,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         } else {
           // Device has a valid region - mark as configured
           await settings.setRegionConfigured(true);
-          AppLogging.debug('✅ Region ${region.name} detected, marked as configured');
+          AppLogging.debug(
+            '✅ Region ${region.name} detected, marked as configured',
+          );
         }
       }
 

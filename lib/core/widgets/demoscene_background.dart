@@ -227,9 +227,7 @@ class _DemosceneBackgroundState extends State<DemosceneBackground>
         if (widget.showScanlines)
           Positioned.fill(
             child: IgnorePointer(
-              child: CustomPaint(
-                painter: _ScanlinesPainter(),
-              ),
+              child: CustomPaint(painter: _ScanlinesPainter()),
             ),
           ),
       ],
@@ -275,8 +273,9 @@ class _DemosceneBackgroundState extends State<DemosceneBackground>
   Widget _buildGlowingIcon(_BobData bob, double opacity, double hueShift) {
     // Apply subtle hue shift for color cycling
     final hsv = HSVColor.fromColor(bob.color);
-    final shiftedColor =
-        hsv.withHue((hsv.hue + hueShift * 360) % 360).toColor();
+    final shiftedColor = hsv
+        .withHue((hsv.hue + hueShift * 360) % 360)
+        .toColor();
 
     return Container(
       decoration: BoxDecoration(
@@ -306,6 +305,7 @@ class _DemosceneBackgroundState extends State<DemosceneBackground>
 }
 
 /// Copper bars painter - creates horizontal animated color gradient bars
+/// with plasma-like undulation effect inspired by classic Amiga demos
 class _CopperBarsPainter extends CustomPainter {
   final double progress;
   final double pageOffset;
@@ -321,52 +321,67 @@ class _CopperBarsPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint();
 
-    // Classic Amiga copper bar colors
+    // Classic Amiga copper bar color palette - iconic demoscene colors
     final colors = [
-      AppTheme.primaryMagenta,
-      AppTheme.primaryPurple,
-      AppTheme.graphBlue,
-      AccentColors.green,
-      AppTheme.warningYellow,
-      Colors.orange,
-      Colors.red,
-      AppTheme.primaryMagenta,
+      const Color(0xFFFF0080), // Hot pink
+      const Color(0xFFFF00FF), // Magenta
+      const Color(0xFF8000FF), // Purple
+      const Color(0xFF0080FF), // Blue
+      const Color(0xFF00FFFF), // Cyan
+      const Color(0xFF00FF80), // Mint
+      const Color(0xFF00FF00), // Green
+      const Color(0xFF80FF00), // Yellow-green
+      const Color(0xFFFFFF00), // Yellow
+      const Color(0xFFFF8000), // Orange
+      const Color(0xFFFF0000), // Red
+      const Color(0xFFFF0080), // Back to pink
     ];
 
-    const barCount = 12;
+    // More bars for smoother gradient effect
+    const barCount = 24;
     final barHeight = size.height / barCount;
+    final time = progress * math.pi * 2;
 
     for (int i = 0; i < barCount; i++) {
-      // Sine wave offset for each bar creates the flowing effect
-      final wave = math.sin(progress * 2 * math.pi + i * 0.5) * 0.5 + 0.5;
-      final colorIndex = ((i + progress * colors.length) % colors.length);
+      // Plasma-like sine wave creates undulating color bands
+      final wave1 = math.sin(time + i * 0.3);
+      final wave2 = math.sin(time * 1.3 + i * 0.2);
+      final wave3 = math.cos(time * 0.7 + i * 0.4);
+      final combinedWave = (wave1 + wave2 + wave3) / 3;
+
+      // Calculate color index with plasma-like smoothness
+      final colorProgress = (i / barCount + progress + combinedWave * 0.1);
+      final colorIndex = (colorProgress * colors.length) % colors.length;
       final colorIndexInt = colorIndex.floor();
       final colorBlend = colorIndex - colorIndexInt;
 
-      // Interpolate between colors for smooth transitions
+      // Interpolate between colors for smooth rainbow transitions
       final color1 = colors[colorIndexInt % colors.length];
       final color2 = colors[(colorIndexInt + 1) % colors.length];
       final blendedColor = Color.lerp(color1, color2, colorBlend)!;
 
-      // Calculate bar opacity based on position and wave
-      final opacity = 0.08 + wave * 0.07;
+      // Intensity waves for that classic copper bar shimmer
+      final intensity = 0.06 + (combinedWave * 0.5 + 0.5) * 0.08;
 
-      // Gradient for each bar (brighter in middle)
+      // Position with slight sine wave horizontal offset (raster effect)
       final barY = i * barHeight;
+      final xOffset = math.sin(time * 2 + i * 0.2) * 5 - pageOffset * 0.5;
+
+      // Create gradient for this bar - brighter center, faded edges
       final gradient = ui.Gradient.linear(
-        Offset(0, barY),
-        Offset(0, barY + barHeight),
+        Offset(xOffset, barY),
+        Offset(xOffset, barY + barHeight),
         [
-          blendedColor.withValues(alpha: opacity * 0.3),
-          blendedColor.withValues(alpha: opacity),
-          blendedColor.withValues(alpha: opacity * 0.3),
+          blendedColor.withValues(alpha: intensity * 0.2),
+          blendedColor.withValues(alpha: intensity),
+          blendedColor.withValues(alpha: intensity * 0.2),
         ],
         [0.0, 0.5, 1.0],
       );
 
       paint.shader = gradient;
       canvas.drawRect(
-        Rect.fromLTWH(0, barY, size.width, barHeight),
+        Rect.fromLTWH(0, barY, size.width, barHeight * 1.1),
         paint,
       );
     }
@@ -437,11 +452,7 @@ class _StarfieldPainter extends CustomPainter {
 
       // Brighter star point
       paint.color = Colors.white.withValues(alpha: brightness);
-      canvas.drawCircle(
-        Offset(projectedX, projectedY),
-        starSize * 0.6,
-        paint,
-      );
+      canvas.drawCircle(Offset(projectedX, projectedY), starSize * 0.6, paint);
     }
   }
 
@@ -460,10 +471,7 @@ class _ScanlinesPainter extends CustomPainter {
 
     // Draw horizontal scanlines every 3 pixels for subtle CRT effect
     for (double y = 0; y < size.height; y += 3) {
-      canvas.drawRect(
-        Rect.fromLTWH(0, y, size.width, 1),
-        paint,
-      );
+      canvas.drawRect(Rect.fromLTWH(0, y, size.width, 1), paint);
     }
   }
 
