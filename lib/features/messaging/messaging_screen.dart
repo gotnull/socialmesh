@@ -1323,21 +1323,69 @@ class _MessageBubble extends StatelessWidget {
     }
   }
 
-  /// Get tooltip text for message source
-  String? _getSourceTooltip() {
+  /// Get label text for message source
+  String? _getSourceLabel() {
     switch (message.source) {
       case MessageSource.automation:
-        return 'Sent by automation';
+        return 'Automation';
       case MessageSource.siri:
-        return 'Sent via Siri';
+        return 'Siri';
       case MessageSource.reaction:
-        return 'Notification reaction';
+        return 'Notification';
       case MessageSource.tapback:
-        return 'Tapback reaction';
+        return 'Tapback';
       case MessageSource.manual:
       case MessageSource.unknown:
         return null;
     }
+  }
+
+  /// Get background color for source badge
+  Color _getSourceColor() {
+    switch (message.source) {
+      case MessageSource.automation:
+        return const Color(0xFF8B5CF6); // Purple
+      case MessageSource.siri:
+        return const Color(0xFFFF2D55); // Siri pink/red
+      case MessageSource.reaction:
+        return const Color(0xFFFF9500); // Orange
+      case MessageSource.tapback:
+        return const Color(0xFF30D158); // Green
+      case MessageSource.manual:
+      case MessageSource.unknown:
+        return Colors.transparent;
+    }
+  }
+
+  /// Build the source badge widget
+  Widget? _buildSourceBadge() {
+    final icon = _getSourceIcon();
+    final label = _getSourceLabel();
+    if (icon == null || label == null) return null;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4, right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: _getSourceColor().withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: Colors.white),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -1346,7 +1394,7 @@ class _MessageBubble extends StatelessWidget {
     final isFailed = message.isFailed;
     final isPending = message.isPending;
     final isDelivered = message.status == MessageStatus.delivered;
-    final sourceIcon = _getSourceIcon();
+    final sourceBadge = _buildSourceBadge();
 
     if (isFromMe) {
       return Padding(
@@ -1354,6 +1402,8 @@ class _MessageBubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
+            // Source badge above message (Siri, Automation, etc.)
+            if (sourceBadge != null) sourceBadge,
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -1392,18 +1442,6 @@ class _MessageBubble extends StatelessWidget {
                                 Icons.lock,
                                 size: 11,
                                 color: Colors.white.withValues(alpha: 0.7),
-                              ),
-                              const SizedBox(width: 3),
-                            ],
-                            // Source indicator (automation, siri, reaction, tapback)
-                            if (sourceIcon != null) ...[
-                              Tooltip(
-                                message: _getSourceTooltip() ?? '',
-                                child: Icon(
-                                  sourceIcon,
-                                  size: 11,
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                ),
                               ),
                               const SizedBox(width: 3),
                             ],
