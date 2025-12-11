@@ -70,6 +70,7 @@ dependencies:
   firebase_core: ^4.2.1
   firebase_auth: ^6.0.1
   flutter_box_transform: ^0.4.7
+  three_js: ^0.2.6
 
 dev_dependencies:
   flutter_test:

@@ -98,6 +98,10 @@ PODS:
     - nanopb (~> 3.30910.0)
     - PromisesSwift (~> 2.1)
   - Flutter (1.0.0)
+  - flutter_angle (0.3.8):
+    - Flutter
+    - FlutterAngle (~> 0.0.8)
+    - FlutterMacOS
   - flutter_app_group_directory (0.0.1):
     - Flutter
   - flutter_blue_plus_darwin (0.0.2):
@@ -107,6 +111,7 @@ PODS:
     - Flutter
   - flutter_secure_storage (6.0.0):
     - Flutter
+  - FlutterAngle (0.0.8)
   - geolocator_apple (1.2.0):
     - Flutter
     - FlutterMacOS
@@ -180,6 +185,8 @@ PODS:
     - Flutter
     - FlutterMacOS
   - SwiftyGif (5.4.5)
+  - three_js_sensors (0.1.2):
+    - Flutter
   - url_launcher_ios (0.0.1):
     - Flutter
 
@@ -190,6 +197,7 @@ DEPENDENCIES:
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_crashlytics (from `.symlinks/plugins/firebase_crashlytics/ios`)
   - Flutter (from `Flutter`)
+  - flutter_angle (from `.symlinks/plugins/flutter_angle/darwin`)
   - flutter_app_group_directory (from `.symlinks/plugins/flutter_app_group_directory/ios`)
   - flutter_blue_plus_darwin (from `.symlinks/plugins/flutter_blue_plus_darwin/darwin`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
@@ -205,6 +213,7 @@ DEPENDENCIES:
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
+  - three_js_sensors (from `.symlinks/plugins/three_js_sensors/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
 SPEC REPOS:
@@ -222,6 +231,7 @@ SPEC REPOS:
     - FirebaseInstallations
     - FirebaseRemoteConfigInterop
     - FirebaseSessions
+    - FlutterAngle
     - GoogleDataTransport
     - GoogleUtilities
     - GTMSessionFetcher
@@ -247,6 +257,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_crashlytics/ios"
   Flutter:
     :path: Flutter
+  flutter_angle:
+    :path: ".symlinks/plugins/flutter_angle/darwin"
   flutter_app_group_directory:
     :path: ".symlinks/plugins/flutter_app_group_directory/ios"
   flutter_blue_plus_darwin:
@@ -277,6 +289,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
   sqflite_darwin:
     :path: ".symlinks/plugins/sqflite_darwin/darwin"
+  three_js_sensors:
+    :path: ".symlinks/plugins/three_js_sensors/ios"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
 
@@ -300,10 +314,12 @@ SPEC CHECKSUMS:
   FirebaseRemoteConfigInterop: 1e31ec72b89c9924367c59bfb5ec9ab60d1d6766
   FirebaseSessions: ba7c7a7ca8696a8d540eb3fe3800fbe98c79786d
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_angle: 7b1a2b3e733221bf2e0325e42fc3edf95b5d44c4
   flutter_app_group_directory: 55b5362007d1c0cb45dc1dd1e94f67d615f45a6b
   flutter_blue_plus_darwin: 20a08bfeaa0f7804d524858d3d8744bcc1b6dbc3
   flutter_local_notifications: a5a732f069baa862e728d839dd2ebb904737effb
   flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
+  FlutterAngle: c810891af800750361b1d0e7cc944f2338d5ae18
   geolocator_apple: ab36aa0e8b7d7a2d7639b3b4e48308394e8cef5e
   GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
@@ -326,6 +342,7 @@ SPEC CHECKSUMS:
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
   SwiftyGif: 706c60cf65fa2bc5ee0313beece843c8eb8194d4
+  three_js_sensors: f516b092803411e05b1e3dc7625efa36acd8f455
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
 
 PODFILE CHECKSUM: 1857a7cdb7dfafe45f2b0e9a9af44644190f7506

@@ -492,8 +492,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         backgroundColor: AppTheme.darkBackground,
         body: Stack(
           children: [
-            // Background - Amiga demoscene style
-            const Positioned.fill(child: DemosceneBackground()),
+            // Background - 3D HexTerrain
+            const Positioned.fill(child: HexTerrain()),
             // Content in SafeArea - EXACT same as onboarding
             SafeArea(child: Center(child: _buildConnectingContent())),
           ],

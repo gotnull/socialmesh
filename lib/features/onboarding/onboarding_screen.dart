@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
-import '../../core/widgets/demoscene_background.dart';
+import '../../core/widgets/hex_terrain.dart';
 import '../../providers/app_providers.dart';
 import '../scanner/scanner_screen.dart';
 
@@ -160,13 +160,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       backgroundColor: AppTheme.darkBackground,
       body: Stack(
         children: [
-          // Amiga demoscene-inspired animated background
-          Positioned.fill(
-            child: DemosceneBackground(
-              pageOffset: _pageOffset,
-              accentColor: accentColor,
-            ),
-          ),
+          // 3D HexTerrain background
+          const Positioned.fill(child: HexTerrain()),
 
           // Main content
           SafeArea(
