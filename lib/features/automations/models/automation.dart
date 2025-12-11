@@ -202,6 +202,40 @@ extension TriggerTypeExtension on TriggerType {
     }
   }
 
+  /// Default description for automation
+  String get defaultDescription {
+    switch (this) {
+      case TriggerType.nodeOnline:
+        return 'Triggered when a node comes online';
+      case TriggerType.nodeOffline:
+        return 'Triggered when a node goes offline';
+      case TriggerType.batteryLow:
+        return 'Triggered when battery drops below threshold';
+      case TriggerType.batteryFull:
+        return 'Triggered when battery is fully charged';
+      case TriggerType.messageReceived:
+        return 'Triggered when any message is received';
+      case TriggerType.messageContains:
+        return 'Triggered when message contains keyword';
+      case TriggerType.positionChanged:
+        return 'Triggered when node position changes';
+      case TriggerType.geofenceEnter:
+        return 'Triggered when node enters geofence area';
+      case TriggerType.geofenceExit:
+        return 'Triggered when node exits geofence area';
+      case TriggerType.nodeSilent:
+        return 'Triggered when node is silent for duration';
+      case TriggerType.scheduled:
+        return 'Triggered at scheduled time';
+      case TriggerType.signalWeak:
+        return 'Triggered when signal strength drops';
+      case TriggerType.channelActivity:
+        return 'Triggered when activity on channel';
+      case TriggerType.manual:
+        return 'Triggered manually via Shortcuts or UI';
+    }
+  }
+
   /// Default message text for sendMessage/sendToChannel actions
   String get defaultMessageText {
     switch (this) {

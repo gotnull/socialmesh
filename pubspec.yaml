@@ -99,6 +99,7 @@ flutter:
     - assets/app_icons/source/
     - assets/rtttl_library.json
     - assets/lottie/
+    - assets/models/
     - docs/
 
   # An image asset can refer to one or more resolution-specific "variants", see

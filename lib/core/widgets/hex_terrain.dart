@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:three_js/three_js.dart' as three;
 import '../theme.dart';
 
-/// 3D Hexagonal terrain widget inspired by HexTerrain
-/// Uses three_js for WebGL rendering
+/// 3D Hexagonal terrain widget - Full port of HexTerrain
+/// Uses three_js for WebGL rendering with support for trees, grass, clouds
 class HexTerrain extends StatefulWidget {
   /// Auto-rotate speed (0 to disable)
   final double autoRotateSpeed;
@@ -13,10 +13,26 @@ class HexTerrain extends StatefulWidget {
   /// Whether to show the terrain
   final bool enabled;
 
+  /// Whether to show trees
+  final bool showTrees;
+
+  /// Whether to show grass
+  final bool showGrass;
+
+  /// Whether to show clouds
+  final bool showClouds;
+
+  /// Random seed for terrain generation (null = random each time)
+  final int? seed;
+
   const HexTerrain({
     super.key,
-    this.autoRotateSpeed = 0.6,
+    this.autoRotateSpeed = 0.3,
     this.enabled = true,
+    this.showTrees = false,
+    this.showGrass = false,
+    this.showClouds = false,
+    this.seed,
   });
 
   @override
@@ -28,27 +44,46 @@ class _HexTerrainState extends State<HexTerrain> {
   bool _isInitialized = false;
   bool _hasError = false;
 
-  // Terrain parameters - adjusted for proper HexTerrain look
-  static const int _terrainRadius = 25;
-  static const double _hexSize = 0.4;
-  static const double _heightScale = 3.0; // Height multiplier for terrain
+  // Generation settings (from appState.js)
+  late final int _seed;
+  static const double _height = 1.0;
+  static const double _scale = 0.2;
+  static const double _detail = 0.5;
+  static const double _fuzzyness = 0.25;
 
-  // Biome colors (matching HexTerrain exactly)
-  static const _waterColor = 0xFF4AA3DF; // Bright cyan-blue water
-  static const _shoreColor = 0xFF6BBFEF; // Light blue shore
-  static const _beachColor = 0xFFE8D4A8; // Sandy beige
-  static const _shrubColor = 0xFFB8C84A; // Yellow-green grass
-  static const _forestColor = 0xFF5A8A3A; // Medium green
-  static const _darkForestColor = 0xFF2A5A2A; // Dark forest green
-  static const _stoneColor = 0xFF8A8A7A; // Gray stone
-  static const _snowColor = 0xFFEEEEEE; // White snow
+  // Terrain parameters
+  static const int _terrainRadius = 20;
+  static const double _hexSize = 1.0;
+  static const double _hexGap = 2.0;
 
-  // Water level threshold
-  static const double _waterLevel = 0.15;
+  // Biome color thresholds (from appState.js)
+  static const double _waterValue = 0.21;
+  static const double _shoreValue = 0.01;
+  static const double _beachValue = 0.04;
+  static const double _shrubValue = 0.10;
+  static const double _forestValue = 0.29;
+  static const double _stoneValue = 0.36;
+
+  // Biome colors (from appState.js)
+  static const int _waterColor = 0x00a9ff;
+  static const int _shoreColor = 0xffd68f;
+  static const int _beachColor = 0xefb28f;
+  static const int _shrubColor = 0x9ea667;
+  static const int _forestColor = 0x586647;
+  static const int _stoneColor = 0x656565;
+  static const int _snowColor = 0x9aa7ad;
+
+  // Store hex data for trees/grass placement
+  final List<_HexData> _hexDataList = [];
+
+  // Cloud animation data
+  final List<_CloudPoint> _cloudPoints = [];
+  three.Group? _cloudGroup;
 
   @override
   void initState() {
     super.initState();
+    _seed = widget.seed ?? DateTime.now().millisecondsSinceEpoch;
     if (widget.enabled) {
       _initThreeJS();
     }
@@ -88,26 +123,48 @@ class _HexTerrainState extends State<HexTerrain> {
         AppTheme.darkBackground.toARGB32(),
       );
 
-      // Camera - positioned above looking down at terrain (like HexTerrain)
+      // Camera - looking down at terrain from above at an angle
       threeJs.camera = three.PerspectiveCamera(
-        50,
+        45,
         threeJs.width / threeJs.height,
         0.1,
-        1000,
+        500,
       );
-      threeJs.camera.position.setValues(5, 8, 5);
+      // Position camera above and to the side, looking at center
+      threeJs.camera.position.setValues(0, 10, 8);
       threeJs.camera.lookAt(three.Vector3(0, 0, 0));
 
-      // Lights
+      // Lights (matching Lights.jsx)
       _setupLights();
 
       // Generate hex terrain
       await _generateTerrain();
 
+      // Add trees if enabled
+      if (widget.showTrees) {
+        await _addTrees();
+      }
+
+      // Add grass if enabled
+      if (widget.showGrass) {
+        await _addGrass();
+      }
+
+      // Add clouds if enabled
+      if (widget.showClouds) {
+        _addClouds();
+      }
+
       // Auto-rotate animation
       if (widget.autoRotateSpeed > 0) {
         threeJs.addAnimationEvent((dt) {
+          // Rotate around Y axis (vertical) for flat terrain rotation
           threeJs.scene.rotation.y += dt * widget.autoRotateSpeed;
+
+          // Animate clouds
+          if (widget.showClouds && _cloudGroup != null) {
+            _animateClouds(dt);
+          }
         });
       }
     } catch (e) {
@@ -120,108 +177,130 @@ class _HexTerrainState extends State<HexTerrain> {
 
   void _setupLights() {
     // Ambient light
-    final ambient = three.AmbientLight(0x404040, 0.5);
+    final ambient = three.AmbientLight(0xffffff, 0.4);
     threeJs.scene.add(ambient);
 
-    // Main directional light (sun-like)
-    final directional = three.DirectionalLight(0xffffff, 1.0);
-    directional.position.setValues(5, 10, 5);
+    // Main directional light (sun-like, from Lights.jsx)
+    final directional = three.DirectionalLight(0xffffff, 1.5);
+    directional.position.setValues(100, 200, 100);
     directional.castShadow = true;
-    directional.shadow?.mapSize.width = 1024;
-    directional.shadow?.mapSize.height = 1024;
+    directional.shadow?.mapSize.width = 2048;
+    directional.shadow?.mapSize.height = 2048;
     directional.shadow?.camera?.near = 0.5;
-    directional.shadow?.camera?.far = 50;
+    directional.shadow?.camera?.far = 500;
+
+    // Configure shadow camera bounds
+    final shadowCam = directional.shadow?.camera;
+    if (shadowCam is three.OrthographicCamera) {
+      shadowCam.left = -200;
+      shadowCam.right = 200;
+      shadowCam.top = 200;
+      shadowCam.bottom = -200;
+    }
+
     threeJs.scene.add(directional);
 
-    // Fill light from below
-    final fillLight = three.DirectionalLight(0x4080ff, 0.3);
-    fillLight.position.setValues(-3, -5, -3);
-    threeJs.scene.add(fillLight);
-
-    // Hemisphere light for sky/ground gradient
-    final hemi = three.HemisphereLight(0x87ceeb, 0x3a5a2a, 0.4);
+    // Hemisphere light for sky/ground coloring
+    final hemi = three.HemisphereLight(0x87ceeb, 0x3a5a2a, 0.3);
     threeJs.scene.add(hemi);
   }
 
   Future<void> _generateTerrain() async {
-    // Generate hex positions using scatter pattern (like useHexagonScatter)
-    final hexPositions = _generateHexScatter(_terrainRadius);
-    final random = math.Random(42);
+    final random = math.Random(_seed);
 
-    // Create a group to hold all hexes
+    // Generate hex positions using scatter pattern (useHexagonScatter.js)
+    final hexPositions = _generateHexScatter(_terrainRadius, _hexGap);
+
+    // Create terrain group
     final terrainGroup = three.Group();
 
-    // Pre-compute heights for all positions
-    final heights = <double>[];
+    // Generate each hex with its own height and color
     for (final pos in hexPositions) {
-      heights.add(_fbmNoise(pos.x * 0.12, pos.y * 0.12, random));
-    }
+      // Get height using FBM noise (useFBM.js)
+      final scaledPos = three.Vector2(pos.x * _scale, pos.y * _scale);
+      var height = _fbmNoise(scaledPos.x, scaledPos.y, random) * _height;
 
-    // Create individual meshes for each hex (since we need different heights)
-    for (int i = 0; i < hexPositions.length; i++) {
-      final pos = hexPositions[i];
-      final height = heights[i];
+      // Get biome color based on height (useColor.js)
+      final color = _getBiomeColor(height);
 
-      // Calculate actual height - water stays at water level
-      final actualHeight = height <= _waterLevel ? _waterLevel : height;
-      final hexHeight = actualHeight * _heightScale + 0.1;
+      // Water stays at water level
+      if (height <= _waterValue) {
+        height = _waterValue;
+      }
 
-      // Create hex geometry with proper height
-      final hexGeometry = three.CylinderGeometry(
-        _hexSize, // radiusTop
-        _hexSize, // radiusBottom
-        hexHeight, // height - THIS is the key difference
+      // Scale Z based on height (like ScatterHexagonMesh.jsx)
+      final hexHeight = (height * 2.0).clamp(0.05, 2.0);
+
+      // Create hexagonal prism using CylinderGeometry with 6 segments
+      final geometry = three.CylinderGeometry(
+        _hexSize * 0.08, // radiusTop
+        _hexSize * 0.08, // radiusBottom
+        hexHeight, // height
         6, // radialSegments (hexagon)
+        1, // heightSegments
       );
 
-      // Get color based on height
-      final color = _getTerrainColor(height);
-
+      // Create material with this color
       final material = three.MeshPhongMaterial.fromMap({
         'color': color.getHex(),
         'flatShading': true,
+        'side': three.FrontSide,
       });
 
-      final mesh = three.Mesh(hexGeometry, material);
+      // Create mesh
+      final mesh = three.Mesh(geometry, material);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
 
-      // Position: x, y (height/2 so bottom is at 0), z
+      // Position hex on X-Z plane with Y as height
+      // Cylinder is already vertical by default (Y-up)
       mesh.position.setValues(pos.x, hexHeight / 2, pos.y);
 
       terrainGroup.add(mesh);
-    }
 
-    // Rotate the whole terrain to lay flat (hexes point up)
-    terrainGroup.rotation.x = -math.pi / 2;
+      // Store hex data for trees/grass
+      _hexDataList.add(
+        _HexData(
+          position: three.Vector3(pos.x, hexHeight, pos.y),
+          height: height,
+          biome: _getBiome(height),
+        ),
+      );
+    }
 
     threeJs.scene.add(terrainGroup);
   }
 
-  List<three.Vector2> _generateHexScatter(int radius) {
+  List<three.Vector2> _generateHexScatter(int radius, double gap) {
     final points = <three.Vector2>[];
 
     // Center hex
     points.add(three.Vector2(0, 0));
 
-    const gap = 1.0;
-    final unit = gap * 0.176 * 6; // Hex spacing unit
-    const angle = math.pi / 3; // 60 degrees
+    // Hex spacing - gap is the distance between hex centers
+    final unit = gap * 0.15; // Adjusted for proper hex tiling
+    const angle = math.pi / 3;
 
-    // Generate rings from center outward (like HexTerrain's useHexagonScatter)
-    for (int ring = 1; ring <= radius; ring++) {
-      for (int segment = 0; segment < 6; segment++) {
-        for (int side = 0; side < ring; side++) {
-          // Axis vector pointing outward
-          final axisX = math.sin(segment * angle) * ring * unit;
-          final axisY = -math.cos(segment * angle) * ring * unit;
+    final axis = three.Vector3(0, 0, 1);
+    final axisVector = three.Vector3(0, -unit, 0);
+    final sideVector = three.Vector3(0, unit, 0);
+    _rotateAroundAxis(sideVector, axis, -angle);
 
-          // Side vector for this segment
-          final sideAngle = segment * angle + math.pi / 3;
-          final sideX = math.sin(sideAngle) * side * unit;
-          final sideY = -math.cos(sideAngle) * side * unit;
+    final tempV3 = three.Vector3();
 
-          points.add(three.Vector2(axisX + sideX, axisY + sideY));
+    for (int seg = 0; seg < 6; seg++) {
+      for (int ax = 1; ax <= radius; ax++) {
+        for (int sd = 0; sd < ax; sd++) {
+          tempV3.setFrom(axisVector);
+          tempV3.scale(ax.toDouble());
+
+          final sideScaled = sideVector.clone();
+          sideScaled.scale(sd.toDouble());
+          tempV3.add(sideScaled);
+
+          _rotateAroundAxis(tempV3, axis, angle * seg);
+
+          points.add(three.Vector2(tempV3.x, tempV3.y));
         }
       }
     }
@@ -229,100 +308,303 @@ class _HexTerrainState extends State<HexTerrain> {
     return points;
   }
 
+  void _rotateAroundAxis(three.Vector3 v, three.Vector3 axis, double angle) {
+    final c = math.cos(angle);
+    final s = math.sin(angle);
+    final t = 1 - c;
+
+    final x = v.x;
+    final y = v.y;
+    final z = v.z;
+
+    v.x =
+        (t * axis.x * axis.x + c) * x +
+        (t * axis.x * axis.y - s * axis.z) * y +
+        (t * axis.x * axis.z + s * axis.y) * z;
+    v.y =
+        (t * axis.x * axis.y + s * axis.z) * x +
+        (t * axis.y * axis.y + c) * y +
+        (t * axis.y * axis.z - s * axis.x) * z;
+    v.z =
+        (t * axis.x * axis.z - s * axis.y) * x +
+        (t * axis.y * axis.z + s * axis.x) * y +
+        (t * axis.z * axis.z + c) * z;
+  }
+
   double _fbmNoise(double x, double y, math.Random random) {
-    // Multi-octave noise approximation using sin waves
+    // FBM (Fractal Brownian Motion) noise implementation (useFBM.js)
+    // Using sin/cos combination to approximate Perlin noise
+    final lacunarity = _detail * 4;
+    final persistence = _fuzzyness * 2;
+
     var value = 0.0;
     var amplitude = 1.0;
     var frequency = 1.0;
+    var maxValue = 0.0;
+
+    // Use seed-based offset
+    final seedOffset = _seed * 0.001;
 
     for (int i = 0; i < 4; i++) {
-      value +=
-          amplitude *
-          (math.sin(x * frequency * 3.7 + y * frequency * 2.3) * 0.5 +
-              math.cos(y * frequency * 4.1 - x * frequency * 1.9) * 0.5);
-      amplitude *= 0.5;
-      frequency *= 2.0;
+      // Simplex-like noise approximation
+      final nx = (x + seedOffset) * frequency;
+      final ny = (y + seedOffset) * frequency;
+
+      final n =
+          math.sin(nx * 1.27 + ny * 0.89) * math.cos(ny * 1.13 - nx * 0.97) +
+          math.sin(nx * 2.31 - ny * 1.71) * 0.5;
+
+      value += n * amplitude;
+      maxValue += amplitude;
+
+      amplitude *= persistence;
+      frequency *= lacunarity;
     }
 
-    // Normalize and apply power curve
-    return math.pow((value + 1) / 2, 2).clamp(0.0, 1.0).toDouble();
+    // Normalize to 0-1 and apply power curve
+    final normalized = (value / maxValue + 1) / 2;
+    return math.pow(normalized.clamp(0.0, 1.0), 2).toDouble();
   }
 
-  three.Color _getTerrainColor(double height) {
-    // Biome thresholds matching HexTerrain
-    const shoreLevel = 0.18;
-    const beachLevel = 0.25;
-    const grassLevel = 0.40;
-    const shrubLevel = 0.55;
-    const forestLevel = 0.70;
-    const stoneLevel = 0.85;
+  String _getBiome(double height) {
+    if (height <= _waterValue) return 'water';
+    if (height <= _waterValue + _shoreValue) return 'shore';
+    if (height <= _waterValue + _beachValue) return 'beach';
+    if (height <= _waterValue + _shrubValue) return 'shrub';
+    if (height <= _waterValue + _forestValue) return 'forest';
+    if (height <= _waterValue + _stoneValue) return 'stone';
+    return 'snow';
+  }
 
+  three.Color _getBiomeColor(double height) {
     int colorHex;
 
-    if (height <= _waterLevel) {
-      // Water - cyan blue, darker at deeper levels
-      final depth = height / _waterLevel;
-      colorHex = _lerpColor(0xFF2080B0, _waterColor, depth);
-    } else if (height <= shoreLevel) {
-      // Shore - lighter blue
+    if (height <= _waterValue) {
+      colorHex = _waterColor;
+    } else if (height <= _waterValue + _shoreValue) {
       colorHex = _shoreColor;
-    } else if (height <= beachLevel) {
-      // Beach/sand - warm beige
+    } else if (height <= _waterValue + _beachValue) {
       colorHex = _beachColor;
-    } else if (height <= grassLevel) {
-      // Light grass - yellow-green (most prominent in HexTerrain)
-      colorHex = _lerpColor(
-        _shrubColor,
-        0xFFA8B83A,
-        (height - beachLevel) / (grassLevel - beachLevel),
-      );
-    } else if (height <= shrubLevel) {
-      // Shrub - transitioning to darker green
-      colorHex = _lerpColor(
-        0xFF88A830,
-        _forestColor,
-        (height - grassLevel) / (shrubLevel - grassLevel),
-      );
-    } else if (height <= forestLevel) {
-      // Forest - dark green
-      colorHex = _lerpColor(
-        _forestColor,
-        _darkForestColor,
-        (height - shrubLevel) / (forestLevel - shrubLevel),
-      );
-    } else if (height <= stoneLevel) {
-      // Stone - gray
-      colorHex = _lerpColor(
-        _stoneColor,
-        0xFF9A9A8A,
-        (height - forestLevel) / (stoneLevel - forestLevel),
-      );
+    } else if (height <= _waterValue + _shrubValue) {
+      colorHex = _shrubColor;
+    } else if (height <= _waterValue + _forestValue) {
+      colorHex = _forestColor;
+    } else if (height <= _waterValue + _stoneValue) {
+      colorHex = _stoneColor;
     } else {
-      // Snow - white
-      colorHex = _lerpColor(
-        0xFFCCCCCC,
-        _snowColor,
-        (height - stoneLevel) / (1.0 - stoneLevel),
+      colorHex = _snowColor;
+    }
+
+    final color = three.Color.fromHex32(0xFF000000 | colorHex);
+
+    // Adjust water depth coloring (from useColor.js)
+    if (height <= _waterValue) {
+      final depthFactor = math.pow(1 - (_waterValue - height) * 1.3, 6);
+      final mappedL = depthFactor.clamp(0.0, 1.0) * 1.4;
+      // Darken water based on depth
+      color.red = (color.red * mappedL).clamp(0.0, 1.0);
+      color.green = (color.green * mappedL).clamp(0.0, 1.0);
+      color.blue = (color.blue * mappedL).clamp(0.0, 1.0);
+    }
+
+    return color;
+  }
+
+  Future<void> _addTrees() async {
+    final random = math.Random(_seed + 1);
+    final treeGroup = three.Group();
+
+    // Filter hexes that are in forest or stone biomes (from Trees.jsx)
+    final treeHexes = _hexDataList
+        .where((hex) => hex.biome == 'forest' || hex.biome == 'stone')
+        .toList();
+
+    // Create simple tree geometry (cone + cylinder)
+    for (final hex in treeHexes) {
+      // Random chance to place tree
+      if (random.nextDouble() > 0.3) continue;
+
+      // Create tree
+      final tree = _createSimpleTree(random);
+
+      // Position tree on hex (Y is height)
+      tree.position.setValues(
+        hex.position.x + (random.nextDouble() - 0.5) * 0.05,
+        hex.position.y, // Y is the height
+        hex.position.z + (random.nextDouble() - 0.5) * 0.05,
+      );
+
+      // Random rotation around Y axis
+      tree.rotation.y = random.nextDouble() * math.pi * 2;
+
+      // Random scale
+      final scale = 0.02 + random.nextDouble() * 0.02;
+      tree.scale.setValues(scale, scale, scale);
+
+      treeGroup.add(tree);
+    }
+
+    threeJs.scene.add(treeGroup);
+  }
+
+  three.Group _createSimpleTree(math.Random random) {
+    final tree = three.Group();
+
+    // Trunk (brown cylinder) - already Y-up by default
+    final trunkGeometry = three.CylinderGeometry(0.3, 0.4, 2.0, 8);
+    final trunkMaterial = three.MeshPhongMaterial.fromMap({
+      'color': 0x4a3728,
+      'flatShading': true,
+    });
+    final trunk = three.Mesh(trunkGeometry, trunkMaterial);
+    trunk.position.y = 1.0;
+    trunk.castShadow = true;
+    tree.add(trunk);
+
+    // Foliage (green cone) - already Y-up by default
+    final foliageGeometry = three.ConeGeometry(1.2, 3.0, 8);
+    final foliageColor = random.nextBool() ? 0x2d5a27 : 0x3d6a37;
+    final foliageMaterial = three.MeshPhongMaterial.fromMap({
+      'color': foliageColor,
+      'flatShading': true,
+    });
+    final foliage = three.Mesh(foliageGeometry, foliageMaterial);
+    foliage.position.y = 3.5;
+    foliage.castShadow = true;
+    tree.add(foliage);
+
+    return tree;
+  }
+
+  Future<void> _addGrass() async {
+    final random = math.Random(_seed + 2);
+    final grassGroup = three.Group();
+
+    // Filter hexes that are in beach to forest biomes (from Grass.jsx)
+    final grassHexes = _hexDataList
+        .where(
+          (hex) =>
+              hex.biome == 'beach' ||
+              hex.biome == 'shrub' ||
+              hex.biome == 'forest',
+        )
+        .toList();
+
+    // Create grass patches
+    for (final hex in grassHexes) {
+      // Multiple grass blades per hex
+      final bladeCount = 2 + random.nextInt(4);
+      for (int i = 0; i < bladeCount; i++) {
+        if (random.nextDouble() > 0.5) continue;
+
+        final grass = _createGrassBlade(random);
+
+        grass.position.setValues(
+          hex.position.x + (random.nextDouble() - 0.5) * 0.08,
+          hex.position.y, // Y is height
+          hex.position.z + (random.nextDouble() - 0.5) * 0.08,
+        );
+
+        grass.rotation.y = random.nextDouble() * math.pi * 2;
+
+        final scale = 0.01 + random.nextDouble() * 0.015;
+        grass.scale.setValues(scale, scale, scale);
+
+        grassGroup.add(grass);
+      }
+    }
+
+    threeJs.scene.add(grassGroup);
+  }
+
+  three.Mesh _createGrassBlade(math.Random random) {
+    // Simple grass blade as a thin box (Y-up)
+    final geometry = three.BoxGeometry(0.1, 1.5, 0.1);
+    final grassColor = random.nextBool() ? 0x7a9a57 : 0x8aaa67;
+    final material = three.MeshPhongMaterial.fromMap({
+      'color': grassColor,
+      'flatShading': true,
+    });
+    final blade = three.Mesh(geometry, material);
+    blade.position.y = 0.75; // Half height up
+    return blade;
+  }
+
+  void _addClouds() {
+    final random = math.Random(_seed + 3);
+    _cloudGroup = three.Group();
+    _cloudGroup!.position.y = 8; // Cloud height (Y-up)
+
+    // Generate cloud points
+    for (int i = 0; i < 30; i++) {
+      _cloudPoints.add(
+        _CloudPoint(
+          position: three.Vector3(
+            (random.nextDouble() * 16 - 8) * 5,
+            0, // Y offset within cloud layer
+            (random.nextDouble() * 16 - 8) * 5,
+          ),
+          scale: 0.1 + random.nextDouble() * 0.1,
+          rate: 5 + random.nextDouble() * 5,
+        ),
       );
     }
 
-    return three.Color.fromHex32(colorHex);
+    // Create cloud meshes
+    for (final point in _cloudPoints) {
+      final cloud = _createCloud(random);
+      cloud.position.setFrom(point.position);
+      cloud.scale.setScalar(point.scale);
+      _cloudGroup!.add(cloud);
+    }
+
+    threeJs.scene.add(_cloudGroup!);
   }
 
-  int _lerpColor(int color1, int color2, double t) {
-    final r1 = (color1 >> 16) & 0xFF;
-    final g1 = (color1 >> 8) & 0xFF;
-    final b1 = color1 & 0xFF;
+  three.Mesh _createCloud(math.Random random) {
+    // Simple cloud as a flattened sphere
+    final geometry = three.SphereGeometry(2, 8, 6);
+    final material = three.MeshPhongMaterial.fromMap({
+      'color': 0xffffff,
+      'opacity': 0.9,
+      'transparent': true,
+    });
+    final cloud = three.Mesh(geometry, material);
+    cloud.castShadow = true;
 
-    final r2 = (color2 >> 16) & 0xFF;
-    final g2 = (color2 >> 8) & 0xFF;
-    final b2 = color2 & 0xFF;
+    // Flatten cloud (squash Y)
+    cloud.scale.y = 0.3;
 
-    final r = (r1 + (r2 - r1) * t).round();
-    final g = (g1 + (g2 - g1) * t).round();
-    final b = (b1 + (b2 - b1) * t).round();
+    return cloud;
+  }
 
-    return 0xFF000000 | (r << 16) | (g << 8) | b;
+  void _animateClouds(double dt) {
+    if (_cloudGroup == null) return;
+
+    for (
+      int i = 0;
+      i < _cloudPoints.length && i < _cloudGroup!.children.length;
+      i++
+    ) {
+      final point = _cloudPoints[i];
+      final cloud = _cloudGroup!.children[i];
+
+      // Move cloud along X
+      point.position.x += dt * point.rate;
+
+      // Wrap around
+      if (point.position.x > 40) {
+        point.position.x = -40;
+        point.position.z = (math.Random().nextDouble() * 80) - 40;
+      }
+
+      // Update position
+      cloud.position.setFrom(point.position);
+
+      // Fade at edges
+      final fadeScale = math.pow(1 - (point.position.x.abs() / 40), 0.5);
+      cloud.scale.setScalar(point.scale * fadeScale);
+    }
   }
 
   @override
@@ -350,4 +632,26 @@ class _HexTerrainState extends State<HexTerrain> {
 
     return Container(color: AppTheme.darkBackground, child: threeJs.build());
   }
+}
+
+/// Stores data for each hex in the terrain
+class _HexData {
+  final three.Vector3 position;
+  final double height;
+  final String biome;
+
+  _HexData({required this.position, required this.height, required this.biome});
+}
+
+/// Stores data for cloud animation
+class _CloudPoint {
+  three.Vector3 position;
+  final double scale;
+  final double rate;
+
+  _CloudPoint({
+    required this.position,
+    required this.scale,
+    required this.rate,
+  });
 }

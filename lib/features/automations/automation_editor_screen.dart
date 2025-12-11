@@ -64,26 +64,43 @@ class _AutomationEditorScreenState
 
     // If trigger type changed, update actions with new default text
     if (oldType != newType) {
-      final oldDefaultText = oldType.defaultMessageText;
       final newDefaultText = newType.defaultMessageText;
-      final oldDisplayName = oldType.displayName;
       final newDisplayName = newType.displayName;
+      final newDefaultDesc = newType.defaultDescription;
 
-      // Update Name field if it matches old trigger pattern
+      // Collect all possible default values from any trigger type
+      final allDefaultMessages = TriggerType.values
+          .map((t) => t.defaultMessageText)
+          .toSet();
+      final allDisplayNames = TriggerType.values
+          .map((t) => t.displayName)
+          .toSet();
+      final allDefaultDescriptions = TriggerType.values
+          .map((t) => t.defaultDescription)
+          .toSet();
+      final allAlertNames = TriggerType.values
+          .map((t) => '${t.displayName} Alert')
+          .toSet();
+
+      // Update Name field if it matches any default trigger pattern
       final currentName = _nameController.text;
       if (currentName.isEmpty ||
-          currentName == oldDisplayName ||
-          currentName == '$oldDisplayName Alert') {
+          allDisplayNames.contains(currentName) ||
+          allAlertNames.contains(currentName)) {
         _nameController.text = '$newDisplayName Alert';
       }
 
-      // Update Description field if it matches old trigger pattern
+      // Update Description field if it matches any default pattern
       final currentDesc = _descriptionController.text;
       if (currentDesc.isEmpty ||
-          currentDesc == oldDefaultText ||
-          currentDesc == 'Alert when ${oldDisplayName.toLowerCase()}' ||
-          currentDesc == 'Triggered when ${oldDisplayName.toLowerCase()}') {
-        _descriptionController.text = '';
+          allDefaultMessages.contains(currentDesc) ||
+          allDefaultDescriptions.contains(currentDesc) ||
+          allDisplayNames.any(
+            (name) =>
+                currentDesc == 'Alert when ${name.toLowerCase()}' ||
+                currentDesc == 'Triggered when ${name.toLowerCase()}',
+          )) {
+        _descriptionController.text = newDefaultDesc;
       }
 
       _actions = _actions.map((action) {
@@ -96,31 +113,31 @@ class _AutomationEditorScreenState
           final messageText = newConfig['messageText'] as String?;
           if (messageText == null ||
               messageText.isEmpty ||
-              messageText == oldDefaultText) {
+              allDefaultMessages.contains(messageText)) {
             newConfig['messageText'] = newDefaultText;
             changed = true;
           }
         }
 
-        // Update notification title/body if they match old defaults
+        // Update notification title/body if they match any defaults
         if (action.type == ActionType.pushNotification) {
           final title = newConfig['notificationTitle'] as String?;
           final body = newConfig['notificationBody'] as String?;
 
-          // Update title if it matches old trigger name patterns
+          // Update title if it matches any default trigger name patterns
           if (title == null ||
               title.isEmpty ||
-              title == oldDisplayName ||
-              title == '$oldDisplayName Alert') {
+              allDisplayNames.contains(title) ||
+              allAlertNames.contains(title)) {
             newConfig['notificationTitle'] = newDisplayName;
             changed = true;
           }
 
-          // Update body if it matches old default text
+          // Update body if it matches any default message text
           if (body == null ||
               body.isEmpty ||
-              body == oldDefaultText ||
-              body == oldDisplayName) {
+              allDefaultMessages.contains(body) ||
+              allDisplayNames.contains(body)) {
             newConfig['notificationBody'] = newDefaultText;
             changed = true;
           }
