@@ -1,13 +1,13 @@
 {
-  "id": "53d48979-a5e2-4e6b-96a4-283a3046f6ed",
+  "id": "dc1bf795-6833-45bd-ae8a-f54e2f5b0e43",
   "name": "Node Info",
   "description": "Basic node information card",
   "version": "1.0.0",
-  "createdAt": "2025-12-11T21:05:49.705169",
-  "updatedAt": "2025-12-11T21:05:49.705169",
+  "createdAt": "2025-12-11T22:12:28.766585",
+  "updatedAt": "2025-12-11T22:12:28.766585",
   "size": "medium",
   "root": {
-    "id": "b893ea8f-966b-41d6-a222-19bec9f93118",
+    "id": "de504522-9ff6-41a8-b05f-545747b6ecb6",
     "type": "column",
     "style": {
       "padding": 12.0,
@@ -15,12 +15,12 @@
     },
     "children": [
       {
-        "id": "86032696-4a8f-411e-b917-eb5b5a6399b0",
+        "id": "f29bf073-efb2-4975-91cb-9502407ee625",
         "type": "row",
         "style": {},
         "children": [
           {
-            "id": "f82bddce-c7b2-4b23-bfdc-eecb2aa0d59e",
+            "id": "0d10af4e-4283-4bd7-a12d-858ccc6b1aa4",
             "type": "icon",
             "style": {
               "textColor": "#E91E8C"
@@ -29,14 +29,14 @@
             "iconSize": 20.0
           },
           {
-            "id": "a8c1b2d9-0db0-45bd-bca5-a9e7bd5151d4",
+            "id": "700e3269-eb4d-4df8-abc3-4658045b146d",
             "type": "spacer",
             "style": {
               "width": 8.0
             }
           },
           {
-            "id": "022f24d6-6207-43df-85f6-9cb201c76ce0",
+            "id": "625c2af8-62ca-4a20-af39-63cbe58ac920",
             "type": "text",
             "style": {
               "textColor": "#FFFFFF",
@@ -51,12 +51,12 @@
         ]
       },
       {
-        "id": "1ba2a486-f678-4dcb-aaab-c11a846def51",
+        "id": "fb9ec371-8f3f-42e7-8661-91c7832f918a",
         "type": "row",
         "style": {},
         "children": [
           {
-            "id": "fe0ec5a7-10fa-4c1d-bf8e-9f0adb6a7e75",
+            "id": "a50b644b-31f4-4ecd-8ad3-b290228b92d6",
             "type": "text",
             "style": {
               "textColor": "#666666",
@@ -65,7 +65,7 @@
             "text": "Role: "
           },
           {
-            "id": "40d4738c-c268-46cb-9cac-828709f8af86",
+            "id": "3abc94c9-27b0-42a5-822f-49714acbf6d4",
             "type": "text",
             "style": {
               "textColor": "#AAAAAA",
@@ -79,12 +79,12 @@
         ]
       },
       {
-        "id": "ac15f718-9b70-4534-be8e-e7037ca43fca",
+        "id": "a086b170-f600-4ccf-b4e6-4858e91e913b",
         "type": "row",
         "style": {},
         "children": [
           {
-            "id": "9bfc3cb1-0c1a-4fcb-8f33-baf6bea32fc2",
+            "id": "2e26b342-09ed-4122-a980-fed6915b4701",
             "type": "text",
             "style": {
               "textColor": "#666666",
@@ -93,7 +93,7 @@
             "text": "Device: "
           },
           {
-            "id": "c4deb208-eabf-4d88-af0a-ec5ba6e4d4f2",
+            "id": "0f3ee592-1479-4db6-9517-d007435b654d",
             "type": "text",
             "style": {
               "textColor": "#AAAAAA",
@@ -107,12 +107,12 @@
         ]
       },
       {
-        "id": "972d2ef7-445c-43ab-b7ff-7625566aab84",
+        "id": "76270a7e-8292-49fc-bf83-d11d64c953c1",
         "type": "row",
         "style": {},
         "children": [
           {
-            "id": "ce760e9e-596d-473e-8f30-c3355b3a125b",
+            "id": "a7d6dd4c-97cc-4e64-9944-4d739dbe385e",
             "type": "icon",
             "style": {
               "textColor": "#555555"
@@ -121,14 +121,14 @@
             "iconSize": 12.0
           },
           {
-            "id": "489c453e-b307-4e6d-985b-5ea88c27121e",
+            "id": "579b8009-75d3-437d-9db4-8e7c3c17acff",
             "type": "spacer",
             "style": {
               "width": 4.0
             }
           },
           {
-            "id": "68206ad6-8589-4f23-8711-a02499687c02",
+            "id": "9a29a807-8285-4e98-8dba-006ca1ca2301",
             "type": "text",
             "style": {
               "textColor": "#555555",

@@ -1,13 +1,13 @@
 {
-  "id": "8b0e7c2a-c27a-4ff9-be83-c4412ea48827",
+  "id": "4bad67c7-1e81-4116-8e09-9243e8c882e7",
   "name": "Quick Actions",
   "description": "Common mesh actions at a glance",
   "version": "1.0.0",
-  "createdAt": "2025-12-11T21:05:49.710384",
-  "updatedAt": "2025-12-11T21:05:49.710384",
+  "createdAt": "2025-12-11T22:12:28.770883",
+  "updatedAt": "2025-12-11T22:12:28.770884",
   "size": "medium",
   "root": {
-    "id": "29b71702-3070-456b-a4e8-70f4d9c10db0",
+    "id": "021633ba-f9ab-4708-9870-cf6055883bbf",
     "type": "column",
     "style": {
       "padding": 12.0,
@@ -15,12 +15,12 @@
     },
     "children": [
       {
-        "id": "d1b08e2c-963f-4510-b4c3-87f3a9d119a9",
+        "id": "10aaf408-b1ae-4a45-9940-765c4115d06b",
         "type": "row",
         "style": {},
         "children": [
           {
-            "id": "03f891b4-1595-42dc-be9a-5925293bdf80",
+            "id": "8567544f-245d-4760-b872-f3bbcf870d5c",
             "type": "icon",
             "style": {
               "textColor": "#FBBF24"
@@ -29,14 +29,14 @@
             "iconSize": 20.0
           },
           {
-            "id": "f6b27223-8e43-4eaa-afcb-e270d5b3a614",
+            "id": "2d9a9865-a25a-4ed9-a658-42bd1202b9d7",
             "type": "spacer",
             "style": {
               "width": 8.0
             }
           },
           {
-            "id": "a8900a5e-9d81-4d23-b844-c8cbb1ee4065",
+            "id": "d9e68be0-44b0-4bfa-a52b-40f36ab80d04",
             "type": "text",
             "style": {
               "textColor": "#FFFFFF",
@@ -48,14 +48,14 @@
         ]
       },
       {
-        "id": "b9a3f684-8cfd-4e08-a002-c7f6f21e1873",
+        "id": "808d410f-f268-4401-8296-66502c706c79",
         "type": "row",
         "style": {
           "mainAxisAlignment": "spaceAround"
         },
         "children": [
           {
-            "id": "874bd37d-f145-4f40-b11a-08b5a9c2f25e",
+            "id": "02b2875f-6a3d-4bdf-842c-a1fecb8baf79",
             "type": "column",
             "style": {
               "alignment": "center"
@@ -68,7 +68,7 @@
             },
             "children": [
               {
-                "id": "bbec0801-eea8-4559-9305-816ef6c54a22",
+                "id": "daa33d00-bab7-410f-830f-0f73c52a644a",
                 "type": "shape",
                 "style": {
                   "width": 44.0,
@@ -77,7 +77,7 @@
                 },
                 "children": [
                   {
-                    "id": "076b048f-1802-4b91-9ef6-f9356f27c44f",
+                    "id": "a08ab189-48be-462c-821b-4b40d02dab64",
                     "type": "icon",
                     "style": {
                       "textColor": "#4F6AF6"
@@ -89,14 +89,14 @@
                 "shapeType": "circle"
               },
               {
-                "id": "a9f1b0ca-3994-475b-adb4-b2decc09e84d",
+                "id": "f8073bc6-0119-47dd-b430-941664c4c851",
                 "type": "spacer",
                 "style": {
                   "height": 4.0
                 }
               },
               {
-                "id": "b87cdb95-d36c-4a65-9663-bc01cce723ba",
+                "id": "3f8d4e76-45df-4f7b-8fd5-126794eaf4e0",
                 "type": "text",
                 "style": {
                   "textColor": "#888888",
@@ -107,7 +107,7 @@
             ]
           },
           {
-            "id": "3f6d0cd0-77b3-41ba-aa1d-59b204f7fb41",
+            "id": "1e5ff7f6-4049-4e72-9dcc-69e7747cb37d",
             "type": "column",
             "style": {
               "alignment": "center"
@@ -118,7 +118,7 @@
             },
             "children": [
               {
-                "id": "c03c5e68-f75a-4fcb-add5-71814cc660b6",
+                "id": "30a36d15-8c17-462c-ab00-7e96923fcb2a",
                 "type": "shape",
                 "style": {
                   "width": 44.0,
@@ -127,7 +127,7 @@
                 },
                 "children": [
                   {
-                    "id": "9812e18d-5e2b-47a3-9fae-2bb75a0eacb3",
+                    "id": "057f5e65-7414-4916-bda5-45940dfc953d",
                     "type": "icon",
                     "style": {
                       "textColor": "#22C55E"
@@ -139,14 +139,14 @@
                 "shapeType": "circle"
               },
               {
-                "id": "faefcce0-0ed5-47cb-907f-2f69c669911b",
+                "id": "f3b28946-e690-4318-a4ab-369fa30a15aa",
                 "type": "spacer",
                 "style": {
                   "height": 4.0
                 }
               },
               {
-                "id": "a3965d1c-a513-4fa1-8b63-d297231eaf1b",
+                "id": "bb251959-f2f0-41a9-93ec-1e7f6219b70c",
                 "type": "text",
                 "style": {
                   "textColor": "#888888",
@@ -157,7 +157,7 @@
             ]
           },
           {
-            "id": "ad5ad1cf-3157-4731-b561-2cb22a7c3073",
+            "id": "f84d636f-5187-4611-a1e7-2972fa45654a",
             "type": "column",
             "style": {
               "alignment": "center"
@@ -169,7 +169,7 @@
             },
             "children": [
               {
-                "id": "4cd4529a-4516-42bd-b0b5-9c8751943199",
+                "id": "1352bf5e-3ebc-493a-bf80-9037a4372ca4",
                 "type": "shape",
                 "style": {
                   "width": 44.0,
@@ -178,7 +178,7 @@
                 },
                 "children": [
                   {
-                    "id": "72e8d113-2388-4d3f-bf25-1253ae0296bb",
+                    "id": "3f376235-1067-49e6-92b3-b1cb4fe81881",
                     "type": "icon",
                     "style": {
                       "textColor": "#F97316"
@@ -190,14 +190,14 @@
                 "shapeType": "circle"
               },
               {
-                "id": "ac1ad0ec-6b11-4296-8005-cd8ed58de796",
+                "id": "75c42884-d82e-4ea6-ba95-7ed351d4ca0e",
                 "type": "spacer",
                 "style": {
                   "height": 4.0
                 }
               },
               {
-                "id": "c9312eb5-4b2f-47d0-96f4-ad1190ab3ce0",
+                "id": "cb1bdec7-37db-41aa-bce5-a0cd69b8d54c",
                 "type": "text",
                 "style": {
                   "textColor": "#888888",
@@ -208,7 +208,7 @@
             ]
           },
           {
-            "id": "deaf779e-d63f-4098-ab21-3ab1900a9886",
+            "id": "6c24a906-5ced-49a5-a1ae-365e02804885",
             "type": "column",
             "style": {
               "alignment": "center"
@@ -219,7 +219,7 @@
             },
             "children": [
               {
-                "id": "2cc5670c-b24b-459f-ab1b-064f5bddf4d4",
+                "id": "ac7193cd-5d9c-42a0-9f7a-72cfde399362",
                 "type": "shape",
                 "style": {
                   "width": 44.0,
@@ -228,7 +228,7 @@
                 },
                 "children": [
                   {
-                    "id": "16fc6ba3-70d0-4c1a-b69b-ab33ff35ef0d",
+                    "id": "7c53358d-8843-42b7-bcdb-ec0a8d7f9445",
                     "type": "icon",
                     "style": {
                       "textColor": "#06B6D4"
@@ -240,14 +240,14 @@
                 "shapeType": "circle"
               },
               {
-                "id": "a748115d-bae0-41f2-b356-c6583016730e",
+                "id": "0df0d241-f05e-4ff2-b514-755fc47b8240",
                 "type": "spacer",
                 "style": {
                   "height": 4.0
                 }
               },
               {
-                "id": "a7cc1b5a-a004-4e61-824a-870ac41faa91",
+                "id": "8f41c25a-300b-43bd-800e-9969582b8db2",
                 "type": "text",
                 "style": {
                   "textColor": "#888888",

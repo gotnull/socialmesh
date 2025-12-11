@@ -146,7 +146,9 @@ class AppInitNotifier extends Notifier<AppInitState> {
             // Verify protocol actually received configuration from device
             // If PIN was cancelled or authentication failed, myNodeNum will be null
             if (protocol.myNodeNum == null) {
-              AppLogging.debug('❌ AppInit: myNodeNum is NULL - throwing exception');
+              AppLogging.debug(
+                '❌ AppInit: myNodeNum is NULL - throwing exception',
+              );
               await transport.disconnect();
               throw Exception(
                 'Authentication failed - no configuration received',
@@ -368,7 +370,9 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
     previous,
     next,
   ) {
-    AppLogging.connection('connectionStateProvider changed: $previous -> $next');
+    AppLogging.connection(
+      'connectionStateProvider changed: $previous -> $next',
+    );
 
     next.whenData((state) {
       final lastDeviceId = ref.read(_lastConnectedDeviceIdProvider);
@@ -461,7 +465,9 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         return;
       }
 
-      AppLogging.connection('Scan attempt $attempt/$maxRetries for device: $deviceId');
+      AppLogging.connection(
+        'Scan attempt $attempt/$maxRetries for device: $deviceId',
+      );
 
       DeviceInfo? foundDevice;
 
@@ -492,7 +498,9 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           (results) {
             for (final r in results) {
               final foundId = r.device.remoteId.toString();
-              AppLogging.connection('Found device: $foundId (looking for $deviceId)');
+              AppLogging.connection(
+                'Found device: $foundId (looking for $deviceId)',
+              );
 
               if (foundId == deviceId && !completer.isCompleted) {
                 AppLogging.connection('✓ Target device found!');
@@ -577,7 +585,9 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 
           // Check if still connected
           if (transport.state != DeviceConnectionState.connected) {
-            AppLogging.connection('❌ Connection dropped after connect, retrying...');
+            AppLogging.connection(
+              '❌ Connection dropped after connect, retrying...',
+            );
             if (attempt < maxRetries) {
               ref
                   .read(autoReconnectStateProvider.notifier)
@@ -676,7 +686,9 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           }
         }
       } else {
-        AppLogging.connection('Device not found in attempt $attempt, waiting 5s...');
+        AppLogging.connection(
+          'Device not found in attempt $attempt, waiting 5s...',
+        );
         if (attempt < maxRetries) {
           // Wait longer before next retry - device may still be rebooting
           await Future.delayed(const Duration(seconds: 5));
@@ -1054,8 +1066,28 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
     // Listen for new messages
     protocol.messageStream.listen((message) {
-      // Skip sent messages - they're handled via optimistic UI in messaging_screen
+      // For sent messages, check if they're already in state (from optimistic UI)
+      // If not (e.g., from automations, app intents, reactions), we need to add them
       if (message.sent) {
+        // Check if this message is already tracked (from optimistic UI in messaging_screen)
+        // Match by id, or by packetId if both are non-null
+        final existingMessage = state.where((m) {
+          if (m.id == message.id) return true;
+          if (m.packetId != null &&
+              message.packetId != null &&
+              m.packetId == message.packetId) {
+            return true;
+          }
+          return false;
+        }).firstOrNull;
+        if (existingMessage != null) {
+          // Already tracked via optimistic UI, skip to avoid duplicates
+          return;
+        }
+        // Not tracked - this is from automation or other background send
+        // Add it to state and persist
+        state = [...state, message];
+        _storage?.saveMessage(message);
         return;
       }
       state = [...state, message];
@@ -1221,13 +1253,17 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
     final messageId = _packetToMessageId[update.packetId];
     if (messageId == null) {
-      AppLogging.debug('📨 ❌ Delivery update for unknown packet ${update.packetId}');
+      AppLogging.debug(
+        '📨 ❌ Delivery update for unknown packet ${update.packetId}',
+      );
       return;
     }
 
     final messageIndex = state.indexWhere((m) => m.id == messageId);
     if (messageIndex == -1) {
-      AppLogging.debug('📨 ❌ Delivery update for message not in state: $messageId');
+      AppLogging.debug(
+        '📨 ❌ Delivery update for message not in state: $messageId',
+      );
       return;
     }
 
@@ -1260,7 +1296,9 @@ class MessagesNotifier extends Notifier<List<Message>> {
       _packetToMessageId.remove(update.packetId);
       AppLogging.debug('📨 ✅ Message delivered, stopped tracking: $messageId');
     } else {
-      AppLogging.debug('📨 ❌ Message failed: $messageId - ${update.error?.message}');
+      AppLogging.debug(
+        '📨 ❌ Message failed: $messageId - ${update.error?.message}',
+      );
     }
   }
 

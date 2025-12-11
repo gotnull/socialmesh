@@ -48,6 +48,27 @@ enum RoutingError {
       this == RoutingError.dutyCycleLimit;
 }
 
+/// Source of where a message originated
+enum MessageSource {
+  /// Manually typed by user in the messaging screen
+  manual,
+
+  /// Sent via automation rule
+  automation,
+
+  /// Sent via Siri Shortcuts / App Intents
+  siri,
+
+  /// Sent as a notification reaction (emoji response)
+  reaction,
+
+  /// Sent as a tapback/emoji reaction
+  tapback,
+
+  /// Unknown/legacy source
+  unknown,
+}
+
 /// Message model
 class Message {
   final String id;
@@ -63,6 +84,7 @@ class Message {
   final String? errorMessage;
   final RoutingError? routingError;
   final int? packetId; // Meshtastic packet ID for tracking delivery
+  final MessageSource source; // Where the message originated from
 
   Message({
     String? id,
@@ -78,6 +100,7 @@ class Message {
     this.errorMessage,
     this.routingError,
     this.packetId,
+    this.source = MessageSource.unknown,
   }) : id = id ?? const Uuid().v4(),
        timestamp = timestamp ?? DateTime.now();
 
@@ -95,6 +118,7 @@ class Message {
     String? errorMessage,
     RoutingError? routingError,
     int? packetId,
+    MessageSource? source,
   }) {
     return Message(
       id: id ?? this.id,
@@ -110,6 +134,7 @@ class Message {
       errorMessage: errorMessage ?? this.errorMessage,
       routingError: routingError ?? this.routingError,
       packetId: packetId ?? this.packetId,
+      source: source ?? this.source,
     );
   }
 
