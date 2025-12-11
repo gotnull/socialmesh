@@ -929,23 +929,33 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   }
 
   double _getWidgetWidth() {
+    if (_schema.customWidth != null) {
+      return _schema.customWidth!;
+    }
     switch (_schema.size) {
       case CustomWidgetSize.small:
         return 160;
       case CustomWidgetSize.medium:
         return 320;
       case CustomWidgetSize.large:
+        return 320;
+      case CustomWidgetSize.custom:
         return 320;
     }
   }
 
   double _getWidgetHeight() {
+    if (_schema.customHeight != null) {
+      return _schema.customHeight!;
+    }
     switch (_schema.size) {
       case CustomWidgetSize.small:
         return 160;
       case CustomWidgetSize.medium:
         return 160;
       case CustomWidgetSize.large:
+        return 320;
+      case CustomWidgetSize.custom:
         return 320;
     }
   }

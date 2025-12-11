@@ -1,0 +1,231 @@
+{
+  "id": "50e3e49b-9ae4-4608-b386-1afd21e549b5",
+  "name": "Environment",
+  "description": "Temperature, humidity, and pressure display",
+  "version": "1.0.0",
+  "createdAt": "2025-12-11T13:52:59.728232",
+  "updatedAt": "2025-12-11T13:52:59.728232",
+  "size": "medium",
+  "root": {
+    "id": "3aaf054f-300a-4be0-80ed-0a6bf4deedda",
+    "type": "column",
+    "style": {
+      "padding": 12.0,
+      "spacing": 12.0
+    },
+    "children": [
+      {
+        "id": "c19c4ba3-4823-499a-9edd-41de0648d458",
+        "type": "row",
+        "style": {},
+        "children": [
+          {
+            "id": "9068028e-41a4-4245-9b5d-8c0c2e191899",
+            "type": "icon",
+            "style": {
+              "textColor": "#F97316"
+            },
+            "iconName": "thermostat",
+            "iconSize": 20.0
+          },
+          {
+            "id": "80b20985-1ce6-43cc-ae83-275028a3c464",
+            "type": "spacer",
+            "style": {
+              "width": 8.0
+            }
+          },
+          {
+            "id": "34d3347a-4189-4703-894d-6cf0ccb68201",
+            "type": "text",
+            "style": {
+              "textColor": "#FFFFFF",
+              "fontSize": 14.0,
+              "fontWeight": "w600"
+            },
+            "text": "Environment"
+          }
+        ]
+      },
+      {
+        "id": "ebc2bf69-7b81-4896-8328-ed753a76d7c1",
+        "type": "row",
+        "style": {
+          "mainAxisAlignment": "spaceEvenly"
+        },
+        "children": [
+          {
+            "id": "1b05ab37-ab54-4886-8c19-1a3146cffdbf",
+            "type": "column",
+            "style": {
+              "alignment": "center"
+            },
+            "children": [
+              {
+                "id": "feef9e99-4bee-4aa7-a99e-f247c2120c57",
+                "type": "icon",
+                "style": {
+                  "textColor": "#EF4444"
+                },
+                "iconName": "thermostat",
+                "iconSize": 22.0
+              },
+              {
+                "id": "4d8d0dbd-10c2-44d3-82d8-c9d4485c4be8",
+                "type": "spacer",
+                "style": {
+                  "height": 4.0
+                }
+              },
+              {
+                "id": "22ed2a77-9d7e-438c-bb76-f6aa5a853515",
+                "type": "text",
+                "style": {
+                  "textColor": "#FFFFFF",
+                  "fontSize": 18.0,
+                  "fontWeight": "w600"
+                },
+                "binding": {
+                  "path": "node.temperature",
+                  "format": "{value}°",
+                  "defaultValue": "--"
+                }
+              },
+              {
+                "id": "9484ec9b-60f4-414b-b2ce-467933125529",
+                "type": "text",
+                "style": {
+                  "textColor": "#9CA3AF",
+                  "fontSize": 10.0
+                },
+                "text": "Temp"
+              }
+            ]
+          },
+          {
+            "id": "e7a25b80-65aa-4bdf-b0d0-ea149aa81153",
+            "type": "container",
+            "style": {
+              "width": 1.0,
+              "height": 40.0,
+              "backgroundColor": "#374151"
+            }
+          },
+          {
+            "id": "5bb58b35-c884-490a-8983-8494fd90f159",
+            "type": "column",
+            "style": {
+              "alignment": "center"
+            },
+            "children": [
+              {
+                "id": "64d4acce-2a56-4db5-a10d-bd30dea3272e",
+                "type": "icon",
+                "style": {
+                  "textColor": "#06B6D4"
+                },
+                "iconName": "water_drop",
+                "iconSize": 22.0
+              },
+              {
+                "id": "cb782adb-33b0-426e-b915-81be1eec9887",
+                "type": "spacer",
+                "style": {
+                  "height": 4.0
+                }
+              },
+              {
+                "id": "3ba3c538-5b1b-42eb-a411-b5ea2b935220",
+                "type": "text",
+                "style": {
+                  "textColor": "#FFFFFF",
+                  "fontSize": 18.0,
+                  "fontWeight": "w600"
+                },
+                "binding": {
+                  "path": "node.humidity",
+                  "format": "{value}%",
+                  "defaultValue": "--"
+                }
+              },
+              {
+                "id": "8f62fd33-5333-4193-9045-151d5f4888ec",
+                "type": "text",
+                "style": {
+                  "textColor": "#9CA3AF",
+                  "fontSize": 10.0
+                },
+                "text": "Humidity"
+              }
+            ]
+          },
+          {
+            "id": "4bbe7799-2bb5-48a8-8d65-6828eca369c4",
+            "type": "container",
+            "style": {
+              "width": 1.0,
+              "height": 40.0,
+              "backgroundColor": "#374151"
+            }
+          },
+          {
+            "id": "d7487eb1-834c-4b36-b91d-70db138e63c9",
+            "type": "column",
+            "style": {
+              "alignment": "center"
+            },
+            "children": [
+              {
+                "id": "71841181-fea1-42b5-8bc9-4b8f826ad57e",
+                "type": "icon",
+                "style": {
+                  "textColor": "#8B5CF6"
+                },
+                "iconName": "speed",
+                "iconSize": 22.0
+              },
+              {
+                "id": "7512fd12-db93-4436-b05d-8b17c307645d",
+                "type": "spacer",
+                "style": {
+                  "height": 4.0
+                }
+              },
+              {
+                "id": "551cf336-7822-448d-a068-4bf6994ff3a8",
+                "type": "text",
+                "style": {
+                  "textColor": "#FFFFFF",
+                  "fontSize": 18.0,
+                  "fontWeight": "w600"
+                },
+                "binding": {
+                  "path": "node.pressure",
+                  "format": "{value}",
+                  "defaultValue": "--"
+                }
+              },
+              {
+                "id": "1f602880-7d6f-47c5-8eb3-504e309c5148",
+                "type": "text",
+                "style": {
+                  "textColor": "#9CA3AF",
+                  "fontSize": 10.0
+                },
+                "text": "hPa"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "tags": [
+    "environment",
+    "temperature",
+    "humidity",
+    "pressure",
+    "sensors"
+  ],
+  "isPublic": false
+}

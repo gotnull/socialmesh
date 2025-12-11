@@ -765,6 +765,7 @@ enum CustomWidgetSize {
   small, // 1x1
   medium, // 2x1
   large, // 2x2
+  custom, // User-defined size
 }
 
 /// Complete widget schema - the root definition
@@ -777,6 +778,8 @@ class WidgetSchema {
   final DateTime createdAt;
   final DateTime updatedAt;
   final CustomWidgetSize size;
+  final double? customWidth;
+  final double? customHeight;
   final ElementSchema root;
   final List<String> tags;
   final String? thumbnailUrl;
@@ -793,6 +796,8 @@ class WidgetSchema {
     DateTime? createdAt,
     DateTime? updatedAt,
     this.size = CustomWidgetSize.medium,
+    this.customWidth,
+    this.customHeight,
     required this.root,
     this.tags = const [],
     this.thumbnailUrl,
@@ -803,6 +808,40 @@ class WidgetSchema {
        createdAt = createdAt ?? DateTime.now(),
        updatedAt = updatedAt ?? DateTime.now();
 
+  /// Get the effective width based on size preset or custom value
+  double get effectiveWidth {
+    if (size == CustomWidgetSize.custom && customWidth != null) {
+      return customWidth!;
+    }
+    switch (size) {
+      case CustomWidgetSize.small:
+        return 160;
+      case CustomWidgetSize.medium:
+        return 320;
+      case CustomWidgetSize.large:
+        return 320;
+      case CustomWidgetSize.custom:
+        return customWidth ?? 320;
+    }
+  }
+
+  /// Get the effective height based on size preset or custom value
+  double get effectiveHeight {
+    if (size == CustomWidgetSize.custom && customHeight != null) {
+      return customHeight!;
+    }
+    switch (size) {
+      case CustomWidgetSize.small:
+        return 160;
+      case CustomWidgetSize.medium:
+        return 160;
+      case CustomWidgetSize.large:
+        return 320;
+      case CustomWidgetSize.custom:
+        return customHeight ?? 160;
+    }
+  }
+
   WidgetSchema copyWith({
     String? id,
     String? name,
@@ -812,6 +851,8 @@ class WidgetSchema {
     DateTime? createdAt,
     DateTime? updatedAt,
     CustomWidgetSize? size,
+    double? customWidth,
+    double? customHeight,
     ElementSchema? root,
     List<String>? tags,
     String? thumbnailUrl,
@@ -828,6 +869,8 @@ class WidgetSchema {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
       size: size ?? this.size,
+      customWidth: customWidth ?? this.customWidth,
+      customHeight: customHeight ?? this.customHeight,
       root: root ?? this.root,
       tags: tags ?? this.tags,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
@@ -846,6 +889,8 @@ class WidgetSchema {
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
     'size': size.name,
+    if (customWidth != null) 'customWidth': customWidth,
+    if (customHeight != null) 'customHeight': customHeight,
     'root': root.toJson(),
     'tags': tags,
     if (thumbnailUrl != null) 'thumbnailUrl': thumbnailUrl,
@@ -871,6 +916,8 @@ class WidgetSchema {
         (e) => e.name == json['size'],
         orElse: () => CustomWidgetSize.medium,
       ),
+      customWidth: (json['customWidth'] as num?)?.toDouble(),
+      customHeight: (json['customHeight'] as num?)?.toDouble(),
       root: ElementSchema.fromJson(json['root'] as Map<String, dynamic>),
       tags:
           (json['tags'] as List<dynamic>?)?.map((t) => t as String).toList() ??

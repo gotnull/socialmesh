@@ -1,0 +1,127 @@
+{
+  "id": "adddbbd5-a644-4fe0-8790-16c5f9ea67f4",
+  "name": "GPS Position",
+  "description": "Show GPS coordinates and satellites",
+  "version": "1.0.0",
+  "createdAt": "2025-12-11T13:52:59.730191",
+  "updatedAt": "2025-12-11T13:52:59.730192",
+  "size": "medium",
+  "root": {
+    "id": "483854a5-00e6-48c4-96d1-dc97c3d23786",
+    "type": "column",
+    "style": {
+      "padding": 12.0,
+      "spacing": 8.0
+    },
+    "children": [
+      {
+        "id": "7bce9c64-681c-4dfd-a3d4-e20084c8c60a",
+        "type": "row",
+        "style": {},
+        "children": [
+          {
+            "id": "11a719db-370a-4d36-9bb1-7999cd38be50",
+            "type": "icon",
+            "style": {
+              "textColor": "#22C55E"
+            },
+            "iconName": "gps_fixed",
+            "iconSize": 20.0
+          },
+          {
+            "id": "8db8912d-84fa-430b-b286-67225200f326",
+            "type": "spacer",
+            "style": {
+              "width": 8.0
+            }
+          },
+          {
+            "id": "8b4ba6ec-537b-4404-b079-3b2e977746af",
+            "type": "text",
+            "style": {
+              "textColor": "#FFFFFF",
+              "fontSize": 14.0,
+              "fontWeight": "w600"
+            },
+            "text": "GPS"
+          },
+          {
+            "id": "f4e071e1-87d7-4fb2-9f62-9dbab84a01f1",
+            "type": "spacer",
+            "style": {
+              "expanded": true
+            }
+          },
+          {
+            "id": "61c0ea5a-119d-40c7-b44e-00e4994673a6",
+            "type": "text",
+            "style": {
+              "textColor": "#888888",
+              "fontSize": 12.0
+            },
+            "binding": {
+              "path": "node.satsInView",
+              "format": "{value} sats",
+              "defaultValue": "--"
+            }
+          }
+        ]
+      },
+      {
+        "id": "e18f2577-97d9-4418-9ae4-27a8cd04620c",
+        "type": "row",
+        "style": {
+          "spacing": 16.0
+        },
+        "children": [
+          {
+            "id": "c0d22e38-472f-4820-b625-bd8f22050346",
+            "type": "text",
+            "style": {
+              "textColor": "#FFFFFF",
+              "fontSize": 13.0
+            },
+            "binding": {
+              "path": "node.latitude",
+              "format": "Lat: {value}°",
+              "defaultValue": "--"
+            }
+          },
+          {
+            "id": "d150d0d0-e9c4-4baa-b9b1-6e06073637ac",
+            "type": "text",
+            "style": {
+              "textColor": "#FFFFFF",
+              "fontSize": 13.0
+            },
+            "binding": {
+              "path": "node.longitude",
+              "format": "Lon: {value}°",
+              "defaultValue": "--"
+            }
+          }
+        ]
+      },
+      {
+        "id": "9da410dc-067d-4e03-bc0e-01ecb3031c5b",
+        "type": "text",
+        "style": {
+          "textColor": "#888888",
+          "fontSize": 12.0
+        },
+        "binding": {
+          "path": "node.altitude",
+          "format": "Alt: {value}m",
+          "defaultValue": "--"
+        }
+      }
+    ]
+  },
+  "tags": [
+    "gps",
+    "position",
+    "location",
+    "coordinates"
+  ],
+  "isPublic": false
+}

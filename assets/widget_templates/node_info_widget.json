@@ -1,0 +1,152 @@
+{
+  "id": "e5d6b3ee-9385-4975-8faa-8037bf083102",
+  "name": "Node Info",
+  "description": "Basic node information card",
+  "version": "1.0.0",
+  "createdAt": "2025-12-11T13:52:59.729188",
+  "updatedAt": "2025-12-11T13:52:59.729188",
+  "size": "medium",
+  "root": {
+    "id": "741fca4f-78d3-40a4-8f80-8cec95a4f851",
+    "type": "column",
+    "style": {
+      "padding": 12.0,
+      "spacing": 10.0
+    },
+    "children": [
+      {
+        "id": "f9621d94-7dab-4bd7-b748-e87e472113a6",
+        "type": "row",
+        "style": {},
+        "children": [
+          {
+            "id": "d0c4b82d-8a53-4006-80e4-25090b4b37ab",
+            "type": "icon",
+            "style": {
+              "textColor": "#E91E8C"
+            },
+            "iconName": "hub",
+            "iconSize": 20.0
+          },
+          {
+            "id": "7e716e62-4155-4fc7-99d2-d97b4e60eae9",
+            "type": "spacer",
+            "style": {
+              "width": 8.0
+            }
+          },
+          {
+            "id": "a43c7403-09b9-4ead-94c7-60d0a50bb205",
+            "type": "text",
+            "style": {
+              "textColor": "#FFFFFF",
+              "fontSize": 16.0,
+              "fontWeight": "w600"
+            },
+            "binding": {
+              "path": "node.displayName",
+              "defaultValue": "Unknown Node"
+            }
+          }
+        ]
+      },
+      {
+        "id": "5c5d8561-424a-4339-8a37-7a1da0103e40",
+        "type": "row",
+        "style": {},
+        "children": [
+          {
+            "id": "44b94ccb-22e4-4335-b662-dbf06415fadb",
+            "type": "text",
+            "style": {
+              "textColor": "#666666",
+              "fontSize": 12.0
+            },
+            "text": "Role: "
+          },
+          {
+            "id": "7dfe78d2-c14d-4028-a3d3-875548b3c666",
+            "type": "text",
+            "style": {
+              "textColor": "#AAAAAA",
+              "fontSize": 12.0
+            },
+            "binding": {
+              "path": "node.role",
+              "defaultValue": "--"
+            }
+          }
+        ]
+      },
+      {
+        "id": "8a25d0fa-6671-4488-953c-9123186b1e6d",
+        "type": "row",
+        "style": {},
+        "children": [
+          {
+            "id": "e8ee266b-d73c-4da4-9dbb-f76070761472",
+            "type": "text",
+            "style": {
+              "textColor": "#666666",
+              "fontSize": 12.0
+            },
+            "text": "Device: "
+          },
+          {
+            "id": "1decaaee-a0d8-4d56-93f1-f13a7d52270d",
+            "type": "text",
+            "style": {
+              "textColor": "#AAAAAA",
+              "fontSize": 12.0
+            },
+            "binding": {
+              "path": "node.hardwareModel",
+              "defaultValue": "--"
+            }
+          }
+        ]
+      },
+      {
+        "id": "672256b5-1c75-4fad-93fa-746b57413ce9",
+        "type": "row",
+        "style": {},
+        "children": [
+          {
+            "id": "46581d85-6d43-4c09-8f7e-3738d90ff038",
+            "type": "icon",
+            "style": {
+              "textColor": "#555555"
+            },
+            "iconName": "schedule",
+            "iconSize": 12.0
+          },
+          {
+            "id": "358521da-80a9-4748-803f-5b22fd1c0040",
+            "type": "spacer",
+            "style": {
+              "width": 4.0
+            }
+          },
+          {
+            "id": "8b0bebb3-bb5e-4e97-9c21-450ee70daf41",
+            "type": "text",
+            "style": {
+              "textColor": "#555555",
+              "fontSize": 11.0
+            },
+            "binding": {
+              "path": "node.lastHeard",
+              "defaultValue": "Never"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "tags": [
+    "node",
+    "info",
+    "status"
+  ],
+  "isPublic": false
+}

@@ -1,0 +1,166 @@
+{
+  "id": "c3a94e98-8c98-481d-9cd7-041bd15464c8",
+  "name": "Network Overview",
+  "description": "Mesh network status at a glance",
+  "version": "1.0.0",
+  "createdAt": "2025-12-11T13:52:59.732821",
+  "updatedAt": "2025-12-11T13:52:59.732822",
+  "size": "medium",
+  "root": {
+    "id": "04877896-791c-418f-85b3-1b3fea827b24",
+    "type": "row",
+    "style": {
+      "padding": 16.0,
+      "mainAxisAlignment": "spaceAround"
+    },
+    "children": [
+      {
+        "id": "ffa644da-29be-4244-93cc-5fbd61b380f4",
+        "type": "column",
+        "style": {
+          "alignment": "center"
+        },
+        "children": [
+          {
+            "id": "b7e44c35-2dfb-446b-87c1-d7476d9eb356",
+            "type": "icon",
+            "style": {
+              "textColor": "#4ADE80"
+            },
+            "condition": {
+              "bindingPath": "node.isOnline",
+              "operator": "equals",
+              "value": true
+            },
+            "iconName": "check_circle",
+            "iconSize": 24.0
+          },
+          {
+            "id": "5614e964-42fe-4190-9598-2a9105eaeefe",
+            "type": "text",
+            "style": {
+              "textColor": "#FFFFFF",
+              "fontSize": 16.0,
+              "fontWeight": "w600"
+            },
+            "text": "Online"
+          },
+          {
+            "id": "3a76fe2c-7530-44aa-962c-c22d3d3c4d20",
+            "type": "text",
+            "style": {
+              "textColor": "#888888",
+              "fontSize": 11.0
+            },
+            "text": "Status"
+          }
+        ]
+      },
+      {
+        "id": "b7daf57f-e960-4a38-b5ea-50b480d5a678",
+        "type": "shape",
+        "style": {
+          "width": 1.0,
+          "height": 50.0
+        },
+        "shapeType": "dividerVertical"
+      },
+      {
+        "id": "a84e9905-d7ee-4bc8-9d37-ff18efc2ad05",
+        "type": "column",
+        "style": {
+          "alignment": "center"
+        },
+        "children": [
+          {
+            "id": "2802b1c3-3766-4bfd-b8d7-3a2bf21463b7",
+            "type": "icon",
+            "style": {
+              "textColor": "#4F6AF6"
+            },
+            "iconName": "people_outline",
+            "iconSize": 24.0
+          },
+          {
+            "id": "c76ea780-6216-4113-995c-7f6e8eebf77e",
+            "type": "text",
+            "style": {
+              "textColor": "#FFFFFF",
+              "fontSize": 16.0,
+              "fontWeight": "w600"
+            },
+            "binding": {
+              "path": "network.totalNodes",
+              "defaultValue": "0"
+            }
+          },
+          {
+            "id": "d8613174-d698-4a3d-a09f-ca8c67af6c5f",
+            "type": "text",
+            "style": {
+              "textColor": "#888888",
+              "fontSize": 11.0
+            },
+            "text": "Nodes"
+          }
+        ]
+      },
+      {
+        "id": "cc218877-cbc6-45e4-bd90-df700ee419a8",
+        "type": "shape",
+        "style": {
+          "width": 1.0,
+          "height": 50.0
+        },
+        "shapeType": "dividerVertical"
+      },
+      {
+        "id": "479c717e-4e74-4066-a40c-670410149dd1",
+        "type": "column",
+        "style": {
+          "alignment": "center"
+        },
+        "children": [
+          {
+            "id": "c914fdff-6dc9-44d0-8056-c598b3d3603d",
+            "type": "icon",
+            "style": {
+              "textColor": "#4F6AF6"
+            },
+            "iconName": "chat_bubble_outline",
+            "iconSize": 24.0
+          },
+          {
+            "id": "6bf99224-ce11-4a9d-83af-be59835217dd",
+            "type": "text",
+            "style": {
+              "textColor": "#FFFFFF",
+              "fontSize": 16.0,
+              "fontWeight": "w600"
+            },
+            "binding": {
+              "path": "messaging.recentCount",
+              "defaultValue": "0"
+            }
+          },
+          {
+            "id": "1c648fe7-958b-4247-bc3a-d66100eff08c",
+            "type": "text",
+            "style": {
+              "textColor": "#888888",
+              "fontSize": 11.0
+            },
+            "text": "Messages"
+          }
+        ]
+      }
+    ]
+  },
+  "tags": [
+    "network",
+    "mesh",
+    "nodes",
+    "status"
+  ],
+  "isPublic": false
+}

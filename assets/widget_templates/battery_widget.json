@@ -1,0 +1,84 @@
+{
+  "id": "a03f2ff8-e311-4c99-b601-083eeaf040b8",
+  "name": "Battery Status",
+  "description": "Display battery level with gauge",
+  "version": "1.0.0",
+  "createdAt": "2025-12-11T13:52:59.724651",
+  "updatedAt": "2025-12-11T13:52:59.724652",
+  "size": "medium",
+  "root": {
+    "id": "5707b78e-983e-4921-b2f5-b63232d2cb00",
+    "type": "column",
+    "style": {
+      "padding": 12.0,
+      "spacing": 8.0
+    },
+    "children": [
+      {
+        "id": "5051f7b5-095a-4b53-80d1-343a5b351a04",
+        "type": "row",
+        "style": {
+          "mainAxisAlignment": "spaceBetween"
+        },
+        "children": [
+          {
+            "id": "3bdff5e7-83a4-4a3f-b64f-5ac8c104a464",
+            "type": "icon",
+            "style": {
+              "textColor": "#4ADE80"
+            },
+            "iconName": "battery_full",
+            "iconSize": 20.0
+          },
+          {
+            "id": "9dd020a1-b969-4f9f-8af5-d0ce86694827",
+            "type": "text",
+            "style": {
+              "textColor": "#FFFFFF",
+              "fontSize": 14.0,
+              "fontWeight": "w600"
+            },
+            "binding": {
+              "path": "node.displayName",
+              "defaultValue": "My Device"
+            }
+          }
+        ]
+      },
+      {
+        "id": "652e3ded-5f67-4d58-83f4-d809b842935d",
+        "type": "text",
+        "style": {
+          "textColor": "#FFFFFF",
+          "fontSize": 32.0,
+          "fontWeight": "bold"
+        },
+        "binding": {
+          "path": "node.batteryLevel",
+          "format": "{value}%",
+          "defaultValue": "--"
+        }
+      },
+      {
+        "id": "7239c88c-2310-4865-a3a9-e3c41128ef4d",
+        "type": "gauge",
+        "style": {
+          "height": 6.0
+        },
+        "binding": {
+          "path": "node.batteryLevel"
+        },
+        "gaugeType": "linear",
+        "gaugeMin": 0.0,
+        "gaugeMax": 100.0,
+        "gaugeColor": "#4ADE80"
+      }
+    ]
+  },
+  "tags": [
+    "battery",
+    "power",
+    "status"
+  ],
+  "isPublic": false
+}

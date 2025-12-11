@@ -1,0 +1,271 @@
+{
+  "id": "859de8e5-f979-485d-924e-2d8a444f49e7",
+  "name": "Quick Actions",
+  "description": "Common mesh actions at a glance",
+  "version": "1.0.0",
+  "createdAt": "2025-12-11T13:52:59.734771",
+  "updatedAt": "2025-12-11T13:52:59.734772",
+  "size": "medium",
+  "root": {
+    "id": "f273e092-2aea-4999-bb91-e5979ed6dfb5",
+    "type": "column",
+    "style": {
+      "padding": 12.0,
+      "spacing": 12.0
+    },
+    "children": [
+      {
+        "id": "d47019c8-d191-4653-af90-8bef80cc9686",
+        "type": "row",
+        "style": {},
+        "children": [
+          {
+            "id": "0c888710-b890-4ec5-b2ec-dabbe96ff2d9",
+            "type": "icon",
+            "style": {
+              "textColor": "#FBBF24"
+            },
+            "iconName": "flash_on",
+            "iconSize": 20.0
+          },
+          {
+            "id": "120d94b2-840c-4743-9701-9a0db0021643",
+            "type": "spacer",
+            "style": {
+              "width": 8.0
+            }
+          },
+          {
+            "id": "d38b1d8e-64cf-4df3-ae20-6d026c754591",
+            "type": "text",
+            "style": {
+              "textColor": "#FFFFFF",
+              "fontSize": 14.0,
+              "fontWeight": "w600"
+            },
+            "text": "Quick Actions"
+          }
+        ]
+      },
+      {
+        "id": "e627be50-e272-4245-a50a-63a54534cac2",
+        "type": "row",
+        "style": {
+          "mainAxisAlignment": "spaceAround"
+        },
+        "children": [
+          {
+            "id": "9eefff46-b844-4345-9a33-fd8e37caabba",
+            "type": "column",
+            "style": {
+              "alignment": "center"
+            },
+            "action": {
+              "type": "sendMessage",
+              "requiresNodeSelection": true,
+              "requiresChannelSelection": true,
+              "label": "Quick Message"
+            },
+            "children": [
+              {
+                "id": "38959b97-68ff-488e-b012-a7af49610a02",
+                "type": "shape",
+                "style": {
+                  "width": 44.0,
+                  "height": 44.0,
+                  "backgroundColor": "#1E3A5F"
+                },
+                "children": [
+                  {
+                    "id": "031b0579-9d32-4d47-9ba8-2972547d19de",
+                    "type": "icon",
+                    "style": {
+                      "textColor": "#4F6AF6"
+                    },
+                    "iconName": "send",
+                    "iconSize": 20.0
+                  }
+                ],
+                "shapeType": "circle"
+              },
+              {
+                "id": "c1eaae01-9758-4c19-8280-f592fbff2ddd",
+                "type": "spacer",
+                "style": {
+                  "height": 4.0
+                }
+              },
+              {
+                "id": "0bc553ae-baff-4dc4-b7f4-8531bd3063af",
+                "type": "text",
+                "style": {
+                  "textColor": "#888888",
+                  "fontSize": 10.0
+                },
+                "text": "Message"
+              }
+            ]
+          },
+          {
+            "id": "057e717f-8777-4e61-8ac4-02fc8009ae5e",
+            "type": "column",
+            "style": {
+              "alignment": "center"
+            },
+            "action": {
+              "type": "shareLocation",
+              "label": "Share Location"
+            },
+            "children": [
+              {
+                "id": "d8e8980a-8c03-41cb-94ba-cf053ce51db6",
+                "type": "shape",
+                "style": {
+                  "width": 44.0,
+                  "height": 44.0,
+                  "backgroundColor": "#1E3A5F"
+                },
+                "children": [
+                  {
+                    "id": "43f0de96-d171-4bf7-81aa-41674f47692c",
+                    "type": "icon",
+                    "style": {
+                      "textColor": "#22C55E"
+                    },
+                    "iconName": "location_on",
+                    "iconSize": 20.0
+                  }
+                ],
+                "shapeType": "circle"
+              },
+              {
+                "id": "054c8bac-f479-4918-811a-dc3a36b17590",
+                "type": "spacer",
+                "style": {
+                  "height": 4.0
+                }
+              },
+              {
+                "id": "076881f2-70e3-4489-8c90-44325b093309",
+                "type": "text",
+                "style": {
+                  "textColor": "#888888",
+                  "fontSize": 10.0
+                },
+                "text": "Location"
+              }
+            ]
+          },
+          {
+            "id": "1cd9f203-a0fe-4e2e-8c00-0fb26fe0112f",
+            "type": "column",
+            "style": {
+              "alignment": "center"
+            },
+            "action": {
+              "type": "traceroute",
+              "requiresNodeSelection": true,
+              "label": "Traceroute"
+            },
+            "children": [
+              {
+                "id": "ab81b74e-1181-464b-89cc-16c403993ec9",
+                "type": "shape",
+                "style": {
+                  "width": 44.0,
+                  "height": 44.0,
+                  "backgroundColor": "#1E3A5F"
+                },
+                "children": [
+                  {
+                    "id": "e5970f14-4578-4ddd-a500-4c5bbc2c60b1",
+                    "type": "icon",
+                    "style": {
+                      "textColor": "#F97316"
+                    },
+                    "iconName": "route",
+                    "iconSize": 20.0
+                  }
+                ],
+                "shapeType": "circle"
+              },
+              {
+                "id": "7caf7fbe-afbb-4cf6-9389-7eb5291f3db1",
+                "type": "spacer",
+                "style": {
+                  "height": 4.0
+                }
+              },
+              {
+                "id": "a6954238-cdd9-404b-9f19-ebcda0d4289c",
+                "type": "text",
+                "style": {
+                  "textColor": "#888888",
+                  "fontSize": 10.0
+                },
+                "text": "Trace"
+              }
+            ]
+          },
+          {
+            "id": "23ec41ae-9137-4141-8e85-4d9672874ce7",
+            "type": "column",
+            "style": {
+              "alignment": "center"
+            },
+            "action": {
+              "type": "requestPositions",
+              "label": "Request Positions"
+            },
+            "children": [
+              {
+                "id": "31d1fe25-77fd-41ac-9c83-f3a3b9aa342f",
+                "type": "shape",
+                "style": {
+                  "width": 44.0,
+                  "height": 44.0,
+                  "backgroundColor": "#1E3A5F"
+                },
+                "children": [
+                  {
+                    "id": "8ac7b006-1504-40d5-8caf-225886ceb521",
+                    "type": "icon",
+                    "style": {
+                      "textColor": "#06B6D4"
+                    },
+                    "iconName": "refresh",
+                    "iconSize": 20.0
+                  }
+                ],
+                "shapeType": "circle"
+              },
+              {
+                "id": "3b686958-eb0b-45a1-bca6-c33f05aec9e1",
+                "type": "spacer",
+                "style": {
+                  "height": 4.0
+                }
+              },
+              {
+                "id": "58226061-1468-46bb-9315-1048ee48c986",
+                "type": "text",
+                "style": {
+                  "textColor": "#888888",
+                  "fontSize": 10.0
+                },
+                "text": "Refresh"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "tags": [
+    "actions",
+    "quick",
+    "compose",
+    "send"
+  ],
+  "isPublic": false
+}

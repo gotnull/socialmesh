@@ -1,0 +1,128 @@
+{
+  "id": "bf1b7866-0e39-4f5a-a2a7-cd156ce65b29",
+  "name": "Signal Strength",
+  "description": "Display SNR and RSSI",
+  "version": "1.0.0",
+  "createdAt": "2025-12-11T13:52:59.725459",
+  "updatedAt": "2025-12-11T13:52:59.725459",
+  "size": "medium",
+  "root": {
+    "id": "8181c605-781b-4380-a4eb-8ea77525c018",
+    "type": "column",
+    "style": {
+      "padding": 12.0,
+      "spacing": 8.0
+    },
+    "children": [
+      {
+        "id": "b0de854b-1479-4dbc-97e9-1b1d91daf91b",
+        "type": "row",
+        "style": {},
+        "children": [
+          {
+            "id": "90a426cd-e054-408f-b637-49ce01e435f2",
+            "type": "icon",
+            "style": {
+              "textColor": "#4F6AF6"
+            },
+            "iconName": "signal_cellular_alt",
+            "iconSize": 20.0
+          },
+          {
+            "id": "bdfac0b7-df53-4668-b88a-c71aa6d4ecda",
+            "type": "spacer",
+            "style": {
+              "width": 8.0
+            }
+          },
+          {
+            "id": "55d10c56-9c47-4563-a80a-49ccfbceda45",
+            "type": "text",
+            "style": {
+              "textColor": "#FFFFFF",
+              "fontSize": 14.0,
+              "fontWeight": "w600"
+            },
+            "text": "Signal"
+          }
+        ]
+      },
+      {
+        "id": "542e61e1-f712-4df2-98c5-6d03e37d3701",
+        "type": "row",
+        "style": {
+          "mainAxisAlignment": "spaceBetween"
+        },
+        "children": [
+          {
+            "id": "a34e645f-6653-47a8-8d0a-34c54d58bfec",
+            "type": "column",
+            "style": {},
+            "children": [
+              {
+                "id": "e8c706c2-35f3-4785-ab4d-9afb83d8084a",
+                "type": "text",
+                "style": {
+                  "textColor": "#888888",
+                  "fontSize": 11.0
+                },
+                "text": "SNR"
+              },
+              {
+                "id": "2619da69-6d62-4da1-bf93-068771c85cbd",
+                "type": "text",
+                "style": {
+                  "textColor": "#FFFFFF",
+                  "fontSize": 18.0,
+                  "fontWeight": "w600"
+                },
+                "binding": {
+                  "path": "device.snr",
+                  "format": "{value} dB",
+                  "defaultValue": "--"
+                }
+              }
+            ]
+          },
+          {
+            "id": "6eb3956d-bf3c-43bf-880d-983a45f3e53f",
+            "type": "column",
+            "style": {},
+            "children": [
+              {
+                "id": "cb9eb999-06b4-4ba5-af9f-8475590322e5",
+                "type": "text",
+                "style": {
+                  "textColor": "#888888",
+                  "fontSize": 11.0
+                },
+                "text": "RSSI"
+              },
+              {
+                "id": "a742e7ee-2c69-450b-bc1c-4d9a021a4af4",
+                "type": "text",
+                "style": {
+                  "textColor": "#FFFFFF",
+                  "fontSize": 18.0,
+                  "fontWeight": "w600"
+                },
+                "binding": {
+                  "path": "device.rssi",
+                  "format": "{value} dBm",
+                  "defaultValue": "--"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "tags": [
+    "signal",
+    "snr",
+    "rssi",
+    "connectivity"
+  ],
+  "isPublic": false
+}

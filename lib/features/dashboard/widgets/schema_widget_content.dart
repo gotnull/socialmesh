@@ -61,6 +61,8 @@ class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent> {
         return 160;
       case CustomWidgetSize.large:
         return 280;
+      case CustomWidgetSize.custom:
+        return 200; // Default height for custom size
     }
   }
 
