@@ -371,7 +371,8 @@ class _PerspectiveFloorPainter extends CustomPainter {
         final nz = z / gridZ;
 
         // Multiple octaves of "noise" using sin waves
-        final height = math.sin(nx * math.pi * 3 + nz * 2) * 0.4 +
+        final height =
+            math.sin(nx * math.pi * 3 + nz * 2) * 0.4 +
             math.sin(nx * math.pi * 6 + nz * 4) * 0.2 +
             math.sin(nz * math.pi * 5) * 0.3 +
             random.nextDouble() * 0.3;
@@ -395,7 +396,9 @@ class _PerspectiveFloorPainter extends CustomPainter {
 
     // Save canvas state for clipping
     canvas.save();
-    canvas.clipRect(Rect.fromLTWH(0, floorTop - 20, size.width, floorHeight + 40));
+    canvas.clipRect(
+      Rect.fromLTWH(0, floorTop - 20, size.width, floorHeight + 40),
+    );
 
     // Scrolling offset for flying forward effect
     final scrollZ = (progress * 6) % 1.0;
@@ -464,7 +467,13 @@ class _PerspectiveFloorPainter extends CustomPainter {
         final heightDiff = ((h00 + h10) - (h01 + h11)) / 2; // Forward slope
 
         // Demoscene color palette based on height and position
-        final hue = ((x / gridX * 0.3 + z / gridZ * 0.2 + progress * 0.2 + avgHeight * 0.2) % 1.0) * 360;
+        final hue =
+            ((x / gridX * 0.3 +
+                    z / gridZ * 0.2 +
+                    progress * 0.2 +
+                    avgHeight * 0.2) %
+                1.0) *
+            360;
 
         // Brightness based on depth and slope (simulate lighting from above)
         final depthFade = 1.0 - perspNear * 0.7;
