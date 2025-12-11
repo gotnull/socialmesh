@@ -1093,6 +1093,12 @@ class MessagesNotifier extends Notifier<List<Message>> {
         // Add it to state and persist
         state = [...state, message];
         _storage?.saveMessage(message);
+
+        // Track the packet for delivery updates if it has a packetId and messageId
+        // This ensures background-sent messages (Siri, automations, etc.) get delivery status updates
+        if (message.packetId != null && message.id.isNotEmpty) {
+          trackPacket(message.packetId!, message.id);
+        }
         return;
       }
       state = [...state, message];

@@ -387,64 +387,70 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Beautiful parallax floating icons background
-            const Positioned.fill(child: ConnectingAnimationBackground()),
-            // Main centered content - unaffected by node cards
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: Image.asset(
-                      AssetPaths.appIcon,
-                      width: 120,
-                      height: 120,
-                    ),
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          // Beautiful parallax floating icons background - full screen
+          const Positioned.fill(child: ConnectingAnimationBackground()),
+          // Content with SafeArea
+          SafeArea(
+            child: Stack(
+              children: [
+                // Main centered content - unaffected by node cards
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Image.asset(
+                          AssetPaths.appIcon,
+                          width: 120,
+                          height: 120,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      const Text(
+                        'Socialmesh',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const AnimatedTagline(taglines: appTaglines),
+                      const SizedBox(height: 48),
+                      // Animated status indicator
+                      _buildStatusIndicator(statusInfo),
+                    ],
                   ),
-                  const SizedBox(height: 32),
-                  const Text(
-                    'Socialmesh',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const AnimatedTagline(taglines: appTaglines),
-                  const SizedBox(height: 48),
-                  // Animated status indicator
-                  _buildStatusIndicator(statusInfo),
-                ],
-              ),
-            ),
-            // Node discovery cards - absolutely positioned at bottom
-            if (discoveredNodes.isNotEmpty)
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: 24,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: discoveredNodes.take(4).map((entry) {
-                    return _SplashNodeCard(
-                      key: ValueKey(entry.id),
-                      entry: entry,
-                      onDismiss: () {
-                        ref
-                            .read(discoveredNodesQueueProvider.notifier)
-                            .removeNode(entry.id);
-                      },
-                    );
-                  }).toList(),
                 ),
-              ),
-          ],
-        ),
+                // Node discovery cards - absolutely positioned at bottom
+                if (discoveredNodes.isNotEmpty)
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 24,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: discoveredNodes.take(4).map((entry) {
+                        return _SplashNodeCard(
+                          key: ValueKey(entry.id),
+                          entry: entry,
+                          onDismiss: () {
+                            ref
+                                .read(discoveredNodesQueueProvider.notifier)
+                                .removeNode(entry.id);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
