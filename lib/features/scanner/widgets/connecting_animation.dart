@@ -1,14 +1,14 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
-import '../../../core/widgets/hex_terrain.dart';
+import '../../../core/widgets/floating_icons_background.dart';
 
 // Re-export the shared background widgets for convenience
 export '../../../core/widgets/hex_terrain.dart';
 export '../../../core/widgets/floating_icons_background.dart';
 
 /// Connecting animation with status text and optional cancel button.
-/// Uses the 3D HexTerrain background centered on screen.
+/// Uses the floating icons background centered on screen.
 class ConnectingAnimation extends StatelessWidget {
   final String statusText;
   final VoidCallback? onCancel;
@@ -25,8 +25,8 @@ class ConnectingAnimation extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // 3D HexTerrain background
-        const Positioned.fill(child: HexTerrain()),
+        // Floating icons background
+        const Positioned.fill(child: FloatingIconsBackground()),
 
         // Center content
         Center(
@@ -66,8 +66,8 @@ class ConnectingAnimation extends StatelessWidget {
   }
 }
 
-/// Alias for HexTerrain for backward compatibility
-typedef ConnectingAnimationBackground = HexTerrain;
+/// Alias for FloatingIconsBackground for backward compatibility
+typedef ConnectingAnimationBackground = FloatingIconsBackground;
 
 class _AnimatedDots extends StatefulWidget {
   const _AnimatedDots();

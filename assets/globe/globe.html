@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    #globe {
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+    }
+
+    #globe:active {
+      cursor: grabbing;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="globe"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
+  <script>
+    // Globe configuration
+    let globe;
+    let nodesData = [];
+    let arcsData = [];
+    let selectedNodeId = null;
+
+    // Initialize globe
+    function initGlobe(config) {
+      const container = document.getElementById('globe');
+
+      globe = Globe()
+        .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+        .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+        .backgroundColor('rgba(0,0,0,0)')
+        .showAtmosphere(true)
+        .atmosphereColor(config.atmosphereColor || '#6b93d6')
+        .atmosphereAltitude(0.25)
+        .pointsData([])
+        .pointLat(d => d.lat)
+        .pointLng(d => d.lng)
+        .pointAltitude(d => d.selected ? 0.15 : 0.06)
+        .pointRadius(d => d.selected ? 0.8 : 0.4)
+        .pointColor(d => d.color)
+        .pointsMerge(false)
+        .onPointClick((point, event) => {
+          if (point) {
+            selectNode(point.id);
+            sendToFlutter('nodeSelected', { nodeId: point.id });
+          }
+        })
+        .arcsData([])
+        .arcStartLat(d => d.startLat)
+        .arcStartLng(d => d.startLng)
+        .arcEndLat(d => d.endLat)
+        .arcEndLng(d => d.endLng)
+        .arcColor(d => d.color)
+        .arcAltitudeAutoScale(0.4)
+        .arcStroke(0.5)
+        .arcDashLength(0.9)
+        .arcDashGap(0.4)
+        .arcDashAnimateTime(1500)
+        (container);
+
+      // Set initial point of view
+      globe.pointOfView({ lat: config.initialLat || 20, lng: config.initialLng || 0, altitude: 2.5 });
+
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        globe.width(container.clientWidth);
+        globe.height(container.clientHeight);
+      });
+
+      // Auto-rotate
+      globe.controls().autoRotate = config.autoRotate !== false;
+      globe.controls().autoRotateSpeed = 0.3;
+      globe.controls().enableZoom = true;
+      globe.controls().minDistance = 150;
+      globe.controls().maxDistance = 500;
+
+      sendToFlutter('ready', {});
+    }
+
+    // Update nodes
+    function updateNodes(nodes) {
+      nodesData = nodes.map(n => ({
+        id: n.id,
+        lat: n.lat,
+        lng: n.lng,
+        color: n.isOnline ? (n.color || '#00ff88') : '#666666',
+        name: n.name,
+        isOnline: n.isOnline,
+        selected: n.id === selectedNodeId
+      }));
+
+      globe.pointsData(nodesData);
+    }
+
+    // Update arcs (connections)
+    function updateArcs(arcs) {
+      arcsData = arcs.map(a => ({
+        startLat: a.startLat,
+        startLng: a.startLng,
+        endLat: a.endLat,
+        endLng: a.endLng,
+        color: a.color || ['#ff00ff88', '#00ffff88']
+      }));
+
+      globe.arcsData(arcsData);
+    }
+
+    // Select a node
+    function selectNode(nodeId) {
+      selectedNodeId = nodeId;
+      nodesData = nodesData.map(n => ({
+        ...n,
+        selected: n.id === nodeId
+      }));
+      globe.pointsData(nodesData);
+
+      // Focus on selected node
+      const node = nodesData.find(n => n.id === nodeId);
+      if (node) {
+        globe.pointOfView({ lat: node.lat, lng: node.lng, altitude: 2 }, 1000);
+      }
+    }
+
+    // Clear selection
+    function clearSelection() {
+      selectedNodeId = null;
+      nodesData = nodesData.map(n => ({
+        ...n,
+        selected: false
+      }));
+      globe.pointsData(nodesData);
+    }
+
+    // Focus on location
+    function focusOnLocation(lat, lng, altitude, duration) {
+      globe.pointOfView({ lat, lng, altitude: altitude || 2 }, duration || 1000);
+    }
+
+    // Set auto-rotate
+    function setAutoRotate(enabled) {
+      if (globe && globe.controls()) {
+        globe.controls().autoRotate = enabled;
+      }
+    }
+
+    // Send message to Flutter
+    function sendToFlutter(type, data) {
+      if (window.flutter_inappwebview) {
+        window.flutter_inappwebview.callHandler('onGlobeEvent', JSON.stringify({ type, data }));
+      }
+    }
+
+    // Handle messages from Flutter
+    window.handleFlutterMessage = function (message) {
+      const { action, payload } = JSON.parse(message);
+
+      switch (action) {
+        case 'init':
+          initGlobe(payload || {});
+          break;
+        case 'updateNodes':
+          updateNodes(payload.nodes || []);
+          break;
+        case 'updateArcs':
+          updateArcs(payload.arcs || []);
+          break;
+        case 'selectNode':
+          selectNode(payload.nodeId);
+          break;
+        case 'clearSelection':
+          clearSelection();
+          break;
+        case 'focusOnLocation':
+          focusOnLocation(payload.lat, payload.lng, payload.altitude, payload.duration);
+          break;
+        case 'setAutoRotate':
+          setAutoRotate(payload.enabled);
+          break;
+      }
+    };
+
+    // Initialize when ready
+    document.addEventListener('DOMContentLoaded', () => {
+      // Globe will be initialized via Flutter message
+    });
+  </script>
+</body>
+
+</html>

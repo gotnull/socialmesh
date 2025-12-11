@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 
 void main() {
   group('MeshGlobe Widget', () {
-    // Note: Tests with enabled: true are skipped because three_js requires
-    // an actual OpenGL context and creates timers that don't clean up in tests.
+    // Note: Tests with enabled: true are skipped because flutter_globe_3d requires
+    // an actual GPU context and creates timers that don't clean up in tests.
 
     testWidgets('renders when disabled', (tester) async {
       await tester.pumpWidget(

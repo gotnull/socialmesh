@@ -5,6 +5,7 @@ import '../../core/widgets/mesh_globe.dart';
 import '../../core/widgets/node_info_card.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../messaging/messaging_screen.dart';
 
 /// Screen showing the 3D mesh globe with node positions
 class GlobeScreen extends ConsumerStatefulWidget {
@@ -100,9 +101,7 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
               nodes: nodesList,
               showConnections: _showConnections,
               onNodeSelected: _onNodeSelected,
-              autoRotateSpeed: _selectedNode == null ? 0.2 : 0.0,
-              baseColor: const Color(0xFF16213e),
-              dotColor: const Color(0xFF4a5568),
+              autoRotateSpeed: 0.0, // No auto-rotation
               markerColor: context.accentColor,
               connectionColor: context.accentColor.withAlpha(150),
             ),
@@ -149,7 +148,17 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
                 isMyNode: _selectedNode!.nodeNum == myNodeNum,
                 onClose: () => setState(() => _selectedNode = null),
                 onMessage: () {
-                  // TODO: Navigate to chat
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatScreen(
+                        type: ConversationType.directMessage,
+                        nodeNum: _selectedNode!.nodeNum,
+                        title: _selectedNode!.displayName,
+                        avatarColor: _selectedNode!.avatarColor,
+                      ),
+                    ),
+                  );
                 },
               ),
             ),
