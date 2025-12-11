@@ -1,13 +1,14 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
-import '../../../core/widgets/floating_icons_background.dart';
+import '../../../core/widgets/demoscene_background.dart';
 
-// Re-export the shared background widget for convenience
+// Re-export the shared background widgets for convenience
+export '../../../core/widgets/demoscene_background.dart';
 export '../../../core/widgets/floating_icons_background.dart';
 
 /// Connecting animation with status text and optional cancel button.
-/// Uses the shared FloatingIconsBackground.
+/// Uses the Amiga demoscene-inspired DemosceneBackground.
 class ConnectingAnimation extends StatelessWidget {
   final String statusText;
   final VoidCallback? onCancel;
@@ -24,8 +25,8 @@ class ConnectingAnimation extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Shared animated background
-        const Positioned.fill(child: FloatingIconsBackground()),
+        // Amiga demoscene-inspired animated background
+        const Positioned.fill(child: DemosceneBackground()),
 
         // Center content
         Center(
@@ -66,8 +67,8 @@ class ConnectingAnimation extends StatelessWidget {
   }
 }
 
-/// Alias for FloatingIconsBackground for backward compatibility
-typedef ConnectingAnimationBackground = FloatingIconsBackground;
+/// Alias for DemosceneBackground for backward compatibility
+typedef ConnectingAnimationBackground = DemosceneBackground;
 
 class _AnimatedDots extends StatefulWidget {
   const _AnimatedDots();

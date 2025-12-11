@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
-import '../../core/widgets/floating_icons_background.dart';
+import '../../core/widgets/demoscene_background.dart';
 import '../../providers/app_providers.dart';
 import '../scanner/scanner_screen.dart';
 
@@ -160,9 +160,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       backgroundColor: AppTheme.darkBackground,
       body: Stack(
         children: [
-          // Shared animated background with floating icons
+          // Amiga demoscene-inspired animated background
           Positioned.fill(
-            child: FloatingIconsBackground(
+            child: DemosceneBackground(
               pageOffset: _pageOffset,
               accentColor: accentColor,
             ),
