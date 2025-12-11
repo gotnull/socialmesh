@@ -26,7 +26,6 @@ class SimpleWidgetBuilder extends ConsumerStatefulWidget {
 class _SimpleWidgetBuilderState extends ConsumerState<SimpleWidgetBuilder> {
   late WidgetSchema _schema;
   String? _selectedElementId;
-  bool _showPreview = false;
 
   @override
   void initState() {
@@ -40,7 +39,7 @@ class _SimpleWidgetBuilderState extends ConsumerState<SimpleWidgetBuilder> {
       description: 'My custom widget',
       root: ElementSchema(
         type: ElementType.column,
-        style: const StyleSchema(padding: 12),
+        style: const StyleSchema(padding: 12, spacing: 8),
         children: [],
       ),
     );
@@ -54,7 +53,7 @@ class _SimpleWidgetBuilderState extends ConsumerState<SimpleWidgetBuilder> {
       body: SafeArea(
         child: Column(
           children: [
-            // Size selector
+            // Size and layout selector
             _buildSizeBar(),
             // Canvas
             Expanded(child: _buildCanvas()),
@@ -85,18 +84,6 @@ class _SimpleWidgetBuilderState extends ConsumerState<SimpleWidgetBuilder> {
         ),
       ),
       actions: [
-        // Preview toggle
-        IconButton(
-          icon: Icon(
-            _showPreview ? Icons.edit : Icons.visibility,
-            color: _showPreview ? context.accentColor : Colors.white,
-          ),
-          onPressed: () => setState(() {
-            _showPreview = !_showPreview;
-            if (_showPreview) _selectedElementId = null;
-          }),
-          tooltip: _showPreview ? 'Edit' : 'Preview',
-        ),
         // Save
         TextButton.icon(
           onPressed: _save,
@@ -109,6 +96,8 @@ class _SimpleWidgetBuilderState extends ConsumerState<SimpleWidgetBuilder> {
   }
 
   Widget _buildSizeBar() {
+    final isRow = _schema.root.type == ElementType.row;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -116,16 +105,93 @@ class _SimpleWidgetBuilderState extends ConsumerState<SimpleWidgetBuilder> {
         border: Border(bottom: BorderSide(color: AppTheme.darkBorder)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildSizeChip(CustomWidgetSize.small, 'Small'),
-          const SizedBox(width: 8),
-          _buildSizeChip(CustomWidgetSize.medium, 'Medium'),
-          const SizedBox(width: 8),
-          _buildSizeChip(CustomWidgetSize.large, 'Large'),
+          // Layout toggle
+          _buildLayoutToggle(isRow),
+          const Spacer(),
+          // Size chips
+          _buildSizeChip(CustomWidgetSize.small, 'S'),
+          const SizedBox(width: 6),
+          _buildSizeChip(CustomWidgetSize.medium, 'M'),
+          const SizedBox(width: 6),
+          _buildSizeChip(CustomWidgetSize.large, 'L'),
         ],
       ),
     );
+  }
+
+  Widget _buildLayoutToggle(bool isRow) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkBackground,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildLayoutOption(
+            icon: Icons.view_agenda,
+            label: 'Stack',
+            isSelected: !isRow,
+            onTap: () => _setRootLayout(ElementType.column),
+          ),
+          _buildLayoutOption(
+            icon: Icons.view_column,
+            label: 'Side',
+            isSelected: isRow,
+            onTap: () => _setRootLayout(ElementType.row),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLayoutOption({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final accentColor = context.accentColor;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? accentColor.withValues(alpha: 0.2)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isSelected ? accentColor : AppTheme.textSecondary,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: isSelected ? accentColor : AppTheme.textSecondary,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _setRootLayout(ElementType type) {
+    setState(() {
+      _schema = _schema.copyWith(root: _schema.root.copyWith(type: type));
+    });
   }
 
   Widget _buildSizeChip(CustomWidgetSize size, String label) {
@@ -137,7 +203,7 @@ class _SimpleWidgetBuilderState extends ConsumerState<SimpleWidgetBuilder> {
         _schema = _schema.copyWith(size: size);
       }),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
               ? accentColor.withValues(alpha: 0.2)
@@ -199,7 +265,6 @@ class _SimpleWidgetBuilderState extends ConsumerState<SimpleWidgetBuilder> {
                 child: SimpleWidgetCanvas(
                   schema: _schema,
                   selectedElementId: _selectedElementId,
-                  isPreview: _showPreview,
                   onElementTap: (id) => setState(() {
                     _selectedElementId = _selectedElementId == id ? null : id;
                   }),

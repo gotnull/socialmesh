@@ -7,7 +7,6 @@ import '../models/widget_schema.dart';
 class SimpleWidgetCanvas extends StatelessWidget {
   final WidgetSchema schema;
   final String? selectedElementId;
-  final bool isPreview;
   final void Function(String elementId)? onElementTap;
   final void Function(String parentId, int index) onDropZoneTap;
   final VoidCallback? onTapOutside;
@@ -16,7 +15,6 @@ class SimpleWidgetCanvas extends StatelessWidget {
     super.key,
     required this.schema,
     this.selectedElementId,
-    this.isPreview = false,
     this.onElementTap,
     required this.onDropZoneTap,
     this.onTapOutside,
@@ -24,25 +22,11 @@ class SimpleWidgetCanvas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isPreview) {
-      return _buildPreview(context);
-    }
-
     // Wrap entire canvas in gesture detector to handle tap outside
     return GestureDetector(
       onTap: onTapOutside,
       behavior: HitTestBehavior.opaque,
       child: _buildRootElement(context, schema.root),
-    );
-  }
-
-  Widget _buildPreview(BuildContext context) {
-    // Simple preview - render the actual content
-    return _buildElementPreview(
-      context,
-      schema.root,
-      context.accentColor,
-      isPreview: true,
     );
   }
 
@@ -151,16 +135,13 @@ class SimpleWidgetCanvas extends StatelessWidget {
   Widget _buildElementPreview(
     BuildContext context,
     ElementSchema element,
-    Color accentColor, {
-    bool isPreview = false,
-  }) {
+    Color accentColor,
+  ) {
     switch (element.type) {
       case ElementType.text:
         final text = element.text ?? element.binding?.path ?? 'Text';
         final displayText = element.binding != null
-            ? (isPreview
-                  ? '75%'
-                  : '{${element.binding!.path.split('.').last}}') // Show placeholder in preview
+            ? '{${element.binding!.path.split('.').last}}'
             : text;
         return Text(
           displayText,
@@ -169,6 +150,7 @@ class SimpleWidgetCanvas extends StatelessWidget {
             fontSize: element.style.fontSize ?? 14,
             fontWeight: element.style.fontWeightValue,
           ),
+          overflow: TextOverflow.ellipsis,
         );
 
       case ElementType.icon:
@@ -187,7 +169,7 @@ class SimpleWidgetCanvas extends StatelessWidget {
           ),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
-            widthFactor: isPreview ? 0.75 : 0.6,
+            widthFactor: 0.6,
             child: Container(
               decoration: BoxDecoration(
                 color: accentColor,
@@ -235,15 +217,15 @@ class SimpleWidgetCanvas extends StatelessWidget {
             element.action != null && element.action!.type != ActionType.none;
         return Container(
           padding: EdgeInsets.symmetric(
-            horizontal: element.style.padding ?? 12,
-            vertical: (element.style.padding ?? 12) / 2,
+            horizontal: element.style.padding ?? 10,
+            vertical: (element.style.padding ?? 10) / 2,
           ),
           decoration: BoxDecoration(
             color: element.style.backgroundColorValue ?? accentColor,
             borderRadius: BorderRadius.circular(
               element.style.borderRadius ?? 8,
             ),
-            border: !hasAction && !isPreview
+            border: !hasAction
                 ? Border.all(color: AppTheme.errorRed, width: 2)
                 : null,
           ),
@@ -253,24 +235,28 @@ class SimpleWidgetCanvas extends StatelessWidget {
               if (element.iconName != null) ...[
                 Icon(
                   _getIconData(element.iconName!),
-                  size: element.iconSize ?? 18,
+                  size: element.iconSize ?? 16,
                   color: element.style.textColorValue ?? Colors.white,
                 ),
                 if (element.text != null && element.text!.isNotEmpty)
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 4),
               ],
               if (element.text != null && element.text!.isNotEmpty)
-                Text(
-                  element.text!,
-                  style: TextStyle(
-                    color: element.style.textColorValue ?? Colors.white,
-                    fontSize: element.style.fontSize ?? 14,
-                    fontWeight: FontWeight.w500,
+                Flexible(
+                  child: Text(
+                    element.text!,
+                    style: TextStyle(
+                      color: element.style.textColorValue ?? Colors.white,
+                      fontSize: element.style.fontSize ?? 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 ),
-              if (!hasAction && !isPreview) ...[
+              if (!hasAction) ...[
                 const SizedBox(width: 4),
-                Icon(Icons.warning, size: 14, color: AppTheme.errorRed),
+                Icon(Icons.warning, size: 12, color: AppTheme.errorRed),
               ],
             ],
           ),
@@ -279,18 +265,11 @@ class SimpleWidgetCanvas extends StatelessWidget {
       case ElementType.row:
       case ElementType.column:
       case ElementType.container:
-        // For layout elements in preview mode, render children
-        if (isPreview && element.children.isNotEmpty) {
+        // Layout elements - render children
+        if (element.children.isNotEmpty) {
           final isRow = element.type == ElementType.row;
           final children = element.children
-              .map(
-                (c) => _buildElementPreview(
-                  context,
-                  c,
-                  accentColor,
-                  isPreview: true,
-                ),
-              )
+              .map((c) => _buildElementPreview(context, c, accentColor))
               .toList();
 
           if (isRow) {
