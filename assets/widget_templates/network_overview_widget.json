@@ -1,13 +1,13 @@
 {
-  "id": "c3a94e98-8c98-481d-9cd7-041bd15464c8",
+  "id": "e6da4709-9f83-4dd6-ad42-838f32c43f40",
   "name": "Network Overview",
   "description": "Mesh network status at a glance",
   "version": "1.0.0",
-  "createdAt": "2025-12-11T13:52:59.732821",
-  "updatedAt": "2025-12-11T13:52:59.732822",
+  "createdAt": "2025-12-11T16:20:27.152467",
+  "updatedAt": "2025-12-11T16:20:27.152467",
   "size": "medium",
   "root": {
-    "id": "04877896-791c-418f-85b3-1b3fea827b24",
+    "id": "918bb80a-15c5-4514-bdd6-04fa18ecd41d",
     "type": "row",
     "style": {
       "padding": 16.0,
@@ -15,14 +15,14 @@
     },
     "children": [
       {
-        "id": "ffa644da-29be-4244-93cc-5fbd61b380f4",
+        "id": "f17f4685-c0f7-4c59-9a80-744c7f36090e",
         "type": "column",
         "style": {
           "alignment": "center"
         },
         "children": [
           {
-            "id": "b7e44c35-2dfb-446b-87c1-d7476d9eb356",
+            "id": "5d7b5e39-9a23-4bb1-98a8-43d00acfdf8b",
             "type": "icon",
             "style": {
               "textColor": "#4ADE80"
@@ -36,7 +36,7 @@
             "iconSize": 24.0
           },
           {
-            "id": "5614e964-42fe-4190-9598-2a9105eaeefe",
+            "id": "bcaa0cfd-a24b-4296-adb2-c0918f195418",
             "type": "text",
             "style": {
               "textColor": "#FFFFFF",
@@ -46,7 +46,7 @@
             "text": "Online"
           },
           {
-            "id": "3a76fe2c-7530-44aa-962c-c22d3d3c4d20",
+            "id": "9f894827-ebc5-44e9-8155-801a2cc58f71",
             "type": "text",
             "style": {
               "textColor": "#888888",
@@ -57,7 +57,7 @@
         ]
       },
       {
-        "id": "b7daf57f-e960-4a38-b5ea-50b480d5a678",
+        "id": "161c8961-c6d5-4010-a603-3973b24eae65",
         "type": "shape",
         "style": {
           "width": 1.0,
@@ -66,14 +66,14 @@
         "shapeType": "dividerVertical"
       },
       {
-        "id": "a84e9905-d7ee-4bc8-9d37-ff18efc2ad05",
+        "id": "b5218de6-1ef1-4dbf-ba0d-6be716c58117",
         "type": "column",
         "style": {
           "alignment": "center"
         },
         "children": [
           {
-            "id": "2802b1c3-3766-4bfd-b8d7-3a2bf21463b7",
+            "id": "ae37cde8-b0b3-4916-98ef-b94e102f60e7",
             "type": "icon",
             "style": {
               "textColor": "#4F6AF6"
@@ -82,7 +82,7 @@
             "iconSize": 24.0
           },
           {
-            "id": "c76ea780-6216-4113-995c-7f6e8eebf77e",
+            "id": "24a11c27-2898-47ab-91ed-9df8aa50c262",
             "type": "text",
             "style": {
               "textColor": "#FFFFFF",
@@ -95,7 +95,7 @@
             }
           },
           {
-            "id": "d8613174-d698-4a3d-a09f-ca8c67af6c5f",
+            "id": "74014254-4818-49fd-972a-08038ae6ea6a",
             "type": "text",
             "style": {
               "textColor": "#888888",
@@ -106,7 +106,7 @@
         ]
       },
       {
-        "id": "cc218877-cbc6-45e4-bd90-df700ee419a8",
+        "id": "0665fe2e-5121-4f16-b736-263c981a708d",
         "type": "shape",
         "style": {
           "width": 1.0,
@@ -115,14 +115,14 @@
         "shapeType": "dividerVertical"
       },
       {
-        "id": "479c717e-4e74-4066-a40c-670410149dd1",
+        "id": "f09e08ba-4971-4036-991e-c732f1a9227a",
         "type": "column",
         "style": {
           "alignment": "center"
         },
         "children": [
           {
-            "id": "c914fdff-6dc9-44d0-8056-c598b3d3603d",
+            "id": "5a0d0caf-3554-430f-9120-5a841bdd1711",
             "type": "icon",
             "style": {
               "textColor": "#4F6AF6"
@@ -131,7 +131,7 @@
             "iconSize": 24.0
           },
           {
-            "id": "6bf99224-ce11-4a9d-83af-be59835217dd",
+            "id": "735d7bde-d832-456b-970b-6704dad5d11e",
             "type": "text",
             "style": {
               "textColor": "#FFFFFF",
@@ -144,7 +144,7 @@
             }
           },
           {
-            "id": "1c648fe7-958b-4247-bc3a-d66100eff08c",
+            "id": "2f00a322-f3c8-4718-99cc-ca15b4a4fe63",
             "type": "text",
             "style": {
               "textColor": "#888888",

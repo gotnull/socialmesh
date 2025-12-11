@@ -69,6 +69,7 @@ dependencies:
   firebase_crashlytics: ^5.0.5
   firebase_core: ^4.2.1
   firebase_auth: ^6.0.1
+  flutter_box_transform: ^0.4.7
 
 dev_dependencies:
   flutter_test:

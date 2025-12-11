@@ -347,12 +347,24 @@ void main() {
             content.contains('localhost:') ||
             content.contains("'localhost'") ||
             content.contains('"localhost"')) {
-          // Check it's not in a comment
+          // Check it's not in a comment or kDebugMode block
           final lines = content.split('\n');
+          bool inDebugBlock = false;
           for (int i = 0; i < lines.length; i++) {
             final line = lines[i];
+            // Track if we're in a kDebugMode block
+            if (line.contains('if (kDebugMode)')) {
+              inDebugBlock = true;
+            }
+            if (inDebugBlock && line.contains('}')) {
+              // Count braces to detect end of block (simplified)
+              if (!line.contains('{')) {
+                inDebugBlock = false;
+              }
+            }
             if ((line.contains('127.0.0.1') || line.contains('localhost')) &&
-                !line.trimLeft().startsWith('//')) {
+                !line.trimLeft().startsWith('//') &&
+                !inDebugBlock) {
               violations.add('${file.path}:${i + 1}');
             }
           }

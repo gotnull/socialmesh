@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_box_transform/flutter_box_transform.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
@@ -26,16 +27,7 @@ class SimpleWidgetBuilder extends ConsumerStatefulWidget {
 class _SimpleWidgetBuilderState extends ConsumerState<SimpleWidgetBuilder> {
   late WidgetSchema _schema;
   String? _selectedElementId;
-
-  // Resize state
   bool _isResizing = false;
-  Offset? _resizeStart;
-  Size? _resizeStartSize;
-
-  // Snap grid constants
-  static const double _snapGridSize = 40.0;
-  static const double _minWidgetSize = 80.0;
-  static const double _maxWidgetSize = 400.0;
 
   @override
   void initState() {
@@ -107,10 +99,6 @@ class _SimpleWidgetBuilderState extends ConsumerState<SimpleWidgetBuilder> {
 
   Widget _buildSizeBar() {
     final isRow = _schema.root.type == ElementType.row;
-    final isCustomSize =
-        _schema.size == CustomWidgetSize.custom ||
-        _schema.customWidth != null ||
-        _schema.customHeight != null;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -123,47 +111,12 @@ class _SimpleWidgetBuilderState extends ConsumerState<SimpleWidgetBuilder> {
           // Layout toggle
           _buildLayoutToggle(isRow),
           const Spacer(),
-          // Custom indicator
-          if (isCustomSize) ...[
-            _buildCustomSizeIndicator(),
-            const SizedBox(width: 6),
-          ],
           // Size chips
           _buildSizeChip(CustomWidgetSize.small, 'S'),
           const SizedBox(width: 6),
           _buildSizeChip(CustomWidgetSize.medium, 'M'),
           const SizedBox(width: 6),
           _buildSizeChip(CustomWidgetSize.large, 'L'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCustomSizeIndicator() {
-    final width = _getWidgetWidth();
-    final height = _getWidgetHeight();
-    final accentColor = context.accentColor;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: accentColor),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.straighten, size: 12, color: accentColor),
-          const SizedBox(width: 4),
-          Text(
-            '${width.toInt()}×${height.toInt()}',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: accentColor,
-            ),
-          ),
         ],
       ),
     );
@@ -244,11 +197,7 @@ class _SimpleWidgetBuilderState extends ConsumerState<SimpleWidgetBuilder> {
   }
 
   Widget _buildSizeChip(CustomWidgetSize size, String label) {
-    // Check if this preset matches current size (and no custom dimensions)
-    final isSelected =
-        _schema.size == size &&
-        _schema.customWidth == null &&
-        _schema.customHeight == null;
+    final isSelected = _schema.size == size;
     final accentColor = context.accentColor;
 
     return GestureDetector(
@@ -281,257 +230,120 @@ class _SimpleWidgetBuilderState extends ConsumerState<SimpleWidgetBuilder> {
     final height = _getWidgetHeight();
     final accentColor = context.accentColor;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        // Tap outside widget to deselect
-        if (_selectedElementId != null) {
-          setState(() {
-            _selectedElementId = null;
-          });
-        }
-      },
-      child: Stack(
-        children: [
-          // Grid overlay during resize
-          if (_isResizing) _buildSnapGrid(),
-          // Centered widget with resize handles
-          Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: GestureDetector(
-                // Prevent tap-through to parent deselect handler when tapping widget
-                onTap: () {},
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Main widget container
-                    Container(
-                      width: width,
-                      height: height,
-                      decoration: BoxDecoration(
-                        color: AppTheme.darkCard,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _isResizing
-                              ? accentColor
-                              : AppTheme.darkBorder,
-                          width: _isResizing ? 2 : 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Create rect centered in available space
+        final rect = Rect.fromCenter(
+          center: Offset(constraints.maxWidth / 2, constraints.maxHeight / 2),
+          width: width,
+          height: height,
+        );
+
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () {
+            if (_selectedElementId != null) {
+              setState(() => _selectedElementId = null);
+            }
+          },
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              TransformableBox(
+                rect: rect,
+                flip: Flip.none,
+                draggable: false,
+                resizable: true,
+                allowFlippingWhileResizing: false,
+                handleTapSize: 32,
+                constraints: const BoxConstraints(
+                  minWidth: 80,
+                  minHeight: 80,
+                  maxWidth: 400,
+                  maxHeight: 400,
+                ),
+                onResizeStart: (handle, event) {
+                  setState(() => _isResizing = true);
+                },
+                onResizeUpdate: (result, event) {
+                  setState(() {
+                    _schema = _schema.copyWith(
+                      size: CustomWidgetSize.custom,
+                      customWidth: result.rect.width,
+                      customHeight: result.rect.height,
+                    );
+                  });
+                },
+                onResizeEnd: (handle, event) {
+                  setState(() => _isResizing = false);
+                },
+                contentBuilder: (context, rect, flip) {
+                  return Container(
+                    width: rect.width,
+                    height: rect.height,
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkCard,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _isResizing ? accentColor : AppTheme.darkBorder,
+                        width: _isResizing ? 2 : 1,
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(11),
-                        child: SimpleWidgetCanvas(
-                          schema: _schema,
-                          selectedElementId: _selectedElementId,
-                          onElementTap: (id) => setState(() {
-                            _selectedElementId = _selectedElementId == id
-                                ? null
-                                : id;
-                          }),
-                          onDropZoneTap: _handleDropZoneTap,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(11),
+                      child: SimpleWidgetCanvas(
+                        schema: _schema,
+                        selectedElementId: _selectedElementId,
+                        onElementTap: (id) => setState(() {
+                          _selectedElementId = _selectedElementId == id
+                              ? null
+                              : id;
+                        }),
+                        onDropZoneTap: _handleDropZoneTap,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              // Size indicator when resizing
+              if (_isResizing)
+                Positioned(
+                  bottom: 16,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: accentColor,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        '${width.toInt()} × ${height.toInt()}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
                     ),
-                    // Resize handles (corners only)
-                    ..._buildResizeHandles(width, height, accentColor),
-                    // Size indicator during resize
-                    if (_isResizing)
-                      Positioned(
-                        bottom: -28,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: accentColor,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              '${width.toInt()} × ${height.toInt()}',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSnapGrid() {
-    return Positioned.fill(
-      child: CustomPaint(
-        painter: _SnapGridPainter(
-          gridSize: _snapGridSize,
-          color: AppTheme.darkBorder.withValues(alpha: 0.5),
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _buildResizeHandles(
-    double width,
-    double height,
-    Color accentColor,
-  ) {
-    const handleSize = 24.0;
-    const hitAreaSize = 44.0; // Larger hit area for easier touch
-
-    Widget buildHandle(Alignment alignment) {
-      double left = 0;
-      double top = 0;
-
-      // Position based on alignment
-      switch (alignment) {
-        case Alignment.topLeft:
-          left = -handleSize / 2;
-          top = -handleSize / 2;
-          break;
-        case Alignment.topRight:
-          left = width - handleSize / 2;
-          top = -handleSize / 2;
-          break;
-        case Alignment.bottomLeft:
-          left = -handleSize / 2;
-          top = height - handleSize / 2;
-          break;
-        case Alignment.bottomRight:
-          left = width - handleSize / 2;
-          top = height - handleSize / 2;
-          break;
-        default:
-          break;
-      }
-
-      return Positioned(
-        left: left - (hitAreaSize - handleSize) / 2,
-        top: top - (hitAreaSize - handleSize) / 2,
-        width: hitAreaSize,
-        height: hitAreaSize,
-        child: GestureDetector(
-          onPanStart: (details) => _onResizeStart(details, alignment),
-          onPanUpdate: (details) => _onResizeUpdate(details, alignment),
-          onPanEnd: _onResizeEnd,
-          child: Center(
-            child: Container(
-              width: handleSize,
-              height: handleSize,
-              decoration: BoxDecoration(
-                color: _isResizing ? accentColor : AppTheme.darkCard,
-                borderRadius: BorderRadius.circular(handleSize / 2),
-                border: Border.all(color: accentColor, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
                   ),
-                ],
-              ),
-              child: Icon(
-                Icons.open_in_full,
-                size: 12,
-                color: _isResizing ? Colors.white : accentColor,
-              ),
-            ),
+                ),
+            ],
           ),
-        ),
-      );
-    }
-
-    return [
-      buildHandle(Alignment.bottomRight), // Primary resize handle
-      buildHandle(Alignment.bottomLeft),
-      buildHandle(Alignment.topRight),
-      buildHandle(Alignment.topLeft),
-    ];
-  }
-
-  void _onResizeStart(DragStartDetails details, Alignment alignment) {
-    setState(() {
-      _isResizing = true;
-      _resizeStart = details.globalPosition;
-      _resizeStartSize = Size(_getWidgetWidth(), _getWidgetHeight());
-    });
-  }
-
-  void _onResizeUpdate(DragUpdateDetails details, Alignment alignment) {
-    if (_resizeStart == null || _resizeStartSize == null) return;
-
-    final delta = details.globalPosition - _resizeStart!;
-    double newWidth = _resizeStartSize!.width;
-    double newHeight = _resizeStartSize!.height;
-
-    // Calculate new dimensions based on which corner is being dragged
-    switch (alignment) {
-      case Alignment.bottomRight:
-        newWidth = _resizeStartSize!.width + delta.dx;
-        newHeight = _resizeStartSize!.height + delta.dy;
-        break;
-      case Alignment.bottomLeft:
-        newWidth = _resizeStartSize!.width - delta.dx;
-        newHeight = _resizeStartSize!.height + delta.dy;
-        break;
-      case Alignment.topRight:
-        newWidth = _resizeStartSize!.width + delta.dx;
-        newHeight = _resizeStartSize!.height - delta.dy;
-        break;
-      case Alignment.topLeft:
-        newWidth = _resizeStartSize!.width - delta.dx;
-        newHeight = _resizeStartSize!.height - delta.dy;
-        break;
-      default:
-        break;
-    }
-
-    // Snap to grid
-    newWidth = _snapToGrid(newWidth);
-    newHeight = _snapToGrid(newHeight);
-
-    // Enforce constraints
-    newWidth = newWidth.clamp(_minWidgetSize, _maxWidgetSize);
-    newHeight = newHeight.clamp(_minWidgetSize, _maxWidgetSize);
-
-    setState(() {
-      _schema = _schema.copyWith(
-        size: CustomWidgetSize.custom,
-        customWidth: newWidth,
-        customHeight: newHeight,
-      );
-    });
-  }
-
-  void _onResizeEnd(DragEndDetails details) {
-    setState(() {
-      _isResizing = false;
-      _resizeStart = null;
-      _resizeStartSize = null;
-    });
-  }
-
-  double _snapToGrid(double value) {
-    return (value / _snapGridSize).round() * _snapGridSize;
+        );
+      },
+    );
   }
 
   void _selectPresetSize(CustomWidgetSize size) {
@@ -2275,47 +2087,5 @@ class _ElementEditorState extends State<_ElementEditor> {
       'warning_amber': Icons.warning_amber,
     };
     return map[name] ?? Icons.help_outline;
-  }
-}
-
-/// Custom painter for snap grid overlay
-class _SnapGridPainter extends CustomPainter {
-  final double gridSize;
-  final Color color;
-
-  _SnapGridPainter({required this.gridSize, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final dotPaint = Paint()
-      ..color = color.withValues(alpha: 0.8)
-      ..style = PaintingStyle.fill;
-
-    // Draw dots at grid intersections
-    for (double x = 0; x < size.width; x += gridSize) {
-      for (double y = 0; y < size.height; y += gridSize) {
-        canvas.drawCircle(Offset(x, y), 2, dotPaint);
-      }
-    }
-
-    // Draw faint lines
-    final linePaint = Paint()
-      ..color = color.withValues(alpha: 0.3)
-      ..strokeWidth = 0.5;
-
-    // Vertical lines
-    for (double x = 0; x < size.width; x += gridSize) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
-    }
-
-    // Horizontal lines
-    for (double y = 0; y < size.height; y += gridSize) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _SnapGridPainter oldDelegate) {
-    return oldDelegate.gridSize != gridSize || oldDelegate.color != color;
   }
 }
