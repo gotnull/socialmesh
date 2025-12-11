@@ -55,6 +55,7 @@ import '../telemetry/pax_counter_log_screen.dart';
 import '../telemetry/detection_sensor_log_screen.dart';
 import '../routes/routes_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
+import 'account_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -962,6 +963,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const AppLogScreen()),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Account Section
+              _SectionHeader(title: 'ACCOUNT'),
+              _SettingsTile(
+                icon: Icons.account_circle,
+                title: 'Marketplace Account',
+                subtitle: 'Sign in to submit & manage widgets',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AccountScreen()),
                 ),
               ),
 
