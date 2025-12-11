@@ -1329,8 +1329,8 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
         ),
         const SizedBox(height: 4),
-        TextField(
-          controller: TextEditingController(text: value),
+        TextFormField(
+          initialValue: value,
           onChanged: onChanged,
           style: const TextStyle(color: Colors.white, fontSize: 13),
           decoration: InputDecoration(
@@ -1689,8 +1689,8 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: TextField(
-                controller: TextEditingController(text: value),
+              child: TextFormField(
+                initialValue: value,
                 onChanged: onChanged,
                 style: const TextStyle(color: Colors.white, fontSize: 13),
                 decoration: InputDecoration(
@@ -1823,6 +1823,18 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           ),
           children: [],
         );
+      case ElementType.button:
+        return ElementSchema(
+          type: type,
+          text: 'Tap me',
+          iconName: 'touch_app',
+          style: const StyleSchema(
+            backgroundColor: '#4F6AF6',
+            textColor: '#FFFFFF',
+            borderRadius: 8,
+            padding: 12,
+          ),
+        );
     }
   }
 
@@ -1905,6 +1917,8 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         return 'Spacer';
       case ElementType.stack:
         return 'Stack';
+      case ElementType.button:
+        return 'Action Button';
     }
   }
 

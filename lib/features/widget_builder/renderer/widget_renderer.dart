@@ -198,7 +198,75 @@ class _ElementRenderer extends StatelessWidget {
 
       case ElementType.stack:
         return _buildStack();
+
+      case ElementType.button:
+        return _buildButton();
     }
+  }
+
+  Widget _buildButton() {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: element.style.padding ?? 12,
+        vertical: (element.style.padding ?? 12) / 2,
+      ),
+      decoration: BoxDecoration(
+        color: element.style.backgroundColorValue ?? accentColor,
+        borderRadius: BorderRadius.circular(element.style.borderRadius ?? 8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (element.iconName != null) ...[
+            Icon(
+              _getIconData(element.iconName!),
+              size: element.iconSize ?? 18,
+              color: element.style.textColorValue ?? Colors.white,
+            ),
+            if (element.text != null && element.text!.isNotEmpty)
+              const SizedBox(width: 6),
+          ],
+          if (element.text != null && element.text!.isNotEmpty)
+            Text(
+              element.text!,
+              style: TextStyle(
+                color: element.style.textColorValue ?? Colors.white,
+                fontSize: element.style.fontSize ?? 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getIconData(String name) {
+    const iconMap = {
+      'star': Icons.star,
+      'favorite': Icons.favorite,
+      'battery_full': Icons.battery_full,
+      'signal_cellular_alt': Icons.signal_cellular_alt,
+      'wifi': Icons.wifi,
+      'gps_fixed': Icons.gps_fixed,
+      'thermostat': Icons.thermostat,
+      'water_drop': Icons.water_drop,
+      'check_circle': Icons.check_circle,
+      'warning': Icons.warning,
+      'error': Icons.error,
+      'info': Icons.info,
+      'send': Icons.send,
+      'message': Icons.message,
+      'flash_on': Icons.flash_on,
+      'speed': Icons.speed,
+      'hub': Icons.hub,
+      'router': Icons.router,
+      'touch_app': Icons.touch_app,
+      'location_on': Icons.location_on,
+      'timeline': Icons.timeline,
+      'refresh': Icons.refresh,
+      'warning_amber': Icons.warning_amber,
+    };
+    return iconMap[name] ?? Icons.help_outline;
   }
 
   Widget _buildImage() {

@@ -16,6 +16,7 @@ enum ElementType {
   column, // Vertical layout
   spacer, // Flexible space
   stack, // Overlapping elements
+  button, // Action button with tap behavior
 }
 
 /// Types of gauges available
