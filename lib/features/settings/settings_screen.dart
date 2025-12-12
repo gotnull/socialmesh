@@ -1,6 +1,7 @@
 import '../../core/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/transport.dart' show DeviceConnectionState;
 import '../../providers/app_providers.dart';
@@ -1040,6 +1041,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 title: 'Privacy Policy',
                 onTap: () => LegalDocumentSheet.showPrivacy(context),
               ),
+              _SettingsTile(
+                icon: Icons.source_outlined,
+                title: 'Open Source Licenses',
+                subtitle: 'Third-party libraries and attributions',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const _OpenSourceLicensesScreen(),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Meshtastic Powered footer
+              _MeshtasticPoweredFooter(),
 
               const SizedBox(height: 32),
             ],
@@ -1740,6 +1757,153 @@ class _AccountTile extends ConsumerWidget {
         title: 'Marketplace Account',
         subtitle: 'Sign in to submit & manage widgets',
         onTap: onTap,
+      ),
+    );
+  }
+}
+
+/// Meshtastic Powered footer with link to meshtastic.org
+class _MeshtasticPoweredFooter extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: InkWell(
+          onTap: () => _openMeshtasticWebsite(context),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: Opacity(
+              opacity: 0.7,
+              child: Image.asset(
+                'assets/meshtastic_powered_landscape.png',
+                width: 180,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openMeshtasticWebsite(BuildContext context) {
+    HapticFeedback.lightImpact();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const _MeshtasticWebViewScreen()),
+    );
+  }
+}
+
+/// In-app webview for meshtastic.org
+class _MeshtasticWebViewScreen extends StatefulWidget {
+  const _MeshtasticWebViewScreen();
+
+  @override
+  State<_MeshtasticWebViewScreen> createState() =>
+      _MeshtasticWebViewScreenState();
+}
+
+class _MeshtasticWebViewScreenState extends State<_MeshtasticWebViewScreen> {
+  double _progress = 0;
+  String _title = 'Meshtastic';
+
+  @override
+  Widget build(BuildContext context) {
+    final accentColor = Theme.of(context).colorScheme.primary;
+
+    return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      appBar: AppBar(
+        backgroundColor: AppTheme.darkBackground,
+        title: Text(
+          _title,
+          style: const TextStyle(fontSize: 18),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Progress indicator
+          if (_progress < 1.0)
+            LinearProgressIndicator(
+              value: _progress,
+              backgroundColor: AppTheme.darkCard,
+              valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+              minHeight: 2,
+            ),
+          // WebView
+          Expanded(
+            child: InAppWebView(
+              initialUrlRequest: URLRequest(
+                url: WebUri('https://meshtastic.org'),
+              ),
+              initialSettings: InAppWebViewSettings(
+                transparentBackground: true,
+                javaScriptEnabled: true,
+                useShouldOverrideUrlLoading: true,
+                mediaPlaybackRequiresUserGesture: false,
+              ),
+              onProgressChanged: (controller, progress) {
+                setState(() => _progress = progress / 100);
+              },
+              onTitleChanged: (controller, title) {
+                if (title != null && title.isNotEmpty) {
+                  setState(() => _title = title);
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Custom themed Open Source Licenses screen
+class _OpenSourceLicensesScreen extends StatelessWidget {
+  const _OpenSourceLicensesScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    final accentColor = Theme.of(context).colorScheme.primary;
+
+    return Theme(
+      // Apply dark theme to the license page
+      data: Theme.of(context).copyWith(
+        scaffoldBackgroundColor: AppTheme.darkBackground,
+        appBarTheme: AppBarTheme(
+          backgroundColor: AppTheme.darkBackground,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        cardColor: AppTheme.darkCard,
+        listTileTheme: ListTileThemeData(
+          textColor: Colors.white,
+          iconColor: accentColor,
+        ),
+      ),
+      child: LicensePage(
+        applicationName: 'Socialmesh',
+        applicationVersion: '1.0.0',
+        applicationIcon: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Image.asset(
+            'assets/meshtastic_powered_landscape.png',
+            width: 140,
+            fit: BoxFit.contain,
+          ),
+        ),
+        applicationLegalese:
+            '© 2024 Socialmesh\n\nThis app uses open source software. '
+            'See below for the complete list of third-party licenses.',
       ),
     );
   }
