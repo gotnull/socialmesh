@@ -1,3 +1,10 @@
+/// Node status based on last seen time
+enum NodeStatus {
+  online, // < 1 hour
+  idle, // 1-24 hours
+  offline, // > 24 hours or never seen
+}
+
 /// Model for nodes from meshmap.net's nodes.json API
 /// Represents Meshtastic nodes from the global MQTT network
 class WorldMeshNode {
@@ -164,6 +171,35 @@ class WorldMeshNode {
     final seen = lastSeen;
     if (seen == null) return false;
     return DateTime.now().difference(seen).inHours < 24;
+  }
+
+  /// Check if node is online (seen within 1 hour)
+  bool get isOnline {
+    final seen = lastSeen;
+    if (seen == null) return false;
+    return DateTime.now().difference(seen).inMinutes < 60;
+  }
+
+  /// Check if node was seen recently but not online (1-24 hours)
+  bool get isIdle {
+    final seen = lastSeen;
+    if (seen == null) return false;
+    final diff = DateTime.now().difference(seen);
+    return diff.inMinutes >= 60 && diff.inHours < 24;
+  }
+
+  /// Check if node is offline (>24 hours or never seen)
+  bool get isOffline {
+    final seen = lastSeen;
+    if (seen == null) return true;
+    return DateTime.now().difference(seen).inHours >= 24;
+  }
+
+  /// Get node status based on last seen time
+  NodeStatus get status {
+    if (isOnline) return NodeStatus.online;
+    if (isIdle) return NodeStatus.idle;
+    return NodeStatus.offline;
   }
 
   /// Get time since last seen as human readable string

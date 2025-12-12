@@ -307,6 +307,27 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 },
               ),
             ),
+            // Status legend
+            const Divider(height: 1, color: AppTheme.darkBorder),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _StatusLegendItem(
+                    color: AppTheme.successGreen,
+                    label: 'Online (<1h)',
+                  ),
+                  const SizedBox(width: 16),
+                  _StatusLegendItem(color: Colors.amber, label: 'Idle (1-24h)'),
+                  const SizedBox(width: 16),
+                  _StatusLegendItem(
+                    color: AppTheme.textTertiary,
+                    label: 'Offline (>24h)',
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -854,6 +875,33 @@ class _LazySearchResultsListState extends State<_LazySearchResultsList> {
   }
 }
 
+/// Status legend item widget
+class _StatusLegendItem extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _StatusLegendItem({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(fontSize: 10, color: AppTheme.textTertiary),
+        ),
+      ],
+    );
+  }
+}
+
 /// Search result tile for world mesh nodes
 class _SearchResultTile extends StatelessWidget {
   final WorldMeshNode node;
@@ -866,22 +914,37 @@ class _SearchResultTile extends StatelessWidget {
     required this.onTap,
   });
 
+  Color get _statusColor {
+    switch (node.status) {
+      case NodeStatus.online:
+        return AppTheme.successGreen;
+      case NodeStatus.idle:
+        return Colors.amber;
+      case NodeStatus.offline:
+        return AppTheme.textTertiary;
+    }
+  }
+
+  bool get _showStatusBadge => node.status != NodeStatus.offline;
+
   @override
   Widget build(BuildContext context) {
+    final isActive = node.status != NodeStatus.offline;
+
     return InkWell(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            // Avatar with online indicator badge
+            // Avatar with status indicator badge
             Stack(
               children: [
                 Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: node.isRecentlySeen
+                    color: isActive
                         ? accentColor.withValues(alpha: 0.2)
                         : AppTheme.darkBorder.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(10),
@@ -892,9 +955,7 @@ class _SearchResultTile extends StatelessWidget {
                           ? node.shortName.substring(0, 2).toUpperCase()
                           : node.shortName.toUpperCase(),
                       style: TextStyle(
-                        color: node.isRecentlySeen
-                            ? accentColor
-                            : AppTheme.textSecondary,
+                        color: isActive ? accentColor : AppTheme.textSecondary,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                         fontFamily: 'JetBrainsMono',
@@ -902,8 +963,8 @@ class _SearchResultTile extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Online status badge (top-right corner)
-                if (node.isRecentlySeen)
+                // Status badge (top-right corner)
+                if (_showStatusBadge)
                   Positioned(
                     top: -2,
                     right: -2,
@@ -911,7 +972,7 @@ class _SearchResultTile extends StatelessWidget {
                       width: 12,
                       height: 12,
                       decoration: BoxDecoration(
-                        color: AppTheme.successGreen,
+                        color: _statusColor,
                         shape: BoxShape.circle,
                         border: Border.all(color: AppTheme.darkCard, width: 2),
                       ),
