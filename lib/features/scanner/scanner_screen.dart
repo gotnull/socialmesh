@@ -9,7 +9,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../core/transport.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animated_tagline.dart';
-import '../../core/widgets/animated_mesh_node.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
@@ -412,13 +412,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const AccelerometerMeshNode(
-          size: 250,
-          animationType: MeshNodeAnimationType.tumble,
-          glowIntensity: 0.5,
-          lineThickness: 0.5,
-          nodeSize: 0.8,
-        ),
+        const ConfiguredSplashMeshNode(),
         const SizedBox(height: 32),
         const Text(
           'Socialmesh',

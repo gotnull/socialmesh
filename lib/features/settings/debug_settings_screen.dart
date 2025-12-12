@@ -6,6 +6,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/animated_mesh_node.dart';
 import '../../core/widgets/animations.dart';
 import '../../services/notifications/notification_service.dart';
+import '../../services/storage/storage_service.dart';
 import '../../utils/snackbar.dart';
 
 /// Debug settings screen with developer tools and the mesh node playground.
@@ -27,6 +28,12 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   double _nodeSize = 1.0;
   bool _animate = true;
   int _selectedColorPreset = 0;
+  bool _useAccelerometer = false;
+  double _accelerometerSensitivity = 1.0;
+  double _accelerometerSmoothing = 0.8;
+
+  SettingsService? _settingsService;
+  bool _hasUnsavedChanges = false;
 
   // Color presets
   static const List<List<Color>> _colorPresets = [
@@ -58,6 +65,77 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
     'Neon',
     'Mono',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedConfig();
+  }
+
+  Future<void> _loadSavedConfig() async {
+    _settingsService = SettingsService();
+    await _settingsService!.init();
+
+    setState(() {
+      _size = _settingsService!.splashMeshSize;
+      _animationType = MeshNodeAnimationType.values.firstWhere(
+        (t) => t.name == _settingsService!.splashMeshAnimationType,
+        orElse: () => MeshNodeAnimationType.tumble,
+      );
+      _glowIntensity = _settingsService!.splashMeshGlowIntensity;
+      _lineThickness = _settingsService!.splashMeshLineThickness;
+      _nodeSize = _settingsService!.splashMeshNodeSize;
+      _selectedColorPreset = _settingsService!.splashMeshColorPreset.clamp(
+        0,
+        _colorPresets.length - 1,
+      );
+      _useAccelerometer = _settingsService!.splashMeshUseAccelerometer;
+      _accelerometerSensitivity = _settingsService!.splashMeshAccelSensitivity;
+      _accelerometerSmoothing = _settingsService!.splashMeshAccelSmoothing;
+      _hasUnsavedChanges = false;
+    });
+  }
+
+  Future<void> _saveConfig() async {
+    if (_settingsService == null) return;
+
+    await _settingsService!.setSplashMeshConfig(
+      size: _size,
+      animationType: _animationType.name,
+      glowIntensity: _glowIntensity,
+      lineThickness: _lineThickness,
+      nodeSize: _nodeSize,
+      colorPreset: _selectedColorPreset,
+      useAccelerometer: _useAccelerometer,
+      accelerometerSensitivity: _accelerometerSensitivity,
+      accelerometerSmoothing: _accelerometerSmoothing,
+    );
+
+    setState(() => _hasUnsavedChanges = false);
+    if (mounted) {
+      showSuccessSnackBar(
+        context,
+        'Splash mesh config saved! Restart app to apply.',
+      );
+    }
+  }
+
+  Future<void> _resetConfig() async {
+    if (_settingsService == null) return;
+
+    await _settingsService!.resetSplashMeshConfig();
+    await _loadSavedConfig();
+
+    if (mounted) {
+      showInfoSnackBar(context, 'Splash mesh config reset to defaults');
+    }
+  }
+
+  void _markChanged() {
+    if (!_hasUnsavedChanges) {
+      setState(() => _hasUnsavedChanges = true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,22 +214,34 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
 
           // Preview area
           Container(
-            height: 200,
+            height: 340,
             decoration: BoxDecoration(
               color: AppTheme.darkBackground,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppTheme.darkBorder.withAlpha(100)),
             ),
             child: Center(
-              child: AnimatedMeshNode(
-                size: _size,
-                animationType: _animationType,
-                animate: _animate,
-                glowIntensity: _glowIntensity,
-                lineThickness: _lineThickness,
-                nodeSize: _nodeSize,
-                gradientColors: _colorPresets[_selectedColorPreset],
-              ),
+              child: _useAccelerometer
+                  ? AccelerometerMeshNode(
+                      size: _size,
+                      animationType: _animationType,
+                      animate: _animate,
+                      glowIntensity: _glowIntensity,
+                      lineThickness: _lineThickness,
+                      nodeSize: _nodeSize,
+                      gradientColors: _colorPresets[_selectedColorPreset],
+                      accelerometerSensitivity: _accelerometerSensitivity,
+                      smoothing: _accelerometerSmoothing,
+                    )
+                  : AnimatedMeshNode(
+                      size: _size,
+                      animationType: _animationType,
+                      animate: _animate,
+                      glowIntensity: _glowIntensity,
+                      lineThickness: _lineThickness,
+                      nodeSize: _nodeSize,
+                      gradientColors: _colorPresets[_selectedColorPreset],
+                    ),
             ),
           ),
           const SizedBox(height: 20),
@@ -212,7 +302,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                 return Padding(
                   padding: EdgeInsets.only(right: 8),
                   child: BouncyTap(
-                    onTap: () => setState(() => _selectedColorPreset = index),
+                    onTap: () {
+                      setState(() => _selectedColorPreset = index);
+                      _markChanged();
+                    },
                     child: Container(
                       width: 60,
                       decoration: BoxDecoration(
@@ -249,9 +342,12 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             label: 'Size',
             value: _size,
             min: 24,
-            max: 160,
+            max: 300,
             displayValue: '${_size.round()}px',
-            onChanged: (v) => setState(() => _size = v),
+            onChanged: (v) {
+              setState(() => _size = v);
+              _markChanged();
+            },
           ),
           const SizedBox(height: 16),
 
@@ -262,7 +358,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             min: 0,
             max: 1,
             displayValue: '${(_glowIntensity * 100).round()}%',
-            onChanged: (v) => setState(() => _glowIntensity = v),
+            onChanged: (v) {
+              setState(() => _glowIntensity = v);
+              _markChanged();
+            },
           ),
           const SizedBox(height: 16),
 
@@ -273,7 +372,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             min: 0.5,
             max: 2.0,
             displayValue: '${_lineThickness.toStringAsFixed(1)}x',
-            onChanged: (v) => setState(() => _lineThickness = v),
+            onChanged: (v) {
+              setState(() => _lineThickness = v);
+              _markChanged();
+            },
           ),
           const SizedBox(height: 16),
 
@@ -284,7 +386,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             min: 0.5,
             max: 2.0,
             displayValue: '${_nodeSize.toStringAsFixed(1)}x',
-            onChanged: (v) => setState(() => _nodeSize = v),
+            onChanged: (v) {
+              setState(() => _nodeSize = v);
+              _markChanged();
+            },
           ),
           const SizedBox(height: 20),
 
@@ -295,12 +400,54 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                 child: _buildToggle(
                   label: 'Animate',
                   value: _animate,
-                  onChanged: (v) => setState(() => _animate = v),
+                  onChanged: (v) {
+                    setState(() => _animate = v);
+                    _markChanged();
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildToggle(
+                  label: 'Accelerometer',
+                  value: _useAccelerometer,
+                  onChanged: (v) {
+                    setState(() => _useAccelerometer = v);
+                    _markChanged();
+                  },
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
+
+          // Accelerometer controls (only visible when enabled)
+          if (_useAccelerometer) ...[
+            _buildSliderRow(
+              label: 'Accel Sensitivity',
+              value: _accelerometerSensitivity,
+              min: 0.1,
+              max: 3.0,
+              displayValue: '${_accelerometerSensitivity.toStringAsFixed(1)}x',
+              onChanged: (v) {
+                setState(() => _accelerometerSensitivity = v);
+                _markChanged();
+              },
+            ),
+            const SizedBox(height: 16),
+            _buildSliderRow(
+              label: 'Accel Smoothing',
+              value: _accelerometerSmoothing,
+              min: 0.0,
+              max: 0.95,
+              displayValue: '${(_accelerometerSmoothing * 100).round()}%',
+              onChanged: (v) {
+                setState(() => _accelerometerSmoothing = v);
+                _markChanged();
+              },
+            ),
+            const SizedBox(height: 20),
+          ],
 
           // Preset Buttons
           _buildSectionLabel('Quick Presets'),
@@ -351,6 +498,58 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     _size = 96;
                     _glowIntensity = 1.0;
                     _selectedColorPreset = 6;
+                    _useAccelerometer = false;
+                  }),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _buildPresetButton(
+                  'Splash',
+                  () => setState(() {
+                    _animationType = MeshNodeAnimationType.tumble;
+                    _size = 300;
+                    _glowIntensity = 0.5;
+                    _lineThickness = 0.5;
+                    _nodeSize = 0.8;
+                    _selectedColorPreset = 0;
+                    _useAccelerometer = true;
+                    _accelerometerSensitivity = 1.0;
+                    _accelerometerSmoothing = 0.8;
+                  }),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildPresetButton(
+                  'Tilt High',
+                  () => setState(() {
+                    _animationType = MeshNodeAnimationType.tumble;
+                    _size = 200;
+                    _glowIntensity = 0.8;
+                    _selectedColorPreset = 0;
+                    _useAccelerometer = true;
+                    _accelerometerSensitivity = 2.5;
+                    _accelerometerSmoothing = 0.5;
+                  }),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildPresetButton(
+                  'Tilt Slow',
+                  () => setState(() {
+                    _animationType = MeshNodeAnimationType.none;
+                    _size = 150;
+                    _glowIntensity = 0.6;
+                    _selectedColorPreset = 4;
+                    _useAccelerometer = true;
+                    _accelerometerSensitivity = 0.8;
+                    _accelerometerSmoothing = 0.92;
                   }),
                 ),
               ),
@@ -412,6 +611,101 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 20),
+
+          // Save/Reset buttons for splash screen config
+          _buildSectionLabel('Splash Screen Config'),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: BouncyTap(
+                  onTap: _saveConfig,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: _hasUnsavedChanges
+                          ? context.accentColor.withAlpha(40)
+                          : AppTheme.darkBackground,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: _hasUnsavedChanges
+                            ? context.accentColor
+                            : AppTheme.darkBorder,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.save_rounded,
+                          size: 18,
+                          color: _hasUnsavedChanges
+                              ? context.accentColor
+                              : AppTheme.textSecondary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _hasUnsavedChanges ? 'Save Config' : 'Saved',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: _hasUnsavedChanges
+                                ? context.accentColor
+                                : AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: BouncyTap(
+                  onTap: _resetConfig,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkBackground,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppTheme.darkBorder),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.restore_rounded,
+                          size: 18,
+                          color: AppTheme.textSecondary,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Reset Defaults',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (_hasUnsavedChanges) ...[
+            const SizedBox(height: 8),
+            const Text(
+              '• Changes will apply to splash/connecting screens on next app restart',
+              style: TextStyle(
+                fontSize: 11,
+                color: AppTheme.textTertiary,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -754,7 +1048,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
     final colorPreset = _colorPresetNames[_selectedColorPreset];
     final hasCustomColors = _selectedColorPreset != 0;
 
-    var snippet = 'AnimatedMeshNode(\n';
+    final widgetName = _useAccelerometer
+        ? 'AccelerometerMeshNode'
+        : 'AnimatedMeshNode';
+    var snippet = '$widgetName(\n';
     snippet += '  size: ${_size.round()},\n';
     snippet +=
         '  animationType: MeshNodeAnimationType.${_animationType.name},\n';
@@ -774,6 +1071,16 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
     if (hasCustomColors) {
       snippet += '  // $colorPreset preset\n';
       snippet += '  gradientColors: [...],\n';
+    }
+    if (_useAccelerometer) {
+      if (_accelerometerSensitivity != 1.0) {
+        snippet +=
+            '  accelerometerSensitivity: ${_accelerometerSensitivity.toStringAsFixed(1)},\n';
+      }
+      if (_accelerometerSmoothing != 0.8) {
+        snippet +=
+            '  smoothing: ${_accelerometerSmoothing.toStringAsFixed(2)},\n';
+      }
     }
 
     snippet += ')';

@@ -351,6 +351,69 @@ class SettingsService {
     await _preferences.remove('ringtone_description');
     await _preferences.remove('ringtone_source');
   }
+
+  // Splash Mesh Node Configuration
+  Future<void> setSplashMeshConfig({
+    required double size,
+    required String animationType,
+    required double glowIntensity,
+    required double lineThickness,
+    required double nodeSize,
+    required int colorPreset,
+    required bool useAccelerometer,
+    required double accelerometerSensitivity,
+    required double accelerometerSmoothing,
+  }) async {
+    await _preferences.setDouble('splash_mesh_size', size);
+    await _preferences.setString('splash_mesh_animation_type', animationType);
+    await _preferences.setDouble('splash_mesh_glow_intensity', glowIntensity);
+    await _preferences.setDouble('splash_mesh_line_thickness', lineThickness);
+    await _preferences.setDouble('splash_mesh_node_size', nodeSize);
+    await _preferences.setInt('splash_mesh_color_preset', colorPreset);
+    await _preferences.setBool(
+      'splash_mesh_use_accelerometer',
+      useAccelerometer,
+    );
+    await _preferences.setDouble(
+      'splash_mesh_accel_sensitivity',
+      accelerometerSensitivity,
+    );
+    await _preferences.setDouble(
+      'splash_mesh_accel_smoothing',
+      accelerometerSmoothing,
+    );
+  }
+
+  double get splashMeshSize =>
+      _preferences.getDouble('splash_mesh_size') ?? 300;
+  String get splashMeshAnimationType =>
+      _preferences.getString('splash_mesh_animation_type') ?? 'tumble';
+  double get splashMeshGlowIntensity =>
+      _preferences.getDouble('splash_mesh_glow_intensity') ?? 0.5;
+  double get splashMeshLineThickness =>
+      _preferences.getDouble('splash_mesh_line_thickness') ?? 0.5;
+  double get splashMeshNodeSize =>
+      _preferences.getDouble('splash_mesh_node_size') ?? 0.8;
+  int get splashMeshColorPreset =>
+      _preferences.getInt('splash_mesh_color_preset') ?? 0;
+  bool get splashMeshUseAccelerometer =>
+      _preferences.getBool('splash_mesh_use_accelerometer') ?? true;
+  double get splashMeshAccelSensitivity =>
+      _preferences.getDouble('splash_mesh_accel_sensitivity') ?? 1.0;
+  double get splashMeshAccelSmoothing =>
+      _preferences.getDouble('splash_mesh_accel_smoothing') ?? 0.8;
+
+  Future<void> resetSplashMeshConfig() async {
+    await _preferences.remove('splash_mesh_size');
+    await _preferences.remove('splash_mesh_animation_type');
+    await _preferences.remove('splash_mesh_glow_intensity');
+    await _preferences.remove('splash_mesh_line_thickness');
+    await _preferences.remove('splash_mesh_node_size');
+    await _preferences.remove('splash_mesh_color_preset');
+    await _preferences.remove('splash_mesh_use_accelerometer');
+    await _preferences.remove('splash_mesh_accel_sensitivity');
+    await _preferences.remove('splash_mesh_accel_smoothing');
+  }
 }
 
 /// Message storage service - persists messages locally

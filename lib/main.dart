@@ -12,7 +12,7 @@ import 'core/theme.dart';
 import 'core/transport.dart';
 import 'core/logging.dart';
 import 'core/widgets/animated_tagline.dart';
-import 'core/widgets/animated_mesh_node.dart';
+import 'providers/splash_mesh_provider.dart';
 import 'providers/app_providers.dart';
 import 'providers/telemetry_providers.dart';
 import 'providers/subscription_providers.dart';
@@ -403,13 +403,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const AccelerometerMeshNode(
-                        size: 250,
-                        animationType: MeshNodeAnimationType.tumble,
-                        glowIntensity: 0.5,
-                        lineThickness: 0.5,
-                        nodeSize: 0.8,
-                      ),
+                      const ConfiguredSplashMeshNode(),
                       const SizedBox(height: 32),
                       const Text(
                         'Socialmesh',

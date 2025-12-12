@@ -648,7 +648,7 @@ class AccelerometerMeshNode extends StatefulWidget {
   /// Node (vertex) size multiplier
   final double nodeSize;
 
-  /// Sensitivity of accelerometer influence (0.0 - 1.0)
+  /// Sensitivity of accelerometer influence (higher = more responsive)
   final double accelerometerSensitivity;
 
   /// Smoothing factor for accelerometer input (0.0 - 1.0, higher = smoother)
@@ -664,8 +664,8 @@ class AccelerometerMeshNode extends StatefulWidget {
     this.glowIntensity = 0.6,
     this.lineThickness = 1.0,
     this.nodeSize = 1.0,
-    this.accelerometerSensitivity = 0.15,
-    this.smoothing = 0.85,
+    this.accelerometerSensitivity = 1.0,
+    this.smoothing = 0.8,
   });
 
   @override
@@ -695,13 +695,13 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode> {
           // Map accelerometer values to rotation
           // X accelerometer = tilt left/right = rotate around Y axis
           // Y accelerometer = tilt forward/back = rotate around X axis
+          // Accelerometer typically ranges -10 to 10 (m/s²), with gravity ~9.8
           final sensitivity = widget.accelerometerSensitivity;
 
-          // Clamp and scale the values
-          _targetRotationY =
-              (event.x / 10.0).clamp(-1.0, 1.0) * sensitivity * math.pi;
-          _targetRotationX =
-              (event.y / 10.0).clamp(-1.0, 1.0) * sensitivity * math.pi;
+          // Scale accelerometer input directly to radians
+          // Dividing by 5 gives ~±45° range at full tilt
+          _targetRotationY = event.x * sensitivity * 0.2;
+          _targetRotationX = event.y * sensitivity * 0.2;
 
           // Apply smoothing for fluid motion
           setState(() {
