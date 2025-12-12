@@ -20,6 +20,7 @@ import '../automations/automations_screen.dart';
 import '../settings/settings_screen.dart';
 import '../presence/presence_screen.dart';
 import '../mesh3d/mesh_3d_screen.dart';
+import '../world_mesh/world_mesh_screen.dart';
 
 /// Notifier to expose the main shell's scaffold key for drawer access
 class MainShellScaffoldKeyNotifier extends Notifier<GlobalKey<ScaffoldState>?> {
@@ -98,6 +99,11 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   /// Drawer menu items for quick access screens not in bottom nav
   final List<_DrawerMenuItem> _drawerMenuItems = [
+    const _DrawerMenuItem(
+      icon: Icons.public,
+      label: 'World Mesh Map',
+      screen: WorldMeshScreen(),
+    ),
     const _DrawerMenuItem(
       icon: Icons.view_in_ar,
       label: '3D Mesh View',
