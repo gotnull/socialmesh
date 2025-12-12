@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/world_mesh/world_mesh_filters.dart';
 import '../models/world_mesh_node.dart';
 import '../services/world_mesh_map_service.dart';
 
@@ -145,7 +146,7 @@ final worldMeshNodesWithPositionProvider = Provider<List<WorldMeshNode>>((ref) {
       [];
 });
 
-/// Provider for filtered/searched nodes
+/// Provider for filtered/searched nodes (simple text search)
 final worldMeshFilteredNodesProvider =
     Provider.family<List<WorldMeshNode>, String>((ref, query) {
       final nodes =
@@ -163,3 +164,135 @@ final worldMeshFilteredNodesProvider =
             (node.hwModel.toLowerCase().contains(lowerQuery));
       }).toList();
     });
+
+/// Provider for filter state
+final worldMeshFiltersProvider =
+    NotifierProvider<WorldMeshFiltersNotifier, WorldMeshFilters>(
+      WorldMeshFiltersNotifier.new,
+    );
+
+/// Notifier for filter state
+class WorldMeshFiltersNotifier extends Notifier<WorldMeshFilters> {
+  @override
+  WorldMeshFilters build() => const WorldMeshFilters();
+
+  void setSearchQuery(String query) {
+    state = state.copyWith(searchQuery: query);
+  }
+
+  void toggleStatus(NodeStatus status) {
+    final newSet = Set<NodeStatus>.from(state.statusFilter);
+    if (newSet.contains(status)) {
+      newSet.remove(status);
+    } else {
+      newSet.add(status);
+    }
+    state = state.copyWith(statusFilter: newSet);
+  }
+
+  void toggleHardware(String hardware) {
+    final newSet = Set<String>.from(state.hardwareFilter);
+    if (newSet.contains(hardware)) {
+      newSet.remove(hardware);
+    } else {
+      newSet.add(hardware);
+    }
+    state = state.copyWith(hardwareFilter: newSet);
+  }
+
+  void toggleModemPreset(String preset) {
+    final newSet = Set<String>.from(state.modemPresetFilter);
+    if (newSet.contains(preset)) {
+      newSet.remove(preset);
+    } else {
+      newSet.add(preset);
+    }
+    state = state.copyWith(modemPresetFilter: newSet);
+  }
+
+  void toggleRegion(String region) {
+    final newSet = Set<String>.from(state.regionFilter);
+    if (newSet.contains(region)) {
+      newSet.remove(region);
+    } else {
+      newSet.add(region);
+    }
+    state = state.copyWith(regionFilter: newSet);
+  }
+
+  void toggleRole(String role) {
+    final newSet = Set<String>.from(state.roleFilter);
+    if (newSet.contains(role)) {
+      newSet.remove(role);
+    } else {
+      newSet.add(role);
+    }
+    state = state.copyWith(roleFilter: newSet);
+  }
+
+  void toggleFirmware(String firmware) {
+    final newSet = Set<String>.from(state.firmwareFilter);
+    if (newSet.contains(firmware)) {
+      newSet.remove(firmware);
+    } else {
+      newSet.add(firmware);
+    }
+    state = state.copyWith(firmwareFilter: newSet);
+  }
+
+  void setHasEnvironmentSensors(bool? value) {
+    if (value == null) {
+      state = state.copyWith(clearHasEnvironmentSensors: true);
+    } else {
+      state = state.copyWith(hasEnvironmentSensors: value);
+    }
+  }
+
+  void setHasBattery(bool? value) {
+    if (value == null) {
+      state = state.copyWith(clearHasBattery: true);
+    } else {
+      state = state.copyWith(hasBattery: value);
+    }
+  }
+
+  void clearAllFilters() {
+    state = state.clear();
+  }
+
+  void clearCategory(WorldMeshFilterCategory category) {
+    switch (category) {
+      case WorldMeshFilterCategory.status:
+        state = state.copyWith(statusFilter: {});
+      case WorldMeshFilterCategory.hardware:
+        state = state.copyWith(hardwareFilter: {});
+      case WorldMeshFilterCategory.modemPreset:
+        state = state.copyWith(modemPresetFilter: {});
+      case WorldMeshFilterCategory.region:
+        state = state.copyWith(regionFilter: {});
+      case WorldMeshFilterCategory.role:
+        state = state.copyWith(roleFilter: {});
+      case WorldMeshFilterCategory.firmware:
+        state = state.copyWith(firmwareFilter: {});
+      case WorldMeshFilterCategory.hasEnvironmentSensors:
+        state = state.copyWith(clearHasEnvironmentSensors: true);
+      case WorldMeshFilterCategory.hasBattery:
+        state = state.copyWith(clearHasBattery: true);
+    }
+  }
+}
+
+/// Provider for filter options extracted from nodes
+final worldMeshFilterOptionsProvider = Provider<WorldMeshFilterOptions>((ref) {
+  final nodes = ref.watch(worldMeshNodesWithPositionProvider);
+  return WorldMeshFilterOptions.fromNodes(nodes);
+});
+
+/// Provider for filtered nodes (with all filters applied)
+final worldMeshAdvancedFilteredNodesProvider = Provider<List<WorldMeshNode>>((
+  ref,
+) {
+  final nodes = ref.watch(worldMeshNodesWithPositionProvider);
+  final filters = ref.watch(worldMeshFiltersProvider);
+  return filters.apply(nodes);
+});

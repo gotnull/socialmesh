@@ -14,6 +14,7 @@ import '../../models/world_mesh_node.dart';
 import '../../providers/world_mesh_map_provider.dart';
 import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
+import 'world_mesh_filter_sheet.dart';
 
 /// World Mesh Map screen showing all Meshtastic nodes from meshmap.net
 class WorldMeshScreen extends ConsumerStatefulWidget {
@@ -110,6 +111,8 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 });
               },
             ),
+          // Filter button with badge
+          _buildFilterButton(accentColor),
           // Map style
           PopupMenuButton<MapTileStyle>(
             icon: const Icon(Icons.layers),
@@ -231,6 +234,55 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           },
         ),
       ),
+    );
+  }
+
+  /// Build filter button with active filter count badge
+  Widget _buildFilterButton(Color accentColor) {
+    final filters = ref.watch(worldMeshFiltersProvider);
+    final activeCount = filters.activeFilterCount;
+
+    return Stack(
+      children: [
+        IconButton(
+          icon: Icon(
+            Icons.filter_list,
+            color: activeCount > 0 ? accentColor : null,
+          ),
+          tooltip: 'Filter nodes',
+          onPressed: () async {
+            HapticFeedback.selectionClick();
+            await showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => const WorldMeshFilterSheet(),
+            );
+          },
+        ),
+        if (activeCount > 0)
+          Positioned(
+            right: 6,
+            top: 6,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: accentColor,
+                shape: BoxShape.circle,
+              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              child: Text(
+                '$activeCount',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -375,8 +427,12 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     ThemeData theme,
     WorldMeshMapState state,
   ) {
-    // Get filtered nodes for display
-    final displayNodes = state.nodesWithPosition;
+    // Get filtered nodes for display - apply user filters to base nodes
+    final filters = ref.watch(worldMeshFiltersProvider);
+    final allNodes = state.nodesWithPosition;
+    final displayNodes = filters.hasActiveFilters
+        ? filters.apply(allNodes)
+        : allNodes;
     final accentColor = theme.colorScheme.primary;
 
     return Stack(
@@ -594,7 +650,12 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           left: 0,
           right: 0,
           bottom: 0,
-          child: _buildStatsBar(theme, state, displayNodes.length),
+          child: _buildStatsBar(
+            theme,
+            state,
+            displayNodes.length,
+            filters.hasActiveFilters,
+          ),
         ),
       ],
     );
@@ -645,6 +706,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     ThemeData theme,
     WorldMeshMapState state,
     int visibleCount,
+    bool hasFilters,
   ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -658,7 +720,13 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         top: false,
         child: Row(
           children: [
-            _buildStatItem(theme, Icons.public, '$visibleCount', 'visible'),
+            _buildStatItem(
+              theme,
+              hasFilters ? Icons.filter_alt : Icons.public,
+              '$visibleCount',
+              hasFilters ? 'filtered' : 'visible',
+              highlight: hasFilters,
+            ),
             const SizedBox(width: 24),
             _buildStatItem(
               theme,
@@ -684,27 +752,30 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     ThemeData theme,
     IconData icon,
     String value,
-    String label,
-  ) {
+    String label, {
+    bool highlight = false,
+  }) {
+    final color = highlight
+        ? theme.colorScheme.primary
+        : theme.colorScheme.primary.withValues(alpha: 0.7);
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: theme.colorScheme.primary.withValues(alpha: 0.7),
-        ),
+        Icon(icon, size: 16, color: color),
         const SizedBox(width: 6),
         Text(
           value,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
+            color: highlight ? theme.colorScheme.primary : null,
           ),
         ),
         const SizedBox(width: 4),
         Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            color: highlight
+                ? theme.colorScheme.primary.withValues(alpha: 0.8)
+                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],
