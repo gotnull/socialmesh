@@ -521,7 +521,11 @@ class _MeshCubePainter extends CustomPainter {
     final index = (t / segment).floor().clamp(0, gradientColors.length - 2);
     final localT = (t - index * segment) / segment;
 
-    return Color.lerp(gradientColors[index], gradientColors[index + 1], localT)!;
+    return Color.lerp(
+      gradientColors[index],
+      gradientColors[index + 1],
+      localT,
+    )!;
   }
 
   @override
@@ -542,10 +546,7 @@ extension MeshNodeLoadingIndicator on BuildContext {
     MeshNodeAnimationType animationType = MeshNodeAnimationType.pulseRotate,
   }) {
     return Center(
-      child: AnimatedMeshNode(
-        size: size,
-        animationType: animationType,
-      ),
+      child: AnimatedMeshNode(size: size, animationType: animationType),
     );
   }
 }
