@@ -30,7 +30,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   int _selectedColorPreset = 0;
   bool _useAccelerometer = false;
   double _accelerometerSensitivity = 1.0;
-  double _accelerometerSmoothing = 0.8;
+  double _accelerometerFriction = 0.985;
 
   SettingsService? _settingsService;
   bool _hasUnsavedChanges = false;
@@ -91,7 +91,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       );
       _useAccelerometer = _settingsService!.splashMeshUseAccelerometer;
       _accelerometerSensitivity = _settingsService!.splashMeshAccelSensitivity;
-      _accelerometerSmoothing = _settingsService!.splashMeshAccelSmoothing;
+      _accelerometerFriction = _settingsService!.splashMeshAccelFriction;
       _hasUnsavedChanges = false;
     });
   }
@@ -108,7 +108,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       colorPreset: _selectedColorPreset,
       useAccelerometer: _useAccelerometer,
       accelerometerSensitivity: _accelerometerSensitivity,
-      accelerometerSmoothing: _accelerometerSmoothing,
+      accelerometerFriction: _accelerometerFriction,
     );
 
     setState(() => _hasUnsavedChanges = false);
@@ -231,7 +231,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                       nodeSize: _nodeSize,
                       gradientColors: _colorPresets[_selectedColorPreset],
                       accelerometerSensitivity: _accelerometerSensitivity,
-                      smoothing: _accelerometerSmoothing,
+                      friction: _accelerometerFriction,
                     )
                   : AnimatedMeshNode(
                       size: _size,
@@ -436,13 +436,17 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             ),
             const SizedBox(height: 16),
             _buildSliderRow(
-              label: 'Accel Smoothing',
-              value: _accelerometerSmoothing,
-              min: 0.0,
-              max: 0.95,
-              displayValue: '${(_accelerometerSmoothing * 100).round()}%',
+              label: 'Momentum (Friction)',
+              value: _accelerometerFriction,
+              min: 0.9,
+              max: 0.998,
+              displayValue: _accelerometerFriction >= 0.99
+                  ? 'High'
+                  : _accelerometerFriction >= 0.97
+                  ? 'Medium'
+                  : 'Low',
               onChanged: (v) {
-                setState(() => _accelerometerSmoothing = v);
+                setState(() => _accelerometerFriction = v);
                 _markChanged();
               },
             ),
@@ -511,7 +515,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                 child: _buildPresetButton(
                   'Splash',
                   () => setState(() {
-                    _animationType = MeshNodeAnimationType.tumble;
+                    _animationType = MeshNodeAnimationType.none;
                     _size = 300;
                     _glowIntensity = 0.5;
                     _lineThickness = 0.5;
@@ -519,37 +523,37 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     _selectedColorPreset = 0;
                     _useAccelerometer = true;
                     _accelerometerSensitivity = 1.0;
-                    _accelerometerSmoothing = 0.8;
+                    _accelerometerFriction = 0.985;
                   }),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildPresetButton(
-                  'Tilt High',
+                  'Flick Fast',
                   () => setState(() {
-                    _animationType = MeshNodeAnimationType.tumble;
+                    _animationType = MeshNodeAnimationType.none;
                     _size = 200;
                     _glowIntensity = 0.8;
                     _selectedColorPreset = 0;
                     _useAccelerometer = true;
-                    _accelerometerSensitivity = 2.5;
-                    _accelerometerSmoothing = 0.5;
+                    _accelerometerSensitivity = 2.0;
+                    _accelerometerFriction = 0.96;
                   }),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildPresetButton(
-                  'Tilt Slow',
+                  'Floaty',
                   () => setState(() {
                     _animationType = MeshNodeAnimationType.none;
-                    _size = 150;
+                    _size = 200;
                     _glowIntensity = 0.6;
                     _selectedColorPreset = 4;
                     _useAccelerometer = true;
                     _accelerometerSensitivity = 0.8;
-                    _accelerometerSmoothing = 0.92;
+                    _accelerometerFriction = 0.995;
                   }),
                 ),
               ),
@@ -1077,9 +1081,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         snippet +=
             '  accelerometerSensitivity: ${_accelerometerSensitivity.toStringAsFixed(1)},\n';
       }
-      if (_accelerometerSmoothing != 0.8) {
+      if (_accelerometerFriction != 0.985) {
         snippet +=
-            '  smoothing: ${_accelerometerSmoothing.toStringAsFixed(2)},\n';
+            '  friction: ${_accelerometerFriction.toStringAsFixed(3)},\n';
       }
     }
 

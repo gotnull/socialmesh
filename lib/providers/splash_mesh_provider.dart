@@ -14,11 +14,11 @@ class SplashMeshConfig {
   final List<Color> gradientColors;
   final bool useAccelerometer;
   final double accelerometerSensitivity;
-  final double accelerometerSmoothing;
+  final double accelerometerFriction;
 
   const SplashMeshConfig({
     this.size = 300,
-    this.animationType = MeshNodeAnimationType.tumble,
+    this.animationType = MeshNodeAnimationType.none,
     this.glowIntensity = 0.5,
     this.lineThickness = 0.5,
     this.nodeSize = 0.8,
@@ -29,7 +29,7 @@ class SplashMeshConfig {
     ],
     this.useAccelerometer = true,
     this.accelerometerSensitivity = 1.0,
-    this.accelerometerSmoothing = 0.8,
+    this.accelerometerFriction = 0.985,
   });
 
   /// Default configuration
@@ -54,7 +54,7 @@ final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
 
   final size = prefs.getDouble('splash_mesh_size') ?? 300;
   final animationTypeName =
-      prefs.getString('splash_mesh_animation_type') ?? 'tumble';
+      prefs.getString('splash_mesh_animation_type') ?? 'none';
   final glowIntensity = prefs.getDouble('splash_mesh_glow_intensity') ?? 0.5;
   final lineThickness = prefs.getDouble('splash_mesh_line_thickness') ?? 0.5;
   final nodeSize = prefs.getDouble('splash_mesh_node_size') ?? 0.8;
@@ -66,11 +66,11 @@ final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
       prefs.getBool('splash_mesh_use_accelerometer') ?? true;
   final accelSensitivity =
       prefs.getDouble('splash_mesh_accel_sensitivity') ?? 1.0;
-  final accelSmoothing = prefs.getDouble('splash_mesh_accel_smoothing') ?? 0.8;
+  final accelFriction = prefs.getDouble('splash_mesh_accel_friction') ?? 0.985;
 
   final animationType = MeshNodeAnimationType.values.firstWhere(
     (t) => t.name == animationTypeName,
-    orElse: () => MeshNodeAnimationType.tumble,
+    orElse: () => MeshNodeAnimationType.none,
   );
 
   return SplashMeshConfig(
@@ -82,7 +82,7 @@ final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
     gradientColors: splashMeshColorPresets[colorPreset],
     useAccelerometer: useAccelerometer,
     accelerometerSensitivity: accelSensitivity,
-    accelerometerSmoothing: accelSmoothing,
+    accelerometerFriction: accelFriction,
   );
 });
 
@@ -111,7 +111,7 @@ class ConfiguredSplashMeshNode extends ConsumerWidget {
         nodeSize: config.nodeSize,
         gradientColors: config.gradientColors,
         accelerometerSensitivity: config.accelerometerSensitivity,
-        smoothing: config.accelerometerSmoothing,
+        friction: config.accelerometerFriction,
       );
     } else {
       return AnimatedMeshNode(

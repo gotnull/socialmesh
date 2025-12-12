@@ -362,7 +362,7 @@ class SettingsService {
     required int colorPreset,
     required bool useAccelerometer,
     required double accelerometerSensitivity,
-    required double accelerometerSmoothing,
+    required double accelerometerFriction,
   }) async {
     await _preferences.setDouble('splash_mesh_size', size);
     await _preferences.setString('splash_mesh_animation_type', animationType);
@@ -379,15 +379,15 @@ class SettingsService {
       accelerometerSensitivity,
     );
     await _preferences.setDouble(
-      'splash_mesh_accel_smoothing',
-      accelerometerSmoothing,
+      'splash_mesh_accel_friction',
+      accelerometerFriction,
     );
   }
 
   double get splashMeshSize =>
       _preferences.getDouble('splash_mesh_size') ?? 300;
   String get splashMeshAnimationType =>
-      _preferences.getString('splash_mesh_animation_type') ?? 'tumble';
+      _preferences.getString('splash_mesh_animation_type') ?? 'none';
   double get splashMeshGlowIntensity =>
       _preferences.getDouble('splash_mesh_glow_intensity') ?? 0.5;
   double get splashMeshLineThickness =>
@@ -400,8 +400,8 @@ class SettingsService {
       _preferences.getBool('splash_mesh_use_accelerometer') ?? true;
   double get splashMeshAccelSensitivity =>
       _preferences.getDouble('splash_mesh_accel_sensitivity') ?? 1.0;
-  double get splashMeshAccelSmoothing =>
-      _preferences.getDouble('splash_mesh_accel_smoothing') ?? 0.8;
+  double get splashMeshAccelFriction =>
+      _preferences.getDouble('splash_mesh_accel_friction') ?? 0.985;
 
   Future<void> resetSplashMeshConfig() async {
     await _preferences.remove('splash_mesh_size');
@@ -412,7 +412,7 @@ class SettingsService {
     await _preferences.remove('splash_mesh_color_preset');
     await _preferences.remove('splash_mesh_use_accelerometer');
     await _preferences.remove('splash_mesh_accel_sensitivity');
-    await _preferences.remove('splash_mesh_accel_smoothing');
+    await _preferences.remove('splash_mesh_accel_friction');
   }
 }
 

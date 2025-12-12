@@ -621,13 +621,14 @@ extension MeshNodeLoadingIndicator on BuildContext {
   }
 }
 
-/// An AnimatedMeshNode that responds to device accelerometer for interactive rotation.
-/// Tilting the device left/right and forward/back will influence the mesh rotation.
+/// An AnimatedMeshNode that responds to device accelerometer with momentum physics.
+/// Flicking the device imparts angular velocity that gradually decays with friction.
+/// Like spinning a basketball - flick it and it keeps spinning, slowing down smoothly.
 class AccelerometerMeshNode extends StatefulWidget {
   /// The size of the mesh node
   final double size;
 
-  /// The animation type to use
+  /// The animation type to use (set to none for pure physics control)
   final MeshNodeAnimationType animationType;
 
   /// Animation duration
@@ -648,11 +649,14 @@ class AccelerometerMeshNode extends StatefulWidget {
   /// Node (vertex) size multiplier
   final double nodeSize;
 
-  /// Sensitivity of accelerometer influence (higher = more responsive)
+  /// Sensitivity - how much acceleration translates to angular velocity
   final double accelerometerSensitivity;
 
-  /// Smoothing factor for accelerometer input (0.0 - 1.0, higher = smoother)
-  final double smoothing;
+  /// Friction/drag coefficient (0.0 - 1.0) - higher = slower decay
+  /// 0.99 = very slow decay (spins for a long time)
+  /// 0.95 = medium decay
+  /// 0.90 = fast decay (stops quickly)
+  final double friction;
 
   const AccelerometerMeshNode({
     super.key,
@@ -665,23 +669,49 @@ class AccelerometerMeshNode extends StatefulWidget {
     this.lineThickness = 1.0,
     this.nodeSize = 1.0,
     this.accelerometerSensitivity = 1.0,
-    this.smoothing = 0.8,
+    this.friction = 0.985,
   });
 
   @override
   State<AccelerometerMeshNode> createState() => _AccelerometerMeshNodeState();
 }
 
-class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode> {
+class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
+    with SingleTickerProviderStateMixin {
   StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
+  late AnimationController _physicsController;
+
+  // Current rotation angles (accumulative)
   double _rotationX = 0.0;
   double _rotationY = 0.0;
-  double _targetRotationX = 0.0;
-  double _targetRotationY = 0.0;
+  double _rotationZ = 0.0;
+
+  // Angular velocities (radians per frame)
+  double _velocityX = 0.0;
+  double _velocityY = 0.0;
+  double _velocityZ = 0.0;
+
+  // Previous accelerometer values for detecting changes (flicks)
+  double _prevAccelX = 0.0;
+  double _prevAccelY = 0.0;
+  double _prevAccelZ = 0.0;
+
+  // Smoothed accelerometer values
+  double _smoothAccelX = 0.0;
+  double _smoothAccelY = 0.0;
+  double _smoothAccelZ = 0.0;
 
   @override
   void initState() {
     super.initState();
+
+    // Physics update loop at 60fps
+    _physicsController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat();
+
+    _physicsController.addListener(_updatePhysics);
     _startAccelerometer();
   }
 
@@ -692,32 +722,84 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode> {
         ).listen((event) {
           if (!mounted) return;
 
-          // Map accelerometer values to rotation
-          // X accelerometer = tilt left/right = rotate around Y axis
-          // Y accelerometer = tilt forward/back = rotate around X axis
-          // Accelerometer typically ranges -10 to 10 (m/s²), with gravity ~9.8
-          final sensitivity = widget.accelerometerSensitivity;
+          // Smooth the accelerometer input to reduce noise
+          const smoothFactor = 0.3;
+          _smoothAccelX =
+              _smoothAccelX * (1 - smoothFactor) + event.x * smoothFactor;
+          _smoothAccelY =
+              _smoothAccelY * (1 - smoothFactor) + event.y * smoothFactor;
+          _smoothAccelZ =
+              _smoothAccelZ * (1 - smoothFactor) + event.z * smoothFactor;
 
-          // Scale accelerometer input directly to radians
-          // Dividing by 5 gives ~±45° range at full tilt
-          _targetRotationY = event.x * sensitivity * 0.2;
-          _targetRotationX = event.y * sensitivity * 0.2;
+          // Calculate acceleration delta (jerk) - this detects flicks/movements
+          final deltaX = _smoothAccelX - _prevAccelX;
+          final deltaY = _smoothAccelY - _prevAccelY;
+          final deltaZ = _smoothAccelZ - _prevAccelZ;
 
-          // Apply smoothing for fluid motion
-          setState(() {
-            _rotationX =
-                _rotationX * widget.smoothing +
-                _targetRotationX * (1 - widget.smoothing);
-            _rotationY =
-                _rotationY * widget.smoothing +
-                _targetRotationY * (1 - widget.smoothing);
-          });
+          // Store for next frame
+          _prevAccelX = _smoothAccelX;
+          _prevAccelY = _smoothAccelY;
+          _prevAccelZ = _smoothAccelZ;
+
+          // Convert acceleration changes to angular velocity impulses
+          // Flicking phone forward (Y accel change) = spin around X axis
+          // Flicking phone left/right (X accel change) = spin around Y axis
+          // Twisting phone (Z accel change) = spin around Z axis
+          final sensitivity = widget.accelerometerSensitivity * 0.08;
+
+          // Only apply impulse if the delta is significant (noise threshold)
+          const threshold = 0.15;
+
+          if (deltaX.abs() > threshold) {
+            _velocityY += deltaX * sensitivity;
+          }
+          if (deltaY.abs() > threshold) {
+            _velocityX -= deltaY * sensitivity;
+          }
+          if (deltaZ.abs() > threshold) {
+            _velocityZ += deltaZ * sensitivity * 0.5;
+          }
+
+          // Clamp max velocity to prevent insane spinning
+          const maxVelocity = 0.8;
+          _velocityX = _velocityX.clamp(-maxVelocity, maxVelocity);
+          _velocityY = _velocityY.clamp(-maxVelocity, maxVelocity);
+          _velocityZ = _velocityZ.clamp(-maxVelocity, maxVelocity);
         });
+  }
+
+  void _updatePhysics() {
+    if (!mounted) return;
+
+    setState(() {
+      // Apply velocities to rotation
+      _rotationX += _velocityX;
+      _rotationY += _velocityY;
+      _rotationZ += _velocityZ;
+
+      // Apply friction - exponential decay
+      _velocityX *= widget.friction;
+      _velocityY *= widget.friction;
+      _velocityZ *= widget.friction;
+
+      // Stop very small velocities to save CPU
+      if (_velocityX.abs() < 0.0001) _velocityX = 0;
+      if (_velocityY.abs() < 0.0001) _velocityY = 0;
+      if (_velocityZ.abs() < 0.0001) _velocityZ = 0;
+
+      // Keep rotation angles bounded (optional, for numerical stability)
+      const twoPi = 2 * math.pi;
+      _rotationX = _rotationX % twoPi;
+      _rotationY = _rotationY % twoPi;
+      _rotationZ = _rotationZ % twoPi;
+    });
   }
 
   @override
   void dispose() {
     _accelerometerSubscription?.cancel();
+    _physicsController.removeListener(_updatePhysics);
+    _physicsController.dispose();
     super.dispose();
   }
 
