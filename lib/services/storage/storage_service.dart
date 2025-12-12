@@ -365,8 +365,9 @@ class SettingsService {
     required double accelerometerFriction,
     String physicsMode = 'momentum',
     bool enableTouch = true,
-    bool enablePullToStretch = true,
-    double touchIntensity = 1.0,
+    bool enablePullToStretch = false,
+    double touchIntensity = 0.5,
+    double stretchIntensity = 0.3,
   }) async {
     await _preferences.setDouble('splash_mesh_size', size);
     await _preferences.setString('splash_mesh_animation_type', animationType);
@@ -393,12 +394,16 @@ class SettingsService {
       enablePullToStretch,
     );
     await _preferences.setDouble('splash_mesh_touch_intensity', touchIntensity);
+    await _preferences.setDouble(
+      'splash_mesh_stretch_intensity',
+      stretchIntensity,
+    );
   }
 
   double get splashMeshSize =>
       _preferences.getDouble('splash_mesh_size') ?? 600;
   String get splashMeshAnimationType =>
-      _preferences.getString('splash_mesh_animation_type') ?? 'none';
+      _preferences.getString('splash_mesh_animation_type') ?? 'tumble';
   double get splashMeshGlowIntensity =>
       _preferences.getDouble('splash_mesh_glow_intensity') ?? 0.5;
   double get splashMeshLineThickness =>
@@ -410,17 +415,19 @@ class SettingsService {
   bool get splashMeshUseAccelerometer =>
       _preferences.getBool('splash_mesh_use_accelerometer') ?? true;
   double get splashMeshAccelSensitivity =>
-      _preferences.getDouble('splash_mesh_accel_sensitivity') ?? 1.0;
+      _preferences.getDouble('splash_mesh_accel_sensitivity') ?? 0.5;
   double get splashMeshAccelFriction =>
-      _preferences.getDouble('splash_mesh_accel_friction') ?? 0.985;
+      _preferences.getDouble('splash_mesh_accel_friction') ?? 0.97;
   String get splashMeshPhysicsMode =>
       _preferences.getString('splash_mesh_physics_mode') ?? 'momentum';
   bool get splashMeshEnableTouch =>
       _preferences.getBool('splash_mesh_enable_touch') ?? true;
   bool get splashMeshEnablePullToStretch =>
-      _preferences.getBool('splash_mesh_enable_pull_to_stretch') ?? true;
+      _preferences.getBool('splash_mesh_enable_pull_to_stretch') ?? false;
   double get splashMeshTouchIntensity =>
-      _preferences.getDouble('splash_mesh_touch_intensity') ?? 1.0;
+      _preferences.getDouble('splash_mesh_touch_intensity') ?? 0.5;
+  double get splashMeshStretchIntensity =>
+      _preferences.getDouble('splash_mesh_stretch_intensity') ?? 0.3;
 
   Future<void> resetSplashMeshConfig() async {
     await _preferences.remove('splash_mesh_size');
@@ -436,6 +443,7 @@ class SettingsService {
     await _preferences.remove('splash_mesh_enable_touch');
     await _preferences.remove('splash_mesh_enable_pull_to_stretch');
     await _preferences.remove('splash_mesh_touch_intensity');
+    await _preferences.remove('splash_mesh_stretch_intensity');
   }
 }
 

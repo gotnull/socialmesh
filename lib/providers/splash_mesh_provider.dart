@@ -19,25 +19,27 @@ class SplashMeshConfig {
   final bool enableTouch;
   final bool enablePullToStretch;
   final double touchIntensity;
+  final double stretchIntensity;
 
   const SplashMeshConfig({
-    this.size = 300,
-    this.animationType = MeshNodeAnimationType.none,
-    this.glowIntensity = 1.0,
+    this.size = 600,
+    this.animationType = MeshNodeAnimationType.tumble,
+    this.glowIntensity = 0.5,
     this.lineThickness = 0.5,
-    this.nodeSize = 0.5,
+    this.nodeSize = 0.8,
     this.gradientColors = const [
       Color(0xFFFF6B4A),
       Color(0xFFE91E8C),
       Color(0xFF4F6AF6),
     ],
     this.useAccelerometer = true,
-    this.accelerometerSensitivity = 1.0,
-    this.accelerometerFriction = 0.985,
+    this.accelerometerSensitivity = 0.5,
+    this.accelerometerFriction = 0.97,
     this.physicsMode = MeshPhysicsMode.momentum,
-    this.enableTouch = true, // Touch + accelerometer work together
-    this.enablePullToStretch = true, // Mario 64 style vertex pulling
-    this.touchIntensity = 1.0,
+    this.enableTouch = true,
+    this.enablePullToStretch = false,
+    this.touchIntensity = 0.5,
+    this.stretchIntensity = 0.3,
   });
 
   /// Default configuration
@@ -73,14 +75,16 @@ final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
   final useAccelerometer =
       prefs.getBool('splash_mesh_use_accelerometer') ?? true;
   final accelSensitivity =
-      prefs.getDouble('splash_mesh_accel_sensitivity') ?? 1.0;
-  final accelFriction = prefs.getDouble('splash_mesh_accel_friction') ?? 0.985;
+      prefs.getDouble('splash_mesh_accel_sensitivity') ?? 0.5;
+  final accelFriction = prefs.getDouble('splash_mesh_accel_friction') ?? 0.97;
   final physicsModeName =
       prefs.getString('splash_mesh_physics_mode') ?? 'momentum';
-  final enableTouch = prefs.getBool('splash_mesh_enable_touch') ?? false;
+  final enableTouch = prefs.getBool('splash_mesh_enable_touch') ?? true;
   final enablePullToStretch =
-      prefs.getBool('splash_mesh_enable_pull_to_stretch') ?? true;
-  final touchIntensity = prefs.getDouble('splash_mesh_touch_intensity') ?? 1.0;
+      prefs.getBool('splash_mesh_enable_pull_to_stretch') ?? false;
+  final touchIntensity = prefs.getDouble('splash_mesh_touch_intensity') ?? 0.5;
+  final stretchIntensity =
+      prefs.getDouble('splash_mesh_stretch_intensity') ?? 0.3;
 
   final animationType = MeshNodeAnimationType.values.firstWhere(
     (t) => t.name == animationTypeName,
@@ -106,6 +110,7 @@ final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
     enableTouch: enableTouch,
     enablePullToStretch: enablePullToStretch,
     touchIntensity: touchIntensity,
+    stretchIntensity: stretchIntensity,
   );
 });
 
@@ -143,6 +148,7 @@ class ConfiguredSplashMeshNode extends ConsumerWidget {
       enableTouch: config.enableTouch,
       enablePullToStretch: config.enablePullToStretch,
       touchIntensity: config.touchIntensity,
+      stretchIntensity: config.stretchIntensity,
     );
   }
 }

@@ -99,6 +99,9 @@ class AnimatedMeshNode extends StatefulWidget {
   /// Where to drag the grabbed vertex (in normalized 0-1 coordinates)
   final Offset? dragPosition;
 
+  /// How much the grabbed vertex can stretch (0.0 = none, 1.0 = full)
+  final double stretchIntensity;
+
   /// Callback when animation completes one cycle
   final VoidCallback? onAnimationCycle;
 
@@ -116,6 +119,7 @@ class AnimatedMeshNode extends StatefulWidget {
     this.externalRotationY = 0.0,
     this.grabbedVertexIndex = -1,
     this.dragPosition,
+    this.stretchIntensity = 0.3,
     this.onAnimationCycle,
   });
 
@@ -353,6 +357,7 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
         rotationZ: rotationZ,
         grabbedVertexIndex: widget.grabbedVertexIndex,
         dragPosition: widget.dragPosition,
+        stretchIntensity: widget.stretchIntensity,
       ),
     );
 
@@ -444,6 +449,9 @@ class _IcosahedronPainter extends CustomPainter {
   /// Where to drag the grabbed vertex (in normalized 0-1 coordinates)
   final Offset? dragPosition;
 
+  /// How much the grabbed vertex can stretch (0.0 = none, 1.0 = full)
+  final double stretchIntensity;
+
   _IcosahedronPainter({
     required this.gradientColors,
     required this.glowIntensity,
@@ -454,6 +462,7 @@ class _IcosahedronPainter extends CustomPainter {
     required this.rotationZ,
     this.grabbedVertexIndex = -1,
     this.dragPosition,
+    this.stretchIntensity = 0.3,
   });
 
   // Golden ratio for icosahedron
@@ -569,7 +578,8 @@ class _IcosahedronPainter extends CustomPainter {
   List<Offset> _applyDeformation(List<Offset> points, Size size) {
     if (grabbedVertexIndex < 0 ||
         grabbedVertexIndex >= points.length ||
-        dragPosition == null) {
+        dragPosition == null ||
+        stretchIntensity <= 0) {
       return points;
     }
 
@@ -579,9 +589,15 @@ class _IcosahedronPainter extends CustomPainter {
       dragPosition!.dy * size.height,
     );
 
-    // Copy all points, but move the grabbed vertex to the drag position
+    // Get original position of grabbed vertex
+    final originalPos = points[grabbedVertexIndex];
+
+    // Lerp between original and drag position based on stretch intensity
+    final stretchedPos = Offset.lerp(originalPos, dragPixel, stretchIntensity)!;
+
+    // Copy all points, but move the grabbed vertex to the stretched position
     final deformed = List<Offset>.from(points);
-    deformed[grabbedVertexIndex] = dragPixel;
+    deformed[grabbedVertexIndex] = stretchedPos;
 
     return deformed;
   }
@@ -694,7 +710,8 @@ class _IcosahedronPainter extends CustomPainter {
         oldDelegate.lineThickness != lineThickness ||
         oldDelegate.nodeSize != nodeSize ||
         oldDelegate.grabbedVertexIndex != grabbedVertexIndex ||
-        oldDelegate.dragPosition != dragPosition;
+        oldDelegate.dragPosition != dragPosition ||
+        oldDelegate.stretchIntensity != stretchIntensity;
   }
 }
 
@@ -762,23 +779,27 @@ class AccelerometerMeshNode extends StatefulWidget {
   /// Intensity of touch-induced rotation (0.0 - 2.0)
   final double touchIntensity;
 
+  /// How much the grabbed vertex can stretch (0.0 = none, 1.0 = full)
+  final double stretchIntensity;
+
   const AccelerometerMeshNode({
     super.key,
-    this.size = 48,
+    this.size = 600,
     this.animationType = MeshNodeAnimationType.tumble,
     this.duration,
     this.animate = true,
     this.gradientColors,
-    this.glowIntensity = 0.6,
-    this.lineThickness = 1.0,
-    this.nodeSize = 1.0,
-    this.accelerometerSensitivity = 0.15,
+    this.glowIntensity = 0.5,
+    this.lineThickness = 0.5,
+    this.nodeSize = 0.8,
+    this.accelerometerSensitivity = 0.5,
     this.smoothing = 0.85,
-    this.friction = 0.985,
+    this.friction = 0.97,
     this.physicsMode = MeshPhysicsMode.momentum,
-    this.enableTouch = false,
-    this.enablePullToStretch = true,
-    this.touchIntensity = 1.0,
+    this.enableTouch = true,
+    this.enablePullToStretch = false,
+    this.touchIntensity = 0.5,
+    this.stretchIntensity = 0.3,
   });
 
   @override
@@ -1149,6 +1170,7 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
         externalRotationY: _rotationY,
         grabbedVertexIndex: activeVertexIndex,
         dragPosition: _dragPosition,
+        stretchIntensity: widget.stretchIntensity,
       ),
     );
   }

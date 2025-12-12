@@ -20,21 +20,22 @@ class DebugSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
-  // Mesh node playground state
-  MeshNodeAnimationType _animationType = MeshNodeAnimationType.pulse;
-  double _size = 96;
-  double _glowIntensity = 0.6;
-  double _lineThickness = 1.0;
-  double _nodeSize = 1.0;
+  // Mesh node playground state - defaults match user requirements
+  MeshNodeAnimationType _animationType = MeshNodeAnimationType.tumble;
+  double _size = 600;
+  double _glowIntensity = 0.5;
+  double _lineThickness = 0.5;
+  double _nodeSize = 0.8;
   bool _animate = true;
-  int _selectedColorPreset = 0;
-  bool _useAccelerometer = false;
-  double _accelerometerSensitivity = 1.0;
-  double _accelerometerFriction = 0.985;
+  int _selectedColorPreset = 0; // Brand
+  bool _useAccelerometer = true;
+  double _accelerometerSensitivity = 0.5;
+  double _accelerometerFriction = 0.97; // Low friction
   MeshPhysicsMode _physicsMode = MeshPhysicsMode.momentum;
   bool _enableTouch = true;
-  bool _enablePullToStretch = true;
-  double _touchIntensity = 1.0;
+  bool _enablePullToStretch = false;
+  double _touchIntensity = 0.5; // Subtle
+  double _stretchIntensity = 0.3;
 
   SettingsService? _settingsService;
   bool _hasUnsavedChanges = false;
@@ -103,6 +104,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       _enableTouch = _settingsService!.splashMeshEnableTouch;
       _enablePullToStretch = _settingsService!.splashMeshEnablePullToStretch;
       _touchIntensity = _settingsService!.splashMeshTouchIntensity;
+      _stretchIntensity = _settingsService!.splashMeshStretchIntensity;
       _hasUnsavedChanges = false;
     });
   }
@@ -124,6 +126,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       enableTouch: _enableTouch,
       enablePullToStretch: _enablePullToStretch,
       touchIntensity: _touchIntensity,
+      stretchIntensity: _stretchIntensity,
     );
 
     setState(() => _hasUnsavedChanges = false);
@@ -259,6 +262,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                   enableTouch: _enableTouch,
                   enablePullToStretch: _enablePullToStretch,
                   touchIntensity: _touchIntensity,
+                  stretchIntensity: _stretchIntensity,
                 ),
               ),
             ),
@@ -583,6 +587,24 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               _markChanged();
             },
           ),
+          const SizedBox(height: 16),
+          // Only show stretch intensity when pull-to-stretch is enabled
+          if (_enablePullToStretch)
+            _buildSliderRow(
+              label: 'Stretch Intensity',
+              value: _stretchIntensity,
+              min: 0.1,
+              max: 1.0,
+              displayValue: _stretchIntensity >= 0.7
+                  ? 'Extreme'
+                  : _stretchIntensity >= 0.4
+                  ? 'Normal'
+                  : 'Subtle',
+              onChanged: (v) {
+                setState(() => _stretchIntensity = v);
+                _markChanged();
+              },
+            ),
           const SizedBox(height: 20),
 
           // Preset Buttons
