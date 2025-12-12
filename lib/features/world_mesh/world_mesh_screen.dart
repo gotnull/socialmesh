@@ -93,13 +93,14 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     return Scaffold(
       appBar: AppBar(
         leading: const HamburgerMenuButton(),
-        title: _showSearch
-            ? _buildSearchField(theme)
-            : const Text('World Mesh Map'),
+        title: const Text('World Mesh Map'),
         actions: [
           // Search toggle
           IconButton(
-            icon: Icon(_showSearch ? Icons.close : Icons.search),
+            icon: Icon(
+              _showSearch ? Icons.close : Icons.search,
+              color: _showSearch ? accentColor : Colors.white,
+            ),
             onPressed: () {
               setState(() {
                 _showSearch = !_showSearch;
@@ -163,36 +164,195 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           if (state.error != null && state.nodes.isEmpty) {
             return _buildErrorState(theme, state.error!);
           }
-          return _buildMap(context, theme, state);
+          return Column(
+            children: [
+              // Search bar (same design as Direct Messages)
+              if (_showSearch) _buildSearchBar(),
+              // Divider when searching
+              if (_showSearch)
+                Container(
+                  height: 1,
+                  color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                ),
+              // Search results count
+              if (_showSearch && _searchQuery.isNotEmpty)
+                _buildSearchResultsHeader(
+                  theme,
+                  ref
+                      .watch(worldMeshFilteredNodesProvider(_searchQuery))
+                      .length,
+                ),
+              // Map content (wrapping in Expanded with Stack for dropdown)
+              Expanded(
+                child: Stack(
+                  children: [
+                    _buildMap(context, theme, state),
+                    // Search results dropdown overlay
+                    if (_showSearch && _showSearchResults)
+                      _buildSearchResultsOverlay(
+                        theme,
+                        ref.watch(worldMeshFilteredNodesProvider(_searchQuery)),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          );
         },
       ),
     );
   }
 
-  Widget _buildSearchField(ThemeData theme) {
-    return TextField(
-      controller: _searchController,
-      focusNode: _searchFocusNode,
-      autofocus: true,
-      style: const TextStyle(fontSize: 16, color: Colors.white),
-      decoration: InputDecoration(
-        hintText: 'Search by name, ID, or region...',
-        border: InputBorder.none,
-        hintStyle: TextStyle(color: AppTheme.textTertiary, fontSize: 14),
-        isDense: true,
-        contentPadding: EdgeInsets.zero,
+  /// Build search bar widget matching direct messages design
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.darkCard,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: TextField(
+          controller: _searchController,
+          focusNode: _searchFocusNode,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            hintText: 'Find a node',
+            hintStyle: TextStyle(color: AppTheme.textTertiary),
+            prefixIcon: Icon(Icons.search, color: AppTheme.textTertiary),
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+          onChanged: (value) {
+            setState(() {
+              _searchQuery = value;
+              _showSearchResults = value.isNotEmpty;
+            });
+          },
+        ),
       ),
-      onChanged: (value) {
-        setState(() {
-          _searchQuery = value;
-          _showSearchResults = value.isNotEmpty;
-        });
-      },
-      onTap: () {
-        if (_searchQuery.isNotEmpty) {
-          setState(() => _showSearchResults = true);
-        }
-      },
+    );
+  }
+
+  /// Build search results header showing count (matching direct messages)
+  Widget _buildSearchResultsHeader(ThemeData theme, int count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: AppTheme.darkCard,
+      child: Row(
+        children: [
+          Icon(
+            Icons.info_outline,
+            size: 16,
+            color: AppTheme.textSecondary.withValues(alpha: 0.8),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$count node${count == 1 ? '' : 's'} found',
+            style: TextStyle(
+              fontSize: 13,
+              color: AppTheme.textSecondary.withValues(alpha: 0.8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build search results overlay dropdown
+  Widget _buildSearchResultsOverlay(
+    ThemeData theme,
+    List<WorldMeshNode> results,
+  ) {
+    if (results.isEmpty) return const SizedBox.shrink();
+
+    final accentColor = theme.colorScheme.primary;
+    final displayResults = results.take(10).toList();
+
+    return Positioned(
+      left: 8,
+      right: 8,
+      top: 0,
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 350),
+        decoration: BoxDecoration(
+          color: AppTheme.darkCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.darkBorder),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Results header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  Text(
+                    '${results.length} RESULTS',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textTertiary,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (results.length > 10)
+                    Text(
+                      'Showing first 10',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.textTertiary,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: AppTheme.darkBorder),
+            // Results list
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: displayResults.length,
+                itemBuilder: (context, index) {
+                  final node = displayResults[index];
+                  return _SearchResultTile(
+                    node: node,
+                    accentColor: accentColor,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      // Only navigate to the node location - don't show info card
+                      setState(() {
+                        _showSearchResults = false;
+                        _showSearch = false;
+                        _searchQuery = '';
+                        _searchController.clear();
+                        // Clear any selected node so info card doesn't show
+                        _selectedNode = null;
+                      });
+                      // Animate to the node
+                      _animatedMove(
+                        LatLng(node.latitudeDecimal, node.longitudeDecimal),
+                        12.0,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -236,14 +396,8 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     ThemeData theme,
     WorldMeshMapState state,
   ) {
-    // Get filtered nodes for display (only used for the map, not search results)
+    // Get filtered nodes for display
     final displayNodes = state.nodesWithPosition;
-
-    // Get search results separately - show all matching nodes
-    final searchResults = _searchQuery.isEmpty
-        ? <WorldMeshNode>[]
-        : ref.watch(worldMeshFilteredNodesProvider(_searchQuery));
-
     final accentColor = theme.colorScheme.primary;
 
     return Stack(
@@ -403,15 +557,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           ),
         ),
 
-        // Search results dropdown
-        if (_showSearch && _showSearchResults && searchResults.isNotEmpty)
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 0,
-            child: _buildSearchResults(theme, searchResults),
-          ),
-
         // Use shared map controls with ValueListenableBuilder for zoom state
         _MapControlsWithZoomState(
           mapController: _mapController,
@@ -473,92 +618,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           child: _buildStatsBar(theme, state, displayNodes.length),
         ),
       ],
-    );
-  }
-
-  Widget _buildSearchResults(ThemeData theme, List<WorldMeshNode> results) {
-    final accentColor = theme.colorScheme.primary;
-    // Show max 10 results
-    final displayResults = results.take(10).toList();
-
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 350),
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.darkCard,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Results header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Row(
-              children: [
-                Text(
-                  '${results.length} RESULTS',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textTertiary,
-                    letterSpacing: 1,
-                  ),
-                ),
-                const Spacer(),
-                if (results.length > 10)
-                  Text(
-                    'Showing first 10',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppTheme.textTertiary,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
-          // Results list
-          Flexible(
-            child: ListView.builder(
-              shrinkWrap: true,
-              padding: EdgeInsets.zero,
-              itemCount: displayResults.length,
-              itemBuilder: (context, index) {
-                final node = displayResults[index];
-                return _SearchResultTile(
-                  node: node,
-                  accentColor: accentColor,
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    setState(() {
-                      _selectedNode = node;
-                      _showSearchResults = false;
-                      _showSearch = false;
-                      _searchQuery = '';
-                      _searchController.clear();
-                    });
-                    // Animate to the node
-                    _animatedMove(
-                      LatLng(node.latitudeDecimal, node.longitudeDecimal),
-                      12.0,
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
     );
   }
 
