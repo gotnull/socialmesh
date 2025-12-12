@@ -363,6 +363,9 @@ class SettingsService {
     required bool useAccelerometer,
     required double accelerometerSensitivity,
     required double accelerometerFriction,
+    String physicsMode = 'momentum',
+    bool enableTouch = true,
+    double touchIntensity = 1.0,
   }) async {
     await _preferences.setDouble('splash_mesh_size', size);
     await _preferences.setString('splash_mesh_animation_type', animationType);
@@ -382,6 +385,9 @@ class SettingsService {
       'splash_mesh_accel_friction',
       accelerometerFriction,
     );
+    await _preferences.setString('splash_mesh_physics_mode', physicsMode);
+    await _preferences.setBool('splash_mesh_enable_touch', enableTouch);
+    await _preferences.setDouble('splash_mesh_touch_intensity', touchIntensity);
   }
 
   double get splashMeshSize =>
@@ -402,6 +408,12 @@ class SettingsService {
       _preferences.getDouble('splash_mesh_accel_sensitivity') ?? 1.0;
   double get splashMeshAccelFriction =>
       _preferences.getDouble('splash_mesh_accel_friction') ?? 0.985;
+  String get splashMeshPhysicsMode =>
+      _preferences.getString('splash_mesh_physics_mode') ?? 'momentum';
+  bool get splashMeshEnableTouch =>
+      _preferences.getBool('splash_mesh_enable_touch') ?? true;
+  double get splashMeshTouchIntensity =>
+      _preferences.getDouble('splash_mesh_touch_intensity') ?? 1.0;
 
   Future<void> resetSplashMeshConfig() async {
     await _preferences.remove('splash_mesh_size');
@@ -413,6 +425,9 @@ class SettingsService {
     await _preferences.remove('splash_mesh_use_accelerometer');
     await _preferences.remove('splash_mesh_accel_sensitivity');
     await _preferences.remove('splash_mesh_accel_friction');
+    await _preferences.remove('splash_mesh_physics_mode');
+    await _preferences.remove('splash_mesh_enable_touch');
+    await _preferences.remove('splash_mesh_touch_intensity');
   }
 }
 

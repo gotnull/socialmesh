@@ -15,6 +15,9 @@ class SplashMeshConfig {
   final bool useAccelerometer;
   final double accelerometerSensitivity;
   final double accelerometerFriction;
+  final MeshPhysicsMode physicsMode;
+  final bool enableTouch;
+  final double touchIntensity;
 
   const SplashMeshConfig({
     this.size = 300,
@@ -30,6 +33,9 @@ class SplashMeshConfig {
     this.useAccelerometer = true,
     this.accelerometerSensitivity = 1.0,
     this.accelerometerFriction = 0.985,
+    this.physicsMode = MeshPhysicsMode.momentum,
+    this.enableTouch = false, // Off by default - experimental feature
+    this.touchIntensity = 1.0,
   });
 
   /// Default configuration
@@ -67,10 +73,19 @@ final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
   final accelSensitivity =
       prefs.getDouble('splash_mesh_accel_sensitivity') ?? 1.0;
   final accelFriction = prefs.getDouble('splash_mesh_accel_friction') ?? 0.985;
+  final physicsModeName =
+      prefs.getString('splash_mesh_physics_mode') ?? 'momentum';
+  final enableTouch = prefs.getBool('splash_mesh_enable_touch') ?? false;
+  final touchIntensity = prefs.getDouble('splash_mesh_touch_intensity') ?? 1.0;
 
   final animationType = MeshNodeAnimationType.values.firstWhere(
     (t) => t.name == animationTypeName,
     orElse: () => MeshNodeAnimationType.none,
+  );
+
+  final physicsMode = MeshPhysicsMode.values.firstWhere(
+    (m) => m.name == physicsModeName,
+    orElse: () => MeshPhysicsMode.momentum,
   );
 
   return SplashMeshConfig(
@@ -83,6 +98,9 @@ final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
     useAccelerometer: useAccelerometer,
     accelerometerSensitivity: accelSensitivity,
     accelerometerFriction: accelFriction,
+    physicsMode: physicsMode,
+    enableTouch: enableTouch,
+    touchIntensity: touchIntensity,
   );
 });
 
@@ -112,6 +130,9 @@ class ConfiguredSplashMeshNode extends ConsumerWidget {
         gradientColors: config.gradientColors,
         accelerometerSensitivity: config.accelerometerSensitivity,
         friction: config.accelerometerFriction,
+        physicsMode: config.physicsMode,
+        enableTouch: config.enableTouch,
+        touchIntensity: config.touchIntensity,
       );
     } else {
       return AnimatedMeshNode(

@@ -31,6 +31,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   bool _useAccelerometer = false;
   double _accelerometerSensitivity = 1.0;
   double _accelerometerFriction = 0.985;
+  MeshPhysicsMode _physicsMode = MeshPhysicsMode.momentum;
+  bool _enableTouch = true;
+  double _touchIntensity = 1.0;
 
   SettingsService? _settingsService;
   bool _hasUnsavedChanges = false;
@@ -92,6 +95,12 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       _useAccelerometer = _settingsService!.splashMeshUseAccelerometer;
       _accelerometerSensitivity = _settingsService!.splashMeshAccelSensitivity;
       _accelerometerFriction = _settingsService!.splashMeshAccelFriction;
+      _physicsMode = MeshPhysicsMode.values.firstWhere(
+        (m) => m.name == _settingsService!.splashMeshPhysicsMode,
+        orElse: () => MeshPhysicsMode.momentum,
+      );
+      _enableTouch = _settingsService!.splashMeshEnableTouch;
+      _touchIntensity = _settingsService!.splashMeshTouchIntensity;
       _hasUnsavedChanges = false;
     });
   }
@@ -109,6 +118,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       useAccelerometer: _useAccelerometer,
       accelerometerSensitivity: _accelerometerSensitivity,
       accelerometerFriction: _accelerometerFriction,
+      physicsMode: _physicsMode.name,
+      enableTouch: _enableTouch,
+      touchIntensity: _touchIntensity,
     );
 
     setState(() => _hasUnsavedChanges = false);
@@ -232,6 +244,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                       gradientColors: _colorPresets[_selectedColorPreset],
                       accelerometerSensitivity: _accelerometerSensitivity,
                       friction: _accelerometerFriction,
+                      physicsMode: _physicsMode,
+                      enableTouch: _enableTouch,
+                      touchIntensity: _touchIntensity,
                     )
                   : AnimatedMeshNode(
                       size: _size,
@@ -423,6 +438,55 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
 
           // Accelerometer controls (only visible when enabled)
           if (_useAccelerometer) ...[
+            _buildSectionLabel('Physics Mode'),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: MeshPhysicsMode.values.map((mode) {
+                final isSelected = mode == _physicsMode;
+                final label = switch (mode) {
+                  MeshPhysicsMode.momentum => '🏀 Momentum',
+                  MeshPhysicsMode.tilt => '📱 Tilt',
+                  MeshPhysicsMode.gyroscope => '🎯 Gyro',
+                  MeshPhysicsMode.chaos => '🌀 Chaos',
+                  MeshPhysicsMode.touchOnly => '👆 Touch Only',
+                };
+                return BouncyTap(
+                  onTap: () {
+                    setState(() => _physicsMode = mode);
+                    _markChanged();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? context.accentColor.withAlpha(40)
+                          : AppTheme.darkBackground,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isSelected
+                            ? context.accentColor
+                            : AppTheme.darkBorder.withAlpha(100),
+                      ),
+                    ),
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isSelected
+                            ? context.accentColor
+                            : AppTheme.textSecondary,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
             _buildSliderRow(
               label: 'Accel Sensitivity',
               value: _accelerometerSensitivity,
@@ -450,6 +514,53 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                 _markChanged();
               },
             ),
+            const SizedBox(height: 20),
+
+            // Touch Interaction
+            _buildSectionLabel('Touch Interaction (Mario 64 Style)'),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Enable Touch Deformation',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 24,
+                  child: Switch.adaptive(
+                    value: _enableTouch,
+                    activeTrackColor: context.accentColor,
+                    onChanged: (v) {
+                      setState(() => _enableTouch = v);
+                      _markChanged();
+                    },
+                  ),
+                ),
+              ],
+            ),
+            if (_enableTouch) ...[
+              const SizedBox(height: 16),
+              _buildSliderRow(
+                label: 'Touch Intensity',
+                value: _touchIntensity,
+                min: 0.1,
+                max: 2.0,
+                displayValue: _touchIntensity >= 1.5
+                    ? 'Wild'
+                    : _touchIntensity >= 1.0
+                    ? 'Normal'
+                    : 'Subtle',
+                onChanged: (v) {
+                  setState(() => _touchIntensity = v);
+                  _markChanged();
+                },
+              ),
+            ],
             const SizedBox(height: 20),
           ],
 
@@ -524,6 +635,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     _useAccelerometer = true;
                     _accelerometerSensitivity = 1.0;
                     _accelerometerFriction = 0.985;
+                    _physicsMode = MeshPhysicsMode.momentum;
+                    _enableTouch = true;
+                    _touchIntensity = 1.0;
                   }),
                 ),
               ),
@@ -539,6 +653,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     _useAccelerometer = true;
                     _accelerometerSensitivity = 2.0;
                     _accelerometerFriction = 0.96;
+                    _physicsMode = MeshPhysicsMode.momentum;
+                    _enableTouch = true;
+                    _touchIntensity = 1.5;
                   }),
                 ),
               ),
@@ -554,6 +671,66 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     _useAccelerometer = true;
                     _accelerometerSensitivity = 0.8;
                     _accelerometerFriction = 0.995;
+                    _physicsMode = MeshPhysicsMode.momentum;
+                    _enableTouch = true;
+                    _touchIntensity = 0.5;
+                  }),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Additional physics presets row
+          Row(
+            children: [
+              Expanded(
+                child: _buildPresetButton(
+                  'Chaos',
+                  () => setState(() {
+                    _animationType = MeshNodeAnimationType.none;
+                    _size = 200;
+                    _glowIntensity = 1.0;
+                    _selectedColorPreset = 6;
+                    _useAccelerometer = true;
+                    _accelerometerSensitivity = 1.5;
+                    _accelerometerFriction = 0.98;
+                    _physicsMode = MeshPhysicsMode.chaos;
+                    _enableTouch = true;
+                    _touchIntensity = 2.0;
+                  }),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildPresetButton(
+                  'Tilt',
+                  () => setState(() {
+                    _animationType = MeshNodeAnimationType.none;
+                    _size = 200;
+                    _glowIntensity = 0.6;
+                    _selectedColorPreset = 3;
+                    _useAccelerometer = true;
+                    _accelerometerSensitivity = 1.0;
+                    _physicsMode = MeshPhysicsMode.tilt;
+                    _enableTouch = false;
+                  }),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildPresetButton(
+                  'Mario 64',
+                  () => setState(() {
+                    _animationType = MeshNodeAnimationType.none;
+                    _size = 250;
+                    _glowIntensity = 0.7;
+                    _selectedColorPreset = 0;
+                    _useAccelerometer = true;
+                    _accelerometerSensitivity = 0.5;
+                    _accelerometerFriction = 0.99;
+                    _physicsMode = MeshPhysicsMode.touchOnly;
+                    _enableTouch = true;
+                    _touchIntensity = 1.5;
                   }),
                 ),
               ),

@@ -4,6 +4,24 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
+/// Physics modes for accelerometer-controlled mesh
+enum MeshPhysicsMode {
+  /// Momentum mode: accelerometer gives impulse, mesh continues spinning with friction
+  momentum,
+
+  /// Tilt mode: direct mapping where device tilt directly controls rotation (original behavior)
+  tilt,
+
+  /// Gyroscope mode: uses gyroscope for more precise rotation tracking
+  gyroscope,
+
+  /// Chaos mode: random perturbations added to movement
+  chaos,
+
+  /// Touch only mode: no accelerometer, only touch interaction
+  touchOnly,
+}
+
 /// Animation types available for the mesh node
 enum MeshNodeAnimationType {
   /// Gentle pulsing glow effect
@@ -75,6 +93,12 @@ class AnimatedMeshNode extends StatefulWidget {
   /// External rotation offset for Y axis (radians) - e.g., from accelerometer
   final double externalRotationY;
 
+  /// Touch point for deformation in normalized coordinates (0-1), null if not touching
+  final Offset? touchPoint;
+
+  /// How much vertices are pulled toward touch point (0-1)
+  final double deformationAmount;
+
   /// Callback when animation completes one cycle
   final VoidCallback? onAnimationCycle;
 
@@ -90,6 +114,8 @@ class AnimatedMeshNode extends StatefulWidget {
     this.nodeSize = 1.0,
     this.externalRotationX = 0.0,
     this.externalRotationY = 0.0,
+    this.touchPoint,
+    this.deformationAmount = 0.0,
     this.onAnimationCycle,
   });
 
@@ -325,6 +351,8 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
         rotationY: rotationY,
         rotationX: rotationX,
         rotationZ: rotationZ,
+        touchPoint: widget.touchPoint,
+        deformationAmount: widget.deformationAmount,
       ),
     );
 
@@ -371,9 +399,33 @@ class _Point3D {
       y * scale * size / 2 + size / 2,
     );
   }
+
+  /// Add two points
+  _Point3D operator +(_Point3D other) =>
+      _Point3D(x + other.x, y + other.y, z + other.z);
+
+  /// Multiply by scalar
+  _Point3D operator *(double scalar) =>
+      _Point3D(x * scalar, y * scalar, z * scalar);
+
+  /// Distance to another point
+  double distanceTo(_Point3D other) {
+    final dx = x - other.x;
+    final dy = y - other.y;
+    final dz = z - other.z;
+    return math.sqrt(dx * dx + dy * dy + dz * dz);
+  }
+
+  /// Normalize to unit length
+  _Point3D normalized() {
+    final len = math.sqrt(x * x + y * y + z * z);
+    if (len == 0) return this;
+    return _Point3D(x / len, y / len, z / len);
+  }
 }
 
 /// Custom painter for the 3D icosahedron mesh (12 vertices, 30 edges)
+/// Supports optional touch-based vertex deformation (Mario 64 style)
 class _IcosahedronPainter extends CustomPainter {
   final List<Color> gradientColors;
   final double glowIntensity;
@@ -383,6 +435,12 @@ class _IcosahedronPainter extends CustomPainter {
   final double rotationX;
   final double rotationZ;
 
+  /// Touch point in normalized coordinates (0-1), null if not touching
+  final Offset? touchPoint;
+
+  /// How much vertices are pulled toward touch point (0-1)
+  final double deformationAmount;
+
   _IcosahedronPainter({
     required this.gradientColors,
     required this.glowIntensity,
@@ -391,7 +449,12 @@ class _IcosahedronPainter extends CustomPainter {
     required this.rotationY,
     required this.rotationX,
     required this.rotationZ,
+    this.touchPoint,
+    this.deformationAmount = 0.0,
   });
+
+  // Radius of deformation influence (normalized to widget size)
+  static const double _deformationRadius = 0.4;
 
   // Golden ratio for icosahedron
   static final double _phi = (1 + math.sqrt(5)) / 2;
@@ -463,6 +526,9 @@ class _IcosahedronPainter extends CustomPainter {
       projectedPoints.add(point.project(size.width, perspective));
     }
 
+    // Apply touch deformation to projected points (Mario 64 style pull)
+    final deformedPoints = _applyDeformation(projectedPoints, size);
+
     // Sort edges by average Z depth (back to front)
     final edgesWithDepth = <MapEntry<List<int>, double>>[];
     for (final edge in _edges) {
@@ -472,11 +538,11 @@ class _IcosahedronPainter extends CustomPainter {
     }
     edgesWithDepth.sort((a, b) => a.value.compareTo(b.value));
 
-    // Draw edges (back to front)
+    // Draw edges (back to front) using deformed points
     for (final entry in edgesWithDepth) {
       final edge = entry.key;
-      final p1 = projectedPoints[edge[0]];
-      final p2 = projectedPoints[edge[1]];
+      final p1 = deformedPoints[edge[0]];
+      final p2 = deformedPoints[edge[1]];
       final z1 = transformedPoints[edge[0]].z;
       final z2 = transformedPoints[edge[1]].z;
       _drawEdge(canvas, p1, p2, size, z1, z2);
@@ -489,13 +555,57 @@ class _IcosahedronPainter extends CustomPainter {
     }
     verticesWithDepth.sort((a, b) => a.value.compareTo(b.value));
 
-    // Draw nodes (back to front)
+    // Draw nodes (back to front) using deformed points
     for (final entry in verticesWithDepth) {
       final i = entry.key;
-      final point = projectedPoints[i];
+      final point = deformedPoints[i];
       final depth = transformedPoints[i].z;
       _drawNode(canvas, point, size, depth);
     }
+  }
+
+  /// Apply Mario 64 style deformation - vertices near touch point get pulled toward it
+  List<Offset> _applyDeformation(List<Offset> points, Size size) {
+    if (touchPoint == null || deformationAmount <= 0) {
+      return points;
+    }
+
+    // Convert touch point from normalized (0-1) to pixel coordinates
+    final touchPixel = Offset(
+      touchPoint!.dx * size.width,
+      touchPoint!.dy * size.height,
+    );
+
+    final deformed = <Offset>[];
+    final radiusPixels = _deformationRadius * size.width;
+
+    for (final point in points) {
+      // Calculate distance from point to touch
+      final dx = touchPixel.dx - point.dx;
+      final dy = touchPixel.dy - point.dy;
+      final distance = math.sqrt(dx * dx + dy * dy);
+
+      if (distance < radiusPixels && distance > 0) {
+        // Calculate pull strength based on distance (closer = stronger pull)
+        // Use smooth falloff curve for jelly-like effect
+        final normalizedDist = distance / radiusPixels;
+        final falloff = math.pow(
+          1.0 - normalizedDist,
+          2.0,
+        ); // Quadratic falloff
+        final pullStrength = falloff * deformationAmount;
+
+        // Pull vertex toward touch point
+        final pullX = dx * pullStrength;
+        final pullY = dy * pullStrength;
+
+        deformed.add(Offset(point.dx + pullX, point.dy + pullY));
+      } else {
+        deformed.add(point);
+      }
+    }
+
+    return deformed;
   }
 
   void _drawEdge(
@@ -604,7 +714,9 @@ class _IcosahedronPainter extends CustomPainter {
         oldDelegate.rotationX != rotationX ||
         oldDelegate.rotationZ != rotationZ ||
         oldDelegate.lineThickness != lineThickness ||
-        oldDelegate.nodeSize != nodeSize;
+        oldDelegate.nodeSize != nodeSize ||
+        oldDelegate.touchPoint != touchPoint ||
+        oldDelegate.deformationAmount != deformationAmount;
   }
 }
 
@@ -623,6 +735,7 @@ extension MeshNodeLoadingIndicator on BuildContext {
 
 /// An AnimatedMeshNode that responds to device accelerometer for interactive rotation.
 /// Tilting the device left/right and forward/back will influence the mesh rotation.
+/// Supports multiple physics modes including momentum-based spinning.
 class AccelerometerMeshNode extends StatefulWidget {
   /// The size of the mesh node
   final double size;
@@ -652,7 +765,21 @@ class AccelerometerMeshNode extends StatefulWidget {
   final double accelerometerSensitivity;
 
   /// Smoothing factor for accelerometer input (0.0 - 1.0, higher = smoother)
+  /// Only used in direct mode
   final double smoothing;
+
+  /// Friction for momentum physics (0.0 - 1.0, higher = less friction)
+  /// Used in momentum, bounce, drift, and chaos modes
+  final double friction;
+
+  /// Physics mode for controlling how accelerometer input affects rotation
+  final MeshPhysicsMode physicsMode;
+
+  /// Whether touch interaction is enabled (drag to spin, Mario 64 style)
+  final bool enableTouch;
+
+  /// Intensity of touch-induced rotation (0.0 - 2.0)
+  final double touchIntensity;
 
   const AccelerometerMeshNode({
     super.key,
@@ -666,64 +793,283 @@ class AccelerometerMeshNode extends StatefulWidget {
     this.nodeSize = 1.0,
     this.accelerometerSensitivity = 0.15,
     this.smoothing = 0.85,
+    this.friction = 0.985,
+    this.physicsMode = MeshPhysicsMode.momentum,
+    this.enableTouch = false,
+    this.touchIntensity = 1.0,
   });
 
   @override
   State<AccelerometerMeshNode> createState() => _AccelerometerMeshNodeState();
 }
 
-class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode> {
+class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
+    with SingleTickerProviderStateMixin {
   StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
+  late AnimationController _physicsController;
+
+  // Rotation state
   double _rotationX = 0.0;
   double _rotationY = 0.0;
-  double _targetRotationX = 0.0;
-  double _targetRotationY = 0.0;
+
+  // Velocity for momentum physics (radians per frame)
+  double _velocityX = 0.0;
+  double _velocityY = 0.0;
+
+  // Touch interaction state
+  Offset? _lastTouchPosition;
+  bool _isDragging = false;
+
+  // Deformation state for Mario 64 style pull
+  Offset? _touchPoint; // Normalized 0-1 coordinates
+  double _deformationAmount = 0.0;
+  double _targetDeformation = 0.0;
+
+  // Spring-back physics constants
+  static const double _springStiffness = 0.15; // How fast it snaps back
+  static const double _springDamping = 0.7; // Reduces oscillation
+
+  // For chaos mode
+  final math.Random _random = math.Random();
+
+  // Startup stabilization - ignore first few readings
+  int _stabilizationFrames = 0;
+  static const int _stabilizationDelay = 30; // ~0.5 seconds at 60fps
+
+  // Maximum velocity to prevent crazy spinning
+  static const double _maxVelocity = 0.15;
 
   @override
   void initState() {
     super.initState();
+    _physicsController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..addListener(_updatePhysics);
+    _physicsController.repeat();
     _startAccelerometer();
   }
 
   void _startAccelerometer() {
     _accelerometerSubscription =
         accelerometerEventStream(
-          samplingPeriod: const Duration(milliseconds: 16), // ~60fps
+          samplingPeriod: const Duration(milliseconds: 16),
         ).listen((event) {
           if (!mounted) return;
-
-          // Map accelerometer values to rotation
-          // X accelerometer = tilt left/right = rotate around Y axis
-          // Y accelerometer = tilt forward/back = rotate around X axis
-          final sensitivity = widget.accelerometerSensitivity;
-
-          // Clamp and scale the values
-          _targetRotationY =
-              (event.x / 10.0).clamp(-1.0, 1.0) * sensitivity * math.pi;
-          _targetRotationX =
-              (event.y / 10.0).clamp(-1.0, 1.0) * sensitivity * math.pi;
-
-          // Apply smoothing for fluid motion
-          setState(() {
-            _rotationX =
-                _rotationX * widget.smoothing +
-                _targetRotationX * (1 - widget.smoothing);
-            _rotationY =
-                _rotationY * widget.smoothing +
-                _targetRotationY * (1 - widget.smoothing);
-          });
+          _processAccelerometerInput(event.x, event.y);
         });
+  }
+
+  void _processAccelerometerInput(double accelX, double accelY) {
+    // In touchOnly mode, ignore accelerometer
+    if (widget.physicsMode == MeshPhysicsMode.touchOnly) return;
+
+    // Wait for stabilization period before processing input
+    if (_stabilizationFrames < _stabilizationDelay) {
+      _stabilizationFrames++;
+      return;
+    }
+
+    final sensitivity = widget.accelerometerSensitivity;
+
+    // Normalize accelerometer values (-1 to 1)
+    final normalizedX = (accelX / 10.0).clamp(-1.0, 1.0);
+    final normalizedY = (accelY / 10.0).clamp(-1.0, 1.0);
+
+    switch (widget.physicsMode) {
+      case MeshPhysicsMode.tilt:
+        // Original behavior: direct mapping with smoothing
+        final targetX = normalizedY * sensitivity * math.pi;
+        final targetY = normalizedX * sensitivity * math.pi;
+        setState(() {
+          _rotationX =
+              _rotationX * widget.smoothing + targetX * (1 - widget.smoothing);
+          _rotationY =
+              _rotationY * widget.smoothing + targetY * (1 - widget.smoothing);
+        });
+        break;
+
+      case MeshPhysicsMode.momentum:
+        // Add accelerometer as impulse to velocity (reduced magnitude)
+        _velocityY += normalizedX * sensitivity * 0.005;
+        _velocityX += normalizedY * sensitivity * 0.005;
+        // Clamp velocity to prevent runaway spinning
+        _velocityX = _velocityX.clamp(-_maxVelocity, _maxVelocity);
+        _velocityY = _velocityY.clamp(-_maxVelocity, _maxVelocity);
+        break;
+
+      case MeshPhysicsMode.gyroscope:
+        // More precise, less smoothed tilt control
+        final targetX = normalizedY * sensitivity * math.pi * 1.5;
+        final targetY = normalizedX * sensitivity * math.pi * 1.5;
+        setState(() {
+          _rotationX =
+              _rotationX * 0.7 +
+              targetX * 0.3; // Less smoothing for responsiveness
+          _rotationY = _rotationY * 0.7 + targetY * 0.3;
+        });
+        break;
+
+      case MeshPhysicsMode.chaos:
+        // Add impulse plus random perturbation (reduced magnitude)
+        _velocityY += normalizedX * sensitivity * 0.005;
+        _velocityX += normalizedY * sensitivity * 0.005;
+        _velocityX += (_random.nextDouble() - 0.5) * 0.003;
+        _velocityY += (_random.nextDouble() - 0.5) * 0.003;
+        // Clamp velocity
+        _velocityX = _velocityX.clamp(-_maxVelocity, _maxVelocity);
+        _velocityY = _velocityY.clamp(-_maxVelocity, _maxVelocity);
+        break;
+
+      case MeshPhysicsMode.touchOnly:
+        // No accelerometer input
+        break;
+    }
+  }
+
+  void _updatePhysics() {
+    if (!mounted) return;
+
+    // Update deformation spring-back physics
+    _updateDeformation();
+
+    switch (widget.physicsMode) {
+      case MeshPhysicsMode.tilt:
+      case MeshPhysicsMode.gyroscope:
+        // Physics handled in accelerometer callback for direct modes
+        break;
+
+      case MeshPhysicsMode.momentum:
+        setState(() {
+          // Apply velocity to rotation
+          _rotationX += _velocityX;
+          _rotationY += _velocityY;
+          // Apply friction
+          _velocityX *= widget.friction;
+          _velocityY *= widget.friction;
+        });
+        break;
+
+      case MeshPhysicsMode.chaos:
+        setState(() {
+          _rotationX += _velocityX;
+          _rotationY += _velocityY;
+          _velocityX *= widget.friction;
+          _velocityY *= widget.friction;
+          // Random micro-perturbations
+          if (_random.nextDouble() < 0.1) {
+            _velocityX += (_random.nextDouble() - 0.5) * 0.02;
+            _velocityY += (_random.nextDouble() - 0.5) * 0.02;
+          }
+        });
+        break;
+
+      case MeshPhysicsMode.touchOnly:
+        // Apply velocity from touch input with friction
+        setState(() {
+          _rotationX += _velocityX;
+          _rotationY += _velocityY;
+          _velocityX *= widget.friction;
+          _velocityY *= widget.friction;
+        });
+        break;
+    }
+  }
+
+  void _updateDeformation() {
+    // Spring physics for jelly-like snap-back
+    if (_isDragging) {
+      // While dragging, smoothly move toward target
+      _deformationAmount +=
+          (_targetDeformation - _deformationAmount) * _springStiffness * 2;
+    } else {
+      // When released, spring back to zero with damping
+      _deformationAmount *= _springDamping;
+      if (_deformationAmount.abs() < 0.001) {
+        _deformationAmount = 0.0;
+        _touchPoint = null;
+      }
+    }
+  }
+
+  void _onPanStart(DragStartDetails details) {
+    if (!widget.enableTouch) return;
+    _isDragging = true;
+    _lastTouchPosition = details.localPosition;
+
+    // Set touch point in normalized coordinates
+    _touchPoint = Offset(
+      details.localPosition.dx / widget.size,
+      details.localPosition.dy / widget.size,
+    );
+    _targetDeformation = widget.touchIntensity * 0.5;
+  }
+
+  void _onPanUpdate(DragUpdateDetails details) {
+    if (!widget.enableTouch || !_isDragging) return;
+
+    final delta = details.localPosition - (_lastTouchPosition ?? Offset.zero);
+    _lastTouchPosition = details.localPosition;
+
+    // Update touch point for deformation (normalized coordinates)
+    _touchPoint = Offset(
+      details.localPosition.dx / widget.size,
+      details.localPosition.dy / widget.size,
+    );
+
+    // Calculate deformation based on drag distance from center
+    final center = Offset(0.5, 0.5);
+    final distFromCenter =
+        (_touchPoint! - center).distance * 2; // 0-1 range roughly
+    _targetDeformation = (widget.touchIntensity * 0.6 * distFromCenter).clamp(
+      0.0,
+      0.8,
+    );
+
+    // Convert drag delta to rotation velocity
+    // Horizontal drag = Y rotation, Vertical drag = X rotation
+    final intensity = widget.touchIntensity * 0.01;
+
+    if (widget.physicsMode == MeshPhysicsMode.tilt ||
+        widget.physicsMode == MeshPhysicsMode.gyroscope) {
+      // In direct modes, touch directly rotates
+      setState(() {
+        _rotationY += delta.dx * intensity;
+        _rotationX += delta.dy * intensity;
+      });
+    } else {
+      // In physics modes, touch adds velocity (Mario 64 style spin)
+      _velocityY += delta.dx * intensity;
+      _velocityX += delta.dy * intensity;
+    }
+  }
+
+  void _onPanEnd(DragEndDetails details) {
+    if (!widget.enableTouch) return;
+    _isDragging = false;
+    _lastTouchPosition = null;
+    _targetDeformation = 0.0; // Spring back to normal
+
+    // Add fling velocity for momentum effect
+    if (widget.physicsMode != MeshPhysicsMode.tilt &&
+        widget.physicsMode != MeshPhysicsMode.gyroscope) {
+      final velocity = details.velocity.pixelsPerSecond;
+      final intensity = widget.touchIntensity * 0.0001;
+      _velocityY += velocity.dx * intensity;
+      _velocityX += velocity.dy * intensity;
+    }
   }
 
   @override
   void dispose() {
     _accelerometerSubscription?.cancel();
+    _physicsController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedMeshNode(
+    final meshNode = AnimatedMeshNode(
       size: widget.size,
       animationType: widget.animationType,
       duration: widget.duration,
@@ -734,6 +1080,19 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode> {
       nodeSize: widget.nodeSize,
       externalRotationX: _rotationX,
       externalRotationY: _rotationY,
+      touchPoint: _touchPoint,
+      deformationAmount: _deformationAmount,
     );
+
+    if (widget.enableTouch) {
+      return GestureDetector(
+        onPanStart: _onPanStart,
+        onPanUpdate: _onPanUpdate,
+        onPanEnd: _onPanEnd,
+        child: meshNode,
+      );
+    }
+
+    return meshNode;
   }
 }
