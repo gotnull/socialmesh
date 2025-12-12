@@ -313,6 +313,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.11"
+  ditredi:
+    dependency: "direct main"
+    description:
+      name: ditredi
+      sha256: "0b6c5334fa4198a3e880d1865eece06189edf91ae894087ba67d347ead5aae4e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.2"
   dylib:
     dependency: transitive
     description:
@@ -1854,7 +1862,7 @@ packages:
     source: hosted
     version: "4.5.2"
   vector_math:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: vector_math
       sha256: d530bd74fea330e6e364cda7a85019c434070188383e1cd8d9777ee586914c5b
