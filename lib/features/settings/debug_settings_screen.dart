@@ -360,7 +360,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             label: 'Size',
             value: _size,
             min: 24,
-            max: 300,
+            max: 600,
             displayValue: '${_size.round()}px',
             onChanged: (v) {
               setState(() => _size = v);

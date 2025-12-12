@@ -396,7 +396,7 @@ class SettingsService {
   }
 
   double get splashMeshSize =>
-      _preferences.getDouble('splash_mesh_size') ?? 300;
+      _preferences.getDouble('splash_mesh_size') ?? 600;
   String get splashMeshAnimationType =>
       _preferences.getString('splash_mesh_animation_type') ?? 'none';
   double get splashMeshGlowIntensity =>
