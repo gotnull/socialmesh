@@ -9,7 +9,9 @@ import 'package:latlong2/latlong.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/map_controls.dart';
+import '../../models/world_mesh_node.dart';
 import '../../providers/world_mesh_map_provider.dart';
+import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
 
 /// World Mesh Map screen showing all Meshtastic nodes from meshmap.net
@@ -27,6 +29,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   MapTileStyle _mapStyle = MapTileStyle.dark;
   String _searchQuery = '';
   bool _showSearch = false;
+  WorldMeshNode? _selectedNode;
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -235,6 +238,16 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               onPositionChanged: (position, hasGesture) {
                 _currentZoom = position.zoom;
               },
+              onTap: (tapPosition, point) {
+                // Find closest node to tap point
+                final tappedNode = _findClosestNode(point, nodes);
+                if (tappedNode != null) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _selectedNode = tappedNode);
+                } else {
+                  setState(() => _selectedNode = null);
+                }
+              },
             ),
             children: [
               // Tile layer
@@ -247,14 +260,19 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               // Use CircleLayer for 10k+ nodes - MUCH faster than Markers
               CircleLayer(
                 circles: nodes.map((node) {
+                  final isSelected = _selectedNode?.nodeNum == node.nodeNum;
                   return CircleMarker(
                     point: LatLng(node.latitudeDecimal, node.longitudeDecimal),
-                    radius: 4,
-                    color: node.isRecentlySeen
+                    radius: isSelected ? 8 : 4,
+                    color: isSelected
+                        ? accentColor
+                        : node.isRecentlySeen
                         ? accentColor.withValues(alpha: 0.7)
                         : Colors.grey.withValues(alpha: 0.4),
-                    borderColor: Colors.white.withValues(alpha: 0.5),
-                    borderStrokeWidth: 0.5,
+                    borderColor: isSelected
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.5),
+                    borderStrokeWidth: isSelected ? 2 : 0.5,
                   );
                 }).toList(),
               ),
@@ -295,6 +313,27 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           },
         ),
 
+        // Node info card when selected
+        if (_selectedNode != null)
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 70,
+            child: WorldNodeInfoCard(
+              node: _selectedNode!,
+              onClose: () => setState(() => _selectedNode = null),
+              onFocus: () {
+                _animatedMove(
+                  LatLng(
+                    _selectedNode!.latitudeDecimal,
+                    _selectedNode!.longitudeDecimal,
+                  ),
+                  14.0,
+                );
+              },
+            ),
+          ),
+
         // Stats bar
         Positioned(
           left: 0,
@@ -304,6 +343,31 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         ),
       ],
     );
+  }
+
+  /// Find the closest node to a tap point within a reasonable distance
+  WorldMeshNode? _findClosestNode(LatLng tapPoint, List<WorldMeshNode> nodes) {
+    if (nodes.isEmpty) return null;
+
+    // Calculate tap radius based on zoom level (in degrees)
+    // At zoom 3, ~45 degrees per screen width; at zoom 18, ~0.001 degrees
+    final tapRadius = 5.0 / math.pow(2, _currentZoom);
+
+    WorldMeshNode? closest;
+    double closestDist = double.infinity;
+
+    for (final node in nodes) {
+      final dx = node.longitudeDecimal - tapPoint.longitude;
+      final dy = node.latitudeDecimal - tapPoint.latitude;
+      final dist = dx * dx + dy * dy;
+
+      if (dist < closestDist && dist < tapRadius * tapRadius) {
+        closestDist = dist;
+        closest = node;
+      }
+    }
+
+    return closest;
   }
 
   Widget _buildStatsBar(
@@ -451,4 +515,497 @@ class _MapControlsWithZoomStateState extends State<_MapControlsWithZoomState> {
       mapRotation: 0, // World mesh doesn't rotate
     );
   }
+}
+
+/// Rich info card for WorldMeshNode - shows all available data from meshmap.net
+class WorldNodeInfoCard extends StatelessWidget {
+  final WorldMeshNode node;
+  final VoidCallback? onClose;
+  final VoidCallback? onFocus;
+
+  const WorldNodeInfoCard({
+    super.key,
+    required this.node,
+    this.onClose,
+    this.onFocus,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accentColor = theme.colorScheme.primary;
+
+    return Container(
+      constraints: const BoxConstraints(maxHeight: 400),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard.withValues(alpha: 0.98),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header with name and close button
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      node.shortName.length > 2
+                          ? node.shortName.substring(0, 2).toUpperCase()
+                          : node.shortName.toUpperCase(),
+                      style: TextStyle(
+                        color: accentColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        fontFamily: 'JetBrainsMono',
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        node.displayName,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            node.nodeId,
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontFamily: 'JetBrainsMono',
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          if (node.isRecentlySeen)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.successGreen.withValues(
+                                  alpha: 0.2,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'ONLINE',
+                                style: TextStyle(
+                                  color: AppTheme.successGreen,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 20),
+                  onPressed: onClose,
+                  color: AppTheme.textSecondary,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 16),
+
+            // Device Info Section
+            _buildSectionHeader(theme, Icons.memory, 'Device'),
+            const SizedBox(height: 8),
+            _buildInfoGrid([
+              _InfoItem('Hardware', _formatHardware(node.hwModel)),
+              _InfoItem('Role', _formatRole(node.role)),
+              if (node.fwVersion != null)
+                _InfoItem('Firmware', node.fwVersion!),
+              if (node.region != null) _InfoItem('Region', node.region!),
+              if (node.modemPreset != null)
+                _InfoItem('Modem', node.modemPreset!),
+              if (node.onlineLocalNodes != null)
+                _InfoItem('Local Nodes', '${node.onlineLocalNodes}'),
+            ]),
+
+            // Position Section
+            if (node.altitude != null ||
+                node.precisionMarginMeters != null) ...[
+              const SizedBox(height: 16),
+              _buildSectionHeader(theme, Icons.location_on, 'Position'),
+              const SizedBox(height: 8),
+              _buildInfoGrid([
+                _InfoItem(
+                  'Coordinates',
+                  '${node.latitudeDecimal.toStringAsFixed(5)}, ${node.longitudeDecimal.toStringAsFixed(5)}',
+                ),
+                if (node.altitude != null)
+                  _InfoItem('Altitude', '${node.altitude}m'),
+                if (node.precisionMarginMeters != null)
+                  _InfoItem(
+                    'Precision',
+                    '±${_formatDistance(node.precisionMarginMeters!)}',
+                  ),
+              ]),
+            ],
+
+            // Device Metrics Section
+            if (node.batteryLevel != null ||
+                node.voltage != null ||
+                node.chUtil != null ||
+                node.airUtilTx != null ||
+                node.uptime != null) ...[
+              const SizedBox(height: 16),
+              _buildSectionHeader(theme, Icons.analytics, 'Device Metrics'),
+              const SizedBox(height: 8),
+              _buildMetricsRow(theme, [
+                if (node.batteryLevel != null)
+                  _MetricChip(
+                    icon: Icons.battery_std,
+                    value: node.batteryString!,
+                    color: _getBatteryColor(node.batteryLevel!),
+                  ),
+                if (node.voltage != null)
+                  _MetricChip(
+                    icon: Icons.electric_bolt,
+                    value: '${node.voltage!.toStringAsFixed(2)}V',
+                    color: Colors.amber,
+                  ),
+                if (node.chUtil != null)
+                  _MetricChip(
+                    icon: Icons.show_chart,
+                    value: '${node.chUtil!.toStringAsFixed(1)}% Ch',
+                    color: Colors.blue,
+                  ),
+                if (node.airUtilTx != null)
+                  _MetricChip(
+                    icon: Icons.cell_tower,
+                    value: '${node.airUtilTx!.toStringAsFixed(1)}% Tx',
+                    color: Colors.purple,
+                  ),
+              ]),
+              if (node.uptimeString != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Uptime: ${node.uptimeString}',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+            ],
+
+            // Environment Metrics Section
+            if (node.temperature != null ||
+                node.relativeHumidity != null ||
+                node.barometricPressure != null ||
+                node.windSpeed != null ||
+                node.lux != null) ...[
+              const SizedBox(height: 16),
+              _buildSectionHeader(theme, Icons.thermostat, 'Environment'),
+              const SizedBox(height: 8),
+              _buildMetricsRow(theme, [
+                if (node.temperature != null)
+                  _MetricChip(
+                    icon: Icons.thermostat,
+                    value: '${node.temperature!.toStringAsFixed(1)}°C',
+                    color: Colors.orange,
+                  ),
+                if (node.relativeHumidity != null)
+                  _MetricChip(
+                    icon: Icons.water_drop,
+                    value: '${node.relativeHumidity!.toStringAsFixed(0)}%',
+                    color: Colors.cyan,
+                  ),
+                if (node.barometricPressure != null)
+                  _MetricChip(
+                    icon: Icons.speed,
+                    value: '${node.barometricPressure!.toStringAsFixed(0)}hPa',
+                    color: Colors.teal,
+                  ),
+                if (node.lux != null)
+                  _MetricChip(
+                    icon: Icons.light_mode,
+                    value: '${node.lux!.toStringAsFixed(0)} lux',
+                    color: Colors.yellow,
+                  ),
+              ]),
+              if (node.windSpeed != null || node.windDirection != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: _buildMetricsRow(theme, [
+                    if (node.windSpeed != null)
+                      _MetricChip(
+                        icon: Icons.air,
+                        value: '${node.windSpeed!.toStringAsFixed(1)} m/s',
+                        color: Colors.blueGrey,
+                      ),
+                    if (node.windGust != null)
+                      _MetricChip(
+                        icon: Icons.storm,
+                        value: '${node.windGust!.toStringAsFixed(1)} gust',
+                        color: Colors.blueGrey,
+                      ),
+                  ]),
+                ),
+            ],
+
+            // Neighbors Section
+            if (node.neighbors != null && node.neighbors!.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildSectionHeader(
+                theme,
+                Icons.people,
+                'Neighbors (${node.neighbors!.length})',
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: node.neighbors!.entries.take(8).map((entry) {
+                  final snr = entry.value.snr;
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${entry.key}${snr != null ? ' (${snr.toStringAsFixed(1)}dB)' : ''}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontFamily: 'JetBrainsMono',
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+
+            // Seen By Section
+            if (node.seenBy.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildSectionHeader(
+                theme,
+                Icons.wifi_tethering,
+                'Seen By (${node.seenBy.length} gateways)',
+              ),
+              const SizedBox(height: 8),
+              Text(
+                node.seenBy.keys.take(3).join(', ') +
+                    (node.seenBy.length > 3
+                        ? ' +${node.seenBy.length - 3} more'
+                        : ''),
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+              ),
+            ],
+
+            // Last Seen
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(Icons.schedule, size: 14, color: AppTheme.textSecondary),
+                const SizedBox(width: 6),
+                Text(
+                  'Last seen: ${node.lastSeenString}',
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                ),
+              ],
+            ),
+
+            // Action buttons
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: node.nodeId));
+                      showSuccessSnackBar(context, 'Node ID copied');
+                    },
+                    icon: const Icon(Icons.copy, size: 16),
+                    label: const Text('Copy ID'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: onFocus,
+                    icon: const Icon(Icons.center_focus_strong, size: 16),
+                    label: const Text('Focus'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(ThemeData theme, IconData icon, String title) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: theme.colorScheme.primary),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoGrid(List<_InfoItem> items) {
+    return Wrap(
+      spacing: 16,
+      runSpacing: 8,
+      children: items.map((item) {
+        return SizedBox(
+          width: 140,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.label,
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+              ),
+              Text(
+                item.value,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildMetricsRow(ThemeData theme, List<_MetricChip> chips) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: chips.map((chip) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: chip.color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: chip.color.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(chip.icon, size: 14, color: chip.color),
+              const SizedBox(width: 6),
+              Text(
+                chip.value,
+                style: TextStyle(
+                  color: chip.color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  String _formatHardware(String model) {
+    return model
+        .replaceAll('_', ' ')
+        .replaceAll('HELTEC', 'Heltec')
+        .replaceAll('TBEAM', 'T-Beam')
+        .replaceAll('TLORA', 'T-LoRa')
+        .replaceAll('RAK', 'RAK');
+  }
+
+  String _formatRole(String role) {
+    return role
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map(
+          (w) => w.isNotEmpty
+              ? '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}'
+              : '',
+        )
+        .join(' ');
+  }
+
+  String _formatDistance(int meters) {
+    if (meters < 1000) return '${meters}m';
+    return '${(meters / 1000).toStringAsFixed(1)}km';
+  }
+
+  Color _getBatteryColor(int level) {
+    if (level > 100) return AppTheme.successGreen; // Plugged in
+    if (level > 60) return AppTheme.successGreen;
+    if (level > 30) return Colors.orange;
+    return AppTheme.errorRed;
+  }
+}
+
+class _InfoItem {
+  final String label;
+  final String value;
+  const _InfoItem(this.label, this.value);
+}
+
+class _MetricChip {
+  final IconData icon;
+  final String value;
+  final Color color;
+  const _MetricChip({
+    required this.icon,
+    required this.value,
+    required this.color,
+  });
 }
