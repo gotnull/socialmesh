@@ -1075,7 +1075,7 @@ class WorldNodeInfoCard extends StatelessWidget {
         children: [
           // STATIC HEADER - doesn't scroll
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 12, 0),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
             child: Row(
               children: [
                 Container(

@@ -12,7 +12,6 @@ import '../../services/storage/storage_service.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../services/haptic_service.dart';
 import '../../core/theme.dart';
-import '../navigation/main_shell.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -309,7 +308,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
-        leading: const HamburgerMenuButton(),
         centerTitle: true,
         title: const Text(
           'Settings',
@@ -1790,25 +1788,57 @@ class _MeshtasticPoweredFooter extends StatelessWidget {
 
   void _openMeshtasticWebsite(BuildContext context) {
     HapticFeedback.lightImpact();
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const _MeshtasticWebViewScreen()),
+    MeshtasticWebViewScreen.show(context);
+  }
+}
+
+/// Tappable Meshtastic Powered logo that opens meshtastic.org
+class _TappableMeshtasticLogo extends StatelessWidget {
+  final double width;
+
+  const _TappableMeshtasticLogo({this.width = 140});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        MeshtasticWebViewScreen.show(context);
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Image.asset(
+          'assets/meshtastic_powered_landscape.png',
+          width: width,
+          fit: BoxFit.contain,
+        ),
+      ),
     );
   }
 }
 
 /// In-app webview for meshtastic.org
-class _MeshtasticWebViewScreen extends StatefulWidget {
-  const _MeshtasticWebViewScreen();
+class MeshtasticWebViewScreen extends StatefulWidget {
+  const MeshtasticWebViewScreen._();
+
+  /// Show the Meshtastic website in an in-app browser
+  static void show(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const MeshtasticWebViewScreen._()),
+    );
+  }
 
   @override
-  State<_MeshtasticWebViewScreen> createState() =>
+  State<MeshtasticWebViewScreen> createState() =>
       _MeshtasticWebViewScreenState();
 }
 
-class _MeshtasticWebViewScreenState extends State<_MeshtasticWebViewScreen> {
+class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen> {
   double _progress = 0;
   String _title = 'Meshtastic';
+  InAppWebViewController? _webViewController;
+  bool _canGoBack = false;
 
   @override
   Widget build(BuildContext context) {
@@ -1828,6 +1858,19 @@ class _MeshtasticWebViewScreenState extends State<_MeshtasticWebViewScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          if (_canGoBack)
+            IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => _webViewController?.goBack(),
+              tooltip: 'Go back',
+            ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _webViewController?.reload(),
+            tooltip: 'Refresh',
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -1848,16 +1891,33 @@ class _MeshtasticWebViewScreenState extends State<_MeshtasticWebViewScreen> {
               initialSettings: InAppWebViewSettings(
                 transparentBackground: true,
                 javaScriptEnabled: true,
-                useShouldOverrideUrlLoading: true,
+                useShouldOverrideUrlLoading: false,
                 mediaPlaybackRequiresUserGesture: false,
+                allowsInlineMediaPlayback: true,
+                iframeAllowFullscreen: true,
               ),
+              onWebViewCreated: (controller) {
+                _webViewController = controller;
+              },
+              onLoadStart: (controller, url) {
+                if (mounted) setState(() => _progress = 0);
+              },
               onProgressChanged: (controller, progress) {
-                setState(() => _progress = progress / 100);
+                if (mounted) setState(() => _progress = progress / 100);
+              },
+              onLoadStop: (controller, url) async {
+                if (!mounted) return;
+                setState(() => _progress = 1.0);
+                final canGoBack = await controller.canGoBack();
+                if (mounted) setState(() => _canGoBack = canGoBack);
               },
               onTitleChanged: (controller, title) {
-                if (title != null && title.isNotEmpty) {
+                if (mounted && title != null && title.isNotEmpty) {
                   setState(() => _title = title);
                 }
+              },
+              onReceivedError: (controller, request, error) {
+                debugPrint('WebView error: ${error.description}');
               },
             ),
           ),
@@ -1893,14 +1953,7 @@ class _OpenSourceLicensesScreen extends StatelessWidget {
       child: LicensePage(
         applicationName: 'Socialmesh',
         applicationVersion: '1.0.0',
-        applicationIcon: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Image.asset(
-            'assets/meshtastic_powered_landscape.png',
-            width: 140,
-            fit: BoxFit.contain,
-          ),
-        ),
+        applicationIcon: const _TappableMeshtasticLogo(width: 140),
         applicationLegalese:
             '© 2024 Socialmesh\n\nThis app uses open source software. '
             'See below for the complete list of third-party licenses.',
