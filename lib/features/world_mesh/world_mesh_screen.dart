@@ -874,31 +874,50 @@ class _SearchResultTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            // Avatar
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: node.isRecentlySeen
-                    ? accentColor.withValues(alpha: 0.2)
-                    : AppTheme.darkBorder.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Center(
-                child: Text(
-                  node.shortName.length > 2
-                      ? node.shortName.substring(0, 2).toUpperCase()
-                      : node.shortName.toUpperCase(),
-                  style: TextStyle(
+            // Avatar with online indicator badge
+            Stack(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
                     color: node.isRecentlySeen
-                        ? accentColor
-                        : AppTheme.textSecondary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    fontFamily: 'JetBrainsMono',
+                        ? accentColor.withValues(alpha: 0.2)
+                        : AppTheme.darkBorder.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: Text(
+                      node.shortName.length > 2
+                          ? node.shortName.substring(0, 2).toUpperCase()
+                          : node.shortName.toUpperCase(),
+                      style: TextStyle(
+                        color: node.isRecentlySeen
+                            ? accentColor
+                            : AppTheme.textSecondary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        fontFamily: 'JetBrainsMono',
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                // Online status badge (top-right corner)
+                if (node.isRecentlySeen)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: AppTheme.successGreen,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.darkCard, width: 2),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(width: 12),
             // Info
@@ -906,30 +925,15 @@ class _SearchResultTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          node.displayName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (node.isRecentlySeen)
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: AppTheme.successGreen,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                    ],
+                  Text(
+                    node.displayName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
