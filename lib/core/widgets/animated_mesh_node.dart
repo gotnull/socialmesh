@@ -361,7 +361,10 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
       node = Transform.scale(scale: scale, child: node);
     }
 
-    return SizedBox(width: widget.size, height: widget.size, child: node);
+    // Clip to bounds to prevent deformation from affecting layout
+    return ClipRect(
+      child: SizedBox(width: widget.size, height: widget.size, child: node),
+    );
   }
 }
 
@@ -565,7 +568,7 @@ class _IcosahedronPainter extends CustomPainter {
     }
   }
 
-  /// Apply Mario 64 style deformation - vertices near touch point get pulled toward it
+  /// Apply Mario 64 style deformation - vertices near touch point get stretched outward
   List<Offset> _applyDeformation(List<Offset> points, Size size) {
     if (touchPoint == null || deformationAmount <= 0) {
       return points;
@@ -576,6 +579,16 @@ class _IcosahedronPainter extends CustomPainter {
       touchPoint!.dx * size.width,
       touchPoint!.dy * size.height,
     );
+
+    // Center of the mesh
+    final center = Offset(size.width / 2, size.height / 2);
+
+    // Direction from center to touch point (this is the "pull" direction)
+    final pullDirX = touchPixel.dx - center.dx;
+    final pullDirY = touchPixel.dy - center.dy;
+    final pullDirLen = math.sqrt(pullDirX * pullDirX + pullDirY * pullDirY);
+    final normalizedPullX = pullDirLen > 0 ? pullDirX / pullDirLen : 0.0;
+    final normalizedPullY = pullDirLen > 0 ? pullDirY / pullDirLen : 0.0;
 
     final deformed = <Offset>[];
     final radiusPixels = _deformationRadius * size.width;
@@ -592,13 +605,26 @@ class _IcosahedronPainter extends CustomPainter {
         final normalizedDist = distance / radiusPixels;
         // Cubic falloff for more dramatic near-touch effect
         final falloff = math.pow(1.0 - normalizedDist, 3.0);
-        final pullStrength = falloff * deformationAmount;
+        final pullStrength = falloff * deformationAmount * 0.15;
 
-        // Pull vertex toward touch point
-        final pullX = dx * pullStrength;
-        final pullY = dy * pullStrength;
+        // Push vertex OUTWARD in the pull direction (stretch, not collapse)
+        // Scale by how much the vertex is in the direction of the pull
+        final vertexFromCenter = Offset(
+          point.dx - center.dx,
+          point.dy - center.dy,
+        );
+        final dot =
+            vertexFromCenter.dx * normalizedPullX +
+            vertexFromCenter.dy * normalizedPullY;
 
-        deformed.add(Offset(point.dx + pullX, point.dy + pullY));
+        // Only stretch vertices that are somewhat aligned with the pull direction
+        final alignmentFactor = (dot / (size.width * 0.3)).clamp(0.0, 1.0);
+        final stretchX =
+            normalizedPullX * pullStrength * size.width * alignmentFactor;
+        final stretchY =
+            normalizedPullY * pullStrength * size.height * alignmentFactor;
+
+        deformed.add(Offset(point.dx + stretchX, point.dy + stretchY));
       } else {
         deformed.add(point);
       }

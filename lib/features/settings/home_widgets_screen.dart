@@ -269,7 +269,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
             ),
             _InstructionStep(
               number: 3,
-              title: 'Search for "Protofluff"',
+              title: 'Search for "Socialmesh"',
               description: 'Or scroll to find our widgets',
             ),
             _InstructionStep(
@@ -296,7 +296,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
             ),
             _InstructionStep(
               number: 3,
-              title: 'Search for "Protofluff"',
+              title: 'Search for "Socialmesh"',
               description: 'Or scroll to find our widgets',
             ),
             _InstructionStep(

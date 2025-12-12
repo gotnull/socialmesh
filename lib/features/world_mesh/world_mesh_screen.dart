@@ -494,14 +494,18 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   ),
                   markers: displayNodes.map((node) {
                     final isSelected = _selectedNode?.nodeNum == node.nodeNum;
+                    // Use larger tap target (44px) but smaller visual marker
+                    const tapTargetSize = 44.0;
+                    final visualSize = isSelected ? 24.0 : 14.0;
                     return Marker(
                       point: LatLng(
                         node.latitudeDecimal,
                         node.longitudeDecimal,
                       ),
-                      width: isSelected ? 24 : 12,
-                      height: isSelected ? 24 : 12,
+                      width: tapTargetSize,
+                      height: tapTargetSize,
                       child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
                         onTap: () {
                           HapticFeedback.selectionClick();
                           setState(() {
@@ -514,29 +518,35 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                             }
                           });
                         },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: isSelected
-                                ? accentColor
-                                : node.isRecentlySeen
-                                ? accentColor.withValues(alpha: 0.8)
-                                : Colors.grey.withValues(alpha: 0.5),
-                            border: Border.all(
+                        child: Center(
+                          child: Container(
+                            width: visualSize,
+                            height: visualSize,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
                               color: isSelected
-                                  ? Colors.white
-                                  : Colors.white.withValues(alpha: 0.6),
-                              width: isSelected ? 2 : 1,
+                                  ? accentColor
+                                  : node.isRecentlySeen
+                                  ? accentColor.withValues(alpha: 0.8)
+                                  : Colors.grey.withValues(alpha: 0.5),
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.white.withValues(alpha: 0.6),
+                                width: isSelected ? 2 : 1,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: accentColor.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                        blurRadius: 8,
+                                        spreadRadius: 2,
+                                      ),
+                                    ]
+                                  : null,
                             ),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: accentColor.withValues(alpha: 0.5),
-                                      blurRadius: 8,
-                                      spreadRadius: 2,
-                                    ),
-                                  ]
-                                : null,
                           ),
                         ),
                       ),

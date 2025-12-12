@@ -48,9 +48,12 @@ class HamburgerMenuButton extends ConsumerWidget {
     final scaffoldKey = ref.watch(mainShellScaffoldKeyProvider);
     final theme = Theme.of(context);
 
-    // Check if we can pop (meaning we were pushed onto the stack)
-    // If so, show a back button instead of the hamburger menu
-    final canPop = Navigator.of(context).canPop();
+    // Check if we're NOT at the first route (meaning we were pushed onto the stack)
+    // Using ModalRoute.of(context)?.isFirst is more reliable than canPop()
+    // as it checks if this specific route is the first in the navigator
+    final modalRoute = ModalRoute.of(context);
+    final isFirstRoute = modalRoute?.isFirst ?? true;
+    final canPop = !isFirstRoute && Navigator.of(context).canPop();
 
     if (canPop) {
       return IconButton(
