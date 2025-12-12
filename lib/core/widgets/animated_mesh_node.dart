@@ -13,7 +13,7 @@ enum MeshNodeAnimationType {
   /// Breathing scale effect
   breathe,
 
-  /// Slow 3D tumble rotation
+  /// Slow 3D tumble rotation on multiple axes
   tumble,
 
   /// Shimmer effect across the gradient
@@ -39,8 +39,8 @@ enum MeshNodeSize {
   const MeshNodeSize(this.size);
 }
 
-/// A fully animatable 3D mesh cube widget with the brand gradient.
-/// Replicates the SocialMesh app icon - a wireframe cube with gradient nodes.
+/// A fully animatable 3D icosahedron mesh widget with the brand gradient.
+/// Replicates the SocialMesh app icon - a spherical wireframe with gradient nodes.
 /// Can be used as a loading indicator, decorative element, or icon.
 class AnimatedMeshNode extends StatefulWidget {
   /// The size of the mesh node
@@ -133,10 +133,7 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
     with TickerProviderStateMixin {
   late AnimationController _primaryController;
   late AnimationController _secondaryController;
-  late Animation<double> _pulseAnimation;
-  late Animation<double> _rotateAnimation;
-  late Animation<double> _breatheAnimation;
-  late Animation<double> _tumbleAnimation;
+  late AnimationController _tertiaryController;
 
   @override
   void initState() {
@@ -157,8 +154,13 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
 
   void _setupAnimations() {
     final primaryDuration = widget.duration ?? _getDefaultDuration();
+
+    // Use prime number ratios for non-repeating seamless animation
     final secondaryDuration = Duration(
-      milliseconds: (primaryDuration.inMilliseconds * 1.5).round(),
+      milliseconds: (primaryDuration.inMilliseconds * 1.31).round(),
+    );
+    final tertiaryDuration = Duration(
+      milliseconds: (primaryDuration.inMilliseconds * 1.73).round(),
     );
 
     _primaryController = AnimationController(
@@ -171,20 +173,9 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
       vsync: this,
     );
 
-    _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _primaryController, curve: Curves.easeInOut),
-    );
-
-    _rotateAnimation = Tween<double>(begin: 0.0, end: 2 * math.pi).animate(
-      CurvedAnimation(parent: _primaryController, curve: Curves.linear),
-    );
-
-    _breatheAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
-      CurvedAnimation(parent: _primaryController, curve: Curves.easeInOut),
-    );
-
-    _tumbleAnimation = Tween<double>(begin: 0.0, end: 2 * math.pi).animate(
-      CurvedAnimation(parent: _secondaryController, curve: Curves.linear),
+    _tertiaryController = AnimationController(
+      duration: tertiaryDuration,
+      vsync: this,
     );
 
     if (widget.animate) {
@@ -192,8 +183,7 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
     }
 
     _primaryController.addStatusListener((status) {
-      if (status == AnimationStatus.completed ||
-          status == AnimationStatus.dismissed) {
+      if (status == AnimationStatus.completed) {
         widget.onAnimationCycle?.call();
       }
     });
@@ -204,15 +194,15 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
       case MeshNodeAnimationType.pulse:
         return const Duration(milliseconds: 1500);
       case MeshNodeAnimationType.rotate:
-        return const Duration(milliseconds: 4000);
+        return const Duration(milliseconds: 6000);
       case MeshNodeAnimationType.breathe:
         return const Duration(milliseconds: 2000);
       case MeshNodeAnimationType.tumble:
-        return const Duration(milliseconds: 8000);
+        return const Duration(milliseconds: 10000);
       case MeshNodeAnimationType.shimmer:
         return const Duration(milliseconds: 2000);
       case MeshNodeAnimationType.pulseRotate:
-        return const Duration(milliseconds: 3000);
+        return const Duration(milliseconds: 4000);
       case MeshNodeAnimationType.none:
         return const Duration(milliseconds: 1000);
     }
@@ -229,8 +219,10 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
         _primaryController.repeat();
         break;
       case MeshNodeAnimationType.tumble:
+        // All three controllers run continuously for seamless tumble
         _primaryController.repeat();
         _secondaryController.repeat();
+        _tertiaryController.repeat();
         break;
       case MeshNodeAnimationType.pulseRotate:
         _primaryController.repeat();
@@ -244,6 +236,7 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
   void _disposeControllers() {
     _primaryController.dispose();
     _secondaryController.dispose();
+    _tertiaryController.dispose();
   }
 
   @override
@@ -264,7 +257,11 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_primaryController, _secondaryController]),
+      animation: Listenable.merge([
+        _primaryController,
+        _secondaryController,
+        _tertiaryController,
+      ]),
       builder: (context, child) {
         return _buildAnimatedNode();
       },
@@ -275,17 +272,30 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
     // Calculate rotation angles based on animation type
     double rotationY = 0;
     double rotationX = 0;
+    double rotationZ = 0;
+    double scale = 1.0;
+    double glowMultiplier = 1.0;
 
     switch (widget.animationType) {
       case MeshNodeAnimationType.rotate:
-        rotationY = _rotateAnimation.value;
+        // Seamless full rotation
+        rotationY = _primaryController.value * 2 * math.pi;
         break;
       case MeshNodeAnimationType.tumble:
-        rotationY = _rotateAnimation.value;
-        rotationX = _tumbleAnimation.value * 0.3;
+        // Three independent rotations for organic tumble - all seamless
+        rotationY = _primaryController.value * 2 * math.pi;
+        rotationX = _secondaryController.value * 2 * math.pi;
+        rotationZ = _tertiaryController.value * 2 * math.pi;
         break;
       case MeshNodeAnimationType.pulseRotate:
-        rotationY = _rotateAnimation.value;
+        rotationY = _primaryController.value * 2 * math.pi;
+        glowMultiplier = 0.6 + 0.4 * _secondaryController.value;
+        break;
+      case MeshNodeAnimationType.pulse:
+        glowMultiplier = 0.5 + 0.5 * _primaryController.value;
+        break;
+      case MeshNodeAnimationType.breathe:
+        scale = 0.9 + 0.2 * _primaryController.value;
         break;
       default:
         break;
@@ -293,35 +303,23 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
 
     Widget node = CustomPaint(
       size: Size(widget.size, widget.size),
-      painter: _MeshCubePainter(
+      painter: _IcosahedronPainter(
         gradientColors: _gradientColors,
-        glowIntensity: _getGlowIntensity(),
+        glowIntensity: widget.glowIntensity * glowMultiplier,
         lineThickness: widget.lineThickness,
         nodeSize: widget.nodeSize,
         rotationY: rotationY,
         rotationX: rotationX,
+        rotationZ: rotationZ,
       ),
     );
 
     // Apply scale for breathe animation
-    if (widget.animationType == MeshNodeAnimationType.breathe) {
-      node = Transform.scale(scale: _breatheAnimation.value, child: node);
+    if (scale != 1.0) {
+      node = Transform.scale(scale: scale, child: node);
     }
 
     return SizedBox(width: widget.size, height: widget.size, child: node);
-  }
-
-  double _getGlowIntensity() {
-    if (!widget.animate) return widget.glowIntensity;
-
-    switch (widget.animationType) {
-      case MeshNodeAnimationType.pulse:
-        return widget.glowIntensity * (0.5 + 0.5 * _pulseAnimation.value);
-      case MeshNodeAnimationType.pulseRotate:
-        return widget.glowIntensity * (0.6 + 0.4 * _secondaryController.value);
-      default:
-        return widget.glowIntensity;
-    }
   }
 }
 
@@ -344,6 +342,13 @@ class _Point3D {
     return _Point3D(x, y * cos - z * sin, y * sin + z * cos);
   }
 
+  /// Rotate around Z axis
+  _Point3D rotateZ(double angle) {
+    final cos = math.cos(angle);
+    final sin = math.sin(angle);
+    return _Point3D(x * cos - y * sin, x * sin + y * cos, z);
+  }
+
   /// Project to 2D with perspective
   Offset project(double size, double perspective) {
     final scale = perspective / (perspective + z);
@@ -354,61 +359,92 @@ class _Point3D {
   }
 }
 
-/// Custom painter for the 3D mesh cube
-class _MeshCubePainter extends CustomPainter {
+/// Custom painter for the 3D icosahedron mesh (12 vertices, 30 edges)
+class _IcosahedronPainter extends CustomPainter {
   final List<Color> gradientColors;
   final double glowIntensity;
   final double lineThickness;
   final double nodeSize;
   final double rotationY;
   final double rotationX;
+  final double rotationZ;
 
-  _MeshCubePainter({
+  _IcosahedronPainter({
     required this.gradientColors,
     required this.glowIntensity,
     required this.lineThickness,
     required this.nodeSize,
     required this.rotationY,
     required this.rotationX,
+    required this.rotationZ,
   });
 
-  // Cube vertices (normalized -1 to 1)
-  static const _vertices = [
-    _Point3D(-1, -1, -1), // 0: back-bottom-left
-    _Point3D(1, -1, -1), // 1: back-bottom-right
-    _Point3D(1, 1, -1), // 2: back-top-right
-    _Point3D(-1, 1, -1), // 3: back-top-left
-    _Point3D(-1, -1, 1), // 4: front-bottom-left
-    _Point3D(1, -1, 1), // 5: front-bottom-right
-    _Point3D(1, 1, 1), // 6: front-top-right
-    _Point3D(-1, 1, 1), // 7: front-top-left
-  ];
+  // Golden ratio for icosahedron
+  static final double _phi = (1 + math.sqrt(5)) / 2;
 
-  // Edges as pairs of vertex indices
-  static const _edges = [
-    [0, 1], [1, 2], [2, 3], [3, 0], // Back face
-    [4, 5], [5, 6], [6, 7], [7, 4], // Front face
-    [0, 4], [1, 5], [2, 6], [3, 7], // Connecting edges
+  // Icosahedron has 12 vertices - perfectly spherical distribution
+  static final List<_Point3D> _vertices = _generateVertices();
+
+  static List<_Point3D> _generateVertices() {
+    const scale = 0.42;
+
+    // Icosahedron vertices: 3 perpendicular golden rectangles
+    final vertices = <_Point3D>[
+      // Rectangle in XY plane
+      _Point3D(-1, _phi, 0),
+      _Point3D(1, _phi, 0),
+      _Point3D(-1, -_phi, 0),
+      _Point3D(1, -_phi, 0),
+      // Rectangle in YZ plane
+      _Point3D(0, -1, _phi),
+      _Point3D(0, 1, _phi),
+      _Point3D(0, -1, -_phi),
+      _Point3D(0, 1, -_phi),
+      // Rectangle in XZ plane
+      _Point3D(_phi, 0, -1),
+      _Point3D(_phi, 0, 1),
+      _Point3D(-_phi, 0, -1),
+      _Point3D(-_phi, 0, 1),
+    ];
+
+    // Normalize to unit sphere and scale
+    return vertices.map((v) {
+      final len = math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+      return _Point3D(v.x / len * scale, v.y / len * scale, v.z / len * scale);
+    }).toList();
+  }
+
+  // Icosahedron has exactly 30 edges - each vertex connects to 5 others
+  static const List<List<int>> _edges = [
+    // Top pentagon (around vertex 0 and 1)
+    [0, 1], [0, 5], [0, 7], [0, 10], [0, 11],
+    [1, 5], [1, 7], [1, 8], [1, 9],
+    // Middle band
+    [5, 9], [5, 4], [5, 11],
+    [9, 4], [9, 3], [9, 8],
+    [4, 3], [4, 2], [4, 11],
+    [3, 2], [3, 6], [3, 8],
+    // Bottom pentagon (around vertex 2 and 6)
+    [2, 6], [2, 10], [2, 11],
+    [6, 7], [6, 8], [6, 10],
+    [7, 8], [7, 10],
+    [10, 11],
   ];
 
   @override
   void paint(Canvas canvas, Size size) {
-    const perspective = 4.0;
-    const cubeScale = 0.35; // Scale down the cube to fit nicely
+    const perspective = 3.0;
 
     // Transform and project all vertices
     final projectedPoints = <Offset>[];
     final transformedPoints = <_Point3D>[];
 
     for (final vertex in _vertices) {
-      // Scale, rotate, then project
-      var point = _Point3D(
-        vertex.x * cubeScale,
-        vertex.y * cubeScale,
-        vertex.z * cubeScale,
-      );
-      point = point.rotateY(rotationY);
+      var point = vertex;
+      // Apply rotations in order: Z, X, Y for natural tumble
+      point = point.rotateZ(rotationZ);
       point = point.rotateX(rotationX);
+      point = point.rotateY(rotationY);
       transformedPoints.add(point);
       projectedPoints.add(point.project(size.width, perspective));
     }
@@ -427,7 +463,9 @@ class _MeshCubePainter extends CustomPainter {
       final edge = entry.key;
       final p1 = projectedPoints[edge[0]];
       final p2 = projectedPoints[edge[1]];
-      _drawEdge(canvas, p1, p2, size);
+      final z1 = transformedPoints[edge[0]].z;
+      final z2 = transformedPoints[edge[1]].z;
+      _drawEdge(canvas, p1, p2, size, z1, z2);
     }
 
     // Sort vertices by Z depth for drawing (back to front)
@@ -446,8 +484,19 @@ class _MeshCubePainter extends CustomPainter {
     }
   }
 
-  void _drawEdge(Canvas canvas, Offset p1, Offset p2, Size size) {
-    final baseWidth = size.width * 0.025 * lineThickness;
+  void _drawEdge(
+    Canvas canvas,
+    Offset p1,
+    Offset p2,
+    Size size,
+    double z1,
+    double z2,
+  ) {
+    final baseWidth = size.width * 0.02 * lineThickness;
+
+    // Depth-based opacity - normalize z from [-0.42, 0.42] to [0.3, 1.0]
+    final avgZ = (z1 + z2) / 2;
+    final depthFactor = ((avgZ + 0.5) * 0.9 + 0.3).clamp(0.35, 1.0);
 
     // Calculate color based on X position (left=orange, middle=magenta, right=blue)
     final avgX = (p1.dx + p2.dx) / 2;
@@ -457,53 +506,59 @@ class _MeshCubePainter extends CustomPainter {
     // Draw glow
     if (glowIntensity > 0) {
       final glowPaint = Paint()
-        ..color = color.withAlpha((40 * glowIntensity).round())
-        ..strokeWidth = baseWidth * 3
+        ..color = color.withAlpha((35 * glowIntensity * depthFactor).round())
+        ..strokeWidth = baseWidth * 5
         ..strokeCap = StrokeCap.round
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseWidth * 2);
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseWidth * 2.5);
       canvas.drawLine(p1, p2, glowPaint);
     }
 
     // Draw line
     final linePaint = Paint()
-      ..color = color
-      ..strokeWidth = baseWidth
+      ..color = color.withAlpha((255 * depthFactor).round())
+      ..strokeWidth = baseWidth * (0.5 + 0.5 * depthFactor)
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(p1, p2, linePaint);
   }
 
   void _drawNode(Canvas canvas, Offset point, Size size, double depth) {
-    // Node size varies slightly based on depth (closer = bigger)
-    final depthFactor = 1.0 + depth * 0.15;
-    final baseRadius = size.width * 0.055 * nodeSize * depthFactor;
+    // Node size varies based on depth (closer = bigger)
+    // Normalize depth from [-0.42, 0.42] to reasonable scale
+    final depthFactor = ((depth + 0.5) * 1.0 + 0.5).clamp(0.5, 1.3);
+    final baseRadius = size.width * 0.045 * nodeSize * depthFactor;
 
     // Color based on X position
     final t = point.dx / size.width;
     final color = _getGradientColor(t);
 
+    // Opacity based on depth
+    final opacity = ((depth + 0.5) * 1.2 + 0.4).clamp(0.45, 1.0);
+
     // Draw outer glow
     if (glowIntensity > 0) {
       final glowPaint = Paint()
-        ..color = color.withAlpha((60 * glowIntensity).round())
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseRadius * 1.5);
-      canvas.drawCircle(point, baseRadius * 2, glowPaint);
+        ..color = color.withAlpha((60 * glowIntensity * opacity).round())
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseRadius * 2);
+      canvas.drawCircle(point, baseRadius * 2.5, glowPaint);
     }
 
     // Draw node fill
     final fillPaint = Paint()
-      ..color = color
+      ..color = color.withAlpha((255 * opacity).round())
       ..style = PaintingStyle.fill;
     canvas.drawCircle(point, baseRadius, fillPaint);
 
-    // Draw highlight
-    final highlightOffset = Offset(
-      point.dx - baseRadius * 0.3,
-      point.dy - baseRadius * 0.3,
-    );
-    final highlightPaint = Paint()
-      ..color = Colors.white.withAlpha(80)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(highlightOffset, baseRadius * 0.3, highlightPaint);
+    // Draw subtle inner highlight for 3D spherical effect
+    if (baseRadius > 2) {
+      final highlightOffset = Offset(
+        point.dx - baseRadius * 0.3,
+        point.dy - baseRadius * 0.3,
+      );
+      final highlightPaint = Paint()
+        ..color = Colors.white.withAlpha((70 * opacity).round())
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(highlightOffset, baseRadius * 0.35, highlightPaint);
+    }
   }
 
   Color _getGradientColor(double t) {
@@ -529,10 +584,11 @@ class _MeshCubePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _MeshCubePainter oldDelegate) {
+  bool shouldRepaint(covariant _IcosahedronPainter oldDelegate) {
     return oldDelegate.glowIntensity != glowIntensity ||
         oldDelegate.rotationY != rotationY ||
         oldDelegate.rotationX != rotationX ||
+        oldDelegate.rotationZ != rotationZ ||
         oldDelegate.lineThickness != lineThickness ||
         oldDelegate.nodeSize != nodeSize;
   }
