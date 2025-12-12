@@ -39,6 +39,7 @@ final mainShellScaffoldKeyProvider =
     );
 
 /// Widget to create a hamburger menu button for app bars
+/// Automatically shows a back button if the screen was pushed onto the navigation stack
 class HamburgerMenuButton extends ConsumerWidget {
   const HamburgerMenuButton({super.key});
 
@@ -46,6 +47,24 @@ class HamburgerMenuButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scaffoldKey = ref.watch(mainShellScaffoldKeyProvider);
     final theme = Theme.of(context);
+    
+    // Check if we can pop (meaning we were pushed onto the stack)
+    // If so, show a back button instead of the hamburger menu
+    final canPop = Navigator.of(context).canPop();
+    
+    if (canPop) {
+      return IconButton(
+        icon: Icon(
+          Icons.arrow_back,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+        ),
+        onPressed: () {
+          HapticFeedback.lightImpact();
+          Navigator.of(context).pop();
+        },
+        tooltip: 'Back',
+      );
+    }
 
     return IconButton(
       icon: Icon(
