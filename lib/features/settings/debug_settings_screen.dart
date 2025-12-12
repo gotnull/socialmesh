@@ -23,15 +23,15 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   MeshNodeAnimationType _animationType = MeshNodeAnimationType.pulse;
   double _size = 96;
   double _glowIntensity = 0.6;
-  int _connectionPoints = 6;
-  bool _showInnerDetail = true;
+  double _lineThickness = 1.0;
+  double _nodeSize = 1.0;
   bool _animate = true;
   int _selectedColorPreset = 0;
 
   // Color presets
   static const List<List<Color>> _colorPresets = [
-    // Brand gradient
-    [Color(0xFFE91E8C), Color(0xFF8B5CF6), Color(0xFF4F6AF6)],
+    // Brand gradient (orange → magenta → blue)
+    [Color(0xFFFF6B4A), Color(0xFFE91E8C), Color(0xFF4F6AF6)],
     // Cyan-Teal
     [Color(0xFF06B6D4), Color(0xFF14B8A6), Color(0xFF10B981)],
     // Sunset
@@ -148,8 +148,8 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                 animationType: _animationType,
                 animate: _animate,
                 glowIntensity: _glowIntensity,
-                connectionPoints: _connectionPoints,
-                showInnerDetail: _showInnerDetail,
+                lineThickness: _lineThickness,
+                nodeSize: _nodeSize,
                 gradientColors: _colorPresets[_selectedColorPreset],
               ),
             ),
@@ -266,15 +266,25 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Connection Points Slider
+          // Line Thickness Slider
           _buildSliderRow(
-            label: 'Connection Points',
-            value: _connectionPoints.toDouble(),
-            min: 3,
-            max: 8,
-            divisions: 5,
-            displayValue: '$_connectionPoints',
-            onChanged: (v) => setState(() => _connectionPoints = v.round()),
+            label: 'Line Thickness',
+            value: _lineThickness,
+            min: 0.5,
+            max: 2.0,
+            displayValue: '${_lineThickness.toStringAsFixed(1)}x',
+            onChanged: (v) => setState(() => _lineThickness = v),
+          ),
+          const SizedBox(height: 16),
+
+          // Node Size Slider
+          _buildSliderRow(
+            label: 'Node Size',
+            value: _nodeSize,
+            min: 0.5,
+            max: 2.0,
+            displayValue: '${_nodeSize.toStringAsFixed(1)}x',
+            onChanged: (v) => setState(() => _nodeSize = v),
           ),
           const SizedBox(height: 20),
 
@@ -286,14 +296,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                   label: 'Animate',
                   value: _animate,
                   onChanged: (v) => setState(() => _animate = v),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildToggle(
-                  label: 'Inner Detail',
-                  value: _showInnerDetail,
-                  onChanged: (v) => setState(() => _showInnerDetail = v),
                 ),
               ),
             ],
@@ -343,9 +345,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: _buildPresetButton(
-                  'Party',
+                  'Tumble',
                   () => setState(() {
-                    _animationType = MeshNodeAnimationType.orbit;
+                    _animationType = MeshNodeAnimationType.tumble;
                     _size = 96;
                     _glowIntensity = 1.0;
                     _selectedColorPreset = 6;
@@ -763,11 +765,11 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
     if (_glowIntensity != 0.6) {
       snippet += '  glowIntensity: ${_glowIntensity.toStringAsFixed(2)},\n';
     }
-    if (_connectionPoints != 6) {
-      snippet += '  connectionPoints: $_connectionPoints,\n';
+    if (_lineThickness != 1.0) {
+      snippet += '  lineThickness: ${_lineThickness.toStringAsFixed(1)},\n';
     }
-    if (!_showInnerDetail) {
-      snippet += '  showInnerDetail: false,\n';
+    if (_nodeSize != 1.0) {
+      snippet += '  nodeSize: ${_nodeSize.toStringAsFixed(1)},\n';
     }
     if (hasCustomColors) {
       snippet += '  // $colorPreset preset\n';

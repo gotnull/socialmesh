@@ -7,17 +7,14 @@ enum MeshNodeAnimationType {
   /// Gentle pulsing glow effect
   pulse,
 
-  /// Continuous rotation
+  /// Continuous Y-axis rotation (3D spin)
   rotate,
 
   /// Breathing scale effect
   breathe,
 
-  /// Orbiting particles around the node
-  orbit,
-
-  /// Wave ripple effect emanating from center
-  ripple,
+  /// Slow 3D tumble rotation
+  tumble,
 
   /// Shimmer effect across the gradient
   shimmer,
@@ -42,7 +39,8 @@ enum MeshNodeSize {
   const MeshNodeSize(this.size);
 }
 
-/// A fully animatable mesh node widget with the brand gradient.
+/// A fully animatable 3D mesh cube widget with the brand gradient.
+/// Replicates the SocialMesh app icon - a wireframe cube with gradient nodes.
 /// Can be used as a loading indicator, decorative element, or icon.
 class AnimatedMeshNode extends StatefulWidget {
   /// The size of the mesh node
@@ -57,17 +55,17 @@ class AnimatedMeshNode extends StatefulWidget {
   /// Whether the animation should run
   final bool animate;
 
-  /// Custom gradient colors (defaults to brand gradient)
+  /// Custom gradient colors (defaults to brand gradient: orange → magenta → blue)
   final List<Color>? gradientColors;
 
   /// Glow intensity (0.0 - 1.0)
   final double glowIntensity;
 
-  /// Number of connection points on the node (3-8)
-  final int connectionPoints;
+  /// Line thickness multiplier
+  final double lineThickness;
 
-  /// Whether to show the inner hexagon detail
-  final bool showInnerDetail;
+  /// Node (vertex) size multiplier
+  final double nodeSize;
 
   /// Callback when animation completes one cycle
   final VoidCallback? onAnimationCycle;
@@ -80,8 +78,8 @@ class AnimatedMeshNode extends StatefulWidget {
     this.animate = true,
     this.gradientColors,
     this.glowIntensity = 0.6,
-    this.connectionPoints = 6,
-    this.showInnerDetail = true,
+    this.lineThickness = 1.0,
+    this.nodeSize = 1.0,
     this.onAnimationCycle,
   });
 
@@ -94,8 +92,8 @@ class AnimatedMeshNode extends StatefulWidget {
     bool animate = true,
     List<Color>? gradientColors,
     double glowIntensity = 0.6,
-    int connectionPoints = 6,
-    bool showInnerDetail = true,
+    double lineThickness = 1.0,
+    double nodeSize = 1.0,
     VoidCallback? onAnimationCycle,
   }) {
     return AnimatedMeshNode(
@@ -106,8 +104,8 @@ class AnimatedMeshNode extends StatefulWidget {
       animate: animate,
       gradientColors: gradientColors,
       glowIntensity: glowIntensity,
-      connectionPoints: connectionPoints,
-      showInnerDetail: showInnerDetail,
+      lineThickness: lineThickness,
+      nodeSize: nodeSize,
       onAnimationCycle: onAnimationCycle,
     );
   }
@@ -138,7 +136,7 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
   late Animation<double> _pulseAnimation;
   late Animation<double> _rotateAnimation;
   late Animation<double> _breatheAnimation;
-  late Animation<double> _shimmerAnimation;
+  late Animation<double> _tumbleAnimation;
 
   @override
   void initState() {
@@ -185,8 +183,8 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
       CurvedAnimation(parent: _primaryController, curve: Curves.easeInOut),
     );
 
-    _shimmerAnimation = Tween<double>(begin: -1.0, end: 2.0).animate(
-      CurvedAnimation(parent: _primaryController, curve: Curves.easeInOut),
+    _tumbleAnimation = Tween<double>(begin: 0.0, end: 2 * math.pi).animate(
+      CurvedAnimation(parent: _secondaryController, curve: Curves.linear),
     );
 
     if (widget.animate) {
@@ -206,17 +204,15 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
       case MeshNodeAnimationType.pulse:
         return const Duration(milliseconds: 1500);
       case MeshNodeAnimationType.rotate:
-        return const Duration(milliseconds: 3000);
+        return const Duration(milliseconds: 4000);
       case MeshNodeAnimationType.breathe:
         return const Duration(milliseconds: 2000);
-      case MeshNodeAnimationType.orbit:
-        return const Duration(milliseconds: 4000);
-      case MeshNodeAnimationType.ripple:
-        return const Duration(milliseconds: 1800);
+      case MeshNodeAnimationType.tumble:
+        return const Duration(milliseconds: 8000);
       case MeshNodeAnimationType.shimmer:
         return const Duration(milliseconds: 2000);
       case MeshNodeAnimationType.pulseRotate:
-        return const Duration(milliseconds: 2000);
+        return const Duration(milliseconds: 3000);
       case MeshNodeAnimationType.none:
         return const Duration(milliseconds: 1000);
     }
@@ -226,15 +222,15 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
     switch (widget.animationType) {
       case MeshNodeAnimationType.pulse:
       case MeshNodeAnimationType.breathe:
-      case MeshNodeAnimationType.ripple:
         _primaryController.repeat(reverse: true);
         break;
       case MeshNodeAnimationType.rotate:
-      case MeshNodeAnimationType.orbit:
-        _primaryController.repeat();
-        break;
       case MeshNodeAnimationType.shimmer:
         _primaryController.repeat();
+        break;
+      case MeshNodeAnimationType.tumble:
+        _primaryController.repeat();
+        _secondaryController.repeat();
         break;
       case MeshNodeAnimationType.pulseRotate:
         _primaryController.repeat();
@@ -256,12 +252,13 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
     super.dispose();
   }
 
+  // Brand gradient: orange/coral → magenta/pink → blue
   List<Color> get _gradientColors =>
       widget.gradientColors ??
       const [
-        Color(0xFFE91E8C), // Magenta
-        Color(0xFF8B5CF6), // Purple
-        Color(0xFF4F6AF6), // Blue
+        Color(0xFFFF6B4A), // Orange/coral (left side)
+        Color(0xFFE91E8C), // Magenta/pink (middle)
+        Color(0xFF4F6AF6), // Blue (right side)
       ];
 
   @override
@@ -275,47 +272,40 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
   }
 
   Widget _buildAnimatedNode() {
-    Widget node = CustomPaint(
-      size: Size(widget.size, widget.size),
-      painter: _MeshNodePainter(
-        gradientColors: _gradientColors,
-        glowIntensity: _getGlowIntensity(),
-        connectionPoints: widget.connectionPoints,
-        showInnerDetail: widget.showInnerDetail,
-        shimmerProgress: widget.animationType == MeshNodeAnimationType.shimmer
-            ? _shimmerAnimation.value
-            : null,
-        rippleProgress: widget.animationType == MeshNodeAnimationType.ripple
-            ? _pulseAnimation.value
-            : null,
-      ),
-    );
+    // Calculate rotation angles based on animation type
+    double rotationY = 0;
+    double rotationX = 0;
 
-    // Apply transformations based on animation type
     switch (widget.animationType) {
       case MeshNodeAnimationType.rotate:
-        node = Transform.rotate(angle: _rotateAnimation.value, child: node);
+        rotationY = _rotateAnimation.value;
         break;
-      case MeshNodeAnimationType.breathe:
-        node = Transform.scale(scale: _breatheAnimation.value, child: node);
+      case MeshNodeAnimationType.tumble:
+        rotationY = _rotateAnimation.value;
+        rotationX = _tumbleAnimation.value * 0.3;
         break;
       case MeshNodeAnimationType.pulseRotate:
-        node = Transform.rotate(
-          angle: _rotateAnimation.value,
-          child: Transform.scale(
-            scale: 0.95 + (0.1 * _secondaryController.value),
-            child: node,
-          ),
-        );
-        break;
-      case MeshNodeAnimationType.orbit:
-        node = Stack(
-          alignment: Alignment.center,
-          children: [node, ..._buildOrbitingParticles()],
-        );
+        rotationY = _rotateAnimation.value;
         break;
       default:
         break;
+    }
+
+    Widget node = CustomPaint(
+      size: Size(widget.size, widget.size),
+      painter: _MeshCubePainter(
+        gradientColors: _gradientColors,
+        glowIntensity: _getGlowIntensity(),
+        lineThickness: widget.lineThickness,
+        nodeSize: widget.nodeSize,
+        rotationY: rotationY,
+        rotationX: rotationX,
+      ),
+    );
+
+    // Apply scale for breathe animation
+    if (widget.animationType == MeshNodeAnimationType.breathe) {
+      node = Transform.scale(scale: _breatheAnimation.value, child: node);
     }
 
     return SizedBox(width: widget.size, height: widget.size, child: node);
@@ -326,7 +316,6 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
 
     switch (widget.animationType) {
       case MeshNodeAnimationType.pulse:
-      case MeshNodeAnimationType.ripple:
         return widget.glowIntensity * (0.5 + 0.5 * _pulseAnimation.value);
       case MeshNodeAnimationType.pulseRotate:
         return widget.glowIntensity * (0.6 + 0.4 * _secondaryController.value);
@@ -334,265 +323,214 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
         return widget.glowIntensity;
     }
   }
+}
 
-  List<Widget> _buildOrbitingParticles() {
-    final particles = <Widget>[];
-    const particleCount = 3;
-    final orbitRadius = widget.size * 0.45;
+/// 3D point representation
+class _Point3D {
+  final double x, y, z;
+  const _Point3D(this.x, this.y, this.z);
 
-    for (var i = 0; i < particleCount; i++) {
-      final baseAngle = (2 * math.pi / particleCount) * i;
-      final angle = baseAngle + _rotateAnimation.value;
-      final x = math.cos(angle) * orbitRadius;
-      final y = math.sin(angle) * orbitRadius;
+  /// Rotate around Y axis
+  _Point3D rotateY(double angle) {
+    final cos = math.cos(angle);
+    final sin = math.sin(angle);
+    return _Point3D(x * cos + z * sin, y, -x * sin + z * cos);
+  }
 
-      particles.add(
-        Transform.translate(
-          offset: Offset(x, y),
-          child: Container(
-            width: widget.size * 0.08,
-            height: widget.size * 0.08,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  _gradientColors[i % _gradientColors.length],
-                  _gradientColors[i % _gradientColors.length].withAlpha(0),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _gradientColors[i % _gradientColors.length].withAlpha(
-                    150,
-                  ),
-                  blurRadius: 4,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
+  /// Rotate around X axis
+  _Point3D rotateX(double angle) {
+    final cos = math.cos(angle);
+    final sin = math.sin(angle);
+    return _Point3D(x, y * cos - z * sin, y * sin + z * cos);
+  }
 
-    return particles;
+  /// Project to 2D with perspective
+  Offset project(double size, double perspective) {
+    final scale = perspective / (perspective + z);
+    return Offset(
+      x * scale * size / 2 + size / 2,
+      y * scale * size / 2 + size / 2,
+    );
   }
 }
 
-/// Custom painter for the mesh node
-class _MeshNodePainter extends CustomPainter {
+/// Custom painter for the 3D mesh cube
+class _MeshCubePainter extends CustomPainter {
   final List<Color> gradientColors;
   final double glowIntensity;
-  final int connectionPoints;
-  final bool showInnerDetail;
-  final double? shimmerProgress;
-  final double? rippleProgress;
+  final double lineThickness;
+  final double nodeSize;
+  final double rotationY;
+  final double rotationX;
 
-  _MeshNodePainter({
+  _MeshCubePainter({
     required this.gradientColors,
     required this.glowIntensity,
-    required this.connectionPoints,
-    required this.showInnerDetail,
-    this.shimmerProgress,
-    this.rippleProgress,
+    required this.lineThickness,
+    required this.nodeSize,
+    required this.rotationY,
+    required this.rotationX,
   });
+
+  // Cube vertices (normalized -1 to 1)
+  static const _vertices = [
+    _Point3D(-1, -1, -1), // 0: back-bottom-left
+    _Point3D(1, -1, -1), // 1: back-bottom-right
+    _Point3D(1, 1, -1), // 2: back-top-right
+    _Point3D(-1, 1, -1), // 3: back-top-left
+    _Point3D(-1, -1, 1), // 4: front-bottom-left
+    _Point3D(1, -1, 1), // 5: front-bottom-right
+    _Point3D(1, 1, 1), // 6: front-top-right
+    _Point3D(-1, 1, 1), // 7: front-top-left
+  ];
+
+  // Edges as pairs of vertex indices
+  static const _edges = [
+    [0, 1], [1, 2], [2, 3], [3, 0], // Back face
+    [4, 5], [5, 6], [6, 7], [7, 4], // Front face
+    [0, 4], [1, 5], [2, 6], [3, 7], // Connecting edges
+  ];
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
+    const perspective = 4.0;
+    const cubeScale = 0.35; // Scale down the cube to fit nicely
+
+    // Transform and project all vertices
+    final projectedPoints = <Offset>[];
+    final transformedPoints = <_Point3D>[];
+
+    for (final vertex in _vertices) {
+      // Scale, rotate, then project
+      var point = _Point3D(
+        vertex.x * cubeScale,
+        vertex.y * cubeScale,
+        vertex.z * cubeScale,
+      );
+      point = point.rotateY(rotationY);
+      point = point.rotateX(rotationX);
+      transformedPoints.add(point);
+      projectedPoints.add(point.project(size.width, perspective));
+    }
+
+    // Sort edges by average Z depth (back to front)
+    final edgesWithDepth = <MapEntry<List<int>, double>>[];
+    for (final edge in _edges) {
+      final avgZ =
+          (transformedPoints[edge[0]].z + transformedPoints[edge[1]].z) / 2;
+      edgesWithDepth.add(MapEntry(edge, avgZ));
+    }
+    edgesWithDepth.sort((a, b) => a.value.compareTo(b.value));
+
+    // Draw edges (back to front)
+    for (final entry in edgesWithDepth) {
+      final edge = entry.key;
+      final p1 = projectedPoints[edge[0]];
+      final p2 = projectedPoints[edge[1]];
+      _drawEdge(canvas, p1, p2, size);
+    }
+
+    // Sort vertices by Z depth for drawing (back to front)
+    final verticesWithDepth = <MapEntry<int, double>>[];
+    for (var i = 0; i < transformedPoints.length; i++) {
+      verticesWithDepth.add(MapEntry(i, transformedPoints[i].z));
+    }
+    verticesWithDepth.sort((a, b) => a.value.compareTo(b.value));
+
+    // Draw nodes (back to front)
+    for (final entry in verticesWithDepth) {
+      final i = entry.key;
+      final point = projectedPoints[i];
+      final depth = transformedPoints[i].z;
+      _drawNode(canvas, point, size, depth);
+    }
+  }
+
+  void _drawEdge(Canvas canvas, Offset p1, Offset p2, Size size) {
+    final baseWidth = size.width * 0.025 * lineThickness;
+
+    // Calculate color based on X position (left=orange, middle=magenta, right=blue)
+    final avgX = (p1.dx + p2.dx) / 2;
+    final t = avgX / size.width;
+    final color = _getGradientColor(t);
+
+    // Draw glow
+    if (glowIntensity > 0) {
+      final glowPaint = Paint()
+        ..color = color.withAlpha((40 * glowIntensity).round())
+        ..strokeWidth = baseWidth * 3
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseWidth * 2);
+      canvas.drawLine(p1, p2, glowPaint);
+    }
+
+    // Draw line
+    final linePaint = Paint()
+      ..color = color
+      ..strokeWidth = baseWidth
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(p1, p2, linePaint);
+  }
+
+  void _drawNode(Canvas canvas, Offset point, Size size, double depth) {
+    // Node size varies slightly based on depth (closer = bigger)
+    final depthFactor = 1.0 + depth * 0.15;
+    final baseRadius = size.width * 0.055 * nodeSize * depthFactor;
+
+    // Color based on X position
+    final t = point.dx / size.width;
+    final color = _getGradientColor(t);
 
     // Draw outer glow
-    _drawGlow(canvas, center, radius);
-
-    // Draw ripple effect if active
-    if (rippleProgress != null) {
-      _drawRipple(canvas, center, radius);
+    if (glowIntensity > 0) {
+      final glowPaint = Paint()
+        ..color = color.withAlpha((60 * glowIntensity).round())
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseRadius * 1.5);
+      canvas.drawCircle(point, baseRadius * 2, glowPaint);
     }
 
-    // Draw main hexagonal node
-    _drawHexagon(canvas, center, radius * 0.75);
-
-    // Draw connection points
-    _drawConnectionPoints(canvas, center, radius * 0.85);
-
-    // Draw inner detail
-    if (showInnerDetail) {
-      _drawInnerHexagon(canvas, center, radius * 0.4);
-    }
-
-    // Draw shimmer overlay if active
-    if (shimmerProgress != null) {
-      _drawShimmer(canvas, size);
-    }
-  }
-
-  void _drawGlow(Canvas canvas, Offset center, double radius) {
-    final glowPaint = Paint()
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, radius * 0.3);
-
-    for (var i = 0; i < gradientColors.length; i++) {
-      final glowRadius = radius * (1.0 - i * 0.15);
-      glowPaint.color = gradientColors[i].withAlpha(
-        (50 * glowIntensity).round(),
-      );
-      canvas.drawCircle(center, glowRadius, glowPaint);
-    }
-  }
-
-  void _drawRipple(Canvas canvas, Offset center, double radius) {
-    final rippleRadius = radius * (0.8 + rippleProgress! * 0.6);
-    final ripplePaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..color = gradientColors[0].withAlpha(
-        ((1 - rippleProgress!) * 100).round(),
-      );
-
-    canvas.drawCircle(center, rippleRadius, ripplePaint);
-
-    // Second ripple ring
-    final rippleRadius2 = radius * (0.6 + rippleProgress! * 0.5);
-    ripplePaint.color = gradientColors[1].withAlpha(
-      ((1 - rippleProgress!) * 80).round(),
-    );
-    canvas.drawCircle(center, rippleRadius2, ripplePaint);
-  }
-
-  void _drawHexagon(Canvas canvas, Offset center, double radius) {
-    final path = _createHexagonPath(center, radius);
-
-    // Create gradient shader
-    final gradient = SweepGradient(
-      colors: [...gradientColors, gradientColors.first],
-      startAngle: 0,
-      endAngle: 2 * math.pi,
-    );
-
-    final paint = Paint()
-      ..shader = gradient.createShader(
-        Rect.fromCircle(center: center, radius: radius),
-      )
+    // Draw node fill
+    final fillPaint = Paint()
+      ..color = color
       ..style = PaintingStyle.fill;
+    canvas.drawCircle(point, baseRadius, fillPaint);
 
-    canvas.drawPath(path, paint);
-
-    // Draw border
-    final borderPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..shader = LinearGradient(
-        colors: gradientColors,
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ).createShader(Rect.fromCircle(center: center, radius: radius));
-
-    canvas.drawPath(path, borderPaint);
-  }
-
-  void _drawInnerHexagon(Canvas canvas, Offset center, double radius) {
-    final path = _createHexagonPath(center, radius);
-
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..color = Colors.white.withAlpha(100);
-
-    canvas.drawPath(path, paint);
-
-    // Draw center dot
-    final centerPaint = Paint()
-      ..color = Colors.white.withAlpha(180)
+    // Draw highlight
+    final highlightOffset = Offset(
+      point.dx - baseRadius * 0.3,
+      point.dy - baseRadius * 0.3,
+    );
+    final highlightPaint = Paint()
+      ..color = Colors.white.withAlpha(80)
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius * 0.2, centerPaint);
+    canvas.drawCircle(highlightOffset, baseRadius * 0.3, highlightPaint);
   }
 
-  void _drawConnectionPoints(Canvas canvas, Offset center, double radius) {
-    final pointPaint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = Colors.white;
+  Color _getGradientColor(double t) {
+    // t: 0 = left (orange), 0.5 = middle (magenta), 1 = right (blue)
+    t = t.clamp(0.0, 1.0);
 
-    final glowPaint = Paint()
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+    if (gradientColors.length < 2) return gradientColors.first;
 
-    for (var i = 0; i < connectionPoints; i++) {
-      final angle = (2 * math.pi / connectionPoints) * i - math.pi / 2;
-      final x = center.dx + math.cos(angle) * radius;
-      final y = center.dy + math.sin(angle) * radius;
-
-      // Glow
-      glowPaint.color = gradientColors[i % gradientColors.length].withAlpha(
-        (150 * glowIntensity).round(),
-      );
-      canvas.drawCircle(Offset(x, y), 4, glowPaint);
-
-      // Point
-      canvas.drawCircle(Offset(x, y), 3, pointPaint);
+    if (gradientColors.length == 2) {
+      return Color.lerp(gradientColors[0], gradientColors[1], t)!;
     }
 
-    // Draw connection lines between points
-    final linePaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..color = Colors.white.withAlpha(50);
+    // 3+ colors: interpolate through all
+    final segment = 1.0 / (gradientColors.length - 1);
+    final index = (t / segment).floor().clamp(0, gradientColors.length - 2);
+    final localT = (t - index * segment) / segment;
 
-    for (var i = 0; i < connectionPoints; i++) {
-      final angle1 = (2 * math.pi / connectionPoints) * i - math.pi / 2;
-      final x1 = center.dx + math.cos(angle1) * radius;
-      final y1 = center.dy + math.sin(angle1) * radius;
-
-      // Connect to next point
-      final nextIndex = (i + 1) % connectionPoints;
-      final angle2 = (2 * math.pi / connectionPoints) * nextIndex - math.pi / 2;
-      final x2 = center.dx + math.cos(angle2) * radius;
-      final y2 = center.dy + math.sin(angle2) * radius;
-
-      canvas.drawLine(Offset(x1, y1), Offset(x2, y2), linePaint);
-
-      // Connect to center
-      linePaint.color = Colors.white.withAlpha(30);
-      canvas.drawLine(Offset(x1, y1), center, linePaint);
-    }
-  }
-
-  void _drawShimmer(Canvas canvas, Size size) {
-    final shimmerPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          Colors.white.withAlpha(0),
-          Colors.white.withAlpha(60),
-          Colors.white.withAlpha(0),
-        ],
-        stops: const [0.0, 0.5, 1.0],
-        begin: Alignment(-1.0 + shimmerProgress! * 2, -1.0),
-        end: Alignment(0.0 + shimmerProgress! * 2, 1.0),
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..blendMode = BlendMode.srcATop;
-
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), shimmerPaint);
-  }
-
-  Path _createHexagonPath(Offset center, double radius) {
-    final path = Path();
-    for (var i = 0; i < 6; i++) {
-      final angle = (math.pi / 3) * i - math.pi / 2;
-      final x = center.dx + radius * math.cos(angle);
-      final y = center.dy + radius * math.sin(angle);
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.close();
-    return path;
+    return Color.lerp(gradientColors[index], gradientColors[index + 1], localT)!;
   }
 
   @override
-  bool shouldRepaint(covariant _MeshNodePainter oldDelegate) {
+  bool shouldRepaint(covariant _MeshCubePainter oldDelegate) {
     return oldDelegate.glowIntensity != glowIntensity ||
-        oldDelegate.shimmerProgress != shimmerProgress ||
-        oldDelegate.rippleProgress != rippleProgress;
+        oldDelegate.rotationY != rotationY ||
+        oldDelegate.rotationX != rotationX ||
+        oldDelegate.lineThickness != lineThickness ||
+        oldDelegate.nodeSize != nodeSize;
   }
 }
 
@@ -604,7 +542,10 @@ extension MeshNodeLoadingIndicator on BuildContext {
     MeshNodeAnimationType animationType = MeshNodeAnimationType.pulseRotate,
   }) {
     return Center(
-      child: AnimatedMeshNode(size: size, animationType: animationType),
+      child: AnimatedMeshNode(
+        size: size,
+        animationType: animationType,
+      ),
     );
   }
 }
