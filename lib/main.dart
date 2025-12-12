@@ -9,10 +9,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'firebase_options.dart';
 import 'core/theme.dart';
-import 'core/constants.dart';
 import 'core/transport.dart';
 import 'core/logging.dart';
 import 'core/widgets/animated_tagline.dart';
+import 'core/widgets/animated_mesh_node.dart';
 import 'providers/app_providers.dart';
 import 'providers/telemetry_providers.dart';
 import 'providers/subscription_providers.dart';
@@ -403,13 +403,12 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: Image.asset(
-                          AssetPaths.appIcon,
-                          width: 120,
-                          height: 120,
-                        ),
+                      const AccelerometerMeshNode(
+                        size: 250,
+                        animationType: MeshNodeAnimationType.tumble,
+                        glowIntensity: 0.5,
+                        lineThickness: 0.5,
+                        nodeSize: 0.8,
                       ),
                       const SizedBox(height: 32),
                       const Text(

@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 /// Animation types available for the mesh node
 enum MeshNodeAnimationType {
@@ -67,6 +69,12 @@ class AnimatedMeshNode extends StatefulWidget {
   /// Node (vertex) size multiplier
   final double nodeSize;
 
+  /// External rotation offset for X axis (radians) - e.g., from accelerometer
+  final double externalRotationX;
+
+  /// External rotation offset for Y axis (radians) - e.g., from accelerometer
+  final double externalRotationY;
+
   /// Callback when animation completes one cycle
   final VoidCallback? onAnimationCycle;
 
@@ -80,6 +88,8 @@ class AnimatedMeshNode extends StatefulWidget {
     this.glowIntensity = 0.6,
     this.lineThickness = 1.0,
     this.nodeSize = 1.0,
+    this.externalRotationX = 0.0,
+    this.externalRotationY = 0.0,
     this.onAnimationCycle,
   });
 
@@ -300,6 +310,10 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
       default:
         break;
     }
+
+    // Add external rotation offsets (e.g., from accelerometer)
+    rotationX += widget.externalRotationX;
+    rotationY += widget.externalRotationY;
 
     Widget node = CustomPaint(
       size: Size(widget.size, widget.size),
@@ -603,6 +617,123 @@ extension MeshNodeLoadingIndicator on BuildContext {
   }) {
     return Center(
       child: AnimatedMeshNode(size: size, animationType: animationType),
+    );
+  }
+}
+
+/// An AnimatedMeshNode that responds to device accelerometer for interactive rotation.
+/// Tilting the device left/right and forward/back will influence the mesh rotation.
+class AccelerometerMeshNode extends StatefulWidget {
+  /// The size of the mesh node
+  final double size;
+
+  /// The animation type to use
+  final MeshNodeAnimationType animationType;
+
+  /// Animation duration
+  final Duration? duration;
+
+  /// Whether the base animation should run
+  final bool animate;
+
+  /// Custom gradient colors
+  final List<Color>? gradientColors;
+
+  /// Glow intensity (0.0 - 1.0)
+  final double glowIntensity;
+
+  /// Line thickness multiplier
+  final double lineThickness;
+
+  /// Node (vertex) size multiplier
+  final double nodeSize;
+
+  /// Sensitivity of accelerometer influence (0.0 - 1.0)
+  final double accelerometerSensitivity;
+
+  /// Smoothing factor for accelerometer input (0.0 - 1.0, higher = smoother)
+  final double smoothing;
+
+  const AccelerometerMeshNode({
+    super.key,
+    this.size = 48,
+    this.animationType = MeshNodeAnimationType.tumble,
+    this.duration,
+    this.animate = true,
+    this.gradientColors,
+    this.glowIntensity = 0.6,
+    this.lineThickness = 1.0,
+    this.nodeSize = 1.0,
+    this.accelerometerSensitivity = 0.15,
+    this.smoothing = 0.85,
+  });
+
+  @override
+  State<AccelerometerMeshNode> createState() => _AccelerometerMeshNodeState();
+}
+
+class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode> {
+  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
+  double _rotationX = 0.0;
+  double _rotationY = 0.0;
+  double _targetRotationX = 0.0;
+  double _targetRotationY = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _startAccelerometer();
+  }
+
+  void _startAccelerometer() {
+    _accelerometerSubscription =
+        accelerometerEventStream(
+          samplingPeriod: const Duration(milliseconds: 16), // ~60fps
+        ).listen((event) {
+          if (!mounted) return;
+
+          // Map accelerometer values to rotation
+          // X accelerometer = tilt left/right = rotate around Y axis
+          // Y accelerometer = tilt forward/back = rotate around X axis
+          final sensitivity = widget.accelerometerSensitivity;
+
+          // Clamp and scale the values
+          _targetRotationY =
+              (event.x / 10.0).clamp(-1.0, 1.0) * sensitivity * math.pi;
+          _targetRotationX =
+              (event.y / 10.0).clamp(-1.0, 1.0) * sensitivity * math.pi;
+
+          // Apply smoothing for fluid motion
+          setState(() {
+            _rotationX =
+                _rotationX * widget.smoothing +
+                _targetRotationX * (1 - widget.smoothing);
+            _rotationY =
+                _rotationY * widget.smoothing +
+                _targetRotationY * (1 - widget.smoothing);
+          });
+        });
+  }
+
+  @override
+  void dispose() {
+    _accelerometerSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedMeshNode(
+      size: widget.size,
+      animationType: widget.animationType,
+      duration: widget.duration,
+      animate: widget.animate,
+      gradientColors: widget.gradientColors,
+      glowIntensity: widget.glowIntensity,
+      lineThickness: widget.lineThickness,
+      nodeSize: widget.nodeSize,
+      externalRotationX: _rotationX,
+      externalRotationY: _rotationY,
     );
   }
 }
