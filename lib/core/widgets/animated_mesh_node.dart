@@ -950,6 +950,7 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
   // ============ NODE HIT DETECTION ============
   /// Returns the index of the nearest vertex to touchPos, or -1 if none within grab radius
   /// Also returns the projected position of that vertex (for spring-back origin)
+  /// Uses depth-aware selection: prefers nodes closer to camera when multiple are near touch
   (int index, Offset? position) _findNearestVertex(Offset touchPos) {
     const scale = 0.42;
     const perspective = 3.0;
@@ -969,13 +970,13 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
       [-_phi, 0, 1],
     ];
 
-    // Grab radius - 30% of widget size
-    final grabRadius = 0.30 * widget.size;
+    // Grab radius - tighter for more precision (15% of widget size)
+    final grabRadius = 0.15 * widget.size;
     final grabRadiusSq = grabRadius * grabRadius;
 
-    int nearestIndex = -1;
-    double nearestDistSq = double.infinity;
-    Offset? nearestPosition;
+    // Collect ALL candidates within grab radius
+    final candidates =
+        <({int index, double distSq, double z, Offset position})>[];
 
     for (int i = 0; i < vertices.length; i++) {
       final v = vertices[i];
@@ -1012,17 +1013,34 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
       final dy = touchPos.dy - projY;
       final distSq = dx * dx + dy * dy;
 
-      if (distSq < grabRadiusSq && distSq < nearestDistSq) {
-        nearestIndex = i;
-        nearestDistSq = distSq;
-        nearestPosition = Offset(
-          projX / widget.size,
-          projY / widget.size,
-        ); // Normalized
+      if (distSq < grabRadiusSq) {
+        candidates.add((
+          index: i,
+          distSq: distSq,
+          z: z, // Higher Z = closer to camera
+          position: Offset(projX / widget.size, projY / widget.size),
+        ));
       }
     }
 
-    return (nearestIndex, nearestPosition);
+    if (candidates.isEmpty) {
+      return (-1, null);
+    }
+
+    // Sort by Z depth (highest/closest to camera first), then by 2D distance as tiebreaker
+    candidates.sort((a, b) {
+      // Primary: prefer closer to camera (higher Z)
+      final zDiff = b.z - a.z;
+      if (zDiff.abs() > 0.05) {
+        // Significant depth difference - use depth
+        return zDiff.sign.toInt();
+      }
+      // Similar depth - use 2D distance
+      return a.distSq.compareTo(b.distSq);
+    });
+
+    final best = candidates.first;
+    return (best.index, best.position);
   }
 
   // ============ TOUCH HANDLERS ============
