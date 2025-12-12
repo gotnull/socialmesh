@@ -227,39 +227,40 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Preview area
-          Container(
-            height: 340,
-            decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder.withAlpha(100)),
-            ),
-            child: Center(
-              child: _useAccelerometer
-                  ? AccelerometerMeshNode(
-                      size: _size,
-                      animationType: _animationType,
-                      animate: _animate,
-                      glowIntensity: _glowIntensity,
-                      lineThickness: _lineThickness,
-                      nodeSize: _nodeSize,
-                      gradientColors: _colorPresets[_selectedColorPreset],
-                      accelerometerSensitivity: _accelerometerSensitivity,
-                      friction: _accelerometerFriction,
-                      physicsMode: _physicsMode,
-                      enableTouch: _enableTouch,
-                      touchIntensity: _touchIntensity,
-                    )
-                  : AnimatedMeshNode(
-                      size: _size,
-                      animationType: _animationType,
-                      animate: _animate,
-                      glowIntensity: _glowIntensity,
-                      lineThickness: _lineThickness,
-                      nodeSize: _nodeSize,
-                      gradientColors: _colorPresets[_selectedColorPreset],
-                    ),
+          // Preview area - wrapped to prevent scroll interference
+          GestureDetector(
+            // Absorb vertical drags so scrollview doesn't scroll when interacting with mesh
+            onVerticalDragStart: (_) {},
+            onVerticalDragUpdate: (_) {},
+            onVerticalDragEnd: (_) {},
+            child: Container(
+              height: 340,
+              decoration: BoxDecoration(
+                color: AppTheme.darkBackground,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.darkBorder.withAlpha(100)),
+              ),
+              child: Center(
+                // ALWAYS use AccelerometerMeshNode - physicsMode.touchOnly disables accelerometer
+                child: AccelerometerMeshNode(
+                  size: _size,
+                  animationType: _animationType,
+                  animate: _animate,
+                  glowIntensity: _glowIntensity,
+                  lineThickness: _lineThickness,
+                  nodeSize: _nodeSize,
+                  gradientColors: _colorPresets[_selectedColorPreset],
+                  accelerometerSensitivity: _accelerometerSensitivity,
+                  friction: _accelerometerFriction,
+                  // When accelerometer disabled, use touchOnly mode
+                  physicsMode: _useAccelerometer
+                      ? _physicsMode
+                      : MeshPhysicsMode.touchOnly,
+                  enableTouch: _enableTouch,
+                  enablePullToStretch: _enablePullToStretch,
+                  touchIntensity: _touchIntensity,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -439,7 +440,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Accelerometer controls (only visible when enabled)
+          // Accelerometer-specific controls (only when enabled)
           if (_useAccelerometer) ...[
             _buildSectionLabel('Physics Mode'),
             const SizedBox(height: 8),
@@ -518,79 +519,71 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               },
             ),
             const SizedBox(height: 20),
+          ],
 
-            // Touch Interaction
-            _buildSectionLabel('Touch Interaction (Mario 64 Style)'),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Enable Touch Rotation',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
+          // Touch Interaction - ALWAYS visible (works with or without accelerometer)
+          _buildSectionLabel('Touch Interaction (Mario 64 Style)'),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Enable Touch Rotation',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                 ),
-                SizedBox(
-                  height: 24,
-                  child: Switch.adaptive(
-                    value: _enableTouch,
-                    activeTrackColor: context.accentColor,
-                    onChanged: (v) {
-                      setState(() => _enableTouch = v);
-                      _markChanged();
-                    },
-                  ),
-                ),
-              ],
-            ),
-            if (_enableTouch) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Enable Pull-to-Stretch',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 24,
-                    child: Switch.adaptive(
-                      value: _enablePullToStretch,
-                      activeTrackColor: context.accentColor,
-                      onChanged: (v) {
-                        setState(() => _enablePullToStretch = v);
-                        _markChanged();
-                      },
-                    ),
-                  ),
-                ],
               ),
-              const SizedBox(height: 16),
-              _buildSliderRow(
-                label: 'Touch Intensity',
-                value: _touchIntensity,
-                min: 0.1,
-                max: 2.0,
-                displayValue: _touchIntensity >= 1.5
-                    ? 'Wild'
-                    : _touchIntensity >= 1.0
-                    ? 'Normal'
-                    : 'Subtle',
-                onChanged: (v) {
-                  setState(() => _touchIntensity = v);
-                  _markChanged();
-                },
+              SizedBox(
+                height: 24,
+                child: Switch.adaptive(
+                  value: _enableTouch,
+                  activeTrackColor: context.accentColor,
+                  onChanged: (v) {
+                    setState(() => _enableTouch = v);
+                    _markChanged();
+                  },
+                ),
               ),
             ],
-            const SizedBox(height: 20),
-          ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Enable Pull-to-Stretch',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                ),
+              ),
+              SizedBox(
+                height: 24,
+                child: Switch.adaptive(
+                  value: _enablePullToStretch,
+                  activeTrackColor: context.accentColor,
+                  onChanged: (v) {
+                    setState(() => _enablePullToStretch = v);
+                    _markChanged();
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildSliderRow(
+            label: 'Touch Intensity',
+            value: _touchIntensity,
+            min: 0.1,
+            max: 2.0,
+            displayValue: _touchIntensity >= 1.5
+                ? 'Wild'
+                : _touchIntensity >= 1.0
+                ? 'Normal'
+                : 'Subtle',
+            onChanged: (v) {
+              setState(() => _touchIntensity = v);
+              _markChanged();
+            },
+          ),
+          const SizedBox(height: 20),
 
           // Preset Buttons
           _buildSectionLabel('Quick Presets'),

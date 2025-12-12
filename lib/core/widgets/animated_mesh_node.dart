@@ -93,11 +93,11 @@ class AnimatedMeshNode extends StatefulWidget {
   /// External rotation offset for Y axis (radians) - e.g., from accelerometer
   final double externalRotationY;
 
-  /// Touch point for deformation in normalized coordinates (0-1), null if not touching
-  final Offset? touchPoint;
+  /// Index of the vertex being grabbed (0-11), or -1 if none
+  final int grabbedVertexIndex;
 
-  /// How much vertices are pulled toward touch point (0-1)
-  final double deformationAmount;
+  /// Where to drag the grabbed vertex (in normalized 0-1 coordinates)
+  final Offset? dragPosition;
 
   /// Callback when animation completes one cycle
   final VoidCallback? onAnimationCycle;
@@ -114,8 +114,8 @@ class AnimatedMeshNode extends StatefulWidget {
     this.nodeSize = 1.0,
     this.externalRotationX = 0.0,
     this.externalRotationY = 0.0,
-    this.touchPoint,
-    this.deformationAmount = 0.0,
+    this.grabbedVertexIndex = -1,
+    this.dragPosition,
     this.onAnimationCycle,
   });
 
@@ -351,8 +351,8 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
         rotationY: rotationY,
         rotationX: rotationX,
         rotationZ: rotationZ,
-        touchPoint: widget.touchPoint,
-        deformationAmount: widget.deformationAmount,
+        grabbedVertexIndex: widget.grabbedVertexIndex,
+        dragPosition: widget.dragPosition,
       ),
     );
 
@@ -438,11 +438,11 @@ class _IcosahedronPainter extends CustomPainter {
   final double rotationX;
   final double rotationZ;
 
-  /// Touch point in normalized coordinates (0-1), null if not touching
-  final Offset? touchPoint;
+  /// Index of the vertex being grabbed (0-11), or -1 if none
+  final int grabbedVertexIndex;
 
-  /// How much vertices are pulled toward touch point (0-1)
-  final double deformationAmount;
+  /// Where to drag the grabbed vertex (in normalized 0-1 coordinates)
+  final Offset? dragPosition;
 
   _IcosahedronPainter({
     required this.gradientColors,
@@ -452,13 +452,9 @@ class _IcosahedronPainter extends CustomPainter {
     required this.rotationY,
     required this.rotationX,
     required this.rotationZ,
-    this.touchPoint,
-    this.deformationAmount = 0.0,
+    this.grabbedVertexIndex = -1,
+    this.dragPosition,
   });
-
-  // Radius of deformation influence (normalized to widget size)
-  // Larger radius = more vertices affected by touch
-  static const double _deformationRadius = 0.6;
 
   // Golden ratio for icosahedron
   static final double _phi = (1 + math.sqrt(5)) / 2;
@@ -568,67 +564,24 @@ class _IcosahedronPainter extends CustomPainter {
     }
   }
 
-  /// Apply Mario 64 style deformation - vertices near touch point get stretched outward
+  /// Move only the grabbed vertex to the drag position
+  /// All other vertices stay in place - edges naturally stretch
   List<Offset> _applyDeformation(List<Offset> points, Size size) {
-    if (touchPoint == null || deformationAmount <= 0) {
+    if (grabbedVertexIndex < 0 ||
+        grabbedVertexIndex >= points.length ||
+        dragPosition == null) {
       return points;
     }
 
-    // Convert touch point from normalized (0-1) to pixel coordinates
-    final touchPixel = Offset(
-      touchPoint!.dx * size.width,
-      touchPoint!.dy * size.height,
+    // Convert drag position from normalized (0-1) to pixel coordinates
+    final dragPixel = Offset(
+      dragPosition!.dx * size.width,
+      dragPosition!.dy * size.height,
     );
 
-    // Center of the mesh
-    final center = Offset(size.width / 2, size.height / 2);
-
-    // Direction from center to touch point (this is the "pull" direction)
-    final pullDirX = touchPixel.dx - center.dx;
-    final pullDirY = touchPixel.dy - center.dy;
-    final pullDirLen = math.sqrt(pullDirX * pullDirX + pullDirY * pullDirY);
-    final normalizedPullX = pullDirLen > 0 ? pullDirX / pullDirLen : 0.0;
-    final normalizedPullY = pullDirLen > 0 ? pullDirY / pullDirLen : 0.0;
-
-    final deformed = <Offset>[];
-    final radiusPixels = _deformationRadius * size.width;
-
-    for (final point in points) {
-      // Calculate distance from point to touch
-      final dx = touchPixel.dx - point.dx;
-      final dy = touchPixel.dy - point.dy;
-      final distance = math.sqrt(dx * dx + dy * dy);
-
-      if (distance < radiusPixels) {
-        // Calculate pull strength based on distance (closer = stronger pull)
-        // Use smooth falloff curve for jelly-like effect
-        final normalizedDist = distance / radiusPixels;
-        // Cubic falloff for more dramatic near-touch effect
-        final falloff = math.pow(1.0 - normalizedDist, 3.0);
-        final pullStrength = falloff * deformationAmount * 0.15;
-
-        // Push vertex OUTWARD in the pull direction (stretch, not collapse)
-        // Scale by how much the vertex is in the direction of the pull
-        final vertexFromCenter = Offset(
-          point.dx - center.dx,
-          point.dy - center.dy,
-        );
-        final dot =
-            vertexFromCenter.dx * normalizedPullX +
-            vertexFromCenter.dy * normalizedPullY;
-
-        // Only stretch vertices that are somewhat aligned with the pull direction
-        final alignmentFactor = (dot / (size.width * 0.3)).clamp(0.0, 1.0);
-        final stretchX =
-            normalizedPullX * pullStrength * size.width * alignmentFactor;
-        final stretchY =
-            normalizedPullY * pullStrength * size.height * alignmentFactor;
-
-        deformed.add(Offset(point.dx + stretchX, point.dy + stretchY));
-      } else {
-        deformed.add(point);
-      }
-    }
+    // Copy all points, but move the grabbed vertex to the drag position
+    final deformed = List<Offset>.from(points);
+    deformed[grabbedVertexIndex] = dragPixel;
 
     return deformed;
   }
@@ -740,8 +693,8 @@ class _IcosahedronPainter extends CustomPainter {
         oldDelegate.rotationZ != rotationZ ||
         oldDelegate.lineThickness != lineThickness ||
         oldDelegate.nodeSize != nodeSize ||
-        oldDelegate.touchPoint != touchPoint ||
-        oldDelegate.deformationAmount != deformationAmount;
+        oldDelegate.grabbedVertexIndex != grabbedVertexIndex ||
+        oldDelegate.dragPosition != dragPosition;
   }
 }
 
@@ -837,47 +790,47 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
   StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
   late AnimationController _physicsController;
 
-  // Rotation state
+  // ============ ROTATION STATE ============
   double _rotationX = 0.0;
   double _rotationY = 0.0;
-
-  // Velocity for momentum physics (radians per frame)
   double _velocityX = 0.0;
   double _velocityY = 0.0;
 
-  // Touch interaction state
+  // ============ TOUCH STATE ============
+  bool _isTouching = false;
   Offset? _lastTouchPosition;
-  bool _isDragging = false;
 
-  // Deformation state for Mario 64 style pull
-  Offset? _touchPoint; // Normalized 0-1 coordinates
-  double _deformationAmount = 0.0;
-  double _targetDeformation = 0.0;
+  // ============ VERTEX GRAB STATE ============
+  int _grabbedVertexIndex =
+      -1; // Which of the 12 vertices is grabbed (-1 = none)
+  int _springBackVertexIndex = -1; // Which vertex is springing back
+  Offset?
+  _dragPosition; // Where the grabbed vertex is being dragged (normalized 0-1)
+  Offset?
+  _originalVertexPosition; // Where the vertex was before grab (for spring-back)
 
-  // Spring-back physics constants
-  static const double _springStiffness =
-      0.35; // How fast it snaps back (higher = faster)
-  static const double _springDamping =
-      0.85; // Reduces oscillation (higher = less bounce)
+  // ============ CONSTANTS ============
+  static const double _maxVelocity = 0.15;
+  static final double _phi = (1 + math.sqrt(5)) / 2;
 
   // For chaos mode
   final math.Random _random = math.Random();
 
-  // Startup stabilization - ignore first few readings
+  // Startup stabilization
   int _stabilizationFrames = 0;
-  static const int _stabilizationDelay = 30; // ~0.5 seconds at 60fps
-
-  // Maximum velocity to prevent crazy spinning
-  static const double _maxVelocity = 0.15;
+  static const int _stabilizationDelay = 30;
 
   @override
   void initState() {
     super.initState();
+    // Physics loop - ALWAYS runs regardless of settings
     _physicsController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
-    )..addListener(_updatePhysics);
+    )..addListener(_physicsLoop);
     _physicsController.repeat();
+
+    // Start accelerometer listener
     _startAccelerometer();
   }
 
@@ -887,213 +840,264 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
           samplingPeriod: const Duration(milliseconds: 16),
         ).listen((event) {
           if (!mounted) return;
-          _processAccelerometerInput(event.x, event.y);
+          _handleAccelerometer(event.x, event.y);
         });
   }
 
-  void _processAccelerometerInput(double accelX, double accelY) {
-    // In touchOnly mode, ignore accelerometer
+  // ============ ACCELEROMETER INPUT ============
+  void _handleAccelerometer(double accelX, double accelY) {
+    // RULE 1: touchOnly mode = no accelerometer ever
     if (widget.physicsMode == MeshPhysicsMode.touchOnly) return;
 
-    // Wait for stabilization period before processing input
+    // RULE 2: While touching = accelerometer paused
+    if (_isTouching) return;
+
+    // RULE 3: Wait for sensor stabilization
     if (_stabilizationFrames < _stabilizationDelay) {
       _stabilizationFrames++;
       return;
     }
 
     final sensitivity = widget.accelerometerSensitivity;
-
-    // Normalize accelerometer values (-1 to 1)
     final normalizedX = (accelX / 10.0).clamp(-1.0, 1.0);
     final normalizedY = (accelY / 10.0).clamp(-1.0, 1.0);
 
     switch (widget.physicsMode) {
       case MeshPhysicsMode.tilt:
-        // Original behavior: direct mapping with smoothing
         final targetX = normalizedY * sensitivity * math.pi;
         final targetY = normalizedX * sensitivity * math.pi;
-        setState(() {
-          _rotationX =
-              _rotationX * widget.smoothing + targetX * (1 - widget.smoothing);
-          _rotationY =
-              _rotationY * widget.smoothing + targetY * (1 - widget.smoothing);
-        });
+        _rotationX =
+            _rotationX * widget.smoothing + targetX * (1 - widget.smoothing);
+        _rotationY =
+            _rotationY * widget.smoothing + targetY * (1 - widget.smoothing);
         break;
 
       case MeshPhysicsMode.momentum:
-        // Add accelerometer as impulse to velocity (reduced magnitude)
         _velocityY += normalizedX * sensitivity * 0.005;
         _velocityX += normalizedY * sensitivity * 0.005;
-        // Clamp velocity to prevent runaway spinning
-        _velocityX = _velocityX.clamp(-_maxVelocity, _maxVelocity);
-        _velocityY = _velocityY.clamp(-_maxVelocity, _maxVelocity);
         break;
 
       case MeshPhysicsMode.gyroscope:
-        // More precise, less smoothed tilt control
         final targetX = normalizedY * sensitivity * math.pi * 1.5;
         final targetY = normalizedX * sensitivity * math.pi * 1.5;
-        setState(() {
-          _rotationX =
-              _rotationX * 0.7 +
-              targetX * 0.3; // Less smoothing for responsiveness
-          _rotationY = _rotationY * 0.7 + targetY * 0.3;
-        });
+        _rotationX = _rotationX * 0.7 + targetX * 0.3;
+        _rotationY = _rotationY * 0.7 + targetY * 0.3;
         break;
 
       case MeshPhysicsMode.chaos:
-        // Add impulse plus random perturbation (reduced magnitude)
         _velocityY += normalizedX * sensitivity * 0.005;
         _velocityX += normalizedY * sensitivity * 0.005;
         _velocityX += (_random.nextDouble() - 0.5) * 0.003;
         _velocityY += (_random.nextDouble() - 0.5) * 0.003;
-        // Clamp velocity
-        _velocityX = _velocityX.clamp(-_maxVelocity, _maxVelocity);
-        _velocityY = _velocityY.clamp(-_maxVelocity, _maxVelocity);
         break;
 
       case MeshPhysicsMode.touchOnly:
-        // No accelerometer input
         break;
     }
+
+    // Clamp velocities
+    _velocityX = _velocityX.clamp(-_maxVelocity, _maxVelocity);
+    _velocityY = _velocityY.clamp(-_maxVelocity, _maxVelocity);
   }
 
-  void _updatePhysics() {
+  // ============ PHYSICS LOOP - ALWAYS RUNS ============
+  void _physicsLoop() {
     if (!mounted) return;
 
-    // Update deformation spring-back physics
-    _updateDeformation();
+    setState(() {
+      // ALWAYS apply velocity to rotation (this makes everything spin)
+      _rotationX += _velocityX;
+      _rotationY += _velocityY;
 
-    switch (widget.physicsMode) {
-      case MeshPhysicsMode.tilt:
-      case MeshPhysicsMode.gyroscope:
-        // Physics handled in accelerometer callback for direct modes
-        break;
+      // ALWAYS apply friction (this makes things slow down)
+      _velocityX *= widget.friction;
+      _velocityY *= widget.friction;
 
-      case MeshPhysicsMode.momentum:
-        setState(() {
-          // Apply velocity to rotation
-          _rotationX += _velocityX;
-          _rotationY += _velocityY;
-          // Apply friction
-          _velocityX *= widget.friction;
-          _velocityY *= widget.friction;
-        });
-        break;
+      // Chaos mode random perturbations
+      if (widget.physicsMode == MeshPhysicsMode.chaos && !_isTouching) {
+        if (_random.nextDouble() < 0.1) {
+          _velocityX += (_random.nextDouble() - 0.5) * 0.02;
+          _velocityY += (_random.nextDouble() - 0.5) * 0.02;
+        }
+      }
 
-      case MeshPhysicsMode.chaos:
-        setState(() {
-          _rotationX += _velocityX;
-          _rotationY += _velocityY;
-          _velocityX *= widget.friction;
-          _velocityY *= widget.friction;
-          // Random micro-perturbations
-          if (_random.nextDouble() < 0.1) {
-            _velocityX += (_random.nextDouble() - 0.5) * 0.02;
-            _velocityY += (_random.nextDouble() - 0.5) * 0.02;
-          }
-        });
-        break;
+      // SPRING-BACK: when not grabbing but have a drag position, animate back
+      if (_grabbedVertexIndex < 0 &&
+          _springBackVertexIndex >= 0 &&
+          _dragPosition != null &&
+          _originalVertexPosition != null) {
+        // Lerp drag position back toward original
+        final dx = _originalVertexPosition!.dx - _dragPosition!.dx;
+        final dy = _originalVertexPosition!.dy - _dragPosition!.dy;
+        final dist = math.sqrt(dx * dx + dy * dy);
 
-      case MeshPhysicsMode.touchOnly:
-        // Apply velocity from touch input with friction
-        setState(() {
-          _rotationX += _velocityX;
-          _rotationY += _velocityY;
-          _velocityX *= widget.friction;
-          _velocityY *= widget.friction;
-        });
-        break;
-    }
+        if (dist < 0.01) {
+          // Close enough - snap to original and clear
+          _dragPosition = null;
+          _originalVertexPosition = null;
+          _springBackVertexIndex = -1;
+        } else {
+          // Fast spring back (30% per frame)
+          _dragPosition = Offset(
+            _dragPosition!.dx + dx * 0.3,
+            _dragPosition!.dy + dy * 0.3,
+          );
+        }
+      }
+    });
   }
 
-  void _updateDeformation() {
-    // Spring physics for jelly-like snap-back
-    if (_isDragging) {
-      // While dragging, quickly move toward target for responsive feel
-      _deformationAmount +=
-          (_targetDeformation - _deformationAmount) * _springStiffness * 3;
-    } else {
-      // When released, spring back to zero with damping for bouncy effect
-      _deformationAmount *= _springDamping;
-      if (_deformationAmount.abs() < 0.01) {
-        _deformationAmount = 0.0;
-        _touchPoint = null;
+  // ============ NODE HIT DETECTION ============
+  /// Returns the index of the nearest vertex to touchPos, or -1 if none within grab radius
+  /// Also returns the projected position of that vertex (for spring-back origin)
+  (int index, Offset? position) _findNearestVertex(Offset touchPos) {
+    const scale = 0.42;
+    const perspective = 3.0;
+
+    final vertices = <List<double>>[
+      [-1, _phi, 0],
+      [1, _phi, 0],
+      [-1, -_phi, 0],
+      [1, -_phi, 0],
+      [0, -1, _phi],
+      [0, 1, _phi],
+      [0, -1, -_phi],
+      [0, 1, -_phi],
+      [_phi, 0, -1],
+      [_phi, 0, 1],
+      [-_phi, 0, -1],
+      [-_phi, 0, 1],
+    ];
+
+    // Grab radius - 30% of widget size
+    final grabRadius = 0.30 * widget.size;
+    final grabRadiusSq = grabRadius * grabRadius;
+
+    int nearestIndex = -1;
+    double nearestDistSq = double.infinity;
+    Offset? nearestPosition;
+
+    for (int i = 0; i < vertices.length; i++) {
+      final v = vertices[i];
+
+      // Normalize to unit sphere then scale
+      final len = math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+      double x = v[0] / len * scale;
+      double y = v[1] / len * scale;
+      double z = v[2] / len * scale;
+
+      // Rotate X
+      final cosX = math.cos(_rotationX);
+      final sinX = math.sin(_rotationX);
+      final newY = y * cosX - z * sinX;
+      final newZ = y * sinX + z * cosX;
+      y = newY;
+      z = newZ;
+
+      // Rotate Y
+      final cosY = math.cos(_rotationY);
+      final sinY = math.sin(_rotationY);
+      final newX = x * cosY + z * sinY;
+      final newZ2 = -x * sinY + z * cosY;
+      x = newX;
+      z = newZ2;
+
+      // Project to 2D
+      final projScale = perspective / (perspective + z);
+      final projX = x * projScale * widget.size / 2 + widget.size / 2;
+      final projY = y * projScale * widget.size / 2 + widget.size / 2;
+
+      // Check distance
+      final dx = touchPos.dx - projX;
+      final dy = touchPos.dy - projY;
+      final distSq = dx * dx + dy * dy;
+
+      if (distSq < grabRadiusSq && distSq < nearestDistSq) {
+        nearestIndex = i;
+        nearestDistSq = distSq;
+        nearestPosition = Offset(
+          projX / widget.size,
+          projY / widget.size,
+        ); // Normalized
+      }
+    }
+
+    return (nearestIndex, nearestPosition);
+  }
+
+  // ============ TOUCH HANDLERS ============
+  void _onPanStart(DragStartDetails details) {
+    _isTouching = true;
+    _lastTouchPosition = details.localPosition;
+
+    // STOP momentum when touch starts
+    _velocityX = 0.0;
+    _velocityY = 0.0;
+
+    // Try to grab a vertex (only if pull-to-stretch enabled)
+    _grabbedVertexIndex = -1;
+    if (widget.enablePullToStretch) {
+      final (index, position) = _findNearestVertex(details.localPosition);
+      if (index >= 0) {
+        _grabbedVertexIndex = index;
+        _originalVertexPosition = position;
+        _dragPosition = Offset(
+          details.localPosition.dx / widget.size,
+          details.localPosition.dy / widget.size,
+        );
       }
     }
   }
 
-  void _onPanStart(DragStartDetails details) {
-    if (!widget.enableTouch) return;
-    _isDragging = true;
-    _lastTouchPosition = details.localPosition;
-
-    // Only apply vertex deformation if pull-to-stretch is enabled
-    if (widget.enablePullToStretch) {
-      // Set touch point in normalized coordinates
-      _touchPoint = Offset(
-        details.localPosition.dx / widget.size,
-        details.localPosition.dy / widget.size,
-      );
-      // Start with immediate strong deformation when touched - high value for visible pull
-      _targetDeformation = widget.touchIntensity * 2.0;
-      // Make deformation instantly visible (skip spring ramp-up)
-      _deformationAmount = widget.touchIntensity * 1.5;
-    }
-  }
-
   void _onPanUpdate(DragUpdateDetails details) {
-    if (!widget.enableTouch || !_isDragging) return;
+    if (!_isTouching) return;
 
     final delta = details.localPosition - (_lastTouchPosition ?? Offset.zero);
     _lastTouchPosition = details.localPosition;
 
-    // Only update vertex deformation if pull-to-stretch is enabled
-    if (widget.enablePullToStretch) {
-      // Update touch point for deformation (normalized coordinates)
-      _touchPoint = Offset(
+    if (_grabbedVertexIndex >= 0) {
+      // DRAGGING A VERTEX - update drag position, mesh stays frozen
+      _dragPosition = Offset(
         details.localPosition.dx / widget.size,
         details.localPosition.dy / widget.size,
       );
-
-      // Deformation increases with drag distance - the further you pull, the more it stretches
-      final dragMagnitude = delta.distance / widget.size;
-      _targetDeformation = (widget.touchIntensity * (2.0 + dragMagnitude * 5.0))
-          .clamp(1.0, 4.0);
-    }
-
-    // Convert drag delta to rotation velocity
-    // Horizontal drag = Y rotation, Vertical drag = X rotation (INVERTED for natural feel)
-    final intensity = widget.touchIntensity * 0.01;
-
-    if (widget.physicsMode == MeshPhysicsMode.tilt ||
-        widget.physicsMode == MeshPhysicsMode.gyroscope) {
-      // In direct modes, touch directly rotates
-      setState(() {
-        _rotationY += delta.dx * intensity;
-        _rotationX -= delta.dy * intensity; // INVERTED: drag up = rotate up
-      });
-    } else {
-      // In physics modes, touch adds velocity (Mario 64 style spin)
+    } else if (widget.enableTouch) {
+      // NO VERTEX GRABBED - rotation from drag
+      final intensity = widget.touchIntensity * 0.015;
       _velocityY += delta.dx * intensity;
-      _velocityX -= delta.dy * intensity; // INVERTED: drag up = rotate up
+      _velocityX -= delta.dy * intensity;
     }
   }
 
   void _onPanEnd(DragEndDetails details) {
-    if (!widget.enableTouch) return;
-    _isDragging = false;
-    _lastTouchPosition = null;
-    _targetDeformation = 0.0; // Spring back to normal
+    // SLINGSHOT: if we were dragging a vertex, apply momentum based on pull direction
+    if (_grabbedVertexIndex >= 0 &&
+        _dragPosition != null &&
+        _originalVertexPosition != null) {
+      final pullX = _dragPosition!.dx - _originalVertexPosition!.dx;
+      final pullY = _dragPosition!.dy - _originalVertexPosition!.dy;
+      final pullMag = math.sqrt(pullX * pullX + pullY * pullY);
 
-    // Add fling velocity for momentum effect
-    if (widget.physicsMode != MeshPhysicsMode.tilt &&
-        widget.physicsMode != MeshPhysicsMode.gyroscope) {
-      final velocity = details.velocity.pixelsPerSecond;
-      final intensity = widget.touchIntensity * 0.0001;
-      _velocityY += velocity.dx * intensity;
-      _velocityX += velocity.dy * intensity;
+      if (pullMag > 0.05) {
+        // Slingshot strength based on pull distance
+        final strength = pullMag * 2.0;
+        _velocityY = pullX * strength;
+        _velocityX = pullY * strength;
+
+        // Allow higher velocity for slingshot
+        _velocityX = _velocityX.clamp(-_maxVelocity * 3, _maxVelocity * 3);
+        _velocityY = _velocityY.clamp(-_maxVelocity * 3, _maxVelocity * 3);
+      }
     }
+
+    _isTouching = false;
+    // Store vertex index for spring-back animation before clearing
+    if (_grabbedVertexIndex >= 0) {
+      _springBackVertexIndex = _grabbedVertexIndex;
+    }
+    _grabbedVertexIndex = -1; // Release vertex - spring-back will animate it
+    _lastTouchPosition = null;
+    // Keep _dragPosition and _originalVertexPosition for spring-back animation
   }
 
   @override
@@ -1105,30 +1109,29 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
 
   @override
   Widget build(BuildContext context) {
-    final meshNode = AnimatedMeshNode(
-      size: widget.size,
-      animationType: widget.animationType,
-      duration: widget.duration,
-      animate: widget.animate,
-      gradientColors: widget.gradientColors,
-      glowIntensity: widget.glowIntensity,
-      lineThickness: widget.lineThickness,
-      nodeSize: widget.nodeSize,
-      externalRotationX: _rotationX,
-      externalRotationY: _rotationY,
-      touchPoint: _touchPoint,
-      deformationAmount: _deformationAmount,
+    // Use grabbed index if actively grabbing, or springback index during animation
+    final activeVertexIndex = _grabbedVertexIndex >= 0
+        ? _grabbedVertexIndex
+        : _springBackVertexIndex;
+
+    return GestureDetector(
+      onPanStart: _onPanStart,
+      onPanUpdate: _onPanUpdate,
+      onPanEnd: _onPanEnd,
+      child: AnimatedMeshNode(
+        size: widget.size,
+        animationType: widget.animationType,
+        duration: widget.duration,
+        animate: widget.animate,
+        gradientColors: widget.gradientColors,
+        glowIntensity: widget.glowIntensity,
+        lineThickness: widget.lineThickness,
+        nodeSize: widget.nodeSize,
+        externalRotationX: _rotationX,
+        externalRotationY: _rotationY,
+        grabbedVertexIndex: activeVertexIndex,
+        dragPosition: _dragPosition,
+      ),
     );
-
-    if (widget.enableTouch) {
-      return GestureDetector(
-        onPanStart: _onPanStart,
-        onPanUpdate: _onPanUpdate,
-        onPanEnd: _onPanEnd,
-        child: meshNode,
-      );
-    }
-
-    return meshNode;
   }
 }

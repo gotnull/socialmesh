@@ -125,30 +125,24 @@ class ConfiguredSplashMeshNode extends ConsumerWidget {
   }
 
   Widget _buildMeshNode(SplashMeshConfig config) {
-    if (config.useAccelerometer) {
-      return AccelerometerMeshNode(
-        size: config.size,
-        animationType: config.animationType,
-        glowIntensity: config.glowIntensity,
-        lineThickness: config.lineThickness,
-        nodeSize: config.nodeSize,
-        gradientColors: config.gradientColors,
-        accelerometerSensitivity: config.accelerometerSensitivity,
-        friction: config.accelerometerFriction,
-        physicsMode: config.physicsMode,
-        enableTouch: config.enableTouch,
-        enablePullToStretch: config.enablePullToStretch,
-        touchIntensity: config.touchIntensity,
-      );
-    } else {
-      return AnimatedMeshNode(
-        size: config.size,
-        animationType: config.animationType,
-        glowIntensity: config.glowIntensity,
-        lineThickness: config.lineThickness,
-        nodeSize: config.nodeSize,
-        gradientColors: config.gradientColors,
-      );
-    }
+    // ALWAYS use AccelerometerMeshNode for touch support
+    // When accelerometer is disabled, use touchOnly physics mode
+    return AccelerometerMeshNode(
+      size: config.size,
+      animationType: config.animationType,
+      glowIntensity: config.glowIntensity,
+      lineThickness: config.lineThickness,
+      nodeSize: config.nodeSize,
+      gradientColors: config.gradientColors,
+      accelerometerSensitivity: config.accelerometerSensitivity,
+      friction: config.accelerometerFriction,
+      // When accelerometer disabled, use touchOnly mode (no sensor input)
+      physicsMode: config.useAccelerometer
+          ? config.physicsMode
+          : MeshPhysicsMode.touchOnly,
+      enableTouch: config.enableTouch,
+      enablePullToStretch: config.enablePullToStretch,
+      touchIntensity: config.touchIntensity,
+    );
   }
 }
