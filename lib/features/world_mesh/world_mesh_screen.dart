@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -31,6 +32,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   bool _showSearch = false;
   bool _showSearchResults = false;
   WorldMeshNode? _selectedNode;
+  bool _isLoadingNodeInfo = false;
 
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -268,13 +270,13 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   setState(() => _showSearchResults = false);
                   return;
                 }
-                // Find closest node to tap point
-                final tappedNode = _findClosestNode(point, displayNodes);
-                if (tappedNode != null) {
-                  HapticFeedback.selectionClick();
-                  setState(() => _selectedNode = tappedNode);
-                } else {
-                  setState(() => _selectedNode = null);
+                // Deselect node when tapping empty map areas
+                // (Marker taps are handled by GestureDetector on each marker)
+                if (_selectedNode != null) {
+                  setState(() {
+                    _selectedNode = null;
+                    _isLoadingNodeInfo = false;
+                  });
                 }
               },
             ),
@@ -286,24 +288,109 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 userAgentPackageName: MapConfig.userAgentPackageName,
                 retinaMode: _mapStyle != MapTileStyle.satellite,
               ),
-              // Use CircleLayer for 10k+ nodes - MUCH faster than Markers
-              CircleLayer(
-                circles: displayNodes.map((node) {
-                  final isSelected = _selectedNode?.nodeNum == node.nodeNum;
-                  return CircleMarker(
-                    point: LatLng(node.latitudeDecimal, node.longitudeDecimal),
-                    radius: isSelected ? 8 : 4,
-                    color: isSelected
-                        ? accentColor
-                        : node.isRecentlySeen
-                        ? accentColor.withValues(alpha: 0.7)
-                        : Colors.grey.withValues(alpha: 0.4),
-                    borderColor: isSelected
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.5),
-                    borderStrokeWidth: isSelected ? 2 : 0.5,
-                  );
-                }).toList(),
+              // Marker clustering for better visualization of dense areas
+              MarkerClusterLayerWidget(
+                options: MarkerClusterLayerOptions(
+                  maxClusterRadius: 80,
+                  size: const Size(40, 40),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(50),
+                  maxZoom: 15,
+                  // Disable animations for performance with 10k+ nodes
+                  animationsOptions: const AnimationsOptions(
+                    zoom: Duration.zero,
+                    fitBound: Duration(milliseconds: 300),
+                    centerMarker: Duration.zero,
+                    spiderfy: Duration(milliseconds: 200),
+                  ),
+                  markers: displayNodes.map((node) {
+                    final isSelected = _selectedNode?.nodeNum == node.nodeNum;
+                    return Marker(
+                      point: LatLng(
+                        node.latitudeDecimal,
+                        node.longitudeDecimal,
+                      ),
+                      width: isSelected ? 24 : 12,
+                      height: isSelected ? 24 : 12,
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() {
+                            _isLoadingNodeInfo = true;
+                            _selectedNode = node;
+                          });
+                          Future.delayed(const Duration(milliseconds: 150), () {
+                            if (mounted) {
+                              setState(() => _isLoadingNodeInfo = false);
+                            }
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isSelected
+                                ? accentColor
+                                : node.isRecentlySeen
+                                ? accentColor.withValues(alpha: 0.8)
+                                : Colors.grey.withValues(alpha: 0.5),
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.6),
+                              width: isSelected ? 2 : 1,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: accentColor.withValues(alpha: 0.5),
+                                      blurRadius: 8,
+                                      spreadRadius: 2,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  builder: (context, markers) {
+                    // Cluster marker builder
+                    final count = markers.length;
+                    final size = count > 100
+                        ? 48.0
+                        : count > 50
+                        ? 44.0
+                        : 40.0;
+                    return Container(
+                      width: size,
+                      height: size,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: accentColor.withValues(alpha: 0.9),
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          count > 999
+                              ? '${(count / 1000).toStringAsFixed(1)}k'
+                              : '$count',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
               // Attribution
               RichAttributionWidget(
@@ -351,24 +438,30 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           },
         ),
 
-        // Node info card when selected
+        // Node info card when selected (with loading indicator)
         if (_selectedNode != null && !_showSearchResults)
           Positioned(
             left: 16,
             right: 16,
             bottom: 70,
-            child: WorldNodeInfoCard(
-              node: _selectedNode!,
-              onClose: () => setState(() => _selectedNode = null),
-              onFocus: () {
-                _animatedMove(
-                  LatLng(
-                    _selectedNode!.latitudeDecimal,
-                    _selectedNode!.longitudeDecimal,
-                  ),
-                  14.0,
-                );
-              },
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: _isLoadingNodeInfo
+                  ? _buildLoadingCard(theme)
+                  : WorldNodeInfoCard(
+                      key: ValueKey(_selectedNode!.nodeNum),
+                      node: _selectedNode!,
+                      onClose: () => setState(() => _selectedNode = null),
+                      onFocus: () {
+                        _animatedMove(
+                          LatLng(
+                            _selectedNode!.latitudeDecimal,
+                            _selectedNode!.longitudeDecimal,
+                          ),
+                          14.0,
+                        );
+                      },
+                    ),
             ),
           ),
 
@@ -469,29 +562,45 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     );
   }
 
-  /// Find the closest node to a tap point within a reasonable distance
-  WorldMeshNode? _findClosestNode(LatLng tapPoint, List<WorldMeshNode> nodes) {
-    if (nodes.isEmpty) return null;
-
-    // Calculate tap radius based on zoom level (in degrees)
-    // At zoom 3, ~45 degrees per screen width; at zoom 18, ~0.001 degrees
-    final tapRadius = 5.0 / math.pow(2, _currentZoom);
-
-    WorldMeshNode? closest;
-    double closestDist = double.infinity;
-
-    for (final node in nodes) {
-      final dx = node.longitudeDecimal - tapPoint.longitude;
-      final dy = node.latitudeDecimal - tapPoint.latitude;
-      final dist = dx * dx + dy * dy;
-
-      if (dist < closestDist && dist < tapRadius * tapRadius) {
-        closestDist = dist;
-        closest = node;
-      }
-    }
-
-    return closest;
+  /// Build a loading placeholder card with shimmer effect
+  Widget _buildLoadingCard(ThemeData theme) {
+    final accentColor = theme.colorScheme.primary;
+    return Container(
+      key: const ValueKey('loading'),
+      height: 120,
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard.withValues(alpha: 0.98),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Loading node info...',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildStatsBar(
@@ -762,12 +871,14 @@ class WorldNodeInfoCard extends StatelessWidget {
   final WorldMeshNode node;
   final VoidCallback? onClose;
   final VoidCallback? onFocus;
+  final bool isLoading;
 
   const WorldNodeInfoCard({
     super.key,
     required this.node,
     this.onClose,
     this.onFocus,
+    this.isLoading = false,
   });
 
   @override
@@ -789,14 +900,13 @@ class WorldNodeInfoCard extends StatelessWidget {
           ),
         ],
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header with name and close button
-            Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // STATIC HEADER - doesn't scroll
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 8, 0),
+            child: Row(
               children: [
                 Container(
                   width: 44,
@@ -876,219 +986,250 @@ class WorldNodeInfoCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
 
-            const SizedBox(height: 16),
-            const Divider(height: 1),
-            const SizedBox(height: 16),
+          const Divider(height: 1),
 
-            // Device Info Section
-            _buildSectionHeader(theme, Icons.memory, 'Device'),
-            const SizedBox(height: 8),
-            _buildInfoGrid([
-              _InfoItem('Hardware', _formatHardware(node.hwModel)),
-              _InfoItem('Role', _formatRole(node.role)),
-              if (node.fwVersion != null)
-                _InfoItem('Firmware', node.fwVersion!),
-              if (node.region != null) _InfoItem('Region', node.region!),
-              if (node.modemPreset != null)
-                _InfoItem('Modem', node.modemPreset!),
-              if (node.onlineLocalNodes != null)
-                _InfoItem('Local Nodes', '${node.onlineLocalNodes}'),
-            ]),
-
-            // Position Section
-            if (node.altitude != null ||
-                node.precisionMarginMeters != null) ...[
-              const SizedBox(height: 16),
-              _buildSectionHeader(theme, Icons.location_on, 'Position'),
-              const SizedBox(height: 8),
-              _buildInfoGrid([
-                _InfoItem(
-                  'Coordinates',
-                  '${node.latitudeDecimal.toStringAsFixed(5)}, ${node.longitudeDecimal.toStringAsFixed(5)}',
-                ),
-                if (node.altitude != null)
-                  _InfoItem('Altitude', '${node.altitude}m'),
-                if (node.precisionMarginMeters != null)
-                  _InfoItem(
-                    'Precision',
-                    '±${_formatDistance(node.precisionMarginMeters!)}',
-                  ),
-              ]),
-            ],
-
-            // Device Metrics Section
-            if (node.batteryLevel != null ||
-                node.voltage != null ||
-                node.chUtil != null ||
-                node.airUtilTx != null ||
-                node.uptime != null) ...[
-              const SizedBox(height: 16),
-              _buildSectionHeader(theme, Icons.analytics, 'Device Metrics'),
-              const SizedBox(height: 8),
-              _buildMetricsRow(theme, [
-                if (node.batteryLevel != null)
-                  _MetricChip(
-                    icon: Icons.battery_std,
-                    value: node.batteryString!,
-                    color: _getBatteryColor(node.batteryLevel!),
-                  ),
-                if (node.voltage != null)
-                  _MetricChip(
-                    icon: Icons.electric_bolt,
-                    value: '${node.voltage!.toStringAsFixed(2)}V',
-                    color: Colors.amber,
-                  ),
-                if (node.chUtil != null)
-                  _MetricChip(
-                    icon: Icons.show_chart,
-                    value: '${node.chUtil!.toStringAsFixed(1)}% Ch',
-                    color: Colors.blue,
-                  ),
-                if (node.airUtilTx != null)
-                  _MetricChip(
-                    icon: Icons.cell_tower,
-                    value: '${node.airUtilTx!.toStringAsFixed(1)}% Tx',
-                    color: Colors.purple,
-                  ),
-              ]),
-              if (node.uptimeString != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    'Uptime: ${node.uptimeString}',
-                    style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-            ],
-
-            // Environment Metrics Section
-            if (node.temperature != null ||
-                node.relativeHumidity != null ||
-                node.barometricPressure != null ||
-                node.windSpeed != null ||
-                node.lux != null) ...[
-              const SizedBox(height: 16),
-              _buildSectionHeader(theme, Icons.thermostat, 'Environment'),
-              const SizedBox(height: 8),
-              _buildMetricsRow(theme, [
-                if (node.temperature != null)
-                  _MetricChip(
-                    icon: Icons.thermostat,
-                    value: '${node.temperature!.toStringAsFixed(1)}°C',
-                    color: Colors.orange,
-                  ),
-                if (node.relativeHumidity != null)
-                  _MetricChip(
-                    icon: Icons.water_drop,
-                    value: '${node.relativeHumidity!.toStringAsFixed(0)}%',
-                    color: Colors.cyan,
-                  ),
-                if (node.barometricPressure != null)
-                  _MetricChip(
-                    icon: Icons.speed,
-                    value: '${node.barometricPressure!.toStringAsFixed(0)}hPa',
-                    color: Colors.teal,
-                  ),
-                if (node.lux != null)
-                  _MetricChip(
-                    icon: Icons.light_mode,
-                    value: '${node.lux!.toStringAsFixed(0)} lux',
-                    color: Colors.yellow,
-                  ),
-              ]),
-              if (node.windSpeed != null || node.windDirection != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: _buildMetricsRow(theme, [
-                    if (node.windSpeed != null)
-                      _MetricChip(
-                        icon: Icons.air,
-                        value: '${node.windSpeed!.toStringAsFixed(1)} m/s',
-                        color: Colors.blueGrey,
-                      ),
-                    if (node.windGust != null)
-                      _MetricChip(
-                        icon: Icons.storm,
-                        value: '${node.windGust!.toStringAsFixed(1)} gust',
-                        color: Colors.blueGrey,
-                      ),
+          // SCROLLABLE CONTENT - middle section
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Device Info Section
+                  _buildSectionHeader(theme, Icons.memory, 'Device'),
+                  const SizedBox(height: 8),
+                  _buildInfoGrid([
+                    _InfoItem('Hardware', _formatHardware(node.hwModel)),
+                    _InfoItem('Role', _formatRole(node.role)),
+                    if (node.fwVersion != null)
+                      _InfoItem('Firmware', node.fwVersion!),
+                    if (node.region != null) _InfoItem('Region', node.region!),
+                    if (node.modemPreset != null)
+                      _InfoItem('Modem', node.modemPreset!),
+                    if (node.onlineLocalNodes != null)
+                      _InfoItem('Local Nodes', '${node.onlineLocalNodes}'),
                   ]),
-                ),
-            ],
 
-            // Neighbors Section
-            if (node.neighbors != null && node.neighbors!.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _buildSectionHeader(
-                theme,
-                Icons.people,
-                'Neighbors (${node.neighbors!.length})',
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: node.neighbors!.entries.take(8).map((entry) {
-                  final snr = entry.value.snr;
-                  return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                  // Position Section
+                  if (node.altitude != null ||
+                      node.precisionMarginMeters != null) ...[
+                    const SizedBox(height: 16),
+                    _buildSectionHeader(theme, Icons.location_on, 'Position'),
+                    const SizedBox(height: 8),
+                    _buildInfoGrid([
+                      _InfoItem(
+                        'Coordinates',
+                        '${node.latitudeDecimal.toStringAsFixed(5)}, ${node.longitudeDecimal.toStringAsFixed(5)}',
+                      ),
+                      if (node.altitude != null)
+                        _InfoItem('Altitude', '${node.altitude}m'),
+                      if (node.precisionMarginMeters != null)
+                        _InfoItem(
+                          'Precision',
+                          '±${_formatDistance(node.precisionMarginMeters!)}',
+                        ),
+                    ]),
+                  ],
+
+                  // Device Metrics Section
+                  if (node.batteryLevel != null ||
+                      node.voltage != null ||
+                      node.chUtil != null ||
+                      node.airUtilTx != null ||
+                      node.uptime != null) ...[
+                    const SizedBox(height: 16),
+                    _buildSectionHeader(
+                      theme,
+                      Icons.analytics,
+                      'Device Metrics',
                     ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.darkBorder.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(8),
+                    const SizedBox(height: 8),
+                    _buildMetricsRow(theme, [
+                      if (node.batteryLevel != null)
+                        _MetricChip(
+                          icon: Icons.battery_std,
+                          value: node.batteryString!,
+                          color: _getBatteryColor(node.batteryLevel!),
+                        ),
+                      if (node.voltage != null)
+                        _MetricChip(
+                          icon: Icons.electric_bolt,
+                          value: '${node.voltage!.toStringAsFixed(2)}V',
+                          color: Colors.amber,
+                        ),
+                      if (node.chUtil != null)
+                        _MetricChip(
+                          icon: Icons.show_chart,
+                          value: '${node.chUtil!.toStringAsFixed(1)}% Ch',
+                          color: Colors.blue,
+                        ),
+                      if (node.airUtilTx != null)
+                        _MetricChip(
+                          icon: Icons.cell_tower,
+                          value: '${node.airUtilTx!.toStringAsFixed(1)}% Tx',
+                          color: Colors.purple,
+                        ),
+                    ]),
+                    if (node.uptimeString != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          'Uptime: ${node.uptimeString}',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                  ],
+
+                  // Environment Metrics Section
+                  if (node.temperature != null ||
+                      node.relativeHumidity != null ||
+                      node.barometricPressure != null ||
+                      node.windSpeed != null ||
+                      node.lux != null) ...[
+                    const SizedBox(height: 16),
+                    _buildSectionHeader(theme, Icons.thermostat, 'Environment'),
+                    const SizedBox(height: 8),
+                    _buildMetricsRow(theme, [
+                      if (node.temperature != null)
+                        _MetricChip(
+                          icon: Icons.thermostat,
+                          value: '${node.temperature!.toStringAsFixed(1)}°C',
+                          color: Colors.orange,
+                        ),
+                      if (node.relativeHumidity != null)
+                        _MetricChip(
+                          icon: Icons.water_drop,
+                          value:
+                              '${node.relativeHumidity!.toStringAsFixed(0)}%',
+                          color: Colors.cyan,
+                        ),
+                      if (node.barometricPressure != null)
+                        _MetricChip(
+                          icon: Icons.speed,
+                          value:
+                              '${node.barometricPressure!.toStringAsFixed(0)}hPa',
+                          color: Colors.teal,
+                        ),
+                      if (node.lux != null)
+                        _MetricChip(
+                          icon: Icons.light_mode,
+                          value: '${node.lux!.toStringAsFixed(0)} lux',
+                          color: Colors.yellow,
+                        ),
+                    ]),
+                    if (node.windSpeed != null || node.windDirection != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: _buildMetricsRow(theme, [
+                          if (node.windSpeed != null)
+                            _MetricChip(
+                              icon: Icons.air,
+                              value:
+                                  '${node.windSpeed!.toStringAsFixed(1)} m/s',
+                              color: Colors.blueGrey,
+                            ),
+                          if (node.windGust != null)
+                            _MetricChip(
+                              icon: Icons.storm,
+                              value:
+                                  '${node.windGust!.toStringAsFixed(1)} gust',
+                              color: Colors.blueGrey,
+                            ),
+                        ]),
+                      ),
+                  ],
+
+                  // Neighbors Section
+                  if (node.neighbors != null && node.neighbors!.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _buildSectionHeader(
+                      theme,
+                      Icons.people,
+                      'Neighbors (${node.neighbors!.length})',
                     ),
-                    child: Text(
-                      '${entry.key}${snr != null ? ' (${snr.toStringAsFixed(1)}dB)' : ''}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontFamily: 'JetBrainsMono',
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: node.neighbors!.entries.take(8).map((entry) {
+                        final snr = entry.value.snr;
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${entry.key}${snr != null ? ' (${snr.toStringAsFixed(1)}dB)' : ''}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontFamily: 'JetBrainsMono',
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+
+                  // Seen By Section
+                  if (node.seenBy.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _buildSectionHeader(
+                      theme,
+                      Icons.wifi_tethering,
+                      'Seen By (${node.seenBy.length} gateways)',
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      node.seenBy.keys.take(3).join(', ') +
+                          (node.seenBy.length > 3
+                              ? ' +${node.seenBy.length - 3} more'
+                              : ''),
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 12,
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
-            ],
+                  ],
 
-            // Seen By Section
-            if (node.seenBy.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _buildSectionHeader(
-                theme,
-                Icons.wifi_tethering,
-                'Seen By (${node.seenBy.length} gateways)',
+                  // Last Seen
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.schedule,
+                        size: 14,
+                        color: AppTheme.textSecondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Last seen: ${node.lastSeenString}',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                node.seenBy.keys.take(3).join(', ') +
-                    (node.seenBy.length > 3
-                        ? ' +${node.seenBy.length - 3} more'
-                        : ''),
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-              ),
-            ],
-
-            // Last Seen
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Icon(Icons.schedule, size: 14, color: AppTheme.textSecondary),
-                const SizedBox(width: 6),
-                Text(
-                  'Last seen: ${node.lastSeenString}',
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-                ),
-              ],
             ),
+          ),
 
-            // Action buttons
-            const SizedBox(height: 16),
-            Row(
+          const Divider(height: 1),
+
+          // STATIC FOOTER - action buttons
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
@@ -1116,8 +1257,8 @@ class WorldNodeInfoCard extends StatelessWidget {
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
