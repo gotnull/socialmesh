@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
+import 'animations.dart';
 import 'app_bottom_sheet.dart';
 
 /// Result from channel selector
@@ -102,18 +103,26 @@ class ChannelSelectorSheet extends ConsumerWidget {
                           : channel.name;
                       final isSelected = channelIndex == selectedIndex;
                       final isPrimary = channel.role == 'PRIMARY';
+                      final animationsEnabled = ref.watch(
+                        animationsEnabledProvider,
+                      );
 
-                      return _ChannelTile(
-                        name: name,
-                        index: channelIndex,
-                        isPrimary: isPrimary,
-                        isSelected: isSelected,
-                        onTap: () {
-                          Navigator.pop(
-                            context,
-                            ChannelSelection(index: channelIndex, name: name),
-                          );
-                        },
+                      return Perspective3DSlide(
+                        index: index,
+                        direction: SlideDirection.left,
+                        enabled: animationsEnabled,
+                        child: _ChannelTile(
+                          name: name,
+                          index: channelIndex,
+                          isPrimary: isPrimary,
+                          isSelected: isSelected,
+                          onTap: () {
+                            Navigator.pop(
+                              context,
+                              ChannelSelection(index: channelIndex, name: name),
+                            );
+                          },
+                        ),
                       );
                     },
                   ),

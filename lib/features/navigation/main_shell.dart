@@ -1,5 +1,6 @@
 import '../../core/logging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
@@ -13,6 +14,63 @@ import '../map/map_screen.dart';
 import '../dashboard/widget_dashboard_screen.dart';
 import '../scanner/scanner_screen.dart';
 import '../device/region_selection_screen.dart';
+import '../timeline/timeline_screen.dart';
+import '../routes/routes_screen.dart';
+import '../automations/automations_screen.dart';
+import '../settings/settings_screen.dart';
+import '../presence/presence_screen.dart';
+
+/// Notifier to expose the main shell's scaffold key for drawer access
+class MainShellScaffoldKeyNotifier extends Notifier<GlobalKey<ScaffoldState>?> {
+  @override
+  GlobalKey<ScaffoldState>? build() => null;
+
+  void setKey(GlobalKey<ScaffoldState>? key) {
+    state = key;
+  }
+}
+
+/// Provider to expose the main shell's scaffold key for drawer access
+final mainShellScaffoldKeyProvider =
+    NotifierProvider<MainShellScaffoldKeyNotifier, GlobalKey<ScaffoldState>?>(
+      MainShellScaffoldKeyNotifier.new,
+    );
+
+/// Widget to create a hamburger menu button for app bars
+class HamburgerMenuButton extends ConsumerWidget {
+  const HamburgerMenuButton({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scaffoldKey = ref.watch(mainShellScaffoldKeyProvider);
+    final theme = Theme.of(context);
+
+    return IconButton(
+      icon: Icon(
+        Icons.menu,
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+      ),
+      onPressed: () {
+        HapticFeedback.lightImpact();
+        scaffoldKey?.currentState?.openDrawer();
+      },
+      tooltip: 'Menu',
+    );
+  }
+}
+
+/// Drawer menu item data for quick access screens
+class _DrawerMenuItem {
+  final IconData icon;
+  final String label;
+  final Widget screen;
+
+  const _DrawerMenuItem({
+    required this.icon,
+    required this.label,
+    required this.screen,
+  });
+}
 
 /// Main navigation shell with bottom navigation bar
 class MainShell extends ConsumerStatefulWidget {
@@ -24,6 +82,47 @@ class MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<MainShell> {
   int _currentIndex = 3; // Start on Nodes tab
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  int _selectedDrawerItem =
+      -1; // -1 means no drawer item selected (showing main nav)
+
+  @override
+  void initState() {
+    super.initState();
+    // Set the scaffold key provider so screens can access the drawer
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(mainShellScaffoldKeyProvider.notifier).setKey(_scaffoldKey);
+    });
+  }
+
+  /// Drawer menu items for quick access screens not in bottom nav
+  final List<_DrawerMenuItem> _drawerMenuItems = [
+    const _DrawerMenuItem(
+      icon: Icons.timeline,
+      label: 'Timeline',
+      screen: TimelineScreen(),
+    ),
+    const _DrawerMenuItem(
+      icon: Icons.people_alt_outlined,
+      label: 'Presence',
+      screen: PresenceScreen(),
+    ),
+    const _DrawerMenuItem(
+      icon: Icons.route,
+      label: 'Routes',
+      screen: RoutesScreen(),
+    ),
+    const _DrawerMenuItem(
+      icon: Icons.auto_awesome,
+      label: 'Automations',
+      screen: AutomationsScreen(),
+    ),
+    const _DrawerMenuItem(
+      icon: Icons.settings,
+      label: 'Settings',
+      screen: SettingsScreen(),
+    ),
+  ];
 
   final List<_NavItem> _navItems = [
     _NavItem(
@@ -50,6 +149,12 @@ class _MainShellState extends ConsumerState<MainShell> {
   ];
 
   Widget _buildScreen(int index) {
+    // If a drawer item is selected, show that screen
+    if (_selectedDrawerItem >= 0 &&
+        _selectedDrawerItem < _drawerMenuItems.length) {
+      return _drawerMenuItems[_selectedDrawerItem].screen;
+    }
+    // Otherwise show the bottom nav screen
     switch (index) {
       case 0:
         return const ChannelsScreen();
@@ -64,6 +169,161 @@ class _MainShellState extends ConsumerState<MainShell> {
       default:
         return const ChannelsScreen();
     }
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    final theme = Theme.of(context);
+    final accentColor = theme.colorScheme.primary;
+
+    return Drawer(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          accentColor,
+                          accentColor.withValues(alpha: 0.7),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: accentColor.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.bolt,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Quick Access',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: AppTheme.fontFamily,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        Text(
+                          'Navigate to features',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontFamily: AppTheme.fontFamily,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Divider
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
+            ),
+
+            const SizedBox(height: 8),
+
+            // Menu items
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                itemCount: _drawerMenuItems.length,
+                itemBuilder: (context, index) {
+                  final item = _drawerMenuItems[index];
+                  final isSelected = _selectedDrawerItem == index;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: _DrawerMenuTile(
+                      icon: item.icon,
+                      label: item.label,
+                      isSelected: isSelected,
+                      onTap: () {
+                        ref.haptics.tabChange();
+                        Navigator.of(context).pop(); // Close drawer
+                        setState(() {
+                          _selectedDrawerItem = index;
+                        });
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // Bottom section
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: theme.dividerColor.withValues(alpha: 0.1),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.swipe,
+                      size: 20,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Swipe from left edge to open',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontFamily: AppTheme.fontFamily,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -118,35 +378,35 @@ class _MainShellState extends ConsumerState<MainShell> {
       return const RegionSelectionScreen(isInitialSetup: true);
     }
 
-    // Build the main scaffold
-    final mainScaffold = Scaffold(
-      body: Column(
-        children: [
-          // Main content
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.02),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                );
-              },
-              child: KeyedSubtree(
-                key: ValueKey(_currentIndex),
-                child: _buildScreen(_currentIndex),
-              ),
+    // Build the main scaffold with Drawer
+    return Scaffold(
+      key: _scaffoldKey,
+      drawer: _buildDrawer(context),
+      drawerEdgeDragWidth: 40, // Edge area for swipe gesture
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.02),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
             ),
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey(
+            _selectedDrawerItem >= 0
+                ? 'drawer_$_selectedDrawerItem'
+                : 'main_$_currentIndex',
           ),
-        ],
+          child: _buildScreen(_currentIndex),
+        ),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -169,7 +429,8 @@ class _MainShellState extends ConsumerState<MainShell> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: List.generate(_navItems.length, (index) {
                 final item = _navItems[index];
-                final isSelected = _currentIndex == index;
+                final isSelected =
+                    _currentIndex == index && _selectedDrawerItem < 0;
 
                 // Show warning badge on Device tab (index 4) when disconnected
                 final showWarningBadge = index == 4 && !isConnected;
@@ -192,7 +453,10 @@ class _MainShellState extends ConsumerState<MainShell> {
                     if (index == 3) {
                       ref.read(newNodesCountProvider.notifier).reset();
                     }
-                    setState(() => _currentIndex = index);
+                    setState(() {
+                      _currentIndex = index;
+                      _selectedDrawerItem = -1; // Clear drawer selection
+                    });
                   },
                 );
               }),
@@ -201,8 +465,6 @@ class _MainShellState extends ConsumerState<MainShell> {
         ),
       ),
     );
-
-    return mainScaffold;
   }
 
   bool _hasUnreadMessages(WidgetRef ref) {
@@ -356,6 +618,87 @@ class _NavBarItem extends StatelessWidget {
               ),
               child: Text(label),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Menu tile for the navigation drawer
+class _DrawerMenuTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _DrawerMenuTile({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accentColor = theme.colorScheme.primary;
+
+    return BouncyTap(
+      onTap: onTap,
+      scaleFactor: 0.98,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? accentColor.withValues(alpha: 0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: isSelected
+              ? Border.all(color: accentColor.withValues(alpha: 0.3))
+              : null,
+        ),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? accentColor.withValues(alpha: 0.2)
+                    : theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                size: 22,
+                color: isSelected
+                    ? accentColor
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  fontFamily: AppTheme.fontFamily,
+                  color: isSelected
+                      ? accentColor
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: accentColor.withValues(alpha: 0.6),
+              ),
           ],
         ),
       ),

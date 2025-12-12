@@ -56,10 +56,16 @@ class AppBottomSheet extends StatelessWidget {
     bool showDragPill = true,
     bool useSafeArea = true,
   }) {
+    HapticFeedback.lightImpact();
     return showModalBottomSheet<T>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: isScrollControlled,
+      transitionAnimationController: AnimationController(
+        vsync: Navigator.of(context),
+        duration: const Duration(milliseconds: 350),
+        reverseDuration: const Duration(milliseconds: 250),
+      ),
       builder: (context) => AppBottomSheet(
         padding: padding,
         showDragPill: showDragPill,
@@ -76,6 +82,7 @@ class AppBottomSheet extends StatelessWidget {
     double minChildSize = 0.3,
     double maxChildSize = 0.9,
   }) {
+    HapticFeedback.lightImpact();
     return showModalBottomSheet<T>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -121,18 +128,13 @@ class AppBottomSheet extends StatelessWidget {
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              
             ),
           ),
           const SizedBox(height: 12),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 15,
-              color: AppTheme.textSecondary,
-              
-            ),
+            style: const TextStyle(fontSize: 15, color: AppTheme.textSecondary),
           ),
           const SizedBox(height: 24),
           Row(
@@ -196,7 +198,6 @@ class AppBottomSheet extends StatelessWidget {
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
-                
               ),
             ),
           ),
@@ -244,7 +245,6 @@ class AppBottomSheet extends StatelessWidget {
                   color: action.isDestructive
                       ? AppTheme.errorRed
                       : Colors.white,
-                  
                 ),
               ),
               subtitle: action.subtitle != null
@@ -253,7 +253,6 @@ class AppBottomSheet extends StatelessWidget {
                       style: const TextStyle(
                         color: AppTheme.textTertiary,
                         fontSize: 12,
-                        
                       ),
                     )
                   : null,
@@ -365,7 +364,6 @@ class BottomSheetHeader extends StatelessWidget {
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.white,
-              
             ),
           ),
           if (subtitle != null) ...[
@@ -375,7 +373,6 @@ class BottomSheetHeader extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 14,
                 color: AppTheme.textSecondary,
-                
               ),
             ),
           ],
@@ -393,11 +390,7 @@ class BottomSheetHeader extends StatelessWidget {
             color: (iconColor ?? context.accentColor).withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: iconColor ?? context.accentColor,
-            size: 24,
-          ),
+          child: Icon(icon, color: iconColor ?? context.accentColor, size: 24),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -410,7 +403,6 @@ class BottomSheetHeader extends StatelessWidget {
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
-                  
                 ),
               ),
               if (subtitle != null) ...[
@@ -420,7 +412,6 @@ class BottomSheetHeader extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppTheme.textTertiary,
-                    
                   ),
                 ),
               ],

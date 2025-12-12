@@ -7,6 +7,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../providers/app_providers.dart';
 import '../device/device_sheet.dart';
+import '../navigation/main_shell.dart';
 import 'models/dashboard_widget_config.dart';
 import 'providers/dashboard_providers.dart';
 import 'widgets/dashboard_widget.dart';
@@ -70,10 +71,12 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
+        leading: const HamburgerMenuButton(),
+        centerTitle: true,
         title: Text(
           _editMode ? 'Edit Dashboard' : 'Dashboard',
           style: const TextStyle(
-            fontSize: 28,
+            fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),

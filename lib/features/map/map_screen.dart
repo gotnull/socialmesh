@@ -15,6 +15,7 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../messaging/messaging_screen.dart';
+import '../navigation/main_shell.dart';
 
 /// Node filter options
 enum NodeFilter {
@@ -437,11 +438,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
+        leading: const HamburgerMenuButton(),
+        centerTitle: true,
         title: const Text(
           'Mesh Map',
           style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
         ),

@@ -203,6 +203,22 @@ class SettingsService {
 
   int get hapticIntensity => _preferences.getInt('haptic_intensity') ?? 1;
 
+  // Animations Enabled
+  Future<void> setAnimationsEnabled(bool enabled) async {
+    await _preferences.setBool('animations_enabled', enabled);
+  }
+
+  bool get animationsEnabled =>
+      _preferences.getBool('animations_enabled') ?? true;
+
+  // 3D Animations Enabled
+  Future<void> setAnimations3DEnabled(bool enabled) async {
+    await _preferences.setBool('animations_3d_enabled', enabled);
+  }
+
+  bool get animations3DEnabled =>
+      _preferences.getBool('animations_3d_enabled') ?? true;
+
   // Message history limit
   Future<void> setMessageHistoryLimit(int limit) async {
     await _preferences.setInt('message_history_limit', limit);

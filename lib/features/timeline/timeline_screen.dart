@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../navigation/main_shell.dart';
 
 /// Types of events that can appear in the timeline
 enum TimelineEventType {
@@ -315,6 +317,8 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        leading: const HamburgerMenuButton(),
+        centerTitle: true,
         title: const Text('Timeline'),
         actions: [
           IconButton(
@@ -351,6 +355,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           final isSelected = _filter == filter;
           return FilterChip(
             selected: isSelected,
+            showCheckmark: false,
             label: Text(filter.label),
             avatar: Icon(
               filter.icon,
@@ -363,7 +368,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               });
             },
             selectedColor: context.accentColor,
-            checkmarkColor: Colors.white,
             backgroundColor: AppTheme.darkSurface,
             labelStyle: TextStyle(
               color: isSelected ? Colors.white : AppTheme.textSecondary,
@@ -419,30 +423,40 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       groupedEvents.putIfAbsent(dateKey, () => []).add(event);
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: groupedEvents.length,
-      itemBuilder: (context, index) {
-        final dateKey = groupedEvents.keys.elementAt(index);
-        final dateEvents = groupedEvents[dateKey]!;
+    return Consumer(
+      builder: (context, ref, _) {
+        final animationsEnabled = ref.watch(animationsEnabledProvider);
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          itemCount: groupedEvents.length,
+          itemBuilder: (context, index) {
+            final dateKey = groupedEvents.keys.elementAt(index);
+            final dateEvents = groupedEvents[dateKey]!;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Date header
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                dateKey,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: AppTheme.textSecondary,
-                  fontWeight: FontWeight.w600,
-                ),
+            return Perspective3DSlide(
+              index: index,
+              direction: SlideDirection.left,
+              enabled: animationsEnabled,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Date header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      dateKey,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  // Events for this date
+                  ...dateEvents.map((event) => _buildEventCard(theme, event)),
+                ],
               ),
-            ),
-            // Events for this date
-            ...dateEvents.map((event) => _buildEventCard(theme, event)),
-          ],
+            );
+          },
         );
       },
     );

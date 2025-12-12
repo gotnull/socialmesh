@@ -8,11 +8,11 @@ import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../utils/snackbar.dart';
-import '../../core/widgets/animated_list_item.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../messaging/messaging_screen.dart';
+import '../navigation/main_shell.dart';
 import 'channel_form_screen.dart';
 import 'channel_wizard_screen.dart';
 
@@ -27,10 +27,12 @@ class ChannelsScreen extends ConsumerWidget {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
+        leading: const HamburgerMenuButton(),
+        centerTitle: true,
         title: const Text(
           'Channels',
           style: TextStyle(
-            fontSize: 22,
+            fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
@@ -116,9 +118,15 @@ class ChannelsScreen extends ConsumerWidget {
               itemCount: channels.length,
               itemBuilder: (context, index) {
                 final channel = channels[index];
-                return AnimatedListItem(
+                final animationsEnabled = ref.watch(animationsEnabledProvider);
+                return Perspective3DSlide(
                   index: index,
-                  child: _ChannelTile(channel: channel),
+                  direction: SlideDirection.left,
+                  enabled: animationsEnabled,
+                  child: _ChannelTile(
+                    channel: channel,
+                    animationsEnabled: animationsEnabled,
+                  ),
                 );
               },
             ),
@@ -128,8 +136,9 @@ class ChannelsScreen extends ConsumerWidget {
 
 class _ChannelTile extends ConsumerWidget {
   final ChannelConfig channel;
+  final bool animationsEnabled;
 
-  const _ChannelTile({required this.channel});
+  const _ChannelTile({required this.channel, this.animationsEnabled = true});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -139,7 +148,7 @@ class _ChannelTile extends ConsumerWidget {
     return BouncyTap(
       onTap: () => _openChannelChat(context),
       onLongPress: () => _showChannelOptions(context, ref),
-      scaleFactor: 0.98,
+      scaleFactor: animationsEnabled ? 0.98 : 1.0,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(

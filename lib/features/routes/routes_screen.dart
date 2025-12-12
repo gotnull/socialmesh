@@ -7,10 +7,13 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/route.dart' as route_model;
+import '../../providers/app_providers.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../utils/snackbar.dart';
+import '../navigation/main_shell.dart';
 
 /// Screen showing saved routes and route recording
 class RoutesScreen extends ConsumerStatefulWidget {
@@ -30,11 +33,13 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
+        leading: const HamburgerMenuButton(),
+        centerTitle: true,
         title: const Text(
           'Routes',
           style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
         ),
@@ -60,11 +65,19 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
                     itemCount: routes.length,
                     itemBuilder: (context, index) {
                       final route = routes[index];
-                      return _RouteCard(
-                        route: route,
-                        onTap: () => _viewRoute(route),
-                        onDelete: () => _deleteRoute(route),
-                        onExport: () => _exportRoute(route),
+                      final animationsEnabled = ref.watch(
+                        animationsEnabledProvider,
+                      );
+                      return Perspective3DSlide(
+                        index: index,
+                        direction: SlideDirection.left,
+                        enabled: animationsEnabled,
+                        child: _RouteCard(
+                          route: route,
+                          onTap: () => _viewRoute(route),
+                          onDelete: () => _deleteRoute(route),
+                          onExport: () => _exportRoute(route),
+                        ),
                       );
                     },
                   ),

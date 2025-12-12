@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import 'animations.dart';
 import 'app_bottom_sheet.dart';
 
 /// Result from node selector - either a specific node or broadcast
@@ -228,22 +229,30 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
                           node.longName ??
                           node.shortName ??
                           '!${node.nodeNum.toRadixString(16)}';
-                      return _NodeTile(
-                        icon: Icons.person,
-                        iconColor: node.isOnline
-                            ? context.accentColor
-                            : AppTheme.textTertiary,
-                        title: displayName,
-                        subtitle: node.shortName ?? 'Unknown',
-                        isSelected: _selectedNodeNum == node.nodeNum,
-                        isOnline: node.isOnline,
-                        onTap: () {
-                          setState(() => _selectedNodeNum = node.nodeNum);
-                          Navigator.pop(
-                            context,
-                            NodeSelection.node(node.nodeNum),
-                          );
-                        },
+                      final animationsEnabled = ref.watch(
+                        animationsEnabledProvider,
+                      );
+                      return Perspective3DSlide(
+                        index: index,
+                        direction: SlideDirection.left,
+                        enabled: animationsEnabled,
+                        child: _NodeTile(
+                          icon: Icons.person,
+                          iconColor: node.isOnline
+                              ? context.accentColor
+                              : AppTheme.textTertiary,
+                          title: displayName,
+                          subtitle: node.shortName ?? 'Unknown',
+                          isSelected: _selectedNodeNum == node.nodeNum,
+                          isOnline: node.isOnline,
+                          onTap: () {
+                            setState(() => _selectedNodeNum = node.nodeNum);
+                            Navigator.pop(
+                              context,
+                              NodeSelection.node(node.nodeNum),
+                            );
+                          },
+                        ),
                       );
                     },
                   ),

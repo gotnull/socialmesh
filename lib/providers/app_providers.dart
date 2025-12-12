@@ -250,6 +250,24 @@ final settingsServiceProvider = FutureProvider<SettingsService>((ref) async {
   return service;
 });
 
+/// Provider for animations enabled setting (optimized for frequent access)
+final animationsEnabledProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsServiceProvider);
+  return settingsAsync.maybeWhen(
+    data: (settings) => settings.animationsEnabled,
+    orElse: () => true,
+  );
+});
+
+/// Provider for 3D animations enabled setting (optimized for frequent access)
+final animations3DEnabledProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsServiceProvider);
+  return settingsAsync.maybeWhen(
+    data: (settings) => settings.animations3DEnabled,
+    orElse: () => true,
+  );
+});
+
 // Message storage service
 final messageStorageProvider = FutureProvider<MessageStorageService>((
   ref,

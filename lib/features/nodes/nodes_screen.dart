@@ -10,11 +10,11 @@ import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/info_table.dart';
-import '../../core/widgets/animated_list_item.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
+import '../navigation/main_shell.dart';
 
 // Battery helper functions
 // Meshtastic uses 101 for charging, 100 for plugged in fully charged
@@ -85,11 +85,13 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
         backgroundColor: AppTheme.darkBackground,
         appBar: AppBar(
           backgroundColor: AppTheme.darkBackground,
+          leading: const HamburgerMenuButton(),
+          centerTitle: true,
           title: Text(
             'Nodes (${nodes.length})',
             style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
           ),
@@ -177,12 +179,18 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                       itemBuilder: (context, index) {
                         final node = nodesList[index];
                         final isMyNode = node.nodeNum == myNodeNum;
+                        final animationsEnabled = ref.watch(
+                          animationsEnabledProvider,
+                        );
 
-                        return AnimatedListItem(
+                        return Perspective3DSlide(
                           index: index,
+                          direction: SlideDirection.left,
+                          enabled: animationsEnabled,
                           child: _NodeCard(
                             node: node,
                             isMyNode: isMyNode,
+                            animationsEnabled: animationsEnabled,
                             onTap: () =>
                                 _showNodeDetails(context, node, isMyNode),
                           ),
@@ -214,11 +222,13 @@ class _NodeCard extends StatelessWidget {
   final MeshNode node;
   final bool isMyNode;
   final VoidCallback onTap;
+  final bool animationsEnabled;
 
   const _NodeCard({
     required this.node,
     required this.isMyNode,
     required this.onTap,
+    this.animationsEnabled = true,
   });
 
   Color _getAvatarColor() {
@@ -271,7 +281,9 @@ class _NodeCard extends StatelessWidget {
 
     return BouncyTap(
       onTap: onTap,
-      scaleFactor: 0.98,
+      scaleFactor: animationsEnabled ? 0.98 : 1.0,
+      enable3DPress: animationsEnabled,
+      tiltDegrees: 4.0,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(

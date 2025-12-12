@@ -12,7 +12,6 @@ import '../../models/canned_response.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../utils/snackbar.dart';
-import '../../core/widgets/animated_list_item.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
@@ -21,6 +20,7 @@ import '../../services/haptic_service.dart';
 import '../channels/channel_form_screen.dart';
 import '../settings/canned_responses_screen.dart';
 import '../nodes/nodes_screen.dart';
+import '../navigation/main_shell.dart';
 
 /// Conversation type enum
 enum ConversationType { channel, directMessage }
@@ -82,11 +82,13 @@ class MessagingScreen extends ConsumerWidget {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
+        leading: const HamburgerMenuButton(),
+        centerTitle: true,
         title: const Text(
           'Messages',
           style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
         ),
@@ -144,8 +146,11 @@ class MessagingScreen extends ConsumerWidget {
               itemCount: conversations.length,
               itemBuilder: (context, index) {
                 final conv = conversations[index];
-                return AnimatedListItem(
+                final animationsEnabled = ref.watch(animationsEnabledProvider);
+                return Perspective3DSlide(
                   index: index,
+                  direction: SlideDirection.left,
+                  enabled: animationsEnabled,
                   child: _ConversationTile(
                     conversation: conv,
                     onTap: () {

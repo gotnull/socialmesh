@@ -11,6 +11,7 @@ import '../../services/storage/storage_service.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../services/haptic_service.dart';
 import '../../core/theme.dart';
+import '../navigation/main_shell.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -307,11 +308,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
+        leading: const HamburgerMenuButton(),
+        centerTitle: true,
         title: const Text(
           'Settings',
           style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
         ),
@@ -414,6 +417,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onTap: () =>
                       _showHapticIntensityPicker(context, ref, settingsService),
                 ),
+
+              const SizedBox(height: 16),
+
+              // Animations Section
+              const _SectionHeader(title: 'ANIMATIONS'),
+              _SettingsTile(
+                icon: Icons.animation,
+                title: 'List animations',
+                subtitle: 'Slide and bounce effects on lists',
+                trailing: ThemedSwitch(
+                  value: settingsService.animationsEnabled,
+                  onChanged: (value) async {
+                    HapticFeedback.selectionClick();
+                    await settingsService.setAnimationsEnabled(value);
+                    ref.read(settingsRefreshProvider.notifier).refresh();
+                    setState(() {});
+                  },
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.view_in_ar,
+                title: '3D effects',
+                subtitle: 'Perspective transforms and depth effects',
+                trailing: ThemedSwitch(
+                  value: settingsService.animations3DEnabled,
+                  onChanged: (value) async {
+                    HapticFeedback.selectionClick();
+                    await settingsService.setAnimations3DEnabled(value);
+                    ref.read(settingsRefreshProvider.notifier).refresh();
+                    setState(() {});
+                  },
+                ),
+              ),
 
               const SizedBox(height: 16),
 

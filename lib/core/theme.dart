@@ -169,6 +169,20 @@ class AppTheme {
         outline: darkBorder,
       ),
 
+      // Professional page transitions
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.android: ZoomPageTransitionsBuilder(
+            allowSnapshotting: true,
+            allowEnterRouteSnapshotting: true,
+          ),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+          TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+        },
+      ),
+
       // Scaffold
       scaffoldBackgroundColor: darkBackground,
 

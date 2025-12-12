@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/logging.dart';
 import '../../core/theme.dart';
+import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../navigation/main_shell.dart';
 import 'automation_debug_service.dart';
 import 'automation_providers.dart';
 import 'automation_repository.dart';
@@ -26,6 +28,8 @@ class AutomationsScreen extends ConsumerWidget {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        leading: const HamburgerMenuButton(),
+        centerTitle: true,
         title: const Text('Automations'),
         actions: [
           if (AppLogging.automationsLoggingEnabled)
@@ -248,10 +252,13 @@ class AutomationsScreen extends ConsumerWidget {
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               final automation = automations[index];
+              final animationsEnabled = ref.watch(animationsEnabledProvider);
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: SlideInAnimation(
-                  delay: Duration(milliseconds: index * 50),
+                child: Perspective3DSlide(
+                  index: index,
+                  direction: SlideDirection.left,
+                  enabled: animationsEnabled,
                   child: AutomationCard(
                     automation: automation,
                     onToggle: (enabled) {
