@@ -1,16 +1,20 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animated_mesh_node.dart';
 import '../../core/widgets/animations.dart';
+import '../../services/config/mesh_firestore_config_service.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../services/storage/storage_service.dart';
 import '../../utils/snackbar.dart';
 
 /// Debug settings screen with developer tools and the mesh node playground.
-/// Only accessible when ADMIN_DEBUG_MODE=true in .env
+/// Accessible via secret 7-tap gesture on the Socialmesh tile in About section.
 class DebugSettingsScreen extends ConsumerStatefulWidget {
   const DebugSettingsScreen({super.key});
 
@@ -37,8 +41,14 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   double _touchIntensity = 0.5; // Subtle
   double _stretchIntensity = 0.3;
 
+  // Save location preference
+  MeshConfigSaveLocation _saveLocation = MeshConfigSaveLocation.localDevice;
+  bool _globalPinVerified = false;
+  static const String _globalSavePin = '4511932';
+
   SettingsService? _settingsService;
   bool _hasUnsavedChanges = false;
+  bool _isLoadingRemote = false;
 
   // Color presets
   static const List<List<Color>> _colorPresets = [
@@ -112,6 +122,14 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   Future<void> _saveConfig() async {
     if (_settingsService == null) return;
 
+    // Require PIN for global saves
+    if (_saveLocation == MeshConfigSaveLocation.global && !_globalPinVerified) {
+      final verified = await _showPinDialog();
+      if (!verified) return;
+      setState(() => _globalPinVerified = true);
+    }
+
+    // Always save to local storage
     await _settingsService!.setSplashMeshConfig(
       size: _size,
       animationType: _animationType.name,
@@ -129,13 +147,338 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       stretchIntensity: _stretchIntensity,
     );
 
+    // If global, also save to Firestore
+    if (_saveLocation == MeshConfigSaveLocation.global) {
+      final config = MeshConfigData(
+        size: _size,
+        animationType: _animationType.name,
+        animate: _animate,
+        glowIntensity: _glowIntensity,
+        lineThickness: _lineThickness,
+        nodeSize: _nodeSize,
+        colorPreset: _selectedColorPreset,
+        useAccelerometer: _useAccelerometer,
+        accelerometerSensitivity: _accelerometerSensitivity,
+        accelerometerFriction: _accelerometerFriction,
+        physicsMode: _physicsMode.name,
+        enableTouch: _enableTouch,
+        enablePullToStretch: _enablePullToStretch,
+        touchIntensity: _touchIntensity,
+        stretchIntensity: _stretchIntensity,
+      );
+
+      await MeshFirestoreConfigService.instance.initialize();
+      final success = await MeshFirestoreConfigService.instance.saveConfig(
+        config,
+      );
+
+      if (!success && mounted) {
+        showErrorSnackBar(context, 'Failed to save to Firestore');
+        return;
+      }
+    }
+
     setState(() => _hasUnsavedChanges = false);
+
+    final locationText = _saveLocation == MeshConfigSaveLocation.localDevice
+        ? 'this device'
+        : 'all devices (Firestore)';
+
     if (mounted) {
       showSuccessSnackBar(
         context,
-        'Splash mesh config saved! Restart app to apply.',
+        'Mesh config saved to $locationText! Restart app to apply.',
       );
     }
+  }
+
+  Future<void> _loadFromFirestore() async {
+    setState(() => _isLoadingRemote = true);
+
+    try {
+      await MeshFirestoreConfigService.instance.initialize();
+      final remoteConfig = await MeshFirestoreConfigService.instance
+          .getRemoteConfig();
+
+      if (remoteConfig != null) {
+        setState(() {
+          _size = remoteConfig.size;
+          _animationType = remoteConfig.animationTypeEnum;
+          _animate = remoteConfig.animate;
+          _glowIntensity = remoteConfig.glowIntensity;
+          _lineThickness = remoteConfig.lineThickness;
+          _nodeSize = remoteConfig.nodeSize;
+          _selectedColorPreset = remoteConfig.colorPreset.clamp(
+            0,
+            _colorPresets.length - 1,
+          );
+          _useAccelerometer = remoteConfig.useAccelerometer;
+          _accelerometerSensitivity = remoteConfig.accelerometerSensitivity;
+          _accelerometerFriction = remoteConfig.accelerometerFriction;
+          _physicsMode = remoteConfig.physicsModeEnum;
+          _enableTouch = remoteConfig.enableTouch;
+          _enablePullToStretch = remoteConfig.enablePullToStretch;
+          _touchIntensity = remoteConfig.touchIntensity;
+          _stretchIntensity = remoteConfig.stretchIntensity;
+          _hasUnsavedChanges = true;
+        });
+
+        if (mounted) {
+          showSuccessSnackBar(context, '✅ Loaded config from Firestore');
+        }
+      } else {
+        if (mounted) {
+          showInfoSnackBar(context, 'No config found in Firestore');
+        }
+      }
+    } catch (e) {
+      AppLogging.settings('Failed to load from Firestore: $e');
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to load from Firestore');
+      }
+    } finally {
+      setState(() => _isLoadingRemote = false);
+    }
+  }
+
+  Future<bool> _showPinDialog() async {
+    var enteredPin = '';
+    var attempts = 0;
+    const maxAttempts = 3;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          void onKeyPress(String key) {
+            if (key == 'del') {
+              if (enteredPin.isNotEmpty) {
+                setDialogState(() {
+                  enteredPin = enteredPin.substring(0, enteredPin.length - 1);
+                });
+              }
+            } else if (key == 'ok') {
+              if (enteredPin == _globalSavePin) {
+                Navigator.of(dialogContext).pop(true);
+              } else {
+                attempts++;
+                if (attempts >= maxAttempts) {
+                  Navigator.of(dialogContext).pop(false);
+                  showErrorSnackBar(
+                    this.context,
+                    'Too many incorrect attempts',
+                  );
+                } else {
+                  setDialogState(() => enteredPin = '');
+                  showErrorSnackBar(
+                    this.context,
+                    'Incorrect PIN (${maxAttempts - attempts} attempts left)',
+                  );
+                }
+              }
+            } else if (enteredPin.length < 10) {
+              setDialogState(() => enteredPin += key);
+            }
+          }
+
+          Widget buildKey(String label, {double flex = 1, Color? color}) {
+            final isSpecial = label == 'DEL' || label == 'OK';
+            final keyColor = color ?? const Color(0xFF8B7BA8);
+
+            return Expanded(
+              flex: flex.toInt(),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: GestureDetector(
+                  onTap: () => onKeyPress(label.toLowerCase()),
+                  child: Container(
+                    height: 56,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          keyColor.withAlpha(200),
+                          keyColor.withAlpha(150),
+                          keyColor.withAlpha(100),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border(
+                        top: BorderSide(
+                          color: keyColor.withAlpha(255),
+                          width: 2,
+                        ),
+                        left: BorderSide(
+                          color: keyColor.withAlpha(230),
+                          width: 2,
+                        ),
+                        right: BorderSide(
+                          color: keyColor.withAlpha(80),
+                          width: 2,
+                        ),
+                        bottom: BorderSide(
+                          color: keyColor.withAlpha(60),
+                          width: 3,
+                        ),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(80),
+                          offset: const Offset(2, 3),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: isSpecial ? 14 : 22,
+                          fontWeight: FontWeight.w600,
+                          color: keyColor.withAlpha(180),
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withAlpha(100),
+                              offset: const Offset(1, 1),
+                              blurRadius: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
+
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              width: 280,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF1A1A2E), Color(0xFF0F0F1A)],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: const Color(0xFF8B7BA8).withAlpha(60),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(150),
+                    blurRadius: 20,
+                    spreadRadius: 5,
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Title
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.lock_outline,
+                        color: const Color(0xFF8B7BA8),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'GLOBAL SAVE PIN',
+                        style: TextStyle(
+                          color: Color(0xFF8B7BA8),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // PIN Display
+                  Container(
+                    width: double.infinity,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0A0A12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: const Color(0xFF8B7BA8).withAlpha(40),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        enteredPin.isEmpty
+                            ? '• • • • • • •'
+                            : '•' * enteredPin.length,
+                        style: TextStyle(
+                          fontSize: 24,
+                          letterSpacing: 8,
+                          color: enteredPin.isEmpty
+                              ? const Color(0xFF8B7BA8).withAlpha(60)
+                              : const Color(0xFF8B7BA8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Keypad
+                  Row(children: [buildKey('7'), buildKey('8'), buildKey('9')]),
+                  Row(children: [buildKey('4'), buildKey('5'), buildKey('6')]),
+                  Row(children: [buildKey('1'), buildKey('2'), buildKey('3')]),
+                  Row(
+                    children: [
+                      buildKey('DEL', color: const Color(0xFF6B5B7A)),
+                      buildKey('0'),
+                      buildKey('OK', color: const Color(0xFF5B8B6B)),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Attempts remaining
+                  if (attempts > 0)
+                    Text(
+                      '${maxAttempts - attempts} attempts remaining',
+                      style: TextStyle(
+                        color: AppTheme.errorRed.withAlpha(200),
+                        fontSize: 12,
+                      ),
+                    ),
+
+                  const SizedBox(height: 8),
+
+                  // Cancel button
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    child: Text(
+                      'CANCEL',
+                      style: TextStyle(
+                        color: const Color(0xFF8B7BA8).withAlpha(150),
+                        fontSize: 12,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    return result ?? false;
   }
 
   Future<void> _resetConfig() async {
@@ -366,6 +709,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             value: _size,
             min: 24,
             max: 600,
+            divisions: 144, // steps of 4px
             displayValue: '${_size.round()}px',
             onChanged: (v) {
               setState(() => _size = v);
@@ -380,6 +724,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             value: _glowIntensity,
             min: 0,
             max: 1,
+            divisions: 20, // steps of 5%
             displayValue: '${(_glowIntensity * 100).round()}%',
             onChanged: (v) {
               setState(() => _glowIntensity = v);
@@ -394,6 +739,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             value: _lineThickness,
             min: 0.5,
             max: 2.0,
+            divisions: 15, // steps of 0.1
             displayValue: '${_lineThickness.toStringAsFixed(1)}x',
             onChanged: (v) {
               setState(() => _lineThickness = v);
@@ -408,6 +754,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             value: _nodeSize,
             min: 0.5,
             max: 2.0,
+            divisions: 15, // steps of 0.1
             displayValue: '${_nodeSize.toStringAsFixed(1)}x',
             onChanged: (v) {
               setState(() => _nodeSize = v);
@@ -500,6 +847,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               value: _accelerometerSensitivity,
               min: 0.1,
               max: 3.0,
+              divisions: 29, // steps of 0.1
               displayValue: '${_accelerometerSensitivity.toStringAsFixed(1)}x',
               onChanged: (v) {
                 setState(() => _accelerometerSensitivity = v);
@@ -512,6 +860,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               value: _accelerometerFriction,
               min: 0.9,
               max: 0.998,
+              divisions: 49, // steps of 0.002
               displayValue: _accelerometerFriction >= 0.99
                   ? 'High'
                   : _accelerometerFriction >= 0.97
@@ -577,6 +926,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             value: _touchIntensity,
             min: 0.1,
             max: 2.0,
+            divisions: 19, // steps of 0.1
             displayValue: _touchIntensity >= 1.5
                 ? 'Wild'
                 : _touchIntensity >= 1.0
@@ -595,6 +945,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               value: _stretchIntensity,
               min: 0.1,
               max: 1.0,
+              divisions: 9, // steps of 0.1
               displayValue: _stretchIntensity >= 0.7
                   ? 'Extreme'
                   : _stretchIntensity >= 0.4
@@ -607,181 +958,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             ),
           const SizedBox(height: 20),
 
-          // Preset Buttons
-          _buildSectionLabel('Quick Presets'),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _buildPresetButton(
-                  'Loading',
-                  () => setState(() {
-                    _animationType = MeshNodeAnimationType.pulseRotate;
-                    _size = 48;
-                    _glowIntensity = 0.8;
-                    _selectedColorPreset = 0;
-                  }),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildPresetButton(
-                  'Hero',
-                  () => setState(() {
-                    _animationType = MeshNodeAnimationType.breathe;
-                    _size = 128;
-                    _glowIntensity = 0.7;
-                    _selectedColorPreset = 0;
-                  }),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildPresetButton(
-                  'Subtle',
-                  () => setState(() {
-                    _animationType = MeshNodeAnimationType.pulse;
-                    _size = 32;
-                    _glowIntensity = 0.4;
-                    _selectedColorPreset = 7;
-                  }),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildPresetButton(
-                  'Tumble',
-                  () => setState(() {
-                    _animationType = MeshNodeAnimationType.tumble;
-                    _size = 96;
-                    _glowIntensity = 1.0;
-                    _selectedColorPreset = 6;
-                    _useAccelerometer = false;
-                  }),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _buildPresetButton(
-                  'Splash',
-                  () => setState(() {
-                    _animationType = MeshNodeAnimationType.none;
-                    _size = 300;
-                    _glowIntensity = 0.5;
-                    _lineThickness = 0.5;
-                    _nodeSize = 0.8;
-                    _selectedColorPreset = 0;
-                    _useAccelerometer = true;
-                    _accelerometerSensitivity = 1.0;
-                    _accelerometerFriction = 0.985;
-                    _physicsMode = MeshPhysicsMode.momentum;
-                    _enableTouch = true;
-                    _touchIntensity = 1.0;
-                  }),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildPresetButton(
-                  'Flick Fast',
-                  () => setState(() {
-                    _animationType = MeshNodeAnimationType.none;
-                    _size = 200;
-                    _glowIntensity = 0.8;
-                    _selectedColorPreset = 0;
-                    _useAccelerometer = true;
-                    _accelerometerSensitivity = 2.0;
-                    _accelerometerFriction = 0.96;
-                    _physicsMode = MeshPhysicsMode.momentum;
-                    _enableTouch = true;
-                    _touchIntensity = 1.5;
-                  }),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildPresetButton(
-                  'Floaty',
-                  () => setState(() {
-                    _animationType = MeshNodeAnimationType.none;
-                    _size = 200;
-                    _glowIntensity = 0.6;
-                    _selectedColorPreset = 4;
-                    _useAccelerometer = true;
-                    _accelerometerSensitivity = 0.8;
-                    _accelerometerFriction = 0.995;
-                    _physicsMode = MeshPhysicsMode.momentum;
-                    _enableTouch = true;
-                    _touchIntensity = 0.5;
-                  }),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Additional physics presets row
-          Row(
-            children: [
-              Expanded(
-                child: _buildPresetButton(
-                  'Chaos',
-                  () => setState(() {
-                    _animationType = MeshNodeAnimationType.none;
-                    _size = 200;
-                    _glowIntensity = 1.0;
-                    _selectedColorPreset = 6;
-                    _useAccelerometer = true;
-                    _accelerometerSensitivity = 1.5;
-                    _accelerometerFriction = 0.98;
-                    _physicsMode = MeshPhysicsMode.chaos;
-                    _enableTouch = true;
-                    _touchIntensity = 2.0;
-                  }),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildPresetButton(
-                  'Tilt',
-                  () => setState(() {
-                    _animationType = MeshNodeAnimationType.none;
-                    _size = 200;
-                    _glowIntensity = 0.6;
-                    _selectedColorPreset = 3;
-                    _useAccelerometer = true;
-                    _accelerometerSensitivity = 1.0;
-                    _physicsMode = MeshPhysicsMode.tilt;
-                    _enableTouch = false;
-                  }),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildPresetButton(
-                  'Mario 64',
-                  () => setState(() {
-                    _animationType = MeshNodeAnimationType.none;
-                    _size = 250;
-                    _glowIntensity = 0.7;
-                    _selectedColorPreset = 0;
-                    _useAccelerometer = true;
-                    _accelerometerSensitivity = 0.5;
-                    _accelerometerFriction = 0.99;
-                    _physicsMode = MeshPhysicsMode.touchOnly;
-                    _enableTouch = true;
-                    _touchIntensity = 1.5;
-                  }),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Code snippet
+          // JSON Config Display
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -795,13 +972,13 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                 Row(
                   children: [
                     const Icon(
-                      Icons.code,
+                      Icons.data_object,
                       size: 14,
                       color: AppTheme.textTertiary,
                     ),
                     const SizedBox(width: 6),
                     const Text(
-                      'Code',
+                      'JSON Config',
                       style: TextStyle(
                         fontSize: 11,
                         color: AppTheme.textTertiary,
@@ -811,8 +988,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     const Spacer(),
                     BouncyTap(
                       onTap: () {
-                        // Copy to clipboard would go here
-                        showInfoSnackBar(context, 'Code snippet copied!');
+                        Clipboard.setData(
+                          ClipboardData(text: _generateJsonConfig()),
+                        );
+                        showInfoSnackBar(context, 'JSON config copied!');
                       },
                       child: const Icon(
                         Icons.copy,
@@ -824,7 +1003,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 SelectableText(
-                  _generateCodeSnippet(),
+                  _generateJsonConfig(),
                   style: const TextStyle(
                     fontSize: 11,
                     fontFamily: 'monospace',
@@ -833,6 +1012,125 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Save Location Selector
+          _buildSectionLabel('Save Location'),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppTheme.darkBorder.withAlpha(100)),
+            ),
+            child: Row(
+              children: MeshConfigSaveLocation.values.map((location) {
+                final isSelected = location == _saveLocation;
+                return Expanded(
+                  child: BouncyTap(
+                    onTap: () {
+                      setState(() => _saveLocation = location);
+                      _markChanged();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? context.accentColor.withAlpha(40)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            location.icon,
+                            size: 16,
+                            color: isSelected
+                                ? context.accentColor
+                                : AppTheme.textSecondary,
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              location == MeshConfigSaveLocation.localDevice
+                                  ? 'Local'
+                                  : 'Global',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                                color: isSelected
+                                    ? context.accentColor
+                                    : AppTheme.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _saveLocation.description,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppTheme.textTertiary,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Load from Firestore button
+          BouncyTap(
+            onTap: _isLoadingRemote ? null : _loadFromFirestore,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryBlue.withAlpha(20),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.primaryBlue.withAlpha(60)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_isLoadingRemote)
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppTheme.primaryBlue,
+                      ),
+                    )
+                  else
+                    const Icon(
+                      Icons.cloud_download_rounded,
+                      size: 18,
+                      color: AppTheme.primaryBlue,
+                    ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _isLoadingRemote ? 'Loading...' : 'Load from Firestore',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.primaryBlue,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -1244,71 +1542,29 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
     );
   }
 
-  Widget _buildPresetButton(String label, VoidCallback onTap) {
-    return BouncyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: AppTheme.darkBackground,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppTheme.darkBorder),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
-            ),
-          ),
-        ),
+  String _generateJsonConfig() {
+    final config = {
+      'size': _size.round(),
+      'animationType': _animationType.name,
+      'animate': _animate,
+      'glowIntensity': double.parse(_glowIntensity.toStringAsFixed(2)),
+      'lineThickness': double.parse(_lineThickness.toStringAsFixed(2)),
+      'nodeSize': double.parse(_nodeSize.toStringAsFixed(2)),
+      'colorPreset': _colorPresetNames[_selectedColorPreset],
+      'useAccelerometer': _useAccelerometer,
+      'accelerometerSensitivity': double.parse(
+        _accelerometerSensitivity.toStringAsFixed(2),
       ),
-    );
-  }
+      'friction': double.parse(_accelerometerFriction.toStringAsFixed(3)),
+      'physicsMode': _physicsMode.name,
+      'enableTouch': _enableTouch,
+      'enablePullToStretch': _enablePullToStretch,
+      'touchIntensity': double.parse(_touchIntensity.toStringAsFixed(2)),
+      'stretchIntensity': double.parse(_stretchIntensity.toStringAsFixed(2)),
+    };
 
-  String _generateCodeSnippet() {
-    final colorPreset = _colorPresetNames[_selectedColorPreset];
-    final hasCustomColors = _selectedColorPreset != 0;
-
-    final widgetName = _useAccelerometer
-        ? 'AccelerometerMeshNode'
-        : 'AnimatedMeshNode';
-    var snippet = '$widgetName(\n';
-    snippet += '  size: ${_size.round()},\n';
-    snippet +=
-        '  animationType: MeshNodeAnimationType.${_animationType.name},\n';
-
-    if (!_animate) {
-      snippet += '  animate: false,\n';
-    }
-    if (_glowIntensity != 0.6) {
-      snippet += '  glowIntensity: ${_glowIntensity.toStringAsFixed(2)},\n';
-    }
-    if (_lineThickness != 1.0) {
-      snippet += '  lineThickness: ${_lineThickness.toStringAsFixed(1)},\n';
-    }
-    if (_nodeSize != 1.0) {
-      snippet += '  nodeSize: ${_nodeSize.toStringAsFixed(1)},\n';
-    }
-    if (hasCustomColors) {
-      snippet += '  // $colorPreset preset\n';
-      snippet += '  gradientColors: [...],\n';
-    }
-    if (_useAccelerometer) {
-      if (_accelerometerSensitivity != 1.0) {
-        snippet +=
-            '  accelerometerSensitivity: ${_accelerometerSensitivity.toStringAsFixed(1)},\n';
-      }
-      if (_accelerometerFriction != 0.985) {
-        snippet +=
-            '  friction: ${_accelerometerFriction.toStringAsFixed(3)},\n';
-      }
-    }
-
-    snippet += ')';
-    return snippet;
+    const encoder = JsonEncoder.withIndent('  ');
+    return encoder.convert(config);
   }
 
   Future<void> _sendTestNotification() async {

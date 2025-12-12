@@ -17,6 +17,7 @@ import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/legal_document_sheet.dart';
+import '../../core/widgets/secret_gesture_detector.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import '../device/region_selection_screen.dart';
@@ -1020,10 +1021,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               // About Section
               _SectionHeader(title: 'ABOUT'),
-              _SettingsTile(
-                icon: Icons.info,
-                title: 'Socialmesh',
-                subtitle: 'Meshtastic companion app • Version 1.0.0',
+              // Secret gesture to unlock debug settings - tap 7 times!
+              SecretGestureDetector(
+                pattern: SecretGesturePattern.sevenTaps,
+                onSecretUnlocked: () {
+                  HapticFeedback.heavyImpact();
+                  showSuccessSnackBar(context, '🔓 Debug mode unlocked!');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const DebugSettingsScreen(),
+                    ),
+                  );
+                },
+                child: _SettingsTile(
+                  icon: Icons.info,
+                  title: 'Socialmesh',
+                  subtitle: 'Meshtastic companion app • Version 1.0.0',
+                ),
               ),
               _SettingsTile(
                 icon: Icons.help_outline,

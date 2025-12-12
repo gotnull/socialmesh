@@ -132,23 +132,38 @@ class ConfiguredSplashMeshNode extends ConsumerWidget {
   Widget _buildMeshNode(SplashMeshConfig config) {
     // ALWAYS use AccelerometerMeshNode for touch support
     // When accelerometer is disabled, use touchOnly physics mode
-    return AccelerometerMeshNode(
-      size: config.size,
-      animationType: config.animationType,
-      glowIntensity: config.glowIntensity,
-      lineThickness: config.lineThickness,
-      nodeSize: config.nodeSize,
-      gradientColors: config.gradientColors,
-      accelerometerSensitivity: config.accelerometerSensitivity,
-      friction: config.accelerometerFriction,
-      // When accelerometer disabled, use touchOnly mode (no sensor input)
-      physicsMode: config.useAccelerometer
-          ? config.physicsMode
-          : MeshPhysicsMode.touchOnly,
-      enableTouch: config.enableTouch,
-      enablePullToStretch: config.enablePullToStretch,
-      touchIntensity: config.touchIntensity,
-      stretchIntensity: config.stretchIntensity,
+    //
+    // Use OverflowBox to allow the mesh to render at full size
+    // while only taking up limited layout space. This prevents
+    // large mesh sizes from pushing down the text below.
+    const maxLayoutSize = 200.0;
+    final meshSize = config.size;
+
+    return SizedBox(
+      width: maxLayoutSize,
+      height: maxLayoutSize,
+      child: OverflowBox(
+        maxWidth: meshSize,
+        maxHeight: meshSize,
+        child: AccelerometerMeshNode(
+          size: meshSize,
+          animationType: config.animationType,
+          glowIntensity: config.glowIntensity,
+          lineThickness: config.lineThickness,
+          nodeSize: config.nodeSize,
+          gradientColors: config.gradientColors,
+          accelerometerSensitivity: config.accelerometerSensitivity,
+          friction: config.accelerometerFriction,
+          // When accelerometer disabled, use touchOnly mode (no sensor input)
+          physicsMode: config.useAccelerometer
+              ? config.physicsMode
+              : MeshPhysicsMode.touchOnly,
+          enableTouch: config.enableTouch,
+          enablePullToStretch: config.enablePullToStretch,
+          touchIntensity: config.touchIntensity,
+          stretchIntensity: config.stretchIntensity,
+        ),
+      ),
     );
   }
 }
