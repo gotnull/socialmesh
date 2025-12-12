@@ -711,7 +711,7 @@ class NodeDetailsSheet extends ConsumerWidget {
       if (node.hasPosition) 'lon': node.longitude,
     };
     final nodeJson = jsonEncode(nodeInfo);
-    final nodeUrl = 'meshtastic://node/${base64Encode(utf8.encode(nodeJson))}';
+    final nodeUrl = 'socialmesh://node/${base64Encode(utf8.encode(nodeJson))}';
 
     AppBottomSheet.show(
       context: context,

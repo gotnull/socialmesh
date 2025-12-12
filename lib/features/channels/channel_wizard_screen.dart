@@ -256,7 +256,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
         .encode(bytes)
         .replaceAll('+', '-')
         .replaceAll('/', '_');
-    return 'https://meshtastic.org/e/#$encoded';
+    return 'socialmesh://channel/$encoded';
   }
 
   @override
@@ -1076,7 +1076,9 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
           const Spacer(),
           Flexible(
             child: Text(
-              keyBase64.isNotEmpty ? '${keyBase64.substring(0, keyBase64.length.clamp(0, 8))}...' : '-',
+              keyBase64.isNotEmpty
+                  ? '${keyBase64.substring(0, keyBase64.length.clamp(0, 8))}...'
+                  : '-',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,

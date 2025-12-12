@@ -43,13 +43,16 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
 
   Future<void> _processQrCode(String code) async {
     try {
-      // Meshtastic node QR codes format: "meshtastic://node/<base64-encoded-json>"
-      if (!code.startsWith('meshtastic://node/')) {
-        throw Exception('Not a valid Meshtastic node QR code');
+      // Node QR codes format: "socialmesh://node/<base64-encoded-json>"
+      // Also supports legacy format: "meshtastic://node/<base64-encoded-json>"
+      String base64Data;
+      if (code.startsWith('socialmesh://node/')) {
+        base64Data = code.substring('socialmesh://node/'.length);
+      } else if (code.startsWith('meshtastic://node/')) {
+        base64Data = code.substring('meshtastic://node/'.length);
+      } else {
+        throw Exception('Not a valid node QR code');
       }
-
-      // Extract and decode the base64 data
-      final base64Data = code.substring('meshtastic://node/'.length);
       final jsonStr = utf8.decode(base64Decode(base64Data));
       final nodeInfo = jsonDecode(jsonStr) as Map<String, dynamic>;
 

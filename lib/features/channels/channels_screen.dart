@@ -352,8 +352,7 @@ class _ChannelTile extends ConsumerWidget {
 
     // Encode as base64 and URL-encode for the URL fragment
     final base64Data = base64Encode(pbChannel.writeToBuffer());
-    final channelUrl =
-        'https://meshtastic.org/e/#${Uri.encodeComponent(base64Data)}';
+    final channelUrl = 'socialmesh://channel/$base64Data';
 
     final channelName = channel.name.isEmpty
         ? 'Channel ${channel.index}'

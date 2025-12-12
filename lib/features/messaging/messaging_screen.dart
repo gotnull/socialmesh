@@ -842,8 +842,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           : pb.Channel_Role.SECONDARY;
 
     final base64Data = base64Encode(pbChannel.writeToBuffer());
-    final channelUrl =
-        'https://meshtastic.org/e/#${Uri.encodeComponent(base64Data)}';
+    final channelUrl = 'socialmesh://channel/$base64Data';
 
     AppBottomSheet.show(
       context: context,

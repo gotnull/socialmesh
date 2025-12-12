@@ -49,12 +49,17 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
     try {
       _logger.i('Processing QR code: $code');
 
-      // Meshtastic QR codes format: "https://meshtastic.org/e/#<url-encoded-base64data>"
-      // The base64 data is URL-encoded and contains a protobuf ChannelSet or Channel
+      // Channel QR codes format: "socialmesh://channel/<base64data>"
+      // Also supports legacy formats:
+      //   - "https://meshtastic.org/e/#<url-encoded-base64data>"
+      //   - Other HTTP URLs with fragment
 
       String base64Data;
-      if (code.contains('meshtastic.org/e/#')) {
-        // Extract the fragment after #
+      if (code.startsWith('socialmesh://channel/')) {
+        // SocialMesh native format
+        base64Data = code.substring('socialmesh://channel/'.length);
+      } else if (code.contains('meshtastic.org/e/#')) {
+        // Legacy Meshtastic format - extract the fragment after #
         final hashIndex = code.indexOf('#');
         if (hashIndex == -1 || hashIndex == code.length - 1) {
           throw Exception('Invalid Meshtastic URL format');

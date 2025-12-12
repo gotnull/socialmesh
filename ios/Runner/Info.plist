@@ -72,5 +72,18 @@
 			<key>NSAllowsLocalNetworking</key>
 			<true />
 		</dict>
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Viewer</string>
+				<key>CFBundleURLName</key>
+				<string>com.socialmesh.app</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>socialmesh</string>
+				</array>
+			</dict>
+		</array>
 	</dict>
 </plist>
