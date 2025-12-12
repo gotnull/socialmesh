@@ -47,11 +47,11 @@ class HamburgerMenuButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scaffoldKey = ref.watch(mainShellScaffoldKeyProvider);
     final theme = Theme.of(context);
-    
+
     // Check if we can pop (meaning we were pushed onto the stack)
     // If so, show a back button instead of the hamburger menu
     final canPop = Navigator.of(context).canPop();
-    
+
     if (canPop) {
       return IconButton(
         icon: Icon(
