@@ -6,8 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/channel_key_field.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/validation.dart';
 
@@ -62,8 +64,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
   bool _downlinkEnabled = false;
   bool _positionEnabled = false;
   bool _isSaving = false;
-  bool _showKey = false;
-  bool _isEditingKey = false;
   String? _keyValidationError;
   KeySize? _detectedKeySize;
 
@@ -159,46 +159,23 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
       return;
     }
 
-    try {
-      final decoded = base64Decode(keyText.trim());
-      final bytes = decoded.length;
-
-      // Check for valid key sizes
-      if (bytes == 0) {
-        _keyValidationError = 'Key cannot be empty';
-        _detectedKeySize = null;
-      } else if (bytes == 1) {
-        _keyValidationError = null;
-        _detectedKeySize = KeySize.default1;
-      } else if (bytes == 16) {
-        _keyValidationError = null;
-        _detectedKeySize = KeySize.bit128;
-      } else if (bytes == 32) {
-        _keyValidationError = null;
-        _detectedKeySize = KeySize.bit256;
+    final validatedSize = ChannelKeyUtils.validateKeySize(keyText);
+    if (validatedSize == null) {
+      // Check if it's a decoding error vs size error
+      final decoded = ChannelKeyUtils.base64ToKey(keyText);
+      if (decoded == null) {
+        _keyValidationError = 'Invalid base64 encoding';
       } else {
         _keyValidationError =
-            'Invalid key size ($bytes bytes). Use 1, 16, or 32 bytes.';
-        _detectedKeySize = null;
+            'Invalid key size (${decoded.length} bytes). Use 1, 16, or 32 bytes.';
       }
-    } catch (e) {
-      _keyValidationError = 'Invalid base64 encoding';
       _detectedKeySize = null;
-    }
-  }
-
-  /// Get display string for detected key size
-  String _getDetectedKeySizeDisplay() {
-    if (_detectedKeySize == null) return '';
-    switch (_detectedKeySize!) {
-      case KeySize.none:
-        return '';
-      case KeySize.default1:
-        return '1 byte · Default PSK';
-      case KeySize.bit128:
-        return '16 bytes · AES-128';
-      case KeySize.bit256:
-        return '32 bytes · AES-256';
+    } else if (validatedSize == 0) {
+      _keyValidationError = 'Key cannot be empty';
+      _detectedKeySize = null;
+    } else {
+      _keyValidationError = null;
+      _detectedKeySize = KeySize.fromBytes(validatedSize);
     }
   }
 
@@ -383,7 +360,19 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
 
               if (_selectedKeySize != KeySize.none) ...[
                 const SizedBox(height: 20),
-                _buildKeyField(),
+                ChannelKeyField(
+                  keyBase64: _keyController.text,
+                  onKeyChanged: (newKey) {
+                    _keyController.text = newKey;
+                    _validateAndDetectKey(newKey);
+                    if (_detectedKeySize != null) {
+                      setState(() {
+                        _selectedKeySize = _detectedKeySize!;
+                      });
+                    }
+                  },
+                  expectedKeyBytes: _selectedKeySize.bytes,
+                ),
               ],
 
               const SizedBox(height: 28),
@@ -676,337 +665,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
             ],
           );
         }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildKeyField() {
-    final hasValidKey =
-        _keyValidationError == null && _keyController.text.isNotEmpty;
-    final detectedDisplay = _getDetectedKeySizeDisplay();
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.darkCard,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: _keyValidationError != null
-              ? AppTheme.errorRed.withValues(alpha: 0.5)
-              : AppTheme.darkBorder,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header row with label and actions
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: hasValidKey
-                        ? context.accentColor.withValues(alpha: 0.15)
-                        : _keyValidationError != null
-                        ? AppTheme.errorRed.withValues(alpha: 0.15)
-                        : AppTheme.darkBackground,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.key,
-                    color: hasValidKey
-                        ? context.accentColor
-                        : _keyValidationError != null
-                        ? AppTheme.errorRed
-                        : AppTheme.textTertiary,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Encryption Key',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        _isEditingKey
-                            ? 'Enter base64-encoded key'
-                            : hasValidKey && detectedDisplay.isNotEmpty
-                            ? detectedDisplay
-                            : 'Base64 encoded',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: hasValidKey
-                              ? context.accentColor
-                              : AppTheme.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Auto-detect badge when valid
-                if (hasValidKey && _detectedKeySize != null && !_isEditingKey)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      _detectedKeySize!.displayName,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: context.accentColor,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          // Key input/display area
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: _keyValidationError != null
-                    ? AppTheme.errorRed.withValues(alpha: 0.5)
-                    : AppTheme.darkBorder.withValues(alpha: 0.5),
-              ),
-            ),
-            child: _isEditingKey
-                ? TextField(
-                    controller: _keyController,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                      fontFamily: 'monospace',
-                      fontWeight: FontWeight.w500,
-                    ),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.all(16),
-                      hintText: 'e.g., AQ== or AAAAAAAAAAAAAAAAAAAAAA==',
-                      hintStyle: TextStyle(
-                        color: AppTheme.textTertiary.withValues(alpha: 0.5),
-                        fontFamily: 'monospace',
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(Icons.check, color: context.accentColor),
-                        onPressed: () {
-                          _validateAndDetectKey(_keyController.text);
-                          setState(() {
-                            _isEditingKey = false;
-                            // Auto-update key size selector based on detected size
-                            if (_detectedKeySize != null) {
-                              _selectedKeySize = _detectedKeySize!;
-                            }
-                          });
-                        },
-                      ),
-                    ),
-                    onChanged: (value) {
-                      _validateAndDetectKey(value);
-                      setState(() {});
-                    },
-                    onSubmitted: (_) {
-                      _validateAndDetectKey(_keyController.text);
-                      setState(() {
-                        _isEditingKey = false;
-                        if (_detectedKeySize != null) {
-                          _selectedKeySize = _detectedKeySize!;
-                        }
-                      });
-                    },
-                    autofocus: true,
-                  )
-                : Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: _showKey
-                        ? SelectableText(
-                            _keyController.text.isEmpty
-                                ? '(no key set)'
-                                : _keyController.text,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: _keyController.text.isEmpty
-                                  ? AppTheme.textTertiary
-                                  : context.accentColor,
-                              fontFamily: 'monospace',
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 0.5,
-                              height: 1.5,
-                            ),
-                          )
-                        : Text(
-                            _keyController.text.isEmpty
-                                ? '(no key set)'
-                                : '•' * min(32, _keyController.text.length),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppTheme.textTertiary.withValues(
-                                alpha: 0.5,
-                              ),
-                              fontFamily: 'monospace',
-                              letterSpacing: 2,
-                            ),
-                          ),
-                  ),
-          ),
-
-          // Validation error message
-          if (_keyValidationError != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: AppTheme.errorRed,
-                    size: 14,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    _keyValidationError!,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.errorRed,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          // Action buttons row
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
-            child: Row(
-              children: [
-                // Show/Hide toggle
-                _buildKeyActionButton(
-                  icon: _showKey ? Icons.visibility_off : Icons.visibility,
-                  label: _showKey ? 'Hide' : 'Show',
-                  onPressed: () => setState(() => _showKey = !_showKey),
-                  isEnabled: true,
-                ),
-                const SizedBox(width: 4),
-                // Edit manually
-                _buildKeyActionButton(
-                  icon: Icons.edit,
-                  label: 'Edit',
-                  onPressed: () {
-                    setState(() {
-                      _isEditingKey = true;
-                      _showKey = true;
-                    });
-                  },
-                  isEnabled: !_isEditingKey,
-                ),
-                const SizedBox(width: 4),
-                // Regenerate
-                _buildKeyActionButton(
-                  icon: Icons.refresh,
-                  label: 'Generate',
-                  onPressed: !_isEditingKey
-                      ? () {
-                          _generateRandomKey();
-                          showSuccessSnackBar(
-                            context,
-                            'New key generated',
-                            duration: const Duration(seconds: 1),
-                          );
-                        }
-                      : null,
-                  isEnabled: !_isEditingKey,
-                ),
-                const SizedBox(width: 4),
-                // Copy - only when visible and not editing
-                _buildKeyActionButton(
-                  icon: Icons.copy,
-                  label: 'Copy',
-                  onPressed:
-                      _showKey &&
-                          !_isEditingKey &&
-                          _keyController.text.isNotEmpty
-                      ? () {
-                          Clipboard.setData(
-                            ClipboardData(text: _keyController.text),
-                          );
-                          showSuccessSnackBar(
-                            context,
-                            'Key copied to clipboard',
-                            duration: const Duration(seconds: 1),
-                          );
-                        }
-                      : null,
-                  isEnabled:
-                      _showKey &&
-                      !_isEditingKey &&
-                      _keyController.text.isNotEmpty,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildKeyActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback? onPressed,
-    required bool isEnabled,
-  }) {
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 16,
-                  color: isEnabled
-                      ? AppTheme.textSecondary
-                      : AppTheme.textTertiary.withValues(alpha: 0.4),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: isEnabled
-                        ? AppTheme.textSecondary
-                        : AppTheme.textTertiary.withValues(alpha: 0.4),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

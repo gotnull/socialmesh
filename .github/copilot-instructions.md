@@ -20,6 +20,15 @@
 - Use `debugPrint()` instead of `print()` for debug logging.
 - Ensure every feature is fully wired and functional end to end.
 
+## Code Reuse (CRITICAL)
+- BEFORE implementing any new widget, utility, or logic, SEARCH the codebase for existing implementations.
+- Look for existing widgets/cards in related screens (e.g., edit screens have widgets that creation screens should reuse).
+- Extract and refactor shared functionality into reusable components rather than duplicating code.
+- Check `lib/core/widgets/`, `lib/utils/`, and feature-specific files for existing utilities.
+- If similar logic exists, refactor to create a shared component instead of reimplementing.
+- Proven, tested code is always preferable to new implementations.
+- When adding features to wizards/creation flows, first check the corresponding edit/form screens for reusable widgets.
+
 ## Systematic Verification (CRITICAL)
 - NEVER assume you have found all instances of a pattern. Always search exhaustively.
 - When fixing a bug pattern, FIRST run a comprehensive search to find ALL affected files before making any changes.

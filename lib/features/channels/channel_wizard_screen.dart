@@ -9,8 +9,10 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/channel_key_field.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
@@ -125,7 +127,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
   bool _downlinkEnabled = false;
   bool _positionEnabled = false;
 
-  // Generated key
+  // Key management
   List<int> _generatedKey = [];
 
   // Saving state
@@ -239,8 +241,9 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
     final channelSettings = pb.ChannelSettings()
       ..name = _nameController.text.trim();
 
-    if (_generatedKey.isNotEmpty) {
-      channelSettings.psk = _generatedKey;
+    final key = _generatedKey;
+    if (key.isNotEmpty) {
+      channelSettings.psk = key;
     }
 
     final channel = pb.Channel()
@@ -636,6 +639,25 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
             ),
           ),
           const SizedBox(height: 32),
+          // Encryption key section (only for private/maximum)
+          if (_privacyLevel == PrivacyLevel.private ||
+              _privacyLevel == PrivacyLevel.maximum) ...[
+            const SizedBox(height: 12),
+            ChannelKeyField(
+              keyBase64: ChannelKeyUtils.keyToBase64(_generatedKey),
+              onKeyChanged: (newKey) {
+                final decoded = ChannelKeyUtils.base64ToKey(newKey);
+                if (decoded != null) {
+                  setState(() {
+                    _generatedKey = decoded;
+                  });
+                }
+              },
+              expectedKeyBytes: _privacyLevel.keySize.bytes,
+              accentColor: _privacyLevel.color,
+            ),
+            const SizedBox(height: 24),
+          ],
           // Position setting (doesn't require MQTT)
           _buildToggleOption(
             theme: theme,
@@ -934,6 +956,10 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                       ? 'Default key'
                       : '${_privacyLevel.keySize.bytes * 8} bits',
                 ),
+                if (_privacyLevel.keySize.bytes > 1) ...[
+                  Divider(color: AppTheme.darkBorder.withAlpha(128)),
+                  _buildKeyRow(theme),
+                ],
                 Divider(color: AppTheme.darkBorder.withAlpha(128)),
                 _buildSummaryRow(
                   theme,
@@ -1027,6 +1053,36 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
             style: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKeyRow(ThemeData theme) {
+    final keyBase64 = ChannelKeyUtils.keyToBase64(_generatedKey);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Text(
+            'Encryption Key',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const Spacer(),
+          Flexible(
+            child: Text(
+              keyBase64.isNotEmpty ? '${keyBase64.substring(0, keyBase64.length.clamp(0, 8))}...' : '-',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'monospace',
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
