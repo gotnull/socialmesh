@@ -287,35 +287,38 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                       },
                       autofocus: true,
                     )
-                  : Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: _showKey
-                          ? SelectableText(
-                              _keyController.text.isEmpty
-                                  ? '(no key set)'
-                                  : _keyController.text,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: _keyController.text.isEmpty
-                                    ? AppTheme.textTertiary
-                                    : _accentColor,
-                                fontFamily: 'monospace',
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.5,
-                                height: 1.5,
+                  : SizedBox(
+                      width: double.infinity,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: _showKey
+                            ? SelectableText(
+                                _keyController.text.isEmpty
+                                    ? '(no key set)'
+                                    : _keyController.text,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: _keyController.text.isEmpty
+                                      ? AppTheme.textTertiary
+                                      : _accentColor,
+                                  fontFamily: 'monospace',
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: 0.5,
+                                  height: 1.5,
+                                ),
+                              )
+                            : Text(
+                                _keyController.text.isEmpty
+                                    ? '(no key set)'
+                                    : '•' * min(32, _keyController.text.length),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppTheme.textTertiary.withAlpha(128),
+                                  fontFamily: 'monospace',
+                                  letterSpacing: 2,
+                                ),
                               ),
-                            )
-                          : Text(
-                              _keyController.text.isEmpty
-                                  ? '(no key set)'
-                                  : '•' * min(32, _keyController.text.length),
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppTheme.textTertiary.withAlpha(128),
-                                fontFamily: 'monospace',
-                                letterSpacing: 2,
-                              ),
-                            ),
+                      ),
                     ),
             ),
 
