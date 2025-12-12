@@ -479,6 +479,238 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     return nodePositions;
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SCI-FI SHAPE BUILDERS - Premium futuristic node visualizations
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Build an octahedron (diamond/crystal) shape - sci-fi node representation
+  List<Model3D<Model3D>> _buildOctahedron(
+    vector.Vector3 position,
+    double size,
+    Color color, {
+    double alpha = 1.0,
+  }) {
+    final figures = <Model3D<Model3D>>[];
+    final halfSize = size / 2;
+    final effectiveColor = color.withValues(alpha: alpha);
+
+    // Octahedron vertices (6 points)
+    final top = position + vector.Vector3(0, halfSize, 0);
+    final bottom = position + vector.Vector3(0, -halfSize, 0);
+    final front = position + vector.Vector3(0, 0, halfSize);
+    final back = position + vector.Vector3(0, 0, -halfSize);
+    final left = position + vector.Vector3(-halfSize, 0, 0);
+    final right = position + vector.Vector3(halfSize, 0, 0);
+
+    // Top pyramid faces (4 triangles)
+    figures.add(Face3D.fromVertices(top, front, right, color: effectiveColor));
+    figures.add(Face3D.fromVertices(top, right, back, color: effectiveColor));
+    figures.add(Face3D.fromVertices(top, back, left, color: effectiveColor));
+    figures.add(Face3D.fromVertices(top, left, front, color: effectiveColor));
+
+    // Bottom pyramid faces (4 triangles)
+    figures.add(
+      Face3D.fromVertices(bottom, right, front, color: effectiveColor),
+    );
+    figures.add(
+      Face3D.fromVertices(bottom, back, right, color: effectiveColor),
+    );
+    figures.add(Face3D.fromVertices(bottom, left, back, color: effectiveColor));
+    figures.add(
+      Face3D.fromVertices(bottom, front, left, color: effectiveColor),
+    );
+
+    return figures;
+  }
+
+  /// Build glowing energy rings around a node - futuristic effect
+  List<Model3D<Model3D>> _buildEnergyRings(
+    vector.Vector3 position,
+    double radius,
+    Color color, {
+    int ringCount = 2,
+    int segments = 16,
+    double alpha = 0.6,
+  }) {
+    final figures = <Model3D<Model3D>>[];
+
+    for (int ring = 0; ring < ringCount; ring++) {
+      final ringRadius = radius * (0.8 + ring * 0.4);
+      final ringAlpha = alpha * (1.0 - ring * 0.2);
+      final yOffset = ring * 0.05; // Slight vertical offset between rings
+
+      for (int i = 0; i < segments; i++) {
+        final angle1 = (i / segments) * 2 * math.pi;
+        final angle2 = ((i + 1) / segments) * 2 * math.pi;
+
+        figures.add(
+          Line3D(
+            position +
+                vector.Vector3(
+                  ringRadius * math.cos(angle1),
+                  yOffset,
+                  ringRadius * math.sin(angle1),
+                ),
+            position +
+                vector.Vector3(
+                  ringRadius * math.cos(angle2),
+                  yOffset,
+                  ringRadius * math.sin(angle2),
+                ),
+            color: color.withValues(alpha: ringAlpha),
+            width: 2,
+          ),
+        );
+      }
+    }
+
+    return figures;
+  }
+
+  /// Build a holographic wireframe node - cutting-edge sci-fi aesthetic
+  List<Model3D<Model3D>> _buildHologramNode(
+    vector.Vector3 position,
+    double size,
+    Color color, {
+    double alpha = 0.8,
+  }) {
+    final figures = <Model3D<Model3D>>[];
+    final halfSize = size / 2;
+
+    // Octahedron vertices
+    final top = position + vector.Vector3(0, halfSize, 0);
+    final bottom = position + vector.Vector3(0, -halfSize, 0);
+    final front = position + vector.Vector3(0, 0, halfSize);
+    final back = position + vector.Vector3(0, 0, -halfSize);
+    final left = position + vector.Vector3(-halfSize, 0, 0);
+    final right = position + vector.Vector3(halfSize, 0, 0);
+
+    final wireColor = color.withValues(alpha: alpha);
+
+    // Edge lines - top pyramid
+    figures.add(Line3D(top, front, color: wireColor, width: 2));
+    figures.add(Line3D(top, right, color: wireColor, width: 2));
+    figures.add(Line3D(top, back, color: wireColor, width: 2));
+    figures.add(Line3D(top, left, color: wireColor, width: 2));
+
+    // Edge lines - bottom pyramid
+    figures.add(Line3D(bottom, front, color: wireColor, width: 2));
+    figures.add(Line3D(bottom, right, color: wireColor, width: 2));
+    figures.add(Line3D(bottom, back, color: wireColor, width: 2));
+    figures.add(Line3D(bottom, left, color: wireColor, width: 2));
+
+    // Equator lines
+    figures.add(Line3D(front, right, color: wireColor, width: 2));
+    figures.add(Line3D(right, back, color: wireColor, width: 2));
+    figures.add(Line3D(back, left, color: wireColor, width: 2));
+    figures.add(Line3D(left, front, color: wireColor, width: 2));
+
+    return figures;
+  }
+
+  /// Build a complete sci-fi node with octahedron core + energy rings
+  List<Model3D<Model3D>> _buildSciFiNode(
+    vector.Vector3 position,
+    double size,
+    Color color, {
+    bool isHighlighted = false,
+    bool showRings = true,
+  }) {
+    final figures = <Model3D<Model3D>>[];
+
+    // Core octahedron (solid)
+    figures.addAll(_buildOctahedron(position, size, color));
+
+    // Add energy rings for highlighted or primary nodes
+    if (showRings) {
+      figures.addAll(
+        _buildEnergyRings(
+          position,
+          size * (isHighlighted ? 1.2 : 0.9),
+          color,
+          ringCount: isHighlighted ? 3 : 2,
+          alpha: isHighlighted ? 0.7 : 0.4,
+        ),
+      );
+    }
+
+    // Add hologram wireframe overlay for highlighted nodes
+    if (isHighlighted) {
+      figures.addAll(
+        _buildHologramNode(position, size * 1.3, Colors.white, alpha: 0.3),
+      );
+    }
+
+    return figures;
+  }
+
+  /// Build a pulsing beacon node (for signal sources)
+  List<Model3D<Model3D>> _buildBeaconNode(
+    vector.Vector3 position,
+    double size,
+    Color color, {
+    double pulsePhase = 0.0,
+  }) {
+    final figures = <Model3D<Model3D>>[];
+
+    // Inner core
+    figures.addAll(_buildOctahedron(position, size * 0.6, color));
+
+    // Outer shell (slightly transparent)
+    figures.addAll(_buildOctahedron(position, size, color, alpha: 0.4));
+
+    // Beacon ring (pulsing effect simulated by size)
+    final ringSize = size * (1.0 + pulsePhase * 0.3);
+    figures.addAll(
+      _buildEnergyRings(
+        position,
+        ringSize,
+        color,
+        ringCount: 1,
+        segments: 24,
+        alpha: 0.6 - pulsePhase * 0.3,
+      ),
+    );
+
+    return figures;
+  }
+
+  /// Build a data bar with glowing top cap (for charts)
+  List<Model3D<Model3D>> _buildGlowingBar(
+    vector.Vector3 basePosition,
+    double width,
+    double height,
+    Color color, {
+    bool showCap = true,
+    double alpha = 1.0,
+  }) {
+    final figures = <Model3D<Model3D>>[];
+
+    // Main bar line
+    figures.add(
+      Line3D(
+        basePosition,
+        basePosition + vector.Vector3(0, height, 0),
+        color: color.withValues(alpha: alpha * 0.8),
+        width: width * 10, // Scale for visibility
+      ),
+    );
+
+    // Glowing cap at top
+    if (showCap) {
+      final capPosition = basePosition + vector.Vector3(0, height, 0);
+      figures.addAll(
+        _buildOctahedron(capPosition, width * 1.5, color, alpha: alpha),
+      );
+    }
+
+    return figures;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VIEW MODE BUILDERS
+  // ═══════════════════════════════════════════════════════════════════════════
+
   /// Build 3D network topology - nodes as cubes, connections as lines
   List<Model3D<Model3D>> _buildTopologyFigures(
     Map<int, MeshNode> nodes,
@@ -512,14 +744,22 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
           nodeColor = AppTheme.textTertiary;
       }
 
-      // Highlight my node with larger size
+      // Highlight my node with larger size and special effects
       final isMyNode = node.nodeNum == myNodeNum;
       if (isMyNode) {
         nodeColor = AppTheme.primaryBlue;
       }
 
-      // Add node as a cube
-      figures.add(Cube3D(isMyNode ? 0.4 : 0.3, position, color: nodeColor));
+      // Add sci-fi node with octahedron core + energy rings
+      figures.addAll(
+        _buildSciFiNode(
+          position,
+          isMyNode ? 0.5 : 0.35,
+          nodeColor,
+          isHighlighted: isMyNode,
+          showRings: status == PresenceStatus.active || isMyNode,
+        ),
+      );
     }
 
     // Add connections between nodes based on SNR data
@@ -597,57 +837,43 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
       final x = col * spacing - gridOffset;
       final z = row * spacing - gridOffset;
 
-      // RSSI bar (left)
+      // RSSI bar (left) - glowing sci-fi bar
       final rssi = (node.rssi ?? -120).clamp(-120, -30).toDouble();
       final rssiNormalized = (rssi + 120) / 90; // 0 to 1
       final rssiHeight = 0.2 + rssiNormalized * 2.5;
       final rssiColor = _getRssiColor(rssi);
 
-      figures.add(
-        Cube3D(
-          0.15,
-          vector.Vector3(x - 0.2, rssiHeight / 2, z),
-          color: rssiColor,
-        ),
-      );
-      figures.add(
-        Line3D(
+      figures.addAll(
+        _buildGlowingBar(
           vector.Vector3(x - 0.2, 0, z),
-          vector.Vector3(x - 0.2, rssiHeight, z),
-          color: rssiColor,
-          width: 8,
+          0.15,
+          rssiHeight,
+          rssiColor,
         ),
       );
 
-      // SNR bar (right)
+      // SNR bar (right) - glowing sci-fi bar
       final snr = (node.snr ?? -20).clamp(-20, 15).toDouble();
       final snrNormalized = (snr + 20) / 35; // 0 to 1
       final snrHeight = 0.2 + snrNormalized * 2.5;
       final snrColor = _getSnrColor(snr);
 
-      figures.add(
-        Cube3D(
-          0.15,
-          vector.Vector3(x + 0.2, snrHeight / 2, z),
-          color: snrColor,
-        ),
-      );
-      figures.add(
-        Line3D(
+      figures.addAll(
+        _buildGlowingBar(
           vector.Vector3(x + 0.2, 0, z),
-          vector.Vector3(x + 0.2, snrHeight, z),
-          color: snrColor,
-          width: 8,
+          0.15,
+          snrHeight,
+          snrColor,
         ),
       );
 
-      // Node indicator at base
+      // Node indicator at base - sci-fi octahedron
       final isMyNode = node.nodeNum == myNodeNum;
-      figures.add(
-        Cube3D(
-          0.12,
-          vector.Vector3(x, 0.06, z),
-          color: isMyNode ? AppTheme.primaryBlue : _getNodeColor(node),
+      figures.addAll(
+        _buildOctahedron(
+          vector.Vector3(x, 0.08, z),
+          0.18,
+          isMyNode ? AppTheme.primaryBlue : _getNodeColor(node),
         ),
       );
 
@@ -734,12 +960,12 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
         ),
       );
 
-      // Cap on top of bar
-      figures.add(
-        Cube3D(
-          isRecent ? 0.12 : 0.08,
+      // Glowing octahedron cap on top of bar
+      figures.addAll(
+        _buildOctahedron(
           vector.Vector3(x, height, z),
-          color: barColor,
+          isRecent ? 0.18 : 0.12,
+          barColor,
         ),
       );
     }
@@ -757,12 +983,12 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
       currentColor = AppTheme.errorRed;
     }
 
-    // Large center indicator for current value
-    figures.add(
-      Cube3D(
-        0.4,
+    // Large center indicator - sci-fi beacon node
+    figures.addAll(
+      _buildBeaconNode(
         vector.Vector3(0, currentHeight + 0.5, 1.5),
-        color: currentColor,
+        0.5,
+        currentColor,
       ),
     );
 
@@ -823,13 +1049,13 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
           ),
         );
 
-        // Node marker
+        // Node marker - sci-fi octahedron
         final isMyNode = node.nodeNum == myNodeNum;
-        figures.add(
-          Cube3D(
-            0.15,
+        figures.addAll(
+          _buildOctahedron(
             vector.Vector3(x, batteryHeight + 0.1, z),
-            color: isMyNode ? AppTheme.primaryBlue : _getNodeColor(node),
+            0.2,
+            isMyNode ? AppTheme.primaryBlue : _getNodeColor(node),
           ),
         );
 
@@ -904,12 +1130,12 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
         }
       }
 
-      // Add the node itself
-      figures.add(
-        Cube3D(
-          0.2,
+      // Add the node itself - sci-fi beacon node
+      figures.addAll(
+        _buildBeaconNode(
           position,
-          color: isMyNode ? AppTheme.primaryBlue : _getNodeColor(node),
+          0.3,
+          isMyNode ? AppTheme.primaryBlue : _getNodeColor(node),
         ),
       );
 
@@ -972,18 +1198,19 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     final nodePositions = _calculateNodePositions(nodes);
     final nodeList = nodes.values.toList();
 
-    // Draw all nodes
+    // Draw all nodes - sci-fi octahedrons with rings
     for (final node in nodeList) {
       final position = nodePositions[node.nodeNum];
       if (position == null) continue;
 
-      figures.add(
-        Cube3D(
-          node.nodeNum == myNodeNum ? 0.35 : 0.25,
+      final isMyNode = node.nodeNum == myNodeNum;
+      figures.addAll(
+        _buildSciFiNode(
           position,
-          color: node.nodeNum == myNodeNum
-              ? AppTheme.primaryBlue
-              : _getNodeColor(node),
+          isMyNode ? 0.4 : 0.3,
+          isMyNode ? AppTheme.primaryBlue : _getNodeColor(node),
+          isHighlighted: isMyNode,
+          showRings: true,
         ),
       );
     }
@@ -1081,22 +1308,13 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
         // Color based on activity level
         final color = Color.lerp(Colors.blue, Colors.red, activity)!;
 
-        // Add cube on top for visibility
-        figures.add(
-          Cube3D(
-            0.2,
-            position + vector.Vector3(0, height / 2, 0),
-            color: color,
-          ),
-        );
-
-        // Add vertical line from base to cube
-        figures.add(
-          Line3D(
+        // Glowing sci-fi bar with octahedron cap
+        figures.addAll(
+          _buildGlowingBar(
             vector.Vector3(position.x, 0, position.z),
-            position + vector.Vector3(0, height / 2, 0),
-            color: color.withValues(alpha: 0.7),
-            width: 3,
+            0.15,
+            height,
+            color,
           ),
         );
       }
@@ -1217,13 +1435,15 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
 
       final nodePosition = vector.Vector3(x, terrainHeight + 0.3, z);
 
-      figures.add(
-        Cube3D(
-          0.2,
+      // Sci-fi floating node above terrain
+      final isMyNode = node.nodeNum == myNodeNum;
+      figures.addAll(
+        _buildSciFiNode(
           nodePosition,
-          color: node.nodeNum == myNodeNum
-              ? AppTheme.primaryBlue
-              : _getNodeColor(node),
+          0.25,
+          isMyNode ? AppTheme.primaryBlue : _getNodeColor(node),
+          isHighlighted: isMyNode,
+          showRings: true,
         ),
       );
 
