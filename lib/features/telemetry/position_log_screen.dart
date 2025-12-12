@@ -389,6 +389,20 @@ class _PositionMapViewState extends State<_PositionMapView> {
       ? widget.logs
       : widget.logs.where((l) => l.nodeNum == _selectedNodeNum).toList();
 
+  void _fitAllPositions() {
+    final lats = widget.logs.map((l) => l.latitude).toList();
+    final lons = widget.logs.map((l) => l.longitude).toList();
+    if (lats.isNotEmpty) {
+      final bounds = LatLngBounds(
+        LatLng(lats.reduce(math.min), lons.reduce(math.min)),
+        LatLng(lats.reduce(math.max), lons.reduce(math.max)),
+      );
+      _mapController.fitCamera(
+        CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(50)),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final logs = _filteredLogs;
@@ -516,7 +530,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
 
               const SizedBox(height: 8),
 
-              // Zoom controls
+              // Zoom controls - use shared widget
               MapZoomControls(
                 currentZoom: _currentZoom,
                 minZoom: 3.0,
@@ -530,23 +544,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
                   final newZoom = (_currentZoom - 1).clamp(3.0, 18.0);
                   _mapController.move(_mapController.camera.center, newZoom);
                 },
-                onFitAll: () {
-                  // Fit to all positions
-                  final lats = widget.logs.map((l) => l.latitude).toList();
-                  final lons = widget.logs.map((l) => l.longitude).toList();
-                  if (lats.isNotEmpty) {
-                    final bounds = LatLngBounds(
-                      LatLng(lats.reduce(math.min), lons.reduce(math.min)),
-                      LatLng(lats.reduce(math.max), lons.reduce(math.max)),
-                    );
-                    _mapController.fitCamera(
-                      CameraFit.bounds(
-                        bounds: bounds,
-                        padding: const EdgeInsets.all(50),
-                      ),
-                    );
-                  }
-                },
+                onFitAll: _fitAllPositions,
               ),
             ],
           ),

@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/node_info_card.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -87,8 +88,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
   static const double _mapPadding = 16.0;
   static const double _controlSpacing = 8.0;
   static const double _controlSize = 44.0;
-  static const double _zoomControlsHeight =
-      136.0; // 3 buttons × 44 + 2 dividers
 
   @override
   void dispose() {
@@ -1103,61 +1102,36 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ),
                     ),
                   ),
-                // Compass
-                Positioned(
-                  right: _mapPadding,
-                  top: _mapPadding,
-                  child: _Compass(
-                    rotation: _mapRotation,
-                    onPressed: () => _animatedMove(
-                      _mapController.camera.center,
-                      _currentZoom,
-                      rotation: 0,
-                    ),
+                // Map controls - use shared overlay for consistency
+                MapControlsOverlay(
+                  currentZoom: _currentZoom,
+                  minZoom: 4,
+                  maxZoom: 18,
+                  mapRotation: _mapRotation,
+                  onZoomIn: () {
+                    final newZoom = (_currentZoom + 1).clamp(4.0, 18.0);
+                    _animatedMove(_mapController.camera.center, newZoom);
+                    HapticFeedback.selectionClick();
+                  },
+                  onZoomOut: () {
+                    final newZoom = (_currentZoom - 1).clamp(4.0, 18.0);
+                    _animatedMove(_mapController.camera.center, newZoom);
+                    HapticFeedback.selectionClick();
+                  },
+                  onFitAll: () => _fitAllNodes(nodesWithPosition),
+                  onCenterOnMe: () =>
+                      _centerOnMyNode(nodesWithPosition, myNodeNum),
+                  onResetNorth: () => _animatedMove(
+                    _mapController.camera.center,
+                    _currentZoom,
+                    rotation: 0,
                   ),
-                ),
-                // Zoom controls
-                Positioned(
-                  right: _mapPadding,
-                  top: _mapPadding + _controlSize + _controlSpacing,
-                  child: _ZoomControls(
-                    currentZoom: _currentZoom,
-                    minZoom: 4,
-                    maxZoom: 18,
-                    onZoomIn: () {
-                      final newZoom = (_currentZoom + 1).clamp(4.0, 18.0);
-                      _animatedMove(_mapController.camera.center, newZoom);
-                      HapticFeedback.selectionClick();
-                    },
-                    onZoomOut: () {
-                      final newZoom = (_currentZoom - 1).clamp(4.0, 18.0);
-                      _animatedMove(_mapController.camera.center, newZoom);
-                      HapticFeedback.selectionClick();
-                    },
-                    onFitAll: () => _fitAllNodes(nodesWithPosition),
+                  hasMyLocation: nodesWithPosition.any(
+                    (n) => n.node.nodeNum == myNodeNum,
                   ),
-                ),
-                // Navigation buttons (center on me, reset north)
-                Positioned(
-                  right: _mapPadding,
-                  top:
-                      _mapPadding +
-                      _controlSize +
-                      _controlSpacing +
-                      _zoomControlsHeight +
-                      _controlSpacing,
-                  child: _NavigationControls(
-                    onCenterOnMe: () =>
-                        _centerOnMyNode(nodesWithPosition, myNodeNum),
-                    onResetNorth: () => _animatedMove(
-                      _mapController.camera.center,
-                      _currentZoom,
-                      rotation: 0,
-                    ),
-                    hasMyNode: nodesWithPosition.any(
-                      (n) => n.node.nodeNum == myNodeNum,
-                    ),
-                  ),
+                  showFitAll: true,
+                  showNavigation: true,
+                  showCompass: true,
                 ),
               ],
             ),
@@ -2121,284 +2095,6 @@ class _NodeListItem extends StatelessWidget {
                 color: isSelected
                     ? context.accentColor
                     : AppTheme.textTertiary.withValues(alpha: 0.5),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Zoom control buttons widget
-class _ZoomControls extends StatelessWidget {
-  final double currentZoom;
-  final double minZoom;
-  final double maxZoom;
-  final VoidCallback onZoomIn;
-  final VoidCallback onZoomOut;
-  final VoidCallback onFitAll;
-
-  const _ZoomControls({
-    required this.currentZoom,
-    required this.minZoom,
-    required this.maxZoom,
-    required this.onZoomIn,
-    required this.onZoomOut,
-    required this.onFitAll,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.darkCard.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Zoom in
-          _ZoomButton(
-            icon: Icons.add,
-            onPressed: currentZoom < maxZoom ? onZoomIn : null,
-            isTop: true,
-          ),
-          Container(
-            height: 1,
-            width: 32,
-            color: AppTheme.darkBorder.withValues(alpha: 0.3),
-          ),
-          // Zoom out
-          _ZoomButton(
-            icon: Icons.remove,
-            onPressed: currentZoom > minZoom ? onZoomOut : null,
-          ),
-          Container(
-            height: 1,
-            width: 32,
-            color: AppTheme.darkBorder.withValues(alpha: 0.3),
-          ),
-          // Fit all nodes
-          _ZoomButton(
-            icon: Icons.fit_screen,
-            onPressed: onFitAll,
-            isBottom: true,
-            tooltip: 'Fit all nodes',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ZoomButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onPressed;
-  final bool isTop;
-  final bool isBottom;
-  final String? tooltip;
-
-  const _ZoomButton({
-    required this.icon,
-    required this.onPressed,
-    this.isTop = false,
-    this.isBottom = false,
-    this.tooltip,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final button = Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.vertical(
-          top: isTop ? const Radius.circular(12) : Radius.zero,
-          bottom: isBottom ? const Radius.circular(12) : Radius.zero,
-        ),
-        child: Container(
-          width: 44,
-          height: 44,
-          alignment: Alignment.center,
-          child: Icon(
-            icon,
-            size: 20,
-            color: onPressed != null
-                ? AppTheme.textSecondary
-                : AppTheme.textTertiary.withValues(alpha: 0.5),
-          ),
-        ),
-      ),
-    );
-
-    if (tooltip != null) {
-      return Tooltip(message: tooltip!, child: button);
-    }
-    return button;
-  }
-}
-
-/// Navigation control buttons (center on me, reset north)
-class _NavigationControls extends StatelessWidget {
-  final VoidCallback onCenterOnMe;
-  final VoidCallback onResetNorth;
-  final bool hasMyNode;
-
-  const _NavigationControls({
-    required this.onCenterOnMe,
-    required this.onResetNorth,
-    required this.hasMyNode,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.darkCard.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Center on me
-          Tooltip(
-            message: 'Center on my location',
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: hasMyNode ? onCenterOnMe : null,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.my_location,
-                    size: 20,
-                    color: hasMyNode
-                        ? context.accentColor
-                        : AppTheme.textTertiary.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Container(
-            height: 1,
-            width: 32,
-            color: AppTheme.darkBorder.withValues(alpha: 0.3),
-          ),
-          // Reset to north
-          Tooltip(
-            message: 'Reset to north',
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onResetNorth,
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(12),
-                ),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.explore,
-                    size: 20,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Compass widget showing map rotation
-class _Compass extends StatelessWidget {
-  final double rotation;
-  final VoidCallback onPressed;
-
-  const _Compass({required this.rotation, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: AppTheme.darkCard.withValues(alpha: 0.95),
-          shape: BoxShape.circle,
-          border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Transform.rotate(
-          angle: -rotation * (3.14159 / 180),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // North indicator (red)
-              Positioned(
-                top: 6,
-                child: Container(
-                  width: 3,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: AppTheme.errorRed,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              // South indicator (white)
-              Positioned(
-                bottom: 6,
-                child: Container(
-                  width: 3,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: AppTheme.textSecondary,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              // Center dot
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: AppTheme.textSecondary,
-                  shape: BoxShape.circle,
-                ),
               ),
             ],
           ),

@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../models/mesh_models.dart';
 import '../../models/route.dart' as route_model;
@@ -30,10 +31,11 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
     with TickerProviderStateMixin {
   final MapController _mapController = MapController();
   bool _isExporting = false;
-  bool _showNodes = true;
-  MapTileStyle _mapStyle = MapTileStyle.dark;
+  final bool _showNodes = true;
+  final MapTileStyle _mapStyle = MapTileStyle.dark;
   MeshNode? _selectedNode;
   AnimationController? _animationController;
+  double _currentZoom = 13.0;
 
   @override
   void dispose() {
@@ -109,6 +111,11 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
               initialZoom: _calculateZoom(route),
               minZoom: 3,
               maxZoom: 18,
+              onPositionChanged: (position, hasGesture) {
+                if ((position.zoom - _currentZoom).abs() > 0.1) {
+                  setState(() => _currentZoom = position.zoom);
+                }
+              },
               onTap: (_, _) {
                 if (_selectedNode != null) {
                   setState(() => _selectedNode = null);
@@ -311,55 +318,26 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
               ),
             ),
 
-          // Map controls (right side)
+          // Map controls - use shared overlay for consistency
           if (hasLocations)
-            Positioned(
-              right: 16,
-              bottom: MediaQuery.of(context).padding.bottom + 180,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Map style selector
-                  _MapControlButton(
-                    icon: Icons.layers,
-                    onPressed: _showMapStylePicker,
-                    tooltip: 'Map style',
-                  ),
-                  const SizedBox(height: 8),
-                  // Toggle nodes
-                  _MapControlButton(
-                    icon: _showNodes ? Icons.people : Icons.people_outline,
-                    onPressed: () => setState(() => _showNodes = !_showNodes),
-                    tooltip: _showNodes ? 'Hide nodes' : 'Show nodes',
-                    isActive: _showNodes,
-                  ),
-                  const SizedBox(height: 8),
-                  // Zoom in
-                  _MapControlButton(
-                    icon: Icons.add,
-                    onPressed: () {
-                      final zoom = _mapController.camera.zoom + 1;
-                      _mapController.move(_mapController.camera.center, zoom);
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  // Zoom out
-                  _MapControlButton(
-                    icon: Icons.remove,
-                    onPressed: () {
-                      final zoom = _mapController.camera.zoom - 1;
-                      _mapController.move(_mapController.camera.center, zoom);
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  // Fit route
-                  _MapControlButton(
-                    icon: Icons.crop_free,
-                    onPressed: _fitBounds,
-                    tooltip: 'Fit route',
-                  ),
-                ],
-              ),
+            MapControlsOverlay(
+              currentZoom: _currentZoom,
+              minZoom: 3,
+              maxZoom: 18,
+              onZoomIn: () {
+                final newZoom = (_currentZoom + 1).clamp(3.0, 18.0);
+                _animatedMove(_mapController.camera.center, newZoom);
+              },
+              onZoomOut: () {
+                final newZoom = (_currentZoom - 1).clamp(3.0, 18.0);
+                _animatedMove(_mapController.camera.center, newZoom);
+              },
+              onFitAll: _fitBounds,
+              onResetNorth: () {},
+              showFitAll: true,
+              showNavigation: false,
+              showCompass: false,
+              mapRotation: 0,
             ),
 
           // Stats panel at bottom
@@ -441,69 +419,6 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
         ],
       ),
     );
-  }
-
-  void _showMapStylePicker() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.darkCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'Map Style',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            ...MapTileStyle.values.map(
-              (style) => ListTile(
-                leading: Icon(
-                  _getStyleIcon(style),
-                  color: _mapStyle == style
-                      ? Theme.of(context).colorScheme.primary
-                      : AppTheme.textSecondary,
-                ),
-                title: Text(style.label),
-                trailing: _mapStyle == style
-                    ? Icon(
-                        Icons.check,
-                        color: Theme.of(context).colorScheme.primary,
-                      )
-                    : null,
-                onTap: () {
-                  setState(() => _mapStyle = style);
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _getStyleIcon(MapTileStyle style) {
-    switch (style) {
-      case MapTileStyle.dark:
-        return Icons.dark_mode;
-      case MapTileStyle.satellite:
-        return Icons.satellite;
-      case MapTileStyle.terrain:
-        return Icons.terrain;
-      case MapTileStyle.light:
-        return Icons.light_mode;
-    }
   }
 
   double _calculateZoom(route_model.Route route) {
@@ -744,46 +659,6 @@ class _StatItem extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _MapControlButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onPressed;
-  final String? tooltip;
-  final bool isActive;
-
-  const _MapControlButton({
-    required this.icon,
-    required this.onPressed,
-    this.tooltip,
-    this.isActive = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: isActive
-          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
-          : AppTheme.darkCard.withValues(alpha: 0.9),
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          width: 44,
-          height: 44,
-          alignment: Alignment.center,
-          child: Icon(
-            icon,
-            size: 22,
-            color: isActive
-                ? Theme.of(context).colorScheme.primary
-                : Colors.white,
-          ),
-        ),
-      ),
     );
   }
 }

@@ -19,7 +19,12 @@ class WorldMeshMapState {
   final String? error;
   final DateTime? lastUpdated;
 
-  const WorldMeshMapState({
+  // Cached list of nodes with valid positions - computed once per state instance
+  late final List<WorldMeshNode> nodesWithPosition = nodes.values
+      .where((n) => n.latitude != 0 || n.longitude != 0)
+      .toList();
+
+  WorldMeshMapState({
     this.nodes = const {},
     this.isLoading = false,
     this.error,
@@ -42,13 +47,6 @@ class WorldMeshMapState {
 
   /// Get total node count
   int get nodeCount => nodes.length;
-
-  /// Get nodes with valid positions
-  List<WorldMeshNode> get nodesWithPosition {
-    return nodes.values
-        .where((n) => n.latitude != 0 || n.longitude != 0)
-        .toList();
-  }
 }
 
 /// Notifier for world mesh map state

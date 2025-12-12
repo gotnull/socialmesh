@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../core/map_config.dart';
+import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../models/world_mesh_node.dart';
 import '../../providers/world_mesh_map_provider.dart';
@@ -25,7 +26,6 @@ class WorldMeshScreen extends ConsumerStatefulWidget {
 class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     with TickerProviderStateMixin {
   final MapController _mapController = MapController();
-  WorldMeshNode? _selectedNode;
   double _currentZoom = 3.0;
   MapTileStyle _mapStyle = MapTileStyle.dark;
   String _searchQuery = '';
@@ -36,6 +36,10 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
 
   // Animation controller for smooth movements
   AnimationController? _animationController;
+
+  // Cache markers to avoid rebuilding on every frame
+  List<Marker>? _cachedMarkers;
+  List<WorldMeshNode>? _cachedNodes;
 
   @override
   void dispose() {
@@ -219,8 +223,8 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         ? state.nodesWithPosition
         : ref.watch(worldMeshFilteredNodesProvider(_searchQuery));
 
-    // Build markers for clustering
-    final markers = nodes.map((node) => _buildMarker(node)).toList();
+    // Cache markers - only rebuild if nodes or selection changed
+    final markers = _getOrBuildMarkers(nodes);
 
     return Stack(
       children: [
@@ -234,16 +238,17 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           maxZoom: 18.0,
           disableRotation: true,
           onPositionChanged: (position, hasGesture) {
-            setState(() => _currentZoom = position.zoom);
+            // Update zoom without triggering rebuild - let ValueListenableBuilder handle it
+            _currentZoom = position.zoom;
           },
           onTap: (tapPosition, point) {
             _popupController.hideAllPopups();
-            setState(() => _selectedNode = null);
           },
           // Enable clustering for world mesh
           enableClustering: true,
           clusteredMarkers: markers,
-          clusterRadius: _currentZoom < 3 ? 60 : 45,
+          clusterRadius:
+              80, // Fixed radius - don't vary with zoom to avoid rebuilds
           popupController: _popupController,
           popupBuilder: (context, marker) {
             final node = _findNodeForMarker(marker, nodes);
@@ -260,29 +265,30 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           ],
         ),
 
-        // Zoom controls
-        Positioned(
-          right: 16,
-          bottom: 100,
-          child: Column(
-            children: [
-              _buildZoomButton(
-                icon: Icons.add,
-                onPressed: () {
-                  final newZoom = math.min(_currentZoom + 1, 18.0);
-                  _mapController.move(_mapController.camera.center, newZoom);
-                },
-              ),
-              const SizedBox(height: 8),
-              _buildZoomButton(
-                icon: Icons.remove,
-                onPressed: () {
-                  final newZoom = math.max(_currentZoom - 1, 2.0);
-                  _mapController.move(_mapController.camera.center, newZoom);
-                },
-              ),
-            ],
-          ),
+        // Use shared map controls with ValueListenableBuilder for zoom state
+        _MapControlsWithZoomState(
+          mapController: _mapController,
+          initialZoom: _currentZoom,
+          minZoom: 2.0,
+          maxZoom: 18.0,
+          animatedMove: _animatedMove,
+          onFitAll: () {
+            // Fit to show all visible nodes
+            if (nodes.isNotEmpty) {
+              final lats = nodes.map((n) => n.latitudeDecimal).toList();
+              final lons = nodes.map((n) => n.longitudeDecimal).toList();
+              final bounds = LatLngBounds(
+                LatLng(lats.reduce(math.min), lons.reduce(math.min)),
+                LatLng(lats.reduce(math.max), lons.reduce(math.max)),
+              );
+              _mapController.fitCamera(
+                CameraFit.bounds(
+                  bounds: bounds,
+                  padding: const EdgeInsets.all(50),
+                ),
+              );
+            }
+          },
         ),
 
         // Stats bar
@@ -296,20 +302,31 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     );
   }
 
+  /// Get cached markers or build new ones if needed
+  List<Marker> _getOrBuildMarkers(List<WorldMeshNode> nodes) {
+    // Only rebuild if the node list itself changed (identity check)
+    // Don't rebuild for selection changes - use popup instead
+    if (_cachedMarkers == null || !identical(_cachedNodes, nodes)) {
+      _cachedMarkers = _buildMarkersForNodes(nodes);
+      _cachedNodes = nodes;
+    }
+    return _cachedMarkers!;
+  }
+
+  /// Build markers once to avoid rebuilding on every frame
+  List<Marker> _buildMarkersForNodes(List<WorldMeshNode> nodes) {
+    // Build all markers with simple, identical widgets for performance
+    return nodes.map((node) => _buildMarker(node)).toList();
+  }
+
   Marker _buildMarker(WorldMeshNode node) {
-    final isRecent = node.isRecentlySeen;
     return Marker(
       point: LatLng(node.latitudeDecimal, node.longitudeDecimal),
-      width: 32,
-      height: 32,
-      child: _WorldMeshNodeMarker(
-        node: node,
-        isRecent: isRecent,
-        isSelected: _selectedNode?.nodeNum == node.nodeNum,
-        onTap: () {
-          setState(() => _selectedNode = node);
-        },
-      ),
+      width: 16,
+      height: 16,
+      // Use key for efficient updates
+      key: ValueKey(node.nodeNum),
+      child: _SimpleNodeDot(isRecent: node.isRecentlySeen),
     );
   }
 
@@ -325,43 +342,32 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   Widget _buildClusterMarker(ThemeData theme, int count) {
     final accentColor = theme.colorScheme.primary;
 
-    // Gradient colors based on cluster size
+    // Simple cluster marker without expensive gradients/shadows for performance
     final Color baseColor;
     final double size;
     if (count < 10) {
       baseColor = accentColor;
-      size = 40;
+      size = 38;
     } else if (count < 100) {
       baseColor = Colors.orange;
-      size = 44;
+      size = 42;
     } else if (count < 1000) {
       baseColor = Colors.deepOrange;
-      size = 48;
+      size = 46;
     } else {
       baseColor = Colors.red;
-      size = 52;
+      size = 50;
     }
 
+    // Use simple solid colors for better performance
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [
-            baseColor.withValues(alpha: 0.9),
-            baseColor.withValues(alpha: 0.6),
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: baseColor.withValues(alpha: 0.4),
-            blurRadius: 8,
-            spreadRadius: 2,
-          ),
-        ],
+        color: baseColor.withValues(alpha: 0.85),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.8),
+          color: Colors.white.withValues(alpha: 0.9),
           width: 2,
         ),
       ),
@@ -371,7 +377,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 12,
+            fontSize: 11,
           ),
         ),
       ),
@@ -382,29 +388,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     if (count < 1000) return count.toString();
     if (count < 10000) return '${(count / 1000).toStringAsFixed(1)}k';
     return '${count ~/ 1000}k';
-  }
-
-  Widget _buildZoomButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    return Material(
-      color: Colors.black87,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-          ),
-          child: Icon(icon, color: Colors.white, size: 24),
-        ),
-      ),
-    );
   }
 
   Widget _buildNodePopup(
@@ -763,79 +746,97 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   }
 }
 
-/// Individual node marker widget
-class _WorldMeshNodeMarker extends StatelessWidget {
-  final WorldMeshNode node;
+/// Super simple node dot for maximum performance with thousands of markers
+class _SimpleNodeDot extends StatelessWidget {
   final bool isRecent;
-  final bool isSelected;
-  final VoidCallback onTap;
 
-  const _WorldMeshNodeMarker({
-    required this.node,
-    required this.isRecent,
-    required this.isSelected,
-    required this.onTap,
-  });
+  const _SimpleNodeDot({required this.isRecent});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final accentColor = theme.colorScheme.primary;
+    // Use darker, more transparent colors to not obscure the map
+    final color = isRecent
+        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.7)
+        : Colors.blueGrey.withValues(alpha: 0.5);
 
-    // Color based on recency
-    final markerColor = isRecent
-        ? accentColor
-        : Colors.grey.withValues(alpha: 0.6);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: isSelected ? 36 : 28,
-        height: isSelected ? 36 : 28,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: markerColor.withValues(alpha: isSelected ? 0.9 : 0.7),
-          border: Border.all(color: Colors.white, width: isSelected ? 3 : 2),
-          boxShadow: [
-            if (isSelected || isRecent)
-              BoxShadow(
-                color: markerColor.withValues(alpha: 0.5),
-                blurRadius: isSelected ? 12 : 6,
-                spreadRadius: isSelected ? 2 : 0,
-              ),
-          ],
-        ),
-        child: Center(
-          child: Icon(
-            _getNodeIcon(node.role),
-            color: Colors.white,
-            size: isSelected ? 18 : 14,
-          ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.6),
+          width: 1,
         ),
       ),
     );
   }
+}
 
-  IconData _getNodeIcon(String role) {
-    switch (role.toUpperCase()) {
-      case 'ROUTER':
-      case 'ROUTER_CLIENT':
-        return Icons.router;
-      case 'REPEATER':
-        return Icons.repeat;
-      case 'TRACKER':
-        return Icons.gps_fixed;
-      case 'SENSOR':
-        return Icons.sensors;
-      case 'TAK':
-        return Icons.military_tech;
-      case 'TAK_TRACKER':
-        return Icons.track_changes;
-      case 'LOST_AND_FOUND':
-        return Icons.search;
-      default:
-        return Icons.radio;
-    }
+/// Map controls that listen to zoom state without triggering parent rebuilds
+class _MapControlsWithZoomState extends StatefulWidget {
+  const _MapControlsWithZoomState({
+    required this.mapController,
+    required this.initialZoom,
+    required this.minZoom,
+    required this.maxZoom,
+    required this.animatedMove,
+    required this.onFitAll,
+  });
+
+  final MapController mapController;
+  final double initialZoom;
+  final double minZoom;
+  final double maxZoom;
+  final void Function(LatLng destLocation, double destZoom) animatedMove;
+  final VoidCallback onFitAll;
+
+  @override
+  State<_MapControlsWithZoomState> createState() =>
+      _MapControlsWithZoomStateState();
+}
+
+class _MapControlsWithZoomStateState extends State<_MapControlsWithZoomState> {
+  late double _currentZoom;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentZoom = widget.initialZoom;
+    // Listen to camera changes
+    widget.mapController.mapEventStream.listen((event) {
+      if (event is MapEventMove || event is MapEventMoveEnd) {
+        final newZoom = widget.mapController.camera.zoom;
+        if ((_currentZoom - newZoom).abs() > 0.05) {
+          setState(() => _currentZoom = newZoom);
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MapControlsOverlay(
+      currentZoom: _currentZoom,
+      minZoom: widget.minZoom,
+      maxZoom: widget.maxZoom,
+      onZoomIn: () {
+        final newZoom = math.min(_currentZoom + 1, widget.maxZoom);
+        widget.animatedMove(widget.mapController.camera.center, newZoom);
+        HapticFeedback.selectionClick();
+      },
+      onZoomOut: () {
+        final newZoom = math.max(_currentZoom - 1, widget.minZoom);
+        widget.animatedMove(widget.mapController.camera.center, newZoom);
+        HapticFeedback.selectionClick();
+      },
+      onFitAll: widget.onFitAll,
+      onResetNorth: () {
+        HapticFeedback.selectionClick();
+      },
+      showFitAll: true,
+      showNavigation: false,
+      showCompass: true,
+      mapRotation: 0, // World mesh doesn't rotate
+    );
   }
 }

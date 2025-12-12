@@ -131,103 +131,105 @@ class MeshMapWidget extends StatelessWidget {
       interactionFlags = InteractiveFlag.all & ~InteractiveFlag.rotate;
     }
 
-    return FlutterMap(
-      mapController: mapController,
-      options: MapOptions(
-        initialCenter: initialCenter,
-        initialZoom: initialZoom,
-        minZoom: minZoom,
-        maxZoom: maxZoom,
-        backgroundColor: backgroundColor,
-        interactionOptions: InteractionOptions(
-          flags: interactionFlags,
-          pinchZoomThreshold: 0.5,
-          scrollWheelVelocity: 0.005,
+    // Wrap in RepaintBoundary for better performance with large datasets
+    return RepaintBoundary(
+      child: FlutterMap(
+        mapController: mapController,
+        options: MapOptions(
+          initialCenter: initialCenter,
+          initialZoom: initialZoom,
+          minZoom: minZoom,
+          maxZoom: maxZoom,
+          backgroundColor: backgroundColor,
+          interactionOptions: InteractionOptions(
+            flags: interactionFlags,
+            pinchZoomThreshold: 0.5,
+            scrollWheelVelocity: 0.005,
+          ),
+          onPositionChanged: onPositionChanged,
+          onTap: onTap,
+          onLongPress: onLongPress,
         ),
-        onPositionChanged: onPositionChanged,
-        onTap: onTap,
-        onLongPress: onLongPress,
-      ),
-      children: [
-        // Map tiles
-        TileLayer(
-          urlTemplate: mapStyle.url,
-          subdomains: mapStyle.subdomains,
-          userAgentPackageName: MapConfig.userAgentPackageName,
-          retinaMode: mapStyle != MapTileStyle.satellite,
-          tileBuilder: animateTiles
-              ? (context, tileWidget, tile) {
-                  return AnimatedOpacity(
-                    opacity: 1.0,
-                    duration: const Duration(milliseconds: 300),
-                    child: tileWidget,
-                  );
-                }
-              : null,
-        ),
+        children: [
+          // Map tiles
+          TileLayer(
+            urlTemplate: mapStyle.url,
+            subdomains: mapStyle.subdomains,
+            userAgentPackageName: MapConfig.userAgentPackageName,
+            retinaMode: mapStyle != MapTileStyle.satellite,
+            // Disable tile animation for better performance
+            tileBuilder: animateTiles
+                ? (context, tileWidget, tile) {
+                    return tileWidget; // Just return widget without animation for perf
+                  }
+                : null,
+          ),
 
-        // Additional layers (polylines, circles, etc.)
-        ...additionalLayers,
+          // Additional layers (polylines, circles, etc.)
+          ...additionalLayers,
 
-        // Clustered markers (when enabled)
-        if (enableClustering &&
-            clusteredMarkers != null &&
-            clusteredMarkers!.isNotEmpty)
-          MarkerClusterLayerWidget(
-            options: MarkerClusterLayerOptions(
-              maxClusterRadius: clusterRadius.toInt(),
-              size: const Size(48, 48),
-              padding: const EdgeInsets.all(50),
-              markers: clusteredMarkers!,
-              popupOptions: popupController != null && popupBuilder != null
-                  ? PopupOptions(
-                      popupSnap: PopupSnap.markerTop,
-                      popupController: popupController!,
-                      popupBuilder: popupBuilder!,
-                    )
-                  : PopupOptions(
-                      popupBuilder: (_, _) => const SizedBox.shrink(),
-                    ),
-              builder: clusterBuilder ?? _defaultClusterBuilder,
+          // Clustered markers (when enabled)
+          if (enableClustering &&
+              clusteredMarkers != null &&
+              clusteredMarkers!.isNotEmpty)
+            MarkerClusterLayerWidget(
+              options: MarkerClusterLayerOptions(
+                maxClusterRadius: clusterRadius.toInt(),
+                size: const Size(48, 48),
+                padding: const EdgeInsets.all(50),
+                markers: clusteredMarkers!,
+                popupOptions: popupController != null && popupBuilder != null
+                    ? PopupOptions(
+                        popupSnap: PopupSnap.markerTop,
+                        popupController: popupController!,
+                        popupBuilder: popupBuilder!,
+                      )
+                    : PopupOptions(
+                        popupBuilder: (_, _) => const SizedBox.shrink(),
+                      ),
+                builder: clusterBuilder ?? _defaultClusterBuilder,
+              ),
             ),
-          ),
 
-        // Non-clustered node markers (standard mode)
-        if (!enableClustering && nodeMarkers != null && nodeMarkers!.isNotEmpty)
-          MarkerLayer(
-            rotate: true,
-            markers: nodeMarkers!.map((data) {
-              final isMyNode = data.node.nodeNum == myNodeNum;
-              final isSelected = data.node.nodeNum == selectedNodeNum;
-              return Marker(
-                point: LatLng(data.latitude, data.longitude),
-                width: isSelected ? 56 : 44,
-                height: isSelected ? 56 : 44,
-                child: GestureDetector(
-                  onTap: onNodeTap != null
-                      ? () {
-                          HapticFeedback.selectionClick();
-                          onNodeTap!(data.node);
-                        }
-                      : null,
-                  child: MeshNodeMarker(
-                    node: data.node,
-                    isMyNode: isMyNode,
-                    isSelected: isSelected,
-                    isStale: data.isStale,
+          // Non-clustered node markers (standard mode)
+          if (!enableClustering &&
+              nodeMarkers != null &&
+              nodeMarkers!.isNotEmpty)
+            MarkerLayer(
+              rotate: true,
+              markers: nodeMarkers!.map((data) {
+                final isMyNode = data.node.nodeNum == myNodeNum;
+                final isSelected = data.node.nodeNum == selectedNodeNum;
+                return Marker(
+                  point: LatLng(data.latitude, data.longitude),
+                  width: isSelected ? 56 : 44,
+                  height: isSelected ? 56 : 44,
+                  child: GestureDetector(
+                    onTap: onNodeTap != null
+                        ? () {
+                            HapticFeedback.selectionClick();
+                            onNodeTap!(data.node);
+                          }
+                        : null,
+                    child: MeshNodeMarker(
+                      node: data.node,
+                      isMyNode: isMyNode,
+                      isSelected: isSelected,
+                      isStale: data.isStale,
+                    ),
                   ),
-                ),
-              );
-            }).toList(),
-          ),
+                );
+              }).toList(),
+            ),
 
-        // Attribution
-        if (showAttribution && attributions != null)
-          RichAttributionWidget(
-            alignment: AttributionAlignment.bottomLeft,
-            attributions: attributions!,
-          ),
-      ],
+          // Attribution
+          if (showAttribution && attributions != null)
+            RichAttributionWidget(
+              alignment: AttributionAlignment.bottomLeft,
+              attributions: attributions!,
+            ),
+        ],
+      ),
     );
   }
 

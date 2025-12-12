@@ -215,3 +215,164 @@ class MapNavigationControls extends StatelessWidget {
     );
   }
 }
+
+/// Layout constants for consistent map control spacing
+class MapControlLayout {
+  static const double padding = 16.0;
+  static const double controlSpacing = 8.0;
+  static const double controlSize = 44.0;
+  static const double zoomControlsHeight = 136.0; // 3 buttons × 44 + 2 dividers
+}
+
+/// Compass widget showing map rotation - shared across all map screens
+class MapCompass extends StatelessWidget {
+  final double rotation;
+  final VoidCallback onPressed;
+
+  const MapCompass({
+    super.key,
+    required this.rotation,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onPressed();
+      },
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: AppTheme.darkCard.withValues(alpha: 0.95),
+          shape: BoxShape.circle,
+          border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Transform.rotate(
+          angle: -rotation * (3.14159 / 180),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // North indicator (red)
+              Positioned(
+                top: 6,
+                child: Container(
+                  width: 3,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: AppTheme.errorRed,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // South indicator (white)
+              Positioned(
+                bottom: 6,
+                child: Container(
+                  width: 3,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: AppTheme.textSecondary,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // Center dot
+              Container(
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(
+                  color: AppTheme.textSecondary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A complete map controls column positioned on the right side of the map
+/// Use this for consistent control layout across all map screens
+class MapControlsOverlay extends StatelessWidget {
+  final double currentZoom;
+  final double minZoom;
+  final double maxZoom;
+  final double mapRotation;
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
+  final VoidCallback? onFitAll;
+  final VoidCallback? onCenterOnMe;
+  final VoidCallback onResetNorth;
+  final bool hasMyLocation;
+  final bool showFitAll;
+  final bool showNavigation;
+  final bool showCompass;
+
+  const MapControlsOverlay({
+    super.key,
+    required this.currentZoom,
+    this.minZoom = 2.0,
+    this.maxZoom = 18.0,
+    this.mapRotation = 0.0,
+    required this.onZoomIn,
+    required this.onZoomOut,
+    this.onFitAll,
+    this.onCenterOnMe,
+    required this.onResetNorth,
+    this.hasMyLocation = true,
+    this.showFitAll = true,
+    this.showNavigation = true,
+    this.showCompass = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const padding = MapControlLayout.padding;
+    const spacing = MapControlLayout.controlSpacing;
+
+    return Positioned(
+      right: padding,
+      top: padding,
+      child: Column(
+        children: [
+          // Compass
+          if (showCompass) ...[
+            MapCompass(rotation: mapRotation, onPressed: onResetNorth),
+            SizedBox(height: spacing),
+          ],
+          // Zoom controls
+          MapZoomControls(
+            currentZoom: currentZoom,
+            minZoom: minZoom,
+            maxZoom: maxZoom,
+            onZoomIn: onZoomIn,
+            onZoomOut: onZoomOut,
+            onFitAll: onFitAll,
+            showFitAll: showFitAll,
+          ),
+          // Navigation controls
+          if (showNavigation && onCenterOnMe != null) ...[
+            SizedBox(height: spacing),
+            MapNavigationControls(
+              onCenterOnMe: onCenterOnMe!,
+              onResetNorth: showCompass ? null : onResetNorth,
+              hasLocation: hasMyLocation,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}

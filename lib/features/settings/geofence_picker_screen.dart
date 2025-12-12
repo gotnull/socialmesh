@@ -549,24 +549,23 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
               ),
             ),
 
-          // Zoom controls
-          Positioned(
-            right: 16,
-            top: 120,
-            child: MapZoomControls(
-              currentZoom: _currentZoom,
-              minZoom: 3.0,
-              maxZoom: 18.0,
-              showFitAll: false,
-              onZoomIn: () {
-                final newZoom = (_currentZoom + 1).clamp(3.0, 18.0);
-                _mapController.move(_mapController.camera.center, newZoom);
-              },
-              onZoomOut: () {
-                final newZoom = (_currentZoom - 1).clamp(3.0, 18.0);
-                _mapController.move(_mapController.camera.center, newZoom);
-              },
-            ),
+          // Map controls - use shared overlay for consistency
+          MapControlsOverlay(
+            currentZoom: _currentZoom,
+            minZoom: 3.0,
+            maxZoom: 18.0,
+            onZoomIn: () {
+              final newZoom = (_currentZoom + 1).clamp(3.0, 18.0);
+              _mapController.move(_mapController.camera.center, newZoom);
+            },
+            onZoomOut: () {
+              final newZoom = (_currentZoom - 1).clamp(3.0, 18.0);
+              _mapController.move(_mapController.camera.center, newZoom);
+            },
+            onResetNorth: () {},
+            showFitAll: false,
+            showNavigation: false,
+            showCompass: false,
           ),
 
           // Node list panel
