@@ -296,8 +296,8 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                     color: isSelected
                         ? accentColor
                         : node.isRecentlySeen
-                            ? accentColor.withValues(alpha: 0.7)
-                            : Colors.grey.withValues(alpha: 0.4),
+                        ? accentColor.withValues(alpha: 0.7)
+                        : Colors.grey.withValues(alpha: 0.4),
                     borderColor: isSelected
                         ? Colors.white
                         : Colors.white.withValues(alpha: 0.5),
@@ -677,7 +677,9 @@ class _SearchResultTile extends StatelessWidget {
                       ? node.shortName.substring(0, 2).toUpperCase()
                       : node.shortName.toUpperCase(),
                   style: TextStyle(
-                    color: node.isRecentlySeen ? accentColor : AppTheme.textSecondary,
+                    color: node.isRecentlySeen
+                        ? accentColor
+                        : AppTheme.textSecondary,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                     fontFamily: 'JetBrainsMono',
@@ -730,11 +732,7 @@ class _SearchResultTile extends StatelessWidget {
               ),
             ),
             // Arrow
-            Icon(
-              Icons.chevron_right,
-              color: AppTheme.textTertiary,
-              size: 20,
-            ),
+            Icon(Icons.chevron_right, color: AppTheme.textTertiary, size: 20),
           ],
         ),
       ),
