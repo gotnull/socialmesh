@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:ditredi/ditredi.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,8 @@ import '../presence/presence_screen.dart';
 /// View modes for the 3D mesh visualization
 enum Mesh3DViewMode {
   topology,
+  signalStrength,
+  channelUtilization,
   signalPropagation,
   traceroute,
   activityHeatmap,
@@ -25,6 +28,10 @@ extension Mesh3DViewModeExt on Mesh3DViewMode {
     switch (this) {
       case Mesh3DViewMode.topology:
         return 'Network Topology';
+      case Mesh3DViewMode.signalStrength:
+        return 'Signal Strength';
+      case Mesh3DViewMode.channelUtilization:
+        return 'Channel Util';
       case Mesh3DViewMode.signalPropagation:
         return 'Signal Propagation';
       case Mesh3DViewMode.traceroute:
@@ -39,15 +46,19 @@ extension Mesh3DViewModeExt on Mesh3DViewMode {
   String get description {
     switch (this) {
       case Mesh3DViewMode.topology:
-        return 'View nodes and their connections in 3D space';
+        return 'View nodes and connections in 3D';
+      case Mesh3DViewMode.signalStrength:
+        return 'Live RSSI/SNR signal bars';
+      case Mesh3DViewMode.channelUtilization:
+        return 'Airtime & channel usage';
       case Mesh3DViewMode.signalPropagation:
-        return 'Visualize signal strength and radio range';
+        return 'Signal range visualization';
       case Mesh3DViewMode.traceroute:
-        return 'See message paths through the mesh';
+        return 'Message paths through mesh';
       case Mesh3DViewMode.activityHeatmap:
-        return '3D activity chart over time';
+        return '3D activity chart';
       case Mesh3DViewMode.terrain:
-        return 'Network overlay on terrain';
+        return 'Network on terrain';
     }
   }
 
@@ -55,6 +66,10 @@ extension Mesh3DViewModeExt on Mesh3DViewMode {
     switch (this) {
       case Mesh3DViewMode.topology:
         return Icons.hub;
+      case Mesh3DViewMode.signalStrength:
+        return Icons.signal_cellular_alt;
+      case Mesh3DViewMode.channelUtilization:
+        return Icons.donut_small;
       case Mesh3DViewMode.signalPropagation:
         return Icons.wifi_tethering;
       case Mesh3DViewMode.traceroute:
@@ -83,6 +98,14 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
   bool _autoRotate = false;
   late AnimationController _rotationController;
   int? _selectedNodeNum;
+  Timer? _signalUpdateTimer;
+
+  // Channel utilization history for live updates
+  final List<double> _channelUtilHistory = [];
+
+  // Signal history for live updates
+  final Map<int, List<double>> _rssiHistory = {};
+  final Map<int, List<double>> _snrHistory = {};
 
   @override
   void initState() {
@@ -97,6 +120,46 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
       vsync: this,
       duration: const Duration(seconds: 20),
     )..addListener(_onRotate);
+
+    // Update signal data periodically
+    _signalUpdateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (mounted) _updateSignalHistory();
+    });
+  }
+
+  void _updateSignalHistory() {
+    final nodes = ref.read(nodesProvider);
+    for (final node in nodes.values) {
+      // Track RSSI history
+      if (node.rssi != null) {
+        _rssiHistory.putIfAbsent(node.nodeNum, () => []);
+        _rssiHistory[node.nodeNum]!.add(node.rssi!.toDouble());
+        if (_rssiHistory[node.nodeNum]!.length > 30) {
+          _rssiHistory[node.nodeNum]!.removeAt(0);
+        }
+      }
+      // Track SNR history
+      if (node.snr != null) {
+        _snrHistory.putIfAbsent(node.nodeNum, () => []);
+        _snrHistory[node.nodeNum]!.add(node.snr!.toDouble());
+        if (_snrHistory[node.nodeNum]!.length > 30) {
+          _snrHistory[node.nodeNum]!.removeAt(0);
+        }
+      }
+    }
+
+    // Track channel utilization from stream
+    final channelUtilAsync = ref.read(currentChannelUtilProvider);
+    final channelUtil = channelUtilAsync.value ?? 0.0;
+    _channelUtilHistory.add(channelUtil);
+    if (_channelUtilHistory.length > 60) {
+      _channelUtilHistory.removeAt(0);
+    }
+
+    if (_currentMode == Mesh3DViewMode.signalStrength ||
+        _currentMode == Mesh3DViewMode.channelUtilization) {
+      setState(() {}); // Trigger rebuild for live updates
+    }
   }
 
   void _onRotate() {
@@ -108,6 +171,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
   @override
   void dispose() {
     _rotationController.dispose();
+    _signalUpdateTimer?.cancel();
     super.dispose();
   }
 
@@ -137,20 +201,22 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
         title: Text(
           _currentMode.label,
           style: const TextStyle(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
         ),
         actions: [
+          // Label toggle
           IconButton(
             icon: Icon(
               _showLabels ? Icons.label : Icons.label_off,
               color: _showLabels ? theme.colorScheme.primary : null,
             ),
-            tooltip: 'Toggle Labels',
+            tooltip: _showLabels ? 'Hide Labels' : 'Show Labels',
             onPressed: () => setState(() => _showLabels = !_showLabels),
           ),
+          // Auto rotate toggle
           IconButton(
             icon: Icon(
               Icons.rotate_right,
@@ -325,6 +391,10 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     switch (_currentMode) {
       case Mesh3DViewMode.topology:
         return _buildTopologyFigures(nodes, myNodeNum);
+      case Mesh3DViewMode.signalStrength:
+        return _buildSignalStrengthFigures(nodes, myNodeNum);
+      case Mesh3DViewMode.channelUtilization:
+        return _buildChannelUtilizationFigures(nodes, myNodeNum);
       case Mesh3DViewMode.signalPropagation:
         return _buildSignalPropagationFigures(nodes, myNodeNum);
       case Mesh3DViewMode.traceroute:
@@ -336,19 +406,37 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     }
   }
 
-  /// Build 3D network topology - nodes as cubes, connections as lines
-  List<Model3D<Model3D>> _buildTopologyFigures(
-    Map<int, MeshNode> nodes,
-    int? myNodeNum,
-  ) {
-    final figures = <Model3D<Model3D>>[];
+  /// Calculate normalized positions for nodes centered around their centroid
+  Map<int, vector.Vector3> _calculateNodePositions(Map<int, MeshNode> nodes) {
     final nodePositions = <int, vector.Vector3>{};
-
-    // Calculate positions for nodes
-    int index = 0;
     final nodeList = nodes.values.toList();
     final nodeCount = nodeList.length;
 
+    if (nodeCount == 0) return nodePositions;
+
+    // First pass: collect all GPS coordinates to find centroid
+    double sumLat = 0, sumLon = 0, sumAlt = 0;
+    int gpsCount = 0;
+
+    for (final node in nodeList) {
+      if (node.latitude != null &&
+          node.longitude != null &&
+          node.latitude != 0 &&
+          node.longitude != 0) {
+        sumLat += node.latitude!;
+        sumLon += node.longitude!;
+        sumAlt += (node.altitude ?? 0).toDouble();
+        gpsCount++;
+      }
+    }
+
+    // Calculate centroid
+    final centerLat = gpsCount > 0 ? sumLat / gpsCount : 0.0;
+    final centerLon = gpsCount > 0 ? sumLon / gpsCount : 0.0;
+    final centerAlt = gpsCount > 0 ? sumAlt / gpsCount : 0.0;
+
+    // Second pass: calculate positions relative to centroid
+    int index = 0;
     for (final node in nodeList) {
       vector.Vector3 position;
 
@@ -356,17 +444,23 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
           node.longitude != null &&
           node.latitude != 0 &&
           node.longitude != 0) {
-        // Use actual GPS position (normalized to fit view)
-        final lat = node.latitude!;
-        final lon = node.longitude!;
-        final alt = (node.altitude ?? 0) / 100;
+        // Use actual GPS position (normalized around centroid)
+        final lat = node.latitude! - centerLat;
+        final lon = node.longitude! - centerLon;
+        final alt = ((node.altitude ?? 0) - centerAlt) / 50; // Scale altitude
 
-        // Center around average position
+        // Scale to reasonable 3D space (roughly 100m = 1 unit)
+        // 1 degree latitude ≈ 111km, 1 degree longitude varies
         position = vector.Vector3(
-          (lon - 0) * 10, // Scale longitude
-          alt.clamp(-5.0, 5.0).toDouble(), // Height based on altitude
-          (lat - 0) * 10, // Scale latitude
+          lon * 1000, // Scale for visibility
+          alt.clamp(-3.0, 3.0), // Height based on altitude
+          lat * 1000, // Scale for visibility
         );
+
+        // If position is too far out, bring it in
+        if (position.length > 5) {
+          position = position.normalized() * 5;
+        }
       } else {
         // Arrange in a circle if no GPS
         final angle = (index / nodeCount) * 2 * math.pi;
@@ -379,6 +473,32 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
       }
 
       nodePositions[node.nodeNum] = position;
+      index++;
+    }
+
+    return nodePositions;
+  }
+
+  /// Build 3D network topology - nodes as cubes, connections as lines
+  List<Model3D<Model3D>> _buildTopologyFigures(
+    Map<int, MeshNode> nodes,
+    int? myNodeNum,
+  ) {
+    final figures = <Model3D<Model3D>>[];
+    final nodeList = nodes.values.toList();
+
+    if (nodeList.isEmpty) {
+      // Show placeholder message
+      figures.addAll(_buildGridPlane());
+      return figures;
+    }
+
+    final nodePositions = _calculateNodePositions(nodes);
+
+    // Add nodes
+    for (final node in nodeList) {
+      final position = nodePositions[node.nodeNum];
+      if (position == null) continue;
 
       // Determine node color based on presence status
       final status = _getPresenceStatus(node);
@@ -392,51 +512,55 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
           nodeColor = AppTheme.textTertiary;
       }
 
-      // Highlight my node
-      if (node.nodeNum == myNodeNum) {
+      // Highlight my node with larger size
+      final isMyNode = node.nodeNum == myNodeNum;
+      if (isMyNode) {
         nodeColor = AppTheme.primaryBlue;
       }
 
       // Add node as a cube
-      figures.add(Cube3D(0.3, position, color: nodeColor));
-
-      index++;
+      figures.add(Cube3D(isMyNode ? 0.4 : 0.3, position, color: nodeColor));
     }
 
-    // Add connections between nodes that have heard each other
+    // Add connections between nodes based on SNR data
+    final connectedPairs = <String>{};
     for (final node in nodeList) {
       final nodePos = nodePositions[node.nodeNum];
       if (nodePos == null) continue;
 
-      // Connect to nodes with SNR data (they've heard each other)
-      if (node.snr != null && node.snr != 0) {
-        // Find nearest neighbors and draw connections
-        for (final otherNode in nodeList) {
-          if (otherNode.nodeNum == node.nodeNum) continue;
+      for (final otherNode in nodeList) {
+        if (otherNode.nodeNum == node.nodeNum) continue;
 
-          final otherPos = nodePositions[otherNode.nodeNum];
-          if (otherPos == null) continue;
+        final otherPos = nodePositions[otherNode.nodeNum];
+        if (otherPos == null) continue;
 
-          // Only draw connection if within reasonable range
-          final distance = (nodePos - otherPos).length;
-          if (distance < 5) {
-            // Calculate line color based on signal quality
-            final snr = (node.snr ?? 0).clamp(-20, 10).toDouble();
-            final quality = (snr + 20) / 30; // 0 to 1
+        // Create unique pair key to avoid duplicate connections
+        final nodes = [node.nodeNum, otherNode.nodeNum]..sort();
+        final pairKey = '${nodes[0]}-${nodes[1]}';
+        if (connectedPairs.contains(pairKey)) continue;
 
-            figures.add(
-              Line3D(
-                nodePos,
-                otherPos,
-                color: Color.lerp(
-                  Colors.red.withValues(alpha: 0.5),
-                  Colors.green.withValues(alpha: 0.5),
-                  quality,
-                )!,
-                width: 1 + quality * 2,
-              ),
-            );
-          }
+        // Draw connection if within view range
+        final distance = (nodePos - otherPos).length;
+        if (distance < 8) {
+          // Calculate line color based on signal quality
+          final snr = (node.snr ?? otherNode.snr ?? 0)
+              .clamp(-20, 10)
+              .toDouble();
+          final quality = (snr + 20) / 30; // 0 to 1
+
+          figures.add(
+            Line3D(
+              nodePos,
+              otherPos,
+              color: Color.lerp(
+                Colors.red.withValues(alpha: 0.4),
+                Colors.green.withValues(alpha: 0.6),
+                quality,
+              )!,
+              width: 1 + quality * 2,
+            ),
+          );
+          connectedPairs.add(pairKey);
         }
       }
     }
@@ -447,8 +571,8 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     return figures;
   }
 
-  /// Build signal propagation visualization with spheres showing range
-  List<Model3D<Model3D>> _buildSignalPropagationFigures(
+  /// Build signal strength visualization - 3D bar chart of RSSI/SNR
+  List<Model3D<Model3D>> _buildSignalStrengthFigures(
     Map<int, MeshNode> nodes,
     int? myNodeNum,
   ) {
@@ -456,19 +580,293 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     final nodeList = nodes.values.toList();
     final nodeCount = nodeList.length;
 
+    if (nodeCount == 0) {
+      figures.addAll(_buildGridPlane());
+      return figures;
+    }
+
+    // Arrange nodes in a grid layout
+    final gridCols = math.sqrt(nodeCount).ceil();
+    const spacing = 1.2;
+    final gridOffset = (gridCols - 1) * spacing / 2;
+
     int index = 0;
     for (final node in nodeList) {
-      // Calculate position
-      final angle = (index / nodeCount) * 2 * math.pi;
-      const radius = 3.0;
-      final position = vector.Vector3(
-        radius * math.cos(angle),
-        0,
-        radius * math.sin(angle),
+      final row = index ~/ gridCols;
+      final col = index % gridCols;
+      final x = col * spacing - gridOffset;
+      final z = row * spacing - gridOffset;
+
+      // RSSI bar (left)
+      final rssi = (node.rssi ?? -120).clamp(-120, -30).toDouble();
+      final rssiNormalized = (rssi + 120) / 90; // 0 to 1
+      final rssiHeight = 0.2 + rssiNormalized * 2.5;
+      final rssiColor = _getRssiColor(rssi);
+
+      figures.add(
+        Cube3D(
+          0.15,
+          vector.Vector3(x - 0.2, rssiHeight / 2, z),
+          color: rssiColor,
+        ),
+      );
+      figures.add(
+        Line3D(
+          vector.Vector3(x - 0.2, 0, z),
+          vector.Vector3(x - 0.2, rssiHeight, z),
+          color: rssiColor,
+          width: 8,
+        ),
       );
 
-      // Determine signal range based on device role/power
-      const signalRadius = 1.5;
+      // SNR bar (right)
+      final snr = (node.snr ?? -20).clamp(-20, 15).toDouble();
+      final snrNormalized = (snr + 20) / 35; // 0 to 1
+      final snrHeight = 0.2 + snrNormalized * 2.5;
+      final snrColor = _getSnrColor(snr);
+
+      figures.add(
+        Cube3D(
+          0.15,
+          vector.Vector3(x + 0.2, snrHeight / 2, z),
+          color: snrColor,
+        ),
+      );
+      figures.add(
+        Line3D(
+          vector.Vector3(x + 0.2, 0, z),
+          vector.Vector3(x + 0.2, snrHeight, z),
+          color: snrColor,
+          width: 8,
+        ),
+      );
+
+      // Node indicator at base
+      final isMyNode = node.nodeNum == myNodeNum;
+      figures.add(
+        Cube3D(
+          0.12,
+          vector.Vector3(x, 0.06, z),
+          color: isMyNode ? AppTheme.primaryBlue : _getNodeColor(node),
+        ),
+      );
+
+      index++;
+    }
+
+    // Add base plane
+    figures.add(
+      Plane3D(
+        (gridCols + 1) * spacing,
+        Axis3D.y,
+        false,
+        vector.Vector3(0, 0, 0),
+        color: AppTheme.darkSurface.withValues(alpha: 0.5),
+      ),
+    );
+
+    return figures;
+  }
+
+  Color _getRssiColor(double rssi) {
+    if (rssi >= -60) return AppTheme.successGreen;
+    if (rssi >= -75) return AppTheme.warningYellow;
+    return AppTheme.errorRed;
+  }
+
+  Color _getSnrColor(double snr) {
+    if (snr >= 5) return AccentColors.cyan;
+    if (snr >= 0) return AppTheme.warningYellow;
+    return AppTheme.errorRed;
+  }
+
+  /// Build channel utilization visualization - 3D timeline of airtime usage
+  List<Model3D<Model3D>> _buildChannelUtilizationFigures(
+    Map<int, MeshNode> nodes,
+    int? myNodeNum,
+  ) {
+    final figures = <Model3D<Model3D>>[];
+
+    // Current channel utilization from provider
+    final channelUtilAsync = ref.read(currentChannelUtilProvider);
+    final currentUtil = channelUtilAsync.value ?? 0.0;
+
+    // Build 3D bar chart showing channel utilization history
+    final historyLength = _channelUtilHistory.length;
+    const maxBars = 30;
+    const spacing = 0.3;
+    final barCount = math.min(historyLength, maxBars);
+
+    // Draw historical utilization bars
+    for (int i = 0; i < barCount; i++) {
+      final historyIndex = historyLength - barCount + i;
+      if (historyIndex < 0) continue;
+
+      final util = _channelUtilHistory[historyIndex].clamp(0.0, 100.0);
+      final normalizedUtil = util / 100.0;
+      final height = 0.1 + normalizedUtil * 3.0;
+
+      final x = (i - barCount / 2) * spacing;
+      final z = 0.0;
+
+      // Color based on utilization level
+      Color barColor;
+      if (util < 25) {
+        barColor = AppTheme.successGreen;
+      } else if (util < 50) {
+        barColor = AccentColors.cyan;
+      } else if (util < 75) {
+        barColor = AppTheme.warningYellow;
+      } else {
+        barColor = AppTheme.errorRed;
+      }
+
+      // Make the most recent bar brighter
+      final isRecent = i >= barCount - 3;
+      final alpha = isRecent ? 1.0 : 0.6;
+
+      figures.add(
+        Line3D(
+          vector.Vector3(x, 0, z),
+          vector.Vector3(x, height, z),
+          color: barColor.withValues(alpha: alpha),
+          width: isRecent ? 10 : 6,
+        ),
+      );
+
+      // Cap on top of bar
+      figures.add(
+        Cube3D(
+          isRecent ? 0.12 : 0.08,
+          vector.Vector3(x, height, z),
+          color: barColor,
+        ),
+      );
+    }
+
+    // Add current utilization as a prominent center display
+    final currentHeight = 0.1 + (currentUtil / 100.0) * 3.0;
+    Color currentColor;
+    if (currentUtil < 25) {
+      currentColor = AppTheme.successGreen;
+    } else if (currentUtil < 50) {
+      currentColor = AccentColors.cyan;
+    } else if (currentUtil < 75) {
+      currentColor = AppTheme.warningYellow;
+    } else {
+      currentColor = AppTheme.errorRed;
+    }
+
+    // Large center indicator for current value
+    figures.add(
+      Cube3D(
+        0.4,
+        vector.Vector3(0, currentHeight + 0.5, 1.5),
+        color: currentColor,
+      ),
+    );
+
+    // Vertical stem for current indicator
+    figures.add(
+      Line3D(
+        vector.Vector3(0, 0, 1.5),
+        vector.Vector3(0, currentHeight + 0.3, 1.5),
+        color: currentColor.withValues(alpha: 0.7),
+        width: 4,
+      ),
+    );
+
+    // Add threshold lines
+    final thresholds = [25.0, 50.0, 75.0];
+    for (final threshold in thresholds) {
+      final thresholdHeight = 0.1 + (threshold / 100.0) * 3.0;
+      figures.add(
+        Line3D(
+          vector.Vector3(-barCount * spacing / 2, thresholdHeight, -0.5),
+          vector.Vector3(barCount * spacing / 2, thresholdHeight, -0.5),
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      );
+    }
+
+    // Add node battery/power indicators in background
+    final nodeList = nodes.values.toList();
+    final nodeCount = nodeList.length;
+    if (nodeCount > 0) {
+      int nodeIndex = 0;
+      for (final node in nodeList.take(8)) {
+        final angle = (nodeIndex / math.min(8, nodeCount)) * 2 * math.pi;
+        const radius = 3.5;
+        final x = radius * math.cos(angle);
+        final z = radius * math.sin(angle) - 1;
+
+        // Show battery level as vertical bar
+        final battery = (node.batteryLevel ?? 0).clamp(0, 100).toDouble();
+        final batteryHeight = 0.2 + (battery / 100.0) * 1.5;
+
+        Color batteryColor;
+        if (battery >= 50) {
+          batteryColor = AppTheme.successGreen;
+        } else if (battery >= 20) {
+          batteryColor = AppTheme.warningYellow;
+        } else {
+          batteryColor = AppTheme.errorRed;
+        }
+
+        figures.add(
+          Line3D(
+            vector.Vector3(x, 0, z),
+            vector.Vector3(x, batteryHeight, z),
+            color: batteryColor.withValues(alpha: 0.5),
+            width: 4,
+          ),
+        );
+
+        // Node marker
+        final isMyNode = node.nodeNum == myNodeNum;
+        figures.add(
+          Cube3D(
+            0.15,
+            vector.Vector3(x, batteryHeight + 0.1, z),
+            color: isMyNode ? AppTheme.primaryBlue : _getNodeColor(node),
+          ),
+        );
+
+        nodeIndex++;
+      }
+    }
+
+    // Add base plane
+    figures.add(
+      Plane3D(
+        6,
+        Axis3D.y,
+        false,
+        vector.Vector3(0, 0, 0),
+        color: AppTheme.darkSurface.withValues(alpha: 0.3),
+      ),
+    );
+
+    return figures;
+  }
+
+  /// Build signal propagation visualization with spheres showing range
+  List<Model3D<Model3D>> _buildSignalPropagationFigures(
+    Map<int, MeshNode> nodes,
+    int? myNodeNum,
+  ) {
+    final figures = <Model3D<Model3D>>[];
+    final nodePositions = _calculateNodePositions(nodes);
+    final nodeList = nodes.values.toList();
+
+    for (final node in nodeList) {
+      final position = nodePositions[node.nodeNum];
+      if (position == null) continue;
+
+      // Determine signal range based on RSSI
+      final rssi = (node.rssi ?? -90).clamp(-120, -30).toDouble();
+      final signalRadius = 0.5 + ((rssi + 120) / 90) * 1.5;
 
       // Create concentric circles to simulate range sphere
       final isMyNode = node.nodeNum == myNodeNum;
@@ -517,8 +915,8 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
 
       // Add vertical signal cone (pointing up)
       const coneSegments = 12;
-      const coneHeight = 1.0;
-      const coneRadius = 0.8;
+      final coneHeight = 0.5 + signalRadius * 0.5;
+      final coneRadius = signalRadius * 0.4;
 
       for (int i = 0; i < coneSegments; i++) {
         final a1 = (i / coneSegments) * 2 * math.pi;
@@ -559,8 +957,6 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
           ),
         );
       }
-
-      index++;
     }
 
     figures.addAll(_buildGridPlane());
@@ -573,24 +969,14 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     int? myNodeNum,
   ) {
     final figures = <Model3D<Model3D>>[];
-    final nodePositions = <int, vector.Vector3>{};
+    final nodePositions = _calculateNodePositions(nodes);
     final nodeList = nodes.values.toList();
-    final nodeCount = nodeList.length;
 
-    // Position all nodes
-    int index = 0;
+    // Draw all nodes
     for (final node in nodeList) {
-      final angle = (index / nodeCount) * 2 * math.pi;
-      const radius = 3.5;
-      final position = vector.Vector3(
-        radius * math.cos(angle),
-        (index % 3 - 1) * 0.5, // Slight vertical variation
-        radius * math.sin(angle),
-      );
+      final position = nodePositions[node.nodeNum];
+      if (position == null) continue;
 
-      nodePositions[node.nodeNum] = position;
-
-      // Draw node
       figures.add(
         Cube3D(
           node.nodeNum == myNodeNum ? 0.35 : 0.25,
@@ -600,39 +986,55 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
               : _getNodeColor(node),
         ),
       );
-
-      index++;
     }
 
-    // Create a simulated traceroute path
+    // Create a simulated traceroute path from my node
     if (myNodeNum != null && nodeList.length > 1) {
-      // Simulate a multi-hop path
-      final pathNodes = nodeList.take(math.min(4, nodeList.length)).toList();
+      // Sort nodes by last heard to simulate recent communication path
+      final sortedNodes =
+          nodeList
+              .where((n) => n.nodeNum != myNodeNum && n.lastHeard != null)
+              .toList()
+            ..sort(
+              (a, b) => (b.lastHeard ?? DateTime(1970)).compareTo(
+                a.lastHeard ?? DateTime(1970),
+              ),
+            );
 
-      for (int i = 0; i < pathNodes.length - 1; i++) {
-        final fromPos = nodePositions[pathNodes[i].nodeNum];
-        final toPos = nodePositions[pathNodes[i + 1].nodeNum];
+      final pathNodes = sortedNodes
+          .take(math.min(4, sortedNodes.length))
+          .toList();
+      final myPos = nodePositions[myNodeNum];
 
-        if (fromPos != null && toPos != null) {
+      if (myPos != null && pathNodes.isNotEmpty) {
+        var prevPos = myPos;
+        int hopNum = 1;
+
+        for (final pathNode in pathNodes) {
+          final toPos = nodePositions[pathNode.nodeNum];
+          if (toPos == null) continue;
+
           // Animated path line (thicker, glowing)
           figures.add(
-            Line3D(fromPos, toPos, color: AccentColors.cyan, width: 4),
+            Line3D(prevPos, toPos, color: AccentColors.cyan, width: 4),
           );
 
-          // Add hop number indicator
-          final midpoint = (fromPos + toPos) / 2;
+          // Add hop number indicator (point above the line midpoint)
+          final midpoint = (prevPos + toPos) / 2;
           figures.add(
             Point3D(
               midpoint + vector.Vector3(0, 0.3, 0),
               color: AccentColors.magenta,
-              width: 10,
+              width: 10 + hopNum * 2,
             ),
           );
+
+          prevPos = toPos;
+          hopNum++;
         }
       }
     }
 
-    // Add directional arrows along paths (simulated with points)
     figures.addAll(_buildGridPlane());
     return figures;
   }
@@ -720,6 +1122,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     int? myNodeNum,
   ) {
     final figures = <Model3D<Model3D>>[];
+    final nodePositions = _calculateNodePositions(nodes);
     final nodeList = nodes.values.toList();
 
     // Create a simple terrain mesh using points
@@ -789,12 +1192,19 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     }
 
     // Add nodes on top of terrain
-    int index = 0;
     for (final node in nodeList) {
-      final angle = (index / nodeList.length) * 2 * math.pi;
-      const radius = 1.5;
-      final x = radius * math.cos(angle);
-      final z = radius * math.sin(angle);
+      final position = nodePositions[node.nodeNum];
+      if (position == null) continue;
+
+      // Clamp position to terrain bounds
+      final x = position.x.clamp(
+        -gridSize * spacing / 2,
+        gridSize * spacing / 2 - spacing,
+      );
+      final z = position.z.clamp(
+        -gridSize * spacing / 2,
+        gridSize * spacing / 2 - spacing,
+      );
 
       // Sample terrain height at node position
       final gridX = ((x / spacing) + gridSize / 2)
@@ -805,12 +1215,12 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
           .toInt();
       final terrainHeight = heights[gridX][gridZ];
 
-      final position = vector.Vector3(x, terrainHeight + 0.3, z);
+      final nodePosition = vector.Vector3(x, terrainHeight + 0.3, z);
 
       figures.add(
         Cube3D(
           0.2,
-          position,
+          nodePosition,
           color: node.nodeNum == myNodeNum
               ? AppTheme.primaryBlue
               : _getNodeColor(node),
@@ -821,13 +1231,11 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
       figures.add(
         Line3D(
           vector.Vector3(x, terrainHeight, z),
-          position,
+          nodePosition,
           color: Colors.white.withValues(alpha: 0.5),
           width: 1,
         ),
       );
-
-      index++;
     }
 
     return figures;
@@ -885,6 +1293,39 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
   }
 
   Widget _buildLegend(ThemeData theme) {
+    // Different legends for different modes
+    final items = <(Color, String)>[];
+
+    switch (_currentMode) {
+      case Mesh3DViewMode.signalStrength:
+        items.addAll([
+          (AppTheme.successGreen, 'RSSI: Excellent'),
+          (AppTheme.warningYellow, 'RSSI: Fair'),
+          (AppTheme.errorRed, 'RSSI: Poor'),
+          (AccentColors.cyan, 'SNR: Good'),
+        ]);
+      case Mesh3DViewMode.channelUtilization:
+        items.addAll([
+          (AppTheme.successGreen, 'Low (<25%)'),
+          (AccentColors.cyan, 'Medium (<50%)'),
+          (AppTheme.warningYellow, 'High (<75%)'),
+          (AppTheme.errorRed, 'Critical (>75%)'),
+        ]);
+      case Mesh3DViewMode.traceroute:
+        items.addAll([
+          (AppTheme.primaryBlue, 'My Node'),
+          (AccentColors.cyan, 'Route Path'),
+          (AccentColors.magenta, 'Hop Point'),
+        ]);
+      default:
+        items.addAll([
+          (AppTheme.primaryBlue, 'My Node'),
+          (AppTheme.successGreen, 'Active'),
+          (AppTheme.warningYellow, 'Idle'),
+          (AppTheme.textTertiary, 'Offline'),
+        ]);
+    }
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -905,10 +1346,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
             ),
           ),
           const SizedBox(height: 8),
-          _buildLegendItem(AppTheme.primaryBlue, 'My Node'),
-          _buildLegendItem(AppTheme.successGreen, 'Active'),
-          _buildLegendItem(AppTheme.warningYellow, 'Idle'),
-          _buildLegendItem(AppTheme.textTertiary, 'Offline'),
+          ...items.map((item) => _buildLegendItem(item.$1, item.$2)),
         ],
       ),
     );
@@ -1012,6 +1450,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
             ],
           ),
           const SizedBox(height: 8),
+          if (node.rssi != null) _buildInfoRow('RSSI', '${node.rssi} dBm'),
           if (node.snr != null) _buildInfoRow('SNR', '${node.snr} dB'),
           _buildInfoRow('Status', _getPresenceStatus(node).label),
         ],
