@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/logging.dart';
+import '../../config/admin_config.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
@@ -32,7 +32,7 @@ class AutomationsScreen extends ConsumerWidget {
         centerTitle: true,
         title: const Text('Automations'),
         actions: [
-          if (AppLogging.automationsLoggingEnabled)
+          if (AdminConfig.showAutomationDebug)
             IconButton(
               icon: const Icon(Icons.bug_report),
               tooltip: 'Debug Panel',

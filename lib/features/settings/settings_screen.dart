@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../config/admin_config.dart';
 import '../../core/transport.dart' show DeviceConnectionState;
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
@@ -59,6 +60,7 @@ import '../telemetry/detection_sensor_log_screen.dart';
 import '../routes/routes_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import 'account_screen.dart';
+import 'debug_settings_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -1050,6 +1052,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
               ),
+
+              // Debug Section (Admin only)
+              if (AdminConfig.isEnabled) ...[
+                const SizedBox(height: 16),
+                _SectionHeader(title: 'DEBUG'),
+                _SettingsTile(
+                  icon: Icons.bug_report,
+                  iconColor: AppTheme.warningYellow,
+                  title: 'Debug Settings',
+                  subtitle: 'Mesh node playground, test notifications',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const DebugSettingsScreen(),
+                    ),
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 24),
 
