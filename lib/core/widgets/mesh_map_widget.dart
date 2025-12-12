@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 import '../map_config.dart';
 import '../theme.dart';
@@ -32,6 +33,9 @@ class MeshMapWidget extends StatelessWidget {
   /// Whether to enable map interactions (pan, zoom, rotate)
   final bool interactive;
 
+  /// Whether to disable rotation specifically
+  final bool disableRotation;
+
   /// Callback when map position changes
   final void Function(MapCamera, bool)? onPositionChanged;
 
@@ -44,7 +48,7 @@ class MeshMapWidget extends StatelessWidget {
   /// Additional map layers to add (polylines, circles, etc.)
   final List<Widget> additionalLayers;
 
-  /// Node markers to display
+  /// Node markers to display (non-clustered)
   final List<MeshNodeMarkerData>? nodeMarkers;
 
   /// Currently selected node (for highlighting)
@@ -62,6 +66,30 @@ class MeshMapWidget extends StatelessWidget {
   /// Background color
   final Color backgroundColor;
 
+  /// Enable clustering for markers (for large datasets like world mesh)
+  final bool enableClustering;
+
+  /// Custom markers when using clustering (overrides nodeMarkers if set)
+  final List<Marker>? clusteredMarkers;
+
+  /// Builder for cluster marker appearance
+  final Widget Function(BuildContext, List<Marker>)? clusterBuilder;
+
+  /// Max cluster radius (controls how aggressively markers cluster)
+  final double clusterRadius;
+
+  /// Popup controller for clustered markers
+  final PopupController? popupController;
+
+  /// Popup builder for clustered markers
+  final Widget Function(BuildContext, Marker)? popupBuilder;
+
+  /// Show attribution widget
+  final bool showAttribution;
+
+  /// Attribution widgets
+  final List<SourceAttribution>? attributions;
+
   const MeshMapWidget({
     super.key,
     this.mapController,
@@ -71,6 +99,7 @@ class MeshMapWidget extends StatelessWidget {
     this.minZoom = 3.0,
     this.maxZoom = 18.0,
     this.interactive = true,
+    this.disableRotation = false,
     this.onPositionChanged,
     this.onTap,
     this.onLongPress,
@@ -81,10 +110,27 @@ class MeshMapWidget extends StatelessWidget {
     this.onNodeTap,
     this.animateTiles = true,
     this.backgroundColor = AppTheme.darkBackground,
+    // Clustering options
+    this.enableClustering = false,
+    this.clusteredMarkers,
+    this.clusterBuilder,
+    this.clusterRadius = 45,
+    this.popupController,
+    this.popupBuilder,
+    this.showAttribution = false,
+    this.attributions,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Build interaction flags
+    int interactionFlags = interactive
+        ? InteractiveFlag.all
+        : InteractiveFlag.none;
+    if (disableRotation && interactive) {
+      interactionFlags = InteractiveFlag.all & ~InteractiveFlag.rotate;
+    }
+
     return FlutterMap(
       mapController: mapController,
       options: MapOptions(
@@ -94,7 +140,7 @@ class MeshMapWidget extends StatelessWidget {
         maxZoom: maxZoom,
         backgroundColor: backgroundColor,
         interactionOptions: InteractionOptions(
-          flags: interactive ? InteractiveFlag.all : InteractiveFlag.none,
+          flags: interactionFlags,
           pinchZoomThreshold: 0.5,
           scrollWheelVelocity: 0.005,
         ),
@@ -123,8 +169,31 @@ class MeshMapWidget extends StatelessWidget {
         // Additional layers (polylines, circles, etc.)
         ...additionalLayers,
 
-        // Node markers
-        if (nodeMarkers != null && nodeMarkers!.isNotEmpty)
+        // Clustered markers (when enabled)
+        if (enableClustering &&
+            clusteredMarkers != null &&
+            clusteredMarkers!.isNotEmpty)
+          MarkerClusterLayerWidget(
+            options: MarkerClusterLayerOptions(
+              maxClusterRadius: clusterRadius.toInt(),
+              size: const Size(48, 48),
+              padding: const EdgeInsets.all(50),
+              markers: clusteredMarkers!,
+              popupOptions: popupController != null && popupBuilder != null
+                  ? PopupOptions(
+                      popupSnap: PopupSnap.markerTop,
+                      popupController: popupController!,
+                      popupBuilder: popupBuilder!,
+                    )
+                  : PopupOptions(
+                      popupBuilder: (_, _) => const SizedBox.shrink(),
+                    ),
+              builder: clusterBuilder ?? _defaultClusterBuilder,
+            ),
+          ),
+
+        // Non-clustered node markers (standard mode)
+        if (!enableClustering && nodeMarkers != null && nodeMarkers!.isNotEmpty)
           MarkerLayer(
             rotate: true,
             markers: nodeMarkers!.map((data) {
@@ -151,8 +220,80 @@ class MeshMapWidget extends StatelessWidget {
               );
             }).toList(),
           ),
+
+        // Attribution
+        if (showAttribution && attributions != null)
+          RichAttributionWidget(
+            alignment: AttributionAlignment.bottomLeft,
+            attributions: attributions!,
+          ),
       ],
     );
+  }
+
+  /// Default cluster marker builder
+  Widget _defaultClusterBuilder(BuildContext context, List<Marker> markers) {
+    final count = markers.length;
+    final theme = Theme.of(context);
+    final accentColor = theme.colorScheme.primary;
+
+    // Gradient colors based on cluster size
+    final Color baseColor;
+    final double size;
+    if (count < 10) {
+      baseColor = accentColor;
+      size = 40;
+    } else if (count < 100) {
+      baseColor = Colors.orange;
+      size = 44;
+    } else if (count < 1000) {
+      baseColor = Colors.deepOrange;
+      size = 48;
+    } else {
+      baseColor = Colors.red;
+      size = 52;
+    }
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            baseColor.withValues(alpha: 0.9),
+            baseColor.withValues(alpha: 0.6),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: baseColor.withValues(alpha: 0.4),
+            blurRadius: 8,
+            spreadRadius: 2,
+          ),
+        ],
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.8),
+          width: 2,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          _formatClusterCount(count),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatClusterCount(int count) {
+    if (count < 1000) return count.toString();
+    if (count < 10000) return '${(count / 1000).toStringAsFixed(1)}k';
+    return '${count ~/ 1000}k';
   }
 }
 

@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../core/map_config.dart';
+import '../../core/widgets/mesh_map_widget.dart';
 import '../../models/world_mesh_node.dart';
 import '../../providers/world_mesh_map_provider.dart';
 import '../../utils/snackbar.dart';
@@ -218,60 +219,44 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         ? state.nodesWithPosition
         : ref.watch(worldMeshFilteredNodesProvider(_searchQuery));
 
+    // Build markers for clustering
+    final markers = nodes.map((node) => _buildMarker(node)).toList();
+
     return Stack(
       children: [
-        FlutterMap(
+        // Use shared MeshMapWidget with clustering enabled
+        MeshMapWidget(
           mapController: _mapController,
-          options: MapOptions(
-            initialCenter: const LatLng(25, 0), // Global center
-            initialZoom: 3.0,
-            minZoom: 2.0,
-            maxZoom: 18.0,
-            interactionOptions: const InteractionOptions(
-              flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-            ),
-            onPositionChanged: (position, hasGesture) {
-              setState(() => _currentZoom = position.zoom);
-            },
-            onTap: (tapPosition, point) {
-              _popupController.hideAllPopups();
-              setState(() => _selectedNode = null);
-            },
-          ),
-          children: [
-            // Tile layer
-            MapConfig.tileLayerForStyle(_mapStyle),
-
-            // Clustered markers
-            MarkerClusterLayerWidget(
-              options: MarkerClusterLayerOptions(
-                maxClusterRadius: _currentZoom < 3 ? 60 : 45,
-                size: const Size(48, 48),
-                padding: const EdgeInsets.all(50),
-                markers: nodes.map((node) => _buildMarker(node)).toList(),
-                popupOptions: PopupOptions(
-                  popupSnap: PopupSnap.markerTop,
-                  popupController: _popupController,
-                  popupBuilder: (context, marker) {
-                    final node = _findNodeForMarker(marker, nodes);
-                    if (node == null) return const SizedBox.shrink();
-                    return _buildNodePopup(context, theme, node);
-                  },
-                ),
-                builder: (context, markers) {
-                  return _buildClusterMarker(theme, markers.length);
-                },
-              ),
-            ),
-
-            // Attribution
-            RichAttributionWidget(
-              alignment: AttributionAlignment.bottomLeft,
-              attributions: [
-                TextSourceAttribution('MeshMap.net', onTap: () {}),
-                TextSourceAttribution('${nodes.length} nodes', onTap: () {}),
-              ],
-            ),
+          mapStyle: _mapStyle,
+          initialCenter: const LatLng(25, 0), // Global center
+          initialZoom: 3.0,
+          minZoom: 2.0,
+          maxZoom: 18.0,
+          disableRotation: true,
+          onPositionChanged: (position, hasGesture) {
+            setState(() => _currentZoom = position.zoom);
+          },
+          onTap: (tapPosition, point) {
+            _popupController.hideAllPopups();
+            setState(() => _selectedNode = null);
+          },
+          // Enable clustering for world mesh
+          enableClustering: true,
+          clusteredMarkers: markers,
+          clusterRadius: _currentZoom < 3 ? 60 : 45,
+          popupController: _popupController,
+          popupBuilder: (context, marker) {
+            final node = _findNodeForMarker(marker, nodes);
+            if (node == null) return const SizedBox.shrink();
+            return _buildNodePopup(context, theme, node);
+          },
+          clusterBuilder: (context, markers) =>
+              _buildClusterMarker(theme, markers.length),
+          // Show attribution
+          showAttribution: true,
+          attributions: [
+            TextSourceAttribution('MeshMap.net', onTap: () {}),
+            TextSourceAttribution('${nodes.length} nodes', onTap: () {}),
           ],
         ),
 

@@ -40,6 +40,9 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
   }
 
   void _addDataPoint() {
+    // Use watch-like behavior by listening to provider values
+    // Note: We use read here since this is called from a Timer, but the providers
+    // are also watched in build() to trigger rebuilds when values change
     final rssiAsync = ref.read(currentRssiProvider);
     final snrAsync = ref.read(currentSnrProvider);
     final channelUtilAsync = ref.read(currentChannelUtilProvider);
@@ -94,6 +97,31 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch providers to trigger rebuilds when data changes
+    final rssiAsync = ref.watch(currentRssiProvider);
+    final snrAsync = ref.watch(currentSnrProvider);
+    final channelUtilAsync = ref.watch(currentChannelUtilProvider);
+
+    // Update display values when provider data changes
+    final rssiValue = rssiAsync.value?.toDouble() ?? -90.0;
+    final snrValue = snrAsync.value ?? 0.0;
+    final channelUtilValue = channelUtilAsync.value ?? 0.0;
+
+    // Update smoothed values if they've changed significantly
+    if ((rssiValue - _displayRssi).abs() > 0.5 ||
+        (snrValue - _displaySnr).abs() > 0.5 ||
+        (channelUtilValue - _displayChannelUtil).abs() > 0.5) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _displayRssi = rssiValue;
+            _displaySnr = snrValue;
+            _displayChannelUtil = channelUtilValue;
+          });
+        }
+      });
+    }
+
     final hasData = _signalHistory.isNotEmpty;
 
     return Column(
@@ -161,15 +189,14 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // 3D Percentage display
+          // 3D Percentage display - minimalistic version
           Expanded(
             flex: 2,
-            child: Flip3DPercentage(
+            child: Flip3DPercentageMinimal(
               value: signalPercentage,
               label: 'SIGNAL',
               color: signalColor,
               size: Flip3DSize.medium,
-              showGlow: true,
             ),
           ),
           const SizedBox(width: 16),

@@ -508,3 +508,167 @@ class _FlipDigitState extends State<_FlipDigit>
     );
   }
 }
+
+/// Minimalistic 3D percentage display - clean and subtle
+/// No heavy gradients or glow effects, just smooth 3D tilt animation
+class Flip3DPercentageMinimal extends StatefulWidget {
+  const Flip3DPercentageMinimal({
+    super.key,
+    required this.value,
+    this.label,
+    this.color,
+    this.size = Flip3DSize.medium,
+  });
+
+  final double value;
+  final String? label;
+  final Color? color;
+  final Flip3DSize size;
+
+  @override
+  State<Flip3DPercentageMinimal> createState() =>
+      _Flip3DPercentageMinimalState();
+}
+
+class _Flip3DPercentageMinimalState extends State<Flip3DPercentageMinimal>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _tiltController;
+  late Animation<double> _tiltAnimation;
+  late Animation<double> _valueAnimation;
+
+  double _previousValue = 0;
+  double _displayValue = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _displayValue = widget.value;
+    _previousValue = widget.value;
+
+    _tiltController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    _tiltAnimation =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: 0, end: 0.08), weight: 50),
+          TweenSequenceItem(tween: Tween(begin: 0.08, end: 0), weight: 50),
+        ]).animate(
+          CurvedAnimation(parent: _tiltController, curve: Curves.easeInOut),
+        );
+
+    _valueAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _tiltController, curve: Curves.easeOutCubic),
+    );
+
+    _tiltController.addListener(_updateDisplayValue);
+  }
+
+  void _updateDisplayValue() {
+    final progress = _valueAnimation.value;
+    setState(() {
+      _displayValue =
+          _previousValue + (widget.value - _previousValue) * progress;
+    });
+  }
+
+  @override
+  void didUpdateWidget(Flip3DPercentageMinimal oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if ((oldWidget.value - widget.value).abs() > 0.5) {
+      _previousValue = _displayValue;
+      _tiltController.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _tiltController.dispose();
+    super.dispose();
+  }
+
+  double get _fontSize {
+    return switch (widget.size) {
+      Flip3DSize.small => 24,
+      Flip3DSize.medium => 32,
+      Flip3DSize.large => 48,
+    };
+  }
+
+  double get _suffixSize {
+    return switch (widget.size) {
+      Flip3DSize.small => 14,
+      Flip3DSize.medium => 18,
+      Flip3DSize.large => 28,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final effectiveColor = widget.color ?? theme.colorScheme.primary;
+
+    return AnimatedBuilder(
+      animation: _tiltController,
+      builder: (context, child) {
+        final tilt = _tiltAnimation.value;
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Main percentage display with subtle 3D tilt
+            Transform(
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.001)
+                ..rotateX(tilt),
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  // Main number
+                  Text(
+                    _displayValue.toStringAsFixed(0),
+                    style: TextStyle(
+                      fontSize: _fontSize,
+                      fontWeight: FontWeight.w700,
+                      color: effectiveColor,
+                      height: 1,
+                      letterSpacing: -1,
+                    ),
+                  ),
+                  // Percent symbol
+                  Text(
+                    '%',
+                    style: TextStyle(
+                      fontSize: _suffixSize,
+                      fontWeight: FontWeight.w500,
+                      color: effectiveColor.withValues(alpha: 0.7),
+                      height: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Label
+            if (widget.label != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                widget.label!,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.white.withValues(alpha: 0.5),
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
