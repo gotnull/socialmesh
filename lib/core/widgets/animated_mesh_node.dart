@@ -454,7 +454,8 @@ class _IcosahedronPainter extends CustomPainter {
   });
 
   // Radius of deformation influence (normalized to widget size)
-  static const double _deformationRadius = 0.4;
+  // Larger radius = more vertices affected by touch
+  static const double _deformationRadius = 0.6;
 
   // Golden ratio for icosahedron
   static final double _phi = (1 + math.sqrt(5)) / 2;
@@ -585,14 +586,12 @@ class _IcosahedronPainter extends CustomPainter {
       final dy = touchPixel.dy - point.dy;
       final distance = math.sqrt(dx * dx + dy * dy);
 
-      if (distance < radiusPixels && distance > 0) {
+      if (distance < radiusPixels) {
         // Calculate pull strength based on distance (closer = stronger pull)
         // Use smooth falloff curve for jelly-like effect
         final normalizedDist = distance / radiusPixels;
-        final falloff = math.pow(
-          1.0 - normalizedDist,
-          2.0,
-        ); // Quadratic falloff
+        // Cubic falloff for more dramatic near-touch effect
+        final falloff = math.pow(1.0 - normalizedDist, 3.0);
         final pullStrength = falloff * deformationAmount;
 
         // Pull vertex toward touch point
@@ -778,6 +777,9 @@ class AccelerometerMeshNode extends StatefulWidget {
   /// Whether touch interaction is enabled (drag to spin, Mario 64 style)
   final bool enableTouch;
 
+  /// Whether pull-to-stretch vertex deformation is enabled (Mario 64 style face pull)
+  final bool enablePullToStretch;
+
   /// Intensity of touch-induced rotation (0.0 - 2.0)
   final double touchIntensity;
 
@@ -796,6 +798,7 @@ class AccelerometerMeshNode extends StatefulWidget {
     this.friction = 0.985,
     this.physicsMode = MeshPhysicsMode.momentum,
     this.enableTouch = false,
+    this.enablePullToStretch = true,
     this.touchIntensity = 1.0,
   });
 
@@ -826,8 +829,10 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
   double _targetDeformation = 0.0;
 
   // Spring-back physics constants
-  static const double _springStiffness = 0.15; // How fast it snaps back
-  static const double _springDamping = 0.7; // Reduces oscillation
+  static const double _springStiffness =
+      0.35; // How fast it snaps back (higher = faster)
+  static const double _springDamping =
+      0.85; // Reduces oscillation (higher = less bounce)
 
   // For chaos mode
   final math.Random _random = math.Random();
@@ -979,13 +984,13 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
   void _updateDeformation() {
     // Spring physics for jelly-like snap-back
     if (_isDragging) {
-      // While dragging, smoothly move toward target
+      // While dragging, quickly move toward target for responsive feel
       _deformationAmount +=
-          (_targetDeformation - _deformationAmount) * _springStiffness * 2;
+          (_targetDeformation - _deformationAmount) * _springStiffness * 3;
     } else {
-      // When released, spring back to zero with damping
+      // When released, spring back to zero with damping for bouncy effect
       _deformationAmount *= _springDamping;
-      if (_deformationAmount.abs() < 0.001) {
+      if (_deformationAmount.abs() < 0.01) {
         _deformationAmount = 0.0;
         _touchPoint = null;
       }
@@ -997,12 +1002,18 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
     _isDragging = true;
     _lastTouchPosition = details.localPosition;
 
-    // Set touch point in normalized coordinates
-    _touchPoint = Offset(
-      details.localPosition.dx / widget.size,
-      details.localPosition.dy / widget.size,
-    );
-    _targetDeformation = widget.touchIntensity * 0.5;
+    // Only apply vertex deformation if pull-to-stretch is enabled
+    if (widget.enablePullToStretch) {
+      // Set touch point in normalized coordinates
+      _touchPoint = Offset(
+        details.localPosition.dx / widget.size,
+        details.localPosition.dy / widget.size,
+      );
+      // Start with immediate strong deformation when touched - high value for visible pull
+      _targetDeformation = widget.touchIntensity * 2.0;
+      // Make deformation instantly visible (skip spring ramp-up)
+      _deformationAmount = widget.touchIntensity * 1.5;
+    }
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
@@ -1011,23 +1022,22 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
     final delta = details.localPosition - (_lastTouchPosition ?? Offset.zero);
     _lastTouchPosition = details.localPosition;
 
-    // Update touch point for deformation (normalized coordinates)
-    _touchPoint = Offset(
-      details.localPosition.dx / widget.size,
-      details.localPosition.dy / widget.size,
-    );
+    // Only update vertex deformation if pull-to-stretch is enabled
+    if (widget.enablePullToStretch) {
+      // Update touch point for deformation (normalized coordinates)
+      _touchPoint = Offset(
+        details.localPosition.dx / widget.size,
+        details.localPosition.dy / widget.size,
+      );
 
-    // Calculate deformation based on drag distance from center
-    final center = Offset(0.5, 0.5);
-    final distFromCenter =
-        (_touchPoint! - center).distance * 2; // 0-1 range roughly
-    _targetDeformation = (widget.touchIntensity * 0.6 * distFromCenter).clamp(
-      0.0,
-      0.8,
-    );
+      // Deformation increases with drag distance - the further you pull, the more it stretches
+      final dragMagnitude = delta.distance / widget.size;
+      _targetDeformation = (widget.touchIntensity * (2.0 + dragMagnitude * 5.0))
+          .clamp(1.0, 4.0);
+    }
 
     // Convert drag delta to rotation velocity
-    // Horizontal drag = Y rotation, Vertical drag = X rotation
+    // Horizontal drag = Y rotation, Vertical drag = X rotation (INVERTED for natural feel)
     final intensity = widget.touchIntensity * 0.01;
 
     if (widget.physicsMode == MeshPhysicsMode.tilt ||
@@ -1035,12 +1045,12 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
       // In direct modes, touch directly rotates
       setState(() {
         _rotationY += delta.dx * intensity;
-        _rotationX += delta.dy * intensity;
+        _rotationX -= delta.dy * intensity; // INVERTED: drag up = rotate up
       });
     } else {
       // In physics modes, touch adds velocity (Mario 64 style spin)
       _velocityY += delta.dx * intensity;
-      _velocityX += delta.dy * intensity;
+      _velocityX -= delta.dy * intensity; // INVERTED: drag up = rotate up
     }
   }
 

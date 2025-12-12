@@ -17,6 +17,7 @@ class SplashMeshConfig {
   final double accelerometerFriction;
   final MeshPhysicsMode physicsMode;
   final bool enableTouch;
+  final bool enablePullToStretch;
   final double touchIntensity;
 
   const SplashMeshConfig({
@@ -35,6 +36,7 @@ class SplashMeshConfig {
     this.accelerometerFriction = 0.985,
     this.physicsMode = MeshPhysicsMode.momentum,
     this.enableTouch = true, // Touch + accelerometer work together
+    this.enablePullToStretch = true, // Mario 64 style vertex pulling
     this.touchIntensity = 1.0,
   });
 
@@ -58,7 +60,7 @@ const List<List<Color>> splashMeshColorPresets = [
 final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
   final prefs = await SharedPreferences.getInstance();
 
-  final size = prefs.getDouble('splash_mesh_size') ?? 300;
+  final size = prefs.getDouble('splash_mesh_size') ?? 600;
   final animationTypeName =
       prefs.getString('splash_mesh_animation_type') ?? 'none';
   final glowIntensity = prefs.getDouble('splash_mesh_glow_intensity') ?? 0.5;
@@ -76,6 +78,8 @@ final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
   final physicsModeName =
       prefs.getString('splash_mesh_physics_mode') ?? 'momentum';
   final enableTouch = prefs.getBool('splash_mesh_enable_touch') ?? false;
+  final enablePullToStretch =
+      prefs.getBool('splash_mesh_enable_pull_to_stretch') ?? true;
   final touchIntensity = prefs.getDouble('splash_mesh_touch_intensity') ?? 1.0;
 
   final animationType = MeshNodeAnimationType.values.firstWhere(
@@ -100,6 +104,7 @@ final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
     accelerometerFriction: accelFriction,
     physicsMode: physicsMode,
     enableTouch: enableTouch,
+    enablePullToStretch: enablePullToStretch,
     touchIntensity: touchIntensity,
   );
 });
@@ -132,6 +137,7 @@ class ConfiguredSplashMeshNode extends ConsumerWidget {
         friction: config.accelerometerFriction,
         physicsMode: config.physicsMode,
         enableTouch: config.enableTouch,
+        enablePullToStretch: config.enablePullToStretch,
         touchIntensity: config.touchIntensity,
       );
     } else {

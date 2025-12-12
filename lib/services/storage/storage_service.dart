@@ -365,6 +365,7 @@ class SettingsService {
     required double accelerometerFriction,
     String physicsMode = 'momentum',
     bool enableTouch = true,
+    bool enablePullToStretch = true,
     double touchIntensity = 1.0,
   }) async {
     await _preferences.setDouble('splash_mesh_size', size);
@@ -387,6 +388,10 @@ class SettingsService {
     );
     await _preferences.setString('splash_mesh_physics_mode', physicsMode);
     await _preferences.setBool('splash_mesh_enable_touch', enableTouch);
+    await _preferences.setBool(
+      'splash_mesh_enable_pull_to_stretch',
+      enablePullToStretch,
+    );
     await _preferences.setDouble('splash_mesh_touch_intensity', touchIntensity);
   }
 
@@ -412,6 +417,8 @@ class SettingsService {
       _preferences.getString('splash_mesh_physics_mode') ?? 'momentum';
   bool get splashMeshEnableTouch =>
       _preferences.getBool('splash_mesh_enable_touch') ?? true;
+  bool get splashMeshEnablePullToStretch =>
+      _preferences.getBool('splash_mesh_enable_pull_to_stretch') ?? true;
   double get splashMeshTouchIntensity =>
       _preferences.getDouble('splash_mesh_touch_intensity') ?? 1.0;
 
@@ -427,6 +434,7 @@ class SettingsService {
     await _preferences.remove('splash_mesh_accel_friction');
     await _preferences.remove('splash_mesh_physics_mode');
     await _preferences.remove('splash_mesh_enable_touch');
+    await _preferences.remove('splash_mesh_enable_pull_to_stretch');
     await _preferences.remove('splash_mesh_touch_intensity');
   }
 }

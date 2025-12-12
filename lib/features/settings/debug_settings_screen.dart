@@ -33,6 +33,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   double _accelerometerFriction = 0.985;
   MeshPhysicsMode _physicsMode = MeshPhysicsMode.momentum;
   bool _enableTouch = true;
+  bool _enablePullToStretch = true;
   double _touchIntensity = 1.0;
 
   SettingsService? _settingsService;
@@ -100,6 +101,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         orElse: () => MeshPhysicsMode.momentum,
       );
       _enableTouch = _settingsService!.splashMeshEnableTouch;
+      _enablePullToStretch = _settingsService!.splashMeshEnablePullToStretch;
       _touchIntensity = _settingsService!.splashMeshTouchIntensity;
       _hasUnsavedChanges = false;
     });
@@ -120,6 +122,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       accelerometerFriction: _accelerometerFriction,
       physicsMode: _physicsMode.name,
       enableTouch: _enableTouch,
+      enablePullToStretch: _enablePullToStretch,
       touchIntensity: _touchIntensity,
     );
 
@@ -523,7 +526,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    'Enable Touch Deformation',
+                    'Enable Touch Rotation',
                     style: TextStyle(
                       fontSize: 12,
                       color: AppTheme.textSecondary,
@@ -544,6 +547,31 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               ],
             ),
             if (_enableTouch) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Enable Pull-to-Stretch',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 24,
+                    child: Switch.adaptive(
+                      value: _enablePullToStretch,
+                      activeTrackColor: context.accentColor,
+                      onChanged: (v) {
+                        setState(() => _enablePullToStretch = v);
+                        _markChanged();
+                      },
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 16),
               _buildSliderRow(
                 label: 'Touch Intensity',

@@ -62,7 +62,7 @@ class _AutomationEditorScreenState
     final oldType = _trigger.type;
     final newType = newTrigger.type;
 
-    // If trigger type changed, update actions with new default text
+    // If trigger type changed, update name, description, and actions with new default text
     if (oldType != newType) {
       final newDefaultText = newType.defaultMessageText;
       final newDisplayName = newType.displayName;
@@ -83,27 +83,28 @@ class _AutomationEditorScreenState
           .toSet();
 
       // Update Name field if it matches any default trigger pattern
-      final currentName = _nameController.text;
+      final currentName = _nameController.text.trim();
       if (currentName.isEmpty ||
           allDisplayNames.contains(currentName) ||
           allAlertNames.contains(currentName)) {
         _nameController.text = '$newDisplayName Alert';
       }
 
-      // Update Description field if it matches any default pattern
-      final currentDesc = _descriptionController.text;
-      if (currentDesc.isEmpty ||
+      // Update Description field if it matches any default pattern or is a generic description
+      final currentDesc = _descriptionController.text.trim();
+      final shouldUpdateDesc = currentDesc.isEmpty ||
           allDefaultMessages.contains(currentDesc) ||
           allDefaultDescriptions.contains(currentDesc) ||
-          allDisplayNames.any(
-            (name) =>
-                currentDesc == 'Alert when ${name.toLowerCase()}' ||
-                currentDesc == 'Triggered when ${name.toLowerCase()}',
-          )) {
+          // Also match if description starts with "Triggered when" or "Alert when"
+          currentDesc.startsWith('Triggered when') ||
+          currentDesc.startsWith('Alert when');
+      
+      if (shouldUpdateDesc) {
         _descriptionController.text = newDefaultDesc;
       }
 
-      _actions = _actions.map((action) {
+      // Update actions with new default values
+      final updatedActions = _actions.map((action) {
         final newConfig = Map<String, dynamic>.from(action.config);
         var changed = false;
 
@@ -145,11 +146,18 @@ class _AutomationEditorScreenState
 
         return changed ? action.copyWith(config: newConfig) : action;
       }).toList();
-    }
 
-    setState(() {
-      _trigger = newTrigger;
-    });
+      // Update all state in a single setState call
+      setState(() {
+        _trigger = newTrigger;
+        _actions = updatedActions;
+      });
+    } else {
+      // Just update the trigger (e.g., config change within same type)
+      setState(() {
+        _trigger = newTrigger;
+      });
+    }
   }
 
   @override
