@@ -92,13 +92,14 @@ class _AutomationEditorScreenState
 
       // Update Description field if it matches any default pattern or is a generic description
       final currentDesc = _descriptionController.text.trim();
-      final shouldUpdateDesc = currentDesc.isEmpty ||
+      final shouldUpdateDesc =
+          currentDesc.isEmpty ||
           allDefaultMessages.contains(currentDesc) ||
           allDefaultDescriptions.contains(currentDesc) ||
           // Also match if description starts with "Triggered when" or "Alert when"
           currentDesc.startsWith('Triggered when') ||
           currentDesc.startsWith('Alert when');
-      
+
       if (shouldUpdateDesc) {
         _descriptionController.text = newDefaultDesc;
       }
