@@ -95,28 +95,21 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         leading: const HamburgerMenuButton(),
         title: const Text('World Mesh Map'),
         actions: [
-          // Search toggle
-          IconButton(
-            icon: Icon(
-              _showSearch ? Icons.close : Icons.search,
-              color: _showSearch ? accentColor : Colors.white,
+          // Search toggle (only show when search is NOT active)
+          if (!_showSearch)
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                setState(() {
+                  _showSearch = true;
+                  _showSearchResults = false;
+                });
+                // Auto-focus when opening search
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  _searchFocusNode.requestFocus();
+                });
+              },
             ),
-            onPressed: () {
-              setState(() {
-                _showSearch = !_showSearch;
-                _showSearchResults = false;
-                if (!_showSearch) {
-                  _searchQuery = '';
-                  _searchController.clear();
-                } else {
-                  // Auto-focus when opening search
-                  Future.delayed(const Duration(milliseconds: 100), () {
-                    _searchFocusNode.requestFocus();
-                  });
-                }
-              });
-            },
-          ),
           // Map style
           PopupMenuButton<MapTileStyle>(
             icon: const Icon(Icons.layers),
@@ -174,14 +167,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   height: 1,
                   color: AppTheme.darkBorder.withValues(alpha: 0.3),
                 ),
-              // Search results count
-              if (_showSearch && _searchQuery.isNotEmpty)
-                _buildSearchResultsHeader(
-                  theme,
-                  ref
-                      .watch(worldMeshFilteredNodesProvider(_searchQuery))
-                      .length,
-                ),
               // Map content (wrapping in Expanded with Stack for dropdown)
               Expanded(
                 child: Stack(
@@ -216,12 +201,27 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           controller: _searchController,
           focusNode: _searchFocusNode,
           style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: 'Find a node',
-            hintStyle: TextStyle(color: AppTheme.textTertiary),
-            prefixIcon: Icon(Icons.search, color: AppTheme.textTertiary),
+            hintStyle: const TextStyle(color: AppTheme.textTertiary),
+            prefixIcon: const Icon(Icons.search, color: AppTheme.textTertiary),
+            // Close button as suffix
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.close, color: AppTheme.textTertiary),
+              onPressed: () {
+                setState(() {
+                  _showSearch = false;
+                  _showSearchResults = false;
+                  _searchQuery = '';
+                  _searchController.clear();
+                });
+              },
+            ),
             border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
           ),
           onChanged: (value) {
             setState(() {
@@ -234,32 +234,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     );
   }
 
-  /// Build search results header showing count (matching direct messages)
-  Widget _buildSearchResultsHeader(ThemeData theme, int count) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: AppTheme.darkCard,
-      child: Row(
-        children: [
-          Icon(
-            Icons.info_outline,
-            size: 16,
-            color: AppTheme.textSecondary.withValues(alpha: 0.8),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            '$count node${count == 1 ? '' : 's'} found',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppTheme.textSecondary.withValues(alpha: 0.8),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Build search results overlay dropdown
+  /// Build search results overlay dropdown with lazy loading
   Widget _buildSearchResultsOverlay(
     ThemeData theme,
     List<WorldMeshNode> results,
@@ -267,14 +242,13 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     if (results.isEmpty) return const SizedBox.shrink();
 
     final accentColor = theme.colorScheme.primary;
-    final displayResults = results.take(10).toList();
 
     return Positioned(
       left: 8,
       right: 8,
       top: 0,
       child: Container(
-        constraints: const BoxConstraints(maxHeight: 350),
+        constraints: const BoxConstraints(maxHeight: 400),
         decoration: BoxDecoration(
           color: AppTheme.darkCard,
           borderRadius: BorderRadius.circular(12),
@@ -291,61 +265,44 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Results header
+            // Results header with count
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: Row(
                 children: [
+                  Icon(Icons.search, size: 14, color: AppTheme.textTertiary),
+                  const SizedBox(width: 8),
                   Text(
-                    '${results.length} RESULTS',
+                    '${results.length} node${results.length == 1 ? '' : 's'} found',
                     style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
                       color: AppTheme.textTertiary,
-                      letterSpacing: 1,
                     ),
                   ),
-                  const Spacer(),
-                  if (results.length > 10)
-                    Text(
-                      'Showing first 10',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppTheme.textTertiary,
-                      ),
-                    ),
                 ],
               ),
             ),
             const Divider(height: 1, color: AppTheme.darkBorder),
-            // Results list
+            // Lazy loading results list
             Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: displayResults.length,
-                itemBuilder: (context, index) {
-                  final node = displayResults[index];
-                  return _SearchResultTile(
-                    node: node,
-                    accentColor: accentColor,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      // Only navigate to the node location - don't show info card
-                      setState(() {
-                        _showSearchResults = false;
-                        _showSearch = false;
-                        _searchQuery = '';
-                        _searchController.clear();
-                        // Clear any selected node so info card doesn't show
-                        _selectedNode = null;
-                      });
-                      // Animate to the node
-                      _animatedMove(
-                        LatLng(node.latitudeDecimal, node.longitudeDecimal),
-                        12.0,
-                      );
-                    },
+              child: _LazySearchResultsList(
+                results: results,
+                accentColor: accentColor,
+                onTap: (node) {
+                  HapticFeedback.selectionClick();
+                  // Only navigate to the node location - don't show info card
+                  setState(() {
+                    _showSearchResults = false;
+                    _showSearch = false;
+                    _searchQuery = '';
+                    _searchController.clear();
+                    // Clear any selected node so info card doesn't show
+                    _selectedNode = null;
+                  });
+                  // Animate to the node
+                  _animatedMove(
+                    LatLng(node.latitudeDecimal, node.longitudeDecimal),
+                    12.0,
                   );
                 },
               ),
@@ -805,6 +762,94 @@ class _MapControlsWithZoomStateState extends State<_MapControlsWithZoomState> {
       showNavigation: false,
       showCompass: true,
       mapRotation: 0, // World mesh doesn't rotate
+    );
+  }
+}
+
+/// Lazy loading search results list - loads more as user scrolls
+class _LazySearchResultsList extends StatefulWidget {
+  final List<WorldMeshNode> results;
+  final Color accentColor;
+  final void Function(WorldMeshNode node) onTap;
+
+  const _LazySearchResultsList({
+    required this.results,
+    required this.accentColor,
+    required this.onTap,
+  });
+
+  @override
+  State<_LazySearchResultsList> createState() => _LazySearchResultsListState();
+}
+
+class _LazySearchResultsListState extends State<_LazySearchResultsList> {
+  static const int _pageSize = 20;
+  int _displayCount = 20;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // Load more when user scrolls near the bottom
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
+      _loadMore();
+    }
+  }
+
+  void _loadMore() {
+    if (_displayCount < widget.results.length) {
+      setState(() {
+        _displayCount = (_displayCount + _pageSize).clamp(
+          0,
+          widget.results.length,
+        );
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final displayResults = widget.results.take(_displayCount).toList();
+    final hasMore = _displayCount < widget.results.length;
+
+    return ListView.builder(
+      controller: _scrollController,
+      shrinkWrap: true,
+      padding: EdgeInsets.zero,
+      itemCount: displayResults.length + (hasMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        // Show loading indicator at the end if there's more to load
+        if (index >= displayResults.length) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: Text(
+                'Scroll for more...',
+                style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+              ),
+            ),
+          );
+        }
+
+        final node = displayResults[index];
+        return _SearchResultTile(
+          node: node,
+          accentColor: widget.accentColor,
+          onTap: () => widget.onTap(node),
+        );
+      },
     );
   }
 }
