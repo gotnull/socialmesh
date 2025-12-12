@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/floating_icons_background.dart';
 
-// Re-export the shared background widgets for convenience
-export '../../../core/widgets/hex_terrain.dart';
+// Re-export the shared background widget for convenience
 export '../../../core/widgets/floating_icons_background.dart';
 
 /// Connecting animation with status text and optional cancel button.

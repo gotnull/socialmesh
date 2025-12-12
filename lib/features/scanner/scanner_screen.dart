@@ -489,8 +489,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         backgroundColor: AppTheme.darkBackground,
         body: Stack(
           children: [
-            // Background - 3D HexTerrain
-            const Positioned.fill(child: HexTerrain()),
+            // Background - Beautiful parallax floating icons
+            const Positioned.fill(child: ConnectingAnimationBackground()),
             // Content in SafeArea - EXACT same as onboarding
             SafeArea(child: Center(child: _buildConnectingContent())),
           ],

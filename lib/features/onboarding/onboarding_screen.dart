@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
-import '../../core/widgets/hex_terrain.dart';
 import '../../providers/app_providers.dart';
+import '../scanner/widgets/connecting_animation.dart';
 import '../scanner/scanner_screen.dart';
 
 /// Onboarding screen for first-time users
@@ -160,8 +160,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       backgroundColor: AppTheme.darkBackground,
       body: Stack(
         children: [
-          // 3D HexTerrain background
-          const Positioned.fill(child: HexTerrain()),
+          // Beautiful parallax floating icons background
+          const Positioned.fill(child: ConnectingAnimationBackground()),
 
           // Main content
           SafeArea(

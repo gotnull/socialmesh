@@ -22,9 +22,9 @@ class SplashMeshConfig {
   const SplashMeshConfig({
     this.size = 300,
     this.animationType = MeshNodeAnimationType.none,
-    this.glowIntensity = 0.5,
+    this.glowIntensity = 1.0,
     this.lineThickness = 0.5,
-    this.nodeSize = 0.8,
+    this.nodeSize = 0.5,
     this.gradientColors = const [
       Color(0xFFFF6B4A),
       Color(0xFFE91E8C),
@@ -34,7 +34,7 @@ class SplashMeshConfig {
     this.accelerometerSensitivity = 1.0,
     this.accelerometerFriction = 0.985,
     this.physicsMode = MeshPhysicsMode.momentum,
-    this.enableTouch = false, // Off by default - experimental feature
+    this.enableTouch = true, // Touch + accelerometer work together
     this.touchIntensity = 1.0,
   });
 
