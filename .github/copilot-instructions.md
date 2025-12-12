@@ -41,6 +41,15 @@
 - Display existing data and allow inline editing.
 - Ensure interactions are polished, intuitive, and responsive.
 
+## Visual Design Philosophy
+- ALWAYS choose the most visually impressive and engaging implementation.
+- Never default to "simple" when "incredible" is achievable.
+- Prioritize sci-fi aesthetics: glowing effects, dynamic animations, futuristic shapes.
+- Use custom geometry over basic primitives (diamonds/octahedrons over cubes, etc.).
+- Add visual flair: pulsing animations, gradient effects, particle-like details.
+- Every visual element should feel premium and cutting-edge.
+- If something can glow, animate, or look more futuristic - make it so.
+
 ## Restrictions
 - Never run the Flutter app.
 - Never commit or push to git.
