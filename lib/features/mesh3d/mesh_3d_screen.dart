@@ -192,6 +192,12 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
+    // Watch stream providers for real-time data updates
+    // This ensures the 3D view rebuilds when new signal data arrives
+    ref.watch(currentRssiProvider);
+    ref.watch(currentSnrProvider);
+    ref.watch(currentChannelUtilProvider);
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
@@ -1704,53 +1710,77 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Select View Mode',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            ...Mesh3DViewMode.values.map(
-              (mode) => ListTile(
-                leading: Icon(
-                  mode.icon,
-                  color: mode == _currentMode
-                      ? Theme.of(context).colorScheme.primary
-                      : null,
-                ),
-                title: Text(mode.label),
-                subtitle: Text(
-                  mode.description,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.6),
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.3,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) => Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                selected: mode == _currentMode,
-                selectedTileColor: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _currentMode = mode);
-                  Navigator.pop(context);
-                },
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
+              const Text(
+                'Select View Mode',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  children: Mesh3DViewMode.values
+                      .map(
+                        (mode) => ListTile(
+                          leading: Icon(
+                            mode.icon,
+                            color: mode == _currentMode
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                          ),
+                          title: Text(mode.label),
+                          subtitle: Text(
+                            mode.description,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.6),
+                            ),
+                          ),
+                          selected: mode == _currentMode,
+                          selectedTileColor: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(() => _currentMode = mode);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

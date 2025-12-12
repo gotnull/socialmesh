@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/flip_3d_text.dart';
 import '../../../providers/app_providers.dart';
 
 /// Signal strength content widget - just the content without header wrapper
@@ -14,12 +15,9 @@ class SignalStrengthContent extends ConsumerStatefulWidget {
       SignalStrengthContentState();
 }
 
-class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
-    with SingleTickerProviderStateMixin {
+class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
   final List<MultiSignalData> _signalHistory = [];
   Timer? _updateTimer;
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
 
   // Smoothed values for animation
   double _displayRssi = -90.0;
@@ -29,13 +27,6 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
     _addDataPoint();
     _updateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       if (mounted) _addDataPoint();
@@ -45,7 +36,6 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
   @override
   void dispose() {
     _updateTimer?.cancel();
-    _pulseController.dispose();
     super.dispose();
   }
 
@@ -84,6 +74,16 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
     if (rssi >= -80) return 'Fair';
     if (rssi >= -90) return 'Weak';
     return 'Poor';
+  }
+
+  /// Convert RSSI to a percentage (0-100%)
+  /// -30 dBm = 100% (excellent)
+  /// -90 dBm = 0% (very weak)
+  double _getSignalPercentage(double rssi) {
+    // Clamp RSSI between -90 and -30
+    final clampedRssi = rssi.clamp(-90.0, -30.0);
+    // Convert to percentage (linear interpolation)
+    return ((clampedRssi + 90) / 60 * 100).clamp(0.0, 100.0);
   }
 
   Color _getSignalColor(double rssi) {
@@ -155,62 +155,27 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
 
   Widget _buildSignalHeader(double rssi, double snr, double channelUtil) {
     final signalColor = _getSignalColor(rssi);
+    final signalPercentage = _getSignalPercentage(rssi);
 
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // Animated signal indicator with pulse
-          AnimatedBuilder(
-            animation: _pulseAnimation,
-            builder: (context, child) {
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.easeOutCubic,
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: signalColor.withValues(
-                    alpha: 0.15 * _pulseAnimation.value,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: signalColor.withValues(
-                        alpha: 0.2 * _pulseAnimation.value,
-                      ),
-                      blurRadius: 8,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _AnimatedSignalIcon(rssi: rssi, color: signalColor),
-                    const SizedBox(height: 2),
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: rssi, end: rssi),
-                      duration: const Duration(milliseconds: 300),
-                      builder: (context, value, child) {
-                        return Text(
-                          '${value.toInt()}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: signalColor,
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
+          // 3D Percentage display
+          Expanded(
+            flex: 2,
+            child: Flip3DPercentage(
+              value: signalPercentage,
+              label: 'SIGNAL',
+              color: signalColor,
+              size: Flip3DSize.medium,
+              showGlow: true,
+            ),
           ),
           const SizedBox(width: 16),
-          // Signal stats
+          // Signal stats column
           Expanded(
+            flex: 3,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -234,36 +199,36 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
                         _getSignalQuality(rssi),
                         key: ValueKey(_getSignalQuality(rssi)),
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: signalColor,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.darkBackground,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        '${rssi.toInt()} dBm',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.textSecondary,
-                          fontFamily: 'monospace',
                         ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkBackground,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '${rssi.toInt()} dBm',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textSecondary,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     _AnimatedStatChip(
@@ -302,29 +267,6 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent>
           _LegendItem(color: AppTheme.accentOrange, label: 'Ch Util'),
         ],
       ),
-    );
-  }
-}
-
-/// Animated signal icon that changes based on RSSI value
-class _AnimatedSignalIcon extends StatelessWidget {
-  final double rssi;
-  final Color color;
-
-  const _AnimatedSignalIcon({required this.rssi, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOutBack,
-      builder: (context, scale, child) {
-        return Transform.scale(
-          scale: 0.8 + (0.2 * scale),
-          child: Icon(Icons.signal_cellular_alt, color: color, size: 24),
-        );
-      },
     );
   }
 }
