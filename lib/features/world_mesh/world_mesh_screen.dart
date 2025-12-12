@@ -148,11 +148,11 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         ],
       ),
       body: meshMapState.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => _buildLoadingState(theme),
         error: (error, _) => _buildErrorState(theme, error.toString()),
         data: (state) {
           if (state.isLoading && state.nodes.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return _buildLoadingState(theme);
           }
           if (state.error != null && state.nodes.isEmpty) {
             return _buildErrorState(theme, state.error!);
@@ -327,6 +327,101 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   ),
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build stunning loading state with Meshtastic Powered logo
+  Widget _buildLoadingState(ThemeData theme) {
+    final accentColor = theme.colorScheme.primary;
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppTheme.darkBackground,
+            AppTheme.darkCard,
+            AppTheme.darkBackground,
+          ],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Animated pulsing glow container
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.3, end: 1.0),
+              duration: const Duration(milliseconds: 1500),
+              curve: Curves.easeInOut,
+              builder: (context, value, child) {
+                return Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accentColor.withValues(alpha: 0.15 * value),
+                        blurRadius: 40 * value,
+                        spreadRadius: 10 * value,
+                      ),
+                    ],
+                  ),
+                  child: child,
+                );
+              },
+              child: Image.asset(
+                'assets/meshtastic_powered_landscape.png',
+                width: 240,
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 48),
+            // Loading indicator with text
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  'Connecting to global mesh network...',
+                  style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 14,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            // Subtle node count indicator
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeOut,
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Text(
+                    'Loading 10,000+ nodes worldwide',
+                    style: TextStyle(
+                      color: AppTheme.textTertiary,
+                      fontSize: 12,
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
