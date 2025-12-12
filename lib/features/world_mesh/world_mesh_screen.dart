@@ -3,16 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../core/map_config.dart';
+import '../../core/theme.dart';
 import '../../core/widgets/map_controls.dart';
-import '../../core/widgets/mesh_map_widget.dart';
-import '../../models/world_mesh_node.dart';
 import '../../providers/world_mesh_map_provider.dart';
-import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
 
 /// World Mesh Map screen showing all Meshtastic nodes from meshmap.net
@@ -32,14 +29,9 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   bool _showSearch = false;
 
   final TextEditingController _searchController = TextEditingController();
-  final PopupController _popupController = PopupController();
 
   // Animation controller for smooth movements
   AnimationController? _animationController;
-
-  // Cache markers to avoid rebuilding on every frame
-  List<Marker>? _cachedMarkers;
-  List<WorldMeshNode>? _cachedNodes;
 
   @override
   void dispose() {
@@ -223,46 +215,58 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         ? state.nodesWithPosition
         : ref.watch(worldMeshFilteredNodesProvider(_searchQuery));
 
-    // Cache markers - only rebuild if nodes or selection changed
-    final markers = _getOrBuildMarkers(nodes);
+    final accentColor = theme.colorScheme.primary;
 
     return Stack(
       children: [
-        // Use shared MeshMapWidget with clustering enabled
-        MeshMapWidget(
-          mapController: _mapController,
-          mapStyle: _mapStyle,
-          initialCenter: const LatLng(25, 0), // Global center
-          initialZoom: 3.0,
-          minZoom: 2.0,
-          maxZoom: 18.0,
-          disableRotation: true,
-          onPositionChanged: (position, hasGesture) {
-            // Update zoom without triggering rebuild - let ValueListenableBuilder handle it
-            _currentZoom = position.zoom;
-          },
-          onTap: (tapPosition, point) {
-            _popupController.hideAllPopups();
-          },
-          // Enable clustering for world mesh
-          enableClustering: true,
-          clusteredMarkers: markers,
-          clusterRadius:
-              80, // Fixed radius - don't vary with zoom to avoid rebuilds
-          popupController: _popupController,
-          popupBuilder: (context, marker) {
-            final node = _findNodeForMarker(marker, nodes);
-            if (node == null) return const SizedBox.shrink();
-            return _buildNodePopup(context, theme, node);
-          },
-          clusterBuilder: (context, markers) =>
-              _buildClusterMarker(theme, markers.length),
-          // Show attribution
-          showAttribution: true,
-          attributions: [
-            TextSourceAttribution('MeshMap.net', onTap: () {}),
-            TextSourceAttribution('${nodes.length} nodes', onTap: () {}),
-          ],
+        // Direct FlutterMap for maximum performance (like main mesh map)
+        RepaintBoundary(
+          child: FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: const LatLng(25, 0),
+              initialZoom: 3.0,
+              minZoom: 2.0,
+              maxZoom: 18.0,
+              backgroundColor: AppTheme.darkBackground,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+              ),
+              onPositionChanged: (position, hasGesture) {
+                _currentZoom = position.zoom;
+              },
+            ),
+            children: [
+              // Tile layer
+              TileLayer(
+                urlTemplate: _mapStyle.url,
+                subdomains: _mapStyle.subdomains,
+                userAgentPackageName: MapConfig.userAgentPackageName,
+                retinaMode: _mapStyle != MapTileStyle.satellite,
+              ),
+              // Use CircleLayer for 10k+ nodes - MUCH faster than Markers
+              CircleLayer(
+                circles: nodes.map((node) {
+                  return CircleMarker(
+                    point: LatLng(node.latitudeDecimal, node.longitudeDecimal),
+                    radius: 4,
+                    color: node.isRecentlySeen
+                        ? accentColor.withValues(alpha: 0.7)
+                        : Colors.grey.withValues(alpha: 0.4),
+                    borderColor: Colors.white.withValues(alpha: 0.5),
+                    borderStrokeWidth: 0.5,
+                  );
+                }).toList(),
+              ),
+              // Attribution
+              RichAttributionWidget(
+                alignment: AttributionAlignment.bottomLeft,
+                attributions: [
+                  TextSourceAttribution('MeshMap.net', onTap: () {}),
+                ],
+              ),
+            ],
+          ),
         ),
 
         // Use shared map controls with ValueListenableBuilder for zoom state
@@ -300,372 +304,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         ),
       ],
     );
-  }
-
-  /// Get cached markers or build new ones if needed
-  List<Marker> _getOrBuildMarkers(List<WorldMeshNode> nodes) {
-    // Only rebuild if the node list itself changed (identity check)
-    // Don't rebuild for selection changes - use popup instead
-    if (_cachedMarkers == null || !identical(_cachedNodes, nodes)) {
-      _cachedMarkers = _buildMarkersForNodes(nodes);
-      _cachedNodes = nodes;
-    }
-    return _cachedMarkers!;
-  }
-
-  /// Build markers once to avoid rebuilding on every frame
-  List<Marker> _buildMarkersForNodes(List<WorldMeshNode> nodes) {
-    // Build all markers with simple, identical widgets for performance
-    return nodes.map((node) => _buildMarker(node)).toList();
-  }
-
-  Marker _buildMarker(WorldMeshNode node) {
-    return Marker(
-      point: LatLng(node.latitudeDecimal, node.longitudeDecimal),
-      width: 16,
-      height: 16,
-      // Use key for efficient updates
-      key: ValueKey(node.nodeNum),
-      child: _SimpleNodeDot(isRecent: node.isRecentlySeen),
-    );
-  }
-
-  WorldMeshNode? _findNodeForMarker(Marker marker, List<WorldMeshNode> nodes) {
-    return nodes.firstWhere(
-      (n) =>
-          n.latitudeDecimal == marker.point.latitude &&
-          n.longitudeDecimal == marker.point.longitude,
-      orElse: () => nodes.first,
-    );
-  }
-
-  Widget _buildClusterMarker(ThemeData theme, int count) {
-    final accentColor = theme.colorScheme.primary;
-
-    // Simple cluster marker without expensive gradients/shadows for performance
-    final Color baseColor;
-    final double size;
-    if (count < 10) {
-      baseColor = accentColor;
-      size = 38;
-    } else if (count < 100) {
-      baseColor = Colors.orange;
-      size = 42;
-    } else if (count < 1000) {
-      baseColor = Colors.deepOrange;
-      size = 46;
-    } else {
-      baseColor = Colors.red;
-      size = 50;
-    }
-
-    // Use simple solid colors for better performance
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: baseColor.withValues(alpha: 0.85),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.9),
-          width: 2,
-        ),
-      ),
-      child: Center(
-        child: Text(
-          _formatCount(count),
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 11,
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _formatCount(int count) {
-    if (count < 1000) return count.toString();
-    if (count < 10000) return '${(count / 1000).toStringAsFixed(1)}k';
-    return '${count ~/ 1000}k';
-  }
-
-  Widget _buildNodePopup(
-    BuildContext context,
-    ThemeData theme,
-    WorldMeshNode node,
-  ) {
-    final accentColor = theme.colorScheme.primary;
-
-    return Container(
-      width: 280,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: Text(
-                    node.shortName.length > 2
-                        ? node.shortName.substring(0, 2)
-                        : node.shortName,
-                    style: TextStyle(
-                      color: accentColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      node.displayName,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      node.nodeId,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.6,
-                        ),
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Close button
-              IconButton(
-                icon: const Icon(Icons.close, size: 18),
-                onPressed: () => _popupController.hideAllPopups(),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-          const Divider(height: 1),
-          const SizedBox(height: 12),
-
-          // Info rows
-          _buildInfoRow(
-            theme,
-            Icons.memory,
-            'Hardware',
-            _formatHardwareModel(node.hwModel),
-          ),
-          _buildInfoRow(theme, Icons.person, 'Role', _formatRole(node.role)),
-          if (node.fwVersion != null)
-            _buildInfoRow(
-              theme,
-              Icons.system_update,
-              'Firmware',
-              node.fwVersion!,
-            ),
-          if (node.region != null)
-            _buildInfoRow(
-              theme,
-              Icons.language,
-              'Region',
-              '${node.region} / ${node.modemPreset ?? 'N/A'}',
-            ),
-          _buildInfoRow(
-            theme,
-            Icons.schedule,
-            'Last seen',
-            node.lastSeenString,
-          ),
-
-          // Metrics section
-          if (node.batteryLevel != null ||
-              node.chUtil != null ||
-              node.temperature != null) ...[
-            const SizedBox(height: 8),
-            const Divider(height: 1),
-            const SizedBox(height: 8),
-
-            Row(
-              children: [
-                if (node.batteryLevel != null)
-                  _buildMetricChip(
-                    theme,
-                    Icons.battery_std,
-                    node.batteryString!,
-                    _getBatteryColor(node.batteryLevel!),
-                  ),
-                if (node.chUtil != null)
-                  _buildMetricChip(
-                    theme,
-                    Icons.show_chart,
-                    '${node.chUtil!.toStringAsFixed(1)}%',
-                    Colors.blue,
-                  ),
-                if (node.temperature != null)
-                  _buildMetricChip(
-                    theme,
-                    Icons.thermostat,
-                    '${node.temperature!.toStringAsFixed(1)}°C',
-                    Colors.orange,
-                  ),
-              ],
-            ),
-          ],
-
-          // Actions
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton.icon(
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: node.nodeId));
-                  showSuccessSnackBar(context, 'Node ID copied');
-                },
-                icon: const Icon(Icons.copy, size: 16),
-                label: const Text('Copy ID'),
-              ),
-              const SizedBox(width: 8),
-              TextButton.icon(
-                onPressed: () {
-                  _animatedMove(
-                    LatLng(node.latitudeDecimal, node.longitudeDecimal),
-                    14.0,
-                  );
-                  _popupController.hideAllPopups();
-                },
-                icon: const Icon(Icons.center_focus_strong, size: 16),
-                label: const Text('Focus'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(
-    ThemeData theme,
-    IconData icon,
-    String label,
-    String value,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 16,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetricChip(
-    ThemeData theme,
-    IconData icon,
-    String value,
-    Color color,
-  ) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getBatteryColor(int level) {
-    if (level > 100) return Colors.green; // Plugged in
-    if (level > 60) return Colors.green;
-    if (level > 30) return Colors.orange;
-    return Colors.red;
-  }
-
-  String _formatHardwareModel(String model) {
-    return model
-        .replaceAll('_', ' ')
-        .replaceAll('HELTEC', 'Heltec')
-        .replaceAll('TBEAM', 'T-Beam')
-        .replaceAll('TLORA', 'T-LoRa')
-        .replaceAll('RAK', 'RAK');
-  }
-
-  String _formatRole(String role) {
-    return role
-        .replaceAll('_', ' ')
-        .split(' ')
-        .map(
-          (w) => w.isNotEmpty
-              ? '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}'
-              : '',
-        )
-        .join(' ');
   }
 
   Widget _buildStatsBar(
@@ -743,32 +381,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     if (diff.inSeconds < 60) return 'just now';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     return '${diff.inHours}h ago';
-  }
-}
-
-/// Super simple node dot for maximum performance with thousands of markers
-class _SimpleNodeDot extends StatelessWidget {
-  final bool isRecent;
-
-  const _SimpleNodeDot({required this.isRecent});
-
-  @override
-  Widget build(BuildContext context) {
-    // Use darker, more transparent colors to not obscure the map
-    final color = isRecent
-        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.7)
-        : Colors.blueGrey.withValues(alpha: 0.5);
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.6),
-          width: 1,
-        ),
-      ),
-    );
   }
 }
 
