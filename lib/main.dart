@@ -31,6 +31,7 @@ import 'features/device/device_config_screen.dart';
 import 'features/device/region_selection_screen.dart';
 import 'features/navigation/main_shell.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'features/onboarding/screens/mesh_brain_emotion_test_screen.dart';
 import 'features/timeline/timeline_screen.dart';
 import 'features/presence/presence_screen.dart';
 import 'features/discovery/node_discovery_overlay.dart';
@@ -296,6 +297,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
             const RegionSelectionScreen(isInitialSetup: true),
         '/main': (context) => const MainShell(),
         '/onboarding': (context) => const OnboardingScreen(),
+        '/emotion-test': (context) => const MeshBrainEmotionTestScreen(),
         '/timeline': (context) => const TimelineScreen(),
         '/presence': (context) => const PresenceScreen(),
       },

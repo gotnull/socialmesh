@@ -1502,6 +1502,12 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             label: 'Test Info Snackbar',
             onTap: () => showInfoSnackBar(context, 'This is a test info!'),
           ),
+          const SizedBox(height: 8),
+          _buildQuickTestButton(
+            icon: Icons.psychology,
+            label: 'Mesh Brain Emotions',
+            onTap: () => Navigator.pushNamed(context, '/emotion-test'),
+          ),
         ],
       ),
     );

@@ -4,32 +4,394 @@ import '../../../core/widgets/animated_mesh_node.dart';
 
 /// Emotional states for the mesh brain advisor
 enum MeshBrainMood {
+  // === POSITIVE EMOTIONS ===
   /// Default curious state - gentle wobble, looking around
   idle,
 
-  /// Processing/thinking - faster spin, concentrated
-  thinking,
+  /// Happy - bouncy, bright glow
+  happy,
 
-  /// Excited/happy - bouncy, sparkly
+  /// Excited - very bouncy, sparkly, fast
   excited,
 
-  /// Approving/nodding - up-down motion
-  approving,
+  /// Celebrating - wild spin, particles everywhere
+  celebrating,
 
-  /// Beckoning/inviting - forward pulse
-  inviting,
+  /// Laughing - rapid shake, jittery bounce
+  laughing,
 
-  /// Alert/attention - quick pulse, bright
-  alert,
+  /// Tickled - quick small wiggles, giggly motion
+  tickled,
 
-  /// Speaking/explaining - rhythmic pulse synced to speech
+  /// Smiling - warm glow, gentle pulse
+  smiling,
+
+  /// Love - heart-like pulse, pink tint, floating
+  love,
+
+  /// Proud - puffed up, tall stance, bright
+  proud,
+
+  /// Grateful - gentle bow motion, warm
+  grateful,
+
+  /// Hopeful - upward gaze, rising motion
+  hopeful,
+
+  /// Playful - bouncing around, mischievous
+  playful,
+
+  /// Energized - rapid spin, electric
+  energized,
+
+  // === NEUTRAL/COMMUNICATIVE ===
+  /// Thinking - concentrated spin
+  thinking,
+
+  /// Speaking - rhythmic pulse
   speaking,
 
-  /// Sleepy/dormant - slow breathe, dim
+  /// Curious - tilting, examining
+  curious,
+
+  /// Focused - intense, still, bright center
+  focused,
+
+  /// Approving - nodding up-down
+  approving,
+
+  /// Inviting - beckoning forward pulse
+  inviting,
+
+  /// Winking - asymmetric playful pulse
+  winking,
+
+  /// Listening - attentive, slight lean
+  listening,
+
+  // === ALERTNESS ===
+  /// Alert - quick pulse, bright
+  alert,
+
+  /// Surprised - sudden scale up, flash
+  surprised,
+
+  /// Alarmed - rapid flash, warning
+  alarmed,
+
+  // === NEGATIVE/LOW ENERGY ===
+  /// Sad - droopy, dim, slow
+  sad,
+
+  /// Sleepy/dormant - very slow breathe
   dormant,
 
-  /// Celebrating - wild spin, particles
-  celebrating,
+  /// Tired - sluggish, dim
+  tired,
+
+  /// Bored - slow droop, occasional sigh
+  bored,
+
+  /// Confused - wobbling, tilting, uncertain
+  confused,
+
+  /// Nervous - shaky, flickering
+  nervous,
+
+  /// Scared - trembling, shrinking
+  scared,
+
+  /// Embarrassed - shrinking, warm tint
+  embarrassed,
+
+  /// Shy - small, hiding motion
+  shy,
+
+  /// Grumpy - heavy, dark, slow
+  grumpy,
+
+  /// Annoyed - twitching, irritated
+  annoyed,
+
+  /// Angry - red tint, sharp movements
+  angry,
+
+  // === SPECIAL ===
+  /// Dizzy - spiral motion, disoriented
+  dizzy,
+
+  /// Glitching - digital corruption effect
+  glitching,
+
+  /// Zen - peaceful, meditative, slow breathe
+  zen,
+
+  /// Sassy - attitude, side movements
+  sassy,
+
+  /// Mischievous - sneaky, plotting
+  mischievous,
+
+  /// Hypnotized - spiral, trance-like
+  hypnotized,
+
+  /// Loading - processing indicator
+  loading,
+
+  /// Error - red flash, shake
+  error,
+
+  /// Success - green glow, celebration
+  success,
+}
+
+/// Extension to get display name and emoji for moods
+extension MeshBrainMoodExtension on MeshBrainMood {
+  String get displayName {
+    switch (this) {
+      case MeshBrainMood.idle:
+        return 'Idle';
+      case MeshBrainMood.happy:
+        return 'Happy';
+      case MeshBrainMood.excited:
+        return 'Excited';
+      case MeshBrainMood.celebrating:
+        return 'Celebrating';
+      case MeshBrainMood.laughing:
+        return 'Laughing';
+      case MeshBrainMood.tickled:
+        return 'Tickled';
+      case MeshBrainMood.smiling:
+        return 'Smiling';
+      case MeshBrainMood.love:
+        return 'Love';
+      case MeshBrainMood.proud:
+        return 'Proud';
+      case MeshBrainMood.grateful:
+        return 'Grateful';
+      case MeshBrainMood.hopeful:
+        return 'Hopeful';
+      case MeshBrainMood.playful:
+        return 'Playful';
+      case MeshBrainMood.energized:
+        return 'Energized';
+      case MeshBrainMood.thinking:
+        return 'Thinking';
+      case MeshBrainMood.speaking:
+        return 'Speaking';
+      case MeshBrainMood.curious:
+        return 'Curious';
+      case MeshBrainMood.focused:
+        return 'Focused';
+      case MeshBrainMood.approving:
+        return 'Approving';
+      case MeshBrainMood.inviting:
+        return 'Inviting';
+      case MeshBrainMood.winking:
+        return 'Winking';
+      case MeshBrainMood.listening:
+        return 'Listening';
+      case MeshBrainMood.alert:
+        return 'Alert';
+      case MeshBrainMood.surprised:
+        return 'Surprised';
+      case MeshBrainMood.alarmed:
+        return 'Alarmed';
+      case MeshBrainMood.sad:
+        return 'Sad';
+      case MeshBrainMood.dormant:
+        return 'Dormant';
+      case MeshBrainMood.tired:
+        return 'Tired';
+      case MeshBrainMood.bored:
+        return 'Bored';
+      case MeshBrainMood.confused:
+        return 'Confused';
+      case MeshBrainMood.nervous:
+        return 'Nervous';
+      case MeshBrainMood.scared:
+        return 'Scared';
+      case MeshBrainMood.embarrassed:
+        return 'Embarrassed';
+      case MeshBrainMood.shy:
+        return 'Shy';
+      case MeshBrainMood.grumpy:
+        return 'Grumpy';
+      case MeshBrainMood.annoyed:
+        return 'Annoyed';
+      case MeshBrainMood.angry:
+        return 'Angry';
+      case MeshBrainMood.dizzy:
+        return 'Dizzy';
+      case MeshBrainMood.glitching:
+        return 'Glitching';
+      case MeshBrainMood.zen:
+        return 'Zen';
+      case MeshBrainMood.sassy:
+        return 'Sassy';
+      case MeshBrainMood.mischievous:
+        return 'Mischievous';
+      case MeshBrainMood.hypnotized:
+        return 'Hypnotized';
+      case MeshBrainMood.loading:
+        return 'Loading';
+      case MeshBrainMood.error:
+        return 'Error';
+      case MeshBrainMood.success:
+        return 'Success';
+    }
+  }
+
+  String get emoji {
+    switch (this) {
+      case MeshBrainMood.idle:
+        return '😐';
+      case MeshBrainMood.happy:
+        return '😊';
+      case MeshBrainMood.excited:
+        return '🤩';
+      case MeshBrainMood.celebrating:
+        return '🎉';
+      case MeshBrainMood.laughing:
+        return '😂';
+      case MeshBrainMood.tickled:
+        return '🤭';
+      case MeshBrainMood.smiling:
+        return '😄';
+      case MeshBrainMood.love:
+        return '😍';
+      case MeshBrainMood.proud:
+        return '😤';
+      case MeshBrainMood.grateful:
+        return '🙏';
+      case MeshBrainMood.hopeful:
+        return '🌟';
+      case MeshBrainMood.playful:
+        return '😜';
+      case MeshBrainMood.energized:
+        return '⚡';
+      case MeshBrainMood.thinking:
+        return '🤔';
+      case MeshBrainMood.speaking:
+        return '💬';
+      case MeshBrainMood.curious:
+        return '🧐';
+      case MeshBrainMood.focused:
+        return '🎯';
+      case MeshBrainMood.approving:
+        return '👍';
+      case MeshBrainMood.inviting:
+        return '👋';
+      case MeshBrainMood.winking:
+        return '😉';
+      case MeshBrainMood.listening:
+        return '👂';
+      case MeshBrainMood.alert:
+        return '⚠️';
+      case MeshBrainMood.surprised:
+        return '😲';
+      case MeshBrainMood.alarmed:
+        return '🚨';
+      case MeshBrainMood.sad:
+        return '😢';
+      case MeshBrainMood.dormant:
+        return '😴';
+      case MeshBrainMood.tired:
+        return '😩';
+      case MeshBrainMood.bored:
+        return '😑';
+      case MeshBrainMood.confused:
+        return '😵';
+      case MeshBrainMood.nervous:
+        return '😰';
+      case MeshBrainMood.scared:
+        return '😱';
+      case MeshBrainMood.embarrassed:
+        return '😳';
+      case MeshBrainMood.shy:
+        return '🙈';
+      case MeshBrainMood.grumpy:
+        return '😠';
+      case MeshBrainMood.annoyed:
+        return '😤';
+      case MeshBrainMood.angry:
+        return '🔥';
+      case MeshBrainMood.dizzy:
+        return '💫';
+      case MeshBrainMood.glitching:
+        return '👾';
+      case MeshBrainMood.zen:
+        return '🧘';
+      case MeshBrainMood.sassy:
+        return '💅';
+      case MeshBrainMood.mischievous:
+        return '😈';
+      case MeshBrainMood.hypnotized:
+        return '🌀';
+      case MeshBrainMood.loading:
+        return '⏳';
+      case MeshBrainMood.error:
+        return '❌';
+      case MeshBrainMood.success:
+        return '✅';
+    }
+  }
+
+  /// Get category for grouping
+  String get category {
+    switch (this) {
+      case MeshBrainMood.idle:
+      case MeshBrainMood.happy:
+      case MeshBrainMood.excited:
+      case MeshBrainMood.celebrating:
+      case MeshBrainMood.laughing:
+      case MeshBrainMood.tickled:
+      case MeshBrainMood.smiling:
+      case MeshBrainMood.love:
+      case MeshBrainMood.proud:
+      case MeshBrainMood.grateful:
+      case MeshBrainMood.hopeful:
+      case MeshBrainMood.playful:
+      case MeshBrainMood.energized:
+        return 'Positive';
+      case MeshBrainMood.thinking:
+      case MeshBrainMood.speaking:
+      case MeshBrainMood.curious:
+      case MeshBrainMood.focused:
+      case MeshBrainMood.approving:
+      case MeshBrainMood.inviting:
+      case MeshBrainMood.winking:
+      case MeshBrainMood.listening:
+        return 'Neutral';
+      case MeshBrainMood.alert:
+      case MeshBrainMood.surprised:
+      case MeshBrainMood.alarmed:
+        return 'Alert';
+      case MeshBrainMood.sad:
+      case MeshBrainMood.dormant:
+      case MeshBrainMood.tired:
+      case MeshBrainMood.bored:
+      case MeshBrainMood.confused:
+      case MeshBrainMood.nervous:
+      case MeshBrainMood.scared:
+      case MeshBrainMood.embarrassed:
+      case MeshBrainMood.shy:
+      case MeshBrainMood.grumpy:
+      case MeshBrainMood.annoyed:
+      case MeshBrainMood.angry:
+        return 'Negative';
+      case MeshBrainMood.dizzy:
+      case MeshBrainMood.glitching:
+      case MeshBrainMood.zen:
+      case MeshBrainMood.sassy:
+      case MeshBrainMood.mischievous:
+      case MeshBrainMood.hypnotized:
+      case MeshBrainMood.loading:
+      case MeshBrainMood.error:
+      case MeshBrainMood.success:
+        return 'Special';
+    }
+  }
 }
 
 /// A sentient mesh node brain that acts as an onboarding advisor.
@@ -56,8 +418,8 @@ class MeshNodeBrain extends StatefulWidget {
   /// Whether to show thought particles
   final bool showThoughtParticles;
 
-  /// External text being "spoken" (affects animation rhythm)
-  final String? speakingText;
+  /// Whether to show expression overlay (eyes, mouth)
+  final bool showExpression;
 
   const MeshNodeBrain({
     super.key,
@@ -68,7 +430,7 @@ class MeshNodeBrain extends StatefulWidget {
     this.interactive = true,
     this.onTap,
     this.showThoughtParticles = true,
-    this.speakingText,
+    this.showExpression = true,
   });
 
   @override
@@ -81,9 +443,10 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
   late AnimationController _wobbleController;
   late AnimationController _pulseController;
   late AnimationController _bounceController;
-  late AnimationController _moodTransitionController;
   late AnimationController _particleController;
   late AnimationController _orbitController;
+  late AnimationController _expressionController;
+  late AnimationController _specialController;
 
   // Animations
   late Animation<double> _wobbleX;
@@ -102,47 +465,45 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     super.initState();
     _initializeControllers();
     _initializeParticles();
-    _updateAnimationsForMood(widget.mood, animate: false);
+    _updateAnimationsForMood(widget.mood);
   }
 
   void _initializeControllers() {
-    // Wobble - organic swaying motion (prime ratio durations for non-repeating)
     _wobbleController = AnimationController(
       duration: const Duration(milliseconds: 2731),
       vsync: this,
     );
 
-    // Pulse - glow breathing
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1879),
       vsync: this,
     );
 
-    // Bounce - vertical motion
     _bounceController = AnimationController(
       duration: const Duration(milliseconds: 1237),
       vsync: this,
     );
 
-    // Mood transition
-    _moodTransitionController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-
-    // Particles
     _particleController = AnimationController(
       duration: const Duration(milliseconds: 3000),
       vsync: this,
     )..repeat();
 
-    // Orbit rings
     _orbitController = AnimationController(
       duration: const Duration(milliseconds: 8000),
       vsync: this,
     )..repeat();
 
-    // Initialize animations
+    _expressionController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _specialController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
     _wobbleX = Tween<double>(begin: -0.08, end: 0.08).animate(
       CurvedAnimation(parent: _wobbleController, curve: Curves.easeInOut),
     );
@@ -158,13 +519,13 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
   }
 
   void _initializeParticles() {
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 12; i++) {
       _particles.add(
         _ThoughtParticle(
-          angle: (i / 8) * 2 * math.pi,
-          radius: 0.6 + _random.nextDouble() * 0.4,
-          speed: 0.5 + _random.nextDouble() * 0.5,
-          size: 3 + _random.nextDouble() * 4,
+          angle: (i / 12) * 2 * math.pi,
+          radius: 0.5 + _random.nextDouble() * 0.5,
+          speed: 0.3 + _random.nextDouble() * 0.7,
+          size: 2 + _random.nextDouble() * 5,
           phase: _random.nextDouble() * 2 * math.pi,
         ),
       );
@@ -175,18 +536,18 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
   void didUpdateWidget(MeshNodeBrain oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.mood != widget.mood) {
-      _updateAnimationsForMood(widget.mood, animate: true);
+      _updateAnimationsForMood(widget.mood);
     }
   }
 
-  void _updateAnimationsForMood(MeshBrainMood mood, {required bool animate}) {
-    // Stop all animations first
+  void _updateAnimationsForMood(MeshBrainMood mood) {
     _wobbleController.stop();
     _pulseController.stop();
     _bounceController.stop();
+    _specialController.stop();
 
-    // Reset and configure based on mood
     switch (mood) {
+      // === POSITIVE ===
       case MeshBrainMood.idle:
         _wobbleController
           ..duration = const Duration(milliseconds: 2731)
@@ -196,12 +557,15 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           ..repeat(reverse: true);
         break;
 
-      case MeshBrainMood.thinking:
+      case MeshBrainMood.happy:
         _wobbleController
-          ..duration = const Duration(milliseconds: 800)
+          ..duration = const Duration(milliseconds: 600)
           ..repeat(reverse: true);
         _pulseController
-          ..duration = const Duration(milliseconds: 600)
+          ..duration = const Duration(milliseconds: 500)
+          ..repeat(reverse: true);
+        _bounceController
+          ..duration = const Duration(milliseconds: 800)
           ..repeat(reverse: true);
         break;
 
@@ -214,6 +578,136 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           ..repeat(reverse: true);
         _bounceController
           ..duration = const Duration(milliseconds: 500)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.celebrating:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 300)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 200)
+          ..repeat(reverse: true);
+        _bounceController
+          ..duration = const Duration(milliseconds: 350)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.laughing:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 120)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 150)
+          ..repeat(reverse: true);
+        _bounceController
+          ..duration = const Duration(milliseconds: 200)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.tickled:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 80)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 100)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.smiling:
+        _pulseController
+          ..duration = const Duration(milliseconds: 1500)
+          ..repeat(reverse: true);
+        _wobbleController
+          ..duration = const Duration(milliseconds: 2000)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.love:
+        _pulseController
+          ..duration = const Duration(milliseconds: 600)
+          ..repeat(reverse: true);
+        _bounceController
+          ..duration = const Duration(milliseconds: 1200)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.proud:
+        _pulseController
+          ..duration = const Duration(milliseconds: 1000)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.grateful:
+        _bounceController
+          ..duration = const Duration(milliseconds: 2000)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 1500)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.hopeful:
+        _bounceController
+          ..duration = const Duration(milliseconds: 1500)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 1200)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.playful:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 500)
+          ..repeat(reverse: true);
+        _bounceController
+          ..duration = const Duration(milliseconds: 600)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 400)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.energized:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 200)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 150)
+          ..repeat(reverse: true);
+        break;
+
+      // === NEUTRAL ===
+      case MeshBrainMood.thinking:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 800)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 600)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.speaking:
+        _pulseController
+          ..duration = const Duration(milliseconds: 400)
+          ..repeat(reverse: true);
+        _wobbleController
+          ..duration = const Duration(milliseconds: 600)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.curious:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 1200)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 1000)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.focused:
+        _pulseController
+          ..duration = const Duration(milliseconds: 2000)
           ..repeat(reverse: true);
         break;
 
@@ -235,6 +729,25 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           ..repeat(reverse: true);
         break;
 
+      case MeshBrainMood.winking:
+        _pulseController
+          ..duration = const Duration(milliseconds: 800)
+          ..repeat(reverse: true);
+        _expressionController
+          ..duration = const Duration(milliseconds: 300)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.listening:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 1500)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 1800)
+          ..repeat(reverse: true);
+        break;
+
+      // === ALERT ===
       case MeshBrainMood.alert:
         _pulseController
           ..duration = const Duration(milliseconds: 200)
@@ -244,12 +757,31 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           ..repeat(reverse: true);
         break;
 
-      case MeshBrainMood.speaking:
+      case MeshBrainMood.surprised:
         _pulseController
-          ..duration = const Duration(milliseconds: 400)
+          ..duration = const Duration(milliseconds: 150)
+          ..repeat(reverse: true);
+        _specialController
+          ..duration = const Duration(milliseconds: 300)
+          ..forward();
+        break;
+
+      case MeshBrainMood.alarmed:
+        _pulseController
+          ..duration = const Duration(milliseconds: 100)
           ..repeat(reverse: true);
         _wobbleController
-          ..duration = const Duration(milliseconds: 600)
+          ..duration = const Duration(milliseconds: 80)
+          ..repeat(reverse: true);
+        break;
+
+      // === NEGATIVE ===
+      case MeshBrainMood.sad:
+        _pulseController
+          ..duration = const Duration(milliseconds: 3000)
+          ..repeat(reverse: true);
+        _bounceController
+          ..duration = const Duration(milliseconds: 2500)
           ..repeat(reverse: true);
         break;
 
@@ -259,21 +791,180 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           ..repeat(reverse: true);
         break;
 
-      case MeshBrainMood.celebrating:
+      case MeshBrainMood.tired:
+        _pulseController
+          ..duration = const Duration(milliseconds: 3500)
+          ..repeat(reverse: true);
         _wobbleController
-          ..duration = const Duration(milliseconds: 300)
+          ..duration = const Duration(milliseconds: 4000)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.bored:
+        _pulseController
+          ..duration = const Duration(milliseconds: 3000)
+          ..repeat(reverse: true);
+        _wobbleController
+          ..duration = const Duration(milliseconds: 5000)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.confused:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 600)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 800)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.nervous:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 150)
           ..repeat(reverse: true);
         _pulseController
           ..duration = const Duration(milliseconds: 200)
           ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.scared:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 100)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 120)
+          ..repeat(reverse: true);
         _bounceController
-          ..duration = const Duration(milliseconds: 350)
+          ..duration = const Duration(milliseconds: 150)
           ..repeat(reverse: true);
         break;
-    }
 
-    if (animate) {
-      _moodTransitionController.forward(from: 0);
+      case MeshBrainMood.embarrassed:
+        _pulseController
+          ..duration = const Duration(milliseconds: 500)
+          ..repeat(reverse: true);
+        _bounceController
+          ..duration = const Duration(milliseconds: 800)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.shy:
+        _pulseController
+          ..duration = const Duration(milliseconds: 1500)
+          ..repeat(reverse: true);
+        _wobbleController
+          ..duration = const Duration(milliseconds: 2000)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.grumpy:
+        _pulseController
+          ..duration = const Duration(milliseconds: 2000)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.annoyed:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 300)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 400)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.angry:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 200)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 150)
+          ..repeat(reverse: true);
+        break;
+
+      // === SPECIAL ===
+      case MeshBrainMood.dizzy:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 400)
+          ..repeat();
+        _pulseController
+          ..duration = const Duration(milliseconds: 500)
+          ..repeat(reverse: true);
+        _specialController
+          ..duration = const Duration(milliseconds: 2000)
+          ..repeat();
+        break;
+
+      case MeshBrainMood.glitching:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 50)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 80)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.zen:
+        _pulseController
+          ..duration = const Duration(milliseconds: 5000)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.sassy:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 700)
+          ..repeat(reverse: true);
+        _bounceController
+          ..duration = const Duration(milliseconds: 500)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 600)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.mischievous:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 800)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 500)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.hypnotized:
+        _specialController
+          ..duration = const Duration(milliseconds: 3000)
+          ..repeat();
+        _pulseController
+          ..duration = const Duration(milliseconds: 1500)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.loading:
+        _specialController
+          ..duration = const Duration(milliseconds: 1500)
+          ..repeat();
+        _pulseController
+          ..duration = const Duration(milliseconds: 800)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.error:
+        _wobbleController
+          ..duration = const Duration(milliseconds: 100)
+          ..repeat(reverse: true);
+        _pulseController
+          ..duration = const Duration(milliseconds: 200)
+          ..repeat(reverse: true);
+        break;
+
+      case MeshBrainMood.success:
+        _pulseController
+          ..duration = const Duration(milliseconds: 400)
+          ..repeat(reverse: true);
+        _bounceController
+          ..duration = const Duration(milliseconds: 600)
+          ..repeat(reverse: true);
+        break;
     }
   }
 
@@ -282,47 +973,133 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     _wobbleController.dispose();
     _pulseController.dispose();
     _bounceController.dispose();
-    _moodTransitionController.dispose();
     _particleController.dispose();
     _orbitController.dispose();
+    _expressionController.dispose();
+    _specialController.dispose();
     super.dispose();
   }
 
-  List<Color> get _colors =>
-      widget.colors ??
-      const [Color(0xFFFF6B4A), Color(0xFFE91E8C), Color(0xFF4F6AF6)];
+  List<Color> get _defaultColors {
+    // Return mood-specific colors
+    switch (widget.mood) {
+      case MeshBrainMood.love:
+        return const [Color(0xFFFF69B4), Color(0xFFFF1493), Color(0xFFFF69B4)];
+      case MeshBrainMood.angry:
+        return const [Color(0xFFFF4444), Color(0xFFCC0000), Color(0xFFFF6666)];
+      case MeshBrainMood.sad:
+        return const [Color(0xFF6699CC), Color(0xFF336699), Color(0xFF99CCFF)];
+      case MeshBrainMood.scared:
+        return const [Color(0xFF9966CC), Color(0xFF663399), Color(0xFFCC99FF)];
+      case MeshBrainMood.error:
+        return const [Color(0xFFFF0000), Color(0xFFCC0000), Color(0xFFFF3333)];
+      case MeshBrainMood.success:
+        return const [Color(0xFF00FF00), Color(0xFF00CC00), Color(0xFF66FF66)];
+      case MeshBrainMood.energized:
+        return const [Color(0xFFFFFF00), Color(0xFFFFCC00), Color(0xFFFFFF66)];
+      case MeshBrainMood.zen:
+        return const [Color(0xFF00FFFF), Color(0xFF00CCCC), Color(0xFF66FFFF)];
+      case MeshBrainMood.glitching:
+        return const [Color(0xFF00FF00), Color(0xFFFF00FF), Color(0xFF00FFFF)];
+      case MeshBrainMood.embarrassed:
+        return const [Color(0xFFFF9999), Color(0xFFFF6666), Color(0xFFFFCCCC)];
+      default:
+        return const [Color(0xFFFF6B4A), Color(0xFFE91E8C), Color(0xFF4F6AF6)];
+    }
+  }
+
+  List<Color> get _colors => widget.colors ?? _defaultColors;
 
   double get _moodGlowMultiplier {
     switch (widget.mood) {
       case MeshBrainMood.idle:
+      case MeshBrainMood.listening:
+      case MeshBrainMood.curious:
         return 1.0;
       case MeshBrainMood.thinking:
+      case MeshBrainMood.speaking:
+      case MeshBrainMood.approving:
+      case MeshBrainMood.smiling:
+        return 1.2;
+      case MeshBrainMood.happy:
+      case MeshBrainMood.hopeful:
+      case MeshBrainMood.grateful:
+      case MeshBrainMood.inviting:
         return 1.3;
       case MeshBrainMood.excited:
-        return 1.6;
-      case MeshBrainMood.approving:
-        return 1.2;
-      case MeshBrainMood.inviting:
-        return 1.4;
+      case MeshBrainMood.proud:
+      case MeshBrainMood.playful:
+      case MeshBrainMood.love:
+        return 1.5;
       case MeshBrainMood.alert:
-        return 1.8;
-      case MeshBrainMood.speaking:
-        return 1.2;
-      case MeshBrainMood.dormant:
-        return 0.5;
+      case MeshBrainMood.surprised:
+      case MeshBrainMood.winking:
+        return 1.6;
       case MeshBrainMood.celebrating:
+      case MeshBrainMood.energized:
+      case MeshBrainMood.success:
+        return 1.8;
+      case MeshBrainMood.laughing:
+      case MeshBrainMood.tickled:
+        return 1.7;
+      case MeshBrainMood.alarmed:
+      case MeshBrainMood.angry:
+      case MeshBrainMood.error:
         return 2.0;
+      case MeshBrainMood.dormant:
+      case MeshBrainMood.tired:
+      case MeshBrainMood.bored:
+        return 0.5;
+      case MeshBrainMood.sad:
+      case MeshBrainMood.grumpy:
+        return 0.6;
+      case MeshBrainMood.shy:
+      case MeshBrainMood.embarrassed:
+        return 0.8;
+      case MeshBrainMood.nervous:
+      case MeshBrainMood.scared:
+      case MeshBrainMood.confused:
+        return 1.4;
+      case MeshBrainMood.annoyed:
+        return 1.3;
+      case MeshBrainMood.dizzy:
+      case MeshBrainMood.hypnotized:
+        return 1.5;
+      case MeshBrainMood.glitching:
+        return 2.2;
+      case MeshBrainMood.zen:
+        return 0.9;
+      case MeshBrainMood.sassy:
+      case MeshBrainMood.mischievous:
+        return 1.4;
+      case MeshBrainMood.focused:
+        return 1.6;
+      case MeshBrainMood.loading:
+        return 1.2;
     }
   }
 
   double get _moodScale {
     switch (widget.mood) {
       case MeshBrainMood.excited:
-        return 1.1;
+      case MeshBrainMood.happy:
+      case MeshBrainMood.playful:
+        return 1.08;
       case MeshBrainMood.celebrating:
+      case MeshBrainMood.laughing:
+        return 1.12;
+      case MeshBrainMood.proud:
         return 1.15;
+      case MeshBrainMood.surprised:
+        return 1.2;
       case MeshBrainMood.dormant:
-        return 0.95;
+      case MeshBrainMood.tired:
+      case MeshBrainMood.sad:
+        return 0.92;
+      case MeshBrainMood.shy:
+      case MeshBrainMood.scared:
+      case MeshBrainMood.embarrassed:
+        return 0.88;
       default:
         return 1.0;
     }
@@ -337,9 +1114,10 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           _wobbleController,
           _pulseController,
           _bounceController,
-          _moodTransitionController,
           _particleController,
           _orbitController,
+          _expressionController,
+          _specialController,
         ]),
         builder: (context, child) {
           return SizedBox(
@@ -362,6 +1140,9 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
 
                 // Inner core glow
                 _buildCoreGlow(),
+
+                // Expression overlay (eyes, mouth effects)
+                if (widget.showExpression) _buildExpressionOverlay(),
               ],
             ),
           );
@@ -375,7 +1156,6 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     final baseColor = _colors[1];
 
     return [
-      // Outer ring
       Container(
         width: widget.size * 1.5,
         height: widget.size * 1.5,
@@ -391,7 +1171,6 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           ),
         ),
       ),
-      // Middle ring
       Container(
         width: widget.size * 1.25,
         height: widget.size * 1.25,
@@ -412,10 +1191,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
 
   List<Widget> _buildThoughtParticles() {
     final particles = <Widget>[];
-    final isActive =
-        widget.mood == MeshBrainMood.thinking ||
-        widget.mood == MeshBrainMood.excited ||
-        widget.mood == MeshBrainMood.celebrating;
+    final isActive = _shouldShowParticles;
 
     if (!isActive) return particles;
 
@@ -429,7 +1205,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           (0.8 + 0.2 * math.sin(progress * math.pi * 2));
 
       final x = math.cos(angle) * radius;
-      final y = math.sin(angle) * radius * 0.6; // Flatten for 3D effect
+      final y = math.sin(angle) * radius * 0.6;
       final opacity = math.sin(progress * math.pi) * 0.8;
 
       particles.add(
@@ -460,17 +1236,43 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     return particles;
   }
 
+  bool get _shouldShowParticles {
+    switch (widget.mood) {
+      case MeshBrainMood.thinking:
+      case MeshBrainMood.excited:
+      case MeshBrainMood.celebrating:
+      case MeshBrainMood.love:
+      case MeshBrainMood.laughing:
+      case MeshBrainMood.energized:
+      case MeshBrainMood.confused:
+      case MeshBrainMood.dizzy:
+      case MeshBrainMood.success:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   Widget _buildOrbitalRings() {
     final rotation = _orbitController.value * 2 * math.pi;
-    final isActive = widget.mood != MeshBrainMood.dormant;
+    final isActive =
+        widget.mood != MeshBrainMood.dormant &&
+        widget.mood != MeshBrainMood.tired &&
+        widget.mood != MeshBrainMood.sad;
 
     if (!isActive) return const SizedBox.shrink();
+
+    double extraRotation = 0;
+    if (widget.mood == MeshBrainMood.dizzy ||
+        widget.mood == MeshBrainMood.hypnotized) {
+      extraRotation = _specialController.value * 4 * math.pi;
+    }
 
     return Transform(
       transform: Matrix4.identity()
         ..setEntry(3, 2, 0.001)
         ..rotateX(0.3)
-        ..rotateY(rotation),
+        ..rotateY(rotation + extraRotation),
       alignment: Alignment.center,
       child: CustomPaint(
         size: Size(widget.size * 1.3, widget.size * 1.3),
@@ -484,18 +1286,39 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
   }
 
   Widget _buildBrainMesh() {
-    // Calculate wobble offsets
-    final wobbleX = _wobbleX.value;
-    final wobbleY = _wobbleY.value;
+    double wobbleX = _wobbleX.value;
+    double wobbleY = _wobbleY.value;
+
+    // Special wobble modifications
+    if (widget.mood == MeshBrainMood.dizzy) {
+      final dizzyAngle = _specialController.value * 2 * math.pi;
+      wobbleX += math.sin(dizzyAngle) * 0.2;
+      wobbleY += math.cos(dizzyAngle) * 0.15;
+    } else if (widget.mood == MeshBrainMood.sassy) {
+      wobbleX *= 1.5; // More side-to-side attitude
+    } else if (widget.mood == MeshBrainMood.curious) {
+      wobbleX *= 0.5;
+      wobbleY = math.sin(_wobbleController.value * math.pi) * 0.15; // Tilt
+    }
 
     // Calculate bounce offset
     double bounceOffset = 0;
     if (widget.mood == MeshBrainMood.excited ||
-        widget.mood == MeshBrainMood.approving ||
-        widget.mood == MeshBrainMood.celebrating) {
-      bounceOffset = math.sin(_bounce.value * math.pi) * 8;
-    } else if (widget.mood == MeshBrainMood.inviting) {
-      bounceOffset = math.sin(_bounce.value * math.pi * 2) * 4;
+        widget.mood == MeshBrainMood.happy ||
+        widget.mood == MeshBrainMood.celebrating ||
+        widget.mood == MeshBrainMood.laughing ||
+        widget.mood == MeshBrainMood.playful ||
+        widget.mood == MeshBrainMood.success) {
+      bounceOffset = math.sin(_bounce.value * math.pi) * 10;
+    } else if (widget.mood == MeshBrainMood.approving) {
+      bounceOffset = math.sin(_bounce.value * math.pi * 2) * 6;
+    } else if (widget.mood == MeshBrainMood.sad ||
+        widget.mood == MeshBrainMood.tired) {
+      bounceOffset = -math.sin(_bounce.value * math.pi) * 4; // Drooping
+    } else if (widget.mood == MeshBrainMood.hopeful) {
+      bounceOffset = -math.sin(_bounce.value * math.pi) * 8; // Rising up
+    } else if (widget.mood == MeshBrainMood.grateful) {
+      bounceOffset = math.sin(_bounce.value * math.pi) * 5; // Gentle bow
     }
 
     // Scale animation
@@ -524,12 +1347,20 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     switch (widget.mood) {
       case MeshBrainMood.thinking:
       case MeshBrainMood.speaking:
+      case MeshBrainMood.focused:
         return MeshNodeAnimationType.rotate;
       case MeshBrainMood.excited:
       case MeshBrainMood.celebrating:
+      case MeshBrainMood.energized:
+      case MeshBrainMood.success:
         return MeshNodeAnimationType.pulseRotate;
       case MeshBrainMood.dormant:
+      case MeshBrainMood.tired:
+      case MeshBrainMood.zen:
         return MeshNodeAnimationType.breathe;
+      case MeshBrainMood.loading:
+      case MeshBrainMood.hypnotized:
+        return MeshNodeAnimationType.rotate;
       default:
         return MeshNodeAnimationType.tumble;
     }
@@ -551,6 +1382,73 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
               Colors.transparent,
             ],
             stops: const [0.0, 0.4, 1.0],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpressionOverlay() {
+    // Build mood-specific overlays (eyes, effects, etc.)
+    switch (widget.mood) {
+      case MeshBrainMood.love:
+        return _buildHeartParticles();
+      case MeshBrainMood.dizzy:
+        return _buildDizzyEffect();
+      case MeshBrainMood.hypnotized:
+        return _buildHypnoEffect();
+      case MeshBrainMood.glitching:
+        return _buildGlitchEffect();
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildHeartParticles() {
+    return Positioned.fill(
+      child: CustomPaint(
+        painter: _HeartParticlesPainter(
+          progress: _particleController.value,
+          color: const Color(0xFFFF69B4),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDizzyEffect() {
+    return Transform.rotate(
+      angle: _specialController.value * 4 * math.pi,
+      child: CustomPaint(
+        size: Size(widget.size * 1.2, widget.size * 1.2),
+        painter: _DizzyStarsPainter(
+          progress: _specialController.value,
+          color: Colors.yellow,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHypnoEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.3, widget.size * 1.3),
+      painter: _HypnoSpiralPainter(
+        progress: _specialController.value,
+        colors: _colors,
+      ),
+    );
+  }
+
+  Widget _buildGlitchEffect() {
+    final offset = (_random.nextDouble() - 0.5) * 4;
+    return Transform.translate(
+      offset: Offset(offset, offset),
+      child: Opacity(
+        opacity: 0.3 + _random.nextDouble() * 0.4,
+        child: Container(
+          width: widget.size * 0.8,
+          height: widget.size * 0.8,
+          decoration: BoxDecoration(
+            border: Border.all(color: _colors[_random.nextInt(3)], width: 2),
           ),
         ),
       ),
@@ -596,7 +1494,6 @@ class _OrbitalRingsPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2 * 0.85;
 
-    // Draw multiple orbital arcs
     for (int i = 0; i < 3; i++) {
       final startAngle = progress * 2 * math.pi + (i * math.pi * 2 / 3);
       final sweepAngle = math.pi * 0.6;
@@ -620,4 +1517,139 @@ class _OrbitalRingsPainter extends CustomPainter {
   @override
   bool shouldRepaint(_OrbitalRingsPainter oldDelegate) =>
       progress != oldDelegate.progress || intensity != oldDelegate.intensity;
+}
+
+/// Heart particles painter for love mood
+class _HeartParticlesPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _HeartParticlesPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final random = math.Random(42);
+
+    for (int i = 0; i < 6; i++) {
+      final angle = (i / 6) * 2 * math.pi + progress * math.pi;
+      final distance = 30 + random.nextDouble() * 20;
+      final heartSize = 6 + random.nextDouble() * 4;
+      final opacity = (math.sin((progress + i / 6) * 2 * math.pi) + 1) / 2;
+
+      final x = center.dx + math.cos(angle) * distance;
+      final y = center.dy + math.sin(angle) * distance - progress * 20;
+
+      _drawHeart(
+        canvas,
+        Offset(x, y),
+        heartSize,
+        color.withValues(alpha: opacity * 0.8),
+      );
+    }
+  }
+
+  void _drawHeart(Canvas canvas, Offset center, double size, Color color) {
+    final path = Path();
+    path.moveTo(center.dx, center.dy + size * 0.3);
+    path.cubicTo(
+      center.dx - size,
+      center.dy - size * 0.5,
+      center.dx - size * 0.5,
+      center.dy - size,
+      center.dx,
+      center.dy - size * 0.3,
+    );
+    path.cubicTo(
+      center.dx + size * 0.5,
+      center.dy - size,
+      center.dx + size,
+      center.dy - size * 0.5,
+      center.dx,
+      center.dy + size * 0.3,
+    );
+
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_HeartParticlesPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Dizzy stars painter
+class _DizzyStarsPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _DizzyStarsPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    for (int i = 0; i < 5; i++) {
+      final angle = (i / 5) * 2 * math.pi + progress * 4 * math.pi;
+      final distance = size.width * 0.35;
+      final x = center.dx + math.cos(angle) * distance;
+      final y = center.dy + math.sin(angle) * distance;
+
+      _drawStar(canvas, Offset(x, y), 8, color.withValues(alpha: 0.8));
+    }
+  }
+
+  void _drawStar(Canvas canvas, Offset center, double size, Color color) {
+    final path = Path();
+    for (int i = 0; i < 5; i++) {
+      final angle = (i * 4 * math.pi / 5) - math.pi / 2;
+      final point = Offset(
+        center.dx + math.cos(angle) * size,
+        center.dy + math.sin(angle) * size,
+      );
+      if (i == 0) {
+        path.moveTo(point.dx, point.dy);
+      } else {
+        path.lineTo(point.dx, point.dy);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_DizzyStarsPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Hypno spiral painter
+class _HypnoSpiralPainter extends CustomPainter {
+  final double progress;
+  final List<Color> colors;
+
+  _HypnoSpiralPainter({required this.progress, required this.colors});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    for (int ring = 0; ring < 4; ring++) {
+      final radius = (ring + 1) * size.width / 10;
+      final startAngle = progress * 2 * math.pi * (ring.isEven ? 1 : -1);
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        math.pi * 1.5,
+        false,
+        Paint()
+          ..color = colors[ring % colors.length].withValues(alpha: 0.4)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_HypnoSpiralPainter oldDelegate) =>
+      progress != oldDelegate.progress;
 }
