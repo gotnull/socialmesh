@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/logging.dart';
 import '../core/widgets/animated_mesh_node.dart';
+import '../services/config/mesh_firestore_config_service.dart';
 
 /// Configuration for the splash/connecting screen mesh node
 class SplashMeshConfig {
@@ -58,10 +60,106 @@ const List<List<Color>> splashMeshColorPresets = [
   [Color(0xFFFFFFFF), Color(0xFFAAAAAA), Color(0xFF666666)], // Mono
 ];
 
-/// Provider that loads splash mesh config from SharedPreferences
+/// Provider that loads splash mesh config
+/// Priority: Firestore (with timeout) -> Local SharedPreferences -> Defaults
 final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
   final prefs = await SharedPreferences.getInstance();
 
+  // Try to fetch from Firestore first (with 3 second timeout)
+  MeshConfigData? remoteConfig;
+  try {
+    await MeshFirestoreConfigService.instance.initialize();
+    remoteConfig = await MeshFirestoreConfigService.instance
+        .getRemoteConfig()
+        .timeout(
+          const Duration(seconds: 3),
+          onTimeout: () {
+            AppLogging.settings(
+              '⏱️ Firestore config fetch timed out, using local',
+            );
+            return null;
+          },
+        );
+
+    if (remoteConfig != null) {
+      AppLogging.settings('✅ Loaded mesh config from Firestore');
+      // Save to local for offline use
+      await _saveConfigToPrefs(prefs, remoteConfig);
+    }
+  } catch (e) {
+    AppLogging.settings('⚠️ Firestore config fetch failed: $e');
+  }
+
+  // If we got remote config, use it
+  if (remoteConfig != null) {
+    return _configFromMeshConfigData(remoteConfig);
+  }
+
+  // Fall back to local SharedPreferences
+  AppLogging.settings('📱 Using local mesh config');
+  return _loadConfigFromPrefs(prefs);
+});
+
+/// Save MeshConfigData to SharedPreferences for offline use
+Future<void> _saveConfigToPrefs(
+  SharedPreferences prefs,
+  MeshConfigData config,
+) async {
+  await prefs.setDouble('splash_mesh_size', config.size);
+  await prefs.setString('splash_mesh_animation_type', config.animationType);
+  await prefs.setDouble('splash_mesh_glow_intensity', config.glowIntensity);
+  await prefs.setDouble('splash_mesh_line_thickness', config.lineThickness);
+  await prefs.setDouble('splash_mesh_node_size', config.nodeSize);
+  await prefs.setInt('splash_mesh_color_preset', config.colorPreset);
+  await prefs.setBool('splash_mesh_use_accelerometer', config.useAccelerometer);
+  await prefs.setDouble(
+    'splash_mesh_accel_sensitivity',
+    config.accelerometerSensitivity,
+  );
+  await prefs.setDouble(
+    'splash_mesh_accel_friction',
+    config.accelerometerFriction,
+  );
+  await prefs.setString('splash_mesh_physics_mode', config.physicsMode);
+  await prefs.setBool('splash_mesh_enable_touch', config.enableTouch);
+  await prefs.setBool(
+    'splash_mesh_enable_pull_to_stretch',
+    config.enablePullToStretch,
+  );
+  await prefs.setDouble('splash_mesh_touch_intensity', config.touchIntensity);
+  await prefs.setDouble(
+    'splash_mesh_stretch_intensity',
+    config.stretchIntensity,
+  );
+}
+
+/// Convert MeshConfigData to SplashMeshConfig
+SplashMeshConfig _configFromMeshConfigData(MeshConfigData data) {
+  final colorPreset = data.colorPreset.clamp(
+    0,
+    splashMeshColorPresets.length - 1,
+  );
+
+  return SplashMeshConfig(
+    size: data.size,
+    animationType: data.animationTypeEnum,
+    glowIntensity: data.glowIntensity,
+    lineThickness: data.lineThickness,
+    nodeSize: data.nodeSize,
+    gradientColors: splashMeshColorPresets[colorPreset],
+    useAccelerometer: data.useAccelerometer,
+    accelerometerSensitivity: data.accelerometerSensitivity,
+    accelerometerFriction: data.accelerometerFriction,
+    physicsMode: data.physicsModeEnum,
+    enableTouch: data.enableTouch,
+    enablePullToStretch: data.enablePullToStretch,
+    touchIntensity: data.touchIntensity,
+    stretchIntensity: data.stretchIntensity,
+  );
+}
+
+/// Load config from SharedPreferences
+SplashMeshConfig _loadConfigFromPrefs(SharedPreferences prefs) {
   final size = prefs.getDouble('splash_mesh_size') ?? 600;
   final animationTypeName =
       prefs.getString('splash_mesh_animation_type') ?? 'none';
@@ -112,7 +210,7 @@ final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
     touchIntensity: touchIntensity,
     stretchIntensity: stretchIntensity,
   );
-});
+}
 
 /// Widget that displays the configured splash mesh node
 class ConfiguredSplashMeshNode extends ConsumerWidget {

@@ -8,6 +8,7 @@ import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animated_mesh_node.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/secret_gesture_detector.dart';
 import '../../services/config/mesh_firestore_config_service.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../services/storage/storage_service.dart';
@@ -40,6 +41,12 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   bool _enablePullToStretch = false;
   double _touchIntensity = 0.5; // Subtle
   double _stretchIntensity = 0.3;
+
+  // Secret gesture configuration
+  SecretGesturePattern _secretPattern = SecretGesturePattern.sevenTaps;
+  Duration _secretTimeWindow = const Duration(seconds: 3);
+  bool _secretShowFeedback = true;
+  bool _secretEnableHaptics = true;
 
   // Save location preference
   MeshConfigSaveLocation _saveLocation = MeshConfigSaveLocation.localDevice;
@@ -507,16 +514,264 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         title: const Text('Debug Settings'),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: Column(
         children: [
-          _buildMeshNodePlayground(),
-          const SizedBox(height: 24),
-          _buildNotificationTest(),
-          const SizedBox(height: 24),
-          _buildQuickTests(),
-          const SizedBox(height: 32),
+          // Scrollable content
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _buildMeshNodePlayground(),
+                const SizedBox(height: 24),
+                _buildNotificationTest(),
+                const SizedBox(height: 24),
+                _buildQuickTests(),
+                const SizedBox(height: 24),
+                _buildSecretGestureConfig(),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+          // Fixed bottom action bar
+          _buildFixedBottomBar(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFixedBottomBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        border: Border(
+          top: BorderSide(color: AppTheme.darkBorder.withAlpha(150)),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(60),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Save Location Toggle
+            Row(
+              children: [
+                const Text(
+                  'Save to:',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkBackground,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppTheme.darkBorder.withAlpha(100),
+                      ),
+                    ),
+                    child: Row(
+                      children: MeshConfigSaveLocation.values.map((location) {
+                        final isSelected = location == _saveLocation;
+                        return Expanded(
+                          child: BouncyTap(
+                            onTap: () {
+                              setState(() => _saveLocation = location);
+                              _markChanged();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? context.accentColor.withAlpha(40)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    location.icon,
+                                    size: 14,
+                                    color: isSelected
+                                        ? context.accentColor
+                                        : AppTheme.textSecondary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    location ==
+                                            MeshConfigSaveLocation.localDevice
+                                        ? 'Local'
+                                        : 'Global',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w600
+                                          : FontWeight.w400,
+                                      color: isSelected
+                                          ? context.accentColor
+                                          : AppTheme.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Load from Firestore mini button
+                BouncyTap(
+                  onTap: _isLoadingRemote ? null : _loadFromFirestore,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryBlue.withAlpha(20),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppTheme.primaryBlue.withAlpha(60),
+                      ),
+                    ),
+                    child: _isLoadingRemote
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppTheme.primaryBlue,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.cloud_download_rounded,
+                            size: 18,
+                            color: AppTheme.primaryBlue,
+                          ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // Save/Reset buttons
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: BouncyTap(
+                    onTap: _saveConfig,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        gradient: _hasUnsavedChanges
+                            ? LinearGradient(
+                                colors: [
+                                  context.accentColor.withAlpha(60),
+                                  context.accentColor.withAlpha(40),
+                                ],
+                              )
+                            : null,
+                        color: _hasUnsavedChanges
+                            ? null
+                            : AppTheme.darkBackground,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: _hasUnsavedChanges
+                              ? context.accentColor
+                              : AppTheme.darkBorder,
+                          width: _hasUnsavedChanges ? 1.5 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _saveLocation == MeshConfigSaveLocation.global
+                                ? Icons.cloud_upload_rounded
+                                : Icons.save_rounded,
+                            size: 18,
+                            color: _hasUnsavedChanges
+                                ? context.accentColor
+                                : AppTheme.textSecondary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _hasUnsavedChanges
+                                ? (_saveLocation ==
+                                          MeshConfigSaveLocation.global
+                                      ? 'Save to Cloud'
+                                      : 'Save Local')
+                                : 'Saved',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _hasUnsavedChanges
+                                  ? context.accentColor
+                                  : AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: BouncyTap(
+                    onTap: _resetConfig,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkBackground,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppTheme.darkBorder),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.restore_rounded,
+                            size: 18,
+                            color: AppTheme.textSecondary,
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            'Reset',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (_hasUnsavedChanges) ...[
+              const SizedBox(height: 6),
+              Text(
+                'Restart app to apply splash screen changes',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: AppTheme.textTertiary.withAlpha(180),
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -580,33 +835,59 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             onVerticalDragUpdate: (_) {},
             onVerticalDragEnd: (_) {},
             child: Container(
-              height: 340,
+              height: (_size + 40).clamp(200, 500),
               decoration: BoxDecoration(
                 color: AppTheme.darkBackground,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppTheme.darkBorder.withAlpha(100)),
               ),
-              child: Center(
-                // ALWAYS use AccelerometerMeshNode - physicsMode.touchOnly disables accelerometer
-                child: AccelerometerMeshNode(
-                  size: _size,
-                  animationType: _animationType,
-                  animate: _animate,
-                  glowIntensity: _glowIntensity,
-                  lineThickness: _lineThickness,
-                  nodeSize: _nodeSize,
-                  gradientColors: _colorPresets[_selectedColorPreset],
-                  accelerometerSensitivity: _accelerometerSensitivity,
-                  friction: _accelerometerFriction,
-                  // When accelerometer disabled, use touchOnly mode
-                  physicsMode: _useAccelerometer
-                      ? _physicsMode
-                      : MeshPhysicsMode.touchOnly,
-                  enableTouch: _enableTouch,
-                  enablePullToStretch: _enablePullToStretch,
-                  touchIntensity: _touchIntensity,
-                  stretchIntensity: _stretchIntensity,
-                ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // ALWAYS use AccelerometerMeshNode - physicsMode.touchOnly disables accelerometer
+                  AccelerometerMeshNode(
+                    size: _size,
+                    animationType: _animationType,
+                    animate: _animate,
+                    glowIntensity: _glowIntensity,
+                    lineThickness: _lineThickness,
+                    nodeSize: _nodeSize,
+                    gradientColors: _colorPresets[_selectedColorPreset],
+                    accelerometerSensitivity: _accelerometerSensitivity,
+                    friction: _accelerometerFriction,
+                    // When accelerometer disabled, use touchOnly mode
+                    physicsMode: _useAccelerometer
+                        ? _physicsMode
+                        : MeshPhysicsMode.touchOnly,
+                    enableTouch: _enableTouch,
+                    enablePullToStretch: _enablePullToStretch,
+                    touchIntensity: _touchIntensity,
+                    stretchIntensity: _stretchIntensity,
+                  ),
+                  // Size indicator overlay
+                  Positioned(
+                    bottom: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        '${_size.toInt()}px (1:1)',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.white70,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -1014,220 +1295,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 20),
-
-          // Save Location Selector
-          _buildSectionLabel('Save Location'),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppTheme.darkBorder.withAlpha(100)),
-            ),
-            child: Row(
-              children: MeshConfigSaveLocation.values.map((location) {
-                final isSelected = location == _saveLocation;
-                return Expanded(
-                  child: BouncyTap(
-                    onTap: () {
-                      setState(() => _saveLocation = location);
-                      _markChanged();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? context.accentColor.withAlpha(40)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            location.icon,
-                            size: 16,
-                            color: isSelected
-                                ? context.accentColor
-                                : AppTheme.textSecondary,
-                          ),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              location == MeshConfigSaveLocation.localDevice
-                                  ? 'Local'
-                                  : 'Global',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                                color: isSelected
-                                    ? context.accentColor
-                                    : AppTheme.textSecondary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _saveLocation.description,
-            style: const TextStyle(
-              fontSize: 11,
-              color: AppTheme.textTertiary,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Load from Firestore button
-          BouncyTap(
-            onTap: _isLoadingRemote ? null : _loadFromFirestore,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryBlue.withAlpha(20),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppTheme.primaryBlue.withAlpha(60)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (_isLoadingRemote)
-                    const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppTheme.primaryBlue,
-                      ),
-                    )
-                  else
-                    const Icon(
-                      Icons.cloud_download_rounded,
-                      size: 18,
-                      color: AppTheme.primaryBlue,
-                    ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _isLoadingRemote ? 'Loading...' : 'Load from Firestore',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.primaryBlue,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Save/Reset buttons for splash screen config
-          _buildSectionLabel('Splash Screen Config'),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: BouncyTap(
-                  onTap: _saveConfig,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: _hasUnsavedChanges
-                          ? context.accentColor.withAlpha(40)
-                          : AppTheme.darkBackground,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: _hasUnsavedChanges
-                            ? context.accentColor
-                            : AppTheme.darkBorder,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.save_rounded,
-                          size: 18,
-                          color: _hasUnsavedChanges
-                              ? context.accentColor
-                              : AppTheme.textSecondary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _hasUnsavedChanges ? 'Save Config' : 'Saved',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: _hasUnsavedChanges
-                                ? context.accentColor
-                                : AppTheme.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: BouncyTap(
-                  onTap: _resetConfig,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: AppTheme.darkBackground,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppTheme.darkBorder),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.restore_rounded,
-                          size: 18,
-                          color: AppTheme.textSecondary,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Reset Defaults',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (_hasUnsavedChanges) ...[
-            const SizedBox(height: 8),
-            const Text(
-              '• Changes will apply to splash/connecting screens on next app restart',
-              style: TextStyle(
-                fontSize: 11,
-                color: AppTheme.textTertiary,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -1435,6 +1502,327 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildSecretGestureConfig() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryPurple.withAlpha(60),
+                      AppTheme.primaryBlue.withAlpha(40),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.gesture,
+                  color: AppTheme.primaryPurple,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Secret Gesture Config',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      'Configure hidden access patterns',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Pattern selector
+          _buildSectionLabel('GESTURE PATTERN'),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppTheme.darkBorder),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<SecretGesturePattern>(
+                value: _secretPattern,
+                isExpanded: true,
+                dropdownColor: AppTheme.darkCard,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                icon: const Icon(
+                  Icons.keyboard_arrow_down,
+                  color: AppTheme.textSecondary,
+                ),
+                items: SecretGesturePattern.values.map((pattern) {
+                  return DropdownMenuItem(
+                    value: pattern,
+                    child: Row(
+                      children: [
+                        Icon(
+                          _getPatternIcon(pattern),
+                          size: 18,
+                          color: AppTheme.primaryPurple,
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              pattern.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              _getPatternDescription(pattern),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: AppTheme.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _secretPattern = value;
+                    });
+                  }
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Time window slider
+          _buildSliderRow(
+            label: 'Time Window',
+            value: _secretTimeWindow.inMilliseconds.toDouble(),
+            min: 1000,
+            max: 10000,
+            divisions: 18,
+            displayValue:
+                '${(_secretTimeWindow.inMilliseconds / 1000).toStringAsFixed(1)}s',
+            onChanged: (v) => setState(() {
+              _secretTimeWindow = Duration(milliseconds: v.toInt());
+            }),
+          ),
+          const SizedBox(height: 16),
+
+          // Toggle options
+          _buildToggle(
+            label: 'Show Feedback',
+            value: _secretShowFeedback,
+            onChanged: (v) => setState(() => _secretShowFeedback = v),
+          ),
+          const SizedBox(height: 8),
+          _buildToggle(
+            label: 'Enable Haptics',
+            value: _secretEnableHaptics,
+            onChanged: (v) => setState(() => _secretEnableHaptics = v),
+          ),
+          const SizedBox(height: 20),
+
+          // Test area
+          _buildSectionLabel('TEST GESTURE'),
+          const SizedBox(height: 8),
+          SecretGestureDetector(
+            pattern: _secretPattern,
+            timeWindow: _secretTimeWindow,
+            showFeedback: _secretShowFeedback,
+            enableHaptics: _secretEnableHaptics,
+            onSecretUnlocked: () {
+              showSuccessSnackBar(
+                context,
+                '✨ Secret gesture triggered! Pattern: ${_secretPattern.name}',
+              );
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppTheme.primaryPurple.withAlpha(20),
+                    AppTheme.primaryBlue.withAlpha(20),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.primaryPurple.withAlpha(60)),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    _getPatternIcon(_secretPattern),
+                    size: 32,
+                    color: AppTheme.primaryPurple.withAlpha(180),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Test ${_secretPattern.name} here',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _getPatternInstructions(_secretPattern),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.textTertiary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Generated code snippet
+          _buildSectionLabel('CODE SNIPPET'),
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E2E),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppTheme.darkBorder.withAlpha(100)),
+            ),
+            child: SelectableText(
+              _generateGestureCodeSnippet(),
+              style: const TextStyle(
+                fontSize: 11,
+                fontFamily: 'monospace',
+                color: Color(0xFFA6E3A1),
+                height: 1.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          BouncyTap(
+            onTap: () {
+              Clipboard.setData(
+                ClipboardData(text: _generateGestureCodeSnippet()),
+              );
+              showSuccessSnackBar(context, 'Code copied to clipboard');
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryPurple.withAlpha(20),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.primaryPurple.withAlpha(60)),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.copy, size: 16, color: AppTheme.primaryPurple),
+                  SizedBox(width: 8),
+                  Text(
+                    'Copy Code Snippet',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.primaryPurple,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getPatternIcon(SecretGesturePattern pattern) {
+    return switch (pattern) {
+      SecretGesturePattern.sevenTaps => Icons.touch_app,
+      SecretGesturePattern.triforce => Icons.change_history,
+      SecretGesturePattern.konami => Icons.gamepad,
+      SecretGesturePattern.holdAndTap => Icons.pan_tool,
+      SecretGesturePattern.spiral => Icons.rotate_right,
+    };
+  }
+
+  String _getPatternDescription(SecretGesturePattern pattern) {
+    return switch (pattern) {
+      SecretGesturePattern.sevenTaps => 'Tap multiple times rapidly',
+      SecretGesturePattern.triforce => 'Draw a triangle pattern',
+      SecretGesturePattern.konami => '↑↑↓↓←→←→ swipe sequence',
+      SecretGesturePattern.holdAndTap => 'Hold + tap with another finger',
+      SecretGesturePattern.spiral => 'Draw a spiral gesture',
+    };
+  }
+
+  String _getPatternInstructions(SecretGesturePattern pattern) {
+    return switch (pattern) {
+      SecretGesturePattern.sevenTaps =>
+        'Tap 7 times within ${(_secretTimeWindow.inMilliseconds / 1000).toStringAsFixed(1)}s',
+      SecretGesturePattern.triforce =>
+        'Draw a triangle: tap 3 corners in order',
+      SecretGesturePattern.konami => 'Swipe: ↑ ↑ ↓ ↓ ← → ← → (like the code!)',
+      SecretGesturePattern.holdAndTap =>
+        'Hold with one finger, tap with another',
+      SecretGesturePattern.spiral => 'Draw a clockwise spiral from center',
+    };
+  }
+
+  String _generateGestureCodeSnippet() {
+    final buffer = StringBuffer();
+    buffer.writeln('SecretGestureDetector(');
+    buffer.writeln('  pattern: SecretGesturePattern.${_secretPattern.name},');
+    buffer.writeln(
+      '  timeWindow: Duration(milliseconds: ${_secretTimeWindow.inMilliseconds}),',
+    );
+    buffer.writeln('  showFeedback: $_secretShowFeedback,');
+    buffer.writeln('  enableHaptics: $_secretEnableHaptics,');
+    buffer.writeln('  onSecretUnlocked: () {');
+    buffer.writeln('    // Your secret action here');
+    buffer.writeln('  },');
+    buffer.writeln('  child: YourWidget(),');
+    buffer.writeln(')');
+    return buffer.toString();
   }
 
   Widget _buildSectionLabel(String label) {
