@@ -7,6 +7,7 @@ import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/splash_mesh_provider.dart';
 import '../../../utils/snackbar.dart';
 import '../../../models/mesh_models.dart';
 
@@ -392,13 +393,13 @@ class _QuickMessageContentState extends State<_QuickMessageContent> {
                     ),
                   ),
                   child: _isSending
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.black,
-                          ),
+                      ? const MeshLoadingIndicator(
+                          size: 20,
+                          colors: [
+                            Colors.black,
+                            Colors.black54,
+                            Colors.black26,
+                          ],
                         )
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -653,13 +654,13 @@ class _SosContentState extends State<_SosContent> {
                         ),
                       ),
                       child: _isSending
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
+                          ? const MeshLoadingIndicator(
+                              size: 20,
+                              colors: [
+                                Colors.white,
+                                Colors.white70,
+                                Colors.white38,
+                              ],
                             )
                           : Text(
                               _canSend ? 'Send SOS' : '$_countdown',

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 
 /// Screen for configuring Store & Forward module
@@ -98,14 +99,14 @@ class _StoreForwardConfigScreenState
                 ? SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: MeshLoadingIndicator(size: 20),
                   )
                 : Text('Save', style: TextStyle(color: context.accentColor)),
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: MeshLoadingIndicator())
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [

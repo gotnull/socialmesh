@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_globe_3d/flutter_globe_3d.dart';
 import '../../models/mesh_models.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../theme.dart';
 
 /// 3D Interactive Globe widget showing mesh node positions
@@ -313,7 +314,7 @@ class MeshGlobeState extends State<MeshGlobe> {
     if (_controller == null || !_isInitialized) {
       return Container(
         color: AppTheme.darkBackground,
-        child: const Center(child: CircularProgressIndicator()),
+        child: const Center(child: MeshLoadingIndicator()),
       );
     }
 

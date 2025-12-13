@@ -11,6 +11,7 @@ import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../models/world_mesh_node.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../providers/world_mesh_map_provider.dart';
 import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
@@ -151,11 +152,29 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         ],
       ),
       body: meshMapState.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(
+          child: MeshLoadingIndicator(
+            size: 48,
+            colors: [
+              context.accentColor,
+              context.accentColor.withValues(alpha: 0.6),
+              context.accentColor.withValues(alpha: 0.3),
+            ],
+          ),
+        ),
         error: (error, _) => _buildErrorState(theme, error.toString()),
         data: (state) {
           if (state.isLoading && state.nodes.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: MeshLoadingIndicator(
+                size: 48,
+                colors: [
+                  context.accentColor,
+                  context.accentColor.withValues(alpha: 0.6),
+                  context.accentColor.withValues(alpha: 0.3),
+                ],
+              ),
+            );
           }
           if (state.error != null && state.nodes.isEmpty) {
             return _buildErrorState(theme, state.error!);
@@ -693,13 +712,13 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(accentColor),
-              ),
+            MeshLoadingIndicator(
+              size: 20,
+              colors: [
+                accentColor,
+                accentColor.withValues(alpha: 0.6),
+                accentColor.withValues(alpha: 0.3),
+              ],
             ),
             const SizedBox(width: 12),
             Text(

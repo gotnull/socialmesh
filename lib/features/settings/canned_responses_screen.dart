@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/canned_response.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../services/storage/storage_service.dart';
 import '../../providers/app_providers.dart';
 
@@ -160,17 +161,19 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
               _isReordering
                   ? 'Drag to reorder responses'
                   : 'Tap to edit, swipe to delete',
-              style: TextStyle(
-                color: AppTheme.textSecondary,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
             ),
           ),
           Expanded(
             child: _isLoading
                 ? Center(
-                    child: CircularProgressIndicator(
-                      color: context.accentColor,
+                    child: MeshLoadingIndicator(
+                      size: 48,
+                      colors: [
+                        context.accentColor,
+                        context.accentColor.withValues(alpha: 0.6),
+                        context.accentColor.withValues(alpha: 0.3),
+                      ],
                     ),
                   )
                 : _isReordering

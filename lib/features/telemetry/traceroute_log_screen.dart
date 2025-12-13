@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme.dart';
 import '../../models/telemetry_log.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
 
@@ -71,7 +72,7 @@ class TraceRouteLogScreen extends ConsumerWidget {
                     },
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: MeshLoadingIndicator()),
                 error: (e, _) => Center(child: Text('Error: $e')),
               ),
             ),

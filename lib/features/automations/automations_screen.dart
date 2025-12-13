@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/admin_config.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -52,7 +53,7 @@ class AutomationsScreen extends ConsumerWidget {
           }
           return _buildAutomationsList(context, ref, automations, stats);
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: MeshLoadingIndicator()),
         error: (error, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

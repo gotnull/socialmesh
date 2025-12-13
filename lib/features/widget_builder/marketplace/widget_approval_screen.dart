@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'widget_marketplace_service.dart';
 import '../../../core/theme.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../providers/splash_mesh_provider.dart';
 import '../../../utils/snackbar.dart';
 
 /// Admin screen for reviewing and approving pending widgets
@@ -197,7 +198,7 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: MeshLoadingIndicator());
     }
 
     if (_error != null) {

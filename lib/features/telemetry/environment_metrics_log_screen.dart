@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/theme.dart';
 import '../../models/telemetry_log.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
 
@@ -106,7 +107,7 @@ class _EnvironmentMetricsLogScreenState
       ),
       body: SafeArea(
         child: logsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: MeshLoadingIndicator()),
           error: (e, s) => Center(child: Text('Error: $e')),
           data: (logs) {
             final filtered = _filterLogs(logs)

@@ -435,12 +435,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
               SizedBox(
                 width: 48,
                 height: 48,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    context.accentColor.withValues(alpha: 0.4),
-                  ),
-                ),
+                child: MeshLoadingIndicator(size: 48),
               ),
               Icon(
                 Icons.bluetooth_connected_rounded,
@@ -524,10 +519,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                 child: SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppTheme.textTertiary,
-                  ),
+                  child: MeshLoadingIndicator(size: 20),
                 ),
               ),
             ),
@@ -582,10 +574,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                   SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(
-                      color: context.accentColor,
-                      strokeWidth: 2,
-                    ),
+                    child: MeshLoadingIndicator(size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(

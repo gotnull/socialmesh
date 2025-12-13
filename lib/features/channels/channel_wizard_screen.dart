@@ -12,6 +12,7 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/channel_key_field.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
@@ -799,8 +800,13 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(context.accentColor),
+            MeshLoadingIndicator(
+              size: 64,
+              colors: [
+                context.accentColor,
+                context.accentColor.withValues(alpha: 0.6),
+                context.accentColor.withValues(alpha: 0.3),
+              ],
             ),
             const SizedBox(height: 24),
             Text(

@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 
 class NodeQrScannerScreen extends ConsumerStatefulWidget {
@@ -386,10 +387,13 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
             Container(
               color: Colors.black54,
               child: Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
+                child: MeshLoadingIndicator(
+                  size: 48,
+                  colors: [
                     context.accentColor,
-                  ),
+                    context.accentColor.withValues(alpha: 0.6),
+                    context.accentColor.withValues(alpha: 0.3),
+                  ],
                 ),
               ),
             ),

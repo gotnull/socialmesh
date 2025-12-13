@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
@@ -473,13 +474,13 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           // Clear button
           if (onClear != null) ...[
             if (isClearing)
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppTheme.errorRed,
-                ),
+              MeshLoadingIndicator(
+                size: 20,
+                colors: [
+                  AppTheme.errorRed,
+                  AppTheme.errorRed.withValues(alpha: 0.6),
+                  AppTheme.errorRed.withValues(alpha: 0.3),
+                ],
               )
             else
               IconButton(
@@ -497,10 +498,13 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           const SizedBox(width: 4),
           // Export button
           if (isExporting)
-            const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
+            MeshLoadingIndicator(
+              size: 20,
+              colors: [
+                context.accentColor,
+                context.accentColor.withValues(alpha: 0.6),
+                context.accentColor.withValues(alpha: 0.3),
+              ],
             )
           else
             IconButton(

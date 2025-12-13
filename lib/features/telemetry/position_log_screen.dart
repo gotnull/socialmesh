@@ -8,6 +8,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../models/telemetry_log.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
 
@@ -272,7 +273,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
       ),
       body: SafeArea(
         child: logsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: MeshLoadingIndicator()),
           error: (e, s) => Center(child: Text('Error: $e')),
           data: (logs) {
             final filtered = _filterLogs(logs)

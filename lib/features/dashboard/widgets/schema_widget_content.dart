@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/splash_mesh_provider.dart';
 import '../../widget_builder/models/widget_schema.dart';
 import '../../widget_builder/models/grid_widget_schema.dart';
 import '../../widget_builder/renderer/widget_renderer.dart';
@@ -91,7 +92,7 @@ class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent> {
     if (_isLoading) {
       return const SizedBox(
         height: 160,
-        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        child: Center(child: MeshLoadingIndicator(size: 20)),
       );
     }
 

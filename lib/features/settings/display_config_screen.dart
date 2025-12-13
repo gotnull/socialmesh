@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
@@ -127,7 +128,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: MeshLoadingIndicator())
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [

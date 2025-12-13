@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 
 /// Telemetry module configuration screen
@@ -154,9 +155,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        body: Center(
-          child: CircularProgressIndicator(color: context.accentColor),
-        ),
+        body: Center(child: MeshLoadingIndicator()),
       );
     }
 
@@ -184,10 +183,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
                   ? SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.accentColor,
-                      ),
+                      child: MeshLoadingIndicator(size: 16),
                     )
                   : Text(
                       'Save',

@@ -133,10 +133,7 @@ Future<void> _saveConfigToPrefs(
     config.stretchIntensity,
   );
   // Also save secret gesture config
-  await prefs.setString(
-    'secret_gesture_pattern',
-    config.secretGesturePattern,
-  );
+  await prefs.setString('secret_gesture_pattern', config.secretGesturePattern);
   await prefs.setInt(
     'secret_gesture_time_window',
     config.secretGestureTimeWindowMs,
@@ -231,53 +228,128 @@ SplashMeshConfig _loadConfigFromPrefs(SharedPreferences prefs) {
 }
 
 /// Widget that displays the configured splash mesh node
-class ConfiguredSplashMeshNode extends ConsumerWidget {
-  const ConfiguredSplashMeshNode({super.key});
+/// Bounces in from size 0 once config is loaded - no blip!
+class ConfiguredSplashMeshNode extends ConsumerStatefulWidget {
+  /// Optional override for layout size (default 200)
+  final double? layoutSize;
+
+  /// Whether to use bounce-in animation (default true)
+  final bool animateIn;
+
+  /// Duration of bounce-in animation
+  final Duration animationDuration;
+
+  const ConfiguredSplashMeshNode({
+    super.key,
+    this.layoutSize,
+    this.animateIn = true,
+    this.animationDuration = const Duration(milliseconds: 800),
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final configAsync = ref.watch(splashMeshConfigProvider);
+  ConsumerState<ConfiguredSplashMeshNode> createState() =>
+      _ConfiguredSplashMeshNodeState();
+}
 
-    return configAsync.when(
-      data: (config) => _buildMeshNode(config),
-      loading: () => _buildMeshNode(SplashMeshConfig.defaultConfig),
-      error: (_, _) => _buildMeshNode(SplashMeshConfig.defaultConfig),
+class _ConfiguredSplashMeshNodeState
+    extends ConsumerState<ConfiguredSplashMeshNode>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  bool _hasAnimated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.animationDuration,
+    );
+
+    // Bouncy overshoot curve for that "mascot" feel
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.elasticOut,
     );
   }
 
-  Widget _buildMeshNode(SplashMeshConfig config) {
-    // ALWAYS use AccelerometerMeshNode for touch support
-    // When accelerometer is disabled, use touchOnly physics mode
-    //
-    // Use OverflowBox to allow the mesh to render at full size
-    // while only taking up limited layout space. This prevents
-    // large mesh sizes from pushing down the text below.
-    const maxLayoutSize = 200.0;
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final configAsync = ref.watch(splashMeshConfigProvider);
+
+    return configAsync.when(
+      data: (config) {
+        // Start animation when config loads (only once)
+        if (!_hasAnimated && widget.animateIn) {
+          _hasAnimated = true;
+          // Small delay to ensure widget is mounted
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _controller.forward();
+            }
+          });
+        }
+        return _buildAnimatedMeshNode(config);
+      },
+      // While loading, show nothing (size 0) - no default config blip!
+      loading: () => SizedBox(
+        width: widget.layoutSize ?? 200,
+        height: widget.layoutSize ?? 200,
+      ),
+      error: (_, _) {
+        // On error, still animate in with defaults
+        if (!_hasAnimated && widget.animateIn) {
+          _hasAnimated = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _controller.forward();
+            }
+          });
+        }
+        return _buildAnimatedMeshNode(SplashMeshConfig.defaultConfig);
+      },
+    );
+  }
+
+  Widget _buildAnimatedMeshNode(SplashMeshConfig config) {
+    final layoutSize = widget.layoutSize ?? 200.0;
     final meshSize = config.size;
 
     return SizedBox(
-      width: maxLayoutSize,
-      height: maxLayoutSize,
-      child: OverflowBox(
-        maxWidth: meshSize,
-        maxHeight: meshSize,
-        child: AccelerometerMeshNode(
-          size: meshSize,
-          animationType: config.animationType,
-          glowIntensity: config.glowIntensity,
-          lineThickness: config.lineThickness,
-          nodeSize: config.nodeSize,
-          gradientColors: config.gradientColors,
-          accelerometerSensitivity: config.accelerometerSensitivity,
-          friction: config.accelerometerFriction,
-          // When accelerometer disabled, use touchOnly mode (no sensor input)
-          physicsMode: config.useAccelerometer
-              ? config.physicsMode
-              : MeshPhysicsMode.touchOnly,
-          enableTouch: config.enableTouch,
-          enablePullToStretch: config.enablePullToStretch,
-          touchIntensity: config.touchIntensity,
-          stretchIntensity: config.stretchIntensity,
+      width: layoutSize,
+      height: layoutSize,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          final scale = widget.animateIn ? _scaleAnimation.value : 1.0;
+          return Transform.scale(scale: scale, child: child);
+        },
+        child: OverflowBox(
+          maxWidth: meshSize,
+          maxHeight: meshSize,
+          child: AccelerometerMeshNode(
+            size: meshSize,
+            animationType: config.animationType,
+            glowIntensity: config.glowIntensity,
+            lineThickness: config.lineThickness,
+            nodeSize: config.nodeSize,
+            gradientColors: config.gradientColors,
+            accelerometerSensitivity: config.accelerometerSensitivity,
+            friction: config.accelerometerFriction,
+            physicsMode: config.useAccelerometer
+                ? config.physicsMode
+                : MeshPhysicsMode.touchOnly,
+            enableTouch: config.enableTouch,
+            enablePullToStretch: config.enablePullToStretch,
+            touchIntensity: config.touchIntensity,
+            stretchIntensity: config.stretchIntensity,
+          ),
         ),
       ),
     );
@@ -303,8 +375,9 @@ class SecretGestureConfig {
 
 /// Provider that loads secret gesture config
 /// Priority: Firestore (with timeout) -> Local SharedPreferences -> Defaults
-final secretGestureConfigProvider =
-    FutureProvider<SecretGestureConfig>((ref) async {
+final secretGestureConfigProvider = FutureProvider<SecretGestureConfig>((
+  ref,
+) async {
   final prefs = await SharedPreferences.getInstance();
 
   // Try to fetch from Firestore first (with 3 second timeout)
@@ -313,29 +386,35 @@ final secretGestureConfigProvider =
     await MeshFirestoreConfigService.instance.initialize();
     remoteConfig = await MeshFirestoreConfigService.instance
         .getRemoteConfig()
-        .timeout(
-          const Duration(seconds: 3),
-          onTimeout: () => null,
-        );
+        .timeout(const Duration(seconds: 3), onTimeout: () => null);
 
     if (remoteConfig != null) {
       // Save to local for offline use
       await prefs.setString(
-          'secret_gesture_pattern', remoteConfig.secretGesturePattern);
+        'secret_gesture_pattern',
+        remoteConfig.secretGesturePattern,
+      );
       await prefs.setInt(
-          'secret_gesture_time_window', remoteConfig.secretGestureTimeWindowMs);
+        'secret_gesture_time_window',
+        remoteConfig.secretGestureTimeWindowMs,
+      );
       await prefs.setBool(
-          'secret_gesture_show_feedback', remoteConfig.secretGestureShowFeedback);
+        'secret_gesture_show_feedback',
+        remoteConfig.secretGestureShowFeedback,
+      );
       await prefs.setBool(
-          'secret_gesture_enable_haptics', remoteConfig.secretGestureEnableHaptics);
+        'secret_gesture_enable_haptics',
+        remoteConfig.secretGestureEnableHaptics,
+      );
 
       return SecretGestureConfig(
         pattern: SecretGesturePattern.values.firstWhere(
           (p) => p.name == remoteConfig!.secretGesturePattern,
           orElse: () => SecretGesturePattern.sevenTaps,
         ),
-        timeWindow:
-            Duration(milliseconds: remoteConfig.secretGestureTimeWindowMs),
+        timeWindow: Duration(
+          milliseconds: remoteConfig.secretGestureTimeWindowMs,
+        ),
         showFeedback: remoteConfig.secretGestureShowFeedback,
         enableHaptics: remoteConfig.secretGestureEnableHaptics,
       );
@@ -345,8 +424,7 @@ final secretGestureConfigProvider =
   }
 
   // Fall back to local SharedPreferences
-  final patternName =
-      prefs.getString('secret_gesture_pattern') ?? 'sevenTaps';
+  final patternName = prefs.getString('secret_gesture_pattern') ?? 'sevenTaps';
   final timeWindowMs = prefs.getInt('secret_gesture_time_window') ?? 3000;
   final showFeedback = prefs.getBool('secret_gesture_show_feedback') ?? true;
   final enableHaptics = prefs.getBool('secret_gesture_enable_haptics') ?? true;
@@ -363,3 +441,400 @@ final secretGestureConfigProvider =
     enableHaptics: enableHaptics,
   );
 });
+
+/// A mini mesh node that replaces CircularProgressIndicator
+/// The app's mascot/brain - used for all loading states
+/// Bounces in when loading starts, bounces out when loading finishes
+class MeshLoadingIndicator extends StatefulWidget {
+  /// Size of the loading indicator (default 48)
+  final double size;
+
+  /// Custom colors (uses brand gradient by default)
+  final List<Color>? colors;
+
+  /// Animation type (defaults to tumble for loading feel)
+  final MeshNodeAnimationType animationType;
+
+  /// Glow intensity (default 0.6 for visibility)
+  final double glowIntensity;
+
+  /// Whether currently loading - when false, bounces out to 0
+  final bool isLoading;
+
+  const MeshLoadingIndicator({
+    super.key,
+    this.size = 48,
+    this.colors,
+    this.animationType = MeshNodeAnimationType.tumble,
+    this.glowIntensity = 0.6,
+    this.isLoading = true,
+  });
+
+  /// Convenience constructor that wraps a child and shows/hides based on loading
+  static Widget withChild({
+    Key? key,
+    required bool isLoading,
+    required Widget child,
+    double size = 48,
+    List<Color>? colors,
+    MeshNodeAnimationType animationType = MeshNodeAnimationType.tumble,
+    double glowIntensity = 0.6,
+  }) {
+    return _MeshLoadingWithChild(
+      key: key,
+      isLoading: isLoading,
+      size: size,
+      colors: colors,
+      animationType: animationType,
+      glowIntensity: glowIntensity,
+      child: child,
+    );
+  }
+
+  @override
+  State<MeshLoadingIndicator> createState() => _MeshLoadingIndicatorState();
+}
+
+class _MeshLoadingIndicatorState extends State<MeshLoadingIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  bool _hasCompletedOut = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.elasticOut,
+      reverseCurve: Curves.easeInBack,
+    );
+
+    // Bounce in on mount if loading
+    if (widget.isLoading) {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(MeshLoadingIndicator oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.isLoading != oldWidget.isLoading) {
+      if (widget.isLoading) {
+        // Bounce in
+        _hasCompletedOut = false;
+        _controller.forward();
+      } else {
+        // Bounce out
+        _controller.reverse().then((_) {
+          if (mounted) {
+            setState(() => _hasCompletedOut = true);
+          }
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // After bounce-out completes, render nothing to free up space
+    if (_hasCompletedOut) {
+      return const SizedBox.shrink();
+    }
+
+    final colors =
+        widget.colors ??
+        const [Color(0xFFFF6B4A), Color(0xFFE91E8C), Color(0xFF4F6AF6)];
+
+    return AnimatedBuilder(
+      animation: _scaleAnimation,
+      builder: (context, child) {
+        return Transform.scale(scale: _scaleAnimation.value, child: child);
+      },
+      child: AccelerometerMeshNode(
+        size: widget.size,
+        animationType: widget.animationType,
+        glowIntensity: widget.glowIntensity,
+        lineThickness: 0.6,
+        nodeSize: 1.0,
+        gradientColors: colors,
+        accelerometerSensitivity: 0.3,
+        friction: 0.95,
+        physicsMode: MeshPhysicsMode.momentum,
+        enableTouch: false, // Loading indicator shouldn't be interactive
+        enablePullToStretch: false,
+      ),
+    );
+  }
+}
+
+/// Helper widget that shows MeshLoadingIndicator while loading, then bounces out and shows child
+class _MeshLoadingWithChild extends StatefulWidget {
+  final bool isLoading;
+  final Widget child;
+  final double size;
+  final List<Color>? colors;
+  final MeshNodeAnimationType animationType;
+  final double glowIntensity;
+
+  const _MeshLoadingWithChild({
+    super.key,
+    required this.isLoading,
+    required this.child,
+    this.size = 48,
+    this.colors,
+    this.animationType = MeshNodeAnimationType.tumble,
+    this.glowIntensity = 0.6,
+  });
+
+  @override
+  State<_MeshLoadingWithChild> createState() => _MeshLoadingWithChildState();
+}
+
+class _MeshLoadingWithChildState extends State<_MeshLoadingWithChild>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _loaderScale;
+  late Animation<double> _childScale;
+  late Animation<double> _childOpacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _loaderScale = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.5, curve: Curves.easeInBack),
+      ),
+    );
+
+    _childScale = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.4, 1.0, curve: Curves.elasticOut),
+      ),
+    );
+
+    _childOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.4, 0.7, curve: Curves.easeOut),
+      ),
+    );
+
+    if (!widget.isLoading) {
+      _controller.value = 1.0;
+    }
+  }
+
+  @override
+  void didUpdateWidget(_MeshLoadingWithChild oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isLoading != oldWidget.isLoading) {
+      if (widget.isLoading) {
+        _controller.reverse();
+      } else {
+        _controller.forward();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors =
+        widget.colors ??
+        const [Color(0xFFFF6B4A), Color(0xFFE91E8C), Color(0xFF4F6AF6)];
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        // Show loader while loading (or transitioning out)
+        if (_controller.value < 0.5) {
+          return Transform.scale(
+            scale: _loaderScale.value,
+            child: AccelerometerMeshNode(
+              size: widget.size,
+              animationType: widget.animationType,
+              glowIntensity: widget.glowIntensity,
+              lineThickness: 0.6,
+              nodeSize: 1.0,
+              gradientColors: colors,
+              accelerometerSensitivity: 0.3,
+              friction: 0.95,
+              physicsMode: MeshPhysicsMode.momentum,
+              enableTouch: false,
+              enablePullToStretch: false,
+            ),
+          );
+        }
+
+        // Show child bouncing in
+        return Opacity(
+          opacity: _childOpacity.value,
+          child: Transform.scale(scale: _childScale.value, child: widget.child),
+        );
+      },
+    );
+  }
+}
+
+/// A bouncy mesh node that can be used as a button or interactive element
+class MeshMascot extends StatefulWidget {
+  /// Size of the mascot
+  final double size;
+
+  /// Custom colors
+  final List<Color>? colors;
+
+  /// Animation type
+  final MeshNodeAnimationType animationType;
+
+  /// Called when tapped
+  final VoidCallback? onTap;
+
+  /// Whether to bounce in
+  final bool bounceIn;
+
+  /// Whether to pulse gently
+  final bool pulse;
+
+  const MeshMascot({
+    super.key,
+    this.size = 80,
+    this.colors,
+    this.animationType = MeshNodeAnimationType.breathe,
+    this.onTap,
+    this.bounceIn = true,
+    this.pulse = false,
+  });
+
+  @override
+  State<MeshMascot> createState() => _MeshMascotState();
+}
+
+class _MeshMascotState extends State<MeshMascot> with TickerProviderStateMixin {
+  late AnimationController _bounceController;
+  late AnimationController _pulseController;
+  late Animation<double> _bounceAnimation;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Bounce-in animation
+    _bounceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _bounceAnimation = CurvedAnimation(
+      parent: _bounceController,
+      curve: Curves.elasticOut,
+    );
+
+    // Subtle pulse animation
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    if (widget.bounceIn) {
+      _bounceController.forward();
+    } else {
+      _bounceController.value = 1.0;
+    }
+
+    if (widget.pulse) {
+      _pulseController.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _bounceController.dispose();
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    if (widget.onTap != null) {
+      // Quick bounce effect on tap
+      _bounceController.forward(from: 0.8);
+      widget.onTap!();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors =
+        widget.colors ??
+        const [Color(0xFFFF6B4A), Color(0xFFE91E8C), Color(0xFF4F6AF6)];
+
+    Widget mesh = AccelerometerMeshNode(
+      size: widget.size,
+      animationType: widget.animationType,
+      glowIntensity: 0.5,
+      lineThickness: 0.5,
+      nodeSize: 0.8,
+      gradientColors: colors,
+      accelerometerSensitivity: 0.5,
+      friction: 0.97,
+      physicsMode: MeshPhysicsMode.momentum,
+      enableTouch: true,
+      enablePullToStretch: false,
+      touchIntensity: 0.5,
+    );
+
+    // Apply pulse animation
+    if (widget.pulse) {
+      mesh = AnimatedBuilder(
+        animation: _pulseAnimation,
+        builder: (context, child) {
+          return Transform.scale(scale: _pulseAnimation.value, child: child);
+        },
+        child: mesh,
+      );
+    }
+
+    // Apply bounce-in animation
+    mesh = AnimatedBuilder(
+      animation: _bounceAnimation,
+      builder: (context, child) {
+        return Transform.scale(scale: _bounceAnimation.value, child: child);
+      },
+      child: mesh,
+    );
+
+    if (widget.onTap != null) {
+      return GestureDetector(onTap: _handleTap, child: mesh);
+    }
+
+    return mesh;
+  }
+}

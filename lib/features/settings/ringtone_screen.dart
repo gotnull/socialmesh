@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../services/audio/rtttl_library_service.dart';
 import '../../services/audio/rtttl_player.dart';
 import '../../utils/snackbar.dart';
@@ -1100,13 +1101,13 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
             child: TextButton(
               onPressed: _saving ? null : _saveRingtone,
               child: _saving
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.accentColor,
-                      ),
+                  ? MeshLoadingIndicator(
+                      size: 20,
+                      colors: [
+                        context.accentColor,
+                        context.accentColor.withValues(alpha: 0.6),
+                        context.accentColor.withValues(alpha: 0.3),
+                      ],
                     )
                   : Text(
                       'Save',
@@ -1123,7 +1124,16 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.opaque,
         child: _loading
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(
+                child: MeshLoadingIndicator(
+                  size: 48,
+                  colors: [
+                    context.accentColor,
+                    context.accentColor.withValues(alpha: 0.6),
+                    context.accentColor.withValues(alpha: 0.3),
+                  ],
+                ),
+              )
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
@@ -2275,13 +2285,13 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
               ),
               if (_loading) ...[
                 const SizedBox(width: 8),
-                SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: context.accentColor,
-                  ),
+                MeshLoadingIndicator(
+                  size: 12,
+                  colors: [
+                    context.accentColor,
+                    context.accentColor.withValues(alpha: 0.6),
+                    context.accentColor.withValues(alpha: 0.3),
+                  ],
                 ),
               ],
             ],
@@ -2293,7 +2303,14 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
         Expanded(
           child: _loadingSuggestions && !hasSearch
               ? Center(
-                  child: CircularProgressIndicator(color: context.accentColor),
+                  child: MeshLoadingIndicator(
+                    size: 48,
+                    colors: [
+                      context.accentColor,
+                      context.accentColor.withValues(alpha: 0.6),
+                      context.accentColor.withValues(alpha: 0.3),
+                    ],
+                  ),
                 )
               : displayList.isEmpty
               ? Center(

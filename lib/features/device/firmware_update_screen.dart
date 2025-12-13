@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 
 /// Provider for firmware update check
 final firmwareCheckProvider = FutureProvider.autoDispose<FirmwareInfo?>((
@@ -50,7 +51,9 @@ final firmwareCheckProvider = FutureProvider.autoDispose<FirmwareInfo?>((
         downloadUrl: htmlUrl,
       );
     } else {
-      AppLogging.firmware('Failed to fetch firmware info: ${response.statusCode}');
+      AppLogging.firmware(
+        'Failed to fetch firmware info: ${response.statusCode}',
+      );
       return null;
     }
   } catch (e) {
@@ -415,10 +418,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                   SizedBox(
                     width: 32,
                     height: 32,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      color: context.accentColor,
-                    ),
+                    child: MeshLoadingIndicator(size: 32),
                   ),
                   const SizedBox(height: 16),
                   const Text(

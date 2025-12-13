@@ -9,6 +9,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/animated_mesh_node.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/secret_gesture_detector.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../services/config/mesh_firestore_config_service.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../services/storage/storage_service.dart';
@@ -679,9 +680,13 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                         ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppTheme.primaryBlue,
+                            child: MeshLoadingIndicator(
+                              size: 18,
+                              colors: [
+                                AppTheme.primaryBlue,
+                                Colors.cyan,
+                                Colors.lightBlue,
+                              ],
                             ),
                           )
                         : const Icon(

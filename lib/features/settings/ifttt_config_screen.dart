@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../services/ifttt/ifttt_service.dart';
 import 'geofence_picker_screen.dart';
@@ -143,7 +144,10 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
 
     if (mounted) {
       if (success) {
-        showSuccessSnackBar(context, 'Test webhook sent! Check your IFTTT applet.');
+        showSuccessSnackBar(
+          context,
+          'Test webhook sent! Check your IFTTT applet.',
+        );
       } else {
         showErrorSnackBar(
           context,
@@ -280,13 +284,13 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   icon: _isTesting
-                      ? SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: context.accentColor,
-                          ),
+                      ? MeshLoadingIndicator(
+                          size: 16,
+                          colors: [
+                            context.accentColor,
+                            context.accentColor.withValues(alpha: 0.6),
+                            context.accentColor.withValues(alpha: 0.3),
+                          ],
                         )
                       : const Icon(Icons.send, size: 18),
                   label: Text(_isTesting ? 'Testing...' : 'Test Connection'),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 
 /// Screen for managing user account and authentication
 class AccountScreen extends ConsumerStatefulWidget {
@@ -23,7 +24,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       body: authState.when(
         data: (user) =>
             user != null ? _SignedInView(user: user) : const _SignedOutView(),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: MeshLoadingIndicator()),
         error: (error, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -626,7 +627,7 @@ class _EmailSignInDialogState extends ConsumerState<_EmailSignInDialog> {
               ? const SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: MeshLoadingIndicator(size: 20),
                 )
               : Text(widget.isCreateAccount ? 'Create' : 'Sign In'),
         ),

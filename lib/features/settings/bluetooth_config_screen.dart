@@ -4,6 +4,7 @@ import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pb;
@@ -171,9 +172,13 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                     ? SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: context.accentColor,
+                        child: MeshLoadingIndicator(
+                          size: 20,
+                          colors: [
+                            context.accentColor,
+                            context.accentColor.withValues(alpha: 0.6),
+                            context.accentColor.withValues(alpha: 0.3),
+                          ],
                         ),
                       )
                     : Text(
@@ -188,7 +193,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
           ],
         ),
         body: _loading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: MeshLoadingIndicator())
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [

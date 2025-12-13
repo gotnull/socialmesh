@@ -323,7 +323,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
       body: settingsServiceAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: MeshLoadingIndicator()),
         error: (error, stack) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1413,7 +1413,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         backgroundColor: AppTheme.darkCard,
         content: Row(
           children: [
-            CircularProgressIndicator(color: context.accentColor),
+            MeshLoadingIndicator(
+              size: 40,
+              colors: [
+                context.accentColor,
+                context.accentColor.withValues(alpha: 0.6),
+                context.accentColor.withValues(alpha: 0.3),
+              ],
+            ),
             const SizedBox(width: 20),
             const Text(
               'Syncing from device...',

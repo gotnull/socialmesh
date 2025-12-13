@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 
 /// PAX Counter module configuration screen
@@ -101,7 +102,13 @@ class _PaxCounterConfigScreenState
           ),
         ),
         body: Center(
-          child: CircularProgressIndicator(color: context.accentColor),
+          child: MeshLoadingIndicator(
+            colors: [
+              context.accentColor,
+              context.accentColor.withValues(alpha: 0.6),
+              context.accentColor.withValues(alpha: 0.3),
+            ],
+          ),
         ),
       );
     }
@@ -130,9 +137,13 @@ class _PaxCounterConfigScreenState
                   ? SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.accentColor,
+                      child: MeshLoadingIndicator(
+                        size: 16,
+                        colors: [
+                          context.accentColor,
+                          context.accentColor.withValues(alpha: 0.6),
+                          context.accentColor.withValues(alpha: 0.3),
+                        ],
                       ),
                     )
                   : Text(

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
@@ -215,9 +216,13 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                     ? SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: context.accentColor,
+                        child: MeshLoadingIndicator(
+                          size: 20,
+                          colors: [
+                            context.accentColor,
+                            context.accentColor.withValues(alpha: 0.6),
+                            context.accentColor.withValues(alpha: 0.3),
+                          ],
                         ),
                       )
                     : Text(
@@ -232,7 +237,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
           ],
         ),
         body: _isLoading
-            ? Center(child: CircularProgressIndicator())
+            ? Center(child: MeshLoadingIndicator())
             : ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [

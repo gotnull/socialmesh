@@ -6,6 +6,7 @@ import '../../core/transport.dart' as transport;
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../device/device_sheet.dart';
 import '../navigation/main_shell.dart';
 import 'models/dashboard_widget_config.dart';
@@ -220,7 +221,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(color: context.accentColor),
+          MeshLoadingIndicator(),
           const SizedBox(height: 24),
           Text(
             autoReconnectState == AutoReconnectState.scanning

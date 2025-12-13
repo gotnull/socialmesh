@@ -12,6 +12,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../models/mesh_models.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 
@@ -737,13 +738,13 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           icon: _isLoadingLocation
-                              ? SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: context.accentColor,
-                                  ),
+                              ? MeshLoadingIndicator(
+                                  size: 18,
+                                  colors: [
+                                    context.accentColor,
+                                    context.accentColor.withValues(alpha: 0.6),
+                                    context.accentColor.withValues(alpha: 0.3),
+                                  ],
                                 )
                               : Icon(Icons.my_location, size: 18),
                           label: Text(

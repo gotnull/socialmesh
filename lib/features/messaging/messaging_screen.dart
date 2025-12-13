@@ -7,6 +7,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:async';
 import 'dart:convert';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../models/mesh_models.dart';
 import '../../models/canned_response.dart';
 import '../../core/theme.dart';
@@ -1489,12 +1490,7 @@ class _MessageBubble extends StatelessWidget {
                               SizedBox(
                                 width: 12,
                                 height: 12,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 1.5,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white.withValues(alpha: 0.7),
-                                  ),
-                                ),
+                                child: MeshLoadingIndicator(size: 12),
                               ),
                               const SizedBox(width: 4),
                             ],

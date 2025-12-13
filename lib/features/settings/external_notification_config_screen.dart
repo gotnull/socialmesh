@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
@@ -141,7 +142,7 @@ class _ExternalNotificationConfigScreenState
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: MeshLoadingIndicator(size: 20),
                     )
                   : const Icon(Icons.save),
               onPressed: _isSaving ? null : _saveConfig,
@@ -149,7 +150,7 @@ class _ExternalNotificationConfigScreenState
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: MeshLoadingIndicator())
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [

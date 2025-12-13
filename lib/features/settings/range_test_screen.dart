@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
@@ -351,14 +352,14 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                   ? SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: MeshLoadingIndicator(size: 20),
                     )
                   : Text('Save', style: TextStyle(color: context.accentColor)),
             ),
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: MeshLoadingIndicator())
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 
 class SerialConfigScreen extends ConsumerStatefulWidget {
@@ -156,9 +157,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
             ),
           ),
         ),
-        body: Center(
-          child: CircularProgressIndicator(color: context.accentColor),
-        ),
+        body: Center(child: MeshLoadingIndicator()),
       );
     }
 
@@ -182,10 +181,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                   ? SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.accentColor,
-                      ),
+                      child: MeshLoadingIndicator(size: 20),
                     )
                   : Text(
                       'Save',

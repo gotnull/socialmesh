@@ -15,6 +15,7 @@ import '../../utils/snackbar.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
 
@@ -1359,10 +1360,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
+                      child: MeshLoadingIndicator(size: 16),
                     )
                   : Icon(Icons.refresh, size: 18),
               label: Text(

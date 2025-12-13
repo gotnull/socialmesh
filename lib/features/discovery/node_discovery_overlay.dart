@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 
 /// Provider to track discovered nodes for the overlay animation
 final discoveredNodesQueueProvider =
@@ -125,13 +126,13 @@ class _ConnectingIndicator extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: 14,
-            height: 14,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(context.accentColor),
-            ),
+          MeshLoadingIndicator(
+            size: 14,
+            colors: [
+              context.accentColor,
+              context.accentColor.withValues(alpha: 0.6),
+              context.accentColor.withValues(alpha: 0.3),
+            ],
           ),
           SizedBox(width: 10),
           Text(

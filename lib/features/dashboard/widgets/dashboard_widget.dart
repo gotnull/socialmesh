@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme.dart';
+import '../../../providers/splash_mesh_provider.dart';
 import '../models/dashboard_widget_config.dart';
 
 /// Base wrapper for all dashboard widgets
@@ -323,10 +324,7 @@ class WidgetLoadingState extends StatelessWidget {
           SizedBox(
             width: 24,
             height: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: context.accentColor,
-            ),
+            child: MeshLoadingIndicator(size: 24),
           ),
           if (message != null) ...[
             const SizedBox(height: 12),

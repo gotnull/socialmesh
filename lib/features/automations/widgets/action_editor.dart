@@ -4,6 +4,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../models/mesh_models.dart';
+import '../../../providers/splash_mesh_provider.dart';
 import '../../../services/audio/rtttl_library_service.dart';
 import '../../../services/audio/rtttl_player.dart';
 import '../../../utils/snackbar.dart';
@@ -1513,7 +1514,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
           // Sound list
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: MeshLoadingIndicator())
                 : displayItems.isEmpty
                 ? Center(
                     child: Column(
@@ -1612,9 +1613,13 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                                       ? const SizedBox(
                                           width: 20,
                                           height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.orange,
+                                          child: MeshLoadingIndicator(
+                                            size: 20,
+                                            colors: [
+                                              Colors.orange,
+                                              Colors.deepOrange,
+                                              Colors.amber,
+                                            ],
                                           ),
                                         )
                                       : Icon(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../services/storage/storage_service.dart';
 
 /// Theme settings screen for Theme Pack owners
@@ -36,7 +37,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
         ),
       ),
       body: settingsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: MeshLoadingIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (settingsService) => ListView(
           padding: const EdgeInsets.all(16),
@@ -334,13 +335,9 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 3,
-                  valueColor: AlwaysStoppedAnimation(accentColor),
-                ),
+              MeshLoadingIndicator(
+                size: 24,
+                colors: [accentColor, accentColor.withValues(alpha: 0.6), accentColor.withValues(alpha: 0.3)],
               ),
               const SizedBox(width: 16),
               Expanded(

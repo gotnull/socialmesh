@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/splash_mesh_provider.dart';
 import '../../../models/mesh_models.dart';
 import 'dashboard_widget.dart';
 
@@ -146,10 +147,7 @@ class _MessageTile extends StatelessWidget {
               child: SizedBox(
                 width: 12,
                 height: 12,
-                child: CircularProgressIndicator(
-                  strokeWidth: 1.5,
-                  color: AppTheme.textTertiary,
-                ),
+                child: MeshLoadingIndicator(size: 12),
               ),
             )
           else if (status == MessageStatus.failed)

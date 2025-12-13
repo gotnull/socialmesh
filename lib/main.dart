@@ -520,31 +520,30 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Spinner ring behind icon
+                  // Mesh spinner behind icon
                   if (info.showSpinner)
-                    SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          info.color.withValues(alpha: 0.4),
+                    MeshLoadingIndicator(
+                      size: 48,
+                      colors: [
+                        info.color,
+                        info.color.withValues(alpha: 0.6),
+                        info.color.withValues(alpha: 0.3),
+                      ],
+                    ),
+                  // Pulsing icon (only show when not spinning)
+                  if (!info.showSpinner)
+                    Transform.scale(
+                      scale: _pulseAnimation.value,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: Icon(
+                          info.icon,
+                          key: ValueKey(info.icon),
+                          color: info.color,
+                          size: 24,
                         ),
                       ),
                     ),
-                  // Pulsing icon
-                  Transform.scale(
-                    scale: info.showSpinner ? _pulseAnimation.value : 1.0,
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: Icon(
-                        info.icon,
-                        key: ValueKey(info.icon),
-                        color: info.color,
-                        size: 24,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),

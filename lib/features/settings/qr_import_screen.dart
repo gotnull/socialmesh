@@ -8,6 +8,7 @@ import '../../models/mesh_models.dart';
 import '../../core/transport.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../core/theme.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../channels/channel_form_screen.dart';
 
@@ -404,10 +405,13 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
             Container(
               color: Colors.black54,
               child: Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
+                child: MeshLoadingIndicator(
+                  size: 48,
+                  colors: [
                     context.accentColor,
-                  ),
+                    context.accentColor.withValues(alpha: 0.6),
+                    context.accentColor.withValues(alpha: 0.3),
+                  ],
                 ),
               ),
             ),

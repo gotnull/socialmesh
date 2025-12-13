@@ -13,6 +13,7 @@ import 'renderer/widget_renderer.dart';
 import 'renderer/grid_widget_renderer.dart';
 import '../../core/theme.dart';
 import '../../providers/auth_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../dashboard/models/dashboard_widget_config.dart';
 import '../dashboard/providers/dashboard_providers.dart';
@@ -110,7 +111,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: MeshLoadingIndicator())
           : TabBarView(
               controller: _tabController,
               children: [
