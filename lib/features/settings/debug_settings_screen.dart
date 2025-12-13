@@ -122,6 +122,16 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       _enablePullToStretch = _settingsService!.splashMeshEnablePullToStretch;
       _touchIntensity = _settingsService!.splashMeshTouchIntensity;
       _stretchIntensity = _settingsService!.splashMeshStretchIntensity;
+      // Load secret gesture config
+      _secretPattern = SecretGesturePattern.values.firstWhere(
+        (p) => p.name == _settingsService!.secretGesturePattern,
+        orElse: () => SecretGesturePattern.sevenTaps,
+      );
+      _secretTimeWindow = Duration(
+        milliseconds: _settingsService!.secretGestureTimeWindowMs,
+      );
+      _secretShowFeedback = _settingsService!.secretGestureShowFeedback;
+      _secretEnableHaptics = _settingsService!.secretGestureEnableHaptics;
       _hasUnsavedChanges = false;
     });
   }
@@ -154,6 +164,14 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       stretchIntensity: _stretchIntensity,
     );
 
+    // Also save secret gesture config to local
+    await _settingsService!.setSecretGestureConfig(
+      pattern: _secretPattern.name,
+      timeWindowMs: _secretTimeWindow.inMilliseconds,
+      showFeedback: _secretShowFeedback,
+      enableHaptics: _secretEnableHaptics,
+    );
+
     // If global, also save to Firestore
     if (_saveLocation == MeshConfigSaveLocation.global) {
       final config = MeshConfigData(
@@ -172,6 +190,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         enablePullToStretch: _enablePullToStretch,
         touchIntensity: _touchIntensity,
         stretchIntensity: _stretchIntensity,
+        secretGesturePattern: _secretPattern.name,
+        secretGestureTimeWindowMs: _secretTimeWindow.inMilliseconds,
+        secretGestureShowFeedback: _secretShowFeedback,
+        secretGestureEnableHaptics: _secretEnableHaptics,
       );
 
       await MeshFirestoreConfigService.instance.initialize();
@@ -227,6 +249,16 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           _enablePullToStretch = remoteConfig.enablePullToStretch;
           _touchIntensity = remoteConfig.touchIntensity;
           _stretchIntensity = remoteConfig.stretchIntensity;
+          // Load secret gesture config
+          _secretPattern = SecretGesturePattern.values.firstWhere(
+            (p) => p.name == remoteConfig.secretGesturePattern,
+            orElse: () => SecretGesturePattern.sevenTaps,
+          );
+          _secretTimeWindow = Duration(
+            milliseconds: remoteConfig.secretGestureTimeWindowMs,
+          );
+          _secretShowFeedback = remoteConfig.secretGestureShowFeedback;
+          _secretEnableHaptics = remoteConfig.secretGestureEnableHaptics;
           _hasUnsavedChanges = true;
         });
 

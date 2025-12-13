@@ -101,6 +101,11 @@ class MeshConfigData {
   final bool enablePullToStretch;
   final double touchIntensity;
   final double stretchIntensity;
+  // Secret gesture config
+  final String secretGesturePattern;
+  final int secretGestureTimeWindowMs;
+  final bool secretGestureShowFeedback;
+  final bool secretGestureEnableHaptics;
 
   const MeshConfigData({
     this.size = 600,
@@ -118,6 +123,10 @@ class MeshConfigData {
     this.enablePullToStretch = false,
     this.touchIntensity = 0.5,
     this.stretchIntensity = 0.3,
+    this.secretGesturePattern = 'sevenTaps',
+    this.secretGestureTimeWindowMs = 3000,
+    this.secretGestureShowFeedback = true,
+    this.secretGestureEnableHaptics = true,
   });
 
   factory MeshConfigData.fromJson(Map<String, dynamic> json) {
@@ -139,6 +148,14 @@ class MeshConfigData {
       enablePullToStretch: json['enablePullToStretch'] as bool? ?? false,
       touchIntensity: (json['touchIntensity'] as num?)?.toDouble() ?? 0.5,
       stretchIntensity: (json['stretchIntensity'] as num?)?.toDouble() ?? 0.3,
+      secretGesturePattern:
+          json['secretGesturePattern'] as String? ?? 'sevenTaps',
+      secretGestureTimeWindowMs:
+          json['secretGestureTimeWindowMs'] as int? ?? 3000,
+      secretGestureShowFeedback:
+          json['secretGestureShowFeedback'] as bool? ?? true,
+      secretGestureEnableHaptics:
+          json['secretGestureEnableHaptics'] as bool? ?? true,
     );
   }
 
@@ -159,6 +176,10 @@ class MeshConfigData {
       'enablePullToStretch': enablePullToStretch,
       'touchIntensity': touchIntensity,
       'stretchIntensity': stretchIntensity,
+      'secretGesturePattern': secretGesturePattern,
+      'secretGestureTimeWindowMs': secretGestureTimeWindowMs,
+      'secretGestureShowFeedback': secretGestureShowFeedback,
+      'secretGestureEnableHaptics': secretGestureEnableHaptics,
     };
   }
 
@@ -179,6 +200,12 @@ class MeshConfigData {
       enablePullToStretch: enablePullToStretch,
       touchIntensity: touchIntensity,
       stretchIntensity: stretchIntensity,
+    );
+    await settingsService.setSecretGestureConfig(
+      pattern: secretGesturePattern,
+      timeWindowMs: secretGestureTimeWindowMs,
+      showFeedback: secretGestureShowFeedback,
+      enableHaptics: secretGestureEnableHaptics,
     );
   }
 

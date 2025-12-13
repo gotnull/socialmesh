@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/logging.dart';
 import '../core/widgets/animated_mesh_node.dart';
+import '../core/widgets/secret_gesture_detector.dart';
 import '../services/config/mesh_firestore_config_service.dart';
 
 /// Configuration for the splash/connecting screen mesh node
@@ -130,6 +131,23 @@ Future<void> _saveConfigToPrefs(
   await prefs.setDouble(
     'splash_mesh_stretch_intensity',
     config.stretchIntensity,
+  );
+  // Also save secret gesture config
+  await prefs.setString(
+    'secret_gesture_pattern',
+    config.secretGesturePattern,
+  );
+  await prefs.setInt(
+    'secret_gesture_time_window',
+    config.secretGestureTimeWindowMs,
+  );
+  await prefs.setBool(
+    'secret_gesture_show_feedback',
+    config.secretGestureShowFeedback,
+  );
+  await prefs.setBool(
+    'secret_gesture_enable_haptics',
+    config.secretGestureEnableHaptics,
   );
 }
 
@@ -265,3 +283,83 @@ class ConfiguredSplashMeshNode extends ConsumerWidget {
     );
   }
 }
+
+/// Configuration for secret gesture
+class SecretGestureConfig {
+  final SecretGesturePattern pattern;
+  final Duration timeWindow;
+  final bool showFeedback;
+  final bool enableHaptics;
+
+  const SecretGestureConfig({
+    this.pattern = SecretGesturePattern.sevenTaps,
+    this.timeWindow = const Duration(seconds: 3),
+    this.showFeedback = true,
+    this.enableHaptics = true,
+  });
+
+  static const SecretGestureConfig defaultConfig = SecretGestureConfig();
+}
+
+/// Provider that loads secret gesture config
+/// Priority: Firestore (with timeout) -> Local SharedPreferences -> Defaults
+final secretGestureConfigProvider =
+    FutureProvider<SecretGestureConfig>((ref) async {
+  final prefs = await SharedPreferences.getInstance();
+
+  // Try to fetch from Firestore first (with 3 second timeout)
+  MeshConfigData? remoteConfig;
+  try {
+    await MeshFirestoreConfigService.instance.initialize();
+    remoteConfig = await MeshFirestoreConfigService.instance
+        .getRemoteConfig()
+        .timeout(
+          const Duration(seconds: 3),
+          onTimeout: () => null,
+        );
+
+    if (remoteConfig != null) {
+      // Save to local for offline use
+      await prefs.setString(
+          'secret_gesture_pattern', remoteConfig.secretGesturePattern);
+      await prefs.setInt(
+          'secret_gesture_time_window', remoteConfig.secretGestureTimeWindowMs);
+      await prefs.setBool(
+          'secret_gesture_show_feedback', remoteConfig.secretGestureShowFeedback);
+      await prefs.setBool(
+          'secret_gesture_enable_haptics', remoteConfig.secretGestureEnableHaptics);
+
+      return SecretGestureConfig(
+        pattern: SecretGesturePattern.values.firstWhere(
+          (p) => p.name == remoteConfig!.secretGesturePattern,
+          orElse: () => SecretGesturePattern.sevenTaps,
+        ),
+        timeWindow:
+            Duration(milliseconds: remoteConfig.secretGestureTimeWindowMs),
+        showFeedback: remoteConfig.secretGestureShowFeedback,
+        enableHaptics: remoteConfig.secretGestureEnableHaptics,
+      );
+    }
+  } catch (e) {
+    AppLogging.settings('⚠️ Secret gesture config fetch failed: $e');
+  }
+
+  // Fall back to local SharedPreferences
+  final patternName =
+      prefs.getString('secret_gesture_pattern') ?? 'sevenTaps';
+  final timeWindowMs = prefs.getInt('secret_gesture_time_window') ?? 3000;
+  final showFeedback = prefs.getBool('secret_gesture_show_feedback') ?? true;
+  final enableHaptics = prefs.getBool('secret_gesture_enable_haptics') ?? true;
+
+  final pattern = SecretGesturePattern.values.firstWhere(
+    (p) => p.name == patternName,
+    orElse: () => SecretGesturePattern.sevenTaps,
+  );
+
+  return SecretGestureConfig(
+    pattern: pattern,
+    timeWindow: Duration(milliseconds: timeWindowMs),
+    showFeedback: showFeedback,
+    enableHaptics: enableHaptics,
+  );
+});

@@ -7,6 +7,7 @@ import '../../config/admin_config.dart';
 import '../../core/transport.dart' show DeviceConnectionState;
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
 import '../../models/subscription_models.dart';
 import '../../services/storage/storage_service.dart';
@@ -1021,24 +1022,70 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               // About Section
               _SectionHeader(title: 'ABOUT'),
-              // Secret gesture to unlock debug settings - tap 7 times!
-              SecretGestureDetector(
-                pattern: SecretGesturePattern.sevenTaps,
-                onSecretUnlocked: () {
-                  HapticFeedback.heavyImpact();
-                  showSuccessSnackBar(context, '🔓 Debug mode unlocked!');
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const DebugSettingsScreen(),
+              // Secret gesture to unlock debug settings - configurable!
+              Consumer(
+                builder: (context, ref, child) {
+                  final gestureConfig = ref.watch(secretGestureConfigProvider);
+                  return gestureConfig.when(
+                    data: (config) => SecretGestureDetector(
+                      pattern: config.pattern,
+                      timeWindow: config.timeWindow,
+                      showFeedback: config.showFeedback,
+                      enableHaptics: config.enableHaptics,
+                      onSecretUnlocked: () {
+                        HapticFeedback.heavyImpact();
+                        showSuccessSnackBar(context, '🔓 Debug mode unlocked!');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const DebugSettingsScreen(),
+                          ),
+                        );
+                      },
+                      child: _SettingsTile(
+                        icon: Icons.info,
+                        title: 'Socialmesh',
+                        subtitle: 'Meshtastic companion app • Version 1.0.0',
+                      ),
+                    ),
+                    loading: () => SecretGestureDetector(
+                      pattern: SecretGesturePattern.sevenTaps,
+                      onSecretUnlocked: () {
+                        HapticFeedback.heavyImpact();
+                        showSuccessSnackBar(context, '🔓 Debug mode unlocked!');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const DebugSettingsScreen(),
+                          ),
+                        );
+                      },
+                      child: _SettingsTile(
+                        icon: Icons.info,
+                        title: 'Socialmesh',
+                        subtitle: 'Meshtastic companion app • Version 1.0.0',
+                      ),
+                    ),
+                    error: (_, _) => SecretGestureDetector(
+                      pattern: SecretGesturePattern.sevenTaps,
+                      onSecretUnlocked: () {
+                        HapticFeedback.heavyImpact();
+                        showSuccessSnackBar(context, '🔓 Debug mode unlocked!');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const DebugSettingsScreen(),
+                          ),
+                        );
+                      },
+                      child: _SettingsTile(
+                        icon: Icons.info,
+                        title: 'Socialmesh',
+                        subtitle: 'Meshtastic companion app • Version 1.0.0',
+                      ),
                     ),
                   );
                 },
-                child: _SettingsTile(
-                  icon: Icons.info,
-                  title: 'Socialmesh',
-                  subtitle: 'Meshtastic companion app • Version 1.0.0',
-                ),
               ),
               _SettingsTile(
                 icon: Icons.help_outline,
