@@ -428,6 +428,37 @@ class _DynamicEffects {
   });
 }
 
+/// Ghost-like personality parameters for expressive mesh deformation
+/// Inspired by Destiny 2's Ghost companion - subtle but characterful
+class _GhostPersonality {
+  /// Squash/stretch ratio (1.0 = normal, <1 = squashed/sad, >1 = stretched/surprised)
+  final double squashStretch;
+
+  /// Shell openness (0 = contracted/scared, 1 = normal, 2 = fully open/excited)
+  final double shellOpenness;
+
+  /// Per-node jitter for nervous/excited micro-movements (0-1)
+  final double nodeJitter;
+
+  /// Attention direction - where it's "looking" (-1 to 1 for X/Y)
+  final Offset attentionOffset;
+
+  /// Head tilt angle for curious/confused expressions (radians)
+  final double tiltAngle;
+
+  /// Edge thickness multiplier (0.5 = thin/scared, 1 = normal, 1.5 = bold/confident)
+  final double edgeThicknessMult;
+
+  const _GhostPersonality({
+    this.squashStretch = 1.0,
+    this.shellOpenness = 1.0,
+    this.nodeJitter = 0.0,
+    this.attentionOffset = Offset.zero,
+    this.tiltAngle = 0.0,
+    this.edgeThicknessMult = 1.0,
+  });
+}
+
 /// A sentient mesh node brain that acts as an onboarding advisor.
 /// Has personality, emotions, and responds to user interactions.
 class MeshNodeBrain extends StatefulWidget {
@@ -1455,6 +1486,9 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     // Get dynamic effect values per mood
     final dynEffects = _getDynamicEffects();
 
+    // Get Ghost-like personality values per mood
+    final personality = _getGhostPersonality();
+
     // Use AnimatedMeshNode with native face expression support
     return Transform.translate(
       offset: Offset(0, -bounceOffset),
@@ -1477,6 +1511,14 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           nodePulsePhase: _pulse.value, // Use pulse animation for phase
           nodePulseIntensity: dynEffects.nodePulseIntensity,
           edgeShimmer: dynEffects.edgeShimmer,
+          // Ghost-like personality parameters
+          squashStretch: personality.squashStretch,
+          shellOpenness: personality.shellOpenness,
+          nodeJitter: personality.nodeJitter,
+          attentionOffset: personality.attentionOffset,
+          tiltAngle: personality.tiltAngle,
+          edgeThicknessMult: personality.edgeThicknessMult,
+          breathePhase: _pulse.value,
         ),
       ),
     );
@@ -1773,6 +1815,507 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           edgeElectricity: 0.0,
           nodePulseIntensity: 0.2,
           edgeShimmer: 0.15,
+        );
+    }
+  }
+
+  /// Ghost-like personality parameters per mood
+  /// Controls mesh deformation for expressive, characterful movements
+  _GhostPersonality _getGhostPersonality() {
+    switch (widget.mood) {
+      // === EXCITED / ENERGETIC ===
+      case MeshBrainMood.excited:
+        return _GhostPersonality(
+          squashStretch:
+              1.15 +
+              math.sin(_pulse.value * math.pi * 4) * 0.1, // Bouncy stretch
+          shellOpenness: 1.4, // Wide open, excited
+          nodeJitter: 0.6, // Vibrating with excitement
+          attentionOffset: Offset(0, -0.2), // Looking up eagerly
+          tiltAngle: math.sin(_pulse.value * math.pi * 2) * 0.1, // Quick tilts
+          edgeThicknessMult: 1.2, // Bold lines
+        );
+      case MeshBrainMood.energized:
+        return _GhostPersonality(
+          squashStretch: 1.1,
+          shellOpenness: 1.3,
+          nodeJitter: 0.8, // Very jittery
+          attentionOffset: Offset(
+            math.sin(_pulse.value * math.pi * 3) * 0.15,
+            math.cos(_pulse.value * math.pi * 3) * 0.15,
+          ), // Darting around
+          tiltAngle: 0.0,
+          edgeThicknessMult: 1.3,
+        );
+      case MeshBrainMood.celebrating:
+        return _GhostPersonality(
+          squashStretch:
+              1.2 +
+              math.sin(_pulse.value * math.pi * 6) * 0.15, // Rapid bouncing
+          shellOpenness: 1.5, // Fully open celebration
+          nodeJitter: 0.5,
+          attentionOffset: Offset(0, -0.3), // Looking up
+          tiltAngle: math.sin(_pulse.value * math.pi * 4) * 0.15,
+          edgeThicknessMult: 1.25,
+        );
+
+      // === HAPPY / POSITIVE ===
+      case MeshBrainMood.happy:
+        return _GhostPersonality(
+          squashStretch: 1.05,
+          shellOpenness: 1.15,
+          nodeJitter: 0.1,
+          attentionOffset: Offset(0, -0.1), // Slightly up, optimistic
+          tiltAngle: 0.05, // Slight happy tilt
+          edgeThicknessMult: 1.1,
+        );
+      case MeshBrainMood.smiling:
+        return const _GhostPersonality(
+          squashStretch: 1.02,
+          shellOpenness: 1.1,
+          nodeJitter: 0.0,
+          attentionOffset: Offset.zero,
+          tiltAngle: 0.03,
+          edgeThicknessMult: 1.05,
+        );
+      case MeshBrainMood.love:
+        return _GhostPersonality(
+          squashStretch:
+              1.0 + math.sin(_pulse.value * math.pi * 2) * 0.05, // Gentle pulse
+          shellOpenness: 1.2,
+          nodeJitter: 0.0,
+          attentionOffset: Offset(0, -0.1),
+          tiltAngle: math.sin(_pulse.value * math.pi) * 0.08, // Dreamy sway
+          edgeThicknessMult: 1.0,
+        );
+      case MeshBrainMood.proud:
+        return const _GhostPersonality(
+          squashStretch: 1.1, // Standing tall
+          shellOpenness: 1.25, // Puffed up
+          nodeJitter: 0.0,
+          attentionOffset: Offset(0, -0.2), // Chin up
+          tiltAngle: 0.0,
+          edgeThicknessMult: 1.2, // Bold
+        );
+      case MeshBrainMood.grateful:
+        return _GhostPersonality(
+          squashStretch: 0.95, // Slight humble bow
+          shellOpenness: 1.0,
+          nodeJitter: 0.0,
+          attentionOffset: Offset(
+            0,
+            0.15 + math.sin(_pulse.value * math.pi) * 0.1,
+          ), // Bowing
+          tiltAngle: 0.1, // Grateful tilt
+          edgeThicknessMult: 0.95,
+        );
+
+      // === SURPRISED / ALERT ===
+      case MeshBrainMood.surprised:
+        return const _GhostPersonality(
+          squashStretch: 1.25, // Stretched tall in surprise
+          shellOpenness: 1.5, // Wide open
+          nodeJitter: 0.3, // Startled jitter
+          attentionOffset: Offset(0, -0.25), // Looking up startled
+          tiltAngle: 0.0,
+          edgeThicknessMult: 1.15,
+        );
+      case MeshBrainMood.alarmed:
+        return _GhostPersonality(
+          squashStretch: 1.2,
+          shellOpenness: 1.4,
+          nodeJitter: 0.5 + _wobbleX.value.abs() * 0.2,
+          attentionOffset: Offset(_wobbleX.value * 0.2, -0.2), // Darting eyes
+          tiltAngle: _wobbleX.value * 0.1,
+          edgeThicknessMult: 1.1,
+        );
+      case MeshBrainMood.alert:
+        return const _GhostPersonality(
+          squashStretch: 1.08,
+          shellOpenness: 1.2,
+          nodeJitter: 0.15,
+          attentionOffset: Offset(0, -0.15),
+          tiltAngle: 0.0,
+          edgeThicknessMult: 1.1,
+        );
+
+      // === SCARED / NERVOUS ===
+      case MeshBrainMood.scared:
+        return _GhostPersonality(
+          squashStretch: 0.8, // Shrinking down
+          shellOpenness: 0.6, // Contracted, protecting
+          nodeJitter: 0.7, // Trembling
+          attentionOffset: Offset(
+            _wobbleX.value * 0.15,
+            0.1,
+          ), // Looking around fearfully
+          tiltAngle: _wobbleX.value * 0.15,
+          edgeThicknessMult: 0.7, // Thin, fragile lines
+        );
+      case MeshBrainMood.nervous:
+        return _GhostPersonality(
+          squashStretch: 0.95,
+          shellOpenness: 0.85,
+          nodeJitter: 0.5, // Fidgety
+          attentionOffset: Offset(
+            math.sin(_pulse.value * math.pi * 5) * 0.1,
+            math.cos(_pulse.value * math.pi * 3) * 0.05,
+          ), // Darting nervously
+          tiltAngle: _wobbleX.value * 0.08,
+          edgeThicknessMult: 0.85,
+        );
+      case MeshBrainMood.shy:
+        return _GhostPersonality(
+          squashStretch: 0.9, // Shrinking
+          shellOpenness: 0.75, // Closed off
+          nodeJitter: 0.2,
+          attentionOffset: Offset(0.15, 0.2), // Looking away/down
+          tiltAngle: 0.15, // Bashful tilt
+          edgeThicknessMult: 0.8,
+        );
+      case MeshBrainMood.embarrassed:
+        return const _GhostPersonality(
+          squashStretch: 0.92,
+          shellOpenness: 0.8,
+          nodeJitter: 0.25,
+          attentionOffset: Offset(0.1, 0.15), // Looking away
+          tiltAngle: 0.12,
+          edgeThicknessMult: 0.85,
+        );
+
+      // === SAD / LOW ENERGY ===
+      case MeshBrainMood.sad:
+        return const _GhostPersonality(
+          squashStretch: 0.85, // Deflated
+          shellOpenness: 0.7, // Closed in
+          nodeJitter: 0.0,
+          attentionOffset: Offset(0, 0.25), // Looking down
+          tiltAngle: 0.1, // Drooping tilt
+          edgeThicknessMult: 0.75, // Thin, weak lines
+        );
+      case MeshBrainMood.tired:
+        return _GhostPersonality(
+          squashStretch: 0.88,
+          shellOpenness: 0.75,
+          nodeJitter: 0.0,
+          attentionOffset: Offset(
+            0,
+            0.2 + math.sin(_pulse.value * math.pi) * 0.1,
+          ), // Nodding off
+          tiltAngle: 0.08 + math.sin(_pulse.value * math.pi) * 0.05,
+          edgeThicknessMult: 0.8,
+        );
+      case MeshBrainMood.dormant:
+        return const _GhostPersonality(
+          squashStretch: 0.9,
+          shellOpenness: 0.65, // Very closed
+          nodeJitter: 0.0,
+          attentionOffset: Offset(0, 0.15),
+          tiltAngle: 0.05,
+          edgeThicknessMult: 0.7,
+        );
+      case MeshBrainMood.bored:
+        return _GhostPersonality(
+          squashStretch: 0.95,
+          shellOpenness: 0.85,
+          nodeJitter: 0.0,
+          attentionOffset: Offset(
+            math.sin(_pulse.value * math.pi * 0.5) * 0.2, // Slow wandering gaze
+            0.1,
+          ),
+          tiltAngle: math.sin(_pulse.value * math.pi) * 0.05,
+          edgeThicknessMult: 0.9,
+        );
+
+      // === ANGRY / FRUSTRATED ===
+      case MeshBrainMood.angry:
+        return _GhostPersonality(
+          squashStretch: 0.9 + _wobbleX.value.abs() * 0.1, // Pulsing with anger
+          shellOpenness: 1.1,
+          nodeJitter: 0.4, // Seething
+          attentionOffset: Offset(0, -0.15), // Intense forward stare
+          tiltAngle: _wobbleX.value * 0.05,
+          edgeThicknessMult: 1.3, // Bold, aggressive lines
+        );
+      case MeshBrainMood.grumpy:
+        return const _GhostPersonality(
+          squashStretch: 0.92,
+          shellOpenness: 0.9,
+          nodeJitter: 0.1,
+          attentionOffset: Offset(0, 0.1), // Scowling down
+          tiltAngle: -0.05, // Grumpy lean
+          edgeThicknessMult: 1.1,
+        );
+      case MeshBrainMood.annoyed:
+        return _GhostPersonality(
+          squashStretch: 0.95,
+          shellOpenness: 0.95,
+          nodeJitter: 0.2,
+          attentionOffset: Offset(_wobbleX.value * 0.1, 0),
+          tiltAngle: -0.03,
+          edgeThicknessMult: 1.05,
+        );
+
+      // === THINKING / PROCESSING ===
+      case MeshBrainMood.thinking:
+        return _GhostPersonality(
+          squashStretch: 1.0,
+          shellOpenness: 1.0,
+          nodeJitter: 0.05,
+          attentionOffset: Offset(0.15, -0.1), // Looking up and to side
+          tiltAngle: 0.12, // Pondering tilt
+          edgeThicknessMult: 1.0,
+        );
+      case MeshBrainMood.curious:
+        return _GhostPersonality(
+          squashStretch: 1.05,
+          shellOpenness: 1.15,
+          nodeJitter: 0.1,
+          attentionOffset: Offset(
+            math.sin(_pulse.value * math.pi * 2) * 0.15,
+            -0.1,
+          ), // Looking around curiously
+          tiltAngle:
+              0.18 + math.sin(_pulse.value * math.pi) * 0.08, // Head tilts
+          edgeThicknessMult: 1.0,
+        );
+      case MeshBrainMood.confused:
+        return _GhostPersonality(
+          squashStretch: 0.98,
+          shellOpenness: 1.0,
+          nodeJitter: 0.15,
+          attentionOffset: Offset(
+            math.sin(_pulse.value * math.pi * 3) * 0.12,
+            math.cos(_pulse.value * math.pi * 2) * 0.08,
+          ),
+          tiltAngle:
+              math.sin(_pulse.value * math.pi * 2) * 0.2, // Confused tilting
+          edgeThicknessMult: 0.95,
+        );
+      case MeshBrainMood.focused:
+        return const _GhostPersonality(
+          squashStretch: 1.02,
+          shellOpenness: 1.05,
+          nodeJitter: 0.0,
+          attentionOffset: Offset(0, -0.1), // Locked on target
+          tiltAngle: 0.0,
+          edgeThicknessMult: 1.1,
+        );
+      case MeshBrainMood.loading:
+        return _GhostPersonality(
+          squashStretch: 1.0 + math.sin(_pulse.value * math.pi * 2) * 0.03,
+          shellOpenness: 1.0,
+          nodeJitter: 0.1,
+          attentionOffset: Offset.zero,
+          tiltAngle: 0.0,
+          edgeThicknessMult: 1.0,
+        );
+
+      // === PLAYFUL / MISCHIEVOUS ===
+      case MeshBrainMood.playful:
+        return _GhostPersonality(
+          squashStretch: 1.0 + math.sin(_pulse.value * math.pi * 3) * 0.08,
+          shellOpenness: 1.2,
+          nodeJitter: 0.3,
+          attentionOffset: Offset(
+            math.sin(_pulse.value * math.pi * 2) * 0.15,
+            math.cos(_pulse.value * math.pi * 2) * 0.1,
+          ),
+          tiltAngle: math.sin(_pulse.value * math.pi * 2) * 0.12,
+          edgeThicknessMult: 1.05,
+        );
+      case MeshBrainMood.mischievous:
+        return _GhostPersonality(
+          squashStretch: 1.02,
+          shellOpenness: 1.1,
+          nodeJitter: 0.2,
+          attentionOffset: Offset(0.2, -0.05), // Sly sideways look
+          tiltAngle: -0.1, // Scheming tilt
+          edgeThicknessMult: 1.0,
+        );
+      case MeshBrainMood.sassy:
+        return _GhostPersonality(
+          squashStretch: 1.0,
+          shellOpenness: 1.15,
+          nodeJitter: 0.15,
+          attentionOffset: Offset(
+            0.15 + math.sin(_pulse.value * math.pi * 2) * 0.1,
+            0,
+          ),
+          tiltAngle: -0.15, // Sassy head tilt
+          edgeThicknessMult: 1.1,
+        );
+      case MeshBrainMood.winking:
+        return _GhostPersonality(
+          squashStretch: 1.0,
+          shellOpenness: 1.1,
+          nodeJitter: 0.05,
+          attentionOffset: Offset(0.1, 0),
+          tiltAngle: 0.08,
+          edgeThicknessMult: 1.0,
+        );
+
+      // === COMMUNICATION ===
+      case MeshBrainMood.speaking:
+        return _GhostPersonality(
+          squashStretch:
+              1.0 +
+              math.sin(_pulse.value * math.pi * 4) * 0.04, // Talking movement
+          shellOpenness: 1.1,
+          nodeJitter: 0.1,
+          attentionOffset: Offset(0, -0.05),
+          tiltAngle: math.sin(_pulse.value * math.pi * 2) * 0.05,
+          edgeThicknessMult: 1.05,
+        );
+      case MeshBrainMood.listening:
+        return _GhostPersonality(
+          squashStretch: 1.0,
+          shellOpenness: 1.05,
+          nodeJitter: 0.0,
+          attentionOffset: Offset(
+            math.sin(_pulse.value * math.pi) * 0.05,
+            -0.05,
+          ),
+          tiltAngle: 0.1, // Attentive tilt
+          edgeThicknessMult: 0.95,
+        );
+      case MeshBrainMood.approving:
+        return _GhostPersonality(
+          squashStretch:
+              1.0 + math.sin(_pulse.value * math.pi * 2) * 0.05, // Nodding
+          shellOpenness: 1.1,
+          nodeJitter: 0.0,
+          attentionOffset: Offset(
+            0,
+            -0.05 + math.sin(_pulse.value * math.pi * 2) * 0.1,
+          ),
+          tiltAngle: 0.05,
+          edgeThicknessMult: 1.05,
+        );
+      case MeshBrainMood.inviting:
+        return _GhostPersonality(
+          squashStretch: 1.05,
+          shellOpenness: 1.2,
+          nodeJitter: 0.05,
+          attentionOffset: Offset(0, -0.1),
+          tiltAngle: 0.05,
+          edgeThicknessMult: 1.0,
+        );
+
+      // === SPECIAL STATES ===
+      case MeshBrainMood.laughing:
+        return _GhostPersonality(
+          squashStretch:
+              0.9 +
+              math.sin(_pulse.value * math.pi * 6) * 0.15, // Laughing bounce
+          shellOpenness: 1.3,
+          nodeJitter: 0.4,
+          attentionOffset: Offset(0, -0.1),
+          tiltAngle: math.sin(_pulse.value * math.pi * 3) * 0.1,
+          edgeThicknessMult: 1.0,
+        );
+      case MeshBrainMood.tickled:
+        return _GhostPersonality(
+          squashStretch: 0.95 + math.sin(_pulse.value * math.pi * 8) * 0.1,
+          shellOpenness: 1.2,
+          nodeJitter: 0.6,
+          attentionOffset: Offset(
+            math.sin(_pulse.value * math.pi * 4) * 0.1,
+            math.cos(_pulse.value * math.pi * 4) * 0.1,
+          ),
+          tiltAngle: math.sin(_pulse.value * math.pi * 4) * 0.15,
+          edgeThicknessMult: 0.95,
+        );
+      case MeshBrainMood.dizzy:
+        return _GhostPersonality(
+          squashStretch: 1.0 + math.sin(_pulse.value * math.pi * 2) * 0.08,
+          shellOpenness: 1.0,
+          nodeJitter: 0.3,
+          attentionOffset: Offset(
+            math.sin(_pulse.value * math.pi * 4) * 0.2,
+            math.cos(_pulse.value * math.pi * 4) * 0.2,
+          ), // Spinning
+          tiltAngle: _pulse.value * math.pi * 2, // Spinning tilt
+          edgeThicknessMult: 0.9,
+        );
+      case MeshBrainMood.glitching:
+        return _GhostPersonality(
+          squashStretch: 1.0 + (math.Random().nextDouble() - 0.5) * 0.2,
+          shellOpenness: 1.0 + (math.Random().nextDouble() - 0.5) * 0.3,
+          nodeJitter: 1.0, // Maximum jitter
+          attentionOffset: Offset(
+            (math.Random().nextDouble() - 0.5) * 0.3,
+            (math.Random().nextDouble() - 0.5) * 0.3,
+          ),
+          tiltAngle: (math.Random().nextDouble() - 0.5) * 0.3,
+          edgeThicknessMult: 0.8 + math.Random().nextDouble() * 0.4,
+        );
+      case MeshBrainMood.error:
+        return _GhostPersonality(
+          squashStretch: 0.95,
+          shellOpenness: 0.9,
+          nodeJitter: 0.5,
+          attentionOffset: Offset(0, 0),
+          tiltAngle: _wobbleX.value * 0.1,
+          edgeThicknessMult: 0.85,
+        );
+      case MeshBrainMood.success:
+        return _GhostPersonality(
+          squashStretch: 1.15,
+          shellOpenness: 1.35,
+          nodeJitter: 0.2,
+          attentionOffset: Offset(0, -0.2),
+          tiltAngle: 0.0,
+          edgeThicknessMult: 1.2,
+        );
+      case MeshBrainMood.zen:
+        return _GhostPersonality(
+          squashStretch:
+              1.0 +
+              math.sin(_pulse.value * math.pi) * 0.02, // Very gentle breathing
+          shellOpenness: 1.0,
+          nodeJitter: 0.0,
+          attentionOffset: Offset(0, 0),
+          tiltAngle: 0.0,
+          edgeThicknessMult: 0.9,
+        );
+      case MeshBrainMood.hypnotized:
+        return _GhostPersonality(
+          squashStretch: 1.0,
+          shellOpenness: 1.0,
+          nodeJitter: 0.0,
+          attentionOffset: Offset(
+            math.sin(_pulse.value * math.pi * 2) * 0.1,
+            math.cos(_pulse.value * math.pi * 2) * 0.1,
+          ), // Slow circular
+          tiltAngle: _pulse.value * math.pi * 0.5,
+          edgeThicknessMult: 1.0,
+        );
+      case MeshBrainMood.hopeful:
+        return const _GhostPersonality(
+          squashStretch: 1.08,
+          shellOpenness: 1.15,
+          nodeJitter: 0.05,
+          attentionOffset: Offset(0, -0.2), // Looking up hopefully
+          tiltAngle: 0.0,
+          edgeThicknessMult: 1.0,
+        );
+
+      // === DEFAULT ===
+      case MeshBrainMood.idle:
+        return _GhostPersonality(
+          squashStretch:
+              1.0 +
+              math.sin(_pulse.value * math.pi) * 0.02, // Subtle idle breathing
+          shellOpenness: 1.0,
+          nodeJitter: 0.0,
+          attentionOffset: Offset(
+            math.sin(_pulse.value * math.pi * 0.3) *
+                0.05, // Slow idle look-around
+            math.cos(_pulse.value * math.pi * 0.2) * 0.03,
+          ),
+          tiltAngle: math.sin(_pulse.value * math.pi * 0.5) * 0.03,
+          edgeThicknessMult: 1.0,
         );
     }
   }

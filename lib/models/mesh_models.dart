@@ -521,7 +521,21 @@ class MeshNode {
     );
   }
 
-  String get displayName => longName ?? shortName ?? 'Node $nodeNum';
+  String get displayName {
+    if (longName != null && longName!.isNotEmpty) return longName!;
+    if (shortName != null && shortName!.isNotEmpty) return shortName!;
+    return 'Node $nodeNum';
+  }
+
+  /// Get a short display name suitable for avatars (max 4 chars)
+  /// Prefers shortName, falls back to longName prefix, then hex node ID
+  String get avatarName {
+    if (shortName != null && shortName!.isNotEmpty) return shortName!;
+    if (longName != null && longName!.isNotEmpty) {
+      return longName!.substring(0, longName!.length.clamp(0, 4));
+    }
+    return nodeNum.toRadixString(16);
+  }
 
   /// Check if node has valid position data
   /// Position must be non-null and not exactly 0,0 (invalid/unset marker)
@@ -566,6 +580,18 @@ class ChannelConfig {
 
   /// Whether position sharing is enabled for this channel
   bool get positionEnabled => positionPrecision > 0;
+
+  /// Whether the channel has a secure encryption key
+  /// Returns false for empty keys or the default 1-byte key (AQ==)
+  bool get hasSecureKey {
+    if (psk.isEmpty) return false;
+    // Default key is a single byte with value 1 (encoded as "AQ==")
+    if (psk.length == 1 && psk[0] == 1) return false;
+    return true;
+  }
+
+  /// Whether the channel uses the default simple key (AQ==)
+  bool get isDefaultKey => psk.length == 1 && psk[0] == 1;
 
   ChannelConfig copyWith({
     int? index,

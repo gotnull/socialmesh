@@ -247,12 +247,6 @@ class _NodeCard extends StatelessWidget {
     return colors[node.nodeNum % colors.length];
   }
 
-  String _getShortName() {
-    return node.shortName ??
-        node.longName?.substring(0, 4) ??
-        node.nodeNum.toRadixString(16);
-  }
-
   int _calculateSignalBars(int? rssi) {
     if (rssi == null) return 0;
     if (rssi >= -70) return 4;
@@ -325,7 +319,7 @@ class _NodeCard extends StatelessWidget {
                         ),
                         child: Center(
                           child: Text(
-                            _getShortName(),
+                            node.avatarName,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -694,18 +688,12 @@ class NodeDetailsSheet extends ConsumerWidget {
     return colors[node.nodeNum % colors.length];
   }
 
-  String _getShortName() {
-    return node.shortName ??
-        node.longName?.substring(0, 4) ??
-        node.nodeNum.toRadixString(16);
-  }
-
   void _showNodeQrCode(BuildContext context) {
     // Create a shareable node info JSON
     final nodeInfo = {
       'nodeNum': node.nodeNum,
       'longName': node.longName ?? node.displayName,
-      'shortName': node.shortName ?? _getShortName(),
+      'shortName': node.avatarName,
       if (node.userId != null) 'userId': node.userId,
       if (node.hasPosition) 'lat': node.latitude,
       if (node.hasPosition) 'lon': node.longitude,
@@ -1221,7 +1209,7 @@ class NodeDetailsSheet extends ConsumerWidget {
                 ),
                 child: Center(
                   child: Text(
-                    _getShortName(),
+                    node.avatarName,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,

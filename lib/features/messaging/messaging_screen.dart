@@ -244,10 +244,7 @@ class MessagingScreen extends ConsumerWidget {
                   ),
                   child: Center(
                     child: Text(
-                      node.shortName ??
-                          (node.nodeNum.toRadixString(16).length >= 2
-                              ? node.nodeNum.toRadixString(16).substring(0, 2)
-                              : node.nodeNum.toRadixString(16)),
+                      node.avatarName,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,

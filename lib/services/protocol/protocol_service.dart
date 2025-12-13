@@ -1740,13 +1740,19 @@ class ProtocolService {
     }
 
     if (existingNode != null) {
+      // Preserve existing names if new ones are empty
+      final newLongName =
+          nodeInfo.hasUser() && nodeInfo.user.longName.isNotEmpty
+          ? nodeInfo.user.longName
+          : existingNode.longName;
+      final newShortName =
+          nodeInfo.hasUser() && nodeInfo.user.shortName.isNotEmpty
+          ? nodeInfo.user.shortName
+          : existingNode.shortName;
+
       updatedNode = existingNode.copyWith(
-        longName: nodeInfo.hasUser()
-            ? nodeInfo.user.longName
-            : existingNode.longName,
-        shortName: nodeInfo.hasUser()
-            ? nodeInfo.user.shortName
-            : existingNode.shortName,
+        longName: newLongName,
+        shortName: newShortName,
         userId: userId ?? existingNode.userId,
         hardwareModel: hwModel ?? existingNode.hardwareModel,
         latitude: hasValidPosition
@@ -1769,10 +1775,20 @@ class ProtocolService {
         hasPublicKey: hasPublicKey,
       );
     } else {
+      // Use null for empty strings to trigger fallback display logic
+      final userLongName =
+          nodeInfo.hasUser() && nodeInfo.user.longName.isNotEmpty
+          ? nodeInfo.user.longName
+          : null;
+      final userShortName =
+          nodeInfo.hasUser() && nodeInfo.user.shortName.isNotEmpty
+          ? nodeInfo.user.shortName
+          : null;
+
       updatedNode = MeshNode(
         nodeNum: nodeInfo.num,
-        longName: nodeInfo.hasUser() ? nodeInfo.user.longName : '',
-        shortName: nodeInfo.hasUser() ? nodeInfo.user.shortName : '',
+        longName: userLongName,
+        shortName: userShortName,
         userId: userId,
         hardwareModel: hwModel,
         latitude: hasValidPosition ? nodeInfo.position.latitudeI / 1e7 : null,
@@ -2476,6 +2492,7 @@ class ProtocolService {
   }
 
   /// Set the region/frequency for the device
+  /// Also sets usePreset=true and hopLimit=3 to match Meshtastic defaults
   Future<void> setRegion(pbenum.RegionCode region) async {
     // Validate we're ready to send
     if (_myNodeNum == null) {
@@ -2488,7 +2505,11 @@ class ProtocolService {
     try {
       _logger.i('Setting region: ${region.name}');
 
-      final loraConfig = pb.Config_LoRaConfig()..region = region;
+      // Set usePreset=true and hopLimit=3 to match Meshtastic defaults
+      final loraConfig = pb.Config_LoRaConfig()
+        ..usePreset = true
+        ..region = region
+        ..hopLimit = 3;
 
       final config = pb.Config()..lora = loraConfig;
 
@@ -3060,11 +3081,13 @@ class ProtocolService {
     required int hopLimit,
     required bool txEnabled,
     required int txPower,
+    bool usePreset = true,
     bool overrideDutyCycle = false,
   }) async {
     _logger.i('Setting LoRa config');
 
     final loraConfig = pb.Config_LoRaConfig()
+      ..usePreset = usePreset
       ..region = region
       ..modemPreset = modemPreset
       ..hopLimit = hopLimit

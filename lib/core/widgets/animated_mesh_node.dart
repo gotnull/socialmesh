@@ -128,6 +128,28 @@ class AnimatedMeshNode extends StatefulWidget {
   /// Edge shimmer effect (traveling light along edges)
   final double edgeShimmer;
 
+  // === GHOST-LIKE PERSONALITY PARAMETERS ===
+  /// Squash/stretch ratio (1.0 = normal, <1 = squashed, >1 = stretched)
+  final double squashStretch;
+
+  /// How "open" the shell feels (0 = contracted/scared, 1 = normal, 2 = fully open/excited)
+  final double shellOpenness;
+
+  /// Per-node jitter intensity for nervous/excited states (0-1)
+  final double nodeJitter;
+
+  /// Attention direction - where the "face" is looking (-1 to 1 for X, -1 to 1 for Y)
+  final Offset attentionOffset;
+
+  /// Tilt angle for curious/confused expressions (radians)
+  final double tiltAngle;
+
+  /// Edge thickness pulse multiplier (0.5 = thin, 1 = normal, 1.5 = thick)
+  final double edgeThicknessMult;
+
+  /// Overall "breathing" phase for organic feel (0-1)
+  final double breathePhase;
+
   const AnimatedMeshNode({
     super.key,
     this.size = 48,
@@ -151,6 +173,13 @@ class AnimatedMeshNode extends StatefulWidget {
     this.nodePulsePhase = 0.0,
     this.nodePulseIntensity = 0.0,
     this.edgeShimmer = 0.0,
+    this.squashStretch = 1.0,
+    this.shellOpenness = 1.0,
+    this.nodeJitter = 0.0,
+    this.attentionOffset = Offset.zero,
+    this.tiltAngle = 0.0,
+    this.edgeThicknessMult = 1.0,
+    this.breathePhase = 0.0,
   });
 
   /// Creates a mesh node with a preset size
@@ -395,6 +424,13 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
         nodePulsePhase: widget.nodePulsePhase,
         nodePulseIntensity: widget.nodePulseIntensity,
         edgeShimmer: widget.edgeShimmer,
+        squashStretch: widget.squashStretch,
+        shellOpenness: widget.shellOpenness,
+        nodeJitter: widget.nodeJitter,
+        attentionOffset: widget.attentionOffset,
+        tiltAngle: widget.tiltAngle,
+        edgeThicknessMult: widget.edgeThicknessMult,
+        breathePhase: widget.breathePhase,
       ),
     );
 
@@ -520,6 +556,28 @@ class _IcosahedronPainter extends CustomPainter {
   /// Shimmer effect traveling along edges (0-1 position of shimmer)
   final double edgeShimmer;
 
+  // === GHOST-LIKE PERSONALITY PARAMETERS ===
+  /// Squash/stretch ratio for expressive deformation
+  final double squashStretch;
+
+  /// Shell openness - how expanded/contracted the mesh feels
+  final double shellOpenness;
+
+  /// Per-node jitter for nervous/excited micro-movements
+  final double nodeJitter;
+
+  /// Attention direction offset for "looking" behavior
+  final Offset attentionOffset;
+
+  /// Tilt angle for curious/confused head tilts
+  final double tiltAngle;
+
+  /// Edge thickness multiplier for mood-based line weight
+  final double edgeThicknessMult;
+
+  /// Breathing phase for organic alive feel
+  final double breathePhase;
+
   _IcosahedronPainter({
     required this.gradientColors,
     required this.glowIntensity,
@@ -538,6 +596,13 @@ class _IcosahedronPainter extends CustomPainter {
     this.nodePulsePhase = 0.0,
     this.nodePulseIntensity = 0.0,
     this.edgeShimmer = 0.0,
+    this.squashStretch = 1.0,
+    this.shellOpenness = 1.0,
+    this.nodeJitter = 0.0,
+    this.attentionOffset = Offset.zero,
+    this.tiltAngle = 0.0,
+    this.edgeThicknessMult = 1.0,
+    this.breathePhase = 0.0,
   });
 
   // Golden ratio for icosahedron
@@ -600,14 +665,85 @@ class _IcosahedronPainter extends CustomPainter {
     final projectedPoints = <Offset>[];
     final transformedPoints = <_Point3D>[];
 
-    for (final vertex in _vertices) {
-      var point = vertex;
+    for (int i = 0; i < _vertices.length; i++) {
+      var point = _vertices[i];
+
+      // === GHOST-LIKE PERSONALITY: Shell Openness ===
+      // Expand or contract the mesh from center (like Ghost shell opening/closing)
+      if (shellOpenness != 1.0) {
+        final openScale = 0.7 + shellOpenness * 0.3; // 0.7 to 1.3 range
+        point = _Point3D(
+          point.x * openScale,
+          point.y * openScale,
+          point.z * openScale,
+        );
+      }
+
+      // === GHOST-LIKE PERSONALITY: Squash & Stretch ===
+      // Deform Y axis for expressive squash/stretch (like a surprised or sad expression)
+      if (squashStretch != 1.0) {
+        // Squash stretches Y while compressing X/Z, stretch does opposite
+        final yScale = squashStretch;
+        final xzScale = 1.0 / math.sqrt(squashStretch); // Preserve volume
+        point = _Point3D(
+          point.x * xzScale,
+          point.y * yScale,
+          point.z * xzScale,
+        );
+      }
+
+      // === GHOST-LIKE PERSONALITY: Breathing ===
+      // Subtle organic expansion/contraction for "alive" feel
+      if (breathePhase > 0) {
+        final breathe = 1.0 + math.sin(breathePhase * 2 * math.pi) * 0.03;
+        point = _Point3D(
+          point.x * breathe,
+          point.y * breathe,
+          point.z * breathe,
+        );
+      }
+
+      // === GHOST-LIKE PERSONALITY: Node Jitter ===
+      // Per-vertex micro-movements for nervous/excited states
+      if (nodeJitter > 0) {
+        // Deterministic pseudo-random jitter based on vertex index and phase
+        final jitterX =
+            math.sin((i * 17 + nodePulsePhase * 50)) * nodeJitter * 0.02;
+        final jitterY =
+            math.cos((i * 23 + nodePulsePhase * 50)) * nodeJitter * 0.02;
+        final jitterZ =
+            math.sin((i * 31 + nodePulsePhase * 50)) * nodeJitter * 0.02;
+        point = _Point3D(
+          point.x + jitterX,
+          point.y + jitterY,
+          point.z + jitterZ,
+        );
+      }
+
+      // Apply tilt rotation (for curious/confused head tilt)
+      if (tiltAngle != 0) {
+        point = point.rotateZ(tiltAngle);
+      }
+
       // Apply rotations in order: Z, X, Y for natural tumble
       point = point.rotateZ(rotationZ);
       point = point.rotateX(rotationX);
       point = point.rotateY(rotationY);
+
+      // === GHOST-LIKE PERSONALITY: Attention Offset ===
+      // Shift the projected position based on where it's "looking"
       transformedPoints.add(point);
-      projectedPoints.add(point.project(size.width, perspective));
+      var projected = point.project(size.width, perspective);
+
+      // Apply attention offset (subtle shift toward attention direction)
+      if (attentionOffset != Offset.zero) {
+        projected = Offset(
+          projected.dx + attentionOffset.dx * size.width * 0.08,
+          projected.dy + attentionOffset.dy * size.height * 0.08,
+        );
+      }
+
+      projectedPoints.add(projected);
     }
 
     // Apply touch deformation to projected points (Mario 64 style pull)
@@ -688,7 +824,8 @@ class _IcosahedronPainter extends CustomPainter {
     double z2,
     int edgeIndex,
   ) {
-    final baseWidth = size.width * 0.02 * lineThickness;
+    // Apply edge thickness multiplier for mood-based line weight
+    final baseWidth = size.width * 0.02 * lineThickness * edgeThicknessMult;
 
     // Depth-based opacity - normalize z from [-0.42, 0.42] to [0.3, 1.0]
     final avgZ = (z1 + z2) / 2;
@@ -978,7 +1115,14 @@ class _IcosahedronPainter extends CustomPainter {
         oldDelegate.edgeElectricity != edgeElectricity ||
         oldDelegate.nodePulsePhase != nodePulsePhase ||
         oldDelegate.nodePulseIntensity != nodePulseIntensity ||
-        oldDelegate.edgeShimmer != edgeShimmer;
+        oldDelegate.edgeShimmer != edgeShimmer ||
+        oldDelegate.squashStretch != squashStretch ||
+        oldDelegate.shellOpenness != shellOpenness ||
+        oldDelegate.nodeJitter != nodeJitter ||
+        oldDelegate.attentionOffset != attentionOffset ||
+        oldDelegate.tiltAngle != tiltAngle ||
+        oldDelegate.edgeThicknessMult != edgeThicknessMult ||
+        oldDelegate.breathePhase != breathePhase;
   }
 }
 

@@ -143,7 +143,7 @@ class _ChannelTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPrimary = channel.index == 0;
-    final hasKey = channel.psk.isNotEmpty;
+    final hasKey = channel.hasSecureKey;
 
     return BouncyTap(
       onTap: () => _openChannelChat(context),
