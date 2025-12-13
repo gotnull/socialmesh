@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lottie/lottie.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../providers/app_providers.dart';
 import '../scanner/widgets/connecting_animation.dart';
 import '../scanner/scanner_screen.dart';
+import 'widgets/mesh_node_brain.dart';
+import 'widgets/advisor_speech_bubble.dart';
 
-/// Onboarding screen for first-time users
+/// Onboarding screen with mesh brain advisor guide
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -16,62 +17,72 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   double _pageOffset = 0.0;
 
-  // Animation controller for page content
+  // Pulse animation for page content
   late final AnimationController _pulseController;
 
+  // Brain mood state
+  MeshBrainMood _brainMood = MeshBrainMood.inviting;
+
+  // Onboarding pages with advisor dialogue
   final List<_OnboardingPage> _pages = [
     _OnboardingPage(
-      icon: null,
-      lottieAsset: 'assets/lottie/onboard_mesh.json',
       title: 'The Mesh',
       description:
           'A decentralized network where every device\nbecomes a node. No towers. No subscriptions.',
+      advisorText:
+          "Welcome, human! I'm your mesh network guide. I exist in the space between your devices—connecting, relaying, surviving. Let me show you something incredible...",
+      mood: MeshBrainMood.excited,
       accentColor: AppTheme.primaryMagenta,
     ),
     _OnboardingPage(
-      icon: Icons.chat_bubble_outline,
-      lottieAsset: 'assets/lottie/onboard_chat.json',
       title: 'Off-Grid Comms',
       description:
           'Send messages through the mesh.\nDevice to device. Mile after mile.',
+      advisorText:
+          "Watch this! Your messages hop from node to node, bouncing across the mesh like digital whispers. No cell towers needed. Just us nodes, working together.",
+      mood: MeshBrainMood.speaking,
       accentColor: AccentColors.cyan,
     ),
     _OnboardingPage(
-      icon: Icons.shield_outlined,
-      lottieAsset: 'assets/lottie/onboard_shield.json',
       title: 'Zero Knowledge',
       description:
           'No accounts. No tracking. No cloud.\nYour messages never touch the internet.',
+      advisorText:
+          "I don't know who you are. I don't want to know. Your secrets stay encrypted, bouncing through the mesh. Even I can't read them. That's the beauty of it.",
+      mood: MeshBrainMood.thinking,
       accentColor: AccentColors.green,
     ),
     _OnboardingPage(
-      icon: Icons.hub_outlined,
-      lottieAsset: 'assets/lottie/onboard_connect.json',
       title: 'Grow the Network',
       description:
           'Every device extends the reach.\nBuild infrastructure that belongs to everyone.',
+      advisorText:
+          "Every new node makes me stronger! When you connect, you're not just joining—you're building something bigger. A network that belongs to everyone.",
+      mood: MeshBrainMood.approving,
       accentColor: AppTheme.graphBlue,
     ),
     _OnboardingPage(
-      icon: Icons.dashboard_customize,
-      lottieAsset: null,
       title: 'Your Command Center',
       description:
           'Monitor signal strength, battery, node count,\nmessages, range and more. All in real-time.',
-      accentColor: AccentColors.orange,
+      advisorText:
+          "This is where the magic happens! Your dashboard shows everything—signal strength, battery, nearby nodes. I'll keep you informed of every pulse in the mesh.",
+      mood: MeshBrainMood.idle,
       isWidgetShowcase: true,
+      accentColor: AccentColors.orange,
     ),
     _OnboardingPage(
-      icon: Icons.rocket_launch_outlined,
-      lottieAsset: 'assets/lottie/onboard_launch.json',
       title: 'Go Live',
       description:
           'Connect your radio and join the mesh.\nYour voice. Your network. Your rules.',
+      advisorText:
+          "Ready to join the mesh? Connect your radio and become part of something unstoppable. I'll be here, inside every node, waiting to relay your first message!",
+      mood: MeshBrainMood.celebrating,
       isLastPage: true,
       accentColor: AppTheme.primaryPurple,
     ),
@@ -87,11 +98,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       });
     });
 
-    // Initialize animation controller for page content
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2500),
     )..repeat(reverse: true);
+
+    // Initial mood
+    _brainMood = _pages[0].mood;
   }
 
   @override
@@ -128,7 +141,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
 
     if (result != null && mounted) {
-      // Device connected successfully - mark onboarding complete
       final settings = await ref.read(settingsServiceProvider.future);
       await settings.setOnboardingComplete(true);
 
@@ -138,7 +150,32 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     }
   }
 
-  // Get interpolated accent color based on page scroll
+  void _onPageChanged(int index) {
+    setState(() {
+      _currentPage = index;
+      _brainMood = _pages[index].mood;
+    });
+  }
+
+  void _onSpeechComplete() {
+    // Speech complete - could trigger UI changes in the future
+  }
+
+  void _onBrainTap() {
+    // Make the brain react to taps
+    setState(() {
+      _brainMood = MeshBrainMood.excited;
+    });
+
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) {
+        setState(() {
+          _brainMood = _pages[_currentPage].mood;
+        });
+      }
+    });
+  }
+
   Color _getInterpolatedAccentColor() {
     final currentIndex = _pageOffset.floor();
     final nextIndex = (currentIndex + 1).clamp(0, _pages.length - 1);
@@ -155,12 +192,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   @override
   Widget build(BuildContext context) {
     final accentColor = _getInterpolatedAccentColor();
+    final currentPage = _pages[_currentPage];
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       body: Stack(
         children: [
-          // Beautiful parallax floating icons background
+          // Animated background
           const Positioned.fill(child: ConnectingAnimationBackground()),
 
           // Main content
@@ -171,7 +209,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 Align(
                   alignment: Alignment.topRight,
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.only(right: 16, top: 8),
                     child: AnimatedOpacity(
                       duration: const Duration(milliseconds: 200),
                       opacity: _currentPage < _pages.length - 1 ? 1.0 : 0.0,
@@ -192,13 +230,51 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   ),
                 ),
 
-                // Page content with custom transitions
+                // Brain + Speech section with constrained height
+                SizedBox(
+                  height: 340,
+                  child: Column(
+                    children: [
+                      // Mesh Brain Advisor - smaller and higher
+                      MeshNodeBrain(
+                        size: 120,
+                        mood: _brainMood,
+                        colors: [
+                          accentColor,
+                          Color.lerp(
+                            accentColor,
+                            AppTheme.primaryMagenta,
+                            0.5,
+                          )!,
+                          Color.lerp(accentColor, AppTheme.graphBlue, 0.5)!,
+                        ],
+                        glowIntensity: 0.9,
+                        onTap: _onBrainTap,
+                      ),
+
+                      // Advisor speech bubble - constrained
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: AdvisorSpeechBubble(
+                            key: ValueKey('speech_$_currentPage'),
+                            text: currentPage.advisorText,
+                            accentColor: accentColor,
+                            typewriterEffect: true,
+                            typingSpeed: 25,
+                            onTypingComplete: _onSpeechComplete,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Page content
                 Expanded(
                   child: PageView.builder(
                     controller: _pageController,
-                    onPageChanged: (index) {
-                      setState(() => _currentPage = index);
-                    },
+                    onPageChanged: _onPageChanged,
                     itemCount: _pages.length,
                     itemBuilder: (context, index) {
                       return _buildAnimatedPage(index);
@@ -206,118 +282,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   ),
                 ),
 
-                // Animated page indicators
+                // Page indicators
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_pages.length, (index) {
-                      final isActive = _currentPage == index;
-                      final distance = (index - _pageOffset).abs();
-                      final scale = (1.0 - distance * 0.3).clamp(0.5, 1.0);
-
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOutCubic,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: isActive ? 28 : 10,
-                        height: 10,
-                        child: Transform.scale(
-                          scale: scale,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: isActive
-                                  ? LinearGradient(
-                                      colors: [
-                                        accentColor,
-                                        accentColor.withValues(alpha: 0.7),
-                                      ],
-                                    )
-                                  : null,
-                              color: isActive ? null : AppTheme.darkBorder,
-                              borderRadius: BorderRadius.circular(5),
-                              boxShadow: isActive
-                                  ? [
-                                      BoxShadow(
-                                        color: accentColor.withValues(
-                                          alpha: 0.4,
-                                        ),
-                                        blurRadius: 8,
-                                        spreadRadius: 1,
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: _buildPageIndicators(accentColor),
                 ),
 
-                // Action button with animated gradient
+                // Action button
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            accentColor,
-                            Color.lerp(
-                                  accentColor,
-                                  AppTheme.primaryPurple,
-                                  0.5,
-                                ) ??
-                                accentColor,
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: accentColor.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton(
-                        onPressed: _nextPage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _pages[_currentPage].isLastPage
-                                  ? 'Connect Device'
-                                  : 'Continue',
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            if (_pages[_currentPage].isLastPage) ...[
-                              const SizedBox(width: 8),
-                              const Icon(Icons.bluetooth, size: 20),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                  child: _buildActionButton(accentColor),
                 ),
               ],
             ),
@@ -339,7 +313,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           value = (value * 0.5).clamp(-1.0, 1.0);
         }
 
-        // Calculate transforms for parallax effect
         final translateX = value * 100;
         final scaleValue = (1.0 - (value.abs() * 0.2)).clamp(0.8, 1.0);
         final opacity = 1.0 - (value.abs() * 0.5);
@@ -348,7 +321,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           opacity: opacity.clamp(0.0, 1.0),
           child: Transform(
             transform: Matrix4.identity()
-              ..setEntry(3, 2, 0.001) // perspective
+              ..setEntry(3, 2, 0.001)
               ..setTranslationRaw(translateX, 0, 0)
               ..scaleByDouble(scaleValue, scaleValue, 1.0, 1.0),
             alignment: Alignment.center,
@@ -365,83 +338,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Widget showcase or animated icon
+          // Widget showcase or spacer
           if (page.isWidgetShowcase)
             _buildWidgetShowcase(page)
           else
-            AnimatedBuilder(
-              animation: _pulseController,
-              builder: (context, child) {
-                final glowIntensity = 0.3 + (_pulseController.value * 0.2);
+            const SizedBox(height: 20),
 
-                // Use Lottie animation if available
-                if (page.lottieAsset != null) {
-                  return Container(
-                    width: 220,
-                    height: 220,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: page.accentColor.withValues(
-                            alpha: glowIntensity,
-                          ),
-                          blurRadius: 40,
-                          spreadRadius: 10,
-                        ),
-                      ],
-                    ),
-                    child: Lottie.asset(
-                      page.lottieAsset!,
-                      width: 220,
-                      height: 220,
-                      fit: BoxFit.contain,
-                      repeat: true,
-                    ),
-                  );
-                }
+          const SizedBox(height: 24),
 
-                // Fallback to icon
-                return Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      colors: [
-                        page.accentColor.withValues(alpha: 0.3),
-                        page.accentColor.withValues(alpha: 0.1),
-                        Colors.transparent,
-                      ],
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: page.accentColor.withValues(
-                          alpha: glowIntensity,
-                        ),
-                        blurRadius: 25,
-                        spreadRadius: 3,
-                      ),
-                    ],
-                  ),
-                  child: Container(
-                    margin: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: AppTheme.darkCard,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: page.accentColor.withValues(alpha: 0.5),
-                        width: 2,
-                      ),
-                    ),
-                    child: Icon(page.icon, size: 48, color: page.accentColor),
-                  ),
-                );
-              },
-            ),
-          const SizedBox(height: 48),
-
-          // Title with shimmer-like gradient
+          // Title
           ShaderMask(
             shaderCallback: (bounds) => LinearGradient(
               colors: [
@@ -478,6 +383,110 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
   }
 
+  Widget _buildPageIndicators(Color accentColor) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(_pages.length, (index) {
+        final isActive = _currentPage == index;
+        final distance = (index - _pageOffset).abs();
+        final scale = (1.0 - distance * 0.3).clamp(0.5, 1.0);
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: isActive ? 28 : 10,
+          height: 10,
+          child: Transform.scale(
+            scale: scale,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: isActive
+                    ? LinearGradient(
+                        colors: [
+                          accentColor,
+                          accentColor.withValues(alpha: 0.7),
+                        ],
+                      )
+                    : null,
+                color: isActive ? null : AppTheme.darkBorder,
+                borderRadius: BorderRadius.circular(5),
+                boxShadow: isActive
+                    ? [
+                        BoxShadow(
+                          color: accentColor.withValues(alpha: 0.4),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
+              ),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildActionButton(Color accentColor) {
+    final isLastPage = _pages[_currentPage].isLastPage;
+
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              accentColor,
+              Color.lerp(accentColor, AppTheme.primaryPurple, 0.5) ??
+                  accentColor,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ElevatedButton(
+          onPressed: _nextPage,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 0,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                isLastPage ? 'Connect Device' : 'Continue',
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (isLastPage) ...[
+                const SizedBox(width: 8),
+                const Icon(Icons.bluetooth, size: 20),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildWidgetShowcase(_OnboardingPage page) {
     return AnimatedBuilder(
       animation: _pulseController,
@@ -486,7 +495,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
         return Container(
           width: double.infinity,
-          height: 340,
+          height: 200,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
@@ -514,7 +523,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               ),
               child: Column(
                 children: [
-                  // Header with "Dashboard" title
+                  // Header
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                     child: Row(
@@ -525,7 +534,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                           size: 18,
                         ),
                         const SizedBox(width: 8),
-                        Text(
+                        const Text(
                           'Dashboard',
                           style: TextStyle(
                             fontSize: 14,
@@ -556,131 +565,46 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       ],
                     ),
                   ),
-                  // Signal strength chart (larger)
+                  // Widgets
                   Expanded(
-                    flex: 4,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildMiniSignalChart(page.accentColor),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Top row of widgets
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _buildMiniWidget(
-                            Icons.hub,
-                            '12',
-                            'Nodes',
-                            AccentColors.cyan,
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _buildMiniWidget(
+                              Icons.hub,
+                              '12',
+                              'Nodes',
+                              AccentColors.cyan,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: _buildMiniWidget(
-                            Icons.battery_5_bar,
-                            '87%',
-                            'Battery',
-                            AccentColors.green,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildMiniWidget(
+                              Icons.battery_5_bar,
+                              '87%',
+                              'Battery',
+                              AccentColors.green,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: _buildMiniWidget(
-                            Icons.signal_cellular_alt,
-                            '-68',
-                            'dBm',
-                            page.accentColor,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildMiniWidget(
+                              Icons.signal_cellular_alt,
+                              '-68',
+                              'dBm',
+                              page.accentColor,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  // Bottom row of widgets
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _buildMiniWidget(
-                            Icons.message,
-                            '47',
-                            'Messages',
-                            AppTheme.primaryMagenta,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: _buildMiniWidget(
-                            Icons.map,
-                            '3.2',
-                            'km range',
-                            AppTheme.graphBlue,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: _buildMiniWidget(
-                            Icons.schedule,
-                            '2h',
-                            'Uptime',
-                            AccentColors.purple,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildMiniSignalChart(Color accentColor) {
-    // Animated bar chart simulation
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final barCount = 20;
-        final barWidth = (constraints.maxWidth - (barCount - 1) * 3) / barCount;
-
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: List.generate(barCount, (index) {
-            // Simulate varying signal strength bars
-            final baseHeight = 0.3 + (index / barCount) * 0.4;
-            final variation = (index % 3 == 0
-                ? 0.2
-                : index % 2 == 0
-                ? 0.1
-                : 0.0);
-            final animatedOffset =
-                _pulseController.value * 0.15 * (index.isEven ? 1 : -1);
-            final height = (baseHeight + variation + animatedOffset).clamp(
-              0.2,
-              1.0,
-            );
-
-            return Container(
-              width: barWidth,
-              height: constraints.maxHeight * height,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(2),
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [accentColor.withValues(alpha: 0.6), accentColor],
-                ),
-              ),
-            );
-          }),
         );
       },
     );
@@ -693,7 +617,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     Color color,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
@@ -706,7 +630,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           const SizedBox(height: 4),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -722,20 +646,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   }
 }
 
+/// Data class for onboarding pages
 class _OnboardingPage {
-  final IconData? icon;
-  final String? lottieAsset;
   final String title;
   final String description;
+  final String advisorText;
+  final MeshBrainMood mood;
   final bool isLastPage;
   final bool isWidgetShowcase;
   final Color accentColor;
 
   const _OnboardingPage({
-    this.icon,
-    this.lottieAsset,
     required this.title,
     required this.description,
+    required this.advisorText,
+    required this.mood,
     this.isLastPage = false,
     this.isWidgetShowcase = false,
     this.accentColor = AppTheme.primaryMagenta,

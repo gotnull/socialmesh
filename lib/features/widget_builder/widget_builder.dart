@@ -1,4 +1,4 @@
-// Widget Builder - Visual widget creation system with marketplace integration
+// Widget Builder - Visual widget creation system
 
 // Core models
 export 'models/widget_schema.dart';

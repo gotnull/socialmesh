@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../marketplace/widget_marketplace_service.dart';
 import '../storage/widget_storage_service.dart';
 import '../../../core/theme.dart';
+import '../../../providers/splash_mesh_provider.dart';
 
 /// Marketplace browse screen
 class WidgetMarketplaceScreen extends ConsumerStatefulWidget {
@@ -161,7 +162,7 @@ class _WidgetMarketplaceScreenState
 
   Widget _buildSearchResults() {
     if (_isSearching) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: MeshLoadingIndicator());
     }
 
     if (_searchResults.isEmpty) {
@@ -185,7 +186,7 @@ class _WidgetMarketplaceScreenState
 
   Widget _buildFeaturedTab() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: MeshLoadingIndicator());
     }
 
     if (_error != null) {
@@ -203,7 +204,7 @@ class _WidgetMarketplaceScreenState
       future: _marketplaceService.getPopular(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: MeshLoadingIndicator());
         }
         if (snapshot.hasError) {
           return _buildErrorState();
@@ -218,7 +219,7 @@ class _WidgetMarketplaceScreenState
       future: _marketplaceService.getNewest(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: MeshLoadingIndicator());
         }
         if (snapshot.hasError) {
           return _buildErrorState();
@@ -656,12 +657,9 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
                 ),
                 child: _isInstalling
                     ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
+                        height: 24,
+                        width: 24,
+                        child: MeshLoadingIndicator(size: 24),
                       )
                     : const Text(
                         'Install Widget',
@@ -761,7 +759,7 @@ class _CategoryScreen extends StatelessWidget {
         future: marketplaceService.getByCategory(category),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: MeshLoadingIndicator());
           }
 
           if (snapshot.hasError) {
