@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../marketplace/widget_marketplace_service.dart';
 import '../storage/widget_storage_service.dart';
 import '../../../core/theme.dart';
-import '../../../providers/splash_mesh_provider.dart';
-import '../../../utils/snackbar.dart';
 
 /// Marketplace browse screen
 class WidgetMarketplaceScreen extends ConsumerStatefulWidget {
@@ -103,8 +101,6 @@ class _WidgetMarketplaceScreenState
           indicatorColor: context.accentColor,
           labelColor: context.accentColor,
           unselectedLabelColor: AppTheme.textSecondary,
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
           tabs: const [
             Tab(text: 'Featured'),
             Tab(text: 'Popular'),
@@ -165,7 +161,7 @@ class _WidgetMarketplaceScreenState
 
   Widget _buildSearchResults() {
     if (_isSearching) {
-      return const Center(child: MeshLoadingIndicator());
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_searchResults.isEmpty) {
@@ -189,7 +185,7 @@ class _WidgetMarketplaceScreenState
 
   Widget _buildFeaturedTab() {
     if (_isLoading) {
-      return const Center(child: MeshLoadingIndicator());
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_error != null) {
@@ -207,7 +203,7 @@ class _WidgetMarketplaceScreenState
       future: _marketplaceService.getPopular(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: MeshLoadingIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
           return _buildErrorState();
@@ -222,7 +218,7 @@ class _WidgetMarketplaceScreenState
       future: _marketplaceService.getNewest(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: MeshLoadingIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
           return _buildErrorState();
@@ -247,47 +243,23 @@ class _WidgetMarketplaceScreenState
     return Card(
       color: AppTheme.darkCard,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: context.accentColor.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(10),
-          ),
+        leading: CircleAvatar(
+          backgroundColor: context.accentColor.withValues(alpha: 0.2),
           child: Icon(
             _getCategoryIcon(category),
             color: context.accentColor,
-            size: 22,
+            size: 20,
           ),
         ),
         title: Text(
           WidgetCategories.getDisplayName(category),
           style: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
+            fontWeight: FontWeight.w500,
           ),
         ),
-        subtitle: Text(
-          'Browse $category widgets',
-          style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
-        ),
-        trailing: Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: AppTheme.darkBackground,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            Icons.arrow_forward_ios_rounded,
-            color: AppTheme.textTertiary,
-            size: 14,
-          ),
-        ),
+        trailing: Icon(Icons.chevron_right, color: AppTheme.textTertiary),
         onTap: () => _openCategory(category),
       ),
     );
@@ -345,9 +317,14 @@ class _WidgetMarketplaceScreenState
       );
     }
 
-    // Use list view for consistent full-width cards
-    return ListView.builder(
+    return GridView.builder(
       padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.85,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+      ),
       itemCount: widgets.length,
       itemBuilder: (context, index) {
         return _MarketplaceWidgetCard(
@@ -392,7 +369,7 @@ class _WidgetMarketplaceScreenState
   }
 }
 
-/// Marketplace widget card - full width, consistent styling
+/// Marketplace widget card
 class _MarketplaceWidgetCard extends StatelessWidget {
   final MarketplaceWidget widget;
   final VoidCallback onTap;
@@ -401,125 +378,38 @@ class _MarketplaceWidgetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: AppTheme.darkCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.darkBorder),
-      ),
+    return Card(
+      color: AppTheme.darkCard,
       clipBehavior: Clip.antiAlias,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Preview area with icon and category
-              Container(
-                width: double.infinity,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: AppTheme.darkBackground,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    // Center icon
-                    Center(
-                      child: Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: context.accentColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          _getCategoryIcon(widget.category),
-                          size: 32,
-                          color: context.accentColor,
-                        ),
-                      ),
-                    ),
-                    // Category badge
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: context.accentColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          widget.category,
-                          style: TextStyle(
-                            color: context.accentColor,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Featured badge
-                    if (widget.isFeatured)
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.warningYellow.withValues(
-                              alpha: 0.2,
-                            ),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.star_rounded,
-                                size: 12,
-                                color: AppTheme.warningYellow,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Featured',
-                                style: TextStyle(
-                                  color: AppTheme.warningYellow,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Thumbnail placeholder
+            Container(
+              height: 80,
+              color: AppTheme.darkBackground,
+              child: Center(
+                child: Icon(
+                  Icons.widgets,
+                  size: 32,
+                  color: context.accentColor.withValues(alpha: 0.5),
                 ),
               ),
-              // Info section
-              Padding(
-                padding: const EdgeInsets.all(16),
+            ),
+            // Info
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Name and author
                     Text(
                       widget.name,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                       maxLines: 1,
@@ -530,122 +420,51 @@ class _MarketplaceWidgetCard extends StatelessWidget {
                       'by ${widget.author}',
                       style: TextStyle(
                         color: AppTheme.textTertiary,
-                        fontSize: 12,
+                        fontSize: 11,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    if (widget.description.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.description,
-                        style: TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontSize: 13,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    // Stats row
+                    const Spacer(),
                     Row(
                       children: [
-                        // Rating
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.darkBackground,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.star_rounded,
-                                size: 14,
-                                color: AppTheme.warningYellow,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                widget.rating.toStringAsFixed(1),
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                        Icon(
+                          Icons.star,
+                          size: 14,
+                          color: AppTheme.warningYellow,
                         ),
-                        const SizedBox(width: 8),
-                        // Downloads
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.darkBackground,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.download_rounded,
-                                size: 14,
-                                color: AppTheme.textSecondary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                _formatDownloads(widget.downloads),
-                                style: TextStyle(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
+                        const SizedBox(width: 4),
+                        Text(
+                          widget.rating.toStringAsFixed(1),
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 12,
                           ),
                         ),
                         const Spacer(),
-                        // Chevron
                         Icon(
-                          Icons.chevron_right_rounded,
+                          Icons.download,
+                          size: 14,
                           color: AppTheme.textTertiary,
-                          size: 20,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatDownloads(widget.downloads),
+                          style: TextStyle(
+                            color: AppTheme.textTertiary,
+                            fontSize: 11,
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
-  }
-
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'status':
-        return Icons.battery_std_rounded;
-      case 'sensors':
-        return Icons.thermostat_rounded;
-      case 'connectivity':
-        return Icons.signal_cellular_alt_rounded;
-      case 'navigation':
-        return Icons.navigation_rounded;
-      case 'network':
-        return Icons.hub_rounded;
-      case 'messaging':
-        return Icons.message_rounded;
-      default:
-        return Icons.widgets_rounded;
-    }
   }
 
   String _formatDownloads(int count) {
@@ -836,9 +655,13 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
                   ),
                 ),
                 child: _isInstalling
-                    ? const MeshLoadingIndicator(
-                        size: 20,
-                        colors: [Colors.white, Colors.white70, Colors.white38],
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Text(
                         'Install Widget',
@@ -884,15 +707,22 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
       await storage.installMarketplaceWidget(schema);
 
       if (mounted) {
-        showSuccessSnackBar(
-          context,
-          '${widget.marketplaceWidget.name} installed!',
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${widget.marketplaceWidget.name} installed!'),
+            backgroundColor: AppTheme.successGreen,
+          ),
         );
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(context, 'Failed to install: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to install: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -931,16 +761,7 @@ class _CategoryScreen extends StatelessWidget {
         future: marketplaceService.getByCategory(category),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: MeshLoadingIndicator(
-                size: 48,
-                colors: [
-                  context.accentColor,
-                  context.accentColor.withValues(alpha: 0.6),
-                  context.accentColor.withValues(alpha: 0.3),
-                ],
-              ),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
@@ -977,10 +798,10 @@ class _CategoryScreen extends StatelessWidget {
           }
 
           return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.75,
+              childAspectRatio: 0.85,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
