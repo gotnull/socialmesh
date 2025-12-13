@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/widgets/animated_mesh_node.dart';
 
 /// Emotional states for the mesh brain advisor
@@ -408,6 +409,25 @@ class _SimpleFaceExpression {
   });
 }
 
+/// Dynamic effect parameters for the mesh
+/// Controls electricity, pulsing, and shimmer effects
+class _DynamicEffects {
+  /// Edge electricity effect (0 = none, 1 = maximum jitter/zap)
+  final double edgeElectricity;
+
+  /// Intensity of node pulse effect (0 = none, 1 = visible pulse)
+  final double nodePulseIntensity;
+
+  /// Shimmer effect traveling along edges (0 = none, 1 = bright)
+  final double edgeShimmer;
+
+  const _DynamicEffects({
+    this.edgeElectricity = 0.0,
+    this.nodePulseIntensity = 0.0,
+    this.edgeShimmer = 0.0,
+  });
+}
+
 /// A sentient mesh node brain that acts as an onboarding advisor.
 /// Has personality, emotions, and responds to user interactions.
 class MeshNodeBrain extends StatefulWidget {
@@ -551,6 +571,97 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.mood != widget.mood) {
       _updateAnimationsForMood(widget.mood);
+      _triggerMoodHaptics(widget.mood);
+    }
+  }
+
+  /// Trigger haptic feedback based on mood for tactile emotional response
+  void _triggerMoodHaptics(MeshBrainMood mood) {
+    switch (mood) {
+      // Strong positive haptics
+      case MeshBrainMood.excited:
+      case MeshBrainMood.celebrating:
+      case MeshBrainMood.success:
+        HapticFeedback.heavyImpact();
+        Future.delayed(const Duration(milliseconds: 100), () {
+          HapticFeedback.mediumImpact();
+        });
+        break;
+
+      // Happy vibrations
+      case MeshBrainMood.happy:
+      case MeshBrainMood.laughing:
+      case MeshBrainMood.smiling:
+      case MeshBrainMood.playful:
+        HapticFeedback.mediumImpact();
+        break;
+
+      // Gentle love pulse
+      case MeshBrainMood.love:
+      case MeshBrainMood.grateful:
+        HapticFeedback.lightImpact();
+        Future.delayed(const Duration(milliseconds: 200), () {
+          HapticFeedback.lightImpact();
+        });
+        break;
+
+      // Alert/warning haptics
+      case MeshBrainMood.alert:
+      case MeshBrainMood.alarmed:
+      case MeshBrainMood.error:
+        HapticFeedback.heavyImpact();
+        break;
+
+      // Nervous/scared tremor
+      case MeshBrainMood.nervous:
+      case MeshBrainMood.scared:
+        for (int i = 0; i < 3; i++) {
+          Future.delayed(Duration(milliseconds: i * 80), () {
+            HapticFeedback.lightImpact();
+          });
+        }
+        break;
+
+      // Angry rumble
+      case MeshBrainMood.angry:
+      case MeshBrainMood.grumpy:
+        HapticFeedback.heavyImpact();
+        Future.delayed(const Duration(milliseconds: 150), () {
+          HapticFeedback.heavyImpact();
+        });
+        break;
+
+      // Glitch/error buzz
+      case MeshBrainMood.glitching:
+        HapticFeedback.vibrate();
+        break;
+
+      // Surprised jolt
+      case MeshBrainMood.surprised:
+        HapticFeedback.heavyImpact();
+        break;
+
+      // Energized pulse
+      case MeshBrainMood.energized:
+        HapticFeedback.mediumImpact();
+        Future.delayed(const Duration(milliseconds: 100), () {
+          HapticFeedback.mediumImpact();
+        });
+        Future.delayed(const Duration(milliseconds: 200), () {
+          HapticFeedback.mediumImpact();
+        });
+        break;
+
+      // Soft transitions for calm moods
+      case MeshBrainMood.zen:
+      case MeshBrainMood.dormant:
+      case MeshBrainMood.thinking:
+        HapticFeedback.selectionClick();
+        break;
+
+      // Default light feedback
+      default:
+        HapticFeedback.lightImpact();
     }
   }
 
@@ -1341,6 +1452,9 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     // Get face expression values
     final faceExpr = _getFaceExpression();
 
+    // Get dynamic effect values per mood
+    final dynEffects = _getDynamicEffects();
+
     // Use AnimatedMeshNode with native face expression support
     return Transform.translate(
       offset: Offset(0, -bounceOffset),
@@ -1359,9 +1473,308 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           leftEyeScale: widget.showExpression ? faceExpr.leftEyeScale : 1.0,
           rightEyeScale: widget.showExpression ? faceExpr.rightEyeScale : 1.0,
           mouthCurve: widget.showExpression ? faceExpr.mouthCurve : 0.0,
+          edgeElectricity: dynEffects.edgeElectricity,
+          nodePulsePhase: _pulse.value, // Use pulse animation for phase
+          nodePulseIntensity: dynEffects.nodePulseIntensity,
+          edgeShimmer: dynEffects.edgeShimmer,
         ),
       ),
     );
+  }
+
+  /// Dynamic effect parameters per mood
+  _DynamicEffects _getDynamicEffects() {
+    switch (widget.mood) {
+      // === HIGH ENERGY / ELECTRIC MOODS ===
+      case MeshBrainMood.excited:
+        return _DynamicEffects(
+          edgeElectricity: 0.4 + _pulse.value * 0.3,
+          nodePulseIntensity: 0.8,
+          edgeShimmer: 0.6,
+        );
+      case MeshBrainMood.energized:
+        return const _DynamicEffects(
+          edgeElectricity: 0.7,
+          nodePulseIntensity: 0.9,
+          edgeShimmer: 0.8,
+        );
+      case MeshBrainMood.surprised:
+        return const _DynamicEffects(
+          edgeElectricity: 0.5,
+          nodePulseIntensity: 1.0,
+          edgeShimmer: 0.4,
+        );
+      case MeshBrainMood.alarmed:
+        return const _DynamicEffects(
+          edgeElectricity: 0.6,
+          nodePulseIntensity: 0.8,
+          edgeShimmer: 0.3,
+        );
+      case MeshBrainMood.angry:
+        return _DynamicEffects(
+          edgeElectricity: 0.8 + _wobbleX.value.abs() * 0.2,
+          nodePulseIntensity: 0.3,
+          edgeShimmer: 0.0,
+        );
+      case MeshBrainMood.grumpy:
+        return const _DynamicEffects(
+          edgeElectricity: 0.3,
+          nodePulseIntensity: 0.15,
+          edgeShimmer: 0.0,
+        );
+
+      // === NERVOUS / ANXIOUS MOODS ===
+      case MeshBrainMood.nervous:
+        return _DynamicEffects(
+          edgeElectricity: 0.2 + _wobbleX.value.abs() * 0.15,
+          nodePulseIntensity: 0.4,
+          edgeShimmer: 0.7,
+        );
+      case MeshBrainMood.scared:
+        return _DynamicEffects(
+          edgeElectricity: 0.4 + _wobbleX.value.abs() * 0.2,
+          nodePulseIntensity: 0.6,
+          edgeShimmer: 0.3,
+        );
+      case MeshBrainMood.embarrassed:
+        return const _DynamicEffects(
+          edgeElectricity: 0.1,
+          nodePulseIntensity: 0.3,
+          edgeShimmer: 0.2,
+        );
+      case MeshBrainMood.shy:
+        return const _DynamicEffects(
+          edgeElectricity: 0.05,
+          nodePulseIntensity: 0.2,
+          edgeShimmer: 0.15,
+        );
+
+      // === PROCESSING / THINKING MOODS ===
+      case MeshBrainMood.thinking:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.3,
+          edgeShimmer: 0.5,
+        );
+      case MeshBrainMood.focused:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.4,
+          edgeShimmer: 0.6,
+        );
+      case MeshBrainMood.loading:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.6,
+          edgeShimmer: 1.0,
+        );
+      case MeshBrainMood.alert:
+        return const _DynamicEffects(
+          edgeElectricity: 0.15,
+          nodePulseIntensity: 0.5,
+          edgeShimmer: 0.7,
+        );
+
+      // === GLITCHY / ERROR MOODS ===
+      case MeshBrainMood.glitching:
+        return _DynamicEffects(
+          edgeElectricity: 0.9 + _wobbleX.value.abs() * 0.1,
+          nodePulseIntensity: 0.8,
+          edgeShimmer: 0.3,
+        );
+      case MeshBrainMood.error:
+        return const _DynamicEffects(
+          edgeElectricity: 0.7,
+          nodePulseIntensity: 0.2,
+          edgeShimmer: 0.0,
+        );
+      case MeshBrainMood.confused:
+        return const _DynamicEffects(
+          edgeElectricity: 0.25,
+          nodePulseIntensity: 0.35,
+          edgeShimmer: 0.4,
+        );
+      case MeshBrainMood.dizzy:
+        return const _DynamicEffects(
+          edgeElectricity: 0.3,
+          nodePulseIntensity: 0.5,
+          edgeShimmer: 0.5,
+        );
+      case MeshBrainMood.hypnotized:
+        return const _DynamicEffects(
+          edgeElectricity: 0.1,
+          nodePulseIntensity: 0.7,
+          edgeShimmer: 0.9,
+        );
+
+      // === HAPPY / POSITIVE MOODS ===
+      case MeshBrainMood.happy:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.4,
+          edgeShimmer: 0.3,
+        );
+      case MeshBrainMood.celebrating:
+        return const _DynamicEffects(
+          edgeElectricity: 0.2,
+          nodePulseIntensity: 0.7,
+          edgeShimmer: 0.6,
+        );
+      case MeshBrainMood.laughing:
+        return _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.5 + _pulse.value * 0.3,
+          edgeShimmer: 0.2,
+        );
+      case MeshBrainMood.tickled:
+        return _DynamicEffects(
+          edgeElectricity: 0.1,
+          nodePulseIntensity: 0.6 + _pulse.value * 0.2,
+          edgeShimmer: 0.3,
+        );
+      case MeshBrainMood.smiling:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.2,
+          edgeShimmer: 0.2,
+        );
+      case MeshBrainMood.love:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.5,
+          edgeShimmer: 0.4,
+        );
+      case MeshBrainMood.proud:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.3,
+          edgeShimmer: 0.5,
+        );
+      case MeshBrainMood.grateful:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.25,
+          edgeShimmer: 0.35,
+        );
+      case MeshBrainMood.hopeful:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.35,
+          edgeShimmer: 0.45,
+        );
+      case MeshBrainMood.success:
+        return const _DynamicEffects(
+          edgeElectricity: 0.15,
+          nodePulseIntensity: 0.6,
+          edgeShimmer: 0.7,
+        );
+
+      // === CALM / RELAXED MOODS ===
+      case MeshBrainMood.zen:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.15,
+          edgeShimmer: 0.1,
+        );
+      case MeshBrainMood.dormant:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.05,
+          edgeShimmer: 0.05,
+        );
+      case MeshBrainMood.tired:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.08,
+          edgeShimmer: 0.05,
+        );
+      case MeshBrainMood.bored:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.08,
+          edgeShimmer: 0.1,
+        );
+
+      // === SAD / NEGATIVE MOODS ===
+      case MeshBrainMood.sad:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.1,
+          edgeShimmer: 0.0,
+        );
+      case MeshBrainMood.annoyed:
+        return const _DynamicEffects(
+          edgeElectricity: 0.2,
+          nodePulseIntensity: 0.2,
+          edgeShimmer: 0.0,
+        );
+
+      // === PLAYFUL / MISCHIEVOUS MOODS ===
+      case MeshBrainMood.curious:
+        return const _DynamicEffects(
+          edgeElectricity: 0.05,
+          nodePulseIntensity: 0.35,
+          edgeShimmer: 0.45,
+        );
+      case MeshBrainMood.playful:
+        return const _DynamicEffects(
+          edgeElectricity: 0.15,
+          nodePulseIntensity: 0.5,
+          edgeShimmer: 0.4,
+        );
+      case MeshBrainMood.mischievous:
+        return const _DynamicEffects(
+          edgeElectricity: 0.2,
+          nodePulseIntensity: 0.45,
+          edgeShimmer: 0.35,
+        );
+      case MeshBrainMood.sassy:
+        return const _DynamicEffects(
+          edgeElectricity: 0.1,
+          nodePulseIntensity: 0.4,
+          edgeShimmer: 0.5,
+        );
+      case MeshBrainMood.winking:
+        return const _DynamicEffects(
+          edgeElectricity: 0.05,
+          nodePulseIntensity: 0.3,
+          edgeShimmer: 0.4,
+        );
+
+      // === LISTENING / COMMUNICATION MOODS ===
+      case MeshBrainMood.listening:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.2,
+          edgeShimmer: 0.3,
+        );
+      case MeshBrainMood.speaking:
+        return _DynamicEffects(
+          edgeElectricity: 0.05,
+          nodePulseIntensity: 0.4 + _pulse.value * 0.2,
+          edgeShimmer: 0.25,
+        );
+      case MeshBrainMood.approving:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.3,
+          edgeShimmer: 0.35,
+        );
+      case MeshBrainMood.inviting:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.35,
+          edgeShimmer: 0.4,
+        );
+
+      // === DEFAULT ===
+      case MeshBrainMood.idle:
+        return const _DynamicEffects(
+          edgeElectricity: 0.0,
+          nodePulseIntensity: 0.2,
+          edgeShimmer: 0.15,
+        );
+    }
   }
 
   /// Simple face expression data (just scales and curve)
@@ -1694,28 +2107,216 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     );
   }
 
-  /// Build special particle effects for certain moods
+  /// Build special particle effects for certain moods - each mood gets unique effects
   List<Widget> _buildSpecialEffects() {
     final effects = <Widget>[];
 
     switch (widget.mood) {
+      // === POSITIVE EMOTIONS ===
+      case MeshBrainMood.happy:
+      case MeshBrainMood.smiling:
+        effects.add(_buildSparkleEffect());
+        break;
+
+      case MeshBrainMood.excited:
+      case MeshBrainMood.celebrating:
+      case MeshBrainMood.success:
+        effects.add(_buildStarBurstEffect());
+        effects.add(_buildSparkleEffect());
+        break;
+
+      case MeshBrainMood.laughing:
+      case MeshBrainMood.tickled:
+        effects.add(_buildJoyBubblesEffect());
+        break;
+
       case MeshBrainMood.love:
         effects.add(_buildHeartParticles());
+        effects.add(_buildLoveGlowEffect());
         break;
+
+      case MeshBrainMood.proud:
+        effects.add(_buildCrownEffect());
+        break;
+
+      case MeshBrainMood.grateful:
+        effects.add(_buildWarmGlowEffect());
+        break;
+
+      case MeshBrainMood.hopeful:
+        effects.add(_buildRisingSparkEffect());
+        break;
+
+      case MeshBrainMood.playful:
+        effects.add(_buildBouncingDotsEffect());
+        break;
+
+      case MeshBrainMood.energized:
+        effects.add(_buildLightningEffect());
+        effects.add(_buildElectricAuraEffect());
+        break;
+
+      // === NEUTRAL/COMMUNICATIVE ===
+      case MeshBrainMood.thinking:
+        effects.add(_buildThinkingDotsEffect());
+        break;
+
+      case MeshBrainMood.speaking:
+        effects.add(_buildSoundWavesEffect());
+        break;
+
+      case MeshBrainMood.curious:
+        effects.add(_buildQuestionMarkEffect());
+        break;
+
+      case MeshBrainMood.focused:
+        effects.add(_buildFocusRingsEffect());
+        break;
+
+      case MeshBrainMood.winking:
+        effects.add(_buildWinkSparkleEffect());
+        break;
+
+      case MeshBrainMood.listening:
+        effects.add(_buildSoundWavesEffect());
+        break;
+
+      // === ALERTNESS ===
+      case MeshBrainMood.alert:
+        effects.add(_buildAlertPulseEffect());
+        break;
+
+      case MeshBrainMood.surprised:
+        effects.add(_buildExclamationEffect());
+        break;
+
+      case MeshBrainMood.alarmed:
+        effects.add(_buildWarningFlashEffect());
+        break;
+
+      // === NEGATIVE/LOW ENERGY ===
+      case MeshBrainMood.sad:
+        effects.add(_buildRainDropsEffect());
+        effects.add(_buildTearDropEffect());
+        break;
+
+      case MeshBrainMood.tired:
+      case MeshBrainMood.dormant:
+        effects.add(_buildZzzEffect());
+        break;
+
+      case MeshBrainMood.bored:
+        effects.add(_buildYawnEffect());
+        break;
+
+      case MeshBrainMood.confused:
+        effects.add(_buildConfusionSwirls());
+        break;
+
+      case MeshBrainMood.nervous:
+        effects.add(_buildSweatDropEffect());
+        effects.add(_buildShakeLines());
+        break;
+
+      case MeshBrainMood.scared:
+        effects.add(_buildFearTremorEffect());
+        effects.add(_buildShakeLines());
+        break;
+
+      case MeshBrainMood.embarrassed:
+        effects.add(_buildBlushEffect());
+        break;
+
+      case MeshBrainMood.shy:
+        effects.add(_buildBlushEffect());
+        break;
+
+      case MeshBrainMood.angry:
+        effects.add(_buildAngerVeinsEffect());
+        effects.add(_buildSteamEffect());
+        break;
+
+      case MeshBrainMood.grumpy:
+      case MeshBrainMood.annoyed:
+        effects.add(_buildAngerVeinsEffect());
+        break;
+
+      // === SPECIAL ===
       case MeshBrainMood.dizzy:
         effects.add(_buildDizzyEffect());
         break;
+
+      case MeshBrainMood.glitching:
+        effects.add(_buildGlitchEffect());
+        effects.add(_buildStaticEffect());
+        break;
+
+      case MeshBrainMood.zen:
+        effects.add(_buildZenAuraEffect());
+        effects.add(_buildFloatingLeavesEffect());
+        break;
+
+      case MeshBrainMood.sassy:
+        effects.add(_buildSassySparkEffect());
+        break;
+
+      case MeshBrainMood.mischievous:
+        effects.add(_buildDevilHornsEffect());
+        break;
+
       case MeshBrainMood.hypnotized:
         effects.add(_buildHypnoEffect());
         break;
-      case MeshBrainMood.glitching:
-        effects.add(_buildGlitchEffect());
+
+      case MeshBrainMood.loading:
+        effects.add(_buildLoadingDotsEffect());
         break;
+
+      case MeshBrainMood.error:
+        effects.add(_buildErrorCrossEffect());
+        effects.add(_buildStaticEffect());
+        break;
+
       default:
         break;
     }
 
     return effects;
+  }
+
+  // ==========================================
+  // POSITIVE EMOTION EFFECTS
+  // ==========================================
+
+  Widget _buildSparkleEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.4, widget.size * 1.4),
+      painter: _SparklePainter(
+        progress: _particleController.value,
+        colors: _colors,
+        count: 8,
+      ),
+    );
+  }
+
+  Widget _buildStarBurstEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.5, widget.size * 1.5),
+      painter: _StarBurstPainter(
+        progress: _particleController.value,
+        colors: _colors,
+      ),
+    );
+  }
+
+  Widget _buildJoyBubblesEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.3, widget.size * 1.3),
+      painter: _JoyBubblesPainter(
+        progress: _particleController.value,
+        color: _colors[1],
+      ),
+    );
   }
 
   Widget _buildHeartParticles() {
@@ -1729,6 +2330,352 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     );
   }
 
+  Widget _buildLoveGlowEffect() {
+    return Container(
+      width: widget.size * 1.2,
+      height: widget.size * 1.2,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            const Color(0xFFFF69B4).withAlpha((60 * _pulse.value).round()),
+            Colors.transparent,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCrownEffect() {
+    return Transform.translate(
+      offset: Offset(0, -widget.size * 0.45),
+      child: CustomPaint(
+        size: Size(widget.size * 0.4, widget.size * 0.25),
+        painter: _CrownPainter(progress: _pulse.value, color: Colors.amber),
+      ),
+    );
+  }
+
+  Widget _buildWarmGlowEffect() {
+    return Container(
+      width: widget.size * 1.3,
+      height: widget.size * 1.3,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            Colors.amber.withAlpha((40 * _pulse.value).round()),
+            Colors.orange.withAlpha((20 * _pulse.value).round()),
+            Colors.transparent,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRisingSparkEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.2, widget.size * 1.4),
+      painter: _RisingSparkPainter(
+        progress: _particleController.value,
+        color: Colors.yellow,
+      ),
+    );
+  }
+
+  Widget _buildBouncingDotsEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.3, widget.size * 1.3),
+      painter: _BouncingDotsPainter(
+        progress: _bounceController.value,
+        colors: _colors,
+      ),
+    );
+  }
+
+  // ==========================================
+  // ENERGY EFFECTS
+  // ==========================================
+
+  Widget _buildLightningEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.5, widget.size * 1.5),
+      painter: _LightningPainter(
+        progress: _particleController.value,
+        color: _colors[0],
+        intensity: _pulse.value,
+      ),
+    );
+  }
+
+  Widget _buildElectricAuraEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.4, widget.size * 1.4),
+      painter: _ElectricAuraPainter(
+        progress: _particleController.value,
+        colors: _colors,
+      ),
+    );
+  }
+
+  // ==========================================
+  // COMMUNICATIVE EFFECTS
+  // ==========================================
+
+  Widget _buildThinkingDotsEffect() {
+    return Transform.translate(
+      offset: Offset(widget.size * 0.4, -widget.size * 0.3),
+      child: CustomPaint(
+        size: Size(widget.size * 0.4, widget.size * 0.2),
+        painter: _ThinkingDotsPainter(
+          progress: _pulseController.value,
+          color: _colors[1],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSoundWavesEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.4, widget.size * 1.4),
+      painter: _SoundWavesPainter(progress: _pulse.value, color: _colors[1]),
+    );
+  }
+
+  Widget _buildQuestionMarkEffect() {
+    return Transform.translate(
+      offset: Offset(widget.size * 0.35, -widget.size * 0.35),
+      child: Text(
+        '?',
+        style: TextStyle(
+          fontSize: widget.size * 0.25,
+          color: _colors[1].withAlpha((200 * _pulse.value).round()),
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFocusRingsEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.3, widget.size * 1.3),
+      painter: _FocusRingsPainter(progress: _pulse.value, color: _colors[2]),
+    );
+  }
+
+  Widget _buildWinkSparkleEffect() {
+    return Transform.translate(
+      offset: Offset(widget.size * 0.25, -widget.size * 0.15),
+      child: CustomPaint(
+        size: Size(widget.size * 0.15, widget.size * 0.15),
+        painter: _SingleStarPainter(
+          progress: _pulse.value,
+          color: Colors.yellow,
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // ALERT EFFECTS
+  // ==========================================
+
+  Widget _buildAlertPulseEffect() {
+    return Container(
+      width: widget.size * (1.0 + _pulse.value * 0.3),
+      height: widget.size * (1.0 + _pulse.value * 0.3),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.orange.withAlpha((150 * _pulse.value).round()),
+          width: 2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExclamationEffect() {
+    return Transform.translate(
+      offset: Offset(0, -widget.size * 0.5),
+      child: Text(
+        '!',
+        style: TextStyle(
+          fontSize: widget.size * 0.35,
+          color: Colors.yellow.withAlpha((255 * _pulse.value).round()),
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWarningFlashEffect() {
+    return Container(
+      width: widget.size * 1.4,
+      height: widget.size * 1.4,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            Colors.red.withAlpha((80 * _pulse.value).round()),
+            Colors.orange.withAlpha((40 * _pulse.value).round()),
+            Colors.transparent,
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // NEGATIVE EMOTION EFFECTS
+  // ==========================================
+
+  Widget _buildRainDropsEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.5, widget.size * 1.8),
+      painter: _RainDropsPainter(
+        progress: _particleController.value,
+        color: Colors.lightBlue.shade300,
+      ),
+    );
+  }
+
+  Widget _buildTearDropEffect() {
+    return Transform.translate(
+      offset: Offset(-widget.size * 0.15, widget.size * 0.1),
+      child: CustomPaint(
+        size: Size(widget.size * 0.1, widget.size * 0.15),
+        painter: _TearDropPainter(
+          progress: _particleController.value,
+          color: Colors.lightBlue.shade200,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildZzzEffect() {
+    return Transform.translate(
+      offset: Offset(widget.size * 0.35, -widget.size * 0.25),
+      child: CustomPaint(
+        size: Size(widget.size * 0.3, widget.size * 0.25),
+        painter: _ZzzPainter(
+          progress: _pulseController.value,
+          color: _colors[2],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildYawnEffect() {
+    return Container(
+      width: widget.size * 1.2,
+      height: widget.size * 1.2,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            Colors.grey.withAlpha((30 * (1 - _pulse.value)).round()),
+            Colors.transparent,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConfusionSwirls() {
+    return CustomPaint(
+      size: Size(widget.size * 1.3, widget.size * 1.3),
+      painter: _ConfusionSwirlsPainter(
+        progress: _specialController.value,
+        color: _colors[1],
+      ),
+    );
+  }
+
+  Widget _buildSweatDropEffect() {
+    return Transform.translate(
+      offset: Offset(widget.size * 0.3, -widget.size * 0.2),
+      child: CustomPaint(
+        size: Size(widget.size * 0.08, widget.size * 0.12),
+        painter: _SweatDropPainter(
+          progress: _pulse.value,
+          color: Colors.lightBlue.shade200,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShakeLines() {
+    return CustomPaint(
+      size: Size(widget.size * 1.3, widget.size * 1.3),
+      painter: _ShakeLinesPainter(
+        progress: _wobbleController.value,
+        color: _colors[0],
+      ),
+    );
+  }
+
+  Widget _buildFearTremorEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.4, widget.size * 1.4),
+      painter: _FearTremorPainter(
+        progress: _pulseController.value,
+        color: Colors.purple.shade200,
+      ),
+    );
+  }
+
+  Widget _buildBlushEffect() {
+    return Transform.translate(
+      offset: Offset(0, widget.size * 0.05),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: widget.size * 0.12,
+            height: widget.size * 0.08,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(widget.size * 0.04),
+              color: Colors.pink.withAlpha((100 * _pulse.value).round()),
+            ),
+          ),
+          SizedBox(width: widget.size * 0.3),
+          Container(
+            width: widget.size * 0.12,
+            height: widget.size * 0.08,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(widget.size * 0.04),
+              color: Colors.pink.withAlpha((100 * _pulse.value).round()),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAngerVeinsEffect() {
+    return Transform.translate(
+      offset: Offset(widget.size * 0.25, -widget.size * 0.25),
+      child: CustomPaint(
+        size: Size(widget.size * 0.15, widget.size * 0.15),
+        painter: _AngerVeinPainter(progress: _pulse.value, color: Colors.red),
+      ),
+    );
+  }
+
+  Widget _buildSteamEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.3, widget.size * 1.5),
+      painter: _SteamPainter(
+        progress: _particleController.value,
+        color: Colors.grey,
+      ),
+    );
+  }
+
+  // ==========================================
+  // SPECIAL EFFECTS
+  // ==========================================
+
   Widget _buildDizzyEffect() {
     return Transform.rotate(
       angle: _specialController.value * 4 * math.pi,
@@ -1738,16 +2685,6 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           progress: _specialController.value,
           color: Colors.yellow,
         ),
-      ),
-    );
-  }
-
-  Widget _buildHypnoEffect() {
-    return CustomPaint(
-      size: Size(widget.size * 1.3, widget.size * 1.3),
-      painter: _HypnoSpiralPainter(
-        progress: _specialController.value,
-        colors: _colors,
       ),
     );
   }
@@ -1769,7 +2706,96 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     );
   }
 
+  Widget _buildStaticEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.2, widget.size * 1.2),
+      painter: _StaticNoisePainter(
+        seed: (_particleController.value * 100).toInt(),
+        color: _colors[0],
+      ),
+    );
+  }
+
+  Widget _buildZenAuraEffect() {
+    return Container(
+      width: widget.size * 1.5,
+      height: widget.size * 1.5,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            Colors.cyan.withAlpha((30 * _pulse.value).round()),
+            Colors.teal.withAlpha((20 * _pulse.value).round()),
+            Colors.transparent,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFloatingLeavesEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.4, widget.size * 1.4),
+      painter: _FloatingLeavesPainter(
+        progress: _particleController.value,
+        color: Colors.green.shade300,
+      ),
+    );
+  }
+
+  Widget _buildSassySparkEffect() {
+    return Transform.translate(
+      offset: Offset(widget.size * 0.3, -widget.size * 0.2),
+      child: CustomPaint(
+        size: Size(widget.size * 0.2, widget.size * 0.2),
+        painter: _SassySparkPainter(progress: _pulse.value, color: Colors.pink),
+      ),
+    );
+  }
+
+  Widget _buildDevilHornsEffect() {
+    return Transform.translate(
+      offset: Offset(0, -widget.size * 0.45),
+      child: CustomPaint(
+        size: Size(widget.size * 0.5, widget.size * 0.2),
+        painter: _DevilHornsPainter(progress: _pulse.value, color: Colors.red),
+      ),
+    );
+  }
+
+  Widget _buildHypnoEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 1.3, widget.size * 1.3),
+      painter: _HypnoSpiralPainter(
+        progress: _specialController.value,
+        colors: _colors,
+      ),
+    );
+  }
+
+  Widget _buildLoadingDotsEffect() {
+    return Transform.translate(
+      offset: Offset(0, widget.size * 0.5),
+      child: CustomPaint(
+        size: Size(widget.size * 0.4, widget.size * 0.1),
+        painter: _LoadingDotsPainter(
+          progress: _particleController.value,
+          color: _colors[1],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorCrossEffect() {
+    return CustomPaint(
+      size: Size(widget.size * 0.3, widget.size * 0.3),
+      painter: _ErrorCrossPainter(progress: _pulse.value, color: Colors.red),
+    );
+  }
+
   void _handleTap() {
+    // Trigger haptic on tap
+    HapticFeedback.lightImpact();
     widget.onTap?.call();
   }
 }
@@ -1965,5 +2991,1058 @@ class _HypnoSpiralPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_HypnoSpiralPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+// ==========================================
+// NEW PARTICLE/EFFECT PAINTERS
+// ==========================================
+
+/// Sparkle effect painter - floating sparkles
+class _SparklePainter extends CustomPainter {
+  final double progress;
+  final List<Color> colors;
+  final int count;
+
+  _SparklePainter({
+    required this.progress,
+    required this.colors,
+    this.count = 8,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final random = math.Random(42);
+
+    for (int i = 0; i < count; i++) {
+      final angle = (i / count) * 2 * math.pi + progress * math.pi;
+      final distance =
+          size.width * 0.3 + random.nextDouble() * size.width * 0.15;
+      final sparkleProgress = (progress + i / count) % 1.0;
+      final opacity = math.sin(sparkleProgress * math.pi);
+      final sparkleSize = 3 + random.nextDouble() * 4;
+
+      final x = center.dx + math.cos(angle) * distance;
+      final y = center.dy + math.sin(angle) * distance;
+
+      _drawSparkle(
+        canvas,
+        Offset(x, y),
+        sparkleSize * opacity,
+        colors[i % colors.length].withAlpha((255 * opacity).round()),
+      );
+    }
+  }
+
+  void _drawSparkle(Canvas canvas, Offset center, double size, Color color) {
+    final paint = Paint()..color = color;
+
+    // Four-pointed star sparkle
+    final path = Path();
+    path.moveTo(center.dx, center.dy - size);
+    path.lineTo(center.dx + size * 0.3, center.dy);
+    path.lineTo(center.dx, center.dy + size);
+    path.lineTo(center.dx - size * 0.3, center.dy);
+    path.close();
+
+    path.moveTo(center.dx - size, center.dy);
+    path.lineTo(center.dx, center.dy + size * 0.3);
+    path.lineTo(center.dx + size, center.dy);
+    path.lineTo(center.dx, center.dy - size * 0.3);
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_SparklePainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Star burst effect for celebrations
+class _StarBurstPainter extends CustomPainter {
+  final double progress;
+  final List<Color> colors;
+
+  _StarBurstPainter({required this.progress, required this.colors});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    for (int i = 0; i < 12; i++) {
+      final angle = (i / 12) * 2 * math.pi;
+      final burstProgress = (progress * 2 + i / 12) % 1.0;
+      final distance = burstProgress * size.width * 0.5;
+      final opacity = (1 - burstProgress).clamp(0.0, 1.0);
+
+      final x = center.dx + math.cos(angle) * distance;
+      final y = center.dy + math.sin(angle) * distance;
+
+      canvas.drawCircle(
+        Offset(x, y),
+        3 * opacity,
+        Paint()
+          ..color = colors[i % colors.length].withAlpha(
+            (255 * opacity).round(),
+          ),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_StarBurstPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Joy bubbles effect
+class _JoyBubblesPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _JoyBubblesPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final random = math.Random(123);
+
+    for (int i = 0; i < 8; i++) {
+      final bubbleProgress = (progress + i / 8) % 1.0;
+      final angle = random.nextDouble() * 2 * math.pi;
+      final startX = center.dx + math.cos(angle) * size.width * 0.2;
+      final y = center.dy - bubbleProgress * size.height * 0.4;
+      final opacity = math.sin(bubbleProgress * math.pi);
+      final bubbleSize = 4 + random.nextDouble() * 6;
+
+      canvas.drawCircle(
+        Offset(startX + math.sin(bubbleProgress * 4 * math.pi) * 10, y),
+        bubbleSize * opacity,
+        Paint()
+          ..color = color.withAlpha((150 * opacity).round())
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_JoyBubblesPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Crown effect for proud mood
+class _CrownPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _CrownPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path();
+    final w = size.width;
+    final h = size.height;
+
+    // Crown shape
+    path.moveTo(0, h);
+    path.lineTo(w * 0.15, h * 0.3);
+    path.lineTo(w * 0.3, h * 0.6);
+    path.lineTo(w * 0.5, 0);
+    path.lineTo(w * 0.7, h * 0.6);
+    path.lineTo(w * 0.85, h * 0.3);
+    path.lineTo(w, h);
+    path.close();
+
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color.withAlpha((200 * progress).round())
+        ..style = PaintingStyle.fill,
+    );
+
+    // Jewels
+    canvas.drawCircle(
+      Offset(w * 0.5, h * 0.35),
+      3,
+      Paint()..color = Colors.red.withAlpha((255 * progress).round()),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_CrownPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Rising spark effect for hopeful mood
+class _RisingSparkPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _RisingSparkPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final random = math.Random(456);
+
+    for (int i = 0; i < 6; i++) {
+      final sparkProgress = (progress + i / 6) % 1.0;
+      final x = size.width * (0.3 + random.nextDouble() * 0.4);
+      final y = size.height * (1 - sparkProgress);
+      final opacity = math.sin(sparkProgress * math.pi);
+
+      canvas.drawCircle(
+        Offset(x, y),
+        2 + opacity * 2,
+        Paint()..color = color.withAlpha((255 * opacity).round()),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RisingSparkPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Bouncing dots effect
+class _BouncingDotsPainter extends CustomPainter {
+  final double progress;
+  final List<Color> colors;
+
+  _BouncingDotsPainter({required this.progress, required this.colors});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    for (int i = 0; i < 5; i++) {
+      final angle = (i / 5) * 2 * math.pi + progress * math.pi;
+      final bounce = math.sin((progress + i / 5) * 2 * math.pi).abs();
+      final distance = size.width * 0.35 + bounce * 10;
+
+      final x = center.dx + math.cos(angle) * distance;
+      final y = center.dy + math.sin(angle) * distance;
+
+      canvas.drawCircle(
+        Offset(x, y),
+        4 + bounce * 3,
+        Paint()..color = colors[i % colors.length].withAlpha(200),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BouncingDotsPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Lightning effect for energized mood
+class _LightningPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final double intensity;
+
+  _LightningPainter({
+    required this.progress,
+    required this.color,
+    required this.intensity,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final random = math.Random((progress * 10).toInt());
+    final center = Offset(size.width / 2, size.height / 2);
+
+    // Draw 2-3 lightning bolts
+    for (int bolt = 0; bolt < 3; bolt++) {
+      if (random.nextDouble() > 0.6) continue;
+
+      final angle = random.nextDouble() * 2 * math.pi;
+      final startDistance = size.width * 0.15;
+      final endDistance = size.width * 0.45;
+
+      final start = Offset(
+        center.dx + math.cos(angle) * startDistance,
+        center.dy + math.sin(angle) * startDistance,
+      );
+      final end = Offset(
+        center.dx + math.cos(angle) * endDistance,
+        center.dy + math.sin(angle) * endDistance,
+      );
+
+      _drawLightningBolt(canvas, start, end, color, random);
+    }
+  }
+
+  void _drawLightningBolt(
+    Canvas canvas,
+    Offset start,
+    Offset end,
+    Color color,
+    math.Random random,
+  ) {
+    final path = Path();
+    path.moveTo(start.dx, start.dy);
+
+    final segments = 4;
+    var current = start;
+
+    for (int i = 0; i < segments; i++) {
+      final t = (i + 1) / segments;
+      final target = Offset.lerp(start, end, t)!;
+      final offset = (random.nextDouble() - 0.5) * 15;
+
+      final perpX = -(end.dy - start.dy);
+      final perpY = end.dx - start.dx;
+      final len = math.sqrt(perpX * perpX + perpY * perpY);
+
+      current = Offset(
+        target.dx + (perpX / len) * offset,
+        target.dy + (perpY / len) * offset,
+      );
+      path.lineTo(current.dx, current.dy);
+    }
+
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color.withAlpha((255 * intensity).round())
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // Glow
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color.withAlpha((80 * intensity).round())
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_LightningPainter oldDelegate) =>
+      progress != oldDelegate.progress || intensity != oldDelegate.intensity;
+}
+
+/// Electric aura effect
+class _ElectricAuraPainter extends CustomPainter {
+  final double progress;
+  final List<Color> colors;
+
+  _ElectricAuraPainter({required this.progress, required this.colors});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final random = math.Random((progress * 20).toInt());
+
+    for (int i = 0; i < 16; i++) {
+      final angle = (i / 16) * 2 * math.pi;
+      final jitter = (random.nextDouble() - 0.5) * 8;
+      final radius = size.width * 0.4 + jitter;
+
+      final x = center.dx + math.cos(angle) * radius;
+      final y = center.dy + math.sin(angle) * radius;
+
+      canvas.drawCircle(
+        Offset(x, y),
+        2,
+        Paint()..color = colors[i % colors.length].withAlpha(180),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ElectricAuraPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Thinking dots effect (... animation)
+class _ThinkingDotsPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _ThinkingDotsPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (int i = 0; i < 3; i++) {
+      final dotProgress = (progress + i * 0.2) % 1.0;
+      final bounce = math.sin(dotProgress * math.pi);
+      final x = size.width * (0.2 + i * 0.3);
+      final y = size.height * 0.5 - bounce * 8;
+
+      canvas.drawCircle(
+        Offset(x, y),
+        4,
+        Paint()..color = color.withAlpha((200 * (0.5 + bounce * 0.5)).round()),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ThinkingDotsPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Sound waves effect for speaking/listening
+class _SoundWavesPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _SoundWavesPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    for (int i = 0; i < 3; i++) {
+      final waveProgress = (progress + i * 0.15) % 1.0;
+      final radius = size.width * 0.25 + waveProgress * size.width * 0.2;
+      final opacity = (1 - waveProgress).clamp(0.0, 0.6);
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        -math.pi / 3,
+        math.pi * 2 / 3,
+        false,
+        Paint()
+          ..color = color.withAlpha((255 * opacity).round())
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SoundWavesPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Focus rings effect
+class _FocusRingsPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _FocusRingsPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    for (int i = 0; i < 2; i++) {
+      final radius = size.width * 0.35 + i * 15;
+      final opacity = progress * (i == 0 ? 0.4 : 0.2);
+
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..color = color.withAlpha((255 * opacity).round())
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_FocusRingsPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Single star painter for wink effect
+class _SingleStarPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _SingleStarPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final starSize = size.width * 0.4 * progress;
+
+    final path = Path();
+    for (int i = 0; i < 4; i++) {
+      final angle = (i / 4) * 2 * math.pi - math.pi / 4;
+      final point = Offset(
+        center.dx + math.cos(angle) * starSize,
+        center.dy + math.sin(angle) * starSize,
+      );
+      if (i == 0) {
+        path.moveTo(point.dx, point.dy);
+      } else {
+        path.lineTo(center.dx, center.dy);
+        path.lineTo(point.dx, point.dy);
+      }
+    }
+    path.close();
+
+    canvas.drawPath(
+      path,
+      Paint()..color = color.withAlpha((255 * progress).round()),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SingleStarPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Rain drops effect for sad mood
+class _RainDropsPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _RainDropsPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final random = math.Random(789);
+
+    for (int i = 0; i < 12; i++) {
+      final dropProgress = (progress + i / 12) % 1.0;
+      final x = size.width * (0.1 + random.nextDouble() * 0.8);
+      final y = dropProgress * size.height;
+      final opacity = math.sin(dropProgress * math.pi) * 0.7;
+
+      // Raindrop shape
+      final path = Path();
+      path.moveTo(x, y - 6);
+      path.quadraticBezierTo(x + 3, y, x, y + 4);
+      path.quadraticBezierTo(x - 3, y, x, y - 6);
+
+      canvas.drawPath(
+        path,
+        Paint()..color = color.withAlpha((255 * opacity).round()),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RainDropsPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Tear drop effect
+class _TearDropPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _TearDropPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final y = size.height * progress;
+    final opacity = math.sin(progress * math.pi);
+
+    final path = Path();
+    path.moveTo(size.width / 2, 0);
+    path.quadraticBezierTo(
+      size.width,
+      size.height * 0.5,
+      size.width / 2,
+      size.height,
+    );
+    path.quadraticBezierTo(0, size.height * 0.5, size.width / 2, 0);
+
+    canvas.save();
+    canvas.translate(0, y * 0.5);
+    canvas.drawPath(
+      path,
+      Paint()..color = color.withAlpha((200 * opacity).round()),
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_TearDropPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Zzz effect for sleeping
+class _ZzzPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _ZzzPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final textPainter = TextPainter(textDirection: TextDirection.ltr);
+
+    for (int i = 0; i < 3; i++) {
+      final zProgress = (progress + i * 0.25) % 1.0;
+      final opacity = math.sin(zProgress * math.pi);
+      final fontSize = 10.0 + i * 4;
+      final x = i * 8.0;
+      final y = -zProgress * 15 - i * 8;
+
+      textPainter.text = TextSpan(
+        text: 'z',
+        style: TextStyle(
+          fontSize: fontSize,
+          color: color.withAlpha((200 * opacity).round()),
+          fontWeight: FontWeight.bold,
+          fontStyle: FontStyle.italic,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(x, y + size.height));
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ZzzPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Confusion swirls effect
+class _ConfusionSwirlsPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _ConfusionSwirlsPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    for (int i = 0; i < 3; i++) {
+      final angle =
+          progress * 2 * math.pi * (i.isEven ? 1 : -1) + i * math.pi / 3;
+      final radius = size.width * 0.3 + i * 8;
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        angle,
+        math.pi,
+        false,
+        Paint()
+          ..color = color.withAlpha(100)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
+
+    // Question marks
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: '?',
+        style: TextStyle(
+          fontSize: 14,
+          color: color.withAlpha(
+            (150 * math.sin(progress * math.pi * 2).abs()).round(),
+          ),
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, Offset(size.width * 0.7, size.height * 0.2));
+  }
+
+  @override
+  bool shouldRepaint(_ConfusionSwirlsPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Sweat drop effect for nervous
+class _SweatDropPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _SweatDropPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bounce = math.sin(progress * math.pi * 4).abs();
+    final y = bounce * 5;
+
+    final path = Path();
+    path.moveTo(size.width / 2, y);
+    path.quadraticBezierTo(
+      size.width,
+      size.height * 0.6 + y,
+      size.width / 2,
+      size.height + y,
+    );
+    path.quadraticBezierTo(0, size.height * 0.6 + y, size.width / 2, y);
+
+    canvas.drawPath(path, Paint()..color = color.withAlpha(180));
+  }
+
+  @override
+  bool shouldRepaint(_SweatDropPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Shake lines effect for nervous/scared
+class _ShakeLinesPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _ShakeLinesPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final shake = math.sin(progress * math.pi * 8) * 3;
+
+    for (int i = 0; i < 4; i++) {
+      final angle = (i / 4) * 2 * math.pi + math.pi / 4;
+      final innerRadius = size.width * 0.38;
+      final outerRadius = size.width * 0.45;
+
+      final start = Offset(
+        center.dx + math.cos(angle) * innerRadius + shake,
+        center.dy + math.sin(angle) * innerRadius,
+      );
+      final end = Offset(
+        center.dx + math.cos(angle) * outerRadius + shake,
+        center.dy + math.sin(angle) * outerRadius,
+      );
+
+      canvas.drawLine(
+        start,
+        end,
+        Paint()
+          ..color = color.withAlpha(100)
+          ..strokeWidth = 2
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ShakeLinesPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Fear tremor effect
+class _FearTremorPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _FearTremorPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final tremor = math.sin(progress * math.pi * 6) * 2;
+
+    // Wavy fear aura
+    final path = Path();
+    for (double angle = 0; angle < 2 * math.pi; angle += 0.1) {
+      final wave = math.sin(angle * 8 + progress * math.pi * 4) * 5;
+      final radius = size.width * 0.4 + wave + tremor;
+      final x = center.dx + math.cos(angle) * radius;
+      final y = center.dy + math.sin(angle) * radius;
+
+      if (angle == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color.withAlpha(60)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_FearTremorPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Anger vein effect
+class _AngerVeinPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _AngerVeinPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Classic anime anger symbol (cross vein)
+    final paint = Paint()
+      ..color = color.withAlpha((255 * progress).round())
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+
+    // Two crossed lines with slight curve
+    canvas.drawLine(
+      Offset(size.width * 0.2, size.height * 0.2),
+      Offset(size.width * 0.8, size.height * 0.8),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(size.width * 0.8, size.height * 0.2),
+      Offset(size.width * 0.2, size.height * 0.8),
+      paint,
+    );
+
+    // Small bulges at the center
+    canvas.drawCircle(
+      Offset(size.width * 0.5, size.height * 0.5),
+      4 * progress,
+      Paint()..color = color.withAlpha((200 * progress).round()),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_AngerVeinPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Steam effect for angry mood
+class _SteamPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _SteamPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final random = math.Random(321);
+
+    for (int i = 0; i < 4; i++) {
+      final steamProgress = (progress + i / 4) % 1.0;
+      final x = size.width * (0.3 + random.nextDouble() * 0.4);
+      final y = size.height * 0.3 - steamProgress * size.height * 0.4;
+      final opacity = (1 - steamProgress) * 0.5;
+      final wave = math.sin(steamProgress * math.pi * 2) * 8;
+
+      // Wavy steam line
+      final path = Path();
+      path.moveTo(x, y + 20);
+      path.quadraticBezierTo(x + wave, y + 10, x, y);
+
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = color.withAlpha((255 * opacity).round())
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SteamPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Static noise effect for glitching
+class _StaticNoisePainter extends CustomPainter {
+  final int seed;
+  final Color color;
+
+  _StaticNoisePainter({required this.seed, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final random = math.Random(seed);
+
+    for (int i = 0; i < 30; i++) {
+      final x = random.nextDouble() * size.width;
+      final y = random.nextDouble() * size.height;
+      final w = 2 + random.nextDouble() * 8;
+      final h = 1 + random.nextDouble() * 2;
+
+      canvas.drawRect(
+        Rect.fromLTWH(x, y, w, h),
+        Paint()..color = color.withAlpha(50 + random.nextInt(100)),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_StaticNoisePainter oldDelegate) =>
+      seed != oldDelegate.seed;
+}
+
+/// Floating leaves effect for zen mood
+class _FloatingLeavesPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _FloatingLeavesPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final random = math.Random(654);
+
+    for (int i = 0; i < 5; i++) {
+      final leafProgress = (progress + i / 5) % 1.0;
+      final startX = random.nextDouble() * size.width;
+      final x = startX + math.sin(leafProgress * math.pi * 2) * 20;
+      final y = leafProgress * size.height;
+      final rotation = leafProgress * math.pi * 2;
+      final opacity = math.sin(leafProgress * math.pi) * 0.6;
+
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(rotation);
+
+      // Simple leaf shape
+      final path = Path();
+      path.moveTo(0, -6);
+      path.quadraticBezierTo(6, 0, 0, 6);
+      path.quadraticBezierTo(-6, 0, 0, -6);
+
+      canvas.drawPath(
+        path,
+        Paint()..color = color.withAlpha((255 * opacity).round()),
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_FloatingLeavesPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Sassy spark effect
+class _SassySparkPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _SassySparkPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    // Sparkle with attitude
+    final sparkSize = size.width * 0.4 * progress;
+
+    for (int i = 0; i < 4; i++) {
+      final angle = (i / 4) * 2 * math.pi + progress * math.pi;
+      final length = i.isEven ? sparkSize : sparkSize * 0.6;
+
+      canvas.drawLine(
+        center,
+        Offset(
+          center.dx + math.cos(angle) * length,
+          center.dy + math.sin(angle) * length,
+        ),
+        Paint()
+          ..color = color.withAlpha((255 * progress).round())
+          ..strokeWidth = 2
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SassySparkPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Devil horns effect for mischievous
+class _DevilHornsPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _DevilHornsPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withAlpha((255 * progress).round())
+      ..style = PaintingStyle.fill;
+
+    // Left horn
+    final leftPath = Path();
+    leftPath.moveTo(size.width * 0.2, size.height);
+    leftPath.lineTo(size.width * 0.1, 0);
+    leftPath.lineTo(size.width * 0.3, size.height * 0.7);
+    leftPath.close();
+    canvas.drawPath(leftPath, paint);
+
+    // Right horn
+    final rightPath = Path();
+    rightPath.moveTo(size.width * 0.8, size.height);
+    rightPath.lineTo(size.width * 0.9, 0);
+    rightPath.lineTo(size.width * 0.7, size.height * 0.7);
+    rightPath.close();
+    canvas.drawPath(rightPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(_DevilHornsPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Loading dots effect
+class _LoadingDotsPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _LoadingDotsPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (int i = 0; i < 3; i++) {
+      final dotProgress = (progress * 3 - i).clamp(0.0, 1.0);
+      final scale = math.sin(dotProgress * math.pi);
+      final x = size.width * (0.2 + i * 0.3);
+
+      canvas.drawCircle(
+        Offset(x, size.height / 2),
+        4 * (0.5 + scale * 0.5),
+        Paint()..color = color.withAlpha((200 * (0.5 + scale * 0.5)).round()),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_LoadingDotsPainter oldDelegate) =>
+      progress != oldDelegate.progress;
+}
+
+/// Error cross effect
+class _ErrorCrossPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _ErrorCrossPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withAlpha((255 * progress).round())
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round;
+
+    final margin = size.width * 0.2;
+    canvas.drawLine(
+      Offset(margin, margin),
+      Offset(size.width - margin, size.height - margin),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(size.width - margin, margin),
+      Offset(margin, size.height - margin),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ErrorCrossPainter oldDelegate) =>
       progress != oldDelegate.progress;
 }

@@ -115,6 +115,19 @@ class AnimatedMeshNode extends StatefulWidget {
   /// Mouth curve amount (-1 = frown, 0 = neutral, 1 = smile)
   final double mouthCurve;
 
+  // === DYNAMIC EFFECT PARAMETERS ===
+  /// Edge electricity effect intensity (0 = none, 1 = full zappy)
+  final double edgeElectricity;
+
+  /// Node pulse phase (0-1, for synced pulsing across the mesh)
+  final double nodePulsePhase;
+
+  /// Node pulse intensity (0 = none, 1 = strong pulsing)
+  final double nodePulseIntensity;
+
+  /// Edge shimmer effect (traveling light along edges)
+  final double edgeShimmer;
+
   const AnimatedMeshNode({
     super.key,
     this.size = 48,
@@ -134,6 +147,10 @@ class AnimatedMeshNode extends StatefulWidget {
     this.leftEyeScale = 1.0,
     this.rightEyeScale = 1.0,
     this.mouthCurve = 0.0,
+    this.edgeElectricity = 0.0,
+    this.nodePulsePhase = 0.0,
+    this.nodePulseIntensity = 0.0,
+    this.edgeShimmer = 0.0,
   });
 
   /// Creates a mesh node with a preset size
@@ -374,6 +391,10 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
         leftEyeScale: widget.leftEyeScale,
         rightEyeScale: widget.rightEyeScale,
         mouthCurve: widget.mouthCurve,
+        edgeElectricity: widget.edgeElectricity,
+        nodePulsePhase: widget.nodePulsePhase,
+        nodePulseIntensity: widget.nodePulseIntensity,
+        edgeShimmer: widget.edgeShimmer,
       ),
     );
 
@@ -486,6 +507,19 @@ class _IcosahedronPainter extends CustomPainter {
   // Mouth edge: use a lower front edge (edge index 8 connects vertices 4 and 9)
   static const int _mouthEdgeIndex = 7; // Lower front edge
 
+  // === DYNAMIC EFFECT PARAMETERS ===
+  /// Edge electricity effect (0 = none, 1 = maximum jitter/zap)
+  final double edgeElectricity;
+
+  /// Phase for individual node pulsing (0-1, animated over time)
+  final double nodePulsePhase;
+
+  /// Intensity of node pulse effect (0 = none, 1 = visible pulse)
+  final double nodePulseIntensity;
+
+  /// Shimmer effect traveling along edges (0-1 position of shimmer)
+  final double edgeShimmer;
+
   _IcosahedronPainter({
     required this.gradientColors,
     required this.glowIntensity,
@@ -500,6 +534,10 @@ class _IcosahedronPainter extends CustomPainter {
     this.leftEyeScale = 1.0,
     this.rightEyeScale = 1.0,
     this.mouthCurve = 0.0,
+    this.edgeElectricity = 0.0,
+    this.nodePulsePhase = 0.0,
+    this.nodePulseIntensity = 0.0,
+    this.edgeShimmer = 0.0,
   });
 
   // Golden ratio for icosahedron
@@ -664,6 +702,26 @@ class _IcosahedronPainter extends CustomPainter {
     // Check if this is the mouth edge
     final isMouthEdge = edgeIndex == _mouthEdgeIndex && mouthCurve != 0;
 
+    // === ELECTRICITY EFFECT ===
+    // When edgeElectricity > 0, add jittery displacement to edges
+    Offset ep1 = p1;
+    Offset ep2 = p2;
+    if (edgeElectricity > 0) {
+      // Use edge index and current time-like value for variation
+      final jitterAmount = edgeElectricity * baseWidth * 3;
+      final seed1 = (edgeIndex * 17 + nodePulsePhase * 100).toInt();
+      final seed2 = (edgeIndex * 31 + nodePulsePhase * 100).toInt();
+
+      // Deterministic pseudo-random based on edge and phase
+      final jitter1X = (math.sin(seed1 * 0.1) * jitterAmount);
+      final jitter1Y = (math.cos(seed1 * 0.13) * jitterAmount);
+      final jitter2X = (math.sin(seed2 * 0.11) * jitterAmount);
+      final jitter2Y = (math.cos(seed2 * 0.12) * jitterAmount);
+
+      ep1 = Offset(p1.dx + jitter1X, p1.dy + jitter1Y);
+      ep2 = Offset(p2.dx + jitter2X, p2.dy + jitter2Y);
+    }
+
     // Draw glow
     if (glowIntensity > 0) {
       final glowPaint = Paint()
@@ -674,13 +732,16 @@ class _IcosahedronPainter extends CustomPainter {
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseWidth * 2.5);
 
       if (isMouthEdge) {
-        _drawCurvedLine(canvas, p1, p2, glowPaint, size);
+        _drawCurvedLine(canvas, ep1, ep2, glowPaint, size);
+      } else if (edgeElectricity > 0.3) {
+        // Draw jagged lightning-style line for high electricity
+        _drawElectricLine(canvas, ep1, ep2, glowPaint, edgeIndex);
       } else {
-        canvas.drawLine(p1, p2, glowPaint);
+        canvas.drawLine(ep1, ep2, glowPaint);
       }
     }
 
-    // Draw line
+    // Draw main line
     final linePaint = Paint()
       ..color = color.withAlpha((255 * depthFactor).round())
       ..strokeWidth = baseWidth * (0.5 + 0.5 * depthFactor)
@@ -688,10 +749,79 @@ class _IcosahedronPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     if (isMouthEdge) {
-      _drawCurvedLine(canvas, p1, p2, linePaint, size);
+      _drawCurvedLine(canvas, ep1, ep2, linePaint, size);
+    } else if (edgeElectricity > 0.3) {
+      _drawElectricLine(canvas, ep1, ep2, linePaint, edgeIndex);
     } else {
-      canvas.drawLine(p1, p2, linePaint);
+      canvas.drawLine(ep1, ep2, linePaint);
     }
+
+    // === SHIMMER EFFECT ===
+    // Draw a bright traveling point along the edge
+    if (edgeShimmer > 0) {
+      // Calculate shimmer position along this edge
+      // Different edges have different phase offsets
+      final phaseOffset = (edgeIndex / 30.0);
+      final shimmerPos = (nodePulsePhase + phaseOffset) % 1.0;
+
+      // Lerp between endpoints
+      final shimmerPoint = Offset.lerp(ep1, ep2, shimmerPos)!;
+
+      // Draw bright shimmer dot
+      final shimmerPaint = Paint()
+        ..color = Colors.white.withAlpha(
+          (200 * edgeShimmer * depthFactor).round(),
+        )
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseWidth * 2);
+      canvas.drawCircle(shimmerPoint, baseWidth * 1.5, shimmerPaint);
+
+      // Inner bright core
+      final shimmerCorePaint = Paint()
+        ..color = color.withAlpha((255 * edgeShimmer).round());
+      canvas.drawCircle(shimmerPoint, baseWidth * 0.8, shimmerCorePaint);
+    }
+  }
+
+  /// Draw a jagged electric line between two points
+  void _drawElectricLine(
+    Canvas canvas,
+    Offset p1,
+    Offset p2,
+    Paint paint,
+    int edgeIndex,
+  ) {
+    final path = Path()..moveTo(p1.dx, p1.dy);
+
+    // Number of segments for the jagged line
+    const segments = 5;
+    final dx = (p2.dx - p1.dx) / segments;
+    final dy = (p2.dy - p1.dy) / segments;
+
+    // Perpendicular direction for jags
+    final len = math.sqrt(dx * dx + dy * dy);
+    if (len == 0) {
+      canvas.drawLine(p1, p2, paint);
+      return;
+    }
+    final perpX = -dy / len;
+    final perpY = dx / len;
+
+    // Draw jagged segments
+    for (int i = 1; i < segments; i++) {
+      // Alternate jag direction with pseudo-random amount
+      final jagAmount =
+          math.sin((edgeIndex + i) * 2.3 + nodePulsePhase * 20) *
+          len *
+          0.15 *
+          edgeElectricity;
+
+      final x = p1.dx + dx * i + perpX * jagAmount;
+      final y = p1.dy + dy * i + perpY * jagAmount;
+      path.lineTo(x, y);
+    }
+
+    path.lineTo(p2.dx, p2.dy);
+    canvas.drawPath(path, paint);
   }
 
   /// Draw a curved line (quadratic bezier) for mouth expression
@@ -749,7 +879,19 @@ class _IcosahedronPainter extends CustomPainter {
       eyeScale = rightEyeScale;
     }
 
-    final baseRadius = size.width * 0.045 * nodeSize * depthFactor * eyeScale;
+    // === NODE PULSE EFFECT ===
+    // Each node pulses with a different phase offset
+    double pulseScale = 1.0;
+    if (nodePulseIntensity > 0) {
+      // Different phase for each vertex creates wave-like effect
+      final phaseOffset = vertexIndex / 12.0;
+      final pulse = math.sin((nodePulsePhase + phaseOffset) * 2 * math.pi);
+      // Pulse scales from 0.85 to 1.15 at max intensity
+      pulseScale = 1.0 + pulse * 0.15 * nodePulseIntensity;
+    }
+
+    final baseRadius =
+        size.width * 0.045 * nodeSize * depthFactor * eyeScale * pulseScale;
 
     // Color based on X position
     final t = point.dx / size.width;
@@ -758,11 +900,23 @@ class _IcosahedronPainter extends CustomPainter {
     // Opacity based on depth
     final opacity = ((depth + 0.5) * 1.2 + 0.4).clamp(0.45, 1.0);
 
-    // Draw outer glow
+    // === ENHANCED GLOW FOR PULSING NODES ===
+    // Draw outer glow (enhanced when pulsing)
     if (glowIntensity > 0) {
+      final pulseGlowBoost = nodePulseIntensity > 0
+          ? (pulseScale - 0.85) * 2
+          : 0;
       final glowPaint = Paint()
-        ..color = color.withAlpha((60 * glowIntensity * opacity).round())
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseRadius * 2);
+        ..color = color.withAlpha(
+          ((60 + pulseGlowBoost * 40) * glowIntensity * opacity).round().clamp(
+            0,
+            255,
+          ),
+        )
+        ..maskFilter = MaskFilter.blur(
+          BlurStyle.normal,
+          baseRadius * (2.0 + pulseGlowBoost),
+        );
       canvas.drawCircle(point, baseRadius * 2.5, glowPaint);
     }
 
@@ -817,7 +971,14 @@ class _IcosahedronPainter extends CustomPainter {
         oldDelegate.nodeSize != nodeSize ||
         oldDelegate.grabbedVertexIndex != grabbedVertexIndex ||
         oldDelegate.dragPosition != dragPosition ||
-        oldDelegate.stretchIntensity != stretchIntensity;
+        oldDelegate.stretchIntensity != stretchIntensity ||
+        oldDelegate.leftEyeScale != leftEyeScale ||
+        oldDelegate.rightEyeScale != rightEyeScale ||
+        oldDelegate.mouthCurve != mouthCurve ||
+        oldDelegate.edgeElectricity != edgeElectricity ||
+        oldDelegate.nodePulsePhase != nodePulsePhase ||
+        oldDelegate.nodePulseIntensity != nodePulseIntensity ||
+        oldDelegate.edgeShimmer != edgeShimmer;
   }
 }
 
