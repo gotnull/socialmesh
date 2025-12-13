@@ -2505,10 +2505,11 @@ class ProtocolService {
     try {
       _logger.i('Setting region: ${region.name}');
 
-      // Set usePreset=true and hopLimit=3 to match Meshtastic defaults
+      // Set Meshtastic defaults: usePreset=true, LONG_FAST preset, hopLimit=3
       final loraConfig = pb.Config_LoRaConfig()
         ..usePreset = true
         ..region = region
+        ..modemPreset = pb.ModemPreset.LONG_FAST
         ..hopLimit = 3;
 
       final config = pb.Config()..lora = loraConfig;
