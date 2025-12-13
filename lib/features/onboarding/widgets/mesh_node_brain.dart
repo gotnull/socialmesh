@@ -394,6 +394,20 @@ extension MeshBrainMoodExtension on MeshBrainMood {
   }
 }
 
+/// Simple face expression data - just eye scales and mouth curve
+/// No overlays, no extra colors - just modifies existing mesh nodes/edges
+class _SimpleFaceExpression {
+  final double leftEyeScale;
+  final double rightEyeScale;
+  final double mouthCurve;
+
+  const _SimpleFaceExpression({
+    this.leftEyeScale = 1.0,
+    this.rightEyeScale = 1.0,
+    this.mouthCurve = 0.0,
+  });
+}
+
 /// A sentient mesh node brain that acts as an onboarding advisor.
 /// Has personality, emotions, and responds to user interactions.
 class MeshNodeBrain extends StatefulWidget {
@@ -1135,14 +1149,14 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
                 // Orbital rings
                 _buildOrbitalRings(),
 
-                // Main brain mesh
+                // Main brain mesh (the rotating icosahedron with face expressions)
                 _buildBrainMesh(),
 
                 // Inner core glow
                 _buildCoreGlow(),
 
-                // Expression overlay (eyes, mouth effects)
-                if (widget.showExpression) _buildExpressionOverlay(),
+                // Additional effects for special moods (particles, etc.)
+                ..._buildSpecialEffects(),
               ],
             ),
           );
@@ -1324,6 +1338,10 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     // Scale animation
     final scale = _moodScale + (_pulse.value - 0.85) * 0.1;
 
+    // Get face expression values
+    final faceExpr = _getFaceExpression();
+
+    // Use AnimatedMeshNode with native face expression support
     return Transform.translate(
       offset: Offset(0, -bounceOffset),
       child: Transform.scale(
@@ -1338,9 +1356,297 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           nodeSize: 0.9,
           externalRotationX: wobbleX,
           externalRotationY: wobbleY,
+          leftEyeScale: widget.showExpression ? faceExpr.leftEyeScale : 1.0,
+          rightEyeScale: widget.showExpression ? faceExpr.rightEyeScale : 1.0,
+          mouthCurve: widget.showExpression ? faceExpr.mouthCurve : 0.0,
         ),
       ),
     );
+  }
+
+  /// Simple face expression data (just scales and curve)
+  _SimpleFaceExpression _getFaceExpression() {
+    switch (widget.mood) {
+      // === POSITIVE EMOTIONS ===
+      case MeshBrainMood.idle:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.0,
+          rightEyeScale: 1.0,
+          mouthCurve: 0.3,
+        );
+      case MeshBrainMood.happy:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.1,
+          rightEyeScale: 1.1,
+          mouthCurve: 0.8,
+        );
+      case MeshBrainMood.excited:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.4,
+          rightEyeScale: 1.4,
+          mouthCurve: 1.0,
+        );
+      case MeshBrainMood.celebrating:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.3,
+          rightEyeScale: 1.3,
+          mouthCurve: 1.0,
+        );
+      case MeshBrainMood.laughing:
+        return _SimpleFaceExpression(
+          leftEyeScale: 0.2 + _pulse.value * 0.3, // Squinting from laughing
+          rightEyeScale: 0.2 + _pulse.value * 0.3,
+          mouthCurve: 1.0,
+        );
+      case MeshBrainMood.tickled:
+        return _SimpleFaceExpression(
+          leftEyeScale: 0.3 + _pulse.value * 0.4,
+          rightEyeScale: 0.3 + _pulse.value * 0.4,
+          mouthCurve: 0.9,
+        );
+      case MeshBrainMood.smiling:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.8, // Gentle squint
+          rightEyeScale: 0.8,
+          mouthCurve: 0.7,
+        );
+      case MeshBrainMood.love:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.2,
+          rightEyeScale: 1.2,
+          mouthCurve: 0.6,
+        );
+      case MeshBrainMood.proud:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.9,
+          rightEyeScale: 0.9,
+          mouthCurve: 0.5,
+        );
+      case MeshBrainMood.grateful:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.7, // Eyes softly closed
+          rightEyeScale: 0.7,
+          mouthCurve: 0.6,
+        );
+      case MeshBrainMood.hopeful:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.2,
+          rightEyeScale: 1.2,
+          mouthCurve: 0.4,
+        );
+      case MeshBrainMood.playful:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.1,
+          rightEyeScale: 0.3, // Winking
+          mouthCurve: 0.8,
+        );
+      case MeshBrainMood.energized:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.3,
+          rightEyeScale: 1.3,
+          mouthCurve: 0.9,
+        );
+
+      // === NEUTRAL/COMMUNICATIVE ===
+      case MeshBrainMood.thinking:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.9,
+          rightEyeScale: 0.9,
+          mouthCurve: 0.0,
+        );
+      case MeshBrainMood.speaking:
+        return _SimpleFaceExpression(
+          leftEyeScale: 1.0,
+          rightEyeScale: 1.0,
+          mouthCurve: 0.2 + _pulse.value * 0.3, // Mouth moves while speaking
+        );
+      case MeshBrainMood.curious:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.3,
+          rightEyeScale: 1.1,
+          mouthCurve: 0.2,
+        );
+      case MeshBrainMood.focused:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.8,
+          rightEyeScale: 0.8,
+          mouthCurve: 0.0,
+        );
+      case MeshBrainMood.approving:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.9,
+          rightEyeScale: 0.9,
+          mouthCurve: 0.5,
+        );
+      case MeshBrainMood.inviting:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.1,
+          rightEyeScale: 1.1,
+          mouthCurve: 0.6,
+        );
+      case MeshBrainMood.winking:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.0,
+          rightEyeScale: 0.0, // Closed wink
+          mouthCurve: 0.7,
+        );
+      case MeshBrainMood.listening:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.0,
+          rightEyeScale: 1.0,
+          mouthCurve: 0.2,
+        );
+
+      // === ALERTNESS ===
+      case MeshBrainMood.alert:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.4,
+          rightEyeScale: 1.4,
+          mouthCurve: 0.0,
+        );
+      case MeshBrainMood.surprised:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.6,
+          rightEyeScale: 1.6,
+          mouthCurve: -0.3, // O-shape
+        );
+      case MeshBrainMood.alarmed:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.5,
+          rightEyeScale: 1.5,
+          mouthCurve: -0.5,
+        );
+
+      // === NEGATIVE/LOW ENERGY ===
+      case MeshBrainMood.sad:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.7,
+          rightEyeScale: 0.7,
+          mouthCurve: -0.7,
+        );
+      case MeshBrainMood.dormant:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.0, // Closed
+          rightEyeScale: 0.0,
+          mouthCurve: 0.1,
+        );
+      case MeshBrainMood.tired:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.4,
+          rightEyeScale: 0.4,
+          mouthCurve: -0.2,
+        );
+      case MeshBrainMood.bored:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.6,
+          rightEyeScale: 0.6,
+          mouthCurve: -0.1,
+        );
+      case MeshBrainMood.confused:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.2,
+          rightEyeScale: 0.8,
+          mouthCurve: -0.2,
+        );
+      case MeshBrainMood.nervous:
+        return _SimpleFaceExpression(
+          leftEyeScale: 1.1 + _pulse.value * 0.2, // Jittery
+          rightEyeScale: 1.1 + _pulse.value * 0.2,
+          mouthCurve: -0.3,
+        );
+      case MeshBrainMood.scared:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.5,
+          rightEyeScale: 1.5,
+          mouthCurve: -0.6,
+        );
+      case MeshBrainMood.embarrassed:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.5,
+          rightEyeScale: 0.5,
+          mouthCurve: -0.3,
+        );
+      case MeshBrainMood.shy:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.6,
+          rightEyeScale: 0.6,
+          mouthCurve: 0.2,
+        );
+      case MeshBrainMood.grumpy:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.7,
+          rightEyeScale: 0.7,
+          mouthCurve: -0.5,
+        );
+      case MeshBrainMood.annoyed:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.8,
+          rightEyeScale: 0.8,
+          mouthCurve: -0.4,
+        );
+      case MeshBrainMood.angry:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.9,
+          rightEyeScale: 0.9,
+          mouthCurve: -0.6,
+        );
+
+      // === SPECIAL ===
+      case MeshBrainMood.dizzy:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.0,
+          rightEyeScale: 1.0,
+          mouthCurve: -0.2,
+        );
+      case MeshBrainMood.glitching:
+        return _SimpleFaceExpression(
+          leftEyeScale: 0.5 + _pulse.value * 1.0, // Glitchy
+          rightEyeScale: 1.5 - _pulse.value * 1.0,
+          mouthCurve: -0.5 + _pulse.value * 1.0,
+        );
+      case MeshBrainMood.zen:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.3, // Meditating
+          rightEyeScale: 0.3,
+          mouthCurve: 0.3,
+        );
+      case MeshBrainMood.sassy:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.9,
+          rightEyeScale: 0.4, // Side eye
+          mouthCurve: 0.4,
+        );
+      case MeshBrainMood.mischievous:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.0,
+          rightEyeScale: 0.5, // Sneaky wink
+          mouthCurve: 0.6,
+        );
+      case MeshBrainMood.hypnotized:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.2,
+          rightEyeScale: 1.2,
+          mouthCurve: 0.0,
+        );
+      case MeshBrainMood.loading:
+        return _SimpleFaceExpression(
+          leftEyeScale: 0.8 + _pulse.value * 0.4,
+          rightEyeScale: 0.8 + _pulse.value * 0.4,
+          mouthCurve: 0.0,
+        );
+      case MeshBrainMood.error:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 1.0,
+          rightEyeScale: 1.0,
+          mouthCurve: -0.8,
+        );
+      case MeshBrainMood.success:
+        return const _SimpleFaceExpression(
+          leftEyeScale: 0.7, // Happy squint
+          rightEyeScale: 0.7,
+          mouthCurve: 1.0,
+        );
+    }
   }
 
   MeshNodeAnimationType _getMeshAnimationType() {
@@ -1388,20 +1694,28 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     );
   }
 
-  Widget _buildExpressionOverlay() {
-    // Build mood-specific overlays (eyes, effects, etc.)
+  /// Build special particle effects for certain moods
+  List<Widget> _buildSpecialEffects() {
+    final effects = <Widget>[];
+
     switch (widget.mood) {
       case MeshBrainMood.love:
-        return _buildHeartParticles();
+        effects.add(_buildHeartParticles());
+        break;
       case MeshBrainMood.dizzy:
-        return _buildDizzyEffect();
+        effects.add(_buildDizzyEffect());
+        break;
       case MeshBrainMood.hypnotized:
-        return _buildHypnoEffect();
+        effects.add(_buildHypnoEffect());
+        break;
       case MeshBrainMood.glitching:
-        return _buildGlitchEffect();
+        effects.add(_buildGlitchEffect());
+        break;
       default:
-        return const SizedBox.shrink();
+        break;
     }
+
+    return effects;
   }
 
   Widget _buildHeartParticles() {

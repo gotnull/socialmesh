@@ -105,6 +105,16 @@ class AnimatedMeshNode extends StatefulWidget {
   /// Callback when animation completes one cycle
   final VoidCallback? onAnimationCycle;
 
+  // === FACE EXPRESSION PARAMETERS ===
+  /// Left eye node scale (0 = closed/blink, 1 = normal, >1 = wide)
+  final double leftEyeScale;
+
+  /// Right eye node scale (0 = closed/blink, 1 = normal, >1 = wide)
+  final double rightEyeScale;
+
+  /// Mouth curve amount (-1 = frown, 0 = neutral, 1 = smile)
+  final double mouthCurve;
+
   const AnimatedMeshNode({
     super.key,
     this.size = 48,
@@ -121,6 +131,9 @@ class AnimatedMeshNode extends StatefulWidget {
     this.dragPosition,
     this.stretchIntensity = 0.3,
     this.onAnimationCycle,
+    this.leftEyeScale = 1.0,
+    this.rightEyeScale = 1.0,
+    this.mouthCurve = 0.0,
   });
 
   /// Creates a mesh node with a preset size
@@ -358,6 +371,9 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
         grabbedVertexIndex: widget.grabbedVertexIndex,
         dragPosition: widget.dragPosition,
         stretchIntensity: widget.stretchIntensity,
+        leftEyeScale: widget.leftEyeScale,
+        rightEyeScale: widget.rightEyeScale,
+        mouthCurve: widget.mouthCurve,
       ),
     );
 
@@ -452,6 +468,24 @@ class _IcosahedronPainter extends CustomPainter {
   /// How much the grabbed vertex can stretch (0.0 = none, 1.0 = full)
   final double stretchIntensity;
 
+  // === FACE EXPRESSION PARAMETERS ===
+  /// Left eye node scale (0 = closed/blink, 1 = normal, >1 = wide)
+  final double leftEyeScale;
+
+  /// Right eye node scale (0 = closed/blink, 1 = normal, >1 = wide)
+  final double rightEyeScale;
+
+  /// Mouth curve amount (-1 = frown, 0 = neutral, 1 = smile)
+  final double mouthCurve;
+
+  // Eye vertices: use upper front vertices (index 5 is front-top, 1 is top-right, 0 is top-left)
+  // After rotation, vertices 5 and 9 tend to be front-facing upper area
+  static const int _leftEyeVertex = 11; // Upper left area
+  static const int _rightEyeVertex = 9; // Upper right area
+
+  // Mouth edge: use a lower front edge (edge index 8 connects vertices 4 and 9)
+  static const int _mouthEdgeIndex = 7; // Lower front edge
+
   _IcosahedronPainter({
     required this.gradientColors,
     required this.glowIntensity,
@@ -463,6 +497,9 @@ class _IcosahedronPainter extends CustomPainter {
     this.grabbedVertexIndex = -1,
     this.dragPosition,
     this.stretchIntensity = 0.3,
+    this.leftEyeScale = 1.0,
+    this.rightEyeScale = 1.0,
+    this.mouthCurve = 0.0,
   });
 
   // Golden ratio for icosahedron
@@ -539,22 +576,24 @@ class _IcosahedronPainter extends CustomPainter {
     final deformedPoints = _applyDeformation(projectedPoints, size);
 
     // Sort edges by average Z depth (back to front)
-    final edgesWithDepth = <MapEntry<List<int>, double>>[];
-    for (final edge in _edges) {
+    final edgesWithDepth = <MapEntry<int, double>>[];
+    for (var i = 0; i < _edges.length; i++) {
+      final edge = _edges[i];
       final avgZ =
           (transformedPoints[edge[0]].z + transformedPoints[edge[1]].z) / 2;
-      edgesWithDepth.add(MapEntry(edge, avgZ));
+      edgesWithDepth.add(MapEntry(i, avgZ));
     }
     edgesWithDepth.sort((a, b) => a.value.compareTo(b.value));
 
     // Draw edges (back to front) using deformed points
     for (final entry in edgesWithDepth) {
-      final edge = entry.key;
+      final edgeIndex = entry.key;
+      final edge = _edges[edgeIndex];
       final p1 = deformedPoints[edge[0]];
       final p2 = deformedPoints[edge[1]];
       final z1 = transformedPoints[edge[0]].z;
       final z2 = transformedPoints[edge[1]].z;
-      _drawEdge(canvas, p1, p2, size, z1, z2);
+      _drawEdge(canvas, p1, p2, size, z1, z2, edgeIndex);
     }
 
     // Sort vertices by Z depth for drawing (back to front)
@@ -569,7 +608,7 @@ class _IcosahedronPainter extends CustomPainter {
       final i = entry.key;
       final point = deformedPoints[i];
       final depth = transformedPoints[i].z;
-      _drawNode(canvas, point, size, depth);
+      _drawNode(canvas, point, size, depth, i);
     }
   }
 
@@ -609,6 +648,7 @@ class _IcosahedronPainter extends CustomPainter {
     Size size,
     double z1,
     double z2,
+    int edgeIndex,
   ) {
     final baseWidth = size.width * 0.02 * lineThickness;
 
@@ -621,29 +661,95 @@ class _IcosahedronPainter extends CustomPainter {
     final t = avgX / size.width;
     final color = _getGradientColor(t);
 
+    // Check if this is the mouth edge
+    final isMouthEdge = edgeIndex == _mouthEdgeIndex && mouthCurve != 0;
+
     // Draw glow
     if (glowIntensity > 0) {
       final glowPaint = Paint()
         ..color = color.withAlpha((35 * glowIntensity * depthFactor).round())
         ..strokeWidth = baseWidth * 5
         ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseWidth * 2.5);
-      canvas.drawLine(p1, p2, glowPaint);
+
+      if (isMouthEdge) {
+        _drawCurvedLine(canvas, p1, p2, glowPaint, size);
+      } else {
+        canvas.drawLine(p1, p2, glowPaint);
+      }
     }
 
     // Draw line
     final linePaint = Paint()
       ..color = color.withAlpha((255 * depthFactor).round())
       ..strokeWidth = baseWidth * (0.5 + 0.5 * depthFactor)
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(p1, p2, linePaint);
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    if (isMouthEdge) {
+      _drawCurvedLine(canvas, p1, p2, linePaint, size);
+    } else {
+      canvas.drawLine(p1, p2, linePaint);
+    }
   }
 
-  void _drawNode(Canvas canvas, Offset point, Size size, double depth) {
+  /// Draw a curved line (quadratic bezier) for mouth expression
+  void _drawCurvedLine(
+    Canvas canvas,
+    Offset p1,
+    Offset p2,
+    Paint paint,
+    Size size,
+  ) {
+    // Control point is perpendicular to the line, offset by mouthCurve
+    final midX = (p1.dx + p2.dx) / 2;
+    final midY = (p1.dy + p2.dy) / 2;
+
+    // Perpendicular direction (rotate 90 degrees)
+    final dx = p2.dx - p1.dx;
+    final dy = p2.dy - p1.dy;
+    final len = math.sqrt(dx * dx + dy * dy);
+    if (len == 0) return;
+
+    // Normalized perpendicular
+    final perpX = -dy / len;
+    final perpY = dx / len;
+
+    // Curve amount: negative = smile (curve down), positive = frown (curve up)
+    final curveOffset = -mouthCurve * size.width * 0.08;
+    final controlPoint = Offset(
+      midX + perpX * curveOffset,
+      midY + perpY * curveOffset,
+    );
+
+    final path = Path()
+      ..moveTo(p1.dx, p1.dy)
+      ..quadraticBezierTo(controlPoint.dx, controlPoint.dy, p2.dx, p2.dy);
+
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawNode(
+    Canvas canvas,
+    Offset point,
+    Size size,
+    double depth,
+    int vertexIndex,
+  ) {
     // Node size varies based on depth (closer = bigger)
     // Normalize depth from [-0.42, 0.42] to reasonable scale
     final depthFactor = ((depth + 0.5) * 1.0 + 0.5).clamp(0.5, 1.3);
-    final baseRadius = size.width * 0.045 * nodeSize * depthFactor;
+
+    // Apply eye scale if this is an eye vertex
+    double eyeScale = 1.0;
+    if (vertexIndex == _leftEyeVertex) {
+      eyeScale = leftEyeScale;
+    } else if (vertexIndex == _rightEyeVertex) {
+      eyeScale = rightEyeScale;
+    }
+
+    final baseRadius = size.width * 0.045 * nodeSize * depthFactor * eyeScale;
 
     // Color based on X position
     final t = point.dx / size.width;

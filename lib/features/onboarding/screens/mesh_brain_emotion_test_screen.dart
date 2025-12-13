@@ -44,57 +44,50 @@ class _MeshBrainEmotionTestScreenState
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0A0A0F) : Colors.grey[100],
-      body: CustomScrollView(
-        slivers: [
-          // Collapsing header with large brain preview
-          SliverAppBar(
-            expandedHeight: 380,
-            pinned: true,
-            backgroundColor: isDark
-                ? const Color(0xFF0A0A0F)
-                : Colors.grey[100],
-            flexibleSpace: FlexibleSpaceBar(
-              background: _buildHeroPreview(isDark),
-            ),
-            title: const Text('Emotion Configurator'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.settings),
-                onPressed: _showSettingsSheet,
-                tooltip: 'Settings',
-              ),
-            ],
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: const Text('Emotion Configurator'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _showSettingsSheet,
+            tooltip: 'Settings',
           ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Fixed brain preview at top
+          _buildFixedBrainPreview(isDark),
 
           // Category filter
-          SliverToBoxAdapter(child: _buildCategoryFilter(theme)),
+          _buildCategoryFilter(theme),
 
-          // Emotion grid
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: SliverGrid(
+          // Scrollable emotion grid
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 childAspectRatio: 0.85,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
-              delegate: SliverChildBuilderDelegate((context, index) {
+              itemCount: _filteredMoods.length,
+              itemBuilder: (context, index) {
                 final mood = _filteredMoods[index];
                 return _buildEmotionCard(mood, theme, isDark);
-              }, childCount: _filteredMoods.length),
+              },
             ),
           ),
-
-          // Bottom padding
-          const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
         ],
       ),
     );
   }
 
-  Widget _buildHeroPreview(bool isDark) {
+  Widget _buildFixedBrainPreview(bool isDark) {
     return Container(
+      height: 280,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -110,79 +103,70 @@ class _MeshBrainEmotionTestScreenState
           _buildGridPattern(isDark),
 
           // Main content
-          SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 60),
-                // Brain preview
-                SizedBox(
-                  height: 200,
-                  child: Center(
-                    child: MeshNodeBrain(
-                      size: _brainSize,
-                      mood: _selectedMood,
-                      glowIntensity: _glowIntensity,
-                      showThoughtParticles: _showParticles,
-                      showExpression: _showExpression,
-                      onTap: _cycleMood,
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Brain preview
+              SizedBox(
+                height: 180,
+                child: Center(
+                  child: MeshNodeBrain(
+                    size: _brainSize * 0.85,
+                    mood: _selectedMood,
+                    glowIntensity: _glowIntensity,
+                    showThoughtParticles: _showParticles,
+                    showExpression: _showExpression,
+                    onTap: _cycleMood,
+                  ),
+                ),
+              ),
+
+              // Current mood info
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _selectedMood.emoji,
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _selectedMood.displayName,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
-                ),
-
-                // Current mood info
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            _selectedMood.emoji,
-                            style: const TextStyle(fontSize: 28),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            _selectedMood.displayName,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _getCategoryColor(
-                            _selectedMood.category,
-                          ).withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _getCategoryColor(
-                              _selectedMood.category,
-                            ).withValues(alpha: 0.5),
-                          ),
-                        ),
-                        child: Text(
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getCategoryColor(
+                        _selectedMood.category,
+                      ).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: _getCategoryColor(
                           _selectedMood.category,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: _getCategoryColor(_selectedMood.category),
-                          ),
-                        ),
+                        ).withValues(alpha: 0.5),
                       ),
-                    ],
+                    ),
+                    child: Text(
+                      _selectedMood.category,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: _getCategoryColor(_selectedMood.category),
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
@@ -279,19 +263,8 @@ class _MeshBrainEmotionTestScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Mini brain preview
-            SizedBox(
-              height: 70,
-              width: 70,
-              child: MeshNodeBrain(
-                size: 45,
-                mood: mood,
-                glowIntensity: 0.6,
-                showThoughtParticles: false,
-                showExpression: false,
-                interactive: false,
-              ),
-            ),
+            // Static mood indicator (no animations for performance)
+            _buildStaticMoodIndicator(mood, isSelected),
 
             const SizedBox(height: 4),
 
@@ -314,6 +287,73 @@ class _MeshBrainEmotionTestScreenState
         ),
       ),
     );
+  }
+
+  /// Static mood indicator - simple colored glow without animations
+  Widget _buildStaticMoodIndicator(MeshBrainMood mood, bool isSelected) {
+    final colors = _getMoodColors(mood);
+    final baseColor = colors[1];
+
+    return SizedBox(
+      height: 60,
+      width: 60,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Outer glow
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  baseColor.withValues(alpha: isSelected ? 0.4 : 0.2),
+                  baseColor.withValues(alpha: isSelected ? 0.15 : 0.05),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.6, 1.0],
+              ),
+            ),
+          ),
+          // Core icosahedron representation (simple diamond shape)
+          CustomPaint(
+            size: const Size(28, 28),
+            painter: _SimpleMeshPainter(
+              color: baseColor,
+              glowIntensity: isSelected ? 0.8 : 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Color> _getMoodColors(MeshBrainMood mood) {
+    switch (mood) {
+      case MeshBrainMood.love:
+        return const [Color(0xFFFF69B4), Color(0xFFFF1493), Color(0xFFFF69B4)];
+      case MeshBrainMood.angry:
+        return const [Color(0xFFFF4444), Color(0xFFCC0000), Color(0xFFFF6666)];
+      case MeshBrainMood.sad:
+        return const [Color(0xFF6699CC), Color(0xFF336699), Color(0xFF99CCFF)];
+      case MeshBrainMood.scared:
+        return const [Color(0xFF9966CC), Color(0xFF663399), Color(0xFFCC99FF)];
+      case MeshBrainMood.error:
+        return const [Color(0xFFFF0000), Color(0xFFCC0000), Color(0xFFFF3333)];
+      case MeshBrainMood.success:
+        return const [Color(0xFF00FF00), Color(0xFF00CC00), Color(0xFF66FF66)];
+      case MeshBrainMood.energized:
+        return const [Color(0xFFFFFF00), Color(0xFFFFCC00), Color(0xFFFFFF66)];
+      case MeshBrainMood.zen:
+        return const [Color(0xFF00FFFF), Color(0xFF00CCCC), Color(0xFF66FFFF)];
+      case MeshBrainMood.glitching:
+        return const [Color(0xFF00FF00), Color(0xFFFF00FF), Color(0xFF00FFFF)];
+      case MeshBrainMood.embarrassed:
+        return const [Color(0xFFFF9999), Color(0xFFFF6666), Color(0xFFFFCCCC)];
+      default:
+        return const [Color(0xFFFF6B4A), Color(0xFFE91E8C), Color(0xFF4F6AF6)];
+    }
   }
 
   void _showSettingsSheet() {
@@ -550,4 +590,78 @@ class _GridPatternPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Simple static mesh painter for grid items (no animations)
+class _SimpleMeshPainter extends CustomPainter {
+  final Color color;
+  final double glowIntensity;
+
+  _SimpleMeshPainter({required this.color, required this.glowIntensity});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+
+    // Draw a simple diamond/icosahedron shape
+    final path = Path();
+
+    // Top point
+    path.moveTo(center.dx, center.dy - radius);
+    // Right point
+    path.lineTo(center.dx + radius * 0.9, center.dy);
+    // Bottom point
+    path.lineTo(center.dx, center.dy + radius);
+    // Left point
+    path.lineTo(center.dx - radius * 0.9, center.dy);
+    path.close();
+
+    // Outer glow
+    final glowPaint = Paint()
+      ..color = color.withValues(alpha: 0.3 * glowIntensity)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    canvas.drawPath(path, glowPaint);
+
+    // Fill
+    final fillPaint = Paint()
+      ..color = color.withValues(alpha: 0.15 * glowIntensity);
+    canvas.drawPath(path, fillPaint);
+
+    // Stroke
+    final strokePaint = Paint()
+      ..color = color.withValues(alpha: 0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawPath(path, strokePaint);
+
+    // Inner lines for mesh effect
+    final linePaint = Paint()
+      ..color = color.withValues(alpha: 0.4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8;
+
+    // Cross lines
+    canvas.drawLine(
+      Offset(center.dx, center.dy - radius),
+      Offset(center.dx, center.dy + radius),
+      linePaint,
+    );
+    canvas.drawLine(
+      Offset(center.dx - radius * 0.9, center.dy),
+      Offset(center.dx + radius * 0.9, center.dy),
+      linePaint,
+    );
+
+    // Center node
+    final nodePaint = Paint()..color = color;
+    canvas.drawCircle(center, 3, nodePaint);
+
+    final nodeGlowPaint = Paint()..color = Colors.white.withValues(alpha: 0.7);
+    canvas.drawCircle(center, 1.5, nodeGlowPaint);
+  }
+
+  @override
+  bool shouldRepaint(_SimpleMeshPainter oldDelegate) =>
+      color != oldDelegate.color || glowIntensity != oldDelegate.glowIntensity;
 }
