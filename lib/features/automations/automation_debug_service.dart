@@ -35,11 +35,11 @@ class ConditionEvaluation {
   });
 
   Map<String, dynamic> toJson() => {
-        'type': type.name,
-        'typeDisplayName': type.displayName,
-        'passed': passed,
-        'details': details,
-      };
+    'type': type.name,
+    'typeDisplayName': type.displayName,
+    'passed': passed,
+    'details': details,
+  };
 }
 
 /// Record of a single automation evaluation
@@ -73,22 +73,22 @@ class AutomationEvaluation {
   });
 
   Map<String, dynamic> toJson() => {
-        'automationId': automationId,
-        'automationName': automationName,
-        'enabled': enabled,
-        'triggerType': triggerType.name,
-        'triggerTypeDisplayName': triggerType.displayName,
-        'eventType': eventType.name,
-        'eventTypeDisplayName': eventType.displayName,
-        'timestamp': timestamp.toIso8601String(),
-        'triggered': triggered,
-        'skipReason': skipReason?.name,
-        'skipReasonDisplayName': skipReason?.displayName,
-        'skipDetails': skipDetails,
-        'eventData': eventData,
-        'triggerConfig': triggerConfig,
-        'conditionResults': conditionResults?.map((c) => c.toJson()).toList(),
-      };
+    'automationId': automationId,
+    'automationName': automationName,
+    'enabled': enabled,
+    'triggerType': triggerType.name,
+    'triggerTypeDisplayName': triggerType.displayName,
+    'eventType': eventType.name,
+    'eventTypeDisplayName': eventType.displayName,
+    'timestamp': timestamp.toIso8601String(),
+    'triggered': triggered,
+    'skipReason': skipReason?.name,
+    'skipReasonDisplayName': skipReason?.displayName,
+    'skipDetails': skipDetails,
+    'eventData': eventData,
+    'triggerConfig': triggerConfig,
+    'conditionResults': conditionResults?.map((c) => c.toJson()).toList(),
+  };
 }
 
 /// Complete snapshot for debugging
@@ -106,18 +106,18 @@ class AutomationDebugSnapshot {
   });
 
   Map<String, dynamic> toJson() => {
-        'timestamp': timestamp.toIso8601String(),
-        'automations': automations.map((a) => a.toJson()).toList(),
-        'recentEvaluations': evaluations.map((e) => e.toJson()).toList(),
-        'engineState': engineState,
-        'summary': {
-          'totalAutomations': automations.length,
-          'enabledAutomations': automations.where((a) => a.enabled).length,
-          'totalEvaluations': evaluations.length,
-          'triggeredCount': evaluations.where((e) => e.triggered).length,
-          'skippedCount': evaluations.where((e) => !e.triggered).length,
-        },
-      };
+    'timestamp': timestamp.toIso8601String(),
+    'automations': automations.map((a) => a.toJson()).toList(),
+    'recentEvaluations': evaluations.map((e) => e.toJson()).toList(),
+    'engineState': engineState,
+    'summary': {
+      'totalAutomations': automations.length,
+      'enabledAutomations': automations.where((a) => a.enabled).length,
+      'totalEvaluations': evaluations.length,
+      'triggeredCount': evaluations.where((e) => e.triggered).length,
+      'skippedCount': evaluations.where((e) => !e.triggered).length,
+    },
+  };
 }
 
 /// Service for tracking and exporting automation debug information
@@ -196,9 +196,6 @@ class AutomationDebugService {
   /// Share debug data
   Future<void> shareDebugJson(AutomationRepository repository) async {
     final jsonStr = exportDebugJson(repository);
-    await Share.share(
-      jsonStr,
-      subject: 'Protofluff Automation Debug Export',
-    );
+    await Share.share(jsonStr, subject: 'Socialmesh Automation Debug Export');
   }
 }

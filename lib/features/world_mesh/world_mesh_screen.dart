@@ -20,7 +20,7 @@ import 'services/node_favorites_service.dart';
 import 'widgets/node_intelligence_panel.dart';
 import 'world_mesh_filter_sheet.dart';
 
-/// World Mesh Map screen showing all Meshtastic nodes from meshmap.net
+/// World Mesh Map screen showing all Meshtastic nodes from mesh-observer
 class WorldMeshScreen extends ConsumerStatefulWidget {
   const WorldMeshScreen({super.key});
 
@@ -665,7 +665,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               RichAttributionWidget(
                 alignment: AttributionAlignment.bottomLeft,
                 attributions: [
-                  TextSourceAttribution('MeshMap.net', onTap: () {}),
+                  TextSourceAttribution('Socialmesh', onTap: () {}),
                 ],
               ),
             ],
@@ -1187,7 +1187,7 @@ class _SearchResultTile extends StatelessWidget {
   }
 }
 
-/// Rich info card for WorldMeshNode - shows all available data from meshmap.net
+/// Rich info card for WorldMeshNode - shows all available data from mesh-observer
 class WorldNodeInfoCard extends StatelessWidget {
   final WorldMeshNode node;
   final VoidCallback? onClose;
@@ -1318,7 +1318,7 @@ class WorldNodeInfoCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Mesh Intelligence Section - Derived from meshmap.net data
+                  // Mesh Intelligence Section - Derived from mesh-observer data
                   NodeIntelligencePanel(node: node, onShowOnMap: onFocus),
                   const SizedBox(height: 16),
 

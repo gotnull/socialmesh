@@ -5,7 +5,7 @@ enum NodeStatus {
   offline, // > 24 hours or never seen
 }
 
-/// Model for nodes from meshmap.net's nodes.json API
+/// Model for nodes from mesh-observer's nodes.json API
 /// Represents Meshtastic nodes from the global MQTT network
 class WorldMeshNode {
   final int nodeNum;
@@ -92,7 +92,7 @@ class WorldMeshNode {
     required this.seenBy,
   });
 
-  /// Parse from meshmap.net JSON format
+  /// Parse from mesh-observer JSON format
   factory WorldMeshNode.fromJson(int nodeNum, Map<String, dynamic> json) {
     return WorldMeshNode(
       nodeNum: nodeNum,
@@ -286,7 +286,7 @@ class WorldMeshNode {
   /// Get position precision margin in meters (for privacy circle)
   int? get precisionMarginMeters {
     if (precision == null || precision! <= 0) return null;
-    // Precision margins from meshmap.net
+    // Precision margins from Meshtastic protocol
     const margins = [
       11939464,
       5969732,

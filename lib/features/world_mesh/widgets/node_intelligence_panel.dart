@@ -7,7 +7,7 @@ import '../../../core/theme.dart';
 import '../../../models/world_mesh_node.dart';
 import '../node_analytics_screen.dart';
 
-/// Computed intelligence derived from WorldMeshNode data (meshmap.net snapshot)
+/// Computed intelligence derived from WorldMeshNode data (mesh-observer snapshot)
 class NodeIntelligenceData {
   final double healthScore; // 0-1 based on battery, uptime, last seen
   final double connectivityScore; // 0-1 based on neighbors, gateways

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The Protofluff codebase has **~60 configurable values** spread across feature flags, timeouts, URLs, and UI content that would benefit from Remote Config. Firebase is already integrated (Core, Crashlytics, Auth), so adding Remote Config is straightforward.
+The Socialmesh codebase has **~60 configurable values** spread across feature flags, timeouts, URLs, and UI content that would benefit from Remote Config. Firebase is already integrated (Core, Crashlytics, Auth), so adding Remote Config is straightforward.
 
 ---
 
@@ -61,7 +61,7 @@ Tune app behavior without releases:
 | `position_update_interval_seconds` | int | `30` | `location_service.dart` |
 | `max_message_storage` | int | `500` | `message_service.dart` |
 | `message_cleanup_days` | int | `30` | Database cleanup |
-| `meshmap_api_url` | string | `https://meshmap.net/nodes.json` | `world_mesh_service.dart` |
+| `mesh_observer_api_url` | string | `http://localhost:3001/nodes.json` | `world_mesh_service.dart` |
 
 **Benefits:**
 - Fix timeout issues for slow networks remotely
@@ -195,7 +195,7 @@ final isMaintenanceMode = RemoteConfigService.instance.getBool(RemoteConfigKeys.
 
 | Location | Value | Remote Config Use Case |
 |----------|-------|------------------------|
-| `world_mesh_service.dart` | `https://meshmap.net/nodes.json` | API endpoint migration |
+| `world_mesh_service.dart` | `http://localhost:3001/nodes.json` | Self-hosted mesh-observer |
 | `ifttt_service.dart` | `https://maker.ifttt.com/trigger` | IFTTT API versioning |
 | `map_tile_provider.dart` | 4 tile server URLs | Map provider switching |
 | `constants.dart` | `API_BASE_URL`, `MARKETPLACE_URL` | Environment switching |

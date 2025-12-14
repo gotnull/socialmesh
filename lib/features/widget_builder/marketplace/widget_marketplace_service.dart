@@ -24,13 +24,13 @@ class WidgetMarketplaceService {
     // Fallback for local development without .env
     if (kDebugMode) {
       if (kIsWeb) {
-        return 'http://localhost:3001/widgets';
+        return 'http://localhost:3000/widgets';
       } else if (Platform.isAndroid) {
-        // Android emulator uses 10.0.2.2 to reach host machine
-        return 'http://10.0.2.2:3001/widgets';
+        // Android emulator and real device uses local network IP
+        return 'http://192.168.5.77:3000/widgets';
       } else {
-        // iOS simulator and macOS can use localhost
-        return 'http://localhost:3001/widgets';
+        // iOS (real device and simulator) - use local network IP
+        return 'http://192.168.5.77:3000/widgets';
       }
     }
 
