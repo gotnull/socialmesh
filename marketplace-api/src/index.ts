@@ -43,13 +43,9 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API routes - all under /api prefix for consistency
+// API routes
 app.use('/api/widgets', widgetsRouter(db));
 app.use('/api/admin', adminRouter(db));
-
-// Legacy routes (for backwards compatibility)
-app.use('/widgets', widgetsRouter(db));
-app.use('/admin', adminRouter(db));
 
 // Error handling
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
