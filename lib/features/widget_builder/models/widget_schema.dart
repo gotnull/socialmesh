@@ -809,20 +809,13 @@ class WidgetSchema {
        updatedAt = updatedAt ?? DateTime.now();
 
   /// Get the effective width based on size preset or custom value
+  /// Note: Width is always the same for S/M/L - only height varies
   double get effectiveWidth {
     if (size == CustomWidgetSize.custom && customWidth != null) {
       return customWidth!;
     }
-    switch (size) {
-      case CustomWidgetSize.small:
-        return 160;
-      case CustomWidgetSize.medium:
-        return 320;
-      case CustomWidgetSize.large:
-        return 320;
-      case CustomWidgetSize.custom:
-        return customWidth ?? 320;
-    }
+    // All standard sizes use the same width - only height differs
+    return 320;
   }
 
   /// Get the effective height based on size preset or custom value
@@ -832,11 +825,11 @@ class WidgetSchema {
     }
     switch (size) {
       case CustomWidgetSize.small:
-        return 160;
+        return 100;
       case CustomWidgetSize.medium:
         return 160;
       case CustomWidgetSize.large:
-        return 320;
+        return 240;
       case CustomWidgetSize.custom:
         return customHeight ?? 160;
     }

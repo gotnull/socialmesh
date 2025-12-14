@@ -77,6 +77,11 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _createNewWidget,
+            tooltip: 'Create Widget',
+          ),
+          IconButton(
             icon: Icon(Icons.store, color: context.accentColor),
             onPressed: _openMarketplace,
             tooltip: 'Marketplace',
@@ -104,15 +109,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
                 _buildInstalledTab(),
               ],
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _createNewWidget,
-        backgroundColor: context.accentColor,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'Create Widget',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-      ),
     );
   }
 
@@ -202,164 +198,165 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
       (w) => w.schemaId == schema.id && w.isVisible,
     );
 
-    return Card(
-      color: AppTheme.darkCard,
-      margin: const EdgeInsets.only(bottom: 16),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Widget preview
-          Container(
-            height: 120,
-            padding: const EdgeInsets.all(12),
-            color: AppTheme.darkBackground,
-            child: WidgetRenderer(
-              schema: schema,
-              node: node,
-              allNodes: nodes,
-              accentColor: context.accentColor,
-            ),
+    // Height based on size - width is always full
+    final previewHeight = switch (schema.size) {
+      CustomWidgetSize.small => 100.0,
+      CustomWidgetSize.medium => 120.0,
+      CustomWidgetSize.large => 180.0,
+      CustomWidgetSize.custom => schema.customHeight ?? 120.0,
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Widget preview - full width, variable height
+        SizedBox(
+          width: double.infinity,
+          height: previewHeight,
+          child: WidgetRenderer(
+            schema: schema,
+            node: node,
+            allNodes: nodes,
+            accentColor: context.accentColor,
           ),
-          // Info section
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        schema.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if (schema.description != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          schema.description!,
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 12,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                // Actions
-                if (isTemplate)
-                  TextButton(
-                    onPressed: () => _useTemplate(schema),
-                    child: Text(
-                      'Use',
-                      style: TextStyle(
-                        color: context.accentColor,
+        ),
+        const SizedBox(height: 8),
+        // Info section
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      schema.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                  )
-                else
-                  PopupMenuButton<String>(
-                    icon: Icon(Icons.more_vert, color: AppTheme.textSecondary),
-                    color: AppTheme.darkCard,
-                    onSelected: (action) => _handleAction(action, schema),
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: isOnDashboard
-                            ? 'remove_from_dashboard'
-                            : 'add_to_dashboard',
-                        child: Row(
-                          children: [
-                            Icon(
-                              isOnDashboard
-                                  ? Icons.dashboard_outlined
-                                  : Icons.dashboard_customize,
-                              size: 18,
+                    if (schema.description != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        schema.description!,
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 12,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              // Actions
+              if (isTemplate)
+                TextButton(
+                  onPressed: () => _useTemplate(schema),
+                  child: Text(
+                    'Use',
+                    style: TextStyle(
+                      color: context.accentColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                )
+              else
+                PopupMenuButton<String>(
+                  icon: Icon(Icons.more_vert, color: AppTheme.textSecondary),
+                  color: AppTheme.darkCard,
+                  onSelected: (action) => _handleAction(action, schema),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: isOnDashboard
+                          ? 'remove_from_dashboard'
+                          : 'add_to_dashboard',
+                      child: Row(
+                        children: [
+                          Icon(
+                            isOnDashboard
+                                ? Icons.dashboard_outlined
+                                : Icons.dashboard_customize,
+                            size: 18,
+                            color: isOnDashboard
+                                ? AppTheme.errorRed
+                                : Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            isOnDashboard
+                                ? 'Remove from Dashboard'
+                                : 'Add to Dashboard',
+                            style: TextStyle(
                               color: isOnDashboard
                                   ? AppTheme.errorRed
                                   : Colors.white,
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              isOnDashboard
-                                  ? 'Remove from Dashboard'
-                                  : 'Add to Dashboard',
-                              style: TextStyle(
-                                color: isOnDashboard
-                                    ? AppTheme.errorRed
-                                    : Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, size: 18, color: Colors.white),
-                            SizedBox(width: 8),
-                            Text('Edit', style: TextStyle(color: Colors.white)),
-                          ],
-                        ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, size: 18, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text('Edit', style: TextStyle(color: Colors.white)),
+                        ],
                       ),
-                      const PopupMenuItem(
-                        value: 'duplicate',
-                        child: Row(
-                          children: [
-                            Icon(Icons.copy, size: 18, color: Colors.white),
-                            SizedBox(width: 8),
-                            Text(
-                              'Duplicate',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'duplicate',
+                      child: Row(
+                        children: [
+                          Icon(Icons.copy, size: 18, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text(
+                            'Duplicate',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
                       ),
-                      const PopupMenuItem(
-                        value: 'export',
-                        child: Row(
-                          children: [
-                            Icon(Icons.share, size: 18, color: Colors.white),
-                            SizedBox(width: 8),
-                            Text(
-                              'Export',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'export',
+                      child: Row(
+                        children: [
+                          Icon(Icons.share, size: 18, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text('Export', style: TextStyle(color: Colors.white)),
+                        ],
                       ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.delete,
-                              size: 18,
-                              color: AppTheme.errorRed,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Delete',
-                              style: TextStyle(color: AppTheme.errorRed),
-                            ),
-                          ],
-                        ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.delete,
+                            size: 18,
+                            color: AppTheme.errorRed,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Delete',
+                            style: TextStyle(color: AppTheme.errorRed),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-              ],
-            ),
+                    ),
+                  ],
+                ),
+            ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
