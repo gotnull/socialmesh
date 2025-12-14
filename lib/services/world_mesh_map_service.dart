@@ -10,19 +10,20 @@ import '../models/world_mesh_node.dart';
 class WorldMeshMapService {
   /// Get the base URL based on environment
   static String get _defaultApiUrl {
-    // TODO: Change to api.socialmesh.app when deployed to production
-    // For now, use local network IP for development/testing
-    // ignore: unused_local_variable
     const productionUrl = 'https://api.socialmesh.app';
 
-    // Local development server
-    if (kIsWeb) {
-      return 'http://localhost:3001';
-    } else if (!kIsWeb && Platform.isAndroid) {
-      return 'http://192.168.5.77:3001';
-    } else {
-      return 'http://192.168.5.77:3001';
+    // Use local development server in debug mode
+    if (kDebugMode) {
+      if (kIsWeb) {
+        return 'http://localhost:3001';
+      } else if (Platform.isAndroid) {
+        return 'http://192.168.5.77:3001';
+      } else {
+        return 'http://192.168.5.77:3001';
+      }
     }
+
+    return productionUrl;
   }
 
   /// Default API endpoint
@@ -57,8 +58,8 @@ class WorldMeshMapService {
   /// Check if using self-hosted server
   static bool get isSelfHosted => _apiBaseUrl != defaultApiUrl;
 
-  /// Get the nodes.json URL
-  String get _nodesUrl => '$_apiBaseUrl/nodes.json';
+  /// Get the nodes URL
+  String get _nodesUrl => '$_apiBaseUrl/api/nodes';
 
   /// Fetch all nodes from API
   /// Returns a map of nodeNum -> WorldMeshNode

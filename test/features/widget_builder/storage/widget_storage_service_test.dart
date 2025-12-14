@@ -272,7 +272,7 @@ void main() {
       final widget = WidgetTemplates.signalWidget();
 
       expect(widget.name, 'Signal Strength');
-      expect(widget.root.type, ElementType.column);
+      expect(widget.root.type, ElementType.row);
       expect(widget.tags, contains('signal'));
     });
 
@@ -280,7 +280,7 @@ void main() {
       final widget = WidgetTemplates.environmentWidget();
 
       expect(widget.name, 'Environment');
-      expect(widget.root.type, ElementType.column);
+      expect(widget.root.type, ElementType.row);
       expect(widget.tags, contains('environment'));
     });
 
@@ -296,7 +296,7 @@ void main() {
       final widget = WidgetTemplates.gpsWidget();
 
       expect(widget.name, 'GPS Position');
-      expect(widget.root.type, ElementType.column);
+      expect(widget.root.type, ElementType.row);
       expect(widget.tags, contains('gps'));
     });
 

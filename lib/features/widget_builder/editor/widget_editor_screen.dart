@@ -4,6 +4,7 @@ import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
 import '../renderer/widget_renderer.dart';
 import '../../../core/theme.dart';
+import '../../../utils/snackbar.dart';
 import 'selectors/icon_selector.dart';
 import 'selectors/binding_selector.dart';
 
@@ -898,9 +899,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   Widget _buildSizeOption(CustomWidgetSize size, String label) {
     final isSelected = _schema.size == size;
     return GestureDetector(
-      onTap: () => setState(() {
-        _schema = _schema.copyWith(size: size);
-      }),
+      onTap: () => _changeSize(size),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
@@ -1731,7 +1730,58 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     }
   }
 
+  /// Get max allowed rows based on widget size
+  int _getMaxRows() {
+    switch (_schema.size) {
+      case CustomWidgetSize.medium:
+        return 1;
+      case CustomWidgetSize.large:
+        return 2;
+      case CustomWidgetSize.custom:
+        return 2; // Default to large behavior for custom
+    }
+  }
+
+  /// Count the number of row elements at root level
+  int _countRootRows() {
+    return _schema.root.children.where((e) => e.type == ElementType.row).length;
+  }
+
+  /// Check if adding a row is allowed
+  bool _canAddRow() {
+    return _countRootRows() < _getMaxRows();
+  }
+
+  void _changeSize(CustomWidgetSize newSize) {
+    // Check if downsizing from large to medium with too many rows
+    if (newSize == CustomWidgetSize.medium) {
+      final rowCount = _countRootRows();
+      if (rowCount > 1) {
+        showInfoSnackBar(
+          context,
+          'Remove extra rows first - medium allows only 1 row',
+        );
+        return;
+      }
+    }
+
+    setState(() {
+      _schema = _schema.copyWith(size: newSize);
+    });
+  }
+
   void _addElement(ElementType type) {
+    // Check row limit for row elements
+    if (type == ElementType.row && !_canAddRow()) {
+      showInfoSnackBar(
+        context,
+        _schema.size == CustomWidgetSize.medium
+            ? 'Medium widgets only allow 1 row'
+            : 'Large widgets only allow 2 rows max',
+      );
+      return;
+    }
+
     final newElement = _createDefaultElement(type);
 
     // Add to root children

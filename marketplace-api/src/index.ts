@@ -43,7 +43,11 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API routes
+// API routes - all under /api prefix for consistency
+app.use('/api/widgets', widgetsRouter(db));
+app.use('/api/admin', adminRouter(db));
+
+// Legacy routes (for backwards compatibility)
 app.use('/widgets', widgetsRouter(db));
 app.use('/admin', adminRouter(db));
 

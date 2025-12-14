@@ -62,6 +62,8 @@ class WidgetRenderer extends ConsumerWidget {
         border: Border.all(color: AppTheme.darkBorder),
       ),
       clipBehavior: Clip.antiAlias,
+      // Align content to top
+      alignment: Alignment.topCenter,
       child: _ElementRenderer(
         element: schema.root,
         bindingEngine: bindingEngine,
@@ -483,10 +485,17 @@ class _ElementRenderer extends StatelessWidget {
       }
     }
 
+    // Use max size when alignment needs space distribution
+    final alignment =
+        element.style.mainAxisAlignmentValue ?? MainAxisAlignment.start;
+    final needsMaxSize =
+        alignment == MainAxisAlignment.spaceAround ||
+        alignment == MainAxisAlignment.spaceBetween ||
+        alignment == MainAxisAlignment.spaceEvenly;
+
     return Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment:
-          element.style.mainAxisAlignmentValue ?? MainAxisAlignment.start,
+      mainAxisSize: needsMaxSize ? MainAxisSize.max : MainAxisSize.min,
+      mainAxisAlignment: alignment,
       crossAxisAlignment:
           element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.center,
       children: children,

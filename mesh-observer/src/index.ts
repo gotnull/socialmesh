@@ -46,12 +46,28 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Get all nodes
+// Get all nodes - both /api/nodes and legacy /nodes.json
+app.get('/api/nodes', (req, res) => {
+  res.json(nodeStore.getAllNodes());
+});
 app.get('/nodes.json', (req, res) => {
   res.json(nodeStore.getAllNodes());
 });
 
 // Get single node by nodeNum
+app.get('/api/node/:nodeNum', (req, res) => {
+  const nodeNum = parseInt(req.params.nodeNum, 10);
+  if (isNaN(nodeNum)) {
+    return res.status(400).json({ error: 'Invalid node number' });
+  }
+
+  const node = nodeStore.getNode(nodeNum);
+  if (!node) {
+    return res.status(404).json({ error: 'Node not found' });
+  }
+
+  res.json(node);
+});
 app.get('/node/:nodeNum', (req, res) => {
   const nodeNum = parseInt(req.params.nodeNum, 10);
   if (isNaN(nodeNum)) {
@@ -67,6 +83,31 @@ app.get('/node/:nodeNum', (req, res) => {
 });
 
 // Get statistics
+app.get('/api/stats', (req, res) => {
+  const decodeStats = mqttObserver.getStats();
+  res.json({
+    totalNodes: nodeStore.getNodeCount(),
+    nodesWithPosition: nodeStore.getNodesWithPositionCount(),
+    onlineNodes: nodeStore.getOnlineNodeCount(),
+    messagesReceived: decodeStats.totalMessages,
+    lastUpdate: nodeStore.getLastUpdateTime(),
+    decode: {
+      envelopesDecoded: decodeStats.envelopesDecoded,
+      packetsWithFrom: decodeStats.packetsWithFrom,
+      decryptedSuccess: decodeStats.decryptedSuccess,
+      decryptedFailed: decodeStats.decryptedFailed,
+      jsonMessages: decodeStats.jsonMessages,
+    },
+    updates: {
+      position: decodeStats.positionUpdates,
+      nodeinfo: decodeStats.nodeinfoUpdates,
+      telemetry: decodeStats.telemetryUpdates,
+      neighborinfo: decodeStats.neighborinfoUpdates,
+      mapreport: decodeStats.mapreportUpdates,
+      nodesCreated: decodeStats.nodesCreated,
+    },
+  });
+});
 app.get('/stats', (req, res) => {
   const decodeStats = mqttObserver.getStats();
   res.json({
