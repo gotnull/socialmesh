@@ -291,91 +291,79 @@ class WidgetTemplates {
       name: 'Signal Strength',
       description: 'Display SNR and RSSI',
       tags: ['signal', 'snr', 'rssi', 'connectivity'],
+      size: CustomWidgetSize.medium,
       root: ElementSchema(
-        type: ElementType.column,
-        style: const StyleSchema(padding: 12, spacing: 8),
+        type: ElementType.row,
+        style: const StyleSchema(
+          padding: 16,
+          mainAxisAlignment: MainAxisAlignmentOption.spaceAround,
+        ),
         children: [
+          // SNR
           ElementSchema(
-            type: ElementType.row,
+            type: ElementType.column,
+            style: const StyleSchema(alignment: AlignmentOption.center),
             children: [
               ElementSchema(
                 type: ElementType.icon,
                 iconName: 'signal_cellular_alt',
-                iconSize: 20,
+                iconSize: 24,
                 style: const StyleSchema(textColor: '#4F6AF6'),
               ),
               ElementSchema(
-                type: ElementType.spacer,
-                style: const StyleSchema(width: 8),
+                type: ElementType.text,
+                binding: const BindingSchema(
+                  path: 'device.snr',
+                  format: '{value} dB',
+                  defaultValue: '--',
+                ),
+                style: const StyleSchema(
+                  fontSize: 16,
+                  fontWeight: 'w600',
+                  textColor: '#FFFFFF',
+                ),
               ),
               ElementSchema(
                 type: ElementType.text,
-                text: 'Signal',
-                style: const StyleSchema(
-                  textColor: '#FFFFFF',
-                  fontSize: 14,
-                  fontWeight: 'w600',
-                ),
+                text: 'SNR',
+                style: const StyleSchema(fontSize: 11, textColor: '#888888'),
               ),
             ],
           ),
+          // Divider
           ElementSchema(
-            type: ElementType.row,
-            style: const StyleSchema(
-              mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
-            ),
+            type: ElementType.shape,
+            shapeType: ShapeType.dividerVertical,
+            style: const StyleSchema(height: 50, width: 1),
+          ),
+          // RSSI
+          ElementSchema(
+            type: ElementType.column,
+            style: const StyleSchema(alignment: AlignmentOption.center),
             children: [
               ElementSchema(
-                type: ElementType.column,
-                children: [
-                  ElementSchema(
-                    type: ElementType.text,
-                    text: 'SNR',
-                    style: const StyleSchema(
-                      textColor: '#888888',
-                      fontSize: 11,
-                    ),
-                  ),
-                  ElementSchema(
-                    type: ElementType.text,
-                    binding: const BindingSchema(
-                      path: 'device.snr',
-                      format: '{value} dB',
-                      defaultValue: '--',
-                    ),
-                    style: const StyleSchema(
-                      textColor: '#FFFFFF',
-                      fontSize: 18,
-                      fontWeight: 'w600',
-                    ),
-                  ),
-                ],
+                type: ElementType.icon,
+                iconName: 'network_check',
+                iconSize: 24,
+                style: const StyleSchema(textColor: '#22C55E'),
               ),
               ElementSchema(
-                type: ElementType.column,
-                children: [
-                  ElementSchema(
-                    type: ElementType.text,
-                    text: 'RSSI',
-                    style: const StyleSchema(
-                      textColor: '#888888',
-                      fontSize: 11,
-                    ),
-                  ),
-                  ElementSchema(
-                    type: ElementType.text,
-                    binding: const BindingSchema(
-                      path: 'device.rssi',
-                      format: '{value} dBm',
-                      defaultValue: '--',
-                    ),
-                    style: const StyleSchema(
-                      textColor: '#FFFFFF',
-                      fontSize: 18,
-                      fontWeight: 'w600',
-                    ),
-                  ),
-                ],
+                type: ElementType.text,
+                binding: const BindingSchema(
+                  path: 'device.rssi',
+                  format: '{value} dBm',
+                  defaultValue: '--',
+                ),
+                style: const StyleSchema(
+                  fontSize: 16,
+                  fontWeight: 'w600',
+                  textColor: '#FFFFFF',
+                ),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                text: 'RSSI',
+                style: const StyleSchema(fontSize: 11, textColor: '#888888'),
               ),
             ],
           ),
@@ -392,172 +380,114 @@ class WidgetTemplates {
       tags: ['environment', 'temperature', 'humidity', 'pressure', 'sensors'],
       size: CustomWidgetSize.medium,
       root: ElementSchema(
-        type: ElementType.column,
-        style: const StyleSchema(padding: 12, spacing: 12),
+        type: ElementType.row,
+        style: const StyleSchema(
+          padding: 16,
+          mainAxisAlignment: MainAxisAlignmentOption.spaceAround,
+        ),
         children: [
-          // Header row
+          // Temperature
           ElementSchema(
-            type: ElementType.row,
+            type: ElementType.column,
+            style: const StyleSchema(alignment: AlignmentOption.center),
             children: [
               ElementSchema(
                 type: ElementType.icon,
                 iconName: 'thermostat',
-                iconSize: 20,
-                style: const StyleSchema(textColor: '#F97316'),
-              ),
-              ElementSchema(
-                type: ElementType.spacer,
-                style: const StyleSchema(width: 8),
+                iconSize: 24,
+                style: const StyleSchema(textColor: '#EF4444'),
               ),
               ElementSchema(
                 type: ElementType.text,
-                text: 'Environment',
-                style: const StyleSchema(
-                  textColor: '#FFFFFF',
-                  fontSize: 14,
-                  fontWeight: 'w600',
+                binding: const BindingSchema(
+                  path: 'node.temperature',
+                  format: '{value}°',
+                  defaultValue: '--',
                 ),
+                style: const StyleSchema(
+                  fontSize: 16,
+                  fontWeight: 'w600',
+                  textColor: '#FFFFFF',
+                ),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                text: 'Temp',
+                style: const StyleSchema(fontSize: 11, textColor: '#888888'),
               ),
             ],
           ),
-          // Metrics row - 3 items with separators, centered
+          // Divider
           ElementSchema(
-            type: ElementType.row,
-            style: const StyleSchema(
-              mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
-            ),
+            type: ElementType.shape,
+            shapeType: ShapeType.dividerVertical,
+            style: const StyleSchema(height: 50, width: 1),
+          ),
+          // Humidity
+          ElementSchema(
+            type: ElementType.column,
+            style: const StyleSchema(alignment: AlignmentOption.center),
             children: [
-              // Temperature
               ElementSchema(
-                type: ElementType.column,
-                style: const StyleSchema(alignment: AlignmentOption.center),
-                children: [
-                  ElementSchema(
-                    type: ElementType.icon,
-                    iconName: 'thermostat',
-                    iconSize: 22,
-                    style: const StyleSchema(textColor: '#EF4444'),
-                  ),
-                  ElementSchema(
-                    type: ElementType.spacer,
-                    style: const StyleSchema(height: 4),
-                  ),
-                  ElementSchema(
-                    type: ElementType.text,
-                    binding: const BindingSchema(
-                      path: 'node.temperature',
-                      format: '{value}°',
-                      defaultValue: '--',
-                    ),
-                    style: const StyleSchema(
-                      textColor: '#FFFFFF',
-                      fontSize: 18,
-                      fontWeight: 'w600',
-                    ),
-                  ),
-                  ElementSchema(
-                    type: ElementType.text,
-                    text: 'Temp',
-                    style: const StyleSchema(
-                      textColor: '#9CA3AF',
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
+                type: ElementType.icon,
+                iconName: 'water_drop',
+                iconSize: 24,
+                style: const StyleSchema(textColor: '#06B6D4'),
               ),
-              // Separator
               ElementSchema(
-                type: ElementType.container,
+                type: ElementType.text,
+                binding: const BindingSchema(
+                  path: 'node.humidity',
+                  format: '{value}%',
+                  defaultValue: '--',
+                ),
                 style: const StyleSchema(
-                  width: 1,
-                  height: 40,
-                  backgroundColor: '#374151',
+                  fontSize: 16,
+                  fontWeight: 'w600',
+                  textColor: '#FFFFFF',
                 ),
               ),
-              // Humidity
               ElementSchema(
-                type: ElementType.column,
-                style: const StyleSchema(alignment: AlignmentOption.center),
-                children: [
-                  ElementSchema(
-                    type: ElementType.icon,
-                    iconName: 'water_drop',
-                    iconSize: 22,
-                    style: const StyleSchema(textColor: '#06B6D4'),
-                  ),
-                  ElementSchema(
-                    type: ElementType.spacer,
-                    style: const StyleSchema(height: 4),
-                  ),
-                  ElementSchema(
-                    type: ElementType.text,
-                    binding: const BindingSchema(
-                      path: 'node.humidity',
-                      format: '{value}%',
-                      defaultValue: '--',
-                    ),
-                    style: const StyleSchema(
-                      textColor: '#FFFFFF',
-                      fontSize: 18,
-                      fontWeight: 'w600',
-                    ),
-                  ),
-                  ElementSchema(
-                    type: ElementType.text,
-                    text: 'Humidity',
-                    style: const StyleSchema(
-                      textColor: '#9CA3AF',
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
+                type: ElementType.text,
+                text: 'Humidity',
+                style: const StyleSchema(fontSize: 11, textColor: '#888888'),
               ),
-              // Separator
+            ],
+          ),
+          // Divider
+          ElementSchema(
+            type: ElementType.shape,
+            shapeType: ShapeType.dividerVertical,
+            style: const StyleSchema(height: 50, width: 1),
+          ),
+          // Barometric Pressure
+          ElementSchema(
+            type: ElementType.column,
+            style: const StyleSchema(alignment: AlignmentOption.center),
+            children: [
               ElementSchema(
-                type: ElementType.container,
+                type: ElementType.icon,
+                iconName: 'speed',
+                iconSize: 24,
+                style: const StyleSchema(textColor: '#8B5CF6'),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                binding: const BindingSchema(
+                  path: 'node.pressure',
+                  format: '{value}',
+                  defaultValue: '--',
+                ),
                 style: const StyleSchema(
-                  width: 1,
-                  height: 40,
-                  backgroundColor: '#374151',
+                  fontSize: 16,
+                  fontWeight: 'w600',
+                  textColor: '#FFFFFF',
                 ),
               ),
-              // Barometric Pressure
               ElementSchema(
-                type: ElementType.column,
-                style: const StyleSchema(alignment: AlignmentOption.center),
-                children: [
-                  ElementSchema(
-                    type: ElementType.icon,
-                    iconName: 'speed',
-                    iconSize: 22,
-                    style: const StyleSchema(textColor: '#8B5CF6'),
-                  ),
-                  ElementSchema(
-                    type: ElementType.spacer,
-                    style: const StyleSchema(height: 4),
-                  ),
-                  ElementSchema(
-                    type: ElementType.text,
-                    binding: const BindingSchema(
-                      path: 'node.pressure',
-                      format: '{value}',
-                      defaultValue: '--',
-                    ),
-                    style: const StyleSchema(
-                      textColor: '#FFFFFF',
-                      fontSize: 18,
-                      fontWeight: 'w600',
-                    ),
-                  ),
-                  ElementSchema(
-                    type: ElementType.text,
-                    text: 'hPa',
-                    style: const StyleSchema(
-                      textColor: '#9CA3AF',
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
+                type: ElementType.text,
+                text: 'hPa',
+                style: const StyleSchema(fontSize: 11, textColor: '#888888'),
               ),
             ],
           ),
@@ -677,79 +607,117 @@ class WidgetTemplates {
       name: 'GPS Position',
       description: 'Show GPS coordinates and satellites',
       tags: ['gps', 'position', 'location', 'coordinates'],
+      size: CustomWidgetSize.medium,
       root: ElementSchema(
-        type: ElementType.column,
-        style: const StyleSchema(padding: 12, spacing: 8),
+        type: ElementType.row,
+        style: const StyleSchema(
+          padding: 16,
+          mainAxisAlignment: MainAxisAlignmentOption.spaceAround,
+        ),
         children: [
+          // Latitude
           ElementSchema(
-            type: ElementType.row,
+            type: ElementType.column,
+            style: const StyleSchema(alignment: AlignmentOption.center),
             children: [
               ElementSchema(
                 type: ElementType.icon,
                 iconName: 'gps_fixed',
-                iconSize: 20,
+                iconSize: 24,
                 style: const StyleSchema(textColor: '#22C55E'),
               ),
-              ElementSchema(
-                type: ElementType.spacer,
-                style: const StyleSchema(width: 8),
-              ),
-              ElementSchema(
-                type: ElementType.text,
-                text: 'GPS',
-                style: const StyleSchema(
-                  textColor: '#FFFFFF',
-                  fontSize: 14,
-                  fontWeight: 'w600',
-                ),
-              ),
-              ElementSchema(
-                type: ElementType.spacer,
-                style: const StyleSchema(expanded: true),
-              ),
-              ElementSchema(
-                type: ElementType.text,
-                binding: const BindingSchema(
-                  path: 'node.satsInView',
-                  format: '{value} sats',
-                  defaultValue: '--',
-                ),
-                style: const StyleSchema(textColor: '#888888', fontSize: 12),
-              ),
-            ],
-          ),
-          ElementSchema(
-            type: ElementType.row,
-            style: const StyleSchema(spacing: 16),
-            children: [
               ElementSchema(
                 type: ElementType.text,
                 binding: const BindingSchema(
                   path: 'node.latitude',
-                  format: 'Lat: {value}°',
+                  format: '{value}°',
                   defaultValue: '--',
                 ),
-                style: const StyleSchema(textColor: '#FFFFFF', fontSize: 13),
+                style: const StyleSchema(
+                  fontSize: 16,
+                  fontWeight: 'w600',
+                  textColor: '#FFFFFF',
+                ),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                text: 'Lat',
+                style: const StyleSchema(fontSize: 11, textColor: '#888888'),
+              ),
+            ],
+          ),
+          // Divider
+          ElementSchema(
+            type: ElementType.shape,
+            shapeType: ShapeType.dividerVertical,
+            style: const StyleSchema(height: 50, width: 1),
+          ),
+          // Longitude
+          ElementSchema(
+            type: ElementType.column,
+            style: const StyleSchema(alignment: AlignmentOption.center),
+            children: [
+              ElementSchema(
+                type: ElementType.icon,
+                iconName: 'explore',
+                iconSize: 24,
+                style: const StyleSchema(textColor: '#4F6AF6'),
               ),
               ElementSchema(
                 type: ElementType.text,
                 binding: const BindingSchema(
                   path: 'node.longitude',
-                  format: 'Lon: {value}°',
+                  format: '{value}°',
                   defaultValue: '--',
                 ),
-                style: const StyleSchema(textColor: '#FFFFFF', fontSize: 13),
+                style: const StyleSchema(
+                  fontSize: 16,
+                  fontWeight: 'w600',
+                  textColor: '#FFFFFF',
+                ),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                text: 'Lon',
+                style: const StyleSchema(fontSize: 11, textColor: '#888888'),
               ),
             ],
           ),
+          // Divider
           ElementSchema(
-            type: ElementType.text,
-            binding: const BindingSchema(
-              path: 'node.altitude',
-              format: 'Alt: {value}m',
-              defaultValue: '--',
-            ),
-            style: const StyleSchema(textColor: '#888888', fontSize: 12),
+            type: ElementType.shape,
+            shapeType: ShapeType.dividerVertical,
+            style: const StyleSchema(height: 50, width: 1),
+          ),
+          // Satellites
+          ElementSchema(
+            type: ElementType.column,
+            style: const StyleSchema(alignment: AlignmentOption.center),
+            children: [
+              ElementSchema(
+                type: ElementType.icon,
+                iconName: 'satellite_alt',
+                iconSize: 24,
+                style: const StyleSchema(textColor: '#F59E0B'),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                binding: const BindingSchema(
+                  path: 'node.satsInView',
+                  defaultValue: '--',
+                ),
+                style: const StyleSchema(
+                  fontSize: 16,
+                  fontWeight: 'w600',
+                  textColor: '#FFFFFF',
+                ),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                text: 'Sats',
+                style: const StyleSchema(fontSize: 11, textColor: '#888888'),
+              ),
+            ],
           ),
         ],
       ),
