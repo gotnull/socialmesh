@@ -9,7 +9,7 @@ class WidgetStorageService {
   static const _installedKey = 'installed_widgets';
   static const _seededKey = 'seeded_widgets';
   static const _seedVersionKey = 'seeded_widgets_version';
-  static const _currentSeedVersion = 9; // Quick Actions with tap actions
+  static const _currentSeedVersion = 10; // Consistent widget layouts
 
   final Logger _logger;
   SharedPreferences? _prefs;
@@ -29,20 +29,24 @@ class WidgetStorageService {
 
     _logger.i('Seeding widgets: version $lastVersion -> $_currentSeedVersion');
 
-    // Get existing widget names to avoid duplicates
+    // Get existing widgets
     final existingWidgets = await getWidgets();
-    final existingNames = existingWidgets.map((w) => w.name).toSet();
+    final templateNames = WidgetTemplates.all().map((t) => t.name).toSet();
 
-    // Save all template widgets that don't already exist
+    // Remove existing widgets that match template names (to refresh them)
+    final userWidgets = existingWidgets
+        .where((w) => !templateNames.contains(w.name))
+        .toList();
+
+    // Add all templates fresh
     for (final template in WidgetTemplates.all()) {
-      if (!existingNames.contains(template.name)) {
-        await saveWidget(template);
-        _logger.d('Seeded widget: ${template.name}');
-      }
+      userWidgets.add(template);
+      _logger.d('Refreshed widget: ${template.name}');
     }
 
+    await _saveWidgetsList(userWidgets);
     await _preferences.setInt(_seedVersionKey, _currentSeedVersion);
-    _logger.i('Default widgets seeded successfully (v$_currentSeedVersion)');
+    _logger.i('Default widgets refreshed successfully (v$_currentSeedVersion)');
   }
 
   SharedPreferences get _preferences {

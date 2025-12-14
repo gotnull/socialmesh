@@ -320,14 +320,13 @@ void main() {
 
   group('CustomWidgetSize', () {
     test('all sizes exist', () {
-      expect(CustomWidgetSize.values, contains(CustomWidgetSize.small));
       expect(CustomWidgetSize.values, contains(CustomWidgetSize.medium));
       expect(CustomWidgetSize.values, contains(CustomWidgetSize.large));
       expect(CustomWidgetSize.values, contains(CustomWidgetSize.custom));
     });
 
     test('size values count', () {
-      expect(CustomWidgetSize.values.length, 4);
+      expect(CustomWidgetSize.values.length, 3);
     });
   });
 

@@ -200,7 +200,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
     // Height based on size - width is always full
     final previewHeight = switch (schema.size) {
-      CustomWidgetSize.small => 100.0,
       CustomWidgetSize.medium => 120.0,
       CustomWidgetSize.large => 180.0,
       CustomWidgetSize.custom => schema.customHeight ?? 120.0,

@@ -56,8 +56,6 @@ class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent> {
   /// Get the height constraint based on widget size
   double _getWidgetHeight(CustomWidgetSize size) {
     switch (size) {
-      case CustomWidgetSize.small:
-        return 120; // Compact for dashboard
       case CustomWidgetSize.medium:
         return 160;
       case CustomWidgetSize.large:

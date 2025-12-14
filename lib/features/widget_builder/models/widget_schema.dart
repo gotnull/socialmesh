@@ -762,7 +762,6 @@ class ElementSchema {
 
 /// Widget size category for grid layout
 enum CustomWidgetSize {
-  small, // 1x1
   medium, // 2x1
   large, // 2x2
   custom, // User-defined size
@@ -824,8 +823,6 @@ class WidgetSchema {
       return customHeight!;
     }
     switch (size) {
-      case CustomWidgetSize.small:
-        return 100;
       case CustomWidgetSize.medium:
         return 160;
       case CustomWidgetSize.large:
