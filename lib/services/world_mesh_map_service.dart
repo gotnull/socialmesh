@@ -12,21 +12,17 @@ class WorldMeshMapService {
   static String get _defaultApiUrl {
     // TODO: Change to api.socialmesh.app when deployed to production
     // For now, use local network IP for development/testing
-    const useLocalServer = true; // Set to false when production server is ready
+    // ignore: unused_local_variable
+    const productionUrl = 'https://api.socialmesh.app';
 
-    if (useLocalServer) {
-      // Local development server
-      if (kIsWeb) {
-        return 'http://localhost:3001';
-      } else if (!kIsWeb && Platform.isAndroid) {
-        return 'http://192.168.5.77:3001';
-      } else {
-        return 'http://192.168.5.77:3001';
-      }
+    // Local development server
+    if (kIsWeb) {
+      return 'http://localhost:3001';
+    } else if (!kIsWeb && Platform.isAndroid) {
+      return 'http://192.168.5.77:3001';
+    } else {
+      return 'http://192.168.5.77:3001';
     }
-
-    // Production - use the Socialmesh API
-    return 'https://api.socialmesh.app';
   }
 
   /// Default API endpoint

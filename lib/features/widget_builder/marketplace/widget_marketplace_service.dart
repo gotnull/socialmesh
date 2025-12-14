@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
@@ -23,21 +23,17 @@ class WidgetMarketplaceService {
 
     // TODO: Change to api.socialmesh.app when deployed to production
     // For now, use local network IP for development/testing
-    const useLocalServer = true; // Set to false when production server is ready
+    // ignore: unused_local_variable
+    const productionUrl = 'https://api.socialmesh.app/widgets';
 
-    if (useLocalServer) {
-      // Local development server
-      if (kIsWeb) {
-        return 'http://localhost:3000/widgets';
-      } else if (Platform.isAndroid) {
-        return 'http://192.168.5.77:3000/widgets';
-      } else {
-        return 'http://192.168.5.77:3000/widgets';
-      }
+    // Local development server
+    if (kIsWeb) {
+      return 'http://localhost:3000/widgets';
+    } else if (Platform.isAndroid) {
+      return 'http://192.168.5.77:3000/widgets';
+    } else {
+      return 'http://192.168.5.77:3000/widgets';
     }
-
-    // Production fallback
-    return 'https://api.socialmesh.app/widgets';
   }
 
   WidgetMarketplaceService({

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../models/world_mesh_node.dart';
+import '../../providers/node_favorites_provider.dart';
 import 'node_analytics_screen.dart';
 import 'node_comparison_screen.dart';
 import 'services/node_favorites_service.dart';
@@ -28,38 +30,24 @@ class _FavoriteItem {
 }
 
 /// Screen displaying all favorited mesh nodes with quick access.
-class FavoritesScreen extends StatefulWidget {
+class FavoritesScreen extends ConsumerStatefulWidget {
   final Map<int, WorldMeshNode>? allNodes;
   final void Function(WorldMeshNode node)? onShowOnMap;
 
   const FavoritesScreen({super.key, this.allNodes, this.onShowOnMap});
 
   @override
-  State<FavoritesScreen> createState() => _FavoritesScreenState();
+  ConsumerState<FavoritesScreen> createState() => _FavoritesScreenState();
 }
 
-class _FavoritesScreenState extends State<FavoritesScreen> {
-  final NodeFavoritesService _favoritesService = NodeFavoritesService();
-  List<_FavoriteItem> _favorites = [];
-  bool _isLoading = true;
+class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   bool _isCompareMode = false;
   _FavoriteItem? _selectedForCompare;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadFavorites();
-  }
-
-  Future<void> _loadFavorites() async {
-    setState(() => _isLoading = true);
-
-    final savedMeta = await _favoritesService.getFavorites();
-
-    // Try to get fresh data from allNodes if available
-    final List<_FavoriteItem> items = [];
-    for (final meta in savedMeta) {
-      // Parse nodeId hex back to int
+  /// Build favorite items from provider state, merging with live node data
+  List<_FavoriteItem> _buildFavoriteItems(NodeFavoritesState state) {
+    final items = <_FavoriteItem>[];
+    for (final meta in state.favorites) {
       final nodeNum = int.tryParse(meta.nodeId, radix: 16);
       WorldMeshNode? freshNode;
       if (nodeNum != null && widget.allNodes != null) {
@@ -67,19 +55,46 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       }
       items.add(_FavoriteItem(metadata: meta, liveNode: freshNode));
     }
-
-    if (mounted) {
-      setState(() {
-        _favorites = items;
-        _isLoading = false;
-      });
-    }
+    return items;
   }
 
   Future<void> _removeFavorite(_FavoriteItem item) async {
-    await _favoritesService.removeFavorite(item.metadata.nodeId);
+    await ref
+        .read(nodeFavoritesProvider.notifier)
+        .removeFavorite(item.metadata.nodeId);
     HapticFeedback.mediumImpact();
-    await _loadFavorites();
+  }
+
+  Future<void> _confirmRemoveFavorite(_FavoriteItem item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        title: const Text(
+          'Remove Favorite?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'Remove ${item.displayName} from your favorites?',
+          style: const TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.errorRed),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _removeFavorite(item);
+    }
   }
 
   void _openNodeAnalytics(_FavoriteItem item) {
@@ -126,9 +141,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     if (item.liveNode == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cannot compare nodes not in mesh'),
-        ),
+        const SnackBar(content: Text('Cannot compare nodes not in mesh')),
       );
       return;
     }
@@ -163,7 +176,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hasEnoughForCompare = _favorites.where((f) => f.hasLiveData).length >= 2;
+    final favoritesState = ref.watch(nodeFavoritesProvider);
+    final favorites = _buildFavoriteItems(favoritesState);
+    final hasEnoughForCompare =
+        favorites.where((f) => f.hasLiveData).length >= 2;
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
@@ -183,7 +199,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         ),
         actions: [
           // Compare toggle
-          if (_favorites.length >= 2 && hasEnoughForCompare)
+          if (favorites.length >= 2 && hasEnoughForCompare)
             IconButton(
               icon: Icon(
                 _isCompareMode ? Icons.close : Icons.compare_arrows,
@@ -192,7 +208,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               tooltip: _isCompareMode ? 'Cancel compare' : 'Compare nodes',
               onPressed: _toggleCompareMode,
             ),
-          if (_favorites.isNotEmpty && !_isCompareMode)
+          if (favorites.isNotEmpty && !_isCompareMode)
             Padding(
               padding: const EdgeInsets.only(right: 16),
               child: Center(
@@ -206,7 +222,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${_favorites.length}',
+                    '${favorites.length}',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -218,11 +234,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             ),
         ],
       ),
-      body: _isLoading
+      body: favoritesState.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _favorites.isEmpty
+          : favorites.isEmpty
           ? _buildEmptyState()
-          : _buildFavoritesList(),
+          : _buildFavoritesList(favorites),
     );
   }
 
@@ -268,18 +284,84 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  Widget _buildFavoritesList() {
+  Widget _buildFavoritesList(List<_FavoriteItem> favorites) {
     return RefreshIndicator(
-      onRefresh: _loadFavorites,
+      onRefresh: () => ref.read(nodeFavoritesProvider.notifier).refresh(),
       color: context.accentColor,
       backgroundColor: AppTheme.darkCard,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: _favorites.length,
+        itemCount: favorites.length,
         itemBuilder: (context, index) {
-          final item = _favorites[index];
-          return _buildFavoriteCard(item);
+          final item = favorites[index];
+          return _buildDismissibleCard(item);
         },
+      ),
+    );
+  }
+
+  Widget _buildDismissibleCard(_FavoriteItem item) {
+    const borderRadius = BorderRadius.all(Radius.circular(12));
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: ClipRRect(
+        borderRadius: borderRadius,
+        child: Dismissible(
+          key: Key(item.metadata.nodeId),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            decoration: const BoxDecoration(color: AppTheme.errorRed),
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 24),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.delete, color: Colors.white, size: 24),
+                SizedBox(width: 8),
+                Text(
+                  'Delete',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          confirmDismiss: (direction) async {
+            return await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: AppTheme.darkCard,
+                    title: const Text(
+                      'Remove Favorite?',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    content: Text(
+                      'Remove ${item.displayName} from your favorites?',
+                      style: const TextStyle(color: AppTheme.textSecondary),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Cancel'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppTheme.errorRed,
+                        ),
+                        child: const Text('Remove'),
+                      ),
+                    ],
+                  ),
+                ) ??
+                false;
+          },
+          onDismissed: (_) => _removeFavorite(item),
+          child: _buildFavoriteCard(item),
+        ),
       ),
     );
   }
@@ -292,211 +374,201 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         ? (item.isOnline ? 'Online' : (item.isIdle ? 'Idle' : 'Offline'))
         : 'Not in mesh';
 
-    final isSelected = _isCompareMode &&
+    final isSelected =
+        _isCompareMode &&
         _selectedForCompare?.metadata.nodeId == item.metadata.nodeId;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: AppTheme.darkCard,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: () => _handleItemTap(item),
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isSelected
-                    ? AccentColors.green
-                    : (_isCompareMode && !item.hasLiveData
-                          ? AppTheme.textTertiary.withValues(alpha: 0.3)
-                          : AppTheme.darkBorder),
-                width: isSelected ? 2 : 1,
-              ),
+    return Material(
+      color: AppTheme.darkCard,
+      child: InkWell(
+        onTap: () => _handleItemTap(item),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: isSelected
+                  ? AccentColors.green
+                  : (_isCompareMode && !item.hasLiveData
+                        ? AppTheme.textTertiary.withValues(alpha: 0.3)
+                        : AppTheme.darkBorder),
+              width: isSelected ? 2 : 1,
             ),
-            child: Row(
-              children: [
-                // Selection checkbox in compare mode
-                if (_isCompareMode) ...[
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: item.hasLiveData
-                            ? (isSelected
-                                  ? AccentColors.green
-                                  : AppTheme.textTertiary)
-                            : AppTheme.textTertiary.withValues(alpha: 0.3),
-                        width: 2,
-                      ),
-                      color: isSelected
-                          ? AccentColors.green
-                          : Colors.transparent,
-                    ),
-                    child: isSelected
-                        ? const Icon(
-                            Icons.check,
-                            size: 16,
-                            color: Colors.white,
-                          )
-                        : null,
-                  ),
-                  const SizedBox(width: 12),
-                ],
-                // Status indicator
+          ),
+          child: Row(
+            children: [
+              // Selection checkbox in compare mode
+              if (_isCompareMode) ...[
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 24,
+                  height: 24,
                   decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
-                    border: Border.all(color: statusColor, width: 2),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      item.hasLiveData
-                          ? (item.isOnline
-                                ? Icons.wifi
-                                : (item.isIdle
-                                      ? Icons.wifi_1_bar
-                                      : Icons.wifi_off))
-                          : Icons.cloud_off,
-                      color: statusColor,
-                      size: 22,
+                    border: Border.all(
+                      color: item.hasLiveData
+                          ? (isSelected
+                                ? AccentColors.green
+                                : AppTheme.textTertiary)
+                          : AppTheme.textTertiary.withValues(alpha: 0.3),
+                      width: 2,
                     ),
+                    color: isSelected ? AccentColors.green : Colors.transparent,
+                  ),
+                  child: isSelected
+                      ? const Icon(Icons.check, size: 16, color: Colors.white)
+                      : null,
+                ),
+                const SizedBox(width: 12),
+              ],
+              // Status indicator
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: statusColor, width: 2),
+                ),
+                child: Center(
+                  child: Icon(
+                    item.hasLiveData
+                        ? (item.isOnline
+                              ? Icons.wifi
+                              : (item.isIdle
+                                    ? Icons.wifi_1_bar
+                                    : Icons.wifi_off))
+                        : Icons.cloud_off,
+                    color: statusColor,
+                    size: 22,
                   ),
                 ),
-                const SizedBox(width: 14),
-                // Node info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
+              ),
+              const SizedBox(width: 14),
+              // Node info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.displayName,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: statusColor,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          statusText,
+                          style: TextStyle(fontSize: 12, color: statusColor),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          '!${item.metadata.nodeId}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textTertiary,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        if (item.metadata.role.isNotEmpty) ...[
+                          const Text(
+                            ' • ',
+                            style: TextStyle(color: AppTheme.textTertiary),
+                          ),
                           Expanded(
                             child: Text(
-                              item.displayName,
+                              item.metadata.role,
                               style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                fontSize: 12,
+                                color: AppTheme.textTertiary,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: statusColor,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            statusText,
-                            style: TextStyle(fontSize: 12, color: statusColor),
-                          ),
                         ],
-                      ),
-                      const SizedBox(height: 4),
+                      ],
+                    ),
+                    if (item.liveNode?.batteryLevel != null) ...[
+                      const SizedBox(height: 6),
                       Row(
                         children: [
-                          Text(
-                            '!${item.metadata.nodeId}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppTheme.textTertiary,
-                              fontFamily: 'monospace',
+                          Icon(
+                            _getBatteryIcon(item.liveNode!.batteryLevel!),
+                            size: 14,
+                            color: _getBatteryColor(
+                              item.liveNode!.batteryLevel!,
                             ),
                           ),
-                          if (item.metadata.role.isNotEmpty) ...[
-                            const Text(
-                              ' • ',
-                              style: TextStyle(color: AppTheme.textTertiary),
-                            ),
-                            Expanded(
-                              child: Text(
-                                item.metadata.role,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppTheme.textTertiary,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      if (item.liveNode?.batteryLevel != null) ...[
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Icon(
-                              _getBatteryIcon(item.liveNode!.batteryLevel!),
-                              size: 14,
+                          const SizedBox(width: 4),
+                          Text(
+                            item.liveNode!.batteryLevel! > 100
+                                ? 'Charging'
+                                : '${item.liveNode!.batteryLevel}%',
+                            style: TextStyle(
+                              fontSize: 12,
                               color: _getBatteryColor(
                                 item.liveNode!.batteryLevel!,
                               ),
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              item.liveNode!.batteryLevel! > 100
-                                  ? 'Charging'
-                                  : '${item.liveNode!.batteryLevel}%',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: _getBatteryColor(
-                                  item.liveNode!.batteryLevel!,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ],
-                  ),
-                ),
-                // Actions
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.star,
-                        color: Color(0xFFFFD700),
-                        size: 22,
-                      ),
-                      onPressed: () => _removeFavorite(item),
-                      tooltip: 'Remove from favorites',
-                      constraints: const BoxConstraints(
-                        minWidth: 36,
-                        minHeight: 36,
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.chevron_right,
-                        color: item.hasLiveData
-                            ? AppTheme.textTertiary
-                            : AppTheme.textTertiary.withValues(alpha: 0.3),
-                        size: 22,
-                      ),
-                      onPressed: () => _openNodeAnalytics(item),
-                      constraints: const BoxConstraints(
-                        minWidth: 36,
-                        minHeight: 36,
-                      ),
-                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              // Actions
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Delete button - obvious red trash icon
+                  IconButton(
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: AppTheme.errorRed,
+                      size: 22,
+                    ),
+                    onPressed: () => _confirmRemoveFavorite(item),
+                    tooltip: 'Remove from favorites',
+                    constraints: const BoxConstraints(
+                      minWidth: 36,
+                      minHeight: 36,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.chevron_right,
+                      color: item.hasLiveData
+                          ? AppTheme.textTertiary
+                          : AppTheme.textTertiary.withValues(alpha: 0.3),
+                      size: 22,
+                    ),
+                    onPressed: () => _openNodeAnalytics(item),
+                    constraints: const BoxConstraints(
+                      minWidth: 36,
+                      minHeight: 36,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

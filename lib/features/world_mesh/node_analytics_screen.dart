@@ -575,14 +575,16 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                     fontFamily: 'monospace',
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  node.role,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppTheme.textTertiary,
+                if (node.role != 'UNKNOWN') ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    _formatRole(node.role),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textTertiary,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -702,14 +704,28 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
   }
 
   Widget _buildDeviceInfoTable(WorldMeshNode node) {
+    final nodeIdHex = node.nodeNum.toRadixString(16).padLeft(8, '0');
     return InfoTable(
       rows: [
-        InfoTableRow(label: 'Long Name', value: node.longName),
-        InfoTableRow(label: 'Short Name', value: node.shortName),
-        InfoTableRow(label: 'Role', value: node.role),
+        InfoTableRow(
+          label: 'Long Name',
+          value: node.longName.isNotEmpty ? node.longName : '—',
+        ),
+        InfoTableRow(
+          label: 'Short Name',
+          value: node.shortName.isNotEmpty && node.shortName != '????'
+              ? node.shortName
+              : nodeIdHex.substring(0, 4).toUpperCase(),
+        ),
+        InfoTableRow(
+          label: 'Role',
+          value: node.role != 'UNKNOWN' ? _formatRole(node.role) : '—',
+        ),
         InfoTableRow(
           label: 'Hardware',
-          value: node.hwModel.isNotEmpty ? node.hwModel : 'Unknown',
+          value: node.hwModel.isNotEmpty && node.hwModel != 'UNKNOWN'
+              ? node.hwModel
+              : '—',
         ),
         if (node.latitude != 0 && node.longitude != 0) ...[
           InfoTableRow(
@@ -725,6 +741,18 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
         ],
       ],
     );
+  }
+
+  String _formatRole(String role) {
+    return role
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map(
+          (w) => w.isNotEmpty
+              ? '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}'
+              : '',
+        )
+        .join(' ');
   }
 
   Widget _buildMetricsTable(WorldMeshNode node) {

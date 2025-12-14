@@ -11,12 +11,12 @@ import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../models/world_mesh_node.dart';
+import '../../providers/node_favorites_provider.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/world_mesh_map_provider.dart';
 import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
 import 'favorites_screen.dart';
-import 'services/node_favorites_service.dart';
 import 'widgets/node_intelligence_panel.dart';
 import 'world_mesh_filter_sheet.dart';
 
@@ -31,7 +31,6 @@ class WorldMeshScreen extends ConsumerStatefulWidget {
 class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     with TickerProviderStateMixin {
   final MapController _mapController = MapController();
-  final NodeFavoritesService _favoritesService = NodeFavoritesService();
   double _currentZoom = 3.0;
   MapTileStyle _mapStyle = MapTileStyle.dark;
   String _searchQuery = '';
@@ -39,7 +38,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   bool _showSearchResults = false;
   WorldMeshNode? _selectedNode;
   bool _isLoadingNodeInfo = false;
-  int _favoritesCount = 0;
 
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -50,14 +48,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   @override
   void initState() {
     super.initState();
-    _loadFavoritesCount();
-  }
-
-  Future<void> _loadFavoritesCount() async {
-    final favorites = await _favoritesService.getFavorites();
-    if (mounted) {
-      setState(() => _favoritesCount = favorites.length);
-    }
   }
 
   @override
@@ -123,7 +113,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           },
         ),
       ),
-    ).then((_) => _loadFavoritesCount());
+    );
   }
 
   @override
@@ -156,9 +146,9 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           _buildFilterButton(accentColor),
           // Favorites
           IconButton(
-            icon: _favoritesCount > 0
+            icon: ref.watch(favoritesCountProvider) > 0
                 ? Badge.count(
-                    count: _favoritesCount,
+                    count: ref.watch(favoritesCountProvider),
                     child: const Icon(Icons.star),
                   )
                 : const Icon(Icons.star_border),
@@ -1103,9 +1093,7 @@ class _SearchResultTile extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      node.shortName.length > 2
-                          ? node.shortName.substring(0, 2).toUpperCase()
-                          : node.shortName.toUpperCase(),
+                      _getAvatarText(),
                       style: TextStyle(
                         color: isActive ? accentColor : AppTheme.textSecondary,
                         fontWeight: FontWeight.bold,
@@ -1185,10 +1173,27 @@ class _SearchResultTile extends StatelessWidget {
         .replaceAll('TLORA', 'T-LoRa')
         .replaceAll('RAK', 'RAK');
   }
+
+  /// Get avatar text for a node - prefers shortName, falls back to hex ID
+  String _getAvatarText() {
+    final shortName = node.shortName.trim();
+    if (shortName.isNotEmpty &&
+        shortName != '????' &&
+        !shortName.startsWith('!')) {
+      return shortName.length > 2
+          ? shortName.substring(0, 2).toUpperCase()
+          : shortName.toUpperCase();
+    }
+    return node.nodeNum
+        .toRadixString(16)
+        .padLeft(8, '0')
+        .substring(0, 2)
+        .toUpperCase();
+  }
 }
 
 /// Rich info card for WorldMeshNode - shows all available data from mesh-observer
-class WorldNodeInfoCard extends StatelessWidget {
+class WorldNodeInfoCard extends ConsumerStatefulWidget {
   final WorldMeshNode node;
   final VoidCallback? onClose;
   final VoidCallback? onFocus;
@@ -1203,9 +1208,34 @@ class WorldNodeInfoCard extends StatelessWidget {
   });
 
   @override
+  ConsumerState<WorldNodeInfoCard> createState() => _WorldNodeInfoCardState();
+}
+
+class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
+  WorldMeshNode get node => widget.node;
+  VoidCallback? get onClose => widget.onClose;
+  VoidCallback? get onFocus => widget.onFocus;
+
+  void _toggleFavorite() {
+    HapticFeedback.mediumImpact();
+    final isFavorite = ref.read(isNodeFavoriteProvider(node.nodeNum));
+    ref.read(nodeFavoritesProvider.notifier).toggleFavorite(node);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isFavorite ? 'Removed from favorites' : 'Added to favorites',
+        ),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final accentColor = theme.colorScheme.primary;
+    final isFavorite = ref.watch(isNodeFavoriteProvider(node.nodeNum));
 
     return Container(
       constraints: const BoxConstraints(maxHeight: 400),
@@ -1238,9 +1268,7 @@ class WorldNodeInfoCard extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      node.shortName.length > 2
-                          ? node.shortName.substring(0, 2).toUpperCase()
-                          : node.shortName.toUpperCase(),
+                      _getAvatarText(node),
                       style: TextStyle(
                         color: accentColor,
                         fontWeight: FontWeight.bold,
@@ -1265,15 +1293,17 @@ class WorldNodeInfoCard extends StatelessWidget {
                       ),
                       Row(
                         children: [
-                          Text(
-                            node.nodeId,
-                            style: TextStyle(
-                              color: AppTheme.textSecondary,
-                              fontFamily: 'JetBrainsMono',
-                              fontSize: 12,
+                          // Only show nodeId if different from displayName
+                          if (node.hasName)
+                            Text(
+                              node.nodeId,
+                              style: TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontFamily: 'JetBrainsMono',
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
+                          if (node.hasName) const SizedBox(width: 8),
                           if (node.isRecentlySeen)
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -1299,6 +1329,20 @@ class WorldNodeInfoCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+                // Favorite button
+                IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.star : Icons.star_border,
+                    size: 22,
+                    color: isFavorite
+                        ? const Color(0xFFFFD700)
+                        : AppTheme.textSecondary,
+                  ),
+                  onPressed: _toggleFavorite,
+                  tooltip: isFavorite
+                      ? 'Remove from favorites'
+                      : 'Add to favorites',
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 20),
@@ -1696,6 +1740,26 @@ class WorldNodeInfoCard extends StatelessWidget {
     if (level > 60) return AppTheme.successGreen;
     if (level > 30) return Colors.orange;
     return AppTheme.errorRed;
+  }
+
+  /// Get avatar text for a node - prefers shortName, falls back to hex ID
+  String _getAvatarText(WorldMeshNode node) {
+    // Check if shortName is valid (not empty and not default placeholder)
+    final shortName = node.shortName.trim();
+    if (shortName.isNotEmpty &&
+        shortName != '????' &&
+        !shortName.startsWith('!')) {
+      // Use first 2 characters of shortName
+      return shortName.length > 2
+          ? shortName.substring(0, 2).toUpperCase()
+          : shortName.toUpperCase();
+    }
+    // Fall back to hex node ID (first 2 hex chars)
+    return node.nodeNum
+        .toRadixString(16)
+        .padLeft(8, '0')
+        .substring(0, 2)
+        .toUpperCase();
   }
 }
 

@@ -153,8 +153,17 @@ class WorldMeshNode {
   /// Get decimal longitude
   double get longitudeDecimal => longitude / 10000000.0;
 
-  /// Get display name (long name preferred)
-  String get displayName => longName.isNotEmpty ? longName : shortName;
+  /// Get display name (long name preferred, falls back to nodeId)
+  String get displayName {
+    if (longName.isNotEmpty && longName != 'Unknown') return longName;
+    if (shortName.isNotEmpty && shortName != '????') return shortName;
+    return nodeId;
+  }
+
+  /// Check if node has a proper name set (not just nodeId fallback)
+  bool get hasName =>
+      (longName.isNotEmpty && longName != 'Unknown') ||
+      (shortName.isNotEmpty && shortName != '????');
 
   /// Get node ID in hex format
   String get nodeId => '!${nodeNum.toRadixString(16).padLeft(8, '0')}';

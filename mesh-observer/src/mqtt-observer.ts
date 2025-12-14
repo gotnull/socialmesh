@@ -159,12 +159,30 @@ export class MqttObserver {
 
       const update: Partial<MeshNode> = {};
 
+      // Extract region and modemPreset from topic
+      // Topic format: msh/{region}/2/json/{modemPreset}/!{nodeId}
+      const topicParts = topic.split('/');
+      if (topicParts.length >= 5) {
+        const region = topicParts[1];
+        const modemPreset = topicParts[4];
+        if (region && region !== '+' && region !== '#') {
+          update.region = region;
+        }
+        if (modemPreset && modemPreset !== '+' && modemPreset !== '#' && !modemPreset.startsWith('!')) {
+          update.modemPreset = modemPreset;
+        }
+      }
+
       // Handle based on message type
       if (json.type === 'nodeinfo' && json.payload) {
         const p = json.payload;
         if (p.longname) update.longName = p.longname;
         if (p.shortname) update.shortName = p.shortname;
-        if (p.hardware) update.hwModel = p.hardware;
+        if (p.hardware) update.hwModel = this.hwModelNumToString(p.hardware);
+        // Role can be in payload as 'role' (string or number)
+        if (p.role !== undefined) {
+          update.role = typeof p.role === 'string' ? p.role : this.roleNumToString(p.role);
+        }
         this.stats.nodeinfoUpdates++;
       } else if (json.type === 'position' && json.payload) {
         const p = json.payload;
@@ -384,5 +402,132 @@ export class MqttObserver {
   disconnect(): void {
     this.client?.end();
     this.connected = false;
+  }
+
+  /**
+   * Convert role number to string
+   */
+  private roleNumToString(num: number): string {
+    const roles: Record<number, string> = {
+      0: 'CLIENT',
+      1: 'CLIENT_MUTE',
+      2: 'ROUTER',
+      3: 'ROUTER_CLIENT',
+      4: 'REPEATER',
+      5: 'TRACKER',
+      6: 'SENSOR',
+      7: 'TAK',
+      8: 'CLIENT_HIDDEN',
+      9: 'LOST_AND_FOUND',
+      10: 'TAK_TRACKER',
+      11: 'ROUTER_LATE',
+      12: 'UNSET',
+    };
+    return roles[num] || `ROLE_${num}`;
+  }
+
+  /**
+   * Convert hardware model number to string
+   */
+  private hwModelNumToString(num: number | string): string {
+    if (typeof num === 'string') return num;
+    // Handle potential float values
+    const intNum = Math.round(num);
+    const models: Record<number, string> = {
+      0: 'UNSET',
+      1: 'TLORA_V2',
+      2: 'TLORA_V1',
+      3: 'TLORA_V2_1_1P6',
+      4: 'TBEAM',
+      5: 'HELTEC_V2_0',
+      6: 'TBEAM_V0P7',
+      7: 'T_ECHO',
+      8: 'TLORA_V1_1P3',
+      9: 'RAK4631',
+      10: 'HELTEC_V2_1',
+      11: 'HELTEC_V1',
+      12: 'LILYGO_TBEAM_S3_CORE',
+      13: 'RAK11200',
+      14: 'NANO_G1',
+      15: 'TLORA_V2_1_1P8',
+      16: 'TLORA_T3_S3',
+      17: 'NANO_G1_EXPLORER',
+      18: 'NANO_G2_ULTRA',
+      19: 'LORA_TYPE',
+      20: 'WIPHONE',
+      21: 'WIO_WM1110',
+      22: 'RAK2560',
+      23: 'HELTEC_HRU_3601',
+      24: 'STATION_G1',
+      25: 'RAK11310',
+      26: 'SENSELORA_RP2040',
+      27: 'SENSELORA_S3',
+      28: 'CANARYONE',
+      29: 'RP2040_LORA',
+      30: 'STATION_G2',
+      31: 'LORA_RELAY_V1',
+      32: 'NRF52840DK',
+      33: 'PPR',
+      34: 'GENIEBLOCKS',
+      35: 'NRF52_UNKNOWN',
+      36: 'PORTDUINO',
+      37: 'ANDROID_SIM',
+      38: 'DIY_V1',
+      39: 'NRF52840_PCA10059',
+      40: 'DR_DEV',
+      41: 'M5STACK',
+      42: 'HELTEC_V3',
+      43: 'HELTEC_WSL_V3',
+      44: 'BETAFPV_2400_TX',
+      45: 'BETAFPV_900_NANO_TX',
+      46: 'RPI_PICO',
+      47: 'HELTEC_WIRELESS_TRACKER',
+      48: 'HELTEC_WIRELESS_PAPER',
+      49: 'T_DECK',
+      50: 'T_WATCH_S3',
+      51: 'PICOMPUTER_S3',
+      52: 'HELTEC_HT62',
+      53: 'EBYTE_ESP32_S3',
+      54: 'ESP32_S3_PICO',
+      55: 'CHATTER_2',
+      56: 'HELTEC_WIRELESS_PAPER_V1_0',
+      57: 'HELTEC_WIRELESS_TRACKER_V1_0',
+      58: 'UNPHONE',
+      59: 'TD_LORAC',
+      60: 'CDEBYTE_EORA_S3',
+      61: 'TWC_MESH_V4',
+      62: 'NRF52_PROMICRO_DIY',
+      63: 'RADIOMASTER_900_BANDIT_NANO',
+      64: 'HELTEC_CAPSULE_SENSOR_V3',
+      65: 'HELTEC_VISION_MASTER_T190',
+      66: 'HELTEC_VISION_MASTER_E213',
+      67: 'HELTEC_VISION_MASTER_E290',
+      68: 'HELTEC_MESH_NODE_T114',
+      69: 'SENSECAP_INDICATOR',
+      70: 'TRACKER_T1000_E',
+      71: 'RAK3172',
+      72: 'WIO_E5',
+      73: 'RADIOMASTER_900_BANDIT',
+      74: 'ME25LS01_4Y10TD',
+      75: 'RP2040_FEATHER_RFM95',
+      76: 'M5STACK_COREBASIC',
+      77: 'M5STACK_CORE2',
+      78: 'TLORA_C6',
+      79: 'SEEED_XIAO_S3',
+      80: 'MS_S24',
+      81: 'MS24_MINI',
+      82: 'WISMESH_TAP',
+      83: 'PRIVATE_HW_OLD',
+      84: 'RPI_PICO2',
+      85: 'MESHLINK',
+      86: 'MESHLINK_MINI',
+      87: 'WISMESH_POCKET',
+      88: 'WISMESH_STICK',
+      89: 'EBP_NOMAD',
+      90: 'HELTEC_LITE_V3',
+      110: 'RASPIAUDIO_MINIA',
+      255: 'PRIVATE_HW',
+    };
+    return models[intNum] || `HW_${intNum}`;
   }
 }
