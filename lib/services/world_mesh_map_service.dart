@@ -53,6 +53,18 @@ class WorldMeshMapService {
     }
   }
 
+  /// Fetch a single node by nodeNum from meshmap.net
+  /// Returns null if node not found
+  Future<WorldMeshNode?> fetchNode(int nodeNum) async {
+    try {
+      final nodes = await fetchNodes();
+      return nodes[nodeNum];
+    } catch (e) {
+      debugPrint('Failed to fetch node $nodeNum: $e');
+      return null;
+    }
+  }
+
   void dispose() {
     _client.close();
   }

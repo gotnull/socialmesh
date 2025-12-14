@@ -15,6 +15,8 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../providers/world_mesh_map_provider.dart';
 import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
+import 'favorites_screen.dart';
+import 'widgets/node_intelligence_panel.dart';
 import 'world_mesh_filter_sheet.dart';
 
 /// World Mesh Map screen showing all Meshtastic nodes from meshmap.net
@@ -86,6 +88,28 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     _animationController!.forward();
   }
 
+  void _openFavorites(BuildContext context) {
+    final asyncState = ref.read(worldMeshMapProvider);
+    final nodes = asyncState.value?.nodes;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => FavoritesScreen(
+          allNodes: nodes,
+          onShowOnMap: (node) {
+            setState(() {
+              _selectedNode = node;
+            });
+            _animatedMove(
+              LatLng(node.latitudeDecimal, node.longitudeDecimal),
+              14.0,
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -114,6 +138,12 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             ),
           // Filter button with badge
           _buildFilterButton(accentColor),
+          // Favorites
+          IconButton(
+            icon: const Icon(Icons.star_border),
+            tooltip: 'Favorites',
+            onPressed: () => _openFavorites(context),
+          ),
           // Map style
           PopupMenuButton<MapTileStyle>(
             icon: const Icon(Icons.layers),
@@ -1267,6 +1297,10 @@ class WorldNodeInfoCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Mesh Intelligence Section - Derived from meshmap.net data
+                  NodeIntelligencePanel(node: node, onShowOnMap: onFocus),
+                  const SizedBox(height: 16),
+
                   // Device Info Section
                   _buildSectionHeader(theme, Icons.memory, 'Device'),
                   const SizedBox(height: 8),
