@@ -10,15 +10,17 @@ import '../models/world_mesh_node.dart';
 class WorldMeshMapService {
   /// Get the base URL based on environment
   static String get _defaultApiUrl {
-    // Debug mode uses local network IP for real device testing
-    if (kDebugMode) {
+    // TODO: Change to api.socialmesh.app when deployed to production
+    // For now, use local network IP for development/testing
+    const useLocalServer = true; // Set to false when production server is ready
+
+    if (useLocalServer) {
+      // Local development server
       if (kIsWeb) {
         return 'http://localhost:3001';
       } else if (!kIsWeb && Platform.isAndroid) {
-        // Android emulator uses 10.0.2.2, real device uses local IP
         return 'http://192.168.5.77:3001';
       } else {
-        // iOS (real device and simulator) - use local network IP
         return 'http://192.168.5.77:3001';
       }
     }

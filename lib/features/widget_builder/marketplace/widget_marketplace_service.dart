@@ -21,15 +21,17 @@ class WidgetMarketplaceService {
       return envUrl;
     }
 
-    // Fallback for local development without .env
-    if (kDebugMode) {
+    // TODO: Change to api.socialmesh.app when deployed to production
+    // For now, use local network IP for development/testing
+    const useLocalServer = true; // Set to false when production server is ready
+
+    if (useLocalServer) {
+      // Local development server
       if (kIsWeb) {
         return 'http://localhost:3000/widgets';
       } else if (Platform.isAndroid) {
-        // Android emulator and real device uses local network IP
         return 'http://192.168.5.77:3000/widgets';
       } else {
-        // iOS (real device and simulator) - use local network IP
         return 'http://192.168.5.77:3000/widgets';
       }
     }
