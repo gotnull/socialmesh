@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../core/theme.dart';
 import '../../models/world_mesh_node.dart';
 import 'node_analytics_screen.dart';
+import 'node_comparison_screen.dart';
 import 'services/node_favorites_service.dart';
 
 /// A favorite item combining metadata with optional live node data.
@@ -41,6 +42,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   final NodeFavoritesService _favoritesService = NodeFavoritesService();
   List<_FavoriteItem> _favorites = [];
   bool _isLoading = true;
+  bool _isCompareMode = false;
+  _FavoriteItem? _selectedForCompare;
 
   @override
   void initState() {
@@ -107,22 +110,89 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
+  void _toggleCompareMode() {
+    HapticFeedback.lightImpact();
+    setState(() {
+      _isCompareMode = !_isCompareMode;
+      _selectedForCompare = null;
+    });
+  }
+
+  void _handleItemTap(_FavoriteItem item) {
+    if (!_isCompareMode) {
+      _openNodeAnalytics(item);
+      return;
+    }
+
+    if (item.liveNode == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cannot compare nodes not in mesh'),
+        ),
+      );
+      return;
+    }
+
+    if (_selectedForCompare == null) {
+      // First selection
+      HapticFeedback.selectionClick();
+      setState(() => _selectedForCompare = item);
+    } else if (_selectedForCompare!.metadata.nodeId == item.metadata.nodeId) {
+      // Deselect
+      HapticFeedback.selectionClick();
+      setState(() => _selectedForCompare = null);
+    } else {
+      // Second selection - open comparison
+      HapticFeedback.mediumImpact();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (ctx) => NodeComparisonScreen(
+            nodeA: _selectedForCompare!.liveNode!,
+            nodeB: item.liveNode!,
+          ),
+        ),
+      ).then((_) {
+        setState(() {
+          _isCompareMode = false;
+          _selectedForCompare = null;
+        });
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasEnoughForCompare = _favorites.where((f) => f.hasLiveData).length >= 2;
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
-        title: const Text(
-          'Favorite Nodes',
-          style: TextStyle(
+        title: Text(
+          _isCompareMode
+              ? (_selectedForCompare == null
+                    ? 'Select first node'
+                    : 'Select second node')
+              : 'Favorite Nodes',
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
         ),
         actions: [
-          if (_favorites.isNotEmpty)
+          // Compare toggle
+          if (_favorites.length >= 2 && hasEnoughForCompare)
+            IconButton(
+              icon: Icon(
+                _isCompareMode ? Icons.close : Icons.compare_arrows,
+                color: _isCompareMode ? AccentColors.green : null,
+              ),
+              tooltip: _isCompareMode ? 'Cancel compare' : 'Compare nodes',
+              onPressed: _toggleCompareMode,
+            ),
+          if (_favorites.isNotEmpty && !_isCompareMode)
             Padding(
               padding: const EdgeInsets.only(right: 16),
               child: Center(
@@ -222,22 +292,61 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         ? (item.isOnline ? 'Online' : (item.isIdle ? 'Idle' : 'Offline'))
         : 'Not in mesh';
 
+    final isSelected = _isCompareMode &&
+        _selectedForCompare?.metadata.nodeId == item.metadata.nodeId;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
         color: AppTheme.darkCard,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
-          onTap: () => _openNodeAnalytics(item),
+          onTap: () => _handleItemTap(item),
           borderRadius: BorderRadius.circular(12),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(
+                color: isSelected
+                    ? AccentColors.green
+                    : (_isCompareMode && !item.hasLiveData
+                          ? AppTheme.textTertiary.withValues(alpha: 0.3)
+                          : AppTheme.darkBorder),
+                width: isSelected ? 2 : 1,
+              ),
             ),
             child: Row(
               children: [
+                // Selection checkbox in compare mode
+                if (_isCompareMode) ...[
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: item.hasLiveData
+                            ? (isSelected
+                                  ? AccentColors.green
+                                  : AppTheme.textTertiary)
+                            : AppTheme.textTertiary.withValues(alpha: 0.3),
+                        width: 2,
+                      ),
+                      color: isSelected
+                          ? AccentColors.green
+                          : Colors.transparent,
+                    ),
+                    child: isSelected
+                        ? const Icon(
+                            Icons.check,
+                            size: 16,
+                            color: Colors.white,
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                ],
                 // Status indicator
                 Container(
                   width: 48,

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/world_mesh/services/node_cache_service.dart';
 import '../features/world_mesh/world_mesh_filters.dart';
 import '../models/world_mesh_node.dart';
 import '../services/world_mesh_map_service.dart';
@@ -13,12 +14,18 @@ final worldMeshMapServiceProvider = Provider<WorldMeshMapService>((ref) {
   return service;
 });
 
+/// Provider for the NodeCacheService
+final nodeCacheServiceProvider = Provider<NodeCacheService>((ref) {
+  return NodeCacheService();
+});
+
 /// State for the world mesh map
 class WorldMeshMapState {
   final Map<int, WorldMeshNode> nodes;
   final bool isLoading;
   final String? error;
   final DateTime? lastUpdated;
+  final bool isFromCache;
 
   // Cached list of nodes with valid positions - computed once per state instance
   late final List<WorldMeshNode> nodesWithPosition = nodes.values
@@ -30,6 +37,7 @@ class WorldMeshMapState {
     this.isLoading = false,
     this.error,
     this.lastUpdated,
+    this.isFromCache = false,
   });
 
   WorldMeshMapState copyWith({
@@ -37,12 +45,14 @@ class WorldMeshMapState {
     bool? isLoading,
     String? error,
     DateTime? lastUpdated,
+    bool? isFromCache,
   }) {
     return WorldMeshMapState(
       nodes: nodes ?? this.nodes,
       isLoading: isLoading ?? this.isLoading,
       error: error,
       lastUpdated: lastUpdated ?? this.lastUpdated,
+      isFromCache: isFromCache ?? this.isFromCache,
     );
   }
 
@@ -78,21 +88,46 @@ class WorldMeshMapNotifier extends Notifier<AsyncValue<WorldMeshMapState>> {
   }
 
   Future<void> _fetchNodes() async {
+    final service = ref.read(worldMeshMapServiceProvider);
+    final cacheService = ref.read(nodeCacheServiceProvider);
+
     try {
-      final service = ref.read(worldMeshMapServiceProvider);
       final nodes = await service.fetchNodes();
+      
+      // Cache the fetched nodes for offline use
+      await cacheService.cacheNodes(nodes.values.toList());
+      
       state = AsyncValue.data(
         WorldMeshMapState(
           nodes: nodes,
           isLoading: false,
           lastUpdated: DateTime.now(),
+          isFromCache: false,
         ),
       );
     } catch (e, st) {
       final currentData = state.whenOrNull(data: (d) => d);
       final currentNodes = currentData?.nodes ?? {};
+      
       if (currentNodes.isEmpty) {
-        state = AsyncValue.error(e, st);
+        // Try to load from cache
+        final cachedNodes = await cacheService.getCachedNodes();
+        final cacheTimestamp = await cacheService.getCacheTimestamp();
+        
+        if (cachedNodes != null && cachedNodes.isNotEmpty) {
+          final nodesMap = {for (final n in cachedNodes) n.nodeNum: n};
+          state = AsyncValue.data(
+            WorldMeshMapState(
+              nodes: nodesMap,
+              isLoading: false,
+              error: 'Offline mode - using cached data',
+              lastUpdated: cacheTimestamp,
+              isFromCache: true,
+            ),
+          );
+        } else {
+          state = AsyncValue.error(e, st);
+        }
       } else {
         // Keep existing data but mark error
         state = AsyncValue.data(
@@ -101,6 +136,7 @@ class WorldMeshMapNotifier extends Notifier<AsyncValue<WorldMeshMapState>> {
             isLoading: false,
             error: e.toString(),
             lastUpdated: currentData?.lastUpdated,
+            isFromCache: currentData?.isFromCache ?? false,
           ),
         );
       }

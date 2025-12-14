@@ -16,6 +16,7 @@ import '../../providers/world_mesh_map_provider.dart';
 import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
 import 'favorites_screen.dart';
+import 'services/node_favorites_service.dart';
 import 'widgets/node_intelligence_panel.dart';
 import 'world_mesh_filter_sheet.dart';
 
@@ -30,6 +31,7 @@ class WorldMeshScreen extends ConsumerStatefulWidget {
 class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     with TickerProviderStateMixin {
   final MapController _mapController = MapController();
+  final NodeFavoritesService _favoritesService = NodeFavoritesService();
   double _currentZoom = 3.0;
   MapTileStyle _mapStyle = MapTileStyle.dark;
   String _searchQuery = '';
@@ -37,12 +39,26 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   bool _showSearchResults = false;
   WorldMeshNode? _selectedNode;
   bool _isLoadingNodeInfo = false;
+  int _favoritesCount = 0;
 
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 
   // Animation controller for smooth movements
   AnimationController? _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavoritesCount();
+  }
+
+  Future<void> _loadFavoritesCount() async {
+    final favorites = await _favoritesService.getFavorites();
+    if (mounted) {
+      setState(() => _favoritesCount = favorites.length);
+    }
+  }
 
   @override
   void dispose() {
@@ -107,7 +123,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           },
         ),
       ),
-    );
+    ).then((_) => _loadFavoritesCount());
   }
 
   @override
@@ -140,7 +156,12 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           _buildFilterButton(accentColor),
           // Favorites
           IconButton(
-            icon: const Icon(Icons.star_border),
+            icon: _favoritesCount > 0
+                ? Badge.count(
+                    count: _favoritesCount,
+                    child: const Icon(Icons.star),
+                  )
+                : const Icon(Icons.star_border),
             tooltip: 'Favorites',
             onPressed: () => _openFavorites(context),
           ),

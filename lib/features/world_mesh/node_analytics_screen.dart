@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme.dart';
@@ -11,6 +13,7 @@ import '../../services/world_mesh_map_service.dart';
 import '../../utils/snackbar.dart';
 import 'services/node_favorites_service.dart';
 import 'services/node_history_service.dart';
+import 'widgets/node_history_charts.dart';
 
 /// Dedicated analytics screen for deep-dive into a single mesh node.
 /// Features live updates, historical trends, favorites, share, and map link.
@@ -227,6 +230,151 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     widget.onShowOnMap?.call();
   }
 
+  void _exportHistory() {
+    if (_history.isEmpty) {
+      showErrorSnackBar(context, 'No history data to export');
+      return;
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.darkCard,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Export History',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${_history.length} records',
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppTheme.textTertiary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _exportAsJson();
+                    },
+                    icon: const Icon(Icons.code, size: 18),
+                    label: const Text('JSON'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: context.accentColor,
+                      side: BorderSide(
+                        color: context.accentColor.withValues(alpha: 0.5),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _exportAsCsv();
+                    },
+                    icon: const Icon(Icons.table_chart, size: 18),
+                    label: const Text('CSV'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: context.accentColor,
+                      side: BorderSide(
+                        color: context.accentColor.withValues(alpha: 0.5),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _exportAsJson() {
+    final node = _node;
+    final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
+
+    final data = {
+      'nodeId': _nodeId,
+      'nodeName': node.displayName,
+      'exportedAt': dateFormat.format(DateTime.now()),
+      'records': _history
+          .map(
+            (entry) => {
+              'timestamp': dateFormat.format(entry.timestamp),
+              'isOnline': entry.isOnline,
+              'batteryLevel': entry.batteryLevel,
+              'voltage': entry.voltage,
+              'channelUtil': entry.channelUtil,
+              'airUtilTx': entry.airUtilTx,
+              'neighborCount': entry.neighborCount,
+              'gatewayCount': entry.gatewayCount,
+              'latitude': entry.latitude,
+              'longitude': entry.longitude,
+            },
+          )
+          .toList(),
+    };
+
+    final jsonString = const JsonEncoder.withIndent('  ').convert(data);
+    Share.share(jsonString, subject: 'Node ${node.displayName} History (JSON)');
+    showSuccessSnackBar(context, 'JSON data shared');
+  }
+
+  void _exportAsCsv() {
+    final node = _node;
+    final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
+
+    final buffer = StringBuffer();
+    buffer.writeln(
+      'timestamp,isOnline,batteryLevel,voltage,channelUtil,airUtilTx,neighborCount,gatewayCount,latitude,longitude',
+    );
+
+    for (final entry in _history) {
+      buffer.writeln(
+        [
+          dateFormat.format(entry.timestamp),
+          entry.isOnline ? '1' : '0',
+          entry.batteryLevel?.toString() ?? '',
+          entry.voltage?.toStringAsFixed(2) ?? '',
+          entry.channelUtil?.toStringAsFixed(2) ?? '',
+          entry.airUtilTx?.toStringAsFixed(2) ?? '',
+          entry.neighborCount.toString(),
+          entry.gatewayCount.toString(),
+          entry.latitude?.toStringAsFixed(6) ?? '',
+          entry.longitude?.toStringAsFixed(6) ?? '',
+        ].join(','),
+      );
+    }
+
+    Share.share(
+      buffer.toString(),
+      subject: 'Node ${node.displayName} History (CSV)',
+    );
+    showSuccessSnackBar(context, 'CSV data shared');
+  }
+
   @override
   void dispose() {
     _refreshTimer?.cancel();
@@ -312,6 +460,15 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
             _buildSectionHeader('Network'),
             const SizedBox(height: 8),
             _buildNetworkSection(node),
+            const SizedBox(height: 24),
+
+            // Charts section
+            _buildSectionHeader('Trends'),
+            const SizedBox(height: 8),
+            NodeHistoryCharts(
+              history: _history,
+              accentColor: context.accentColor,
+            ),
             const SizedBox(height: 24),
 
             // History section
@@ -516,16 +673,30 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
             letterSpacing: 0.5,
           ),
         ),
-        if (_history.isNotEmpty)
-          TextButton.icon(
-            onPressed: _clearHistory,
-            icon: const Icon(Icons.delete_outline, size: 16),
-            label: const Text('Clear'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.textTertiary,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-            ),
-          ),
+        Row(
+          children: [
+            if (_history.isNotEmpty)
+              TextButton.icon(
+                onPressed: _exportHistory,
+                icon: const Icon(Icons.download, size: 16),
+                label: const Text('Export'),
+                style: TextButton.styleFrom(
+                  foregroundColor: context.accentColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+              ),
+            if (_history.isNotEmpty)
+              TextButton.icon(
+                onPressed: _clearHistory,
+                icon: const Icon(Icons.delete_outline, size: 16),
+                label: const Text('Clear'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppTheme.textTertiary,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+              ),
+          ],
+        ),
       ],
     );
   }

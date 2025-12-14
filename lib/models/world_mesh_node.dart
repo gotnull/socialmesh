@@ -239,6 +239,50 @@ class WorldMeshNode {
     return s.trim();
   }
 
+  /// Serialize to JSON for caching
+  Map<String, dynamic> toJson() {
+    return {
+      'nodeNum': nodeNum,
+      'longName': longName,
+      'shortName': shortName,
+      'hwModel': hwModel,
+      'role': role,
+      'latitude': latitude,
+      'longitude': longitude,
+      if (altitude != null) 'altitude': altitude,
+      if (precision != null) 'precision': precision,
+      if (fwVersion != null) 'fwVersion': fwVersion,
+      if (region != null) 'region': region,
+      if (modemPreset != null) 'modemPreset': modemPreset,
+      'hasDefaultCh': hasDefaultCh,
+      if (onlineLocalNodes != null) 'onlineLocalNodes': onlineLocalNodes,
+      if (lastMapReport != null) 'lastMapReport': lastMapReport,
+      if (batteryLevel != null) 'batteryLevel': batteryLevel,
+      if (voltage != null) 'voltage': voltage,
+      if (chUtil != null) 'chUtil': chUtil,
+      if (airUtilTx != null) 'airUtilTx': airUtilTx,
+      if (uptime != null) 'uptime': uptime,
+      if (lastDeviceMetrics != null) 'lastDeviceMetrics': lastDeviceMetrics,
+      if (temperature != null) 'temperature': temperature,
+      if (relativeHumidity != null) 'relativeHumidity': relativeHumidity,
+      if (barometricPressure != null) 'barometricPressure': barometricPressure,
+      if (lux != null) 'lux': lux,
+      if (windDirection != null) 'windDirection': windDirection,
+      if (windSpeed != null) 'windSpeed': windSpeed,
+      if (windGust != null) 'windGust': windGust,
+      if (radiation != null) 'radiation': radiation,
+      if (rainfall1 != null) 'rainfall1': rainfall1,
+      if (rainfall24 != null) 'rainfall24': rainfall24,
+      if (lastEnvironmentMetrics != null)
+        'lastEnvironmentMetrics': lastEnvironmentMetrics,
+      if (neighbors != null)
+        'neighbors': neighbors!.map(
+          (k, v) => MapEntry(k, {'snr': v.snr, 'updated': v.updated}),
+        ),
+      'seenBy': seenBy,
+    };
+  }
+
   /// Get position precision margin in meters (for privacy circle)
   int? get precisionMarginMeters {
     if (precision == null || precision! <= 0) return null;
