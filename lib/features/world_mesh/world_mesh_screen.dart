@@ -125,7 +125,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     return Scaffold(
       appBar: AppBar(
         leading: const HamburgerMenuButton(),
-        title: const Text('World Mesh Map'),
+        title: const Text('World Map'),
         actions: [
           // Search toggle (only show when search is NOT active)
           if (!_showSearch)
@@ -448,6 +448,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   }
 
   Widget _buildErrorState(ThemeData theme, String error) {
+    final accentColor = theme.colorScheme.primary;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -456,25 +457,25 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           children: [
             Icon(
               Icons.cloud_off,
-              size: 64,
-              color: theme.colorScheme.error.withValues(alpha: 0.5),
+              size: 48,
+              color: accentColor.withValues(alpha: 0.7),
             ),
             const SizedBox(height: 16),
-            Text('Failed to load mesh map', style: theme.textTheme.titleLarge),
+            Text(
+              'Unable to load mesh map',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
+            ),
             const SizedBox(height: 8),
             Text(
               error,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
+              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
+            const SizedBox(height: 16),
+            TextButton(
               onPressed: () =>
                   ref.read(worldMeshMapProvider.notifier).forceRefresh(),
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              child: Text('Retry', style: TextStyle(color: accentColor)),
             ),
           ],
         ),

@@ -126,7 +126,9 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
   void didUpdateWidget(AdvisorSpeechBubble oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.text != widget.text) {
+    // Restart typing if text changed or typewriter effect was just enabled
+    if (oldWidget.text != widget.text ||
+        (!oldWidget.typewriterEffect && widget.typewriterEffect)) {
       if (widget.typewriterEffect) {
         _startTyping();
       } else {
@@ -222,90 +224,116 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
                   _buildCornerDecoration(Alignment.bottomLeft),
                   _buildCornerDecoration(Alignment.bottomRight),
 
-                  // Content
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Header indicator
-                        Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: widget.accentColor,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: widget.accentColor,
-                                    blurRadius: 4,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'MESH ADVISOR',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: widget.accentColor,
-                                letterSpacing: 2,
-                              ),
-                            ),
-                            const Spacer(),
-                            // Typing indicator
-                            if (_currentCharIndex < widget.text.length &&
-                                widget.typewriterEffect)
-                              _buildTypingIndicator(),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Main text with cursor
-                        RichText(
-                          text: TextSpan(
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: Colors.white,
-                              height: 1.5,
-                              fontFamily: 'Exo2',
-                            ),
+                  // Content - Fixed height with scrollable text
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 140),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Header indicator
+                          Row(
                             children: [
-                              TextSpan(text: _displayedText),
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: widget.accentColor,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: widget.accentColor,
+                                      blurRadius: 4,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'MESH ADVISOR',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: widget.accentColor,
+                                  letterSpacing: 2,
+                                  fontFamily: AppTheme.fontFamily,
+                                ),
+                              ),
+                              const Spacer(),
+                              // Typing indicator
                               if (_currentCharIndex < widget.text.length &&
                                   widget.typewriterEffect)
-                                TextSpan(
-                                  text: '▌',
-                                  style: TextStyle(
-                                    color: widget.accentColor.withValues(
-                                      alpha: _glow.value,
-                                    ),
-                                  ),
-                                ),
+                                _buildTypingIndicator(),
                             ],
                           ),
-                        ),
+                          const SizedBox(height: 10),
 
-                        // Subtitle
-                        if (widget.subtitle != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            widget.subtitle!,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppTheme.textTertiary,
-                              fontStyle: FontStyle.italic,
+                          // Main text with cursor - scrollable
+                          Expanded(
+                            child: ShaderMask(
+                              shaderCallback: (Rect bounds) {
+                                return LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.white,
+                                    Colors.white,
+                                    Colors.white,
+                                    Colors.white.withValues(alpha: 0),
+                                  ],
+                                  stops: const [0.0, 0.7, 0.9, 1.0],
+                                ).createShader(bounds);
+                              },
+                              blendMode: BlendMode.dstIn,
+                              child: SingleChildScrollView(
+                                physics: const BouncingScrollPhysics(),
+                                child: RichText(
+                                  text: TextSpan(
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                      height: 1.5,
+                                      fontFamily: AppTheme.fontFamily,
+                                    ),
+                                    children: [
+                                      TextSpan(text: _displayedText),
+                                      if (_currentCharIndex <
+                                              widget.text.length &&
+                                          widget.typewriterEffect)
+                                        TextSpan(
+                                          text: '▌',
+                                          style: TextStyle(
+                                            color: widget.accentColor
+                                                .withValues(alpha: _glow.value),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
+
+                          // Subtitle
+                          if (widget.subtitle != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              widget.subtitle!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.textTertiary,
+                                fontStyle: FontStyle.italic,
+                                fontFamily: AppTheme.fontFamily,
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ],

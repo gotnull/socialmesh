@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../models/world_mesh_node.dart';
 import '../../providers/node_favorites_provider.dart';
+import '../../providers/splash_mesh_provider.dart';
 import 'node_analytics_screen.dart';
 import 'node_comparison_screen.dart';
 import 'services/node_favorites_service.dart';
@@ -235,7 +236,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
         ],
       ),
       body: favoritesState.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: MeshLoadingIndicator())
           : favorites.isEmpty
           ? _buildEmptyState()
           : _buildFavoritesList(favorites),

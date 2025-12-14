@@ -45,14 +45,19 @@ class NodeFavoritesNotifier extends Notifier<NodeFavoritesState> {
   Future<void> _loadFavorites() async {
     state = state.copyWith(isLoading: true);
 
-    final ids = await _service.getFavoriteIds();
-    final favorites = await _service.getFavorites();
+    try {
+      final ids = await _service.getFavoriteIds();
+      final favorites = await _service.getFavorites();
 
-    state = NodeFavoritesState(
-      favoriteIds: ids.map((id) => id.toUpperCase()).toSet(),
-      favorites: favorites,
-      isLoading: false,
-    );
+      state = NodeFavoritesState(
+        favoriteIds: ids.map((id) => id.toUpperCase()).toSet(),
+        favorites: favorites,
+        isLoading: false,
+      );
+    } catch (e) {
+      // On error, set loading to false with empty state
+      state = const NodeFavoritesState(isLoading: false);
+    }
   }
 
   Future<void> refresh() async {

@@ -165,7 +165,7 @@ class HamburgerMenuButton extends ConsumerWidget {
                 children: [
                   _QuickAccessTile(
                     icon: Icons.public,
-                    label: 'World Mesh Map',
+                    label: 'World Map',
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.of(context).push(
@@ -327,7 +327,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   final List<_DrawerMenuItem> _drawerMenuItems = [
     const _DrawerMenuItem(
       icon: Icons.public,
-      label: 'World Mesh Map',
+      label: 'World Map',
       screen: WorldMeshScreen(),
     ),
     const _DrawerMenuItem(

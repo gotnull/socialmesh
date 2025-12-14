@@ -192,7 +192,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   @override
   Widget build(BuildContext context) {
     final accentColor = _getInterpolatedAccentColor();
-    final currentPage = _pages[_currentPage];
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
@@ -230,54 +229,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   ),
                 ),
 
-                // Brain + Speech section with constrained height
-                SizedBox(
-                  height: 340,
-                  child: Column(
-                    children: [
-                      // Mesh Brain Advisor - smaller and higher
-                      MeshNodeBrain(
-                        size: 120,
-                        mood: _brainMood,
-                        colors: [
-                          accentColor,
-                          Color.lerp(
-                            accentColor,
-                            AppTheme.primaryMagenta,
-                            0.5,
-                          )!,
-                          Color.lerp(accentColor, AppTheme.graphBlue, 0.5)!,
-                        ],
-                        glowIntensity: 0.9,
-                        onTap: _onBrainTap,
-                      ),
-
-                      // Advisor speech bubble - constrained
-                      Expanded(
-                        child: SingleChildScrollView(
-                          physics: const NeverScrollableScrollPhysics(),
-                          child: AdvisorSpeechBubble(
-                            key: ValueKey('speech_$_currentPage'),
-                            text: currentPage.advisorText,
-                            accentColor: accentColor,
-                            typewriterEffect: true,
-                            typingSpeed: 25,
-                            onTypingComplete: _onSpeechComplete,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Page content
+                // Main scrollable content area
                 Expanded(
                   child: PageView.builder(
                     controller: _pageController,
                     onPageChanged: _onPageChanged,
                     itemCount: _pages.length,
                     itemBuilder: (context, index) {
-                      return _buildAnimatedPage(index);
+                      return _buildFullPage(index, accentColor);
                     },
                   ),
                 ),
@@ -301,7 +260,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
   }
 
-  Widget _buildAnimatedPage(int index) {
+  Widget _buildFullPage(int index, Color accentColor) {
     final page = _pages[index];
 
     return AnimatedBuilder(
@@ -325,27 +284,60 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               ..setTranslationRaw(translateX, 0, 0)
               ..scaleByDouble(scaleValue, scaleValue, 1.0, 1.0),
             alignment: Alignment.center,
-            child: _buildPageContent(page, index),
+            child: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  // Mesh Brain Advisor
+                  MeshNodeBrain(
+                    size: 80,
+                    mood: _brainMood,
+                    colors: [
+                      accentColor,
+                      Color.lerp(accentColor, AppTheme.primaryMagenta, 0.5)!,
+                      Color.lerp(accentColor, AppTheme.graphBlue, 0.5)!,
+                    ],
+                    glowIntensity: 0.9,
+                    onTap: _onBrainTap,
+                  ),
+
+                  // Advisor speech bubble
+                  AdvisorSpeechBubble(
+                    key: ValueKey('speech_$index'),
+                    text: page.advisorText,
+                    accentColor: accentColor,
+                    typewriterEffect: index == _currentPage,
+                    typingSpeed: 25,
+                    onTypingComplete: _onSpeechComplete,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Widget showcase (if applicable)
+                  if (page.isWidgetShowcase) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: _buildWidgetShowcase(page),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+
+                  // Title and description
+                  _buildTitleSection(page),
+                ],
+              ),
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _buildPageContent(_OnboardingPage page, int index) {
+  Widget _buildTitleSection(_OnboardingPage page) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Widget showcase or spacer
-          if (page.isWidgetShowcase)
-            _buildWidgetShowcase(page)
-          else
-            const SizedBox(height: 20),
-
-          const SizedBox(height: 24),
-
           // Title
           ShaderMask(
             shaderCallback: (bounds) => LinearGradient(
@@ -358,7 +350,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
             child: Text(
               page.title,
               style: const TextStyle(
-                fontSize: 28,
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
                 letterSpacing: -0.5,
@@ -366,15 +358,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           // Description
           Text(
             page.description,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 15,
               color: AppTheme.textSecondary,
-              height: 1.5,
+              height: 1.4,
             ),
             textAlign: TextAlign.center,
           ),
@@ -495,19 +487,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
         return Container(
           width: double.infinity,
-          height: 200,
+          height: 130,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
                 color: page.accentColor.withValues(alpha: glowIntensity),
-                blurRadius: 30,
-                spreadRadius: 5,
+                blurRadius: 16,
+                spreadRadius: 1,
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(14),
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -519,25 +511,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   color: page.accentColor.withValues(alpha: 0.3),
                   width: 1.5,
                 ),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Column(
                 children: [
                   // Header
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
                     child: Row(
                       children: [
                         Icon(
                           Icons.dashboard_rounded,
                           color: page.accentColor,
-                          size: 18,
+                          size: 16,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         const Text(
                           'Dashboard',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
@@ -545,17 +537,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                         const Spacer(),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
+                            horizontal: 6,
+                            vertical: 2,
                           ),
                           decoration: BoxDecoration(
                             color: page.accentColor.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             'LIVE',
                             style: TextStyle(
-                              fontSize: 9,
+                              fontSize: 8,
                               fontWeight: FontWeight.bold,
                               color: page.accentColor,
                               letterSpacing: 0.5,
@@ -568,7 +560,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   // Widgets
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
                       child: Row(
                         children: [
                           Expanded(
@@ -579,7 +571,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                               AccentColors.cyan,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: _buildMiniWidget(
                               Icons.battery_5_bar,
@@ -588,7 +580,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                               AccentColors.green,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: _buildMiniWidget(
                               Icons.signal_cellular_alt,
@@ -617,28 +609,28 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     Color color,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 4),
+          Icon(icon, color: color, size: 18),
+          const SizedBox(height: 2),
           Text(
             value,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
           Text(
             label,
-            style: TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 9, color: AppTheme.textSecondary),
           ),
         ],
       ),

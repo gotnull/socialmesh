@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/world_mesh_node.dart';
@@ -12,14 +12,14 @@ class WorldMeshMapService {
   static String get _defaultApiUrl {
     const productionUrl = 'https://api.socialmesh.app';
 
-    // Use local development server in debug mode
-    if (kDebugMode) {
+    // Check .env flag for local API usage
+    final useLocalApi = dotenv.env['USE_LOCAL_API']?.toLowerCase() == 'true';
+    if (useLocalApi) {
+      final localHost = dotenv.env['LOCAL_API_HOST'] ?? '192.168.5.77';
       if (kIsWeb) {
         return 'http://localhost:3001';
-      } else if (Platform.isAndroid) {
-        return 'http://192.168.5.77:3001';
       } else {
-        return 'http://192.168.5.77:3001';
+        return 'http://$localHost:3001';
       }
     }
 

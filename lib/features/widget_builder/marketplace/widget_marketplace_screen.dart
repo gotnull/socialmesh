@@ -337,11 +337,16 @@ class _WidgetMarketplaceScreenState
   }
 
   Widget _buildErrorState() {
+    final accentColor = context.accentColor;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.cloud_off, size: 48, color: AppTheme.textTertiary),
+          Icon(
+            Icons.cloud_off,
+            size: 48,
+            color: accentColor.withValues(alpha: 0.7),
+          ),
           const SizedBox(height: 16),
           Text(
             'Unable to load widgets',
@@ -350,7 +355,7 @@ class _WidgetMarketplaceScreenState
           const SizedBox(height: 16),
           TextButton(
             onPressed: _loadFeatured,
-            child: Text('Retry', style: TextStyle(color: context.accentColor)),
+            child: Text('Retry', style: TextStyle(color: accentColor)),
           ),
         ],
       ),

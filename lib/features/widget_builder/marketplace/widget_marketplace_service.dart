@@ -1,6 +1,5 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
@@ -15,7 +14,7 @@ class WidgetMarketplaceService {
 
   /// Get the base URL from environment or use platform-specific fallback
   static String get _defaultBaseUrl {
-    // First check .env configuration
+    // First check .env configuration for explicit marketplace URL
     final envUrl = dotenv.env['MARKETPLACE_URL'];
     if (envUrl != null && envUrl.isNotEmpty) {
       return envUrl;
@@ -23,14 +22,14 @@ class WidgetMarketplaceService {
 
     const productionUrl = 'https://api.socialmesh.app/widgets';
 
-    // Use local development server in debug mode
-    if (kDebugMode) {
+    // Check .env flag for local API usage
+    final useLocalApi = dotenv.env['USE_LOCAL_API']?.toLowerCase() == 'true';
+    if (useLocalApi) {
+      final localHost = dotenv.env['LOCAL_API_HOST'] ?? '192.168.5.77';
       if (kIsWeb) {
         return 'http://localhost:3000/api/widgets';
-      } else if (Platform.isAndroid) {
-        return 'http://192.168.5.77:3000/api/widgets';
       } else {
-        return 'http://192.168.5.77:3000/api/widgets';
+        return 'http://$localHost:3000/api/widgets';
       }
     }
 
