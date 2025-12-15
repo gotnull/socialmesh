@@ -436,86 +436,82 @@ export class Database {
           size: 'medium',
           root: {
             type: 'column',
-            style: { padding: 12, spacing: 12 },
+            style: { padding: 12, spacing: 8 },
             children: [
               {
                 type: 'row',
-                children: [
-                  { type: 'icon', iconName: 'flash_on', iconSize: 20, style: { textColor: '#FBBF24' } },
-                  { type: 'spacer', style: { width: 8 } },
-                  { type: 'text', text: 'Quick Actions', style: { textColor: '#FFFFFF', fontSize: 14, fontWeight: 'w600' } },
-                ],
-              },
-              {
-                type: 'row',
-                style: { mainAxisAlignment: 'spaceAround' },
+                style: { spacing: 8 },
                 children: [
                   {
-                    type: 'column',
-                    style: { alignment: 'center' },
+                    type: 'container',
+                    style: {
+                      flex: 1,
+                      padding: 8,
+                      borderRadius: 12,
+                      backgroundColor: 'accent:0.08',
+                      borderColor: 'accent:0.2',
+                      borderWidth: 1,
+                      alignment: 'center',
+                    },
                     action: { type: 'sendMessage', requiresNodeSelection: true, requiresChannelSelection: true, label: 'Quick Message' },
                     children: [
-                      {
-                        type: 'shape',
-                        shapeType: 'circle',
-                        style: { width: 44, height: 44, backgroundColor: '#1E3A5F' },
-                        children: [
-                          { type: 'icon', iconName: 'send', iconSize: 20, style: { textColor: '#4F6AF6' } },
-                        ],
-                      },
+                      { type: 'icon', iconName: 'send', iconSize: 22, style: { textColor: 'accent' } },
                       { type: 'spacer', style: { height: 4 } },
-                      { type: 'text', text: 'Message', style: { textColor: '#888888', fontSize: 10 } },
+                      { type: 'text', text: 'Quick\nMessage', style: { textColor: 'accent', fontSize: 9, fontWeight: 'w600', textAlign: 'center' } },
                     ],
                   },
                   {
-                    type: 'column',
-                    style: { alignment: 'center' },
+                    type: 'container',
+                    style: {
+                      flex: 1,
+                      padding: 8,
+                      borderRadius: 12,
+                      backgroundColor: 'accent:0.08',
+                      borderColor: 'accent:0.2',
+                      borderWidth: 1,
+                      alignment: 'center',
+                    },
                     action: { type: 'shareLocation', label: 'Share Location' },
                     children: [
-                      {
-                        type: 'shape',
-                        shapeType: 'circle',
-                        style: { width: 44, height: 44, backgroundColor: '#1E3A5F' },
-                        children: [
-                          { type: 'icon', iconName: 'location_on', iconSize: 20, style: { textColor: '#22C55E' } },
-                        ],
-                      },
+                      { type: 'icon', iconName: 'location_on', iconSize: 22, style: { textColor: 'accent' } },
                       { type: 'spacer', style: { height: 4 } },
-                      { type: 'text', text: 'Location', style: { textColor: '#888888', fontSize: 10 } },
+                      { type: 'text', text: 'Share\nLocation', style: { textColor: 'accent', fontSize: 9, fontWeight: 'w600', textAlign: 'center' } },
                     ],
                   },
                   {
-                    type: 'column',
-                    style: { alignment: 'center' },
+                    type: 'container',
+                    style: {
+                      flex: 1,
+                      padding: 8,
+                      borderRadius: 12,
+                      backgroundColor: 'accent:0.08',
+                      borderColor: 'accent:0.2',
+                      borderWidth: 1,
+                      alignment: 'center',
+                    },
                     action: { type: 'traceroute', requiresNodeSelection: true, label: 'Traceroute' },
                     children: [
-                      {
-                        type: 'shape',
-                        shapeType: 'circle',
-                        style: { width: 44, height: 44, backgroundColor: '#1E3A5F' },
-                        children: [
-                          { type: 'icon', iconName: 'route', iconSize: 20, style: { textColor: '#F97316' } },
-                        ],
-                      },
+                      { type: 'icon', iconName: 'route', iconSize: 22, style: { textColor: 'accent' } },
                       { type: 'spacer', style: { height: 4 } },
-                      { type: 'text', text: 'Trace', style: { textColor: '#888888', fontSize: 10 } },
+                      { type: 'text', text: 'Traceroute', style: { textColor: 'accent', fontSize: 9, fontWeight: 'w600', textAlign: 'center' } },
                     ],
                   },
                   {
-                    type: 'column',
-                    style: { alignment: 'center' },
+                    type: 'container',
+                    style: {
+                      flex: 1,
+                      padding: 8,
+                      borderRadius: 12,
+                      backgroundColor: 'accent:0.08',
+                      borderColor: 'accent:0.2',
+                      borderWidth: 1,
+                      alignment: 'center',
+                    },
                     action: { type: 'requestPositions', label: 'Request Positions' },
                     children: [
-                      {
-                        type: 'shape',
-                        shapeType: 'circle',
-                        style: { width: 44, height: 44, backgroundColor: '#1E3A5F' },
-                        children: [
-                          { type: 'icon', iconName: 'refresh', iconSize: 20, style: { textColor: '#06B6D4' } },
-                        ],
-                      },
+                      { type: 'icon', iconName: 'refresh', iconSize: 22, style: { textColor: 'accent' } },
                       { type: 'spacer', style: { height: 4 } },
-                      { type: 'text', text: 'Refresh', style: { textColor: '#888888', fontSize: 10 } },
+                      { type: 'text', text: 'Request\nPositions', style: { textColor: 'accent', fontSize: 9, fontWeight: 'w600', textAlign: 'center' } },
                     ],
                   },
                 ],
