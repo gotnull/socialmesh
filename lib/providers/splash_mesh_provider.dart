@@ -840,16 +840,16 @@ class _MeshMascotState extends State<MeshMascot> with TickerProviderStateMixin {
   }
 }
 
-/// Full-screen loading indicator using MeshNodeBrain with loading mood.
+/// Full-screen loading indicator using Ico (MeshNodeBrain) with loading mood.
 /// Use this for centered loading states on screens (larger, more prominent).
 class ScreenLoadingIndicator extends StatelessWidget {
-  /// Size of the brain (default 100 for screen-level loading)
+  /// Size of Ico (default 100 for screen-level loading)
   final double size;
 
-  /// Optional message to show below the brain
+  /// Optional message to show below Ico
   final String? message;
 
-  /// Custom colors for the brain
+  /// Custom colors for Ico
   final List<Color>? colors;
 
   const ScreenLoadingIndicator({

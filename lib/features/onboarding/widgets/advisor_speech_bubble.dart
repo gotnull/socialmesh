@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
 
-/// A sci-fi styled speech bubble for the mesh brain advisor.
+/// A sci-fi styled speech bubble for Ico, the mesh brain advisor.
 /// Features typing animation, glowing edges, and holographic effects.
 class AdvisorSpeechBubble extends StatefulWidget {
   /// The text to display
@@ -255,7 +255,7 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'MESH ADVISOR',
+                                'Ico',
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,

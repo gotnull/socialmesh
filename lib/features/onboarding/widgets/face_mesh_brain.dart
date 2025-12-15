@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-/// Face expression configuration for a mesh brain
+/// Face expression configuration for Ico
 class FaceExpression {
   /// Left eye scale (0 = closed, 1 = normal, >1 = wide)
   final double leftEyeScale;

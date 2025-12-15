@@ -35,7 +35,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       description:
           'A decentralized network where every device\nbecomes a node. No towers. No subscriptions.',
       advisorText:
-          "Welcome, human! I'm your mesh network guide. I exist in the space between your devices—connecting, relaying, surviving. Let me show you something incredible...",
+          "Hey there! I'm Ico, your mesh network guide. I exist in the space between your devices. Connecting, relaying, surviving. Let me show you something incredible...",
       mood: MeshBrainMood.excited,
       accentColor: AppTheme.primaryMagenta,
     ),
@@ -62,7 +62,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       description:
           'Every device extends the reach.\nBuild infrastructure that belongs to everyone.',
       advisorText:
-          "Every new node makes me stronger! When you connect, you're not just joining—you're building something bigger. A network that belongs to everyone.",
+          "Every new node makes me stronger! When you connect, you're not just joining. You're building something bigger. A network that belongs to everyone.",
       mood: MeshBrainMood.approving,
       accentColor: AppTheme.graphBlue,
     ),
@@ -71,7 +71,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       description:
           'Monitor signal strength, battery, node count,\nmessages, range and more. All in real-time.',
       advisorText:
-          "This is where the magic happens! Your dashboard shows everything—signal strength, battery, nearby nodes. I'll keep you informed of every pulse in the mesh.",
+          "This is where the magic happens! Your dashboard shows everything: signal strength, battery, nearby nodes. I'll keep you informed of every pulse in the mesh.",
       mood: MeshBrainMood.idle,
       isWidgetShowcase: true,
       accentColor: AccentColors.orange,

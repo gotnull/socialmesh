@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/widgets/animated_mesh_node.dart';
 
-/// Emotional states for the mesh brain advisor
+/// Emotional states for Ico, the mesh brain advisor (icosahedron mascot)
 enum MeshBrainMood {
   // === POSITIVE EMOTIONS ===
   /// Default curious state - gentle wobble, looking around
@@ -459,10 +459,11 @@ class _GhostPersonality {
   });
 }
 
-/// A sentient mesh node brain that acts as an onboarding advisor.
+/// Ico - The sentient icosahedron mesh brain that acts as an advisor.
 /// Has personality, emotions, and responds to user interactions.
+/// Named "Ico" after its icosahedron geometry.
 class MeshNodeBrain extends StatefulWidget {
-  /// Size of the brain
+  /// Size of Ico
   final double size;
 
   /// Current emotional mood
@@ -474,7 +475,7 @@ class MeshNodeBrain extends StatefulWidget {
   /// Glow intensity multiplier
   final double glowIntensity;
 
-  /// Whether the brain should respond to touch
+  /// Whether Ico should respond to touch
   final bool interactive;
 
   /// Callback when tapped

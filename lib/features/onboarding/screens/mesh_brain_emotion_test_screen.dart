@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/mesh_node_brain.dart';
 
-/// A test screen to preview all MeshNodeBrain emotional states
+/// A test screen to preview all of Ico's emotional states
 class MeshBrainEmotionTestScreen extends StatefulWidget {
   const MeshBrainEmotionTestScreen({super.key});
 
