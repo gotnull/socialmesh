@@ -513,12 +513,14 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
   late AnimationController _orbitController;
   late AnimationController _expressionController;
   late AnimationController _specialController;
+  late AnimationController _spinController;
 
   // Animations
   late Animation<double> _wobbleX;
   late Animation<double> _wobbleY;
   late Animation<double> _pulse;
   late Animation<double> _bounce;
+  late Animation<double> _spin;
 
   // Random for organic motion
   final _random = math.Random();
@@ -570,6 +572,11 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
       vsync: this,
     );
 
+    _spinController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
     _wobbleX = Tween<double>(begin: -0.08, end: 0.08).animate(
       CurvedAnimation(parent: _wobbleController, curve: Curves.easeInOut),
     );
@@ -581,6 +588,11 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     );
     _bounce = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
+    );
+    // Spin like a top - full 360° rotation with elastic overshoot for cartoon snap
+    // 2π radians = full rotation, with elasticOut it overshoots then settles
+    _spin = Tween<double>(begin: 0, end: 2 * math.pi).animate(
+      CurvedAnimation(parent: _spinController, curve: Curves.elasticOut),
     );
   }
 
@@ -702,6 +714,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     _pulseController.stop();
     _bounceController.stop();
     _specialController.stop();
+    _spinController.stop();
 
     switch (mood) {
       // === POSITIVE ===
@@ -736,6 +749,9 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
         _bounceController
           ..duration = const Duration(milliseconds: 500)
           ..repeat(reverse: true);
+        _spinController
+          ..duration = const Duration(milliseconds: 1200)
+          ..repeat(reverse: true);
         break;
 
       case MeshBrainMood.celebrating:
@@ -747,6 +763,9 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           ..repeat(reverse: true);
         _bounceController
           ..duration = const Duration(milliseconds: 350)
+          ..repeat(reverse: true);
+        _spinController
+          ..duration = const Duration(milliseconds: 1000)
           ..repeat(reverse: true);
         break;
 
@@ -822,6 +841,9 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           ..repeat(reverse: true);
         _pulseController
           ..duration = const Duration(milliseconds: 400)
+          ..repeat(reverse: true);
+        _spinController
+          ..duration = const Duration(milliseconds: 1400)
           ..repeat(reverse: true);
         break;
 
@@ -1049,6 +1071,9 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
         _specialController
           ..duration = const Duration(milliseconds: 2000)
           ..repeat();
+        _spinController
+          ..duration = const Duration(milliseconds: 1000)
+          ..repeat(reverse: true);
         break;
 
       case MeshBrainMood.glitching:
@@ -1075,6 +1100,9 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           ..repeat(reverse: true);
         _pulseController
           ..duration = const Duration(milliseconds: 600)
+          ..repeat(reverse: true);
+        _spinController
+          ..duration = const Duration(milliseconds: 1600)
           ..repeat(reverse: true);
         break;
 
@@ -1134,6 +1162,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     _orbitController.dispose();
     _expressionController.dispose();
     _specialController.dispose();
+    _spinController.dispose();
     super.dispose();
   }
 
@@ -1275,6 +1304,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           _orbitController,
           _expressionController,
           _specialController,
+          _spinController,
         ]),
         builder: (context, child) {
           return SizedBox(
@@ -1505,6 +1535,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           nodeSize: 0.9,
           externalRotationX: wobbleX,
           externalRotationY: wobbleY,
+          externalRotationZ: _spin.value,
           leftEyeScale: widget.showExpression ? faceExpr.leftEyeScale : 1.0,
           rightEyeScale: widget.showExpression ? faceExpr.rightEyeScale : 1.0,
           mouthCurve: widget.showExpression ? faceExpr.mouthCurve : 0.0,

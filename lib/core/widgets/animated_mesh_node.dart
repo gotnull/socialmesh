@@ -93,6 +93,9 @@ class AnimatedMeshNode extends StatefulWidget {
   /// External rotation offset for Y axis (radians) - e.g., from accelerometer
   final double externalRotationY;
 
+  /// External rotation offset for Z axis (radians) - for "spin like a top" effect
+  final double externalRotationZ;
+
   /// Index of the vertex being grabbed (0-11), or -1 if none
   final int grabbedVertexIndex;
 
@@ -162,6 +165,7 @@ class AnimatedMeshNode extends StatefulWidget {
     this.nodeSize = 1.0,
     this.externalRotationX = 0.0,
     this.externalRotationY = 0.0,
+    this.externalRotationZ = 0.0,
     this.grabbedVertexIndex = -1,
     this.dragPosition,
     this.stretchIntensity = 0.3,
@@ -403,6 +407,7 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
     // Add external rotation offsets (e.g., from accelerometer)
     rotationX += widget.externalRotationX;
     rotationY += widget.externalRotationY;
+    rotationZ += widget.externalRotationZ;
 
     Widget node = CustomPaint(
       size: Size(widget.size, widget.size),

@@ -406,6 +406,7 @@ class _DeviceInfoCard extends StatelessWidget {
               label: 'Address',
               value: device!.address!,
               icon: Icons.tag,
+              iconColor: context.accentColor,
             ),
           if (device?.rssi != null && isConnected)
             InfoTableRow(

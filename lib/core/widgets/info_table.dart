@@ -24,6 +24,9 @@ class InfoTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get accent color once for all rows
+    final accentColor = context.accentColor;
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
@@ -73,7 +76,7 @@ class InfoTable extends StatelessWidget {
                               Icon(
                                 item.icon,
                                 size: 16,
-                                color: item.iconColor ?? AppTheme.textTertiary,
+                                color: item.iconColor ?? accentColor,
                               ),
                               const SizedBox(width: 8),
                             ],
@@ -83,7 +86,7 @@ class InfoTable extends StatelessWidget {
                                 style: const TextStyle(
                                   fontSize: 14,
                                   color: AppTheme.textTertiary,
-                                  
+
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
@@ -105,7 +108,6 @@ class InfoTable extends StatelessWidget {
                             fontSize: 14,
                             color: Colors.white,
                             fontWeight: FontWeight.w500,
-                            
                           ),
                           textAlign: TextAlign.right,
                         ),
