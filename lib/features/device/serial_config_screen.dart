@@ -181,7 +181,10 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                   ? SizedBox(
                       width: 20,
                       height: 20,
-                      child: MeshLoadingIndicator(size: 20),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.accentColor,
+                      ),
                     )
                   : Text(
                       'Save',

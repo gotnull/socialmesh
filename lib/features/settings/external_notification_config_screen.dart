@@ -142,7 +142,10 @@ class _ExternalNotificationConfigScreenState
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: MeshLoadingIndicator(size: 20),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Icon(Icons.save),
               onPressed: _isSaving ? null : _saveConfig,

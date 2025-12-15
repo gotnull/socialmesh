@@ -183,7 +183,10 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
                   ? SizedBox(
                       width: 16,
                       height: 16,
-                      child: MeshLoadingIndicator(size: 16),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.accentColor,
+                      ),
                     )
                   : Text(
                       'Save',

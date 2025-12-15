@@ -7,9 +7,6 @@ import '../models/widget_schema.dart';
 class WidgetStorageService {
   static const _storageKey = 'custom_widgets';
   static const _installedKey = 'installed_widgets';
-  static const _seededKey = 'seeded_widgets';
-  static const _seedVersionKey = 'seeded_widgets_version';
-  static const _currentSeedVersion = 10; // Consistent widget layouts
 
   final Logger _logger;
   SharedPreferences? _prefs;
@@ -19,34 +16,6 @@ class WidgetStorageService {
   /// Initialize the service
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
-    await _seedDefaultWidgets();
-  }
-
-  /// Seed default widgets on first launch so users have examples
-  Future<void> _seedDefaultWidgets() async {
-    final lastVersion = _preferences.getInt(_seedVersionKey) ?? 0;
-    if (lastVersion >= _currentSeedVersion) return;
-
-    _logger.i('Seeding widgets: version $lastVersion -> $_currentSeedVersion');
-
-    // Get existing widgets
-    final existingWidgets = await getWidgets();
-    final templateNames = WidgetTemplates.all().map((t) => t.name).toSet();
-
-    // Remove existing widgets that match template names (to refresh them)
-    final userWidgets = existingWidgets
-        .where((w) => !templateNames.contains(w.name))
-        .toList();
-
-    // Add all templates fresh
-    for (final template in WidgetTemplates.all()) {
-      userWidgets.add(template);
-      _logger.d('Refreshed widget: ${template.name}');
-    }
-
-    await _saveWidgetsList(userWidgets);
-    await _preferences.setInt(_seedVersionKey, _currentSeedVersion);
-    _logger.i('Default widgets refreshed successfully (v$_currentSeedVersion)');
   }
 
   SharedPreferences get _preferences {
@@ -212,15 +181,7 @@ class WidgetStorageService {
   Future<void> clearAll() async {
     await _preferences.remove(_storageKey);
     await _preferences.remove(_installedKey);
-    await _preferences.remove(_seededKey);
-    await _preferences.remove(_seedVersionKey);
     _logger.i('Cleared all custom widgets');
-  }
-
-  /// Re-seed default widgets (for testing or resetting to defaults)
-  Future<void> reseedDefaults() async {
-    await _preferences.setInt(_seedVersionKey, 0);
-    await _seedDefaultWidgets();
   }
 }
 

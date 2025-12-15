@@ -29,10 +29,7 @@ class _WidgetMarketplaceScreenState
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(_onTabChanged);
-    // Load initial data
-    Future.microtask(
-      () => ref.read(marketplaceProvider.notifier).loadFeatured(),
-    );
+    // No manual load needed - AsyncNotifier auto-loads in build()
   }
 
   void _onTabChanged() {
@@ -63,7 +60,7 @@ class _WidgetMarketplaceScreenState
 
   @override
   Widget build(BuildContext context) {
-    final marketplaceState = ref.watch(marketplaceProvider);
+    final marketplaceAsync = ref.watch(marketplaceProvider);
     final searchState = ref.watch(marketplaceSearchProvider);
 
     return Scaffold(
@@ -128,14 +125,18 @@ class _WidgetMarketplaceScreenState
           Expanded(
             child: searchState.query.isNotEmpty
                 ? _buildSearchResults(searchState)
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildFeaturedTab(marketplaceState),
-                      _buildPopularTab(marketplaceState),
-                      _buildNewTab(marketplaceState),
-                      _buildCategoriesTab(),
-                    ],
+                : marketplaceAsync.when(
+                    loading: () => const ScreenLoadingIndicator(),
+                    error: (error, stack) => _buildErrorState(),
+                    data: (state) => TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildFeaturedTab(state),
+                        _buildPopularTab(state),
+                        _buildNewTab(state),
+                        _buildCategoriesTab(),
+                      ],
+                    ),
                   ),
           ),
         ],
@@ -168,12 +169,8 @@ class _WidgetMarketplaceScreenState
   }
 
   Widget _buildFeaturedTab(MarketplaceState state) {
-    if (state.isLoading && state.featured.isEmpty) {
-      return const ScreenLoadingIndicator();
-    }
-
-    if (state.error != null && state.featured.isEmpty) {
-      return _buildErrorState();
+    if (state.featured.isEmpty) {
+      return _buildEmptyState('No featured widgets');
     }
 
     return RefreshIndicator(
@@ -186,10 +183,7 @@ class _WidgetMarketplaceScreenState
 
   Widget _buildPopularTab(MarketplaceState state) {
     if (state.popular.isEmpty) {
-      // Trigger load if not already loaded
-      Future.microtask(
-        () => ref.read(marketplaceProvider.notifier).loadPopular(),
-      );
+      // Load is triggered by _onTabChanged, just show loading
       return const ScreenLoadingIndicator();
     }
 
@@ -198,10 +192,7 @@ class _WidgetMarketplaceScreenState
 
   Widget _buildNewTab(MarketplaceState state) {
     if (state.newest.isEmpty) {
-      // Trigger load if not already loaded
-      Future.microtask(
-        () => ref.read(marketplaceProvider.notifier).loadNewest(),
-      );
+      // Load is triggered by _onTabChanged, just show loading
       return const ScreenLoadingIndicator();
     }
 
@@ -294,14 +285,9 @@ class _WidgetMarketplaceScreenState
       );
     }
 
-    return GridView.builder(
+    // Use single column list - matches My Widgets style
+    return ListView.builder(
       padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
       itemCount: widgets.length,
       itemBuilder: (context, index) {
         return _MarketplaceWidgetCard(
@@ -338,6 +324,22 @@ class _WidgetMarketplaceScreenState
     );
   }
 
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.widgets_outlined, size: 48, color: AppTheme.textTertiary),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _openWidgetDetails(MarketplaceWidget widget) {
     Navigator.push(
       context,
@@ -348,7 +350,7 @@ class _WidgetMarketplaceScreenState
   }
 }
 
-/// Marketplace widget card with live preview
+/// Marketplace widget card - renders EXACTLY like widget_builder_screen._buildWidgetCard
 class _MarketplaceWidgetCard extends ConsumerWidget {
   final MarketplaceWidget widget;
   final VoidCallback onTap;
@@ -358,175 +360,164 @@ class _MarketplaceWidgetCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final service = ref.watch(marketplaceServiceProvider);
+    final nodes = ref.watch(nodesProvider);
+    final myNodeNum = ref.watch(myNodeNumProvider);
+    final node = myNodeNum != null ? nodes[myNodeNum] : null;
 
-    return Card(
-      color: AppTheme.darkCard,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Widget preview
-            Expanded(
-              flex: 3,
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppTheme.darkBackground,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
-                  ),
-                ),
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
-                  ),
-                  child: _buildPreview(context, ref, service),
-                ),
-              ),
-            ),
-            // Info
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'by ${widget.author}',
-                      style: TextStyle(
-                        color: AppTheme.textTertiary,
-                        fontSize: 10,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.star,
-                          size: 12,
-                          color: AppTheme.warningYellow,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          widget.rating.toStringAsFixed(1),
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 11,
-                          ),
-                        ),
-                        const Spacer(),
-                        Icon(
-                          Icons.download,
-                          size: 12,
-                          color: AppTheme.textTertiary,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          _formatDownloads(widget.downloads),
-                          style: TextStyle(
-                            color: AppTheme.textTertiary,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPreview(
-    BuildContext context,
-    WidgetRef ref,
-    WidgetMarketplaceService service,
-  ) {
-    // Try to get the schema for this widget to show live preview
     return FutureBuilder<WidgetSchema>(
       future: service.downloadWidget(widget.id),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          // Show placeholder with icon based on category
-          return _buildPlaceholder(context);
+          // Loading placeholder - same structure as loaded card
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                height: 120,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkCard,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.darkBorder),
+                  ),
+                  child: const Center(
+                    child: SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'by ${widget.author}',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _buildStats(),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          );
         }
 
         final schema = snapshot.data!;
-        final nodes = ref.watch(nodesProvider);
-        final myNodeNum = ref.watch(myNodeNumProvider);
-        final node = myNodeNum != null ? nodes[myNodeNum] : null;
 
-        return Padding(
-          padding: const EdgeInsets.all(8),
-          child: WidgetRenderer(
-            schema: schema,
-            node: node,
-            allNodes: nodes,
-            accentColor: context.accentColor,
+        // EXACT same code as widget_builder_screen._buildWidgetCard
+        final previewHeight = switch (schema.size) {
+          CustomWidgetSize.medium => 120.0,
+          CustomWidgetSize.large => 180.0,
+          CustomWidgetSize.custom => schema.customHeight ?? 120.0,
+        };
+
+        return GestureDetector(
+          onTap: onTap,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Widget preview - full width, variable height
+              SizedBox(
+                width: double.infinity,
+                height: previewHeight,
+                child: WidgetRenderer(
+                  schema: schema,
+                  node: node,
+                  allNodes: nodes,
+                  accentColor: context.accentColor,
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Info section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            schema.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'by ${widget.author}',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 12,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    _buildStats(),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
           ),
         );
       },
     );
   }
 
-  Widget _buildPlaceholder(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            context.accentColor.withValues(alpha: 0.15),
-            context.accentColor.withValues(alpha: 0.05),
-          ],
+  Widget _buildStats() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.star, size: 14, color: AppTheme.warningYellow),
+        const SizedBox(width: 4),
+        Text(
+          widget.rating.toStringAsFixed(1),
+          style: TextStyle(
+            color: AppTheme.textSecondary,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-      ),
-      child: Center(
-        child: Icon(
-          _getCategoryIcon(widget.category),
-          size: 36,
-          color: context.accentColor.withValues(alpha: 0.6),
+        const SizedBox(width: 12),
+        Icon(Icons.download, size: 14, color: AppTheme.textTertiary),
+        const SizedBox(width: 4),
+        Text(
+          _formatDownloads(widget.downloads),
+          style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
         ),
-      ),
+      ],
     );
-  }
-
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'status':
-        return Icons.battery_std;
-      case 'sensors':
-        return Icons.thermostat;
-      case 'connectivity':
-        return Icons.signal_cellular_alt;
-      case 'navigation':
-        return Icons.navigation;
-      case 'network':
-        return Icons.hub;
-      case 'messaging':
-        return Icons.message;
-      default:
-        return Icons.widgets;
-    }
   }
 
   String _formatDownloads(int count) {
@@ -577,27 +568,43 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Live preview
+            // Live preview - widget fills container
             Container(
-              height: 200,
               decoration: BoxDecoration(
                 color: AppTheme.darkCard,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
               clipBehavior: Clip.antiAlias,
               child: FutureBuilder<WidgetSchema>(
                 future: service.downloadWidget(mWidget.id),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
-                    return Center(
-                      child: Icon(
-                        Icons.widgets,
-                        size: 64,
-                        color: context.accentColor.withValues(alpha: 0.3),
+                    return AspectRatio(
+                      aspectRatio: 2.0,
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.widgets,
+                              size: 48,
+                              color: context.accentColor.withValues(alpha: 0.4),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Loading preview...',
+                              style: TextStyle(
+                                color: AppTheme.textTertiary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }
 
+                  // Render widget at its natural size
                   return Padding(
                     padding: const EdgeInsets.all(12),
                     child: WidgetRenderer(
@@ -738,7 +745,10 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
                     ? const SizedBox(
                         height: 24,
                         width: 24,
-                        child: MeshLoadingIndicator(size: 24),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Colors.white,
+                        ),
                       )
                     : const Text(
                         'Install Widget',
@@ -830,9 +840,7 @@ class _CategoryScreenState extends ConsumerState<_CategoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(marketplaceProvider);
-    final widgets = state.categoryWidgets[widget.category] ?? [];
-    final isLoading = !state.categoryWidgets.containsKey(widget.category);
+    final asyncState = ref.watch(marketplaceProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
@@ -847,10 +855,31 @@ class _CategoryScreenState extends ConsumerState<_CategoryScreen> {
           ),
         ),
       ),
-      body: isLoading
-          ? const ScreenLoadingIndicator()
-          : widgets.isEmpty
-          ? Center(
+      body: asyncState.when(
+        loading: () => const ScreenLoadingIndicator(),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: AppTheme.textTertiary),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load category',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
+              ),
+            ],
+          ),
+        ),
+        data: (state) {
+          final widgets = state.categoryWidgets[widget.category] ?? [];
+          final isLoading = !state.categoryWidgets.containsKey(widget.category);
+
+          if (isLoading) {
+            return const ScreenLoadingIndicator();
+          }
+
+          if (widgets.isEmpty) {
+            return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -869,30 +898,33 @@ class _CategoryScreenState extends ConsumerState<_CategoryScreen> {
                   ),
                 ],
               ),
-            )
-          : GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.75,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: widgets.length,
-              itemBuilder: (context, index) {
-                return _MarketplaceWidgetCard(
-                  widget: widgets[index],
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => _WidgetDetailsScreen(
-                        marketplaceWidget: widgets[index],
-                      ),
-                    ),
-                  ),
-                );
-              },
+            );
+          }
+
+          return GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.75,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
             ),
+            itemCount: widgets.length,
+            itemBuilder: (context, index) {
+              return _MarketplaceWidgetCard(
+                widget: widgets[index],
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        _WidgetDetailsScreen(marketplaceWidget: widgets[index]),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

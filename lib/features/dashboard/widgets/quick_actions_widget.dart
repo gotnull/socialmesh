@@ -7,7 +7,6 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../providers/app_providers.dart';
-import '../../../providers/splash_mesh_provider.dart';
 import '../../../core/transport.dart';
 import '../../../models/mesh_models.dart';
 
@@ -508,7 +507,10 @@ class _SosSheetContentState extends State<_SosSheetContent> {
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: MeshLoadingIndicator(size: 20),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -942,7 +944,10 @@ class _QuickMessageSheetContentState extends State<_QuickMessageSheetContent> {
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: MeshLoadingIndicator(size: 20),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.black,
+                          ),
                         )
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -1230,7 +1235,10 @@ class _TracerouteSheetContentState extends State<_TracerouteSheetContent> {
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: MeshLoadingIndicator(size: 20),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.black,
+                              ),
                             )
                           : const Row(
                               mainAxisAlignment: MainAxisAlignment.center,

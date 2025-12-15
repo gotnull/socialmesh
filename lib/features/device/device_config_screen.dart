@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pb;
 import '../../utils/validation.dart';
@@ -216,7 +215,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                   ? SizedBox(
                       width: 20,
                       height: 20,
-                      child: MeshLoadingIndicator(size: 20),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.accentColor,
+                      ),
                     )
                   : Text(
                       'Save',

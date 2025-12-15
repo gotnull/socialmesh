@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart';
 import '../../utils/snackbar.dart';
 
@@ -484,7 +483,10 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: MeshLoadingIndicator(size: 24),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
                         )
                       : Text(
                           widget.isInitialSetup ? 'Continue' : 'Save',

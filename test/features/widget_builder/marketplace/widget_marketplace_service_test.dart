@@ -86,7 +86,7 @@ void main() {
         );
       });
 
-      test('returns mock data on error', () async {
+      test('throws on network error', () async {
         final mockClient = MockClient((request) async {
           throw Exception('Network error');
         });
@@ -96,10 +96,7 @@ void main() {
           client: mockClient,
         );
 
-        final response = await service.browse();
-
-        // Should return mock data on error
-        expect(response.widgets, isNotEmpty);
+        expect(() => service.browse(), throwsA(isA<MarketplaceException>()));
       });
     });
 
@@ -141,7 +138,7 @@ void main() {
         expect(featured.first.rating, 4.8);
       });
 
-      test('returns mock data on error', () async {
+      test('throws on network error', () async {
         final mockClient = MockClient((request) async {
           throw Exception('Network error');
         });
@@ -151,10 +148,10 @@ void main() {
           client: mockClient,
         );
 
-        final featured = await service.getFeatured();
-
-        // Should return mock data on error
-        expect(featured, isNotEmpty);
+        expect(
+          () => service.getFeatured(),
+          throwsA(isA<MarketplaceException>()),
+        );
       });
     });
 
@@ -238,7 +235,7 @@ void main() {
         expect(schema.root.type, ElementType.text);
       });
 
-      test('returns mock schema for known IDs on error', () async {
+      test('throws on network error for any ID', () async {
         final mockClient = MockClient((request) async {
           throw Exception('Network error');
         });
@@ -248,12 +245,14 @@ void main() {
           client: mockClient,
         );
 
-        // Should return mock schema for known mock IDs
-        final schema = await service.downloadWidget('battery-gauge-pro');
-        expect(schema.name, 'Battery Gauge Pro');
+        // Should throw exception on any ID when network fails
+        expect(
+          () => service.downloadWidget('battery-gauge-pro'),
+          throwsA(isA<MarketplaceException>()),
+        );
       });
 
-      test('throws on unknown ID when network fails', () async {
+      test('throws on any ID when network fails', () async {
         final mockClient = MockClient((request) async {
           throw Exception('Network error');
         });

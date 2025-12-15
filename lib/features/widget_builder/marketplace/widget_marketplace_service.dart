@@ -65,7 +65,19 @@ class WidgetMarketplaceService {
         '$baseUrl/browse',
       ).replace(queryParameters: queryParams);
 
-      final response = await _client.get(uri);
+      debugPrint('[MarketplaceService] Browse request: $uri');
+      final response = await _client
+          .get(uri)
+          .timeout(
+            const Duration(seconds: 2),
+            onTimeout: () {
+              debugPrint('[MarketplaceService] Browse request timed out');
+              throw Exception('Request timed out');
+            },
+          );
+      debugPrint(
+        '[MarketplaceService] Browse response: ${response.statusCode}',
+      );
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -78,9 +90,9 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
+      debugPrint('[MarketplaceService] Browse error: $e');
       _logger.e('Marketplace browse error: $e');
-      // Return mock data for offline/development
-      return _getMockBrowseResponse();
+      throw MarketplaceException('Failed to load widgets: $e');
     }
   }
 
@@ -90,7 +102,17 @@ class WidgetMarketplaceService {
     try {
       final uri = Uri.parse('$baseUrl/featured');
       debugPrint('[MarketplaceService] Requesting: $uri');
-      final response = await _client.get(uri);
+      final response = await _client
+          .get(uri)
+          .timeout(
+            const Duration(seconds: 2),
+            onTimeout: () {
+              debugPrint(
+                '[MarketplaceService] Request timed out after 2 seconds',
+              );
+              throw Exception('Request timed out');
+            },
+          );
       debugPrint(
         '[MarketplaceService] Response status: ${response.statusCode}',
       );
@@ -117,15 +139,16 @@ class WidgetMarketplaceService {
       debugPrint('[MarketplaceService] Featured widgets error: $e');
       debugPrint('[MarketplaceService] Stack: $st');
       _logger.e('Featured widgets error: $e');
-      debugPrint('[MarketplaceService] Returning mock featured data');
-      return _getMockFeatured();
+      throw MarketplaceException('Failed to load featured widgets: $e');
     }
   }
 
   /// Get widget details
   Future<MarketplaceWidget> getWidget(String id) async {
     try {
-      final response = await _client.get(Uri.parse('$baseUrl/$id'));
+      final response = await _client
+          .get(Uri.parse('$baseUrl/$id'))
+          .timeout(const Duration(seconds: 2));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -145,7 +168,9 @@ class WidgetMarketplaceService {
   /// Download widget schema
   Future<WidgetSchema> downloadWidget(String id) async {
     try {
-      final response = await _client.get(Uri.parse('$baseUrl/$id/download'));
+      final response = await _client
+          .get(Uri.parse('$baseUrl/$id/download'))
+          .timeout(const Duration(seconds: 2));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -156,236 +181,8 @@ class WidgetMarketplaceService {
     } catch (e) {
       if (e is MarketplaceException) rethrow;
       _logger.e('Download widget error: $e');
-      // Return mock widget for offline/development
-      final mockWidget = _getMockWidgetSchema(id);
-      if (mockWidget != null) {
-        return mockWidget;
-      }
       throw MarketplaceException('Failed to download widget: $e');
     }
-  }
-
-  /// Get mock widget schema by ID (for offline/development)
-  WidgetSchema? _getMockWidgetSchema(String id) {
-    final mockSchemas = <String, Map<String, dynamic>>{
-      'battery-gauge-pro': {
-        'name': 'Battery Gauge Pro',
-        'description': 'Beautiful animated battery indicator',
-        'version': '1.2.0',
-        'tags': ['battery', 'gauge', 'animated'],
-        'root': {
-          'type': 'column',
-          'style': {
-            'padding': 16,
-            'spacing': 8,
-            'backgroundColor': '#1E1E1E',
-            'borderRadius': 12,
-          },
-          'children': [
-            {
-              'type': 'row',
-              'style': {'mainAxisAlignment': 'spaceBetween'},
-              'children': [
-                {
-                  'type': 'icon',
-                  'iconName': 'battery_full',
-                  'style': {'iconSize': 24, 'textColor': '#4ADE80'},
-                },
-                {
-                  'type': 'text',
-                  'text': 'Battery',
-                  'style': {
-                    'fontSize': 14,
-                    'fontWeight': 'w600',
-                    'textColor': '#FFFFFF',
-                  },
-                },
-              ],
-            },
-            {
-              'type': 'gauge',
-              'binding': {'path': 'node.batteryLevel'},
-              'gaugeType': 'radial',
-              'gaugeMin': 0,
-              'gaugeMax': 100,
-              'gaugeColor': '#4ADE80',
-              'style': {'width': 80, 'height': 80},
-            },
-            {
-              'type': 'text',
-              'binding': {'path': 'node.batteryLevel', 'format': '{value}%'},
-              'style': {
-                'fontSize': 28,
-                'fontWeight': 'bold',
-                'textColor': '#FFFFFF',
-              },
-            },
-          ],
-        },
-      },
-      'signal-radar': {
-        'name': 'Signal Radar',
-        'description': 'Animated radar-style signal strength visualization',
-        'version': '1.0.0',
-        'tags': ['signal', 'radar', 'animated'],
-        'root': {
-          'type': 'column',
-          'style': {
-            'padding': 16,
-            'spacing': 12,
-            'backgroundColor': '#1E1E1E',
-            'borderRadius': 12,
-          },
-          'children': [
-            {
-              'type': 'row',
-              'children': [
-                {
-                  'type': 'icon',
-                  'iconName': 'radar',
-                  'style': {'iconSize': 20, 'textColor': '#8B5CF6'},
-                },
-                {
-                  'type': 'spacer',
-                  'style': {'width': 8},
-                },
-                {
-                  'type': 'text',
-                  'text': 'Signal',
-                  'style': {
-                    'fontSize': 14,
-                    'fontWeight': 'w600',
-                    'textColor': '#FFFFFF',
-                  },
-                },
-              ],
-            },
-            {
-              'type': 'gauge',
-              'binding': {'path': 'node.snr'},
-              'gaugeType': 'radial',
-              'gaugeMin': -20,
-              'gaugeMax': 15,
-              'gaugeColor': '#8B5CF6',
-              'style': {'width': 80, 'height': 80},
-            },
-            {
-              'type': 'row',
-              'style': {'mainAxisAlignment': 'spaceBetween'},
-              'children': [
-                {
-                  'type': 'text',
-                  'binding': {'path': 'node.snr', 'format': '{value} dB'},
-                  'style': {'fontSize': 14, 'textColor': '#FFFFFF'},
-                },
-                {
-                  'type': 'text',
-                  'binding': {'path': 'node.rssi', 'format': '{value} dBm'},
-                  'style': {'fontSize': 14, 'textColor': '#808080'},
-                },
-              ],
-            },
-          ],
-        },
-      },
-      'weather-station': {
-        'name': 'Weather Station',
-        'description': 'Complete weather display',
-        'version': '2.0.0',
-        'tags': ['weather', 'temperature', 'environment'],
-        'root': {
-          'type': 'column',
-          'style': {
-            'padding': 16,
-            'spacing': 12,
-            'backgroundColor': '#1E1E1E',
-            'borderRadius': 12,
-          },
-          'children': [
-            {
-              'type': 'row',
-              'children': [
-                {
-                  'type': 'icon',
-                  'iconName': 'thermostat',
-                  'style': {'iconSize': 20, 'textColor': '#F97316'},
-                },
-                {
-                  'type': 'spacer',
-                  'style': {'width': 8},
-                },
-                {
-                  'type': 'text',
-                  'text': 'Weather',
-                  'style': {
-                    'fontSize': 14,
-                    'fontWeight': 'w600',
-                    'textColor': '#FFFFFF',
-                  },
-                },
-              ],
-            },
-            {
-              'type': 'row',
-              'style': {'mainAxisAlignment': 'spaceAround'},
-              'children': [
-                {
-                  'type': 'column',
-                  'style': {'alignment': 'center'},
-                  'children': [
-                    {
-                      'type': 'text',
-                      'binding': {
-                        'path': 'node.temperature',
-                        'format': '{value}°',
-                      },
-                      'style': {
-                        'fontSize': 24,
-                        'fontWeight': 'bold',
-                        'textColor': '#EF4444',
-                      },
-                    },
-                    {
-                      'type': 'text',
-                      'text': 'Temp',
-                      'style': {'fontSize': 10, 'textColor': '#808080'},
-                    },
-                  ],
-                },
-                {
-                  'type': 'column',
-                  'style': {'alignment': 'center'},
-                  'children': [
-                    {
-                      'type': 'text',
-                      'binding': {
-                        'path': 'node.humidity',
-                        'format': '{value}%',
-                      },
-                      'style': {
-                        'fontSize': 24,
-                        'fontWeight': 'bold',
-                        'textColor': '#06B6D4',
-                      },
-                    },
-                    {
-                      'type': 'text',
-                      'text': 'Humidity',
-                      'style': {'fontSize': 10, 'textColor': '#808080'},
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
-    };
-
-    if (mockSchemas.containsKey(id)) {
-      return WidgetSchema.fromJson(mockSchemas[id]!);
-    }
-    return null;
   }
 
   /// Upload widget to marketplace
@@ -394,14 +191,16 @@ class WidgetMarketplaceService {
     String authToken,
   ) async {
     try {
-      final response = await _client.post(
-        Uri.parse('$baseUrl/upload'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
-        },
-        body: jsonEncode(widget.toJson()),
-      );
+      final response = await _client
+          .post(
+            Uri.parse('$baseUrl/upload'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $authToken',
+            },
+            body: jsonEncode(widget.toJson()),
+          )
+          .timeout(const Duration(seconds: 2));
 
       if (response.statusCode == 201) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -421,14 +220,16 @@ class WidgetMarketplaceService {
   /// Rate a widget
   Future<void> rateWidget(String id, int rating, String authToken) async {
     try {
-      final response = await _client.post(
-        Uri.parse('$baseUrl/$id/rate'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
-        },
-        body: jsonEncode({'rating': rating}),
-      );
+      final response = await _client
+          .post(
+            Uri.parse('$baseUrl/$id/rate'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $authToken',
+            },
+            body: jsonEncode({'rating': rating}),
+          )
+          .timeout(const Duration(seconds: 2));
 
       if (response.statusCode != 200) {
         throw MarketplaceException('Failed to rate widget');
@@ -443,14 +244,16 @@ class WidgetMarketplaceService {
   /// Report a widget
   Future<void> reportWidget(String id, String reason, String authToken) async {
     try {
-      final response = await _client.post(
-        Uri.parse('$baseUrl/$id/report'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
-        },
-        body: jsonEncode({'reason': reason}),
-      );
+      final response = await _client
+          .post(
+            Uri.parse('$baseUrl/$id/report'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $authToken',
+            },
+            body: jsonEncode({'reason': reason}),
+          )
+          .timeout(const Duration(seconds: 2));
 
       if (response.statusCode != 200) {
         throw MarketplaceException('Failed to report widget');
@@ -488,109 +291,6 @@ class WidgetMarketplaceService {
   /// Get top rated widgets
   Future<MarketplaceResponse> getTopRated({int page = 1}) async {
     return browse(page: page, sortBy: 'rating');
-  }
-
-  // Mock data for offline/development
-  MarketplaceResponse _getMockBrowseResponse() {
-    return MarketplaceResponse(
-      widgets: _getMockFeatured(),
-      total: 5,
-      page: 1,
-      hasMore: false,
-    );
-  }
-
-  List<MarketplaceWidget> _getMockFeatured() {
-    return [
-      MarketplaceWidget(
-        id: 'battery-gauge-pro',
-        name: 'Battery Gauge Pro',
-        description:
-            'Beautiful animated battery indicator with low power warnings',
-        author: 'MeshMaster',
-        authorId: 'user-123',
-        version: '1.2.0',
-        thumbnailUrl: null,
-        downloads: 1250,
-        rating: 4.8,
-        ratingCount: 156,
-        tags: ['battery', 'gauge', 'animated'],
-        category: 'status',
-        isFeatured: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        updatedAt: DateTime.now().subtract(const Duration(days: 5)),
-      ),
-      MarketplaceWidget(
-        id: 'weather-station',
-        name: 'Weather Station',
-        description:
-            'Complete weather display with temperature, humidity, and pressure',
-        author: 'WeatherWizard',
-        authorId: 'user-456',
-        version: '2.0.0',
-        thumbnailUrl: null,
-        downloads: 890,
-        rating: 4.5,
-        ratingCount: 89,
-        tags: ['weather', 'temperature', 'environment'],
-        category: 'sensors',
-        isFeatured: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 60)),
-        updatedAt: DateTime.now().subtract(const Duration(days: 10)),
-      ),
-      MarketplaceWidget(
-        id: 'signal-radar',
-        name: 'Signal Radar',
-        description: 'Animated radar-style signal strength visualization',
-        author: 'RadioRanger',
-        authorId: 'user-789',
-        version: '1.0.0',
-        thumbnailUrl: null,
-        downloads: 567,
-        rating: 4.3,
-        ratingCount: 45,
-        tags: ['signal', 'radar', 'animated'],
-        category: 'connectivity',
-        isFeatured: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 15)),
-        updatedAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      MarketplaceWidget(
-        id: 'node-compass',
-        name: 'Node Compass',
-        description: 'Shows direction and distance to selected node',
-        author: 'NavigatorNick',
-        authorId: 'user-101',
-        version: '1.1.0',
-        thumbnailUrl: null,
-        downloads: 432,
-        rating: 4.6,
-        ratingCount: 67,
-        tags: ['navigation', 'compass', 'direction'],
-        category: 'navigation',
-        isFeatured: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 45)),
-        updatedAt: DateTime.now().subtract(const Duration(days: 8)),
-      ),
-      MarketplaceWidget(
-        id: 'network-stats',
-        name: 'Network Statistics',
-        description:
-            'Live mesh network statistics with packet counts and graphs',
-        author: 'DataDave',
-        authorId: 'user-202',
-        version: '1.5.0',
-        thumbnailUrl: null,
-        downloads: 321,
-        rating: 4.4,
-        ratingCount: 34,
-        tags: ['network', 'statistics', 'packets'],
-        category: 'network',
-        isFeatured: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 20)),
-        updatedAt: DateTime.now().subtract(const Duration(days: 3)),
-      ),
-    ];
   }
 
   // ============ Admin Methods ============

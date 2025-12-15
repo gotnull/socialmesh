@@ -835,8 +835,8 @@ class _IcosahedronPainter extends CustomPainter {
     // Depth-based opacity - back-facing edges (negative z) should be dimmer
     // z ranges roughly from -0.5 (back) to 0.5 (front)
     final avgZ = (z1 + z2) / 2;
-    // Map z from [-0.5, 0.5] to [0.35, 1.0] - back edges visible but dimmer
-    final depthFactor = ((avgZ + 0.5) * 0.65 + 0.35).clamp(0.35, 1.0);
+    // Map z from [-0.5, 0.5] to [0.55, 1.0] - back edges fairly visible
+    final depthFactor = ((avgZ + 0.5) * 0.45 + 0.55).clamp(0.55, 1.0);
 
     // Calculate color based on X position (left=orange, middle=magenta, right=blue)
     final avgX = (p1.dx + p2.dx) / 2;
@@ -1042,8 +1042,8 @@ class _IcosahedronPainter extends CustomPainter {
     final color = _getGradientColor(t);
 
     // Opacity based on depth - back-facing nodes should be dimmer but visible
-    // Map z from [-0.5, 0.5] to [0.45, 1.0] - back nodes visible but dimmer
-    final opacity = ((depth + 0.5) * 0.55 + 0.45).clamp(0.45, 1.0);
+    // Map z from [-0.5, 0.5] to [0.65, 1.0] - back nodes fairly solid
+    final opacity = ((depth + 0.5) * 0.35 + 0.65).clamp(0.65, 1.0);
 
     // === ENHANCED GLOW FOR PULSING NODES ===
     // Draw outer glow (enhanced when pulsing)
@@ -1523,7 +1523,7 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
       // NO VERTEX GRABBED - rotation from drag
       final intensity = widget.touchIntensity * 0.015;
       _velocityY += delta.dx * intensity;
-      _velocityX -= delta.dy * intensity;
+      _velocityX += delta.dy * intensity;
     }
   }
 

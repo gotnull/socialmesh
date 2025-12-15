@@ -13,16 +13,12 @@ class MarketplaceState {
   final List<MarketplaceWidget> popular;
   final List<MarketplaceWidget> newest;
   final Map<String, List<MarketplaceWidget>> categoryWidgets;
-  final bool isLoading;
-  final String? error;
 
   const MarketplaceState({
     this.featured = const [],
     this.popular = const [],
     this.newest = const [],
     this.categoryWidgets = const {},
-    this.isLoading = false,
-    this.error,
   });
 
   MarketplaceState copyWith({
@@ -30,136 +26,161 @@ class MarketplaceState {
     List<MarketplaceWidget>? popular,
     List<MarketplaceWidget>? newest,
     Map<String, List<MarketplaceWidget>>? categoryWidgets,
-    bool? isLoading,
-    String? error,
   }) {
     return MarketplaceState(
       featured: featured ?? this.featured,
       popular: popular ?? this.popular,
       newest: newest ?? this.newest,
       categoryWidgets: categoryWidgets ?? this.categoryWidgets,
-      isLoading: isLoading ?? this.isLoading,
-      error: error,
     );
   }
 }
 
-/// Notifier for marketplace state management
-class MarketplaceNotifier extends Notifier<MarketplaceState> {
-  @override
-  MarketplaceState build() {
-    return const MarketplaceState();
-  }
-
+/// AsyncNotifier for marketplace state - auto-loads on build like favorites
+class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
   WidgetMarketplaceService get _service => ref.read(marketplaceServiceProvider);
 
-  /// Load featured widgets
-  Future<void> loadFeatured() async {
-    debugPrint(
-      '[Marketplace] loadFeatured called, current featured: ${state.featured.length}, error: ${state.error}',
-    );
-    if (state.featured.isNotEmpty && state.error == null) {
-      debugPrint(
-        '[Marketplace] Skipping loadFeatured - already have ${state.featured.length} widgets',
-      );
-      return;
-    }
+  // Loading flags to prevent concurrent requests
+  bool _loadingPopular = false;
+  bool _loadingNewest = false;
+  final Set<String> _loadingCategories = {};
 
-    state = state.copyWith(isLoading: true, error: null);
-    debugPrint('[Marketplace] Loading featured widgets...');
+  @override
+  Future<MarketplaceState> build() async {
+    debugPrint('[Marketplace] build() called - auto-loading featured');
+    final featured = await _loadFeatured();
+    return MarketplaceState(featured: featured);
+  }
+
+  Future<List<MarketplaceWidget>> _loadFeatured() async {
+    debugPrint('[Marketplace] _loadFeatured() entered');
     try {
       final featured = await _service.getFeatured();
       debugPrint('[Marketplace] Got ${featured.length} featured widgets');
-      state = state.copyWith(featured: featured, isLoading: false);
+      return featured;
     } catch (e, st) {
       debugPrint('[Marketplace] Error loading featured: $e');
       debugPrint('[Marketplace] Stack trace: $st');
-      state = state.copyWith(error: e.toString(), isLoading: false);
+      rethrow;
     }
   }
 
   /// Load popular widgets
   Future<void> loadPopular() async {
+    final currentState = state.value;
+    if (currentState == null) return;
+
     debugPrint(
-      '[Marketplace] loadPopular called, current: ${state.popular.length}',
+      '[Marketplace] loadPopular called, current: ${currentState.popular.length}, loading: $_loadingPopular',
     );
-    if (state.popular.isNotEmpty) {
-      debugPrint('[Marketplace] Skipping loadPopular - already have data');
+    if (currentState.popular.isNotEmpty || _loadingPopular) {
+      debugPrint(
+        '[Marketplace] Skipping loadPopular - already have data or loading',
+      );
       return;
     }
 
+    _loadingPopular = true;
     try {
       debugPrint('[Marketplace] Loading popular widgets...');
       final response = await _service.getPopular();
       debugPrint(
         '[Marketplace] Got ${response.widgets.length} popular widgets',
       );
-      state = state.copyWith(popular: response.widgets);
+      // Re-fetch current state in case it changed during async operation
+      final latestState = state.value ?? currentState;
+      state = AsyncValue.data(latestState.copyWith(popular: response.widgets));
     } catch (e, st) {
       debugPrint('[Marketplace] Error loading popular: $e');
       debugPrint('[Marketplace] Stack trace: $st');
+    } finally {
+      _loadingPopular = false;
     }
   }
 
   /// Load newest widgets
   Future<void> loadNewest() async {
+    final currentState = state.value;
+    if (currentState == null) return;
+
     debugPrint(
-      '[Marketplace] loadNewest called, current: ${state.newest.length}',
+      '[Marketplace] loadNewest called, current: ${currentState.newest.length}, loading: $_loadingNewest',
     );
-    if (state.newest.isNotEmpty) {
-      debugPrint('[Marketplace] Skipping loadNewest - already have data');
+    if (currentState.newest.isNotEmpty || _loadingNewest) {
+      debugPrint(
+        '[Marketplace] Skipping loadNewest - already have data or loading',
+      );
       return;
     }
 
+    _loadingNewest = true;
     try {
       debugPrint('[Marketplace] Loading newest widgets...');
       final response = await _service.getNewest();
       debugPrint('[Marketplace] Got ${response.widgets.length} newest widgets');
-      state = state.copyWith(newest: response.widgets);
+      // Re-fetch current state in case it changed during async operation
+      final latestState = state.value ?? currentState;
+      state = AsyncValue.data(latestState.copyWith(newest: response.widgets));
     } catch (e, st) {
       debugPrint('[Marketplace] Error loading newest: $e');
       debugPrint('[Marketplace] Stack trace: $st');
+    } finally {
+      _loadingNewest = false;
     }
   }
 
   /// Load widgets for a category
   Future<void> loadCategory(String category) async {
-    debugPrint('[Marketplace] loadCategory called for: $category');
-    if (state.categoryWidgets.containsKey(category)) {
+    final currentState = state.value;
+    if (currentState == null) return;
+
+    debugPrint(
+      '[Marketplace] loadCategory called for: $category, loading: ${_loadingCategories.contains(category)}',
+    );
+    if (currentState.categoryWidgets.containsKey(category) ||
+        _loadingCategories.contains(category)) {
       debugPrint(
-        '[Marketplace] Skipping loadCategory - already have data for $category',
+        '[Marketplace] Skipping loadCategory - already have data or loading for $category',
       );
       return;
     }
 
+    _loadingCategories.add(category);
     try {
       debugPrint('[Marketplace] Loading category: $category...');
       final response = await _service.getByCategory(category);
       debugPrint(
         '[Marketplace] Got ${response.widgets.length} widgets for $category',
       );
+      // Re-fetch current state in case it changed during async operation
+      final latestState = state.value ?? currentState;
       final updated = Map<String, List<MarketplaceWidget>>.from(
-        state.categoryWidgets,
+        latestState.categoryWidgets,
       );
       updated[category] = response.widgets;
-      state = state.copyWith(categoryWidgets: updated);
+      state = AsyncValue.data(latestState.copyWith(categoryWidgets: updated));
     } catch (e, st) {
       debugPrint('[Marketplace] Error loading category $category: $e');
       debugPrint('[Marketplace] Stack trace: $st');
+    } finally {
+      _loadingCategories.remove(category);
     }
   }
 
   /// Refresh all data
   Future<void> refresh() async {
     debugPrint('[Marketplace] Refresh requested');
-    state = const MarketplaceState(isLoading: true);
-    await loadFeatured();
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      final featured = await _loadFeatured();
+      return MarketplaceState(featured: featured);
+    });
   }
 }
 
-/// Provider for marketplace state
+/// Provider for marketplace state - uses AsyncNotifierProvider for auto-load
 final marketplaceProvider =
-    NotifierProvider<MarketplaceNotifier, MarketplaceState>(
+    AsyncNotifierProvider<MarketplaceNotifier, MarketplaceState>(
       MarketplaceNotifier.new,
     );
 

@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
+import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/subscription_providers.dart';
 import '../../services/haptic_service.dart';
 import '../channels/channels_screen.dart';
 import '../messaging/messaging_screen.dart';
@@ -21,6 +23,7 @@ import '../settings/settings_screen.dart';
 import '../presence/presence_screen.dart';
 import '../mesh3d/mesh_3d_screen.dart';
 import '../world_mesh/world_mesh_screen.dart';
+import '../settings/subscription_screen.dart';
 
 /// Notifier to expose the main shell's scaffold key for drawer access
 class MainShellScaffoldKeyNotifier extends Notifier<GlobalKey<ScaffoldState>?> {
@@ -292,11 +295,13 @@ class _DrawerMenuItem {
   final IconData icon;
   final String label;
   final Widget screen;
+  final PremiumFeature? premiumFeature;
 
   const _DrawerMenuItem({
     required this.icon,
     required this.label,
     required this.screen,
+    this.premiumFeature,
   });
 }
 
@@ -354,6 +359,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       icon: Icons.auto_awesome,
       label: 'Automations',
       screen: AutomationsScreen(),
+      premiumFeature: PremiumFeature.automations,
     ),
     const _DrawerMenuItem(
       icon: Icons.settings,
@@ -503,18 +509,36 @@ class _MainShellState extends ConsumerState<MainShell> {
                   final item = _drawerMenuItems[index];
                   final isSelected = _selectedDrawerItem == index;
 
+                  // Check if this is a premium feature and if user has access
+                  final isPremium = item.premiumFeature != null;
+                  final hasAccess =
+                      !isPremium ||
+                      ref.watch(hasFeatureProvider(item.premiumFeature!));
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 4),
                     child: _DrawerMenuTile(
                       icon: item.icon,
                       label: item.label,
                       isSelected: isSelected,
+                      isPremium: isPremium,
+                      isLocked: isPremium && !hasAccess,
                       onTap: () {
                         ref.haptics.tabChange();
                         Navigator.of(context).pop(); // Close drawer
-                        setState(() {
-                          _selectedDrawerItem = index;
-                        });
+
+                        if (isPremium && !hasAccess) {
+                          // Show subscription screen for locked features
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (context) => const SubscriptionScreen(),
+                            ),
+                          );
+                        } else {
+                          setState(() {
+                            _selectedDrawerItem = index;
+                          });
+                        }
                       },
                     ),
                   );
@@ -868,6 +892,8 @@ class _DrawerMenuTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool isSelected;
+  final bool isPremium;
+  final bool isLocked;
   final VoidCallback onTap;
 
   const _DrawerMenuTile({
@@ -875,12 +901,15 @@ class _DrawerMenuTile extends StatelessWidget {
     required this.label,
     required this.isSelected,
     required this.onTap,
+    this.isPremium = false,
+    this.isLocked = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final accentColor = theme.colorScheme.primary;
+    final goldColor = Colors.amber.shade600;
 
     return BouncyTap(
       onTap: onTap,
@@ -892,10 +921,14 @@ class _DrawerMenuTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? accentColor.withValues(alpha: 0.15)
+              : isLocked
+              ? goldColor.withValues(alpha: 0.05)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           border: isSelected
               ? Border.all(color: accentColor.withValues(alpha: 0.3))
+              : isLocked
+              ? Border.all(color: goldColor.withValues(alpha: 0.2))
               : null,
         ),
         child: Row(
@@ -906,6 +939,8 @@ class _DrawerMenuTile extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isSelected
                     ? accentColor.withValues(alpha: 0.2)
+                    : isLocked
+                    ? goldColor.withValues(alpha: 0.1)
                     : theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -914,6 +949,8 @@ class _DrawerMenuTile extends StatelessWidget {
                 size: 22,
                 color: isSelected
                     ? accentColor
+                    : isLocked
+                    ? goldColor
                     : theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
@@ -927,16 +964,67 @@ class _DrawerMenuTile extends StatelessWidget {
                   fontFamily: AppTheme.fontFamily,
                   color: isSelected
                       ? accentColor
+                      : isLocked
+                      ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
                       : theme.colorScheme.onSurface.withValues(alpha: 0.8),
                 ),
               ),
             ),
-            if (isSelected)
+            // Show lock icon and PRO badge for locked premium features
+            if (isLocked) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [goldColor, goldColor.withValues(alpha: 0.8)],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: goldColor.withValues(alpha: 0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.lock_rounded,
+                      size: 12,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'PRO',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: AppTheme.fontFamily,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else if (isPremium) ...[
+              // Show unlocked badge for purchased premium features
+              Icon(
+                Icons.verified_rounded,
+                size: 18,
+                color: Colors.green.shade400,
+              ),
+            ] else if (isSelected) ...[
               Icon(
                 Icons.chevron_right,
                 size: 20,
                 color: accentColor.withValues(alpha: 0.6),
               ),
+            ],
           ],
         ),
       ),

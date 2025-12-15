@@ -26,13 +26,12 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
   late TabController _tabController;
   final _storageService = WidgetStorageService();
   List<WidgetSchema> _myWidgets = [];
-  List<WidgetSchema> _templates = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     _loadWidgets();
   }
 
@@ -51,7 +50,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
       setState(() {
         _myWidgets = widgets;
-        _templates = WidgetTemplates.all();
         _isLoading = false;
       });
     } catch (e) {
@@ -94,7 +92,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
           unselectedLabelColor: AppTheme.textSecondary,
           tabs: const [
             Tab(text: 'My Widgets'),
-            Tab(text: 'Templates'),
             Tab(text: 'Installed'),
           ],
         ),
@@ -103,11 +100,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
           ? const ScreenLoadingIndicator()
           : TabBarView(
               controller: _tabController,
-              children: [
-                _buildMyWidgetsTab(),
-                _buildTemplatesTab(),
-                _buildInstalledTab(),
-              ],
+              children: [_buildMyWidgetsTab(), _buildInstalledTab()],
             ),
     );
   }
@@ -116,13 +109,13 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     if (_myWidgets.isEmpty) {
       return _buildEmptyState(
         icon: Icons.widgets_outlined,
-        title: 'No Custom Widgets',
-        subtitle: 'Create your first custom widget or use a template',
+        title: 'No Widgets Yet',
+        subtitle: 'Browse the marketplace to discover and install widgets',
         action: TextButton.icon(
-          onPressed: _createNewWidget,
-          icon: Icon(Icons.add, color: context.accentColor),
+          onPressed: _openMarketplace,
+          icon: Icon(Icons.store, color: context.accentColor),
           label: Text(
-            'Create Widget',
+            'Browse Marketplace',
             style: TextStyle(color: context.accentColor),
           ),
         ),
@@ -138,16 +131,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
           return _buildWidgetCard(_myWidgets[index], isTemplate: false);
         },
       ),
-    );
-  }
-
-  Widget _buildTemplatesTab() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _templates.length,
-      itemBuilder: (context, index) {
-        return _buildWidgetCard(_templates[index], isTemplate: true);
-      },
     );
   }
 

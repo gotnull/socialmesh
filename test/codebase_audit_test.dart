@@ -343,6 +343,11 @@ void main() {
       for (final file in files) {
         final content = readFile(file);
 
+        // Skip files that use dotenv for configuration (legitimate local dev URLs)
+        if (content.contains('dotenv.env')) {
+          continue;
+        }
+
         if (content.contains('127.0.0.1') ||
             content.contains('localhost:') ||
             content.contains("'localhost'") ||

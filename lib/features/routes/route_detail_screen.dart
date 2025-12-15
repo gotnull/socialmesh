@@ -14,7 +14,6 @@ import '../../core/widgets/mesh_map_widget.dart';
 import '../../models/mesh_models.dart';
 import '../../models/route.dart' as route_model;
 import '../../providers/app_providers.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../utils/snackbar.dart';
 
@@ -282,7 +281,10 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: MeshLoadingIndicator(size: 20),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Icon(Icons.share, color: Colors.white),
                     onPressed: _isExporting ? null : _exportRoute,
