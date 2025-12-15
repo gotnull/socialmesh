@@ -4,104 +4,81 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/world_mesh/services/node_favorites_service.dart';
 import '../models/world_mesh_node.dart';
 
-/// State for node favorites
-class NodeFavoritesState {
+/// State for node favorites (data only, loading/error handled by AsyncValue)
+class NodeFavoritesData {
   final Set<String> favoriteIds;
   final List<FavoriteNodeMetadata> favorites;
-  final bool isLoading;
-  final String? error;
 
-  const NodeFavoritesState({
+  const NodeFavoritesData({
     this.favoriteIds = const {},
     this.favorites = const [],
-    this.isLoading = false,
-    this.error,
   });
-
-  NodeFavoritesState copyWith({
-    Set<String>? favoriteIds,
-    List<FavoriteNodeMetadata>? favorites,
-    bool? isLoading,
-    String? error,
-  }) {
-    return NodeFavoritesState(
-      favoriteIds: favoriteIds ?? this.favoriteIds,
-      favorites: favorites ?? this.favorites,
-      isLoading: isLoading ?? this.isLoading,
-      error: error,
-    );
-  }
 
   bool isFavorite(String nodeId) => favoriteIds.contains(nodeId.toUpperCase());
 
   int get count => favoriteIds.length;
 }
 
-/// Provider for managing node favorites with Riverpod
-class NodeFavoritesNotifier extends Notifier<NodeFavoritesState> {
+/// Provider for managing node favorites with Riverpod AsyncNotifier
+/// This is the idiomatic way to handle async initialization in Riverpod
+class NodeFavoritesNotifier extends AsyncNotifier<NodeFavoritesData> {
   final NodeFavoritesService _service = NodeFavoritesService();
 
   @override
-  NodeFavoritesState build() {
-    debugPrint('[NodeFavorites] build() called - scheduling load');
-    // Use Future.microtask to defer load until after build() returns
-    // This avoids "Tried to read the state of an uninitialized provider" error
-    Future.microtask(_loadFavorites);
-    return const NodeFavoritesState(isLoading: true);
+  Future<NodeFavoritesData> build() async {
+    debugPrint('[NodeFavorites] build() called - loading favorites');
+    return _loadFavorites();
   }
 
-  Future<void> _loadFavorites() async {
+  Future<NodeFavoritesData> _loadFavorites() async {
     debugPrint('[NodeFavorites] _loadFavorites() entered');
-    try {
-      // Don't call state.copyWith here - we're already in loading state from build()
-      debugPrint('[NodeFavorites] Calling service to get favorites...');
 
-      final ids = await _service.getFavoriteIds();
-      debugPrint('[NodeFavorites] Got ${ids.length} favorite IDs: $ids');
+    final ids = await _service.getFavoriteIds();
+    debugPrint('[NodeFavorites] Got ${ids.length} favorite IDs: $ids');
 
-      final favorites = await _service.getFavorites();
-      debugPrint(
-        '[NodeFavorites] Got ${favorites.length} favorites with metadata',
-      );
+    final favorites = await _service.getFavorites();
+    debugPrint(
+      '[NodeFavorites] Got ${favorites.length} favorites with metadata',
+    );
 
-      state = NodeFavoritesState(
-        favoriteIds: ids.map((id) => id.toUpperCase()).toSet(),
-        favorites: favorites,
-        isLoading: false,
-      );
-      debugPrint(
-        '[NodeFavorites] Load complete: ${state.favoriteIds.length} IDs',
-      );
-    } catch (e, stack) {
-      debugPrint('[NodeFavorites] ERROR: $e');
-      debugPrint('[NodeFavorites] Stack: $stack');
-      state = NodeFavoritesState(isLoading: false, error: e.toString());
-    }
+    final data = NodeFavoritesData(
+      favoriteIds: ids.map((id) => id.toUpperCase()).toSet(),
+      favorites: favorites,
+    );
+    debugPrint('[NodeFavorites] Load complete: ${data.favoriteIds.length} IDs');
+    return data;
   }
 
   Future<void> refresh() async {
-    state = state.copyWith(isLoading: true, error: null);
-    await _loadFavorites();
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(_loadFavorites);
   }
 
   bool isFavorite(int nodeNum) {
     final nodeId = nodeNum.toRadixString(16).padLeft(8, '0').toUpperCase();
-    return state.isFavorite(nodeId);
+    return state.maybeWhen(
+      data: (data) => data.isFavorite(nodeId),
+      orElse: () => false,
+    );
   }
 
   Future<void> addFavorite(WorldMeshNode node) async {
     await _service.addFavorite(node);
-    await _loadFavorites();
+    state = await AsyncValue.guard(_loadFavorites);
   }
 
   Future<void> removeFavorite(String nodeId) async {
     await _service.removeFavorite(nodeId.toUpperCase());
-    await _loadFavorites();
+    state = await AsyncValue.guard(_loadFavorites);
   }
 
   Future<void> toggleFavorite(WorldMeshNode node) async {
     final nodeId = node.nodeNum.toRadixString(16).padLeft(8, '0').toUpperCase();
-    if (state.isFavorite(nodeId)) {
+    final isFav = state.maybeWhen(
+      data: (data) => data.isFavorite(nodeId),
+      orElse: () => false,
+    );
+    if (isFav) {
       await removeFavorite(nodeId);
     } else {
       await addFavorite(node);
@@ -111,7 +88,7 @@ class NodeFavoritesNotifier extends Notifier<NodeFavoritesState> {
 
 /// Main provider for node favorites
 final nodeFavoritesProvider =
-    NotifierProvider<NodeFavoritesNotifier, NodeFavoritesState>(
+    AsyncNotifierProvider<NodeFavoritesNotifier, NodeFavoritesData>(
       NodeFavoritesNotifier.new,
     );
 
@@ -119,10 +96,16 @@ final nodeFavoritesProvider =
 final isNodeFavoriteProvider = Provider.family<bool, int>((ref, nodeNum) {
   final favorites = ref.watch(nodeFavoritesProvider);
   final nodeId = nodeNum.toRadixString(16).padLeft(8, '0').toUpperCase();
-  return favorites.isFavorite(nodeId);
+  return favorites.maybeWhen(
+    data: (data) => data.isFavorite(nodeId),
+    orElse: () => false,
+  );
 });
 
 /// Provider for favorites count (for badge)
 final favoritesCountProvider = Provider<int>((ref) {
-  return ref.watch(nodeFavoritesProvider).count;
+  return ref.watch(nodeFavoritesProvider).maybeWhen(
+    data: (data) => data.count,
+    orElse: () => 0,
+  );
 });

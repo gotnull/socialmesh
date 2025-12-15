@@ -46,9 +46,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   _FavoriteItem? _selectedForCompare;
 
   /// Build favorite items from provider state, merging with live node data
-  List<_FavoriteItem> _buildFavoriteItems(NodeFavoritesState state) {
+  List<_FavoriteItem> _buildFavoriteItems(NodeFavoritesData data) {
     final items = <_FavoriteItem>[];
-    for (final meta in state.favorites) {
+    for (final meta in data.favorites) {
       final nodeNum = int.tryParse(meta.nodeId, radix: 16);
       WorldMeshNode? freshNode;
       if (nodeNum != null && widget.allNodes != null) {
@@ -177,69 +177,119 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final favoritesState = ref.watch(nodeFavoritesProvider);
-    final favorites = _buildFavoriteItems(favoritesState);
-    final hasEnoughForCompare =
-        favorites.where((f) => f.hasLiveData).length >= 2;
+    final favoritesAsync = ref.watch(nodeFavoritesProvider);
 
-    return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
+    return favoritesAsync.when(
+      loading: () => Scaffold(
         backgroundColor: AppTheme.darkBackground,
-        title: Text(
-          _isCompareMode
-              ? (_selectedForCompare == null
-                    ? 'Select first node'
-                    : 'Select second node')
-              : 'Favorite Nodes',
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkBackground,
+          title: const Text(
+            'Favorite Nodes',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
         ),
-        actions: [
-          // Compare toggle
-          if (favorites.length >= 2 && hasEnoughForCompare)
-            IconButton(
-              icon: Icon(
-                _isCompareMode ? Icons.close : Icons.compare_arrows,
-                color: _isCompareMode ? AccentColors.green : null,
-              ),
-              tooltip: _isCompareMode ? 'Cancel compare' : 'Compare nodes',
-              onPressed: _toggleCompareMode,
+        body: const ScreenLoadingIndicator(),
+      ),
+      error: (error, stack) => Scaffold(
+        backgroundColor: AppTheme.darkBackground,
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkBackground,
+          title: const Text(
+            'Favorite Nodes',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
             ),
-          if (favorites.isNotEmpty && !_isCompareMode)
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: AppTheme.errorRed),
+              const SizedBox(height: 16),
+              Text(
+                'Error loading favorites',
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => ref.read(nodeFavoritesProvider.notifier).refresh(),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
+      data: (favoritesData) {
+        final favorites = _buildFavoriteItems(favoritesData);
+        final hasEnoughForCompare =
+            favorites.where((f) => f.hasLiveData).length >= 2;
+
+        return Scaffold(
+          backgroundColor: AppTheme.darkBackground,
+          appBar: AppBar(
+            backgroundColor: AppTheme.darkBackground,
+            title: Text(
+              _isCompareMode
+                  ? (_selectedForCompare == null
+                        ? 'Select first node'
+                        : 'Select second node')
+                  : 'Favorite Nodes',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            actions: [
+              // Compare toggle
+              if (favorites.length >= 2 && hasEnoughForCompare)
+                IconButton(
+                  icon: Icon(
+                    _isCompareMode ? Icons.close : Icons.compare_arrows,
+                    color: _isCompareMode ? AccentColors.green : null,
                   ),
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${favorites.length}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: context.accentColor,
+                  tooltip: _isCompareMode ? 'Cancel compare' : 'Compare nodes',
+                  onPressed: _toggleCompareMode,
+                ),
+              if (favorites.isNotEmpty && !_isCompareMode)
+                Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${favorites.length}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: context.accentColor,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-        ],
-      ),
-      body: favoritesState.isLoading
-          ? const ScreenLoadingIndicator()
-          : favorites.isEmpty
-          ? _buildEmptyState()
-          : _buildFavoritesList(favorites),
+            ],
+          ),
+          body: favorites.isEmpty
+              ? _buildEmptyState()
+              : _buildFavoritesList(favorites),
+        );
+      },
     );
   }
 
