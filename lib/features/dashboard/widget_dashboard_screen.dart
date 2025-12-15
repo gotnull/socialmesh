@@ -448,48 +448,89 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
     );
   }
 
-  /// Build a custom widget with edit mode support but no card wrapper
+  /// Build a custom widget with edit mode support using the same DashboardWidget wrapper
   Widget _buildCustomWidgetCard(DashboardWidgetConfig config) {
-    final content = SchemaWidgetContent(schemaId: config.schemaId!);
+    return Consumer(
+      builder: (context, ref, _) {
+        final schemaAsync = ref.watch(customWidgetProvider(config.schemaId!));
 
-    if (!_editMode) {
-      return content;
-    }
+        return schemaAsync.when(
+          data: (schema) {
+            if (schema == null) {
+              // Schema not found - show error widget
+              return DashboardWidget(
+                config: config,
+                isEditMode: _editMode,
+                customName: 'Widget Not Found',
+                customIcon: Icons.error_outline,
+                onFavorite: () {
+                  ref
+                      .read(dashboardWidgetsProvider.notifier)
+                      .toggleFavorite(config.id);
+                },
+                onRemove: () {
+                  ref
+                      .read(dashboardWidgetsProvider.notifier)
+                      .removeWidget(config.id);
+                },
+                child: const SizedBox(
+                  height: 120,
+                  child: Center(
+                    child: Text(
+                      'Widget not found',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  ),
+                ),
+              );
+            }
 
-    // Edit mode: add dashed border and remove button
-    return CustomPaint(
-      painter: DashedBorderPainter(
-        color: context.accentColor.withValues(alpha: 0.6),
-        strokeWidth: 2,
-        dashWidth: 8,
-        dashSpace: 4,
-        borderRadius: 16,
-      ),
-      child: Stack(
-        children: [
-          Padding(padding: const EdgeInsets.all(4), child: content),
-          // Remove button
-          Positioned(
-            top: 8,
-            right: 8,
-            child: GestureDetector(
-              onTap: () {
+            // Use DashboardWidget wrapper with the schema's name and icon
+            return DashboardWidget(
+              config: config,
+              isEditMode: _editMode,
+              customName: schema.name,
+              customIcon: Icons.widgets, // Custom widgets use widgets icon
+              showHeader: _editMode, // Only show header in edit mode
+              onFavorite: () {
+                ref
+                    .read(dashboardWidgetsProvider.notifier)
+                    .toggleFavorite(config.id);
+              },
+              onRemove: () {
                 ref
                     .read(dashboardWidgetsProvider.notifier)
                     .removeWidget(config.id);
               },
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: AppTheme.errorRed.withValues(alpha: 0.9),
-                  shape: BoxShape.circle,
+              child: SchemaWidgetContent(schemaId: config.schemaId!),
+            );
+          },
+          loading: () => const SizedBox(
+            height: 160,
+            child: Center(child: MeshLoadingIndicator(size: 20)),
+          ),
+          error: (e, _) => DashboardWidget(
+            config: config,
+            isEditMode: _editMode,
+            customName: 'Error Loading Widget',
+            customIcon: Icons.error_outline,
+            onRemove: () {
+              ref
+                  .read(dashboardWidgetsProvider.notifier)
+                  .removeWidget(config.id);
+            },
+            child: const SizedBox(
+              height: 120,
+              child: Center(
+                child: Text(
+                  'Failed to load widget',
+                  style: TextStyle(color: Colors.white54),
                 ),
-                child: const Icon(Icons.close, size: 16, color: Colors.white),
               ),
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

@@ -16,6 +16,12 @@ class DashboardWidget extends StatefulWidget {
   final Widget? trailing;
   final bool showHeader;
 
+  /// Custom overrides for widget name (for custom schema widgets)
+  final String? customName;
+
+  /// Custom overrides for widget icon (for custom schema widgets)
+  final IconData? customIcon;
+
   const DashboardWidget({
     super.key,
     required this.config,
@@ -26,6 +32,8 @@ class DashboardWidget extends StatefulWidget {
     this.onTap,
     this.trailing,
     this.showHeader = true,
+    this.customName,
+    this.customIcon,
   });
 
   @override
@@ -71,6 +79,10 @@ class _DashboardWidgetState extends State<DashboardWidget>
     final info = WidgetRegistry.getInfo(widget.config.type);
     final isFavorite = widget.config.isFavorite;
 
+    // Use custom overrides or fall back to registry info
+    final displayName = widget.customName ?? info.name;
+    final displayIcon = widget.customIcon ?? info.icon;
+
     // Use custom paint for dashed border in edit mode
     Widget content = widget.isEditMode
         ? CustomPaint(
@@ -81,9 +93,9 @@ class _DashboardWidgetState extends State<DashboardWidget>
               dashSpace: 4,
               borderRadius: 16,
             ),
-            child: _buildCardContent(info, isFavorite),
+            child: _buildCardContent(displayName, displayIcon, isFavorite),
           )
-        : _buildCardContent(info, isFavorite);
+        : _buildCardContent(displayName, displayIcon, isFavorite);
 
     // Apply wobble animation in edit mode
     if (widget.isEditMode) {
@@ -99,7 +111,11 @@ class _DashboardWidgetState extends State<DashboardWidget>
     return content;
   }
 
-  Widget _buildCardContent(WidgetTypeInfo info, bool isFavorite) {
+  Widget _buildCardContent(
+    String displayName,
+    IconData displayIcon,
+    bool isFavorite,
+  ) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
@@ -123,7 +139,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (widget.showHeader) _buildHeader(info),
+              if (widget.showHeader) _buildHeader(displayName, displayIcon),
               Flexible(child: widget.child),
             ],
           ),
@@ -132,7 +148,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
     );
   }
 
-  Widget _buildHeader(WidgetTypeInfo info) {
+  Widget _buildHeader(String displayName, IconData displayIcon) {
     return Container(
       padding: EdgeInsets.only(
         left: 16,
@@ -160,13 +176,13 @@ class _DashboardWidgetState extends State<DashboardWidget>
               color: context.accentColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(info.icon, color: context.accentColor, size: 16),
+            child: Icon(displayIcon, color: context.accentColor, size: 16),
           ),
           const SizedBox(width: 10),
           // Title
           Expanded(
             child: Text(
-              info.name,
+              displayName,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,

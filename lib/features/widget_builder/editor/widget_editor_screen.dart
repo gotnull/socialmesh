@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
 import '../renderer/widget_renderer.dart';
+import '../storage/widget_storage_service.dart';
 import '../../../core/theme.dart';
 import '../../../utils/snackbar.dart';
 import 'selectors/icon_selector.dart';
@@ -24,6 +25,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   String? _selectedElementId;
   bool _showPreview = false;
   bool _showToolbox = true;
+  bool _isMarketplaceWidget = false;
 
   // Track if we're in portrait mode
   bool get _isPortrait =>
@@ -34,6 +36,18 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   void initState() {
     super.initState();
     _schema = widget.initialSchema ?? _createDefaultSchema();
+    _checkMarketplaceStatus();
+  }
+
+  Future<void> _checkMarketplaceStatus() async {
+    if (widget.initialSchema != null) {
+      final storage = WidgetStorageService();
+      await storage.init();
+      final isMarketplace = await storage.isMarketplaceWidget(_schema.id);
+      if (mounted && isMarketplace) {
+        setState(() => _isMarketplaceWidget = true);
+      }
+    }
   }
 
   WidgetSchema _createDefaultSchema() {
@@ -838,8 +852,8 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                     ),
                   ),
                 ),
-                // Size selector
-                _buildSizeSelector(),
+                // Size selector (hidden for marketplace widgets)
+                if (!_isMarketplaceWidget) _buildSizeSelector(),
               ],
             ),
           ),

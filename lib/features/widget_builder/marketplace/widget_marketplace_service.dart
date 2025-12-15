@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -11,6 +13,12 @@ class WidgetMarketplaceService {
   final String baseUrl;
   final Logger _logger;
   final http.Client _client;
+
+  /// Maximum number of retry attempts for transient network errors
+  static const int _maxRetries = 3;
+
+  /// Initial delay between retries (doubles with each attempt)
+  static const Duration _retryDelay = Duration(milliseconds: 500);
 
   /// Get the base URL from environment or use platform-specific fallback
   static String get _defaultBaseUrl {
@@ -44,6 +52,54 @@ class WidgetMarketplaceService {
        _logger = logger ?? Logger(),
        _client = client ?? http.Client();
 
+  /// Execute a GET request with retry logic for transient failures
+  Future<http.Response> _getWithRetry(
+    Uri uri, {
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    Exception? lastException;
+
+    for (var attempt = 0; attempt < _maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          final delay =
+              _retryDelay * (1 << (attempt - 1)); // Exponential backoff
+          debugPrint(
+            '[MarketplaceService] Retry attempt $attempt after ${delay.inMilliseconds}ms',
+          );
+          await Future<void>.delayed(delay);
+        }
+
+        final response = await _client
+            .get(uri)
+            .timeout(
+              timeout,
+              onTimeout: () {
+                throw TimeoutException(
+                  'Request timed out after ${timeout.inSeconds}s',
+                );
+              },
+            );
+        return response;
+      } on SocketException catch (e) {
+        lastException = e;
+        debugPrint('[MarketplaceService] Socket error (attempt $attempt): $e');
+      } on HttpException catch (e) {
+        lastException = e;
+        debugPrint('[MarketplaceService] HTTP error (attempt $attempt): $e');
+      } on http.ClientException catch (e) {
+        lastException = e;
+        debugPrint('[MarketplaceService] Client error (attempt $attempt): $e');
+      } on TimeoutException catch (e) {
+        lastException = e;
+        debugPrint('[MarketplaceService] Timeout (attempt $attempt): $e');
+      }
+    }
+
+    throw lastException ??
+        Exception('Request failed after $_maxRetries attempts');
+  }
+
   /// Browse widgets from marketplace
   Future<MarketplaceResponse> browse({
     int page = 1,
@@ -66,15 +122,7 @@ class WidgetMarketplaceService {
       ).replace(queryParameters: queryParams);
 
       debugPrint('[MarketplaceService] Browse request: $uri');
-      final response = await _client
-          .get(uri)
-          .timeout(
-            const Duration(seconds: 2),
-            onTimeout: () {
-              debugPrint('[MarketplaceService] Browse request timed out');
-              throw Exception('Request timed out');
-            },
-          );
+      final response = await _getWithRetry(uri);
       debugPrint(
         '[MarketplaceService] Browse response: ${response.statusCode}',
       );
@@ -102,17 +150,7 @@ class WidgetMarketplaceService {
     try {
       final uri = Uri.parse('$baseUrl/featured');
       debugPrint('[MarketplaceService] Requesting: $uri');
-      final response = await _client
-          .get(uri)
-          .timeout(
-            const Duration(seconds: 2),
-            onTimeout: () {
-              debugPrint(
-                '[MarketplaceService] Request timed out after 2 seconds',
-              );
-              throw Exception('Request timed out');
-            },
-          );
+      final response = await _getWithRetry(uri);
       debugPrint(
         '[MarketplaceService] Response status: ${response.statusCode}',
       );
@@ -146,9 +184,8 @@ class WidgetMarketplaceService {
   /// Get widget details
   Future<MarketplaceWidget> getWidget(String id) async {
     try {
-      final response = await _client
-          .get(Uri.parse('$baseUrl/$id'))
-          .timeout(const Duration(seconds: 2));
+      final uri = Uri.parse('$baseUrl/$id');
+      final response = await _getWithRetry(uri);
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -168,9 +205,8 @@ class WidgetMarketplaceService {
   /// Download widget schema
   Future<WidgetSchema> downloadWidget(String id) async {
     try {
-      final response = await _client
-          .get(Uri.parse('$baseUrl/$id/download'))
-          .timeout(const Duration(seconds: 2));
+      final uri = Uri.parse('$baseUrl/$id/download');
+      final response = await _getWithRetry(uri);
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
