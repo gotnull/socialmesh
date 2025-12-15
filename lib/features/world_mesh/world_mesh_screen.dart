@@ -125,6 +125,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     return Scaffold(
       appBar: AppBar(
         leading: const HamburgerMenuButton(),
+        titleSpacing: 0,
         title: const Text('World Map'),
         actions: [
           // Search toggle (only show when search is NOT active)

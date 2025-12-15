@@ -284,48 +284,54 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               ..setTranslationRaw(translateX, 0, 0)
               ..scaleByDouble(scaleValue, scaleValue, 1.0, 1.0),
             alignment: Alignment.center,
-            child: SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: Column(
-                children: [
-                  // Mesh Brain Advisor
-                  MeshNodeBrain(
-                    size: 80,
-                    mood: _brainMood,
-                    colors: [
-                      accentColor,
-                      Color.lerp(accentColor, AppTheme.primaryMagenta, 0.5)!,
-                      Color.lerp(accentColor, AppTheme.graphBlue, 0.5)!,
-                    ],
-                    glowIntensity: 0.9,
-                    onTap: _onBrainTap,
-                  ),
+            child: Column(
+              mainAxisAlignment: page.isWidgetShowcase
+                  ? MainAxisAlignment.start
+                  : MainAxisAlignment.center,
+              children: [
+                // Extra top spacing for non-widget pages to push content down
+                if (!page.isWidgetShowcase) const SizedBox(height: 20),
 
-                  // Advisor speech bubble
-                  AdvisorSpeechBubble(
-                    key: ValueKey('speech_$index'),
-                    text: page.advisorText,
-                    accentColor: accentColor,
-                    typewriterEffect: index == _currentPage,
-                    typingSpeed: 25,
-                    onTypingComplete: _onSpeechComplete,
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Widget showcase (if applicable)
-                  if (page.isWidgetShowcase) ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: _buildWidgetShowcase(page),
-                    ),
-                    const SizedBox(height: 12),
+                // Mesh Brain Advisor - larger on non-widget pages
+                MeshNodeBrain(
+                  size: page.isWidgetShowcase ? 80 : 100,
+                  mood: _brainMood,
+                  colors: [
+                    accentColor,
+                    Color.lerp(accentColor, AppTheme.primaryMagenta, 0.5)!,
+                    Color.lerp(accentColor, AppTheme.graphBlue, 0.5)!,
                   ],
+                  glowIntensity: 0.9,
+                  onTap: _onBrainTap,
+                ),
 
-                  // Title and description
-                  _buildTitleSection(page),
+                // Advisor speech bubble
+                AdvisorSpeechBubble(
+                  key: ValueKey('speech_$index'),
+                  text: page.advisorText,
+                  accentColor: accentColor,
+                  typewriterEffect: index == _currentPage,
+                  typingSpeed: 25,
+                  onTypingComplete: _onSpeechComplete,
+                ),
+
+                SizedBox(height: page.isWidgetShowcase ? 12 : 24),
+
+                // Widget showcase (if applicable)
+                if (page.isWidgetShowcase) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: _buildWidgetShowcase(page),
+                  ),
+                  const SizedBox(height: 12),
                 ],
-              ),
+
+                // Title and description
+                _buildTitleSection(page),
+
+                // Extra bottom spacing for non-widget pages
+                if (!page.isWidgetShowcase) const SizedBox(height: 40),
+              ],
             ),
           ),
         );
