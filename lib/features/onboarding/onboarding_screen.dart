@@ -54,7 +54,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           'No accounts. No tracking. No cloud.\nYour messages never touch the internet.',
       advisorText:
           "I don't know who you are. I don't want to know. Your secrets stay encrypted, bouncing through the mesh. Even I can't read them. That's the beauty of it.",
-      mood: MeshBrainMood.thinking,
+      mood: MeshBrainMood.sassy,
       accentColor: AccentColors.green,
     ),
     _OnboardingPage(
