@@ -104,8 +104,7 @@ final isNodeFavoriteProvider = Provider.family<bool, int>((ref, nodeNum) {
 
 /// Provider for favorites count (for badge)
 final favoritesCountProvider = Provider<int>((ref) {
-  return ref.watch(nodeFavoritesProvider).maybeWhen(
-    data: (data) => data.count,
-    orElse: () => 0,
-  );
+  return ref
+      .watch(nodeFavoritesProvider)
+      .maybeWhen(data: (data) => data.count, orElse: () => 0);
 });

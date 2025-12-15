@@ -212,7 +212,11 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: AppTheme.errorRed),
+              const Icon(
+                Icons.error_outline,
+                size: 48,
+                color: AppTheme.errorRed,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Error loading favorites',
@@ -220,7 +224,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
               ),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () => ref.read(nodeFavoritesProvider.notifier).refresh(),
+                onPressed: () =>
+                    ref.read(nodeFavoritesProvider.notifier).refresh(),
                 child: const Text('Retry'),
               ),
             ],
