@@ -10,43 +10,73 @@ import '../../../models/world_mesh_node.dart';
 class NodeFavoritesService {
   static const _favoritesKey = 'mesh_node_favorites';
 
-  /// Get all favorite node IDs
+  /// Get all favorite node IDs (normalized to 8-char padded hex)
   Future<List<String>> getFavoriteIds() async {
     debugPrint('[NodeFavoritesService] getFavoriteIds() called');
-    debugPrint('[NodeFavoritesService] Getting SharedPreferences instance...');
     final prefs = await SharedPreferences.getInstance();
-    debugPrint('[NodeFavoritesService] Got SharedPreferences instance');
-    final ids = prefs.getStringList(_favoritesKey) ?? [];
-    debugPrint('[NodeFavoritesService] Found ${ids.length} IDs: $ids');
-    return ids;
+    final rawIds = prefs.getStringList(_favoritesKey) ?? [];
+
+    // Normalize all IDs to 8-char padded uppercase hex for consistency
+    final normalizedIds = rawIds.map((id) {
+      final trimmed = id.toUpperCase().replaceFirst(RegExp('^0+'), '');
+      if (trimmed.isEmpty) return '00000000';
+      return trimmed.padLeft(8, '0');
+    }).toList();
+
+    debugPrint(
+      '[NodeFavoritesService] Found ${normalizedIds.length} IDs: $normalizedIds',
+    );
+    return normalizedIds;
   }
 
   /// Get all favorite nodes with their metadata
   Future<List<FavoriteNodeMetadata>> getFavorites() async {
     debugPrint('[NodeFavoritesService] getFavorites() called');
     final prefs = await SharedPreferences.getInstance();
-    final ids = prefs.getStringList(_favoritesKey) ?? [];
-    debugPrint('[NodeFavoritesService] Loading metadata for ${ids.length} IDs');
+    final rawIds = prefs.getStringList(_favoritesKey) ?? [];
+    debugPrint(
+      '[NodeFavoritesService] Loading metadata for ${rawIds.length} IDs',
+    );
     final favorites = <FavoriteNodeMetadata>[];
 
-    for (final id in ids) {
-      final metadataKey = '${_favoritesKey}_meta_$id';
-      final metadataJson = prefs.getString(metadataKey);
+    for (final rawId in rawIds) {
+      // Normalize ID to 8-char padded
+      final trimmed = rawId.toUpperCase().replaceFirst(RegExp('^0+'), '');
+      final normalizedId = trimmed.isEmpty
+          ? '00000000'
+          : trimmed.padLeft(8, '0');
+
+      // Try to find metadata with raw ID first (old data), then normalized ID
+      String? metadataJson = prefs.getString('${_favoritesKey}_meta_$rawId');
+      metadataJson ??= prefs.getString('${_favoritesKey}_meta_$normalizedId');
+
       debugPrint(
-        '[NodeFavoritesService] Checking $metadataKey: ${metadataJson != null ? "found" : "NOT FOUND"}',
+        '[NodeFavoritesService] Checking metadata for $rawId (normalized: $normalizedId): ${metadataJson != null ? "found" : "NOT FOUND"}',
       );
       if (metadataJson != null) {
         try {
           final meta = FavoriteNodeMetadata.fromJson(
             jsonDecode(metadataJson) as Map<String, dynamic>,
           );
-          favorites.add(meta);
+          // Return with normalized nodeId
+          favorites.add(
+            FavoriteNodeMetadata(
+              nodeId: normalizedId,
+              longName: meta.longName,
+              shortName: meta.shortName,
+              role: meta.role,
+              addedAt: meta.addedAt,
+              lastSeen: meta.lastSeen,
+              latitude: meta.latitude,
+              longitude: meta.longitude,
+            ),
+          );
           debugPrint(
-            '[NodeFavoritesService] Parsed metadata for $id: ${meta.longName}',
+            '[NodeFavoritesService] Parsed metadata for $normalizedId: ${meta.longName}',
           );
         } catch (e) {
           debugPrint(
-            '[NodeFavoritesService] ERROR parsing metadata for $id: $e',
+            '[NodeFavoritesService] ERROR parsing metadata for $normalizedId: $e',
           );
         }
       }
@@ -67,7 +97,8 @@ class NodeFavoritesService {
   /// Add a node to favorites
   Future<void> addFavorite(WorldMeshNode node) async {
     final prefs = await SharedPreferences.getInstance();
-    final nodeId = node.nodeNum.toRadixString(16).toUpperCase();
+    // Use padded 8-char hex for consistency
+    final nodeId = node.nodeNum.toRadixString(16).padLeft(8, '0').toUpperCase();
     final ids = prefs.getStringList(_favoritesKey) ?? [];
 
     if (!ids.contains(nodeId)) {
@@ -106,7 +137,8 @@ class NodeFavoritesService {
   /// Update metadata for a favorite node (e.g., when viewing it again)
   Future<void> updateFavoriteMetadata(WorldMeshNode node) async {
     final prefs = await SharedPreferences.getInstance();
-    final nodeId = node.nodeNum.toRadixString(16).toUpperCase();
+    // Use padded 8-char hex for consistency
+    final nodeId = node.nodeNum.toRadixString(16).padLeft(8, '0').toUpperCase();
     final ids = prefs.getStringList(_favoritesKey) ?? [];
 
     if (!ids.contains(nodeId)) return;
