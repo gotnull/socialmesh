@@ -323,7 +323,6 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
         hardwareModel: existing?.hardwareModel,
         role: existing?.role,
         distance: existing?.distance,
-        isOnline: existing?.isOnline ?? false,
         avatarColor: existing?.avatarColor,
         hasPublicKey: existing?.hasPublicKey ?? false,
       );

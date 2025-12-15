@@ -20,7 +20,7 @@ void main() {
           longName: 'Test Node',
           shortName: 'TST',
           userId: '!abcd1234',
-          isOnline: true,
+          lastHeard: DateTime.now(), // online
           isFavorite: true,
           batteryLevel: 85,
           voltage: 4.1,
@@ -118,11 +118,13 @@ void main() {
 
     group('network bindings', () {
       setUp(() {
+        final now = DateTime.now();
+        final offline = now.subtract(const Duration(hours: 3));
         final nodes = <int, MeshNode>{
-          1: MeshNode(nodeNum: 1, longName: 'Node 1', isOnline: true),
-          2: MeshNode(nodeNum: 2, longName: 'Node 2', isOnline: true),
-          3: MeshNode(nodeNum: 3, longName: 'Node 3', isOnline: false),
-          4: MeshNode(nodeNum: 4, longName: 'Node 4', isOnline: true),
+          1: MeshNode(nodeNum: 1, longName: 'Node 1', lastHeard: now),
+          2: MeshNode(nodeNum: 2, longName: 'Node 2', lastHeard: now),
+          3: MeshNode(nodeNum: 3, longName: 'Node 3', lastHeard: offline),
+          4: MeshNode(nodeNum: 4, longName: 'Node 4', lastHeard: now),
         };
         engine.setAllNodes(nodes);
       });
@@ -265,7 +267,7 @@ void main() {
         nodeNum: 123,
         longName: 'Test',
         batteryLevel: 25,
-        isOnline: true,
+        lastHeard: DateTime.now(), // online
         snr: 5,
       );
       engine.setCurrentNode(node);

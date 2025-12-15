@@ -3318,7 +3318,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
 
   Widget _buildLoadingDotsEffect() {
     return Transform.translate(
-      offset: Offset(0, widget.size * 0.5),
+      offset: Offset(0, widget.size * 0.75), // Moved down for more spacing
       child: CustomPaint(
         size: Size(widget.size * 0.4, widget.size * 0.1),
         painter: _LoadingDotsPainter(

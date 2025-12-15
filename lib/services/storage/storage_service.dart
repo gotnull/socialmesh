@@ -714,7 +714,6 @@ class NodeStorageService {
       'rssi': node.rssi,
       'firmwareVersion': node.firmwareVersion,
       'lastHeard': node.lastHeard?.millisecondsSinceEpoch,
-      'isOnline': node.isOnline,
       'avatarColor': node.avatarColor,
       'role': node.role,
       'isFavorite': node.isFavorite,
@@ -740,7 +739,6 @@ class NodeStorageService {
       lastHeard: json['lastHeard'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['lastHeard'] as int)
           : null,
-      isOnline: json['isOnline'] as bool? ?? false,
       avatarColor: json['avatarColor'] as int? ?? 0xFF1976D2,
       role: json['role'] as String?,
       isFavorite: json['isFavorite'] as bool? ?? false,

@@ -49,14 +49,12 @@ class NodeFavoritesNotifier extends Notifier<NodeFavoritesState> {
   }
 
   Future<void> _loadFavorites() async {
-    debugPrint('[NodeFavorites] _loadFavorites() starting...');
-    state = state.copyWith(isLoading: true, error: null);
-    debugPrint(
-      '[NodeFavorites] State set to loading, about to call service...',
-    );
-
+    debugPrint('[NodeFavorites] _loadFavorites() entered');
     try {
-      debugPrint('[NodeFavorites] Calling _service.getFavoriteIds()...');
+      debugPrint('[NodeFavorites] About to set state to loading...');
+      state = state.copyWith(isLoading: true, error: null);
+      debugPrint('[NodeFavorites] State set to loading, calling service...');
+
       final ids = await _service.getFavoriteIds();
       debugPrint('[NodeFavorites] Got ${ids.length} favorite IDs: $ids');
 
@@ -64,11 +62,6 @@ class NodeFavoritesNotifier extends Notifier<NodeFavoritesState> {
       debugPrint(
         '[NodeFavorites] Got ${favorites.length} favorites with metadata',
       );
-      for (final fav in favorites) {
-        debugPrint(
-          '[NodeFavorites]   - ${fav.nodeId}: ${fav.longName} / ${fav.shortName}',
-        );
-      }
 
       state = NodeFavoritesState(
         favoriteIds: ids.map((id) => id.toUpperCase()).toSet(),
@@ -76,10 +69,10 @@ class NodeFavoritesNotifier extends Notifier<NodeFavoritesState> {
         isLoading: false,
       );
       debugPrint(
-        '[NodeFavorites] State updated: ${state.favoriteIds.length} IDs, ${state.favorites.length} metadata entries',
+        '[NodeFavorites] Load complete: ${state.favoriteIds.length} IDs',
       );
     } catch (e, stack) {
-      debugPrint('[NodeFavorites] ERROR loading favorites: $e');
+      debugPrint('[NodeFavorites] ERROR: $e');
       debugPrint('[NodeFavorites] Stack: $stack');
       state = NodeFavoritesState(isLoading: false, error: e.toString());
     }

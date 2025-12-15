@@ -1471,40 +1471,33 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     });
   }
 
-  /// Check all nodes for staleness and mark offline if lastHeard is too old
+  /// Check all nodes for staleness and trigger automation/IFTTT if node went offline
+  /// Note: isOnline is now a computed property based on lastHeard (120min threshold)
+  /// This method triggers side effects when a node transitions to offline
   void _checkNodeStaleness() {
     final now = DateTime.now();
     final cutoff = now.subtract(Duration(minutes: _offlineTimeoutMinutes));
-    var hasChanges = false;
-    final newState = Map<int, MeshNode>.from(state);
 
     for (final entry in state.entries) {
       final node = entry.value;
       // Skip nodes that are already offline or have no lastHeard
-      if (!node.isOnline || node.lastHeard == null) continue;
+      if (node.lastHeard == null) continue;
 
-      // Check if node is stale (hasn't been heard from in _offlineTimeoutMinutes)
-      if (node.lastHeard!.isBefore(cutoff)) {
+      // Check if node just went stale (hasn't been heard from in _offlineTimeoutMinutes)
+      // and trigger automations for the offline transition
+      if (node.lastHeard!.isBefore(cutoff) && !node.isOnline) {
         AppLogging.debug(
-          '⚠️ Node ${node.displayName} (${node.nodeNum}) went offline - '
+          '⚠️ Node ${node.displayName} (${node.nodeNum}) is offline - '
           'last heard ${now.difference(node.lastHeard!).inMinutes}m ago',
         );
 
-        final offlineNode = node.copyWith(isOnline: false);
-        newState[entry.key] = offlineNode;
-        hasChanges = true;
-
         // Trigger automation/IFTTT for the offline transition
-        _triggerIftttForNode(offlineNode, node);
-        _triggerAutomationForNode(offlineNode, node);
+        _triggerIftttForNode(node, node);
+        _triggerAutomationForNode(node, node);
 
-        // Persist the updated node
-        _storage?.saveNode(offlineNode);
+        // Persist the updated node (to update lastHeard if needed)
+        _storage?.saveNode(node);
       }
-    }
-
-    if (hasChanges) {
-      state = newState;
     }
   }
 

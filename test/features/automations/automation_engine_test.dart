@@ -143,8 +143,8 @@ void main() {
         nodeNum: 123,
         shortName: 'TEST',
         longName: 'Test Node',
-        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
-        isOnline: false,
+        lastHeard: DateTime.now().subtract(const Duration(hours: 3)),
+        
       );
       await engine.processNodeUpdate(nodeOffline);
 
@@ -154,7 +154,7 @@ void main() {
         shortName: 'TEST',
         longName: 'Test Node',
         lastHeard: DateTime.now(),
-        isOnline: true,
+        
       );
       await engine.processNodeUpdate(nodeOnline);
 
@@ -187,7 +187,7 @@ void main() {
         shortName: 'TEST',
         longName: 'Test Node',
         lastHeard: DateTime.now(),
-        isOnline: true,
+        
       );
       await engine.processNodeUpdate(nodeOnline);
 
@@ -196,8 +196,8 @@ void main() {
         nodeNum: 123,
         shortName: 'TEST',
         longName: 'Test Node',
-        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
-        isOnline: false,
+        lastHeard: DateTime.now().subtract(const Duration(hours: 3)),
+        
       );
       await engine.processNodeUpdate(nodeOffline);
 
@@ -228,15 +228,15 @@ void main() {
       // Node 123 comes online - should NOT trigger
       final node123Offline = MeshNode(
         nodeNum: 123,
-        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
-        isOnline: false,
+        lastHeard: DateTime.now().subtract(const Duration(hours: 3)),
+        
       );
       await engine.processNodeUpdate(node123Offline);
 
       final node123Online = MeshNode(
         nodeNum: 123,
         lastHeard: DateTime.now(),
-        isOnline: true,
+        
       );
       await engine.processNodeUpdate(node123Online);
 
@@ -245,15 +245,15 @@ void main() {
       // Node 456 comes online - SHOULD trigger
       final node456Offline = MeshNode(
         nodeNum: 456,
-        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
-        isOnline: false,
+        lastHeard: DateTime.now().subtract(const Duration(hours: 3)),
+        
       );
       await engine.processNodeUpdate(node456Offline);
 
       final node456Online = MeshNode(
         nodeNum: 456,
         lastHeard: DateTime.now(),
-        isOnline: true,
+        
       );
       await engine.processNodeUpdate(node456Online);
 
@@ -277,15 +277,15 @@ void main() {
 
       final nodeOffline = MeshNode(
         nodeNum: 123,
-        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
-        isOnline: false,
+        lastHeard: DateTime.now().subtract(const Duration(hours: 3)),
+        
       );
       await engine.processNodeUpdate(nodeOffline);
 
       final nodeOnline = MeshNode(
         nodeNum: 123,
         lastHeard: DateTime.now(),
-        isOnline: true,
+        
       );
       await engine.processNodeUpdate(nodeOnline);
 
@@ -668,8 +668,8 @@ void main() {
       var nodeOffline = MeshNode(
         nodeNum: 123,
         batteryLevel: 30,
-        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
-        isOnline: false,
+        lastHeard: DateTime.now().subtract(const Duration(hours: 3)),
+        
       );
       await engine.processNodeUpdate(nodeOffline);
 
@@ -677,7 +677,7 @@ void main() {
         nodeNum: 123,
         batteryLevel: 30,
         lastHeard: DateTime.now(),
-        isOnline: true,
+        
       );
       await engine.processNodeUpdate(nodeOnline);
 
@@ -690,8 +690,8 @@ void main() {
       nodeOffline = MeshNode(
         nodeNum: 456,
         batteryLevel: 80,
-        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
-        isOnline: false,
+        lastHeard: DateTime.now().subtract(const Duration(hours: 3)),
+        
       );
       await engine.processNodeUpdate(nodeOffline);
 
@@ -699,7 +699,7 @@ void main() {
         nodeNum: 456,
         batteryLevel: 80,
         lastHeard: DateTime.now(),
-        isOnline: true,
+        
       );
       await engine.processNodeUpdate(nodeOnline);
 
@@ -788,8 +788,8 @@ void main() {
       final nodeOffline = MeshNode(
         nodeNum: 123,
         longName: 'TestNode',
-        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
-        isOnline: false,
+        lastHeard: DateTime.now().subtract(const Duration(hours: 3)),
+        
       );
       await engine.processNodeUpdate(nodeOffline);
 
@@ -797,7 +797,7 @@ void main() {
         nodeNum: 123,
         longName: 'TestNode',
         lastHeard: DateTime.now(),
-        isOnline: true,
+        
       );
       await engine.processNodeUpdate(nodeOnline);
 
@@ -1060,8 +1060,8 @@ void main() {
         nodeNum: 123,
         longName: 'TestNode',
         batteryLevel: 75,
-        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
-        isOnline: false,
+        lastHeard: DateTime.now().subtract(const Duration(hours: 3)),
+        
       );
       await engine.processNodeUpdate(nodeOffline);
 
@@ -1072,7 +1072,7 @@ void main() {
         latitude: -37.8136,
         longitude: 144.9631,
         lastHeard: DateTime.now(),
-        isOnline: true,
+        
       );
       await engine.processNodeUpdate(nodeOnline);
 
@@ -1165,15 +1165,15 @@ void main() {
         nodeNum: 789,
         longName: 'NotifyNode',
         lastHeard: DateTime.now(),
-        isOnline: true,
+        
       );
       await engine.processNodeUpdate(nodeOnline);
 
       final nodeOffline = MeshNode(
         nodeNum: 789,
         longName: 'NotifyNode',
-        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
-        isOnline: false,
+        lastHeard: DateTime.now().subtract(const Duration(hours: 3)),
+        
       );
       await engine.processNodeUpdate(nodeOffline);
 
@@ -1326,14 +1326,14 @@ void main() {
       // Now register node 555 - start offline then come online
       final node555Offline = MeshNode(
         nodeNum: 555,
-        isOnline: false,
-        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
+        
+        lastHeard: DateTime.now().subtract(const Duration(hours: 3)),
       );
       await engine.processNodeUpdate(node555Offline);
 
       final node555Online = MeshNode(
         nodeNum: 555,
-        isOnline: true,
+        
         lastHeard: DateTime.now(),
       );
       await engine.processNodeUpdate(node555Online);
@@ -1377,15 +1377,15 @@ void main() {
       // Register node 666 as offline
       final node666Online = MeshNode(
         nodeNum: 666,
-        isOnline: true,
+        
         lastHeard: DateTime.now(),
       );
       await engine.processNodeUpdate(node666Online);
 
       final node666Offline = MeshNode(
         nodeNum: 666,
-        isOnline: false,
-        lastHeard: DateTime.now().subtract(const Duration(hours: 1)),
+        
+        lastHeard: DateTime.now().subtract(const Duration(hours: 3)),
       );
       await engine.processNodeUpdate(node666Offline);
 

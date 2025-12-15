@@ -1132,7 +1132,6 @@ class ProtocolService {
               airUtilTx: airUtilTx,
               uptimeSeconds: uptimeSeconds,
               lastHeard: DateTime.now(),
-              isOnline: true,
             );
             _nodes[packet.from] = updatedDeviceNode;
             _nodeController.add(updatedDeviceNode);
@@ -1212,7 +1211,6 @@ class ProtocolService {
                   ? envMetrics.voltage.toDouble()
                   : null,
               lastHeard: DateTime.now(),
-              isOnline: true,
             );
             _nodes[packet.from] = updatedEnvNode;
             _nodeController.add(updatedEnvNode);
@@ -1270,7 +1268,6 @@ class ProtocolService {
                   : null,
               co2: aqMetrics.hasCo2() ? aqMetrics.co2 : null,
               lastHeard: DateTime.now(),
-              isOnline: true,
             );
             _nodes[packet.from] = updatedAqNode;
             _nodeController.add(updatedAqNode);
@@ -1310,7 +1307,6 @@ class ProtocolService {
                   ? pwrMetrics.ch3Current.toDouble()
                   : null,
               lastHeard: DateTime.now(),
-              isOnline: true,
             );
             _nodes[packet.from] = updatedPwrNode;
             _nodeController.add(updatedPwrNode);
@@ -1356,7 +1352,6 @@ class ProtocolService {
                   ? stats.numTotalNodes
                   : null,
               lastHeard: DateTime.now(),
-              isOnline: true,
             );
             _nodes[packet.from] = updatedStatsNode;
             _nodeController.add(updatedStatsNode);
@@ -1407,7 +1402,6 @@ class ProtocolService {
           airUtilTx: airUtilTx,
           uptimeSeconds: uptimeSeconds,
           lastHeard: DateTime.now(),
-          isOnline: true,
           avatarColor: avatarColor,
           isFavorite: false,
         );
@@ -1515,7 +1509,6 @@ class ProtocolService {
           altitude: position.hasAltitude() ? position.altitude : null,
           snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
           lastHeard: DateTime.now(),
-          isOnline: true,
           avatarColor: avatarColor,
           isFavorite: false,
           positionTimestamp: DateTime.now(),
@@ -1584,7 +1577,6 @@ class ProtocolService {
             role: role,
             snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : existingNode.snr,
             lastHeard: DateTime.now(),
-            isOnline: true,
           ) ??
           MeshNode(
             nodeNum: packet.from,
@@ -1595,7 +1587,6 @@ class ProtocolService {
             role: role,
             snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
             lastHeard: DateTime.now(),
-            isOnline: true,
             avatarColor: avatarColor,
             isFavorite: false,
           );
@@ -1612,10 +1603,7 @@ class ProtocolService {
   void _updateNodeLastHeard(int nodeNum) {
     final node = _nodes[nodeNum];
     if (node != null) {
-      final updatedNode = node.copyWith(
-        lastHeard: DateTime.now(),
-        isOnline: true,
-      );
+      final updatedNode = node.copyWith(lastHeard: DateTime.now());
       _nodes[nodeNum] = updatedNode;
       _nodeController.add(updatedNode);
     }
@@ -1769,7 +1757,6 @@ class ProtocolService {
             ? nodeInfo.deviceMetrics.batteryLevel
             : existingNode.batteryLevel,
         lastHeard: DateTime.now(),
-        isOnline: true,
         role: role,
         avatarColor: existingNode.avatarColor,
         hasPublicKey: hasPublicKey,
@@ -1801,7 +1788,6 @@ class ProtocolService {
             ? nodeInfo.deviceMetrics.batteryLevel
             : null,
         lastHeard: DateTime.now(),
-        isOnline: true,
         role: role,
         avatarColor: avatarColor,
         isFavorite: false,

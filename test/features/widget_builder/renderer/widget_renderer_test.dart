@@ -14,7 +14,7 @@ void main() {
         nodeNum: 12345,
         longName: 'Test Node',
         shortName: 'TST',
-        isOnline: true,
+        lastHeard: DateTime.now(), // online
         batteryLevel: 75,
         temperature: 22.5,
         snr: 8,
@@ -370,10 +370,12 @@ void main() {
     });
 
     testWidgets('applies network data', (tester) async {
+      final now = DateTime.now();
+      final offline = now.subtract(const Duration(hours: 3));
       final allNodes = {
-        1: MeshNode(nodeNum: 1, longName: 'Node 1', isOnline: true),
-        2: MeshNode(nodeNum: 2, longName: 'Node 2', isOnline: true),
-        3: MeshNode(nodeNum: 3, longName: 'Node 3', isOnline: false),
+        1: MeshNode(nodeNum: 1, longName: 'Node 1', lastHeard: now),
+        2: MeshNode(nodeNum: 2, longName: 'Node 2', lastHeard: now),
+        3: MeshNode(nodeNum: 3, longName: 'Node 3', lastHeard: offline),
       };
 
       final networkSchema = WidgetSchema(

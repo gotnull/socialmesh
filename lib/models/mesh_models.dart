@@ -185,7 +185,6 @@ class MeshNode {
   final String? hardwareModel;
   final String? role; // 'CLIENT', 'ROUTER', etc.
   final double? distance; // distance in meters
-  final bool isOnline;
   final bool isFavorite;
   final int? avatarColor; // Color value for avatar
   final bool hasPublicKey; // Whether node has encryption key set
@@ -278,7 +277,6 @@ class MeshNode {
     this.hardwareModel,
     this.role,
     this.distance,
-    this.isOnline = false,
     this.isFavorite = false,
     this.avatarColor,
     this.hasPublicKey = false,
@@ -365,7 +363,6 @@ class MeshNode {
     String? hardwareModel,
     String? role,
     double? distance,
-    bool? isOnline,
     bool? isFavorite,
     int? avatarColor,
     bool? hasPublicKey,
@@ -451,7 +448,6 @@ class MeshNode {
       hardwareModel: hardwareModel ?? this.hardwareModel,
       role: role ?? this.role,
       distance: distance ?? this.distance,
-      isOnline: isOnline ?? this.isOnline,
       isFavorite: isFavorite ?? this.isFavorite,
       avatarColor: avatarColor ?? this.avatarColor,
       hasPublicKey: hasPublicKey ?? this.hasPublicKey,
@@ -543,6 +539,29 @@ class MeshNode {
       latitude != null &&
       longitude != null &&
       !(latitude == 0.0 && longitude == 0.0);
+
+  /// Check if node is online (heard within last 2 hours)
+  /// This matches meshtastic-ios behavior which uses 120 minutes
+  bool get isOnline {
+    final heard = lastHeard;
+    if (heard == null) return false;
+    return DateTime.now().difference(heard).inMinutes < 120;
+  }
+
+  /// Check if node is idle (heard 2-24 hours ago)
+  bool get isIdle {
+    final heard = lastHeard;
+    if (heard == null) return false;
+    final diff = DateTime.now().difference(heard);
+    return diff.inMinutes >= 120 && diff.inHours < 24;
+  }
+
+  /// Check if node is offline (>24 hours or never heard)
+  bool get isOffline {
+    final heard = lastHeard;
+    if (heard == null) return true;
+    return DateTime.now().difference(heard).inHours >= 24;
+  }
 
   @override
   String toString() => 'MeshNode($displayName, num: $nodeNum)';

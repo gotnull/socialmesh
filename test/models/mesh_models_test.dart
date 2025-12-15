@@ -259,7 +259,6 @@ void main() {
         hardwareModel: 'TBEAM',
         role: 'ROUTER',
         distance: 1500.0,
-        isOnline: true,
         isFavorite: true,
         avatarColor: 0xFF00FF00,
         hasPublicKey: true,
@@ -324,7 +323,7 @@ void main() {
         longName: 'Original',
         shortName: 'ORIG',
         batteryLevel: 80,
-        isOnline: true,
+        lastHeard: DateTime.now(), // online
       );
 
       final copied = original.copyWith(batteryLevel: 50);
