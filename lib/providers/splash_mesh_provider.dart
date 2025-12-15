@@ -861,30 +861,33 @@ class ScreenLoadingIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          MeshNodeBrain(
-            size: size,
-            mood: MeshBrainMood.loading,
-            colors: colors,
-            glowIntensity: 0.8,
-            interactive: false,
-            showThoughtParticles: true,
-            showExpression: true,
-          ),
-          if (message != null) ...[
-            const SizedBox(height: 16),
-            Text(
-              message!,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 14,
-              ),
+    // Use SizedBox.expand + Center to ensure true centering in available space
+    return SizedBox.expand(
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            MeshNodeBrain(
+              size: size,
+              mood: MeshBrainMood.loading,
+              colors: colors,
+              glowIntensity: 0.8,
+              interactive: false,
+              showThoughtParticles: true,
+              showExpression: true,
             ),
+            if (message != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                message!,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 14,
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
