@@ -284,7 +284,7 @@ class LoRaConfig {
     this.txEnabled = true,
     this.txPower = 0,
     this.overrideDutyCycle = false,
-    this.sx126xRxBoostedGain = false,
+    this.sx126xRxBoostedGain = true,
     this.ignoreMqtt = false,
   });
 
