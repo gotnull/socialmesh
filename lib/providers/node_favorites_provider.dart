@@ -43,17 +43,18 @@ class NodeFavoritesNotifier extends Notifier<NodeFavoritesState> {
 
   @override
   NodeFavoritesState build() {
-    debugPrint('[NodeFavorites] build() called - starting load');
-    _loadFavorites();
+    debugPrint('[NodeFavorites] build() called - scheduling load');
+    // Use Future.microtask to defer load until after build() returns
+    // This avoids "Tried to read the state of an uninitialized provider" error
+    Future.microtask(_loadFavorites);
     return const NodeFavoritesState(isLoading: true);
   }
 
   Future<void> _loadFavorites() async {
     debugPrint('[NodeFavorites] _loadFavorites() entered');
     try {
-      debugPrint('[NodeFavorites] About to set state to loading...');
-      state = state.copyWith(isLoading: true, error: null);
-      debugPrint('[NodeFavorites] State set to loading, calling service...');
+      // Don't call state.copyWith here - we're already in loading state from build()
+      debugPrint('[NodeFavorites] Calling service to get favorites...');
 
       final ids = await _service.getFavoriteIds();
       debugPrint('[NodeFavorites] Got ${ids.length} favorite IDs: $ids');
@@ -79,6 +80,7 @@ class NodeFavoritesNotifier extends Notifier<NodeFavoritesState> {
   }
 
   Future<void> refresh() async {
+    state = state.copyWith(isLoading: true, error: null);
     await _loadFavorites();
   }
 
