@@ -7,6 +7,7 @@ import '../storage/widget_storage_service.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/splash_mesh_provider.dart';
+import '../../../utils/snackbar.dart';
 import 'marketplace_providers.dart';
 
 /// Marketplace browse screen
@@ -793,22 +794,17 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
       await storage.installMarketplaceWidget(schema);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${widget.marketplaceWidget.name} installed!'),
-            backgroundColor: AppTheme.successGreen,
-          ),
+        showSuccessSnackBar(
+          context,
+          '${widget.marketplaceWidget.name} installed!',
         );
-        Navigator.pop(context, true);
+        // Pop back to marketplace, then pop marketplace with result=true
+        Navigator.pop(context); // Pop details screen
+        Navigator.pop(context, true); // Pop marketplace with installed=true
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to install: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to install: $e');
       }
     } finally {
       if (mounted) {
@@ -901,14 +897,8 @@ class _CategoryScreenState extends ConsumerState<_CategoryScreen> {
             );
           }
 
-          return GridView.builder(
+          return ListView.builder(
             padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.75,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-            ),
             itemCount: widgets.length,
             itemBuilder: (context, index) {
               return _MarketplaceWidgetCard(

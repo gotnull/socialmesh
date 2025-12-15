@@ -532,10 +532,14 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     );
   }
 
-  void _openMarketplace() {
-    Navigator.push(
+  void _openMarketplace() async {
+    final installed = await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (context) => const WidgetMarketplaceScreen()),
-    ).then((_) => _loadWidgets());
+    );
+    await _loadWidgets();
+    if (installed == true) {
+      _tabController.animateTo(1); // Switch to Installed tab
+    }
   }
 }
