@@ -24,6 +24,12 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
 
+    externalNativeBuild {
+        cmake {
+            version = "3.22.1"
+        }
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.gotnull.socialmesh"
