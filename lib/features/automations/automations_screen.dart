@@ -53,7 +53,7 @@ class AutomationsScreen extends ConsumerWidget {
           }
           return _buildAutomationsList(context, ref, automations, stats);
         },
-        loading: () => const Center(child: MeshLoadingIndicator()),
+        loading: () => const ScreenLoadingIndicator(),
         error: (error, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

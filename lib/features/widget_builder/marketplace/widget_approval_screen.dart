@@ -198,7 +198,7 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: MeshLoadingIndicator());
+      return const ScreenLoadingIndicator();
     }
 
     if (_error != null) {

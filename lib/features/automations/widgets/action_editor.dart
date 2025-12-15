@@ -1514,7 +1514,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
           // Sound list
           Expanded(
             child: _isLoading
-                ? const Center(child: MeshLoadingIndicator())
+                ? const ScreenLoadingIndicator()
                 : displayItems.isEmpty
                 ? Center(
                     child: Column(

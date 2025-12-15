@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../models/world_mesh_node.dart';
@@ -11,30 +12,49 @@ class NodeFavoritesService {
 
   /// Get all favorite node IDs
   Future<List<String>> getFavoriteIds() async {
+    debugPrint('[NodeFavoritesService] getFavoriteIds() called');
+    debugPrint('[NodeFavoritesService] Getting SharedPreferences instance...');
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_favoritesKey) ?? [];
+    debugPrint('[NodeFavoritesService] Got SharedPreferences instance');
+    final ids = prefs.getStringList(_favoritesKey) ?? [];
+    debugPrint('[NodeFavoritesService] Found ${ids.length} IDs: $ids');
+    return ids;
   }
 
   /// Get all favorite nodes with their metadata
   Future<List<FavoriteNodeMetadata>> getFavorites() async {
+    debugPrint('[NodeFavoritesService] getFavorites() called');
     final prefs = await SharedPreferences.getInstance();
     final ids = prefs.getStringList(_favoritesKey) ?? [];
+    debugPrint('[NodeFavoritesService] Loading metadata for ${ids.length} IDs');
     final favorites = <FavoriteNodeMetadata>[];
 
     for (final id in ids) {
-      final metadataJson = prefs.getString('${_favoritesKey}_meta_$id');
+      final metadataKey = '${_favoritesKey}_meta_$id';
+      final metadataJson = prefs.getString(metadataKey);
+      debugPrint(
+        '[NodeFavoritesService] Checking $metadataKey: ${metadataJson != null ? "found" : "NOT FOUND"}',
+      );
       if (metadataJson != null) {
         try {
           final meta = FavoriteNodeMetadata.fromJson(
             jsonDecode(metadataJson) as Map<String, dynamic>,
           );
           favorites.add(meta);
-        } catch (_) {
-          // Skip corrupted entries
+          debugPrint(
+            '[NodeFavoritesService] Parsed metadata for $id: ${meta.longName}',
+          );
+        } catch (e) {
+          debugPrint(
+            '[NodeFavoritesService] ERROR parsing metadata for $id: $e',
+          );
         }
       }
     }
 
+    debugPrint(
+      '[NodeFavoritesService] Returning ${favorites.length} favorites',
+    );
     return favorites;
   }
 

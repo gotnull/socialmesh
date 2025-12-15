@@ -196,7 +196,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
       body: meshMapState.when(
         loading: () => Center(
           child: MeshLoadingIndicator(
-            size: 48,
+            size: 100,
             colors: [
               context.accentColor,
               context.accentColor.withValues(alpha: 0.6),
@@ -209,7 +209,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           if (state.isLoading && state.nodes.isEmpty) {
             return Center(
               child: MeshLoadingIndicator(
-                size: 48,
+                size: 100,
                 colors: [
                   context.accentColor,
                   context.accentColor.withValues(alpha: 0.6),

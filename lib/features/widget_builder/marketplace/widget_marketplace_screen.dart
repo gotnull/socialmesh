@@ -162,7 +162,7 @@ class _WidgetMarketplaceScreenState
 
   Widget _buildSearchResults() {
     if (_isSearching) {
-      return const Center(child: MeshLoadingIndicator());
+      return const ScreenLoadingIndicator();
     }
 
     if (_searchResults.isEmpty) {
@@ -186,7 +186,7 @@ class _WidgetMarketplaceScreenState
 
   Widget _buildFeaturedTab() {
     if (_isLoading) {
-      return const Center(child: MeshLoadingIndicator());
+      return const ScreenLoadingIndicator();
     }
 
     if (_error != null) {
@@ -204,7 +204,7 @@ class _WidgetMarketplaceScreenState
       future: _marketplaceService.getPopular(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: MeshLoadingIndicator());
+          return const ScreenLoadingIndicator();
         }
         if (snapshot.hasError) {
           return _buildErrorState();
@@ -219,7 +219,7 @@ class _WidgetMarketplaceScreenState
       future: _marketplaceService.getNewest(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: MeshLoadingIndicator());
+          return const ScreenLoadingIndicator();
         }
         if (snapshot.hasError) {
           return _buildErrorState();
@@ -764,7 +764,7 @@ class _CategoryScreen extends StatelessWidget {
         future: marketplaceService.getByCategory(category),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: MeshLoadingIndicator());
+            return const ScreenLoadingIndicator();
           }
 
           if (snapshot.hasError) {

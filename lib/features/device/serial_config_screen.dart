@@ -157,7 +157,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
             ),
           ),
         ),
-        body: Center(child: MeshLoadingIndicator()),
+        body: const ScreenLoadingIndicator(),
       );
     }
 

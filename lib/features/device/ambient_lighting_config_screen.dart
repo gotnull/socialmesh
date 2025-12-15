@@ -121,7 +121,7 @@ class _AmbientLightingConfigScreenState
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        body: Center(child: MeshLoadingIndicator()),
+        body: const ScreenLoadingIndicator(),
       );
     }
 

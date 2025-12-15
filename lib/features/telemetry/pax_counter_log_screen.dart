@@ -69,7 +69,7 @@ class PaxCounterLogScreen extends ConsumerWidget {
                     },
                   );
                 },
-                loading: () => const Center(child: MeshLoadingIndicator()),
+                loading: () => const ScreenLoadingIndicator(),
                 error: (e, _) => Center(child: Text('Error: $e')),
               ),
             ),

@@ -107,7 +107,7 @@ class _DeviceMetricsLogScreenState
       ),
       body: SafeArea(
         child: logsAsync.when(
-          loading: () => const Center(child: MeshLoadingIndicator()),
+          loading: () => const ScreenLoadingIndicator(),
           error: (e, s) => Center(child: Text('Error: $e')),
           data: (logs) {
             final filtered = _filterLogs(logs)

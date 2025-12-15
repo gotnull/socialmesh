@@ -236,7 +236,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
         ],
       ),
       body: favoritesState.isLoading
-          ? const Center(child: MeshLoadingIndicator())
+          ? const ScreenLoadingIndicator()
           : favorites.isEmpty
           ? _buildEmptyState()
           : _buildFavoritesList(favorites),

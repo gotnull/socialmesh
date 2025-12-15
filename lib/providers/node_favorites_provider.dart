@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/world_mesh/services/node_favorites_service.dart';
@@ -8,22 +9,26 @@ class NodeFavoritesState {
   final Set<String> favoriteIds;
   final List<FavoriteNodeMetadata> favorites;
   final bool isLoading;
+  final String? error;
 
   const NodeFavoritesState({
     this.favoriteIds = const {},
     this.favorites = const [],
     this.isLoading = false,
+    this.error,
   });
 
   NodeFavoritesState copyWith({
     Set<String>? favoriteIds,
     List<FavoriteNodeMetadata>? favorites,
     bool? isLoading,
+    String? error,
   }) {
     return NodeFavoritesState(
       favoriteIds: favoriteIds ?? this.favoriteIds,
       favorites: favorites ?? this.favorites,
       isLoading: isLoading ?? this.isLoading,
+      error: error,
     );
   }
 
@@ -38,25 +43,45 @@ class NodeFavoritesNotifier extends Notifier<NodeFavoritesState> {
 
   @override
   NodeFavoritesState build() {
+    debugPrint('[NodeFavorites] build() called - starting load');
     _loadFavorites();
     return const NodeFavoritesState(isLoading: true);
   }
 
   Future<void> _loadFavorites() async {
-    state = state.copyWith(isLoading: true);
+    debugPrint('[NodeFavorites] _loadFavorites() starting...');
+    state = state.copyWith(isLoading: true, error: null);
+    debugPrint(
+      '[NodeFavorites] State set to loading, about to call service...',
+    );
 
     try {
+      debugPrint('[NodeFavorites] Calling _service.getFavoriteIds()...');
       final ids = await _service.getFavoriteIds();
+      debugPrint('[NodeFavorites] Got ${ids.length} favorite IDs: $ids');
+
       final favorites = await _service.getFavorites();
+      debugPrint(
+        '[NodeFavorites] Got ${favorites.length} favorites with metadata',
+      );
+      for (final fav in favorites) {
+        debugPrint(
+          '[NodeFavorites]   - ${fav.nodeId}: ${fav.longName} / ${fav.shortName}',
+        );
+      }
 
       state = NodeFavoritesState(
         favoriteIds: ids.map((id) => id.toUpperCase()).toSet(),
         favorites: favorites,
         isLoading: false,
       );
-    } catch (e) {
-      // On error, set loading to false with empty state
-      state = const NodeFavoritesState(isLoading: false);
+      debugPrint(
+        '[NodeFavorites] State updated: ${state.favoriteIds.length} IDs, ${state.favorites.length} metadata entries',
+      );
+    } catch (e, stack) {
+      debugPrint('[NodeFavorites] ERROR loading favorites: $e');
+      debugPrint('[NodeFavorites] Stack: $stack');
+      state = NodeFavoritesState(isLoading: false, error: e.toString());
     }
   }
 

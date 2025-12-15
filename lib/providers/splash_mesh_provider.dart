@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/logging.dart';
 import '../core/widgets/animated_mesh_node.dart';
 import '../core/widgets/secret_gesture_detector.dart';
+import '../features/onboarding/widgets/mesh_node_brain.dart';
 import '../services/config/mesh_firestore_config_service.dart';
 
 /// Configuration for the splash/connecting screen mesh node
@@ -446,7 +447,7 @@ final secretGestureConfigProvider = FutureProvider<SecretGestureConfig>((
 /// The app's mascot/brain - used for all loading states
 /// Bounces in when loading starts, bounces out when loading finishes
 class MeshLoadingIndicator extends StatefulWidget {
-  /// Size of the loading indicator (default 48)
+  /// Size of the loading indicator (default 64 for better visibility)
   final double size;
 
   /// Custom colors (uses brand gradient by default)
@@ -463,7 +464,7 @@ class MeshLoadingIndicator extends StatefulWidget {
 
   const MeshLoadingIndicator({
     super.key,
-    this.size = 48,
+    this.size = 64,
     this.colors,
     this.animationType = MeshNodeAnimationType.tumble,
     this.glowIntensity = 0.6,
@@ -836,5 +837,55 @@ class _MeshMascotState extends State<MeshMascot> with TickerProviderStateMixin {
     }
 
     return mesh;
+  }
+}
+
+/// Full-screen loading indicator using MeshNodeBrain with loading mood.
+/// Use this for centered loading states on screens (larger, more prominent).
+class ScreenLoadingIndicator extends StatelessWidget {
+  /// Size of the brain (default 100 for screen-level loading)
+  final double size;
+
+  /// Optional message to show below the brain
+  final String? message;
+
+  /// Custom colors for the brain
+  final List<Color>? colors;
+
+  const ScreenLoadingIndicator({
+    super.key,
+    this.size = 100,
+    this.message,
+    this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          MeshNodeBrain(
+            size: size,
+            mood: MeshBrainMood.loading,
+            colors: colors,
+            glowIntensity: 0.8,
+            interactive: false,
+            showThoughtParticles: true,
+            showExpression: true,
+          ),
+          if (message != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              message!,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

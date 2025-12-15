@@ -155,7 +155,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        body: Center(child: MeshLoadingIndicator()),
+        body: const ScreenLoadingIndicator(),
       );
     }
 

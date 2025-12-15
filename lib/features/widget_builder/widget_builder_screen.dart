@@ -100,7 +100,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         ),
       ),
       body: _isLoading
-          ? const Center(child: MeshLoadingIndicator())
+          ? const ScreenLoadingIndicator()
           : TabBarView(
               controller: _tabController,
               children: [
