@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'widget_marketplace_service.dart';
 
@@ -54,59 +55,103 @@ class MarketplaceNotifier extends Notifier<MarketplaceState> {
 
   /// Load featured widgets
   Future<void> loadFeatured() async {
-    if (state.featured.isNotEmpty && state.error == null) return;
+    debugPrint(
+      '[Marketplace] loadFeatured called, current featured: ${state.featured.length}, error: ${state.error}',
+    );
+    if (state.featured.isNotEmpty && state.error == null) {
+      debugPrint(
+        '[Marketplace] Skipping loadFeatured - already have ${state.featured.length} widgets',
+      );
+      return;
+    }
 
     state = state.copyWith(isLoading: true, error: null);
+    debugPrint('[Marketplace] Loading featured widgets...');
     try {
       final featured = await _service.getFeatured();
+      debugPrint('[Marketplace] Got ${featured.length} featured widgets');
       state = state.copyWith(featured: featured, isLoading: false);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[Marketplace] Error loading featured: $e');
+      debugPrint('[Marketplace] Stack trace: $st');
       state = state.copyWith(error: e.toString(), isLoading: false);
     }
   }
 
   /// Load popular widgets
   Future<void> loadPopular() async {
-    if (state.popular.isNotEmpty) return;
+    debugPrint(
+      '[Marketplace] loadPopular called, current: ${state.popular.length}',
+    );
+    if (state.popular.isNotEmpty) {
+      debugPrint('[Marketplace] Skipping loadPopular - already have data');
+      return;
+    }
 
     try {
+      debugPrint('[Marketplace] Loading popular widgets...');
       final response = await _service.getPopular();
+      debugPrint(
+        '[Marketplace] Got ${response.widgets.length} popular widgets',
+      );
       state = state.copyWith(popular: response.widgets);
-    } catch (_) {
-      // Silently fail, will show empty state
+    } catch (e, st) {
+      debugPrint('[Marketplace] Error loading popular: $e');
+      debugPrint('[Marketplace] Stack trace: $st');
     }
   }
 
   /// Load newest widgets
   Future<void> loadNewest() async {
-    if (state.newest.isNotEmpty) return;
+    debugPrint(
+      '[Marketplace] loadNewest called, current: ${state.newest.length}',
+    );
+    if (state.newest.isNotEmpty) {
+      debugPrint('[Marketplace] Skipping loadNewest - already have data');
+      return;
+    }
 
     try {
+      debugPrint('[Marketplace] Loading newest widgets...');
       final response = await _service.getNewest();
+      debugPrint('[Marketplace] Got ${response.widgets.length} newest widgets');
       state = state.copyWith(newest: response.widgets);
-    } catch (_) {
-      // Silently fail, will show empty state
+    } catch (e, st) {
+      debugPrint('[Marketplace] Error loading newest: $e');
+      debugPrint('[Marketplace] Stack trace: $st');
     }
   }
 
   /// Load widgets for a category
   Future<void> loadCategory(String category) async {
-    if (state.categoryWidgets.containsKey(category)) return;
+    debugPrint('[Marketplace] loadCategory called for: $category');
+    if (state.categoryWidgets.containsKey(category)) {
+      debugPrint(
+        '[Marketplace] Skipping loadCategory - already have data for $category',
+      );
+      return;
+    }
 
     try {
+      debugPrint('[Marketplace] Loading category: $category...');
       final response = await _service.getByCategory(category);
+      debugPrint(
+        '[Marketplace] Got ${response.widgets.length} widgets for $category',
+      );
       final updated = Map<String, List<MarketplaceWidget>>.from(
         state.categoryWidgets,
       );
       updated[category] = response.widgets;
       state = state.copyWith(categoryWidgets: updated);
-    } catch (_) {
-      // Silently fail, will show empty state
+    } catch (e, st) {
+      debugPrint('[Marketplace] Error loading category $category: $e');
+      debugPrint('[Marketplace] Stack trace: $st');
     }
   }
 
   /// Refresh all data
   Future<void> refresh() async {
+    debugPrint('[Marketplace] Refresh requested');
     state = const MarketplaceState(isLoading: true);
     await loadFeatured();
   }

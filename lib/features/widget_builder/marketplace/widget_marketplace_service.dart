@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
@@ -86,11 +86,20 @@ class WidgetMarketplaceService {
 
   /// Get featured widgets
   Future<List<MarketplaceWidget>> getFeatured() async {
+    debugPrint('[MarketplaceService] getFeatured called, baseUrl: $baseUrl');
     try {
-      final response = await _client.get(Uri.parse('$baseUrl/featured'));
+      final uri = Uri.parse('$baseUrl/featured');
+      debugPrint('[MarketplaceService] Requesting: $uri');
+      final response = await _client.get(uri);
+      debugPrint(
+        '[MarketplaceService] Response status: ${response.statusCode}',
+      );
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as List<dynamic>;
+        debugPrint(
+          '[MarketplaceService] Parsed ${json.length} featured widgets',
+        );
         return json
             .map(
               (item) =>
@@ -98,11 +107,17 @@ class WidgetMarketplaceService {
             )
             .toList();
       } else {
+        debugPrint(
+          '[MarketplaceService] Featured request failed: ${response.statusCode} - ${response.body}',
+        );
         throw MarketplaceException('Failed to load featured widgets');
       }
-    } catch (e) {
+    } catch (e, st) {
       if (e is MarketplaceException) rethrow;
+      debugPrint('[MarketplaceService] Featured widgets error: $e');
+      debugPrint('[MarketplaceService] Stack: $st');
       _logger.e('Featured widgets error: $e');
+      debugPrint('[MarketplaceService] Returning mock featured data');
       return _getMockFeatured();
     }
   }

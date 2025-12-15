@@ -832,11 +832,11 @@ class _IcosahedronPainter extends CustomPainter {
     // Apply edge thickness multiplier for mood-based line weight
     final baseWidth = size.width * 0.02 * lineThickness * edgeThicknessMult;
 
-    // Depth-based opacity - back-facing edges (negative z) should be very faint
+    // Depth-based opacity - back-facing edges (negative z) should be dimmer
     // z ranges roughly from -0.5 (back) to 0.5 (front)
     final avgZ = (z1 + z2) / 2;
-    // Map z from [-0.5, 0.5] to [0.08, 1.0] - back edges nearly invisible
-    final depthFactor = ((avgZ + 0.5) * 0.92 + 0.08).clamp(0.08, 1.0);
+    // Map z from [-0.5, 0.5] to [0.35, 1.0] - back edges visible but dimmer
+    final depthFactor = ((avgZ + 0.5) * 0.65 + 0.35).clamp(0.35, 1.0);
 
     // Calculate color based on X position (left=orange, middle=magenta, right=blue)
     final avgX = (p1.dx + p2.dx) / 2;
@@ -1041,9 +1041,9 @@ class _IcosahedronPainter extends CustomPainter {
     final t = point.dx / size.width;
     final color = _getGradientColor(t);
 
-    // Opacity based on depth - back-facing nodes should be very faint
-    // Map z from [-0.5, 0.5] to [0.1, 1.0] - back nodes nearly invisible
-    final opacity = ((depth + 0.5) * 0.9 + 0.1).clamp(0.1, 1.0);
+    // Opacity based on depth - back-facing nodes should be dimmer but visible
+    // Map z from [-0.5, 0.5] to [0.45, 1.0] - back nodes visible but dimmer
+    final opacity = ((depth + 0.5) * 0.55 + 0.45).clamp(0.45, 1.0);
 
     // === ENHANCED GLOW FOR PULSING NODES ===
     // Draw outer glow (enhanced when pulsing)
