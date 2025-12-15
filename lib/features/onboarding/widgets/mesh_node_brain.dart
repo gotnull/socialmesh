@@ -2382,14 +2382,14 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
         );
       case MeshBrainMood.laughing:
         return _SimpleFaceExpression(
-          leftEyeScale: 0.2 + _pulse.value * 0.3, // Squinting from laughing
-          rightEyeScale: 0.2 + _pulse.value * 0.3,
+          leftEyeScale: 0.5 + _pulse.value * 0.3, // Squinting from laughing
+          rightEyeScale: 0.5 + _pulse.value * 0.3,
           mouthCurve: 1.0,
         );
       case MeshBrainMood.tickled:
         return _SimpleFaceExpression(
-          leftEyeScale: 0.3 + _pulse.value * 0.4,
-          rightEyeScale: 0.3 + _pulse.value * 0.4,
+          leftEyeScale: 0.5 + _pulse.value * 0.4,
+          rightEyeScale: 0.5 + _pulse.value * 0.4,
           mouthCurve: 0.9,
         );
       case MeshBrainMood.smiling:
@@ -2424,8 +2424,8 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
         );
       case MeshBrainMood.playful:
         return const _SimpleFaceExpression(
-          leftEyeScale: 1.1,
-          rightEyeScale: 0.3, // Winking
+          leftEyeScale: 1.2,
+          rightEyeScale: 1.2, // Both eyes open and bright
           mouthCurve: 0.8,
         );
       case MeshBrainMood.energized:
@@ -2474,8 +2474,8 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
         );
       case MeshBrainMood.winking:
         return const _SimpleFaceExpression(
-          leftEyeScale: 1.0,
-          rightEyeScale: 0.0, // Closed wink
+          leftEyeScale: 1.1,
+          rightEyeScale: 0.5, // Squinting wink
           mouthCurve: 0.7,
         );
       case MeshBrainMood.listening:
@@ -2514,8 +2514,8 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
         );
       case MeshBrainMood.dormant:
         return const _SimpleFaceExpression(
-          leftEyeScale: 0.0, // Closed
-          rightEyeScale: 0.0,
+          leftEyeScale: 0.5, // Sleepy
+          rightEyeScale: 0.5,
           mouthCurve: 0.1,
         );
       case MeshBrainMood.tired:
@@ -2594,20 +2594,20 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
         );
       case MeshBrainMood.zen:
         return const _SimpleFaceExpression(
-          leftEyeScale: 0.3, // Meditating
-          rightEyeScale: 0.3,
+          leftEyeScale: 0.5, // Meditating
+          rightEyeScale: 0.5,
           mouthCurve: 0.3,
         );
       case MeshBrainMood.sassy:
         return const _SimpleFaceExpression(
-          leftEyeScale: 0.9,
-          rightEyeScale: 0.4, // Side eye
+          leftEyeScale: 1.0,
+          rightEyeScale: 0.6, // Side eye
           mouthCurve: 0.4,
         );
       case MeshBrainMood.mischievous:
         return const _SimpleFaceExpression(
           leftEyeScale: 1.0,
-          rightEyeScale: 0.5, // Sneaky wink
+          rightEyeScale: 0.6, // Sneaky squint
           mouthCurve: 0.6,
         );
       case MeshBrainMood.hypnotized:
