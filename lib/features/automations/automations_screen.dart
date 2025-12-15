@@ -44,6 +44,11 @@ class AutomationsScreen extends ConsumerWidget {
             tooltip: 'Execution Log',
             onPressed: () => _showExecutionLog(context, ref),
           ),
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'New Automation',
+            onPressed: () => _showAddAutomation(context, ref),
+          ),
         ],
       ),
       body: automationsAsync.when(
@@ -73,44 +78,6 @@ class AutomationsScreen extends ConsumerWidget {
                 onPressed: () =>
                     ref.read(automationsProvider.notifier).refresh(),
                 child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      ),
-      floatingActionButton: BouncyTap(
-        onTap: () => _showAddAutomation(context, ref),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).colorScheme.primary,
-                Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.add, color: Colors.white),
-              SizedBox(width: 8),
-              Text(
-                'New Automation',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
               ),
             ],
           ),

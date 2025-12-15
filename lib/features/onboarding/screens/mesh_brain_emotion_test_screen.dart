@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../providers/splash_mesh_provider.dart';
 import '../widgets/mesh_node_brain.dart';
 
 /// A test screen to preview all of Ico's emotional states
-class MeshBrainEmotionTestScreen extends StatefulWidget {
+class MeshBrainEmotionTestScreen extends ConsumerStatefulWidget {
   const MeshBrainEmotionTestScreen({super.key});
 
   @override
-  State<MeshBrainEmotionTestScreen> createState() =>
+  ConsumerState<MeshBrainEmotionTestScreen> createState() =>
       _MeshBrainEmotionTestScreenState();
 }
 
 class _MeshBrainEmotionTestScreenState
-    extends State<MeshBrainEmotionTestScreen> {
+    extends ConsumerState<MeshBrainEmotionTestScreen> {
   MeshBrainMood _selectedMood = MeshBrainMood.idle;
   String _selectedCategory = 'All';
   double _brainSize = 160;
@@ -41,6 +43,12 @@ class _MeshBrainEmotionTestScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final meshConfigAsync = ref.watch(splashMeshConfigProvider);
+    final meshConfig = meshConfigAsync.when(
+      data: (config) => config,
+      loading: () => SplashMeshConfig.defaultConfig,
+      error: (_, _) => SplashMeshConfig.defaultConfig,
+    );
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0A0A0F) : Colors.grey[100],
@@ -58,7 +66,7 @@ class _MeshBrainEmotionTestScreenState
       body: Column(
         children: [
           // Fixed brain preview at top
-          _buildFixedBrainPreview(isDark),
+          _buildFixedBrainPreview(isDark, meshConfig),
 
           // Category filter
           _buildCategoryFilter(theme),
@@ -85,7 +93,7 @@ class _MeshBrainEmotionTestScreenState
     );
   }
 
-  Widget _buildFixedBrainPreview(bool isDark) {
+  Widget _buildFixedBrainPreview(bool isDark, SplashMeshConfig meshConfig) {
     return Container(
       height: 280,
       decoration: BoxDecoration(
@@ -114,6 +122,8 @@ class _MeshBrainEmotionTestScreenState
                     size: _brainSize * 0.85,
                     mood: _selectedMood,
                     glowIntensity: _glowIntensity,
+                    lineThickness: meshConfig.lineThickness,
+                    nodeSize: meshConfig.nodeSize,
                     showThoughtParticles: _showParticles,
                     showExpression: _showExpression,
                     onTap: _cycleMood,

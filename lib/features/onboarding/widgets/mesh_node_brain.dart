@@ -475,6 +475,12 @@ class MeshNodeBrain extends StatefulWidget {
   /// Glow intensity multiplier
   final double glowIntensity;
 
+  /// Line thickness multiplier (0.1 - 2.0)
+  final double lineThickness;
+
+  /// Node size multiplier (0.1 - 2.0)
+  final double nodeSize;
+
   /// Whether Ico should respond to touch
   final bool interactive;
 
@@ -493,6 +499,8 @@ class MeshNodeBrain extends StatefulWidget {
     this.mood = MeshBrainMood.idle,
     this.colors,
     this.glowIntensity = 0.8,
+    this.lineThickness = 0.6,
+    this.nodeSize = 0.9,
     this.interactive = true,
     this.onTap,
     this.showThoughtParticles = true,
@@ -1531,8 +1539,8 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           gradientColors: _colors,
           glowIntensity:
               widget.glowIntensity * _pulse.value * _moodGlowMultiplier,
-          lineThickness: 0.6,
-          nodeSize: 0.9,
+          lineThickness: widget.lineThickness,
+          nodeSize: widget.nodeSize,
           externalRotationX: wobbleX,
           externalRotationY: wobbleY,
           externalRotationZ: _spin.value,

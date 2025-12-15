@@ -842,7 +842,7 @@ class _MeshMascotState extends State<MeshMascot> with TickerProviderStateMixin {
 
 /// Full-screen loading indicator using Ico (MeshNodeBrain) with loading mood.
 /// Use this for centered loading states on screens (larger, more prominent).
-class ScreenLoadingIndicator extends StatelessWidget {
+class ScreenLoadingIndicator extends ConsumerWidget {
   /// Size of Ico (default 100 for screen-level loading)
   final double size;
 
@@ -860,7 +860,10 @@ class ScreenLoadingIndicator extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final meshConfigAsync = ref.watch(splashMeshConfigProvider);
+    final meshConfig = meshConfigAsync.value ?? const SplashMeshConfig();
+
     // Use SizedBox.expand + Center to ensure true centering in available space
     return SizedBox.expand(
       child: Center(
@@ -872,6 +875,8 @@ class ScreenLoadingIndicator extends StatelessWidget {
               mood: MeshBrainMood.loading,
               colors: colors,
               glowIntensity: 0.8,
+              lineThickness: meshConfig.lineThickness,
+              nodeSize: meshConfig.nodeSize,
               interactive: false,
               showThoughtParticles: true,
               showExpression: true,

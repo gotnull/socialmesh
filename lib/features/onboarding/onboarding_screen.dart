@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../scanner/widgets/connecting_animation.dart';
 import '../scanner/scanner_screen.dart';
 import 'widgets/mesh_node_brain.dart';
@@ -192,6 +193,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   @override
   Widget build(BuildContext context) {
     final accentColor = _getInterpolatedAccentColor();
+    final meshConfigAsync = ref.watch(splashMeshConfigProvider);
+    final meshConfig = meshConfigAsync.when(
+      data: (config) => config,
+      loading: () => SplashMeshConfig.defaultConfig,
+      error: (_, _) => SplashMeshConfig.defaultConfig,
+    );
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
@@ -236,7 +243,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     onPageChanged: _onPageChanged,
                     itemCount: _pages.length,
                     itemBuilder: (context, index) {
-                      return _buildFullPage(index, accentColor);
+                      return _buildFullPage(index, accentColor, meshConfig);
                     },
                   ),
                 ),
@@ -260,7 +267,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
   }
 
-  Widget _buildFullPage(int index, Color accentColor) {
+  Widget _buildFullPage(
+    int index,
+    Color accentColor,
+    SplashMeshConfig meshConfig,
+  ) {
     final page = _pages[index];
 
     return AnimatedBuilder(
@@ -292,7 +303,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 // Extra top spacing for non-widget pages to push content down
                 if (!page.isWidgetShowcase) const SizedBox(height: 20),
 
-                // Mesh Brain Advisor - larger on non-widget pages
+                // Mesh Brain Advisor - uses global config for line/node sizes
                 MeshNodeBrain(
                   size: page.isWidgetShowcase ? 80 : 100,
                   mood: _brainMood,
@@ -301,7 +312,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     Color.lerp(accentColor, AppTheme.primaryMagenta, 0.5)!,
                     Color.lerp(accentColor, AppTheme.graphBlue, 0.5)!,
                   ],
-                  glowIntensity: 0.9,
+                  glowIntensity: meshConfig.glowIntensity,
+                  lineThickness: meshConfig.lineThickness,
+                  nodeSize: meshConfig.nodeSize,
                   onTap: _onBrainTap,
                 ),
 

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../marketplace/widget_marketplace_service.dart';
+import '../models/widget_schema.dart';
+import '../renderer/widget_renderer.dart';
 import '../storage/widget_storage_service.dart';
 import '../../../core/theme.dart';
+import '../../../providers/app_providers.dart';
 import '../../../providers/splash_mesh_provider.dart';
+import 'marketplace_providers.dart';
 
 /// Marketplace browse screen
 class WidgetMarketplaceScreen extends ConsumerStatefulWidget {
@@ -18,73 +22,50 @@ class _WidgetMarketplaceScreenState
     extends ConsumerState<WidgetMarketplaceScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final _marketplaceService = WidgetMarketplaceService();
   final _searchController = TextEditingController();
-
-  List<MarketplaceWidget> _featuredWidgets = [];
-  List<MarketplaceWidget> _searchResults = [];
-  bool _isLoading = true;
-  bool _isSearching = false;
-  String? _error;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _loadFeatured();
+    _tabController.addListener(_onTabChanged);
+    // Load initial data
+    Future.microtask(
+      () => ref.read(marketplaceProvider.notifier).loadFeatured(),
+    );
+  }
+
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging) {
+      final notifier = ref.read(marketplaceProvider.notifier);
+      switch (_tabController.index) {
+        case 1:
+          notifier.loadPopular();
+          break;
+        case 2:
+          notifier.loadNewest();
+          break;
+      }
+    }
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadFeatured() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final featured = await _marketplaceService.getFeatured();
-      setState(() {
-        _featuredWidgets = featured;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _search(String query) async {
-    if (query.isEmpty) {
-      setState(() {
-        _searchResults = [];
-        _isSearching = false;
-      });
-      return;
-    }
-
-    setState(() => _isSearching = true);
-
-    try {
-      final response = await _marketplaceService.search(query);
-      setState(() {
-        _searchResults = response.widgets;
-        _isSearching = false;
-      });
-    } catch (e) {
-      setState(() => _isSearching = false);
-    }
+  void _search(String query) {
+    ref.read(marketplaceSearchProvider.notifier).search(query);
   }
 
   @override
   Widget build(BuildContext context) {
+    final marketplaceState = ref.watch(marketplaceProvider);
+    final searchState = ref.watch(marketplaceSearchProvider);
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
@@ -102,6 +83,8 @@ class _WidgetMarketplaceScreenState
           indicatorColor: context.accentColor,
           labelColor: context.accentColor,
           unselectedLabelColor: AppTheme.textSecondary,
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
           tabs: const [
             Tab(text: 'Featured'),
             Tab(text: 'Popular'),
@@ -128,7 +111,7 @@ class _WidgetMarketplaceScreenState
                         icon: Icon(Icons.clear, color: AppTheme.textTertiary),
                         onPressed: () {
                           _searchController.clear();
-                          _search('');
+                          ref.read(marketplaceSearchProvider.notifier).clear();
                         },
                       )
                     : null,
@@ -143,14 +126,14 @@ class _WidgetMarketplaceScreenState
           ),
           // Content
           Expanded(
-            child: _searchController.text.isNotEmpty
-                ? _buildSearchResults()
+            child: searchState.query.isNotEmpty
+                ? _buildSearchResults(searchState)
                 : TabBarView(
                     controller: _tabController,
                     children: [
-                      _buildFeaturedTab(),
-                      _buildPopularTab(),
-                      _buildNewTab(),
+                      _buildFeaturedTab(marketplaceState),
+                      _buildPopularTab(marketplaceState),
+                      _buildNewTab(marketplaceState),
                       _buildCategoriesTab(),
                     ],
                   ),
@@ -160,12 +143,12 @@ class _WidgetMarketplaceScreenState
     );
   }
 
-  Widget _buildSearchResults() {
-    if (_isSearching) {
+  Widget _buildSearchResults(MarketplaceSearchState searchState) {
+    if (searchState.isSearching) {
       return const ScreenLoadingIndicator();
     }
 
-    if (_searchResults.isEmpty) {
+    if (searchState.results.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -181,52 +164,48 @@ class _WidgetMarketplaceScreenState
       );
     }
 
-    return _buildWidgetGrid(_searchResults);
+    return _buildWidgetGrid(searchState.results);
   }
 
-  Widget _buildFeaturedTab() {
-    if (_isLoading) {
+  Widget _buildFeaturedTab(MarketplaceState state) {
+    if (state.isLoading && state.featured.isEmpty) {
       return const ScreenLoadingIndicator();
     }
 
-    if (_error != null) {
+    if (state.error != null && state.featured.isEmpty) {
       return _buildErrorState();
     }
 
     return RefreshIndicator(
-      onRefresh: _loadFeatured,
-      child: _buildWidgetGrid(_featuredWidgets),
+      onRefresh: () async {
+        await ref.read(marketplaceProvider.notifier).refresh();
+      },
+      child: _buildWidgetGrid(state.featured),
     );
   }
 
-  Widget _buildPopularTab() {
-    return FutureBuilder<MarketplaceResponse>(
-      future: _marketplaceService.getPopular(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const ScreenLoadingIndicator();
-        }
-        if (snapshot.hasError) {
-          return _buildErrorState();
-        }
-        return _buildWidgetGrid(snapshot.data?.widgets ?? []);
-      },
-    );
+  Widget _buildPopularTab(MarketplaceState state) {
+    if (state.popular.isEmpty) {
+      // Trigger load if not already loaded
+      Future.microtask(
+        () => ref.read(marketplaceProvider.notifier).loadPopular(),
+      );
+      return const ScreenLoadingIndicator();
+    }
+
+    return _buildWidgetGrid(state.popular);
   }
 
-  Widget _buildNewTab() {
-    return FutureBuilder<MarketplaceResponse>(
-      future: _marketplaceService.getNewest(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const ScreenLoadingIndicator();
-        }
-        if (snapshot.hasError) {
-          return _buildErrorState();
-        }
-        return _buildWidgetGrid(snapshot.data?.widgets ?? []);
-      },
-    );
+  Widget _buildNewTab(MarketplaceState state) {
+    if (state.newest.isEmpty) {
+      // Trigger load if not already loaded
+      Future.microtask(
+        () => ref.read(marketplaceProvider.notifier).loadNewest(),
+      );
+      return const ScreenLoadingIndicator();
+    }
+
+    return _buildWidgetGrid(state.newest);
   }
 
   Widget _buildCategoriesTab() {
@@ -289,10 +268,7 @@ class _WidgetMarketplaceScreenState
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => _CategoryScreen(
-          category: category,
-          marketplaceService: _marketplaceService,
-        ),
+        builder: (context) => _CategoryScreen(category: category),
       ),
     );
   }
@@ -322,7 +298,7 @@ class _WidgetMarketplaceScreenState
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.85,
+        childAspectRatio: 0.75,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
       ),
@@ -354,7 +330,7 @@ class _WidgetMarketplaceScreenState
           ),
           const SizedBox(height: 16),
           TextButton(
-            onPressed: _loadFeatured,
+            onPressed: () => ref.read(marketplaceProvider.notifier).refresh(),
             child: Text('Retry', style: TextStyle(color: accentColor)),
           ),
         ],
@@ -366,24 +342,23 @@ class _WidgetMarketplaceScreenState
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => _WidgetDetailsScreen(
-          marketplaceWidget: widget,
-          marketplaceService: _marketplaceService,
-        ),
+        builder: (context) => _WidgetDetailsScreen(marketplaceWidget: widget),
       ),
     );
   }
 }
 
-/// Marketplace widget card
-class _MarketplaceWidgetCard extends StatelessWidget {
+/// Marketplace widget card with live preview
+class _MarketplaceWidgetCard extends ConsumerWidget {
   final MarketplaceWidget widget;
   final VoidCallback onTap;
 
   const _MarketplaceWidgetCard({required this.widget, required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final service = ref.watch(marketplaceServiceProvider);
+
     return Card(
       color: AppTheme.darkCard,
       clipBehavior: Clip.antiAlias,
@@ -392,22 +367,30 @@ class _MarketplaceWidgetCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail placeholder
-            Container(
-              height: 80,
-              color: AppTheme.darkBackground,
-              child: Center(
-                child: Icon(
-                  Icons.widgets,
-                  size: 32,
-                  color: context.accentColor.withValues(alpha: 0.5),
+            // Widget preview
+            Expanded(
+              flex: 3,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBackground,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                  child: _buildPreview(context, ref, service),
                 ),
               ),
             ),
             // Info
             Expanded(
+              flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -415,18 +398,18 @@ class _MarketplaceWidgetCard extends StatelessWidget {
                       widget.name,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       'by ${widget.author}',
                       style: TextStyle(
                         color: AppTheme.textTertiary,
-                        fontSize: 11,
+                        fontSize: 10,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -436,29 +419,29 @@ class _MarketplaceWidgetCard extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.star,
-                          size: 14,
+                          size: 12,
                           color: AppTheme.warningYellow,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 3),
                         Text(
                           widget.rating.toStringAsFixed(1),
                           style: TextStyle(
                             color: AppTheme.textSecondary,
-                            fontSize: 12,
+                            fontSize: 11,
                           ),
                         ),
                         const Spacer(),
                         Icon(
                           Icons.download,
-                          size: 14,
+                          size: 12,
                           color: AppTheme.textTertiary,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 3),
                         Text(
                           _formatDownloads(widget.downloads),
                           style: TextStyle(
                             color: AppTheme.textTertiary,
-                            fontSize: 11,
+                            fontSize: 10,
                           ),
                         ),
                       ],
@@ -473,6 +456,79 @@ class _MarketplaceWidgetCard extends StatelessWidget {
     );
   }
 
+  Widget _buildPreview(
+    BuildContext context,
+    WidgetRef ref,
+    WidgetMarketplaceService service,
+  ) {
+    // Try to get the schema for this widget to show live preview
+    return FutureBuilder<WidgetSchema>(
+      future: service.downloadWidget(widget.id),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          // Show placeholder with icon based on category
+          return _buildPlaceholder(context);
+        }
+
+        final schema = snapshot.data!;
+        final nodes = ref.watch(nodesProvider);
+        final myNodeNum = ref.watch(myNodeNumProvider);
+        final node = myNodeNum != null ? nodes[myNodeNum] : null;
+
+        return Padding(
+          padding: const EdgeInsets.all(8),
+          child: WidgetRenderer(
+            schema: schema,
+            node: node,
+            allNodes: nodes,
+            accentColor: context.accentColor,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPlaceholder(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            context.accentColor.withValues(alpha: 0.15),
+            context.accentColor.withValues(alpha: 0.05),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          _getCategoryIcon(widget.category),
+          size: 36,
+          color: context.accentColor.withValues(alpha: 0.6),
+        ),
+      ),
+    );
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'status':
+        return Icons.battery_std;
+      case 'sensors':
+        return Icons.thermostat;
+      case 'connectivity':
+        return Icons.signal_cellular_alt;
+      case 'navigation':
+        return Icons.navigation;
+      case 'network':
+        return Icons.hub;
+      case 'messaging':
+        return Icons.message;
+      default:
+        return Icons.widgets;
+    }
+  }
+
   String _formatDownloads(int count) {
     if (count >= 1000) {
       return '${(count / 1000).toStringAsFixed(1)}k';
@@ -484,12 +540,8 @@ class _MarketplaceWidgetCard extends StatelessWidget {
 /// Widget details screen
 class _WidgetDetailsScreen extends ConsumerStatefulWidget {
   final MarketplaceWidget marketplaceWidget;
-  final WidgetMarketplaceService marketplaceService;
 
-  const _WidgetDetailsScreen({
-    required this.marketplaceWidget,
-    required this.marketplaceService,
-  });
+  const _WidgetDetailsScreen({required this.marketplaceWidget});
 
   @override
   ConsumerState<_WidgetDetailsScreen> createState() =>
@@ -502,6 +554,10 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final mWidget = widget.marketplaceWidget;
+    final service = ref.watch(marketplaceServiceProvider);
+    final nodes = ref.watch(nodesProvider);
+    final myNodeNum = ref.watch(myNodeNumProvider);
+    final node = myNodeNum != null ? nodes[myNodeNum] : null;
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
@@ -521,19 +577,37 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Preview placeholder
+            // Live preview
             Container(
               height: 200,
               decoration: BoxDecoration(
                 color: AppTheme.darkCard,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Center(
-                child: Icon(
-                  Icons.widgets,
-                  size: 64,
-                  color: context.accentColor.withValues(alpha: 0.3),
-                ),
+              clipBehavior: Clip.antiAlias,
+              child: FutureBuilder<WidgetSchema>(
+                future: service.downloadWidget(mWidget.id),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(
+                      child: Icon(
+                        Icons.widgets,
+                        size: 64,
+                        color: context.accentColor.withValues(alpha: 0.3),
+                      ),
+                    );
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: WidgetRenderer(
+                      schema: snapshot.data!,
+                      node: node,
+                      allNodes: nodes,
+                      accentColor: context.accentColor,
+                    ),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 24),
@@ -699,10 +773,9 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
     setState(() => _isInstalling = true);
 
     try {
+      final service = ref.read(marketplaceServiceProvider);
       // Download widget schema
-      final schema = await widget.marketplaceService.downloadWidget(
-        widget.marketplaceWidget.id,
-      );
+      final schema = await service.downloadWidget(widget.marketplaceWidget.id);
 
       // Save to local storage
       final storage = WidgetStorageService();
@@ -735,24 +808,38 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
   }
 }
 
-/// Category screen
-class _CategoryScreen extends StatelessWidget {
+/// Category screen using provider-based state management
+class _CategoryScreen extends ConsumerStatefulWidget {
   final String category;
-  final WidgetMarketplaceService marketplaceService;
 
-  const _CategoryScreen({
-    required this.category,
-    required this.marketplaceService,
-  });
+  const _CategoryScreen({required this.category});
+
+  @override
+  ConsumerState<_CategoryScreen> createState() => _CategoryScreenState();
+}
+
+class _CategoryScreenState extends ConsumerState<_CategoryScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () =>
+          ref.read(marketplaceProvider.notifier).loadCategory(widget.category),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(marketplaceProvider);
+    final widgets = state.categoryWidgets[widget.category] ?? [];
+    final isLoading = !state.categoryWidgets.containsKey(widget.category);
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
         title: Text(
-          WidgetCategories.getDisplayName(category),
+          WidgetCategories.getDisplayName(widget.category),
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -760,25 +847,10 @@ class _CategoryScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: FutureBuilder<MarketplaceResponse>(
-        future: marketplaceService.getByCategory(category),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const ScreenLoadingIndicator();
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'Failed to load widgets',
-                style: TextStyle(color: AppTheme.textSecondary),
-              ),
-            );
-          }
-
-          final widgets = snapshot.data?.widgets ?? [];
-          if (widgets.isEmpty) {
-            return Center(
+      body: isLoading
+          ? const ScreenLoadingIndicator()
+          : widgets.isEmpty
+          ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -797,35 +869,30 @@ class _CategoryScreen extends StatelessWidget {
                   ),
                 ],
               ),
-            );
-          }
-
-          return GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.85,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-            ),
-            itemCount: widgets.length,
-            itemBuilder: (context, index) {
-              return _MarketplaceWidgetCard(
-                widget: widgets[index],
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => _WidgetDetailsScreen(
-                      marketplaceWidget: widgets[index],
-                      marketplaceService: marketplaceService,
+            )
+          : GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.75,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: widgets.length,
+              itemBuilder: (context, index) {
+                return _MarketplaceWidgetCard(
+                  widget: widgets[index],
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => _WidgetDetailsScreen(
+                        marketplaceWidget: widgets[index],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-          );
-        },
-      ),
+                );
+              },
+            ),
     );
   }
 }
