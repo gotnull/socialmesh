@@ -1761,32 +1761,507 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   List<ElementSchema> _buildDataElements(String name) {
-    final children = <ElementSchema>[];
-    final isCompactLayout =
-        _layoutStyle == _LayoutStyle.horizontal ||
-        _layoutStyle == _LayoutStyle.grid;
+    // Dispatch to template-specific builders for distinct visual styles
+    return switch (_selectedTemplate?.id) {
+      'gauge' => _buildGaugeElements(name),
+      'info' => _buildInfoCardElements(name),
+      'location' => _buildLocationElements(name),
+      'environment' => _buildEnvironmentElements(name),
+      'status' => _buildStatusElements(name),
+      _ => _buildGenericElements(name),
+    };
+  }
 
-    // Title row with icon (only for vertical layout)
-    if (!isCompactLayout &&
-        _selectedTemplate != null &&
-        _selectedTemplate!.id != 'blank') {
+  /// Gauge: Big centered value with radial gauge visualization
+  List<ElementSchema> _buildGaugeElements(String name) {
+    if (_selectedBindings.isEmpty) {
+      return [
+        ElementSchema(
+          type: ElementType.text,
+          text: 'Select a numeric value',
+          style: StyleSchema(
+            textColor: _colorToHex(AppTheme.textSecondary),
+            fontSize: 13,
+          ),
+        ),
+      ];
+    }
+
+    final bindingPath = _selectedBindings.first;
+    final binding = BindingRegistry.bindings.firstWhere(
+      (b) => b.path == bindingPath,
+      orElse: () => BindingDefinition(
+        path: bindingPath,
+        label: bindingPath,
+        description: '',
+        category: BindingCategory.node,
+        valueType: int,
+        minValue: 0,
+        maxValue: 100,
+      ),
+    );
+
+    return [
+      // Centered gauge with large value
+      ElementSchema(
+        type: ElementType.column,
+        style: const StyleSchema(alignment: AlignmentOption.center),
+        children: [
+          // Radial gauge
+          ElementSchema(
+            type: ElementType.gauge,
+            gaugeType: GaugeType.radial,
+            gaugeMin: binding.minValue ?? 0,
+            gaugeMax: binding.maxValue ?? 100,
+            gaugeColor: _colorToHex(_accentColor),
+            binding: BindingSchema(path: bindingPath),
+            style: const StyleSchema(width: 120, height: 120),
+          ),
+          ElementSchema(
+            type: ElementType.spacer,
+            style: const StyleSchema(height: 8),
+          ),
+          // Label
+          ElementSchema(
+            type: ElementType.text,
+            text: binding.label,
+            style: StyleSchema(
+              textColor: _colorToHex(AppTheme.textSecondary),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  /// Info Card: Clean text-focused layout with icon badges
+  List<ElementSchema> _buildInfoCardElements(String name) {
+    final children = <ElementSchema>[];
+
+    // Title with info icon
+    children.add(
+      ElementSchema(
+        type: ElementType.row,
+        children: [
+          ElementSchema(
+            type: ElementType.shape,
+            shapeType: ShapeType.circle,
+            style: StyleSchema(
+              width: 28,
+              height: 28,
+              backgroundColor: _colorToHex(
+                _accentColor.withValues(alpha: 0.15),
+              ),
+            ),
+            children: [
+              ElementSchema(
+                type: ElementType.icon,
+                iconName: 'info',
+                iconSize: 16,
+                style: StyleSchema(textColor: _colorToHex(_accentColor)),
+              ),
+            ],
+          ),
+          ElementSchema(
+            type: ElementType.spacer,
+            style: const StyleSchema(width: 10),
+          ),
+          ElementSchema(
+            type: ElementType.text,
+            text: name,
+            style: const StyleSchema(
+              textColor: '#FFFFFF',
+              fontSize: 15,
+              fontWeight: 'w600',
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (_selectedBindings.isEmpty) {
+      children.add(
+        ElementSchema(
+          type: ElementType.text,
+          text: 'No info selected',
+          style: StyleSchema(
+            textColor: _colorToHex(AppTheme.textSecondary),
+            fontSize: 13,
+          ),
+        ),
+      );
+      return children;
+    }
+
+    children.add(
+      ElementSchema(
+        type: ElementType.spacer,
+        style: const StyleSchema(height: 12),
+      ),
+    );
+
+    // Info rows with subtle styling
+    for (final bindingPath in _selectedBindings) {
+      final binding = _getBinding(bindingPath);
       children.add(
         ElementSchema(
           type: ElementType.row,
+          style: const StyleSchema(
+            mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
+            padding: 6,
+          ),
           children: [
             ElementSchema(
-              type: ElementType.icon,
-              iconName: _getIconNameForTemplate(_selectedTemplate!.id),
-              iconSize: 18,
-              style: StyleSchema(textColor: _colorToHex(_accentColor)),
-            ),
-            ElementSchema(
-              type: ElementType.spacer,
-              style: const StyleSchema(width: 8),
+              type: ElementType.text,
+              text: binding.label,
+              style: StyleSchema(
+                textColor: _colorToHex(AppTheme.textSecondary),
+                fontSize: 13,
+              ),
             ),
             ElementSchema(
               type: ElementType.text,
-              text: name,
+              binding: BindingSchema(
+                path: bindingPath,
+                format: binding.defaultFormat,
+                defaultValue: '--',
+              ),
+              style: const StyleSchema(
+                textColor: '#FFFFFF',
+                fontSize: 13,
+                fontWeight: 'w500',
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return children;
+  }
+
+  /// Location: Map-style layout with coordinates and compass
+  List<ElementSchema> _buildLocationElements(String name) {
+    final children = <ElementSchema>[];
+
+    // Header with location pin
+    children.add(
+      ElementSchema(
+        type: ElementType.row,
+        children: [
+          ElementSchema(
+            type: ElementType.shape,
+            shapeType: ShapeType.circle,
+            style: StyleSchema(
+              width: 32,
+              height: 32,
+              backgroundColor: _colorToHex(
+                const Color(0xFFA78BFA).withValues(alpha: 0.2),
+              ),
+            ),
+            children: [
+              ElementSchema(
+                type: ElementType.icon,
+                iconName: 'location_on',
+                iconSize: 18,
+                style: const StyleSchema(textColor: '#A78BFA'),
+              ),
+            ],
+          ),
+          ElementSchema(
+            type: ElementType.spacer,
+            style: const StyleSchema(width: 10),
+          ),
+          ElementSchema(
+            type: ElementType.text,
+            text: name,
+            style: const StyleSchema(
+              textColor: '#FFFFFF',
+              fontSize: 15,
+              fontWeight: 'w600',
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (_selectedBindings.isEmpty) {
+      children.add(
+        ElementSchema(
+          type: ElementType.text,
+          text: 'No location data selected',
+          style: StyleSchema(
+            textColor: _colorToHex(AppTheme.textSecondary),
+            fontSize: 13,
+          ),
+        ),
+      );
+      return children;
+    }
+
+    children.add(
+      ElementSchema(
+        type: ElementType.spacer,
+        style: const StyleSchema(height: 10),
+      ),
+    );
+
+    // Coordinate-style display
+    for (final bindingPath in _selectedBindings) {
+      final binding = _getBinding(bindingPath);
+      final isCoord = bindingPath.contains('latitude') ||
+          bindingPath.contains('longitude');
+
+      children.add(
+        ElementSchema(
+          type: ElementType.row,
+          style: const StyleSchema(
+            mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
+          ),
+          children: [
+            ElementSchema(
+              type: ElementType.row,
+              children: [
+                ElementSchema(
+                  type: ElementType.icon,
+                  iconName: isCoord ? 'explore' : 'near_me',
+                  iconSize: 14,
+                  style: const StyleSchema(textColor: '#A78BFA'),
+                ),
+                ElementSchema(
+                  type: ElementType.spacer,
+                  style: const StyleSchema(width: 6),
+                ),
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(AppTheme.textSecondary),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            ElementSchema(
+              type: ElementType.text,
+              binding: BindingSchema(
+                path: bindingPath,
+                format: isCoord ? '%.5f' : binding.defaultFormat,
+                defaultValue: '--',
+              ),
+              style: StyleSchema(
+                textColor: isCoord ? '#A78BFA' : '#FFFFFF',
+                fontSize: 13,
+                fontWeight: 'w600',
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return children;
+  }
+
+  /// Environment: Weather card style with icons for each reading
+  List<ElementSchema> _buildEnvironmentElements(String name) {
+    final children = <ElementSchema>[];
+
+    // Header with thermometer
+    children.add(
+      ElementSchema(
+        type: ElementType.row,
+        children: [
+          ElementSchema(
+            type: ElementType.shape,
+            shapeType: ShapeType.circle,
+            style: StyleSchema(
+              width: 32,
+              height: 32,
+              backgroundColor: _colorToHex(
+                const Color(0xFF22D3EE).withValues(alpha: 0.2),
+              ),
+            ),
+            children: [
+              ElementSchema(
+                type: ElementType.icon,
+                iconName: 'thermostat',
+                iconSize: 18,
+                style: const StyleSchema(textColor: '#22D3EE'),
+              ),
+            ],
+          ),
+          ElementSchema(
+            type: ElementType.spacer,
+            style: const StyleSchema(width: 10),
+          ),
+          ElementSchema(
+            type: ElementType.text,
+            text: name,
+            style: const StyleSchema(
+              textColor: '#FFFFFF',
+              fontSize: 15,
+              fontWeight: 'w600',
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (_selectedBindings.isEmpty) {
+      children.add(
+        ElementSchema(
+          type: ElementType.text,
+          text: 'No sensor data selected',
+          style: StyleSchema(
+            textColor: _colorToHex(AppTheme.textSecondary),
+            fontSize: 13,
+          ),
+        ),
+      );
+      return children;
+    }
+
+    children.add(
+      ElementSchema(
+        type: ElementType.spacer,
+        style: const StyleSchema(height: 10),
+      ),
+    );
+
+    // Environment readings with appropriate icons
+    for (final bindingPath in _selectedBindings) {
+      final binding = _getBinding(bindingPath);
+      final iconName = _getEnvironmentIcon(bindingPath);
+      final valueColor = _getEnvironmentColor(bindingPath);
+
+      children.add(
+        ElementSchema(
+          type: ElementType.row,
+          style: const StyleSchema(
+            mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
+            padding: 4,
+          ),
+          children: [
+            ElementSchema(
+              type: ElementType.row,
+              children: [
+                ElementSchema(
+                  type: ElementType.icon,
+                  iconName: iconName,
+                  iconSize: 16,
+                  style: StyleSchema(textColor: valueColor),
+                ),
+                ElementSchema(
+                  type: ElementType.spacer,
+                  style: const StyleSchema(width: 8),
+                ),
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(AppTheme.textSecondary),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            ElementSchema(
+              type: ElementType.text,
+              binding: BindingSchema(
+                path: bindingPath,
+                format: binding.defaultFormat,
+                defaultValue: '--',
+              ),
+              style: StyleSchema(
+                textColor: valueColor,
+                fontSize: 15,
+                fontWeight: 'w700',
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return children;
+  }
+
+  /// Status: Dashboard-style with progress bars
+  List<ElementSchema> _buildStatusElements(String name) {
+    final children = <ElementSchema>[];
+
+    // Title row
+    children.add(
+      ElementSchema(
+        type: ElementType.row,
+        children: [
+          ElementSchema(
+            type: ElementType.icon,
+            iconName: 'speed',
+            iconSize: 18,
+            style: StyleSchema(textColor: _colorToHex(_accentColor)),
+          ),
+          ElementSchema(
+            type: ElementType.spacer,
+            style: const StyleSchema(width: 8),
+          ),
+          ElementSchema(
+            type: ElementType.text,
+            text: name,
+            style: const StyleSchema(
+              textColor: '#FFFFFF',
+              fontSize: 14,
+              fontWeight: 'w600',
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (_selectedBindings.isEmpty) {
+      children.add(
+        ElementSchema(
+          type: ElementType.text,
+          text: 'No data selected',
+          style: StyleSchema(
+            textColor: _colorToHex(AppTheme.textSecondary),
+            fontSize: 13,
+          ),
+        ),
+      );
+      return children;
+    }
+
+    // Status rows with progress bars for numeric values
+    for (final bindingPath in _selectedBindings) {
+      final binding = _getBinding(bindingPath);
+      final isNumeric = binding.valueType == int || binding.valueType == double;
+
+      // Label + value row
+      children.add(
+        ElementSchema(
+          type: ElementType.row,
+          style: const StyleSchema(
+            mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
+          ),
+          children: [
+            ElementSchema(
+              type: ElementType.text,
+              text: binding.label,
+              style: StyleSchema(
+                textColor: _colorToHex(AppTheme.textSecondary),
+                fontSize: 13,
+              ),
+            ),
+            ElementSchema(
+              type: ElementType.text,
+              binding: BindingSchema(
+                path: bindingPath,
+                format: binding.defaultFormat,
+                defaultValue: '--',
+              ),
               style: const StyleSchema(
                 textColor: '#FFFFFF',
                 fontSize: 14,
@@ -1796,23 +2271,51 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ],
         ),
       );
+
+      // Add progress bar for numeric values
+      if (isNumeric) {
+        children.add(
+          ElementSchema(
+            type: ElementType.gauge,
+            gaugeType: GaugeType.linear,
+            gaugeMin: binding.minValue ?? 0,
+            gaugeMax: binding.maxValue ?? 100,
+            gaugeColor: _colorToHex(_accentColor),
+            binding: BindingSchema(path: bindingPath),
+            style: const StyleSchema(height: 6),
+          ),
+        );
+      }
     }
 
-    // Add binding elements
-    for (final bindingPath in _selectedBindings) {
-      final binding = BindingRegistry.bindings.firstWhere(
-        (b) => b.path == bindingPath,
-        orElse: () => BindingDefinition(
-          path: bindingPath,
-          label: bindingPath,
-          description: '',
-          category: BindingCategory.node,
-          valueType: String,
+    return children;
+  }
+
+  /// Generic fallback for blank/custom templates
+  List<ElementSchema> _buildGenericElements(String name) {
+    final children = <ElementSchema>[];
+    final isCompactLayout =
+        _layoutStyle == _LayoutStyle.horizontal ||
+        _layoutStyle == _LayoutStyle.grid;
+
+    if (_selectedBindings.isEmpty) {
+      children.add(
+        ElementSchema(
+          type: ElementType.text,
+          text: 'No data selected',
+          style: StyleSchema(
+            textColor: _colorToHex(AppTheme.textSecondary),
+            fontSize: 13,
+          ),
         ),
       );
+      return children;
+    }
+
+    for (final bindingPath in _selectedBindings) {
+      final binding = _getBinding(bindingPath);
 
       if (isCompactLayout) {
-        // Compact cell for horizontal/grid layout - stacked vertically in a cell
         final isHorizontal = _layoutStyle == _LayoutStyle.horizontal;
         children.add(
           ElementSchema(
@@ -1852,7 +2355,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ),
         );
       } else if (_showLabels) {
-        // Row with label and value for vertical layout
         children.add(
           ElementSchema(
             type: ElementType.row,
@@ -1885,7 +2387,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ),
         );
       } else {
-        // Just the value
         children.add(
           ElementSchema(
             type: ElementType.text,
@@ -1902,43 +2403,40 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ),
         );
       }
-
-      // Add gauge for numeric values (only in vertical layout)
-      if (!isCompactLayout &&
-          (_selectedTemplate?.id == 'gauge' ||
-              (_selectedTemplate?.id == 'status' &&
-                  binding.valueType == int &&
-                  binding.minValue != null))) {
-        children.add(
-          ElementSchema(
-            type: ElementType.gauge,
-            gaugeType: GaugeType.linear,
-            gaugeMin: binding.minValue ?? 0,
-            gaugeMax: binding.maxValue ?? 100,
-            gaugeColor: _colorToHex(_accentColor),
-            binding: BindingSchema(path: bindingPath),
-            style: const StyleSchema(height: 6),
-          ),
-        );
-      }
-    }
-
-    // If no bindings selected, add placeholder
-    if (children.isEmpty ||
-        (_selectedBindings.isEmpty && children.length <= 1)) {
-      children.add(
-        ElementSchema(
-          type: ElementType.text,
-          text: 'No data selected',
-          style: StyleSchema(
-            textColor: _colorToHex(AppTheme.textSecondary),
-            fontSize: 13,
-          ),
-        ),
-      );
     }
 
     return children;
+  }
+
+  BindingDefinition _getBinding(String path) {
+    return BindingRegistry.bindings.firstWhere(
+      (b) => b.path == path,
+      orElse: () => BindingDefinition(
+        path: path,
+        label: path,
+        description: '',
+        category: BindingCategory.node,
+        valueType: String,
+      ),
+    );
+  }
+
+  String _getEnvironmentIcon(String path) {
+    if (path.contains('temperature')) return 'thermostat';
+    if (path.contains('humidity')) return 'water_drop';
+    if (path.contains('pressure') || path.contains('barometric')) return 'speed';
+    if (path.contains('wind')) return 'air';
+    if (path.contains('uv')) return 'wb_sunny';
+    if (path.contains('rain')) return 'grain';
+    return 'eco';
+  }
+
+  String _getEnvironmentColor(String path) {
+    if (path.contains('temperature')) return '#FF6B6B';
+    if (path.contains('humidity')) return '#60A5FA';
+    if (path.contains('pressure')) return '#A78BFA';
+    if (path.contains('wind')) return '#22D3EE';
+    return '#4ADE80';
   }
 
   List<ElementSchema> _buildActionElements() {
@@ -2006,18 +2504,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         ],
       );
     }).toList();
-  }
-
-  String _getIconNameForTemplate(String templateId) {
-    return switch (templateId) {
-      'status' => 'speed',
-      'info' => 'info_outline',
-      'gauge' => 'data_usage',
-      'actions' => 'flash_on',
-      'location' => 'location_on',
-      'environment' => 'thermostat',
-      _ => 'widgets',
-    };
   }
 
   String _getIconNameFromIconData(IconData icon) {
