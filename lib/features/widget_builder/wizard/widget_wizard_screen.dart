@@ -209,36 +209,46 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         children: List.generate(_steps.length, (index) {
           final isCompleted = index < _currentStep;
           final isCurrent = index == _currentStep;
+          // Can navigate to completed steps or current step
+          final canNavigate = index <= _currentStep;
+
           return Expanded(
             child: Row(
               children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isCompleted
-                        ? context.accentColor
-                        : isCurrent
-                        ? context.accentColor.withValues(alpha: 0.2)
-                        : AppTheme.darkCard,
-                    border: isCurrent
-                        ? Border.all(color: context.accentColor, width: 2)
-                        : null,
-                  ),
-                  child: Center(
-                    child: isCompleted
-                        ? const Icon(Icons.check, size: 16, color: Colors.white)
-                        : Text(
-                            '${index + 1}',
-                            style: TextStyle(
-                              color: isCurrent
-                                  ? context.accentColor
-                                  : AppTheme.textSecondary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
+                GestureDetector(
+                  onTap: canNavigate ? () => _goToStep(index) : null,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isCompleted
+                          ? context.accentColor
+                          : isCurrent
+                          ? context.accentColor.withValues(alpha: 0.2)
+                          : AppTheme.darkCard,
+                      border: isCurrent
+                          ? Border.all(color: context.accentColor, width: 2)
+                          : null,
+                    ),
+                    child: Center(
+                      child: isCompleted
+                          ? const Icon(
+                              Icons.check,
+                              size: 16,
+                              color: Colors.white,
+                            )
+                          : Text(
+                              '${index + 1}',
+                              style: TextStyle(
+                                color: isCurrent
+                                    ? context.accentColor
+                                    : AppTheme.textSecondary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
+                    ),
                   ),
                 ),
                 if (index < _steps.length - 1)
@@ -1199,6 +1209,20 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     }
   }
 
+  void _goToStep(int step) {
+    if (step == _currentStep) return;
+    if (step < 0 || step >= _steps.length) return;
+
+    // Only allow going to completed steps or current step
+    if (step > _currentStep) return;
+
+    _pageController.animateToPage(
+      step,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   void _create() async {
     final schema = _buildFinalSchema();
     await widget.onSave(schema);
@@ -1239,30 +1263,51 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         children: children,
       );
     } else if (_layoutStyle == _LayoutStyle.horizontal) {
+      // Horizontal layout - wrap items in a row
       root = ElementSchema(
         type: ElementType.row,
         style: const StyleSchema(
           padding: 12,
-          spacing: 16,
-          mainAxisAlignment: MainAxisAlignmentOption.spaceAround,
+          spacing: 8,
+          mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
         ),
         children: children,
       );
-    } else if (_layoutStyle == _LayoutStyle.grid && children.length > 2) {
+    } else if (_layoutStyle == _LayoutStyle.grid) {
       // Create a 2-column grid using rows
       final rows = <ElementSchema>[];
+
       for (var i = 0; i < children.length; i += 2) {
+        final rowChildren = <ElementSchema>[
+          // Wrap first item in container with expanded
+          ElementSchema(
+            type: ElementType.container,
+            style: const StyleSchema(expanded: true),
+            children: [children[i]],
+          ),
+        ];
+        if (i + 1 < children.length) {
+          rowChildren.add(
+            ElementSchema(
+              type: ElementType.container,
+              style: const StyleSchema(expanded: true),
+              children: [children[i + 1]],
+            ),
+          );
+        } else {
+          // Add empty spacer to maintain grid alignment
+          rowChildren.add(
+            ElementSchema(
+              type: ElementType.spacer,
+              style: const StyleSchema(expanded: true),
+            ),
+          );
+        }
         rows.add(
           ElementSchema(
             type: ElementType.row,
-            style: const StyleSchema(
-              spacing: 12,
-              mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
-            ),
-            children: [
-              children[i],
-              if (i + 1 < children.length) children[i + 1],
-            ],
+            style: const StyleSchema(spacing: 8),
+            children: rowChildren,
           ),
         );
       }
@@ -1291,9 +1336,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   List<ElementSchema> _buildDataElements(String name) {
     final children = <ElementSchema>[];
+    final isCompactLayout =
+        _layoutStyle == _LayoutStyle.horizontal ||
+        _layoutStyle == _LayoutStyle.grid;
 
-    // Title row with icon
-    if (_selectedTemplate != null && _selectedTemplate!.id != 'blank') {
+    // Title row with icon (only for vertical layout)
+    if (!isCompactLayout &&
+        _selectedTemplate != null &&
+        _selectedTemplate!.id != 'blank') {
       children.add(
         ElementSchema(
           type: ElementType.row,
@@ -1335,8 +1385,47 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         ),
       );
 
-      if (_showLabels) {
-        // Row with label and value
+      if (isCompactLayout) {
+        // Compact cell for horizontal/grid layout - stacked vertically in a cell
+        children.add(
+          ElementSchema(
+            type: ElementType.column,
+            style: StyleSchema(
+              padding: 8,
+              backgroundColor: _colorToHex(
+                AppTheme.darkCard.withValues(alpha: 0.5),
+              ),
+              borderRadius: 8,
+              alignment: AlignmentOption.center,
+            ),
+            children: [
+              if (_showLabels)
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(AppTheme.textSecondary),
+                    fontSize: 11,
+                  ),
+                ),
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: binding.defaultFormat,
+                  defaultValue: '--',
+                ),
+                style: StyleSchema(
+                  textColor: _colorToHex(_accentColor),
+                  fontSize: 18,
+                  fontWeight: 'w700',
+                ),
+              ),
+            ],
+          ),
+        );
+      } else if (_showLabels) {
+        // Row with label and value for vertical layout
         children.add(
           ElementSchema(
             type: ElementType.row,
@@ -1387,11 +1476,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         );
       }
 
-      // Add gauge for numeric values
-      if (_selectedTemplate?.id == 'gauge' ||
-          (_selectedTemplate?.id == 'status' &&
-              binding.valueType == int &&
-              binding.minValue != null)) {
+      // Add gauge for numeric values (only in vertical layout)
+      if (!isCompactLayout &&
+          (_selectedTemplate?.id == 'gauge' ||
+              (_selectedTemplate?.id == 'status' &&
+                  binding.valueType == int &&
+                  binding.minValue != null))) {
         children.add(
           ElementSchema(
             type: ElementType.gauge,
