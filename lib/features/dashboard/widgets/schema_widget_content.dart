@@ -83,12 +83,14 @@ class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent> {
     final channelUtilAsync = ref.watch(currentChannelUtilProvider);
 
     // Build the base widget content - auto-sizes to content
+    // showCard: false because DashboardWidget already provides the card
     Widget content = WidgetRenderer(
       schema: _schema!,
       node: myNode,
       allNodes: nodes,
       accentColor: context.accentColor,
       isPreview: false,
+      showCard: false,
       deviceRssi: rssiAsync.value,
       deviceSnr: snrAsync.value,
       deviceChannelUtil: channelUtilAsync.value,

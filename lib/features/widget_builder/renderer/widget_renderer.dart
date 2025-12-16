@@ -21,6 +21,9 @@ class WidgetRenderer extends ConsumerWidget {
   /// Whether to enable action handling (disabled in editor preview)
   final bool enableActions;
 
+  /// Whether to show the outer card decoration (set false when embedded in another card)
+  final bool showCard;
+
   /// Device-level signal data (from protocol streams)
   final int? deviceRssi;
   final double? deviceSnr;
@@ -37,6 +40,7 @@ class WidgetRenderer extends ConsumerWidget {
     this.selectedElementId,
     this.onElementTap,
     this.enableActions = true,
+    this.showCard = true,
     this.deviceRssi,
     this.deviceSnr,
     this.deviceChannelUtil,
@@ -55,6 +59,22 @@ class WidgetRenderer extends ConsumerWidget {
       channelUtil: deviceChannelUtil,
     );
 
+    final content = _ElementRenderer(
+      element: schema.root,
+      bindingEngine: bindingEngine,
+      accentColor: accentColor,
+      isPreview: isPreview,
+      selectedElementId: selectedElementId,
+      onElementTap: onElementTap,
+      enableActions: enableActions && !isPreview,
+      ref: ref,
+      fillParent: schema.root.style.expanded == true,
+    );
+
+    if (!showCard) {
+      return content;
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.darkCard,
@@ -63,17 +83,7 @@ class WidgetRenderer extends ConsumerWidget {
       ),
       clipBehavior: Clip.antiAlias,
       alignment: Alignment.topLeft,
-      child: _ElementRenderer(
-        element: schema.root,
-        bindingEngine: bindingEngine,
-        accentColor: accentColor,
-        isPreview: isPreview,
-        selectedElementId: selectedElementId,
-        onElementTap: onElementTap,
-        enableActions: enableActions && !isPreview,
-        ref: ref,
-        fillParent: schema.root.style.expanded == true,
-      ),
+      child: content,
     );
   }
 }

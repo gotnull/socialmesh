@@ -2331,6 +2331,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           borderWidth: 1,
           borderColor: _colorToHex(actionOption.color.withValues(alpha: 0.2)),
           alignment: AlignmentOption.center,
+          mainAxisAlignment: MainAxisAlignmentOption.center,
+          crossAxisAlignment: CrossAxisAlignmentOption.center,
         ),
         action: ActionSchema(
           type: actionType,
@@ -2342,32 +2344,23 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         ),
         children: [
           ElementSchema(
-            type: ElementType.column,
-            style: const StyleSchema(
-              alignment: AlignmentOption.center,
-              mainAxisAlignment: MainAxisAlignmentOption.center,
+            type: ElementType.icon,
+            iconName: _getIconNameFromIconData(actionOption.icon),
+            iconSize: 20,
+            style: StyleSchema(textColor: _colorToHex(actionOption.color)),
+          ),
+          ElementSchema(
+            type: ElementType.spacer,
+            style: const StyleSchema(height: 4),
+          ),
+          ElementSchema(
+            type: ElementType.text,
+            text: actionOption.label,
+            style: StyleSchema(
+              textColor: _colorToHex(actionOption.color),
+              fontSize: 10,
+              fontWeight: 'w600',
             ),
-            children: [
-              ElementSchema(
-                type: ElementType.icon,
-                iconName: _getIconNameFromIconData(actionOption.icon),
-                iconSize: 18,
-                style: StyleSchema(textColor: _colorToHex(actionOption.color)),
-              ),
-              ElementSchema(
-                type: ElementType.spacer,
-                style: const StyleSchema(height: 2),
-              ),
-              ElementSchema(
-                type: ElementType.text,
-                text: actionOption.label,
-                style: StyleSchema(
-                  textColor: _colorToHex(actionOption.color),
-                  fontSize: 8,
-                  fontWeight: 'w600',
-                ),
-              ),
-            ],
           ),
         ],
       );
