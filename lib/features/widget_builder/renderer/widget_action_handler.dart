@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/widget_schema.dart';
-import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/action_sheets.dart';
 import '../../../providers/app_providers.dart';
@@ -59,31 +58,12 @@ class WidgetActionHandler {
   }
 
   Future<void> _handleSendMessage(ActionSchema action) async {
-    // Show node selector if required
-    int? targetNodeNum;
-
-    if (action.requiresNodeSelection == true) {
-      final selection = await NodeSelectorSheet.show(
-        context,
-        title: 'Send Message To',
-        allowBroadcast: true,
-        broadcastLabel: 'All Nodes',
-        broadcastSubtitle: 'Broadcast to everyone',
-      );
-
-      if (selection == null) return;
-      targetNodeNum = selection.isBroadcast ? null : selection.nodeNum;
-    }
-
-    // Show quick message bottom sheet
+    // Show quick message bottom sheet directly - it has its own node selector
     if (!context.mounted) return;
     AppBottomSheet.show(
       context: context,
       padding: EdgeInsets.zero,
-      child: QuickMessageSheetContent(
-        ref: ref,
-        preSelectedNodeNum: targetNodeNum,
-      ),
+      child: QuickMessageSheetContent(ref: ref),
     );
   }
 

@@ -141,6 +141,7 @@ class IconRenderer extends StatelessWidget {
       'terrain': Icons.terrain,
       'route': Icons.route,
       'alt_route': Icons.alt_route,
+      'radar': Icons.radar,
 
       // Actions
       'settings': Icons.settings,
@@ -157,6 +158,12 @@ class IconRenderer extends StatelessWidget {
       'flash_on': Icons.flash_on,
       'flash_off': Icons.flash_off,
       'bolt': Icons.bolt,
+
+      // Emergency
+      'emergency': Icons.emergency,
+      'sos': Icons.sos,
+      'local_hospital': Icons.local_hospital,
+      'medical_services': Icons.medical_services,
 
       // Time
       'schedule': Icons.schedule,

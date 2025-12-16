@@ -199,6 +199,133 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     }
   }
 
+  /// Check if switching to a new template would lose user data
+  bool _wouldLoseDataOnTemplateSwitch(_WidgetTemplate newTemplate) {
+    final isCurrentActions = _selectedTemplate?.id == 'actions';
+    final isNewActions = newTemplate.id == 'actions';
+
+    // If switching between same type, no data loss
+    if (isCurrentActions == isNewActions) return false;
+
+    // If switching from Actions to Data template, check if actions exist
+    if (isCurrentActions && !isNewActions) {
+      return _selectedActions.isNotEmpty;
+    }
+
+    // If switching from Data to Actions template, check if bindings exist
+    if (!isCurrentActions && isNewActions) {
+      return _selectedBindings.isNotEmpty;
+    }
+
+    return false;
+  }
+
+  /// Handle template selection with compatibility check
+  Future<void> _handleTemplateSelection(_WidgetTemplate template) async {
+    // If same template, just select it
+    if (_selectedTemplate?.id == template.id) return;
+
+    // Check if we would lose data
+    if (_wouldLoseDataOnTemplateSwitch(template)) {
+      final isCurrentActions = _selectedTemplate?.id == 'actions';
+      final currentDataType = isCurrentActions ? 'actions' : 'data bindings';
+      final newDataType = template.id == 'actions'
+          ? 'actions'
+          : 'data bindings';
+      final itemCount = isCurrentActions
+          ? _selectedActions.length
+          : _selectedBindings.length;
+
+      final shouldSwitch = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: AppTheme.darkCard,
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: AppTheme.warningYellow),
+              const SizedBox(width: 12),
+              const Text(
+                'Switch Template?',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'You have $itemCount $currentDataType selected.',
+                style: TextStyle(color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '"${template.name}" uses $newDataType instead, so your current selections won\'t be used.',
+                style: TextStyle(color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'What would you like to do?',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Keep Current Template'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.accentColor,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Switch Template'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldSwitch != true) return;
+
+      // User confirmed - clear the old data type
+      setState(() {
+        if (template.id == 'actions') {
+          _selectedBindings.clear();
+        } else {
+          _selectedActions.clear();
+        }
+        _selectedTemplate = template;
+      });
+    } else {
+      // No data loss, just switch
+      setState(() => _selectedTemplate = template);
+    }
+  }
+
+  /// Get validation error for current state, or null if valid
+  String? _getValidationError() {
+    // Check if data matches template type
+    if (_selectedTemplate?.id == 'actions') {
+      // Quick Actions template should have actions, not bindings
+      if (_selectedBindings.isNotEmpty && _selectedActions.isEmpty) {
+        return 'Quick Actions requires at least one action selected. '
+            'You have data bindings but no actions.';
+      }
+    } else {
+      // Data templates should have bindings, not actions
+      if (_selectedActions.isNotEmpty && _selectedBindings.isEmpty) {
+        return 'This template requires data bindings. '
+            'You have actions selected but no data.';
+      }
+    }
+    return null;
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -405,7 +532,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => setState(() => _selectedTemplate = template),
+          onTap: () => _handleTemplateSelection(template),
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: const EdgeInsets.all(16),
@@ -991,9 +1118,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   // STEP 4: Appearance
   // ============================================================
   Widget _buildAppearanceStep() {
+    final validationError = _getValidationError();
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // Validation warning banner if there's an error
+        if (validationError != null) ...[
+          _buildValidationWarningBanner(validationError),
+          const SizedBox(height: 16),
+        ],
         // Color selection
         Text(
           'Accent Color',
@@ -1028,6 +1162,59 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildValidationWarningBanner(String message) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.warningYellow.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.warningYellow.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            color: AppTheme.warningYellow,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Cannot Save Widget',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  message,
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Go back to Step 1 to change your template, or Step 3 to update your selections.',
+                  style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1293,7 +1480,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       0 => _selectedTemplate != null,
       1 => _nameController.text.trim().isNotEmpty,
       2 => true, // Data/actions selection is optional
-      3 => true, // Appearance always valid
+      3 => _getValidationError() == null, // Must pass validation to create
       _ => false,
     };
   }
@@ -1343,6 +1530,15 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   void _create() async {
     debugPrint('[WidgetWizard] _create called');
+
+    // Final validation check
+    final validationError = _getValidationError();
+    if (validationError != null) {
+      debugPrint('[WidgetWizard] Validation failed: $validationError');
+      showErrorSnackBar(context, validationError);
+      return;
+    }
+
     debugPrint('[WidgetWizard] Building final schema...');
 
     final schema = _buildFinalSchema();
