@@ -54,11 +54,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   _LayoutStyle _layoutStyle = _LayoutStyle.vertical;
 
   // Graph-specific options
-  ChartType _chartType = ChartType.line;
+  ChartType _chartType = ChartType.area; // Default/merged chart type
   bool _showGrid = true;
   bool _showDots = true;
   bool _smoothCurve = true;
   bool _fillArea = true;
+  bool _mergeCharts = false; // Combine all data series into one chart
+  final Map<String, Color> _mergeColors =
+      {}; // Individual colors for merged charts
+  final Map<String, ChartType> _bindingChartTypes =
+      {}; // Individual chart types per binding
 
   List<_WizardStep> get _steps {
     final isQuickActions = _selectedTemplate?.id == 'actions';
@@ -1224,6 +1229,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     final validationError = _getValidationError();
     final isActionsTemplate = _selectedTemplate?.id == 'actions';
     final isGraphTemplate = _selectedTemplate?.id == 'graph';
+    // Hide accent color for merged graphs - they have individual colors
+    final showAccentColor =
+        !isActionsTemplate && !(isGraphTemplate && _mergeCharts);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -1233,8 +1241,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           _buildValidationWarningBanner(validationError),
           const SizedBox(height: 16),
         ],
-        // Color selection (not for actions - they have their own colors)
-        if (!isActionsTemplate) ...[
+        // Color selection (not for actions or merged graphs)
+        if (showAccentColor) ...[
           Text(
             'Accent Color',
             style: TextStyle(
@@ -1541,69 +1549,457 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   Widget _buildChartTypeSelector() {
-    final chartTypes = [
-      (ChartType.line, 'Line', Icons.show_chart),
-      (ChartType.area, 'Area', Icons.area_chart),
-      (ChartType.bar, 'Bar', Icons.bar_chart),
-      (ChartType.sparkline, 'Spark', Icons.timeline),
-    ];
+    // Merge option first (only show if multiple bindings selected)
+    final showMergeOption = _selectedBindings.length > 1;
 
-    return Row(
-      children: chartTypes.map((type) {
-        final isSelected = _chartType == type.$1;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(
-              right: type.$1 != ChartType.sparkline ? 8 : 0,
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => setState(() => _chartType = type.$1),
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? context.accentColor.withValues(alpha: 0.15)
-                        : AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected
-                          ? context.accentColor
-                          : AppTheme.darkBorder,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        type.$3,
-                        color: isSelected
-                            ? context.accentColor
-                            : AppTheme.textSecondary,
-                        size: 22,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        type.$2,
-                        style: TextStyle(
-                          color: isSelected
-                              ? context.accentColor
-                              : Colors.white,
-                          fontSize: 11,
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Merge option at top when multiple bindings
+        if (showMergeOption) ...[
+          _buildMergeChartsOption(),
+          const SizedBox(height: 16),
+        ],
+
+        // When merged: single chart type for all + color pickers
+        if (_mergeCharts && showMergeOption) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: context.accentColor.withValues(alpha: 0.3),
               ),
             ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: context.accentColor, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Merged charts use a combined multi-line view. Individual chart types are disabled.',
+                    style: TextStyle(color: context.accentColor, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildMergeColorPickers(),
+        ],
+
+        // When NOT merged: individual chart type per binding
+        if (!_mergeCharts) ...[
+          if (_selectedBindings.length > 1) ...[
+            Text(
+              'Chart Type per Series',
+              style: TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildIndividualChartTypePickers(),
+          ] else ...[
+            // Single binding: just show the chart type grid
+            _buildChartTypeGrid(),
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildChartTypeGrid({String? bindingPath, ChartType? currentType}) {
+    // First row - main chart types
+    final mainChartTypes = [
+      (ChartType.area, 'Area', Icons.area_chart),
+      (ChartType.line, 'Line', Icons.show_chart),
+      (ChartType.bar, 'Bar', Icons.bar_chart),
+    ];
+
+    // Second row - additional chart types
+    final additionalChartTypes = [
+      (ChartType.sparkline, 'Spark', Icons.timeline),
+      (ChartType.stepped, 'Stepped', Icons.stacked_line_chart),
+      (ChartType.scatter, 'Scatter', Icons.scatter_plot),
+    ];
+
+    final selectedType = currentType ?? _chartType;
+
+    return Column(
+      children: [
+        // First row
+        Row(
+          children: mainChartTypes.asMap().entries.map((entry) {
+            final type = entry.value;
+            final isSelected = selectedType == type.$1;
+            final isLast = entry.key == mainChartTypes.length - 1;
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: isLast ? 0 : 8),
+                child: _buildChartTypeButton(
+                  type,
+                  isSelected,
+                  bindingPath: bindingPath,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 8),
+        // Second row
+        Row(
+          children: additionalChartTypes.asMap().entries.map((entry) {
+            final type = entry.value;
+            final isSelected = selectedType == type.$1;
+            final isLast = entry.key == additionalChartTypes.length - 1;
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: isLast ? 0 : 8),
+                child: _buildChartTypeButton(
+                  type,
+                  isSelected,
+                  bindingPath: bindingPath,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIndividualChartTypePickers() {
+    final bindingsList = _selectedBindings.toList();
+
+    return Column(
+      children: bindingsList.asMap().entries.map((entry) {
+        final index = entry.key;
+        final bindingPath = entry.value;
+        final binding = BindingRegistry.bindings.firstWhere(
+          (b) => b.path == bindingPath,
+          orElse: () => BindingDefinition(
+            path: bindingPath,
+            label: bindingPath,
+            description: '',
+            category: BindingCategory.node,
+            valueType: double,
+          ),
+        );
+
+        // Get current chart type for this binding or default
+        final currentType = _bindingChartTypes[bindingPath] ?? ChartType.area;
+
+        return Container(
+          margin: EdgeInsets.only(
+            bottom: index < bindingsList.length - 1 ? 16 : 0,
+          ),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.darkCard,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppTheme.darkBorder),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Binding label
+              Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: _getDefaultColorForIndex(index),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      binding.label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Chart type grid for this binding
+              _buildChartTypeGrid(
+                bindingPath: bindingPath,
+                currentType: currentType,
+              ),
+            ],
           ),
         );
       }).toList(),
+    );
+  }
+
+  Color _getDefaultColorForIndex(int index) {
+    final colors = [
+      const Color(0xFF4F6AF6), // Blue
+      const Color(0xFF00BCD4), // Cyan
+      const Color(0xFFFF9800), // Orange
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFFE91E63), // Pink
+      const Color(0xFF9C27B0), // Purple
+    ];
+    return colors[index % colors.length];
+  }
+
+  Widget _buildChartTypeButton(
+    (ChartType, String, IconData) type,
+    bool isSelected, {
+    String? bindingPath,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => setState(() {
+          if (bindingPath != null) {
+            // Per-binding chart type
+            _bindingChartTypes[bindingPath] = type.$1;
+          } else {
+            // Global chart type (single binding or merged)
+            _chartType = type.$1;
+            // Auto-adjust fill area based on chart type
+            if (type.$1 == ChartType.area) {
+              _fillArea = true;
+            } else if (type.$1 == ChartType.line) {
+              _fillArea = false;
+            }
+          }
+        }),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? context.accentColor.withValues(alpha: 0.15)
+                : AppTheme.darkCard,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected ? context.accentColor : AppTheme.darkBorder,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                type.$3,
+                color: isSelected
+                    ? context.accentColor
+                    : AppTheme.textSecondary,
+                size: 18,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                type.$2,
+                style: TextStyle(
+                  color: isSelected ? context.accentColor : Colors.white,
+                  fontSize: 9,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMergeChartsOption() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _mergeCharts
+            ? context.accentColor.withValues(alpha: 0.1)
+            : AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _mergeCharts ? context.accentColor : AppTheme.darkBorder,
+        ),
+      ),
+      child: InkWell(
+        onTap: () => setState(() => _mergeCharts = !_mergeCharts),
+        borderRadius: BorderRadius.circular(12),
+        child: Row(
+          children: [
+            Icon(
+              Icons.merge_type,
+              color: _mergeCharts
+                  ? context.accentColor
+                  : AppTheme.textSecondary,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Merge into Single Chart',
+                    style: TextStyle(
+                      color: _mergeCharts ? context.accentColor : Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    'Combine all data series with color-coded legend',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: _mergeCharts,
+              onChanged: (value) => setState(() => _mergeCharts = value),
+              activeTrackColor: context.accentColor,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMergeColorPickers() {
+    // Default colors for merged chart lines
+    final defaultColors = [
+      const Color(0xFF4F6AF6), // Blue
+      const Color(0xFF00BCD4), // Cyan
+      const Color(0xFFFF9800), // Orange
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFFE91E63), // Pink
+      const Color(0xFF9C27B0), // Purple
+    ];
+
+    final availableColors = [
+      const Color(0xFF4F6AF6), // Blue
+      const Color(0xFF4ADE80), // Green
+      const Color(0xFFFBBF24), // Yellow
+      const Color(0xFFF472B6), // Pink
+      const Color(0xFFA78BFA), // Purple
+      const Color(0xFF22D3EE), // Cyan
+      const Color(0xFFFF6B6B), // Red
+      const Color(0xFFFF9F43), // Orange
+      const Color(0xFF00BCD4), // Teal
+      const Color(0xFF4CAF50), // Forest Green
+      const Color(0xFFE91E63), // Magenta
+      const Color(0xFF9C27B0), // Deep Purple
+    ];
+
+    final bindingsList = _selectedBindings.toList();
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Series Colors',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...bindingsList.asMap().entries.map((entry) {
+            final index = entry.key;
+            final bindingPath = entry.value;
+            final binding = BindingRegistry.bindings.firstWhere(
+              (b) => b.path == bindingPath,
+              orElse: () => BindingDefinition(
+                path: bindingPath,
+                label: bindingPath,
+                description: '',
+                category: BindingCategory.node,
+                valueType: double,
+              ),
+            );
+
+            // Get current color or use default
+            final currentColor =
+                _mergeColors[bindingPath] ??
+                defaultColors[index % defaultColors.length];
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: index < bindingsList.length - 1 ? 12 : 0,
+              ),
+              child: Row(
+                children: [
+                  // Color indicator dot
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: currentColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Binding label
+                  Expanded(
+                    child: Text(
+                      binding.label,
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  // Color picker dots
+                  Wrap(
+                    spacing: 6,
+                    children: availableColors.take(6).map((color) {
+                      final isSelected =
+                          currentColor.toARGB32() == color.toARGB32();
+                      return GestureDetector(
+                        onTap: () => setState(() {
+                          _mergeColors[bindingPath] = color;
+                        }),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                            border: isSelected
+                                ? Border.all(color: Colors.white, width: 2)
+                                : null,
+                          ),
+                          child: isSelected
+                              ? const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 14,
+                                )
+                              : null,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 
@@ -2117,53 +2513,82 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     final children = <ElementSchema>[];
 
-    // For each selected binding, create a chart with optional label
-    for (final bindingPath in _selectedBindings) {
-      final binding = BindingRegistry.bindings.firstWhere(
-        (b) => b.path == bindingPath,
-        orElse: () => BindingDefinition(
-          path: bindingPath,
-          label: bindingPath,
-          description: '',
-          category: BindingCategory.node,
-          valueType: double,
-        ),
-      );
+    // Default colors for merged charts (fallback)
+    final defaultChartColors = <Color>[
+      const Color(0xFF4F6AF6), // Blue
+      const Color(0xFF00BCD4), // Cyan
+      const Color(0xFFFF9800), // Orange
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFFE91E63), // Pink
+      const Color(0xFF9C27B0), // Purple
+    ];
 
-      // Header row with label and current value
+    // Merge mode: single chart with multiple data series
+    if (_mergeCharts && _selectedBindings.length > 1) {
+      // Collect labels and colors for legend
+      final legendLabels = <String>[];
+      final legendColors = <String>[];
+      final bindingsList = _selectedBindings.toList();
+
+      for (int i = 0; i < bindingsList.length; i++) {
+        final bindingPath = bindingsList[i];
+        final binding = BindingRegistry.bindings.firstWhere(
+          (b) => b.path == bindingPath,
+          orElse: () => BindingDefinition(
+            path: bindingPath,
+            label: bindingPath,
+            description: '',
+            category: BindingCategory.node,
+            valueType: double,
+          ),
+        );
+        legendLabels.add(binding.label);
+        // Use user-selected color or fall back to default
+        final color =
+            _mergeColors[bindingPath] ??
+            defaultChartColors[i % defaultChartColors.length];
+        legendColors.add(_colorToHex(color));
+      }
+
+      // Legend row at top
       if (_showLabels) {
         children.add(
           ElementSchema(
             type: ElementType.row,
             style: const StyleSchema(
-              mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
+              mainAxisAlignment: MainAxisAlignmentOption.center,
+              crossAxisAlignment: CrossAxisAlignmentOption.center,
               padding: 4,
+              spacing: 16,
             ),
             children: [
-              // Label
-              ElementSchema(
-                type: ElementType.text,
-                text: binding.label,
-                style: StyleSchema(
-                  textColor: _colorToHex(AppTheme.textSecondary),
-                  fontSize: 12,
-                  fontWeight: 'w500',
+              for (int i = 0; i < legendLabels.length; i++)
+                ElementSchema(
+                  type: ElementType.row,
+                  style: const StyleSchema(
+                    spacing: 4,
+                    crossAxisAlignment: CrossAxisAlignmentOption.center,
+                  ),
+                  children: [
+                    ElementSchema(
+                      type: ElementType.container,
+                      style: StyleSchema(
+                        width: 8,
+                        height: 8,
+                        borderRadius: 4,
+                        backgroundColor: legendColors[i],
+                      ),
+                    ),
+                    ElementSchema(
+                      type: ElementType.text,
+                      text: legendLabels[i],
+                      style: StyleSchema(
+                        textColor: _colorToHex(AppTheme.textSecondary),
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              // Current value
-              ElementSchema(
-                type: ElementType.text,
-                binding: BindingSchema(
-                  path: bindingPath,
-                  format: binding.defaultFormat ?? '{value}',
-                  defaultValue: '--',
-                ),
-                style: StyleSchema(
-                  textColor: _colorToHex(_accentColor),
-                  fontSize: 14,
-                  fontWeight: 'w700',
-                ),
-              ),
             ],
           ),
         );
@@ -2175,38 +2600,118 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         );
       }
 
-      // Determine effective chart type
-      ChartType effectiveChartType = _chartType;
-      if (_chartType == ChartType.line && _fillArea) {
-        effectiveChartType = ChartType.area;
-      }
-
-      // The chart element
+      // Single merged chart with multiLine type
       children.add(
         ElementSchema(
           type: ElementType.chart,
-          chartType: effectiveChartType,
+          chartType: ChartType.multiLine,
           chartShowGrid: _showGrid,
           chartShowDots: _showDots,
           chartCurved: _smoothCurve,
           chartMaxPoints: 30,
-          binding: BindingSchema(path: bindingPath),
+          chartBindingPaths: bindingsList,
+          chartLegendLabels: legendLabels,
+          chartLegendColors: legendColors,
           style: StyleSchema(
-            height: _selectedBindings.length == 1 ? 100.0 : 70.0,
+            height: 120.0,
             textColor: _colorToHex(_accentColor),
           ),
         ),
       );
-
-      // Add spacing between charts if multiple
-      if (_selectedBindings.length > 1 &&
-          bindingPath != _selectedBindings.last) {
-        children.add(
-          ElementSchema(
-            type: ElementType.spacer,
-            style: const StyleSchema(height: 16),
+    } else {
+      // Non-merged mode: separate chart per binding
+      for (final bindingPath in _selectedBindings) {
+        final binding = BindingRegistry.bindings.firstWhere(
+          (b) => b.path == bindingPath,
+          orElse: () => BindingDefinition(
+            path: bindingPath,
+            label: bindingPath,
+            description: '',
+            category: BindingCategory.node,
+            valueType: double,
           ),
         );
+
+        // Get chart type for this specific binding (or use global default)
+        ChartType bindingChartType =
+            _bindingChartTypes[bindingPath] ?? _chartType;
+        // Apply fill area logic for line charts
+        if (bindingChartType == ChartType.line && _fillArea) {
+          bindingChartType = ChartType.area;
+        }
+
+        // Header row with label and current value
+        if (_showLabels) {
+          children.add(
+            ElementSchema(
+              type: ElementType.row,
+              style: const StyleSchema(
+                mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
+                padding: 4,
+              ),
+              children: [
+                // Label
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(AppTheme.textSecondary),
+                    fontSize: 12,
+                    fontWeight: 'w500',
+                  ),
+                ),
+                // Current value
+                ElementSchema(
+                  type: ElementType.text,
+                  binding: BindingSchema(
+                    path: bindingPath,
+                    format: binding.defaultFormat ?? '{value}',
+                    defaultValue: '--',
+                  ),
+                  style: StyleSchema(
+                    textColor: _colorToHex(_accentColor),
+                    fontSize: 14,
+                    fontWeight: 'w700',
+                  ),
+                ),
+              ],
+            ),
+          );
+          children.add(
+            ElementSchema(
+              type: ElementType.spacer,
+              style: const StyleSchema(height: 8),
+            ),
+          );
+        }
+
+        // The chart element with per-binding chart type
+        children.add(
+          ElementSchema(
+            type: ElementType.chart,
+            chartType: bindingChartType,
+            chartShowGrid: _showGrid,
+            chartShowDots: _showDots,
+            chartCurved: _smoothCurve,
+            chartMaxPoints: 30,
+            binding: BindingSchema(path: bindingPath),
+            style: StyleSchema(
+              height: _selectedBindings.length == 1 ? 100.0 : 70.0,
+              textColor: _colorToHex(_accentColor),
+            ),
+          ),
+        );
+
+        // Add spacing between charts if multiple
+        if (_selectedBindings.length > 1 &&
+            bindingPath != _selectedBindings.last) {
+          children.add(
+            ElementSchema(
+              type: ElementType.spacer,
+              style: const StyleSchema(height: 16),
+            ),
+          );
+        }
       }
     }
 

@@ -23,7 +23,15 @@ enum ElementType {
 enum GaugeType { linear, radial, arc, battery, signal }
 
 /// Types of charts available
-enum ChartType { sparkline, bar, line, area }
+enum ChartType {
+  area, // Filled area under the line
+  line, // Simple line chart
+  bar, // Vertical bar chart
+  sparkline, // Minimal line without grid
+  stepped, // Stepped line chart
+  scatter, // Scatter plot with dots only
+  multiLine, // Multiple data series on one chart with legend
+}
 
 /// Types of shapes available
 enum ShapeType {
@@ -620,6 +628,10 @@ class ElementSchema {
   final bool? chartShowGrid; // Show grid lines
   final bool? chartShowDots; // Show data points
   final bool? chartCurved; // Use curved lines
+  final List<String>?
+  chartBindingPaths; // Multiple data sources for merged chart
+  final List<String>? chartLegendLabels; // Legend labels for merged chart
+  final List<String>? chartLegendColors; // Legend colors for merged chart
   final ShapeType? shapeType; // For shape elements
   final String? shapeColor;
 
@@ -647,6 +659,9 @@ class ElementSchema {
     this.chartShowGrid,
     this.chartShowDots,
     this.chartCurved,
+    this.chartBindingPaths,
+    this.chartLegendLabels,
+    this.chartLegendColors,
     this.shapeType,
     this.shapeColor,
   }) : id = id ?? const Uuid().v4();
@@ -675,6 +690,9 @@ class ElementSchema {
     bool? chartShowGrid,
     bool? chartShowDots,
     bool? chartCurved,
+    List<String>? chartBindingPaths,
+    List<String>? chartLegendLabels,
+    List<String>? chartLegendColors,
     ShapeType? shapeType,
     String? shapeColor,
   }) {
@@ -702,6 +720,9 @@ class ElementSchema {
       chartShowGrid: chartShowGrid ?? this.chartShowGrid,
       chartShowDots: chartShowDots ?? this.chartShowDots,
       chartCurved: chartCurved ?? this.chartCurved,
+      chartBindingPaths: chartBindingPaths ?? this.chartBindingPaths,
+      chartLegendLabels: chartLegendLabels ?? this.chartLegendLabels,
+      chartLegendColors: chartLegendColors ?? this.chartLegendColors,
       shapeType: shapeType ?? this.shapeType,
       shapeColor: shapeColor ?? this.shapeColor,
     );
@@ -733,6 +754,9 @@ class ElementSchema {
     if (chartShowGrid != null) 'chartShowGrid': chartShowGrid,
     if (chartShowDots != null) 'chartShowDots': chartShowDots,
     if (chartCurved != null) 'chartCurved': chartCurved,
+    if (chartBindingPaths != null) 'chartBindingPaths': chartBindingPaths,
+    if (chartLegendLabels != null) 'chartLegendLabels': chartLegendLabels,
+    if (chartLegendColors != null) 'chartLegendColors': chartLegendColors,
     if (shapeType != null) 'shapeType': shapeType!.name,
     if (shapeColor != null) 'shapeColor': shapeColor,
   };
@@ -789,6 +813,15 @@ class ElementSchema {
       chartShowGrid: json['chartShowGrid'] as bool?,
       chartShowDots: json['chartShowDots'] as bool?,
       chartCurved: json['chartCurved'] as bool?,
+      chartBindingPaths: (json['chartBindingPaths'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      chartLegendLabels: (json['chartLegendLabels'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      chartLegendColors: (json['chartLegendColors'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
       shapeType: json['shapeType'] != null
           ? ShapeType.values.firstWhere(
               (e) => e.name == json['shapeType'],

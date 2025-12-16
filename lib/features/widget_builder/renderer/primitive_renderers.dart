@@ -498,7 +498,10 @@ class ChartRenderer extends StatefulWidget {
 }
 
 class _ChartRendererState extends State<ChartRenderer> {
+  // Single history for single binding
   final List<double> _history = [];
+  // Multiple histories for multi-line charts
+  final Map<String, List<double>> _multiHistory = {};
   Timer? _updateTimer;
 
   // Accessor helpers for chart properties
@@ -507,9 +510,21 @@ class _ChartRendererState extends State<ChartRenderer> {
   bool get _isCurved => widget.element.chartCurved ?? true;
   int get _maxPoints => widget.element.chartMaxPoints ?? 30;
 
+  // Check if this is a multi-line chart
+  bool get _isMultiLine =>
+      widget.element.chartType == ChartType.multiLine &&
+      widget.element.chartBindingPaths != null &&
+      widget.element.chartBindingPaths!.isNotEmpty;
+
   @override
   void initState() {
     super.initState();
+    // Initialize multi-line histories
+    if (_isMultiLine) {
+      for (final path in widget.element.chartBindingPaths!) {
+        _multiHistory[path] = [];
+      }
+    }
     // Add initial data point
     _addDataPoint();
     // Start timer to collect history (every 2 seconds like signal strength)
@@ -527,31 +542,62 @@ class _ChartRendererState extends State<ChartRenderer> {
   }
 
   void _addDataPoint() {
-    // Get current value from binding
-    final value = widget.bindingEngine.resolveBinding(
-      widget.element.binding ?? BindingSchema(path: 'node.rssi'),
-    );
-
-    double? numValue;
-    if (value is int) {
-      numValue = value.toDouble();
-    } else if (value is double) {
-      numValue = value;
-    }
-
-    if (numValue != null) {
+    if (_isMultiLine) {
+      // Multi-line: get value for each binding path
       setState(() {
-        _history.add(numValue!);
-        // Keep only last N points
-        while (_history.length > _maxPoints) {
-          _history.removeAt(0);
+        for (final path in widget.element.chartBindingPaths!) {
+          final value = widget.bindingEngine.resolveBinding(
+            BindingSchema(path: path),
+          );
+
+          double? numValue;
+          if (value is int) {
+            numValue = value.toDouble();
+          } else if (value is double) {
+            numValue = value;
+          }
+
+          if (numValue != null) {
+            _multiHistory[path]!.add(numValue);
+            // Keep only last N points
+            while (_multiHistory[path]!.length > _maxPoints) {
+              _multiHistory[path]!.removeAt(0);
+            }
+          }
         }
       });
+    } else {
+      // Single binding
+      final value = widget.bindingEngine.resolveBinding(
+        widget.element.binding ?? BindingSchema(path: 'node.rssi'),
+      );
+
+      double? numValue;
+      if (value is int) {
+        numValue = value.toDouble();
+      } else if (value is double) {
+        numValue = value;
+      }
+
+      if (numValue != null) {
+        setState(() {
+          _history.add(numValue!);
+          // Keep only last N points
+          while (_history.length > _maxPoints) {
+            _history.removeAt(0);
+          }
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Handle multi-line chart separately
+    if (_isMultiLine) {
+      return _buildMultiLineChart();
+    }
+
     // Use provided history, built-up history, or sample data for preview
     List<double> data;
     if (widget.historyData != null) {
@@ -574,6 +620,13 @@ class _ChartRendererState extends State<ChartRenderer> {
         return _buildLineChart(data, chartColor);
       case ChartType.area:
         return _buildAreaChart(data, chartColor);
+      case ChartType.stepped:
+        return _buildSteppedChart(data, chartColor);
+      case ChartType.scatter:
+        return _buildScatterChart(data, chartColor);
+      case ChartType.multiLine:
+        // Shouldn't reach here, handled above
+        return _buildLineChart(data, chartColor);
     }
   }
 
@@ -582,6 +635,115 @@ class _ChartRendererState extends State<ChartRenderer> {
     return List.generate(
       _maxPoints,
       (i) => (50 + 30 * (i % 5 - 2) / 2 + 10 * (i % 3 - 1)).toDouble(),
+    );
+  }
+
+  Widget _buildMultiLineChart() {
+    final paths = widget.element.chartBindingPaths!;
+    final colors = widget.element.chartLegendColors ?? [];
+
+    // Build line data for each series
+    final lineBarsData = <LineChartBarData>[];
+    double globalMinY = double.infinity;
+    double globalMaxY = double.negativeInfinity;
+
+    for (int i = 0; i < paths.length; i++) {
+      final path = paths[i];
+      final history = _multiHistory[path] ?? [];
+
+      // Use provided color or default
+      Color lineColor;
+      if (i < colors.length) {
+        lineColor = StyleSchema.parseColor(colors[i]);
+      } else {
+        // Default colors for each line
+        final defaultColors = [
+          widget.accentColor,
+          const Color(0xFF00BCD4), // Cyan
+          const Color(0xFFFF9800), // Orange
+          const Color(0xFF4CAF50), // Green
+          const Color(0xFFE91E63), // Pink
+          const Color(0xFF9C27B0), // Purple
+        ];
+        lineColor = defaultColors[i % defaultColors.length];
+      }
+
+      // Use history or sample data
+      List<double> data;
+      if (history.isNotEmpty) {
+        data = history;
+      } else {
+        // Generate slightly different sample data for each line
+        data = List.generate(
+          _maxPoints,
+          (j) =>
+              (50 + 30 * ((j + i * 7) % 5 - 2) / 2 + 10 * ((j + i * 3) % 3 - 1))
+                  .toDouble(),
+        );
+      }
+
+      if (data.isEmpty) continue;
+
+      // Update global min/max
+      final minVal = data.reduce((a, b) => a < b ? a : b);
+      final maxVal = data.reduce((a, b) => a > b ? a : b);
+      if (minVal < globalMinY) globalMinY = minVal;
+      if (maxVal > globalMaxY) globalMaxY = maxVal;
+
+      final spots = data
+          .asMap()
+          .entries
+          .map((e) => FlSpot(e.key.toDouble(), e.value))
+          .toList();
+
+      lineBarsData.add(
+        LineChartBarData(
+          spots: spots,
+          isCurved: _isCurved,
+          color: lineColor,
+          barWidth: 2,
+          isStrokeCapRound: true,
+          dotData: FlDotData(
+            show: _showDots,
+            getDotPainter: (spot, percent, bar, index) =>
+                FlDotCirclePainter(radius: 2, color: lineColor),
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            color: lineColor.withValues(alpha: 0.15),
+          ),
+        ),
+      );
+    }
+
+    if (lineBarsData.isEmpty) return const SizedBox.shrink();
+
+    // Add padding to min/max
+    if (globalMinY == double.infinity) globalMinY = 0;
+    if (globalMaxY == double.negativeInfinity) globalMaxY = 100;
+    final range = globalMaxY - globalMinY;
+    final padding = range * 0.1;
+    globalMinY -= padding;
+    globalMaxY += padding;
+
+    final interval = (globalMaxY - globalMinY) / 4;
+
+    return LineChart(
+      LineChartData(
+        gridData: FlGridData(
+          show: _showGrid,
+          drawVerticalLine: false,
+          horizontalInterval: interval > 0 ? interval : 20,
+          getDrawingHorizontalLine: (value) =>
+              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+        ),
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        lineTouchData: const LineTouchData(enabled: false),
+        lineBarsData: lineBarsData,
+        minY: globalMinY,
+        maxY: globalMaxY,
+      ),
     );
   }
 
@@ -745,6 +907,96 @@ class _ChartRendererState extends State<ChartRenderer> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSteppedChart(List<double> data, Color color) {
+    if (data.isEmpty) return const SizedBox.shrink();
+
+    final spots = data
+        .asMap()
+        .entries
+        .map((e) => FlSpot(e.key.toDouble(), e.value))
+        .toList();
+
+    final minY = data.reduce((a, b) => a < b ? a : b);
+    final maxY = data.reduce((a, b) => a > b ? a : b);
+    final interval = (maxY - minY) / 4;
+
+    return LineChart(
+      LineChartData(
+        gridData: FlGridData(
+          show: _showGrid,
+          drawVerticalLine: false,
+          horizontalInterval: interval > 0 ? interval : 20,
+          getDrawingHorizontalLine: (value) =>
+              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+        ),
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        lineTouchData: const LineTouchData(enabled: false),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: false, // Stepped requires no curve
+            color: color,
+            barWidth: 2,
+            isStrokeCapRound: false,
+            lineChartStepData: const LineChartStepData(stepDirection: 0.5),
+            dotData: FlDotData(
+              show: _showDots,
+              getDotPainter: (spot, percent, bar, index) =>
+                  FlDotCirclePainter(radius: 3, color: color),
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              color: color.withValues(alpha: 0.15),
+            ),
+          ),
+        ],
+        minY: minY - 5,
+        maxY: maxY + 5,
+      ),
+    );
+  }
+
+  Widget _buildScatterChart(List<double> data, Color color) {
+    if (data.isEmpty) return const SizedBox.shrink();
+
+    final spots = data.asMap().entries.map((e) {
+      return ScatterSpot(
+        e.key.toDouble(),
+        e.value,
+        dotPainter: FlDotCirclePainter(
+          radius: 4,
+          color: color,
+          strokeWidth: 1,
+          strokeColor: color.withValues(alpha: 0.5),
+        ),
+      );
+    }).toList();
+
+    final minY = data.reduce((a, b) => a < b ? a : b);
+    final maxY = data.reduce((a, b) => a > b ? a : b);
+
+    return ScatterChart(
+      ScatterChartData(
+        gridData: FlGridData(
+          show: _showGrid,
+          drawVerticalLine: false,
+          horizontalInterval: (maxY - minY) / 4,
+          getDrawingHorizontalLine: (value) =>
+              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+        ),
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        scatterTouchData: ScatterTouchData(enabled: false),
+        scatterSpots: spots,
+        minY: minY - 5,
+        maxY: maxY + 5,
+        minX: 0,
+        maxX: data.length.toDouble(),
       ),
     );
   }
