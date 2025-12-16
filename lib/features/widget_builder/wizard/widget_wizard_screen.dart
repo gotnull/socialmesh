@@ -1263,59 +1263,84 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         children: children,
       );
     } else if (_layoutStyle == _LayoutStyle.horizontal) {
-      // Horizontal layout - wrap items in a row
-      root = ElementSchema(
-        type: ElementType.row,
-        style: const StyleSchema(
-          padding: 12,
-          spacing: 8,
-          mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
-        ),
-        children: children,
-      );
-    } else if (_layoutStyle == _LayoutStyle.grid) {
-      // Create a 2-column grid using rows
-      final rows = <ElementSchema>[];
-
-      for (var i = 0; i < children.length; i += 2) {
-        final rowChildren = <ElementSchema>[
-          // Wrap first item in container with expanded
-          ElementSchema(
-            type: ElementType.container,
-            style: const StyleSchema(expanded: true),
-            children: [children[i]],
+      // Horizontal layout - stack rows of 3 items each for better wrapping
+      if (children.length <= 3) {
+        // Few items - single row with even spacing
+        root = ElementSchema(
+          type: ElementType.row,
+          style: const StyleSchema(
+            padding: 12,
+            spacing: 8,
+            mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
           ),
-        ];
-        if (i + 1 < children.length) {
-          rowChildren.add(
+          children: children,
+        );
+      } else {
+        // Many items - stack into rows of 3
+        final rows = <ElementSchema>[];
+        for (var i = 0; i < children.length; i += 3) {
+          final rowItems = <ElementSchema>[];
+          for (var j = i; j < i + 3 && j < children.length; j++) {
+            rowItems.add(children[j]);
+          }
+          rows.add(
             ElementSchema(
-              type: ElementType.container,
-              style: const StyleSchema(expanded: true),
-              children: [children[i + 1]],
-            ),
-          );
-        } else {
-          // Add empty spacer to maintain grid alignment
-          rowChildren.add(
-            ElementSchema(
-              type: ElementType.spacer,
-              style: const StyleSchema(expanded: true),
+              type: ElementType.row,
+              style: const StyleSchema(
+                spacing: 8,
+                mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
+              ),
+              children: rowItems,
             ),
           );
         }
-        rows.add(
-          ElementSchema(
-            type: ElementType.row,
-            style: const StyleSchema(spacing: 8),
-            children: rowChildren,
-          ),
+        root = ElementSchema(
+          type: ElementType.column,
+          style: const StyleSchema(padding: 12, spacing: 8),
+          children: rows,
         );
       }
-      root = ElementSchema(
-        type: ElementType.column,
-        style: const StyleSchema(padding: 12, spacing: 8),
-        children: rows,
-      );
+    } else if (_layoutStyle == _LayoutStyle.grid) {
+      // Create a 2-column grid - simpler approach without expanded containers
+      if (children.isEmpty) {
+        root = ElementSchema(
+          type: ElementType.column,
+          style: const StyleSchema(padding: 12, spacing: 8),
+          children: [
+            ElementSchema(
+              type: ElementType.text,
+              text: 'No data selected',
+              style: StyleSchema(
+                textColor: _colorToHex(AppTheme.textSecondary),
+                fontSize: 13,
+              ),
+            ),
+          ],
+        );
+      } else {
+        final rows = <ElementSchema>[];
+        for (var i = 0; i < children.length; i += 2) {
+          final rowChildren = <ElementSchema>[children[i]];
+          if (i + 1 < children.length) {
+            rowChildren.add(children[i + 1]);
+          }
+          rows.add(
+            ElementSchema(
+              type: ElementType.row,
+              style: const StyleSchema(
+                spacing: 8,
+                mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
+              ),
+              children: rowChildren,
+            ),
+          );
+        }
+        root = ElementSchema(
+          type: ElementType.column,
+          style: const StyleSchema(padding: 12, spacing: 8),
+          children: rows,
+        );
+      }
     } else {
       root = ElementSchema(
         type: ElementType.column,
@@ -1387,15 +1412,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
       if (isCompactLayout) {
         // Compact cell for horizontal/grid layout - stacked vertically in a cell
+        final isHorizontal = _layoutStyle == _LayoutStyle.horizontal;
         children.add(
           ElementSchema(
             type: ElementType.column,
             style: StyleSchema(
-              padding: 8,
+              padding: isHorizontal ? 4 : 8,
               backgroundColor: _colorToHex(
                 AppTheme.darkCard.withValues(alpha: 0.5),
               ),
-              borderRadius: 8,
+              borderRadius: 6,
               alignment: AlignmentOption.center,
             ),
             children: [
@@ -1405,7 +1431,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   text: binding.label,
                   style: StyleSchema(
                     textColor: _colorToHex(AppTheme.textSecondary),
-                    fontSize: 11,
+                    fontSize: isHorizontal ? 9 : 11,
                   ),
                 ),
               ElementSchema(
@@ -1417,7 +1443,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 ),
                 style: StyleSchema(
                   textColor: _colorToHex(_accentColor),
-                  fontSize: 18,
+                  fontSize: isHorizontal ? 14 : 18,
                   fontWeight: 'w700',
                 ),
               ),
