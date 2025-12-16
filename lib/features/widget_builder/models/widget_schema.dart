@@ -281,6 +281,28 @@ class StyleSchema {
   Color? get textColorValue =>
       textColor != null ? parseColor(textColor!) : null;
 
+  /// Resolves a color string to a Color, with optional accent color support
+  /// Supports formats:
+  /// - Hex: '#FF0000' or 'FF0000'
+  /// - Accent: 'accent' (returns accentColor)
+  /// - Accent with opacity: 'accent:0.5' (returns accentColor with 50% opacity)
+  static Color resolveColor(String colorStr, Color accentColor) {
+    final trimmed = colorStr.trim().toLowerCase();
+
+    // Handle accent color references
+    if (trimmed == 'accent') {
+      return accentColor;
+    }
+    if (trimmed.startsWith('accent:')) {
+      final opacityStr = trimmed.substring(7);
+      final opacity = double.tryParse(opacityStr) ?? 1.0;
+      return accentColor.withValues(alpha: opacity);
+    }
+
+    // Fall back to hex parsing
+    return parseColor(colorStr);
+  }
+
   /// Parses a hex color string to a Color
   static Color parseColor(String hex) {
     final buffer = StringBuffer();

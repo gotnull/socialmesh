@@ -392,36 +392,33 @@ class _MarketplaceWidgetCard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'by ${widget.author}',
-                            style: TextStyle(
-                              color: AppTheme.textSecondary,
-                              fontSize: 12,
-                            ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'by ${widget.author}',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 12,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    _buildStats(),
-                  ],
-                ),
+                  ),
+                  _buildStats(),
+                ],
               ),
               const SizedBox(height: 16),
             ],
@@ -451,42 +448,40 @@ class _MarketplaceWidgetCard extends ConsumerWidget {
                   node: node,
                   allNodes: nodes,
                   accentColor: context.accentColor,
+                  enableActions: false, // Only interactive on dashboard
                 ),
               ),
               const SizedBox(height: 8),
               // Info section
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            schema.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          schema.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'by ${widget.author}',
-                            style: TextStyle(
-                              color: AppTheme.textSecondary,
-                              fontSize: 12,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'by ${widget.author}',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 12,
                           ),
-                        ],
-                      ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                    _buildStats(),
-                  ],
-                ),
+                  ),
+                  _buildStats(),
+                ],
               ),
               const SizedBox(height: 16),
             ],
@@ -613,6 +608,7 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
                       node: node,
                       allNodes: nodes,
                       accentColor: context.accentColor,
+                      enableActions: false, // Only interactive on dashboard
                     ),
                   );
                 },

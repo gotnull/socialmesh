@@ -21,24 +21,16 @@ class WidgetBuilderScreen extends ConsumerStatefulWidget {
       _WidgetBuilderScreenState();
 }
 
-class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   final _storageService = WidgetStorageService();
   List<WidgetSchema> _myWidgets = [];
+  Set<String> _marketplaceIds = {};
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _loadWidgets();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadWidgets() async {
@@ -47,9 +39,11 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     try {
       await _storageService.init();
       final widgets = await _storageService.getWidgets();
+      final installedIds = await _storageService.getInstalledMarketplaceIds();
 
       setState(() {
         _myWidgets = widgets;
+        _marketplaceIds = installedIds.toSet();
         _isLoading = false;
       });
     } catch (e) {
@@ -66,7 +60,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
         title: const Text(
-          'Widget Builder',
+          'My Widgets',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -85,32 +79,17 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
             tooltip: 'Marketplace',
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: context.accentColor,
-          labelColor: context.accentColor,
-          unselectedLabelColor: AppTheme.textSecondary,
-          tabs: const [
-            Tab(text: 'My Widgets'),
-            Tab(text: 'Installed'),
-          ],
-        ),
       ),
-      body: _isLoading
-          ? const ScreenLoadingIndicator()
-          : TabBarView(
-              controller: _tabController,
-              children: [_buildMyWidgetsTab(), _buildInstalledTab()],
-            ),
+      body: _isLoading ? const ScreenLoadingIndicator() : _buildWidgetList(),
     );
   }
 
-  Widget _buildMyWidgetsTab() {
+  Widget _buildWidgetList() {
     if (_myWidgets.isEmpty) {
       return _buildEmptyState(
         icon: Icons.widgets_outlined,
         title: 'No Widgets Yet',
-        subtitle: 'Browse the marketplace to discover and install widgets',
+        subtitle: 'Create your own or browse the marketplace',
         action: TextButton.icon(
           onPressed: _openMarketplace,
           icon: Icon(Icons.store, color: context.accentColor),
@@ -128,49 +107,23 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         padding: const EdgeInsets.all(16),
         itemCount: _myWidgets.length,
         itemBuilder: (context, index) {
-          return _buildWidgetCard(_myWidgets[index], isTemplate: false);
+          final schema = _myWidgets[index];
+          final isFromMarketplace = _marketplaceIds.contains(schema.id);
+          return _buildWidgetCard(
+            schema,
+            isTemplate: false,
+            isFromMarketplace: isFromMarketplace,
+          );
         },
       ),
     );
   }
 
-  Widget _buildInstalledTab() {
-    return FutureBuilder<List<String>>(
-      future: _storageService.getInstalledMarketplaceIds(),
-      builder: (context, snapshot) {
-        final installedIds = snapshot.data ?? [];
-        final installed = _myWidgets
-            .where((w) => installedIds.contains(w.id))
-            .toList();
-
-        if (installed.isEmpty) {
-          return _buildEmptyState(
-            icon: Icons.download_outlined,
-            title: 'No Installed Widgets',
-            subtitle: 'Browse the marketplace to discover community widgets',
-            action: TextButton.icon(
-              onPressed: _openMarketplace,
-              icon: Icon(Icons.store, color: context.accentColor),
-              label: Text(
-                'Open Marketplace',
-                style: TextStyle(color: context.accentColor),
-              ),
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: installed.length,
-          itemBuilder: (context, index) {
-            return _buildWidgetCard(installed[index], isTemplate: false);
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildWidgetCard(WidgetSchema schema, {required bool isTemplate}) {
+  Widget _buildWidgetCard(
+    WidgetSchema schema, {
+    required bool isTemplate,
+    bool isFromMarketplace = false,
+  }) {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
     final node = myNodeNum != null ? nodes[myNodeNum] : null;
@@ -200,142 +153,147 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
             node: node,
             allNodes: nodes,
             accentColor: context.accentColor,
+            enableActions: false, // Only interactive on dashboard
           ),
         ),
         const SizedBox(height: 8),
-        // Info section
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      schema.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (schema.description != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        schema.description!,
-                        style: TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontSize: 12,
+        // Info section - no horizontal padding to match widget preview width
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          schema.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
+                      if (isFromMarketplace) ...[
+                        const SizedBox(width: 8),
+                        Icon(Icons.store, size: 14, color: context.accentColor),
+                      ],
                     ],
-                  ],
-                ),
-              ),
-              // Actions
-              if (isTemplate)
-                TextButton(
-                  onPressed: () => _useTemplate(schema),
-                  child: Text(
-                    'Use',
-                    style: TextStyle(
-                      color: context.accentColor,
-                      fontWeight: FontWeight.w600,
-                    ),
                   ),
-                )
-              else
-                PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert, color: AppTheme.textSecondary),
-                  color: AppTheme.darkCard,
-                  onSelected: (action) => _handleAction(action, schema),
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: isOnDashboard
-                          ? 'remove_from_dashboard'
-                          : 'add_to_dashboard',
-                      child: Row(
-                        children: [
-                          Icon(
-                            isOnDashboard
-                                ? Icons.dashboard_outlined
-                                : Icons.dashboard_customize,
-                            size: 18,
+                  if (schema.description != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      schema.description!,
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 12,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            // Actions
+            if (isTemplate)
+              TextButton(
+                onPressed: () => _useTemplate(schema),
+                child: Text(
+                  'Use',
+                  style: TextStyle(
+                    color: context.accentColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              )
+            else
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, color: AppTheme.textSecondary),
+                color: AppTheme.darkCard,
+                onSelected: (action) => _handleAction(action, schema),
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: isOnDashboard
+                        ? 'remove_from_dashboard'
+                        : 'add_to_dashboard',
+                    child: Row(
+                      children: [
+                        Icon(
+                          isOnDashboard
+                              ? Icons.dashboard_outlined
+                              : Icons.dashboard_customize,
+                          size: 18,
+                          color: isOnDashboard
+                              ? AppTheme.errorRed
+                              : Colors.white,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          isOnDashboard
+                              ? 'Remove from Dashboard'
+                              : 'Add to Dashboard',
+                          style: TextStyle(
                             color: isOnDashboard
                                 ? AppTheme.errorRed
                                 : Colors.white,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            isOnDashboard
-                                ? 'Remove from Dashboard'
-                                : 'Add to Dashboard',
-                            style: TextStyle(
-                              color: isOnDashboard
-                                  ? AppTheme.errorRed
-                                  : Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit, size: 18, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text('Edit', style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit, size: 18, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('Edit', style: TextStyle(color: Colors.white)),
+                      ],
                     ),
-                    const PopupMenuItem(
-                      value: 'duplicate',
-                      child: Row(
-                        children: [
-                          Icon(Icons.copy, size: 18, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text(
-                            'Duplicate',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
-                      ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'duplicate',
+                    child: Row(
+                      children: [
+                        Icon(Icons.copy, size: 18, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text(
+                          'Duplicate',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
                     ),
-                    const PopupMenuItem(
-                      value: 'export',
-                      child: Row(
-                        children: [
-                          Icon(Icons.share, size: 18, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text('Export', style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'export',
+                    child: Row(
+                      children: [
+                        Icon(Icons.share, size: 18, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('Export', style: TextStyle(color: Colors.white)),
+                      ],
                     ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.delete,
-                            size: 18,
-                            color: AppTheme.errorRed,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Delete',
-                            style: TextStyle(color: AppTheme.errorRed),
-                          ),
-                        ],
-                      ),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete, size: 18, color: AppTheme.errorRed),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Delete',
+                          style: TextStyle(color: AppTheme.errorRed),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-            ],
-          ),
+                  ),
+                ],
+              ),
+          ],
         ),
         const SizedBox(height: 16),
       ],
@@ -433,7 +391,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
     if (result != null) {
       await _loadWidgets();
-      _tabController.animateTo(0); // Switch to My Widgets tab
     }
   }
 
@@ -533,13 +490,10 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
   }
 
   void _openMarketplace() async {
-    final installed = await Navigator.push<bool>(
+    await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (context) => const WidgetMarketplaceScreen()),
     );
     await _loadWidgets();
-    if (installed == true) {
-      _tabController.animateTo(1); // Switch to Installed tab
-    }
   }
 }

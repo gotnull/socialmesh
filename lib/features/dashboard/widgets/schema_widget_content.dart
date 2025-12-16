@@ -54,14 +54,15 @@ class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent> {
   }
 
   /// Get the height constraint based on widget size
+  /// MUST match heights in marketplace and editor (120/180px)
   double _getWidgetHeight(CustomWidgetSize size) {
     switch (size) {
       case CustomWidgetSize.medium:
-        return 160;
+        return 120;
       case CustomWidgetSize.large:
-        return 280;
+        return 180;
       case CustomWidgetSize.custom:
-        return 200; // Default height for custom size
+        return 120; // Default to medium height for custom size
     }
   }
 
@@ -69,7 +70,7 @@ class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const SizedBox(
-        height: 160,
+        height: 120,
         child: Center(child: MeshLoadingIndicator(size: 20)),
       );
     }

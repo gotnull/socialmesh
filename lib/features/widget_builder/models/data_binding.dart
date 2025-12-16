@@ -470,6 +470,20 @@ class BindingRegistry {
       category: BindingCategory.messaging,
       valueType: int,
     ),
+    BindingDefinition(
+      path: 'messaging.recentCount',
+      label: 'Recent Messages',
+      description: 'Number of recent messages',
+      category: BindingCategory.messaging,
+      valueType: int,
+    ),
+    BindingDefinition(
+      path: 'node.displayName',
+      label: 'Display Name',
+      description: 'Node display name (long name or short name)',
+      category: BindingCategory.node,
+      valueType: String,
+    ),
   ];
 
   /// Get bindings filtered by category
@@ -661,6 +675,8 @@ class DataBindingEngine {
         return 'Node Name';
       case 'node.shortName':
         return 'NODE';
+      case 'node.displayName':
+        return 'Node Name';
       case 'node.nodeNum':
         return 12345678;
       case 'node.isOnline':
@@ -730,6 +746,8 @@ class DataBindingEngine {
         return 18;
       case 'messages.receivedCount':
         return 24;
+      case 'messaging.recentCount':
+        return 0;
 
       default:
         return null;

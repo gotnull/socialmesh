@@ -26,10 +26,15 @@ class TextRenderer extends StatelessWidget {
       text = bindingEngine.resolveAndFormat(element.binding!);
     }
 
+    // Resolve text color with accent support
+    final textColor = element.style.textColor != null
+        ? StyleSchema.resolveColor(element.style.textColor!, accentColor)
+        : Colors.white;
+
     return Text(
       text,
       style: TextStyle(
-        color: element.style.textColorValue ?? Colors.white,
+        color: textColor,
         fontSize: element.style.fontSize ?? 14,
         fontWeight: element.style.fontWeightValue ?? FontWeight.normal,
       ),
@@ -56,7 +61,11 @@ class IconRenderer extends StatelessWidget {
     final iconName = element.iconName ?? 'help_outline';
     final iconData = _getIconData(iconName);
     final size = element.iconSize ?? element.style.fontSize ?? 24.0;
-    final color = element.style.textColorValue ?? accentColor;
+
+    // Resolve icon color with accent support
+    final color = element.style.textColor != null
+        ? StyleSchema.resolveColor(element.style.textColor!, accentColor)
+        : accentColor;
 
     return Icon(iconData, size: size, color: color);
   }

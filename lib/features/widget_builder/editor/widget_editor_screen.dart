@@ -195,52 +195,47 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   }
 
   Widget _buildFullscreenCanvas() {
+    // Render widget at ACTUAL size it will appear in marketplace/dashboard
+    // Full width with height based on size setting
+    final previewHeight = _getPreviewHeight();
+
     return Container(
       color: AppTheme.darkBackground,
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: DragTarget<ElementType>(
-            onAcceptWithDetails: (details) => _addElement(details.data),
-            builder: (context, candidateData, rejectedData) {
-              final isHovering = candidateData.isNotEmpty;
-              // Scale widget to fit screen while maintaining aspect ratio
-              final screenWidth = MediaQuery.of(context).size.width - 32;
-              final widgetWidth = _getWidgetWidth();
-              final scale = screenWidth < widgetWidth
-                  ? screenWidth / widgetWidth
-                  : 1.0;
+      child: Column(
+        children: [
+          // Centered widget preview at actual render size
+          Expanded(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: DragTarget<ElementType>(
+                  onAcceptWithDetails: (details) => _addElement(details.data),
+                  builder: (context, candidateData, rejectedData) {
+                    final isHovering = candidateData.isNotEmpty;
 
-              return Transform.scale(
-                scale: scale,
-                child: Container(
-                  width: widgetWidth,
-                  height: _getWidgetHeight(),
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isHovering
-                          ? context.accentColor
-                          : AppTheme.darkBorder,
-                      width: isHovering ? 2 : 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 4),
+                    return Container(
+                      // Full width like marketplace cards
+                      width: double.infinity,
+                      height: previewHeight,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: isHovering
+                              ? context.accentColor
+                              : Colors.transparent,
+                          width: isHovering ? 2 : 1,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                    ],
-                  ),
-                  child: _showPreview
-                      ? _buildPreviewContent()
-                      : _buildEditableContent(),
+                      child: _showPreview
+                          ? _buildPreviewContent()
+                          : _buildEditableContent(),
+                    );
+                  },
                 ),
-              );
-            },
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -312,9 +307,9 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.7,
         expand: false,
         builder: (context, scrollController) => Column(
           children: [
@@ -336,13 +331,13 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
               child: Row(
                 children: [
                   Icon(
-                    Icons.widgets_outlined,
+                    Icons.add_box_outlined,
                     size: 20,
                     color: context.accentColor,
                   ),
                   const SizedBox(width: 8),
                   const Text(
-                    'Add Element',
+                    'Add Block',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -353,47 +348,46 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            // Element grid
+            // Simplified block grid
             Expanded(
               child: ListView(
                 controller: scrollController,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  _buildElementPickerSection('Layout', [
-                    _ToolboxItem(ElementType.row, 'Row', Icons.view_column),
-                    _ToolboxItem(
-                      ElementType.column,
-                      'Column',
-                      Icons.view_agenda,
+                  _buildBlockPickerSection('Display Blocks', [
+                    _BlockItem(
+                      'info',
+                      'Info Block',
+                      Icons.info_outline,
+                      'Icon + Label + Data Value',
                     ),
-                    _ToolboxItem(
-                      ElementType.container,
-                      'Container',
-                      Icons.crop_square,
+                    _BlockItem(
+                      'metric',
+                      'Metric',
+                      Icons.trending_up,
+                      'Large value with label',
                     ),
-                    _ToolboxItem(ElementType.stack, 'Stack', Icons.layers),
-                    _ToolboxItem(ElementType.spacer, 'Spacer', Icons.space_bar),
-                  ]),
-                  _buildElementPickerSection('Content', [
-                    _ToolboxItem(ElementType.text, 'Text', Icons.text_fields),
-                    _ToolboxItem(
-                      ElementType.icon,
-                      'Icon',
-                      Icons.emoji_emotions_outlined,
+                    _BlockItem(
+                      'status',
+                      'Status',
+                      Icons.circle,
+                      'Status indicator with binding',
                     ),
-                    _ToolboxItem(ElementType.image, 'Image', Icons.image),
-                    _ToolboxItem(ElementType.shape, 'Shape', Icons.square),
                   ]),
-                  _buildElementPickerSection('Data Display', [
-                    _ToolboxItem(ElementType.gauge, 'Gauge', Icons.speed),
-                    _ToolboxItem(ElementType.chart, 'Chart', Icons.show_chart),
-                    _ToolboxItem(ElementType.map, 'Map', Icons.map),
+                  _buildBlockPickerSection('Action Blocks', [
+                    _BlockItem(
+                      'action_button',
+                      'Action Button',
+                      Icons.touch_app,
+                      'Tappable button with action',
+                    ),
                   ]),
-                  _buildElementPickerSection('Logic', [
-                    _ToolboxItem(
-                      ElementType.conditional,
-                      'Conditional',
-                      Icons.rule,
+                  _buildBlockPickerSection('Layout', [
+                    _BlockItem(
+                      'row',
+                      'New Row',
+                      Icons.view_column,
+                      'Add a row for more blocks',
                     ),
                   ]),
                   const SizedBox(height: 16),
@@ -406,7 +400,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     );
   }
 
-  Widget _buildElementPickerSection(String title, List<_ToolboxItem> items) {
+  Widget _buildBlockPickerSection(String title, List<_BlockItem> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -422,56 +416,329 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
             ),
           ),
         ),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: items.map((item) => _buildElementPickerChip(item)).toList(),
-        ),
-        const SizedBox(height: 16),
+        ...items.map((item) => _buildBlockPickerCard(item)),
+        const SizedBox(height: 8),
       ],
     );
   }
 
-  Widget _buildElementPickerChip(_ToolboxItem item) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          Navigator.pop(context);
-          _addElement(item.type);
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: AppTheme.darkBackground,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.darkBorder),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(item.icon, size: 18, color: context.accentColor),
-              const SizedBox(width: 8),
-              Text(
-                item.label,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
+  Widget _buildBlockPickerCard(_BlockItem item) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.pop(context);
+            _addBlock(item.type);
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.darkBorder),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: context.accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(item.icon, size: 22, color: context.accentColor),
                 ),
-              ),
-            ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.label,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item.description,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.add_circle_outline,
+                  size: 22,
+                  color: AppTheme.textTertiary,
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  void _addBlock(String blockType) {
+    final newBlock = _createBlock(blockType);
+    if (newBlock == null) return;
+
+    // Find or create a row to add the block to
+    if (_schema.root.type == ElementType.row) {
+      // Root is already a row, add directly
+      final updatedRoot = _schema.root.copyWith(
+        children: [..._schema.root.children, newBlock],
+      );
+      setState(() => _schema = _schema.copyWith(root: updatedRoot));
+    } else if (_schema.root.type == ElementType.column) {
+      // Root is a column, find the last row or create one
+      final children = _schema.root.children;
+      if (children.isNotEmpty && children.last.type == ElementType.row) {
+        // Add to existing last row
+        final lastRow = children.last;
+        final updatedRow = lastRow.copyWith(
+          children: [...lastRow.children, newBlock],
+        );
+        final updatedChildren = [...children];
+        updatedChildren[updatedChildren.length - 1] = updatedRow;
+        setState(
+          () => _schema = _schema.copyWith(
+            root: _schema.root.copyWith(children: updatedChildren),
+          ),
+        );
+      } else {
+        // Create a new row with the block
+        final newRow = ElementSchema(
+          type: ElementType.row,
+          style: const StyleSchema(spacing: 8, expanded: true),
+          children: [newBlock],
+        );
+        setState(
+          () => _schema = _schema.copyWith(
+            root: _schema.root.copyWith(children: [...children, newRow]),
+          ),
+        );
+      }
+    } else {
+      // Root is container or something else, wrap in row
+      final newRow = ElementSchema(
+        type: ElementType.row,
+        style: const StyleSchema(spacing: 8, expanded: true),
+        children: [newBlock],
+      );
+      setState(
+        () => _schema = _schema.copyWith(
+          root: ElementSchema(
+            type: ElementType.column,
+            style: const StyleSchema(padding: 12, spacing: 8),
+            children: [newRow],
+          ),
+        ),
+      );
+    }
+  }
+
+  ElementSchema? _createBlock(String blockType) {
+    switch (blockType) {
+      case 'info':
+        return ElementSchema(
+          type: ElementType.container,
+          style: const StyleSchema(
+            flex: 1,
+            expanded: true,
+            padding: 8,
+            borderRadius: 12,
+            backgroundColor: 'accent:0.08',
+            borderColor: 'accent:0.2',
+            borderWidth: 1,
+            mainAxisAlignment: MainAxisAlignmentOption.center,
+            crossAxisAlignment: CrossAxisAlignmentOption.center,
+          ),
+          children: [
+            ElementSchema(
+              type: ElementType.icon,
+              iconName: 'info',
+              iconSize: 22,
+              style: const StyleSchema(textColor: 'accent'),
+            ),
+            ElementSchema(
+              type: ElementType.spacer,
+              style: const StyleSchema(height: 4),
+            ),
+            ElementSchema(
+              type: ElementType.text,
+              text: 'Label',
+              style: const StyleSchema(
+                textColor: 'accent',
+                fontSize: 9,
+                fontWeight: 'w600',
+                textAlign: TextAlignOption.center,
+              ),
+            ),
+          ],
+        );
+
+      case 'metric':
+        return ElementSchema(
+          type: ElementType.column,
+          style: const StyleSchema(flex: 1, alignment: AlignmentOption.center),
+          children: [
+            ElementSchema(
+              type: ElementType.icon,
+              iconName: 'trending_up',
+              iconSize: 24,
+              style: const StyleSchema(textColor: 'accent'),
+            ),
+            ElementSchema(
+              type: ElementType.text,
+              text: '--',
+              binding: const BindingSchema(path: '', defaultValue: '--'),
+              style: const StyleSchema(
+                fontSize: 16,
+                fontWeight: 'w600',
+                textColor: '#FFFFFF',
+              ),
+            ),
+            ElementSchema(
+              type: ElementType.text,
+              text: 'Value',
+              style: const StyleSchema(fontSize: 10, textColor: '#888888'),
+            ),
+          ],
+        );
+
+      case 'status':
+        return ElementSchema(
+          type: ElementType.container,
+          style: const StyleSchema(
+            flex: 1,
+            expanded: true,
+            padding: 8,
+            borderRadius: 12,
+            backgroundColor: 'accent:0.08',
+            borderColor: 'accent:0.2',
+            borderWidth: 1,
+            mainAxisAlignment: MainAxisAlignmentOption.center,
+            crossAxisAlignment: CrossAxisAlignmentOption.center,
+          ),
+          children: [
+            ElementSchema(
+              type: ElementType.icon,
+              iconName: 'circle',
+              iconSize: 12,
+              style: const StyleSchema(textColor: 'accent'),
+            ),
+            ElementSchema(
+              type: ElementType.spacer,
+              style: const StyleSchema(height: 4),
+            ),
+            ElementSchema(
+              type: ElementType.text,
+              text: 'Status',
+              style: const StyleSchema(textColor: '#AAAAAA', fontSize: 11),
+            ),
+          ],
+        );
+
+      case 'action_button':
+        return ElementSchema(
+          type: ElementType.container,
+          style: const StyleSchema(
+            flex: 1,
+            expanded: true,
+            padding: 8,
+            borderRadius: 12,
+            backgroundColor: 'accent:0.08',
+            borderColor: 'accent:0.2',
+            borderWidth: 1,
+            mainAxisAlignment: MainAxisAlignmentOption.center,
+            crossAxisAlignment: CrossAxisAlignmentOption.center,
+          ),
+          action: const ActionSchema(type: ActionType.none),
+          children: [
+            ElementSchema(
+              type: ElementType.icon,
+              iconName: 'touch_app',
+              iconSize: 22,
+              style: const StyleSchema(textColor: 'accent'),
+            ),
+            ElementSchema(
+              type: ElementType.spacer,
+              style: const StyleSchema(height: 4),
+            ),
+            ElementSchema(
+              type: ElementType.text,
+              text: 'Action',
+              style: const StyleSchema(
+                textColor: 'accent',
+                fontSize: 9,
+                fontWeight: 'w600',
+                textAlign: TextAlignOption.center,
+              ),
+            ),
+          ],
+        );
+
+      case 'row':
+        // Check if we can add a row
+        if (!_canAddRow()) {
+          showInfoSnackBar(
+            context,
+            _schema.size == CustomWidgetSize.medium
+                ? 'Medium widgets only allow 1 row'
+                : 'Large widgets allow max 2 rows',
+          );
+          return null;
+        }
+        // Create a new empty row
+        setState(
+          () => _schema = _schema.copyWith(
+            root: _schema.root.type == ElementType.column
+                ? _schema.root.copyWith(
+                    children: [
+                      ..._schema.root.children,
+                      ElementSchema(
+                        type: ElementType.row,
+                        style: const StyleSchema(spacing: 8, expanded: true),
+                        children: [],
+                      ),
+                    ],
+                  )
+                : ElementSchema(
+                    type: ElementType.column,
+                    style: const StyleSchema(padding: 12, spacing: 8),
+                    children: [
+                      _schema.root,
+                      ElementSchema(
+                        type: ElementType.row,
+                        style: const StyleSchema(spacing: 8, expanded: true),
+                        children: [],
+                      ),
+                    ],
+                  ),
+          ),
+        );
+        return null; // Row is added directly, no block to return
+
+      default:
+        return null;
+    }
+  }
+
+  // Callback to refresh the property sheet when element changes
+  void Function(void Function())? _sheetSetState;
+
   void _showPropertySheet() {
     if (_selectedElementId == null) return;
-    final element = _findElementById(_schema.root, _selectedElementId!);
-    if (element == null) return;
 
     showModalBottomSheet(
       context: context,
@@ -486,117 +753,145 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         maxChildSize: 0.85,
         expand: false,
         builder: (context, scrollController) => StatefulBuilder(
-          builder: (context, setSheetState) => Column(
-            children: [
-              // Handle + Live preview row
-              Container(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Column(
-                  children: [
-                    // Drag handle
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: AppTheme.darkBorder,
-                          borderRadius: BorderRadius.circular(2),
+          builder: (context, setSheetState) {
+            // Store the sheet's setState so we can call it from _updateElement
+            _sheetSetState = setSheetState;
+
+            // Get fresh element data each rebuild
+            final element = _findElementById(_schema.root, _selectedElementId!);
+            if (element == null) {
+              return const Center(child: Text('Element not found'));
+            }
+
+            return Column(
+              children: [
+                // Handle + Live preview row
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Column(
+                    children: [
+                      // Drag handle
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkBorder,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Mini widget preview
-                    Container(
-                      height: 80,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: AppTheme.darkBackground,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppTheme.darkBorder),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: SizedBox(
-                            width: _getWidgetWidth(),
-                            height: _getWidgetHeight(),
-                            child: WidgetRenderer(
-                              schema: _schema,
-                              accentColor: context.accentColor,
-                              usePlaceholderData: true,
-                              isPreview: false,
-                              enableActions: false,
+                      const SizedBox(height: 12),
+                      // Mini widget preview
+                      Container(
+                        height: 80,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkBackground,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppTheme.darkBorder),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: FittedBox(
+                            fit: BoxFit.contain,
+                            child: SizedBox(
+                              width: _getWidgetWidth(),
+                              height: _getWidgetHeight(),
+                              child: WidgetRenderer(
+                                schema: _schema,
+                                accentColor: context.accentColor,
+                                usePlaceholderData: true,
+                                isPreview: false,
+                                enableActions: false,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              // Title row
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Icon(Icons.tune, size: 18, color: context.accentColor),
-                    const SizedBox(width: 8),
-                    Text(
-                      _getElementTypeName(element.type),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                const SizedBox(height: 8),
+                // Title row
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Icon(Icons.tune, size: 18, color: context.accentColor),
+                      const SizedBox(width: 8),
+                      Text(
+                        _getElementTypeName(element.type),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _deleteElement(element.id);
-                      },
-                      icon: Icon(
-                        Icons.delete_outline,
-                        color: AppTheme.errorRed,
-                        size: 20,
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _deleteElement(element.id);
+                        },
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: AppTheme.errorRed,
+                          size: 20,
+                        ),
+                        visualDensity: VisualDensity.compact,
                       ),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const Divider(height: 1, color: AppTheme.darkBorder),
-              // Properties
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _buildPropertySection(
-                      'Content',
-                      _buildContentProperties(element),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildPropertySection(
-                      'Data Binding',
-                      _buildBindingProperties(element),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildPropertySection(
-                      'Style',
-                      _buildStyleProperties(element),
-                    ),
-                    const SizedBox(height: 32),
-                  ],
+                const Divider(height: 1, color: AppTheme.darkBorder),
+                // Properties
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      _buildPropertySection(
+                        'Content',
+                        _buildContentProperties(element),
+                      ),
+                      // Only show binding for bindable elements (text, gauge, chart)
+                      if (_isBindableElement(element.type)) ...[
+                        const SizedBox(height: 16),
+                        _buildPropertySection(
+                          'Data Binding',
+                          _buildBindingProperties(element),
+                        ),
+                      ],
+                      // Only show actions for actionable elements (container, button)
+                      if (_isActionableElement(element.type)) ...[
+                        const SizedBox(height: 16),
+                        _buildPropertySection(
+                          'Action',
+                          _buildActionProperties(element),
+                        ),
+                      ],
+                      // Only show style for styleable elements
+                      if (_isStyleableElement(element.type)) ...[
+                        const SizedBox(height: 16),
+                        _buildPropertySection(
+                          'Style',
+                          _buildStyleProperties(element),
+                        ),
+                      ],
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
-    );
+    ).whenComplete(() {
+      // Clear the callback when sheet is dismissed
+      _sheetSetState = null;
+    });
   }
 
   AppBar _buildAppBar() {
@@ -815,6 +1110,9 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   }
 
   Widget _buildCanvas() {
+    // Render widget at ACTUAL size it will appear in marketplace/dashboard
+    final previewHeight = _getPreviewHeight();
+
     return Container(
       color: AppTheme.darkBackground,
       child: Column(
@@ -857,7 +1155,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
               ],
             ),
           ),
-          // Canvas area
+          // Canvas area - render at actual marketplace size
           Expanded(
             child: Center(
               child: SingleChildScrollView(
@@ -866,25 +1164,20 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                   onAcceptWithDetails: (details) => _addElement(details.data),
                   builder: (context, candidateData, rejectedData) {
                     final isHovering = candidateData.isNotEmpty;
+                    // Use a reasonable max width for landscape (typical card width)
+                    final maxWidth =
+                        MediaQuery.of(context).size.width * 0.5 - 64;
                     return Container(
-                      width: _getWidgetWidth(),
-                      height: _getWidgetHeight(),
+                      width: maxWidth.clamp(280.0, 400.0),
+                      height: previewHeight,
                       decoration: BoxDecoration(
-                        color: AppTheme.darkCard,
-                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isHovering
                               ? context.accentColor
-                              : AppTheme.darkBorder,
+                              : Colors.transparent,
                           width: isHovering ? 2 : 1,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                        borderRadius: BorderRadius.circular(14),
                       ),
                       child: _showPreview
                           ? _buildPreviewContent()
@@ -937,46 +1230,50 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     );
   }
 
-  double _getWidgetWidth() {
-    if (_schema.customWidth != null) {
-      return _schema.customWidth!;
-    }
-    switch (_schema.size) {
-      case CustomWidgetSize.medium:
-        return 320;
-      case CustomWidgetSize.large:
-        return 320;
-      case CustomWidgetSize.custom:
-        return 320;
-    }
-  }
-
-  double _getWidgetHeight() {
+  /// Returns the ACTUAL height at which widgets render in marketplace/dashboard
+  /// This MUST match the heights used in:
+  /// - widget_marketplace_screen.dart (_MarketplaceWidgetCard)
+  /// - widget_builder_screen.dart (_buildWidgetCard)
+  /// - dashboard_screen.dart
+  double _getPreviewHeight() {
     if (_schema.customHeight != null) {
       return _schema.customHeight!;
     }
     switch (_schema.size) {
       case CustomWidgetSize.medium:
-        return 160;
+        return 120.0; // Matches marketplace preview height
       case CustomWidgetSize.large:
-        return 320;
+        return 180.0; // Matches marketplace preview height
       case CustomWidgetSize.custom:
-        return 320;
+        return _schema.customHeight ?? 120.0;
     }
   }
+
+  /// Fixed width for mini preview in property sheets (used with FittedBox)
+  double _getWidgetWidth() => 320;
+
+  /// Height for mini preview in property sheets (used with FittedBox)
+  double _getWidgetHeight() => _getPreviewHeight();
 
   Widget _buildEditableContent() {
     return WidgetRenderer(
       schema: _schema,
       accentColor: context.accentColor,
       isPreview: true,
+      usePlaceholderData: true,
+      enableActions: false, // Only interactive on dashboard
       selectedElementId: _selectedElementId,
       onElementTap: (id) => setState(() => _selectedElementId = id),
     );
   }
 
   Widget _buildPreviewContent() {
-    return WidgetRenderer(schema: _schema, accentColor: context.accentColor);
+    return WidgetRenderer(
+      schema: _schema,
+      accentColor: context.accentColor,
+      usePlaceholderData: true,
+      enableActions: false, // Only interactive on dashboard
+    );
   }
 
   Widget _buildPropertyInspector() {
@@ -1036,13 +1333,27 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                   'Content',
                   _buildContentProperties(element),
                 ),
-                const SizedBox(height: 16),
-                _buildPropertySection(
-                  'Data Binding',
-                  _buildBindingProperties(element),
-                ),
-                const SizedBox(height: 16),
-                _buildPropertySection('Style', _buildStyleProperties(element)),
+                if (_isBindableElement(element.type)) ...[
+                  const SizedBox(height: 16),
+                  _buildPropertySection(
+                    'Data Binding',
+                    _buildBindingProperties(element),
+                  ),
+                ],
+                if (_isActionableElement(element.type)) ...[
+                  const SizedBox(height: 16),
+                  _buildPropertySection(
+                    'Action',
+                    _buildActionProperties(element),
+                  ),
+                ],
+                if (_isStyleableElement(element.type)) ...[
+                  const SizedBox(height: 16),
+                  _buildPropertySection(
+                    'Style',
+                    _buildStyleProperties(element),
+                  ),
+                ],
               ],
             ),
           ),
@@ -1094,18 +1405,6 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
             value: element.iconName ?? 'help_outline',
             onChanged: (value) =>
                 _updateElement(element.id, element.copyWith(iconName: value)),
-          ),
-        );
-        properties.add(const SizedBox(height: 8));
-        properties.add(
-          _buildSliderField(
-            label: 'Size',
-            value: element.iconSize ?? 24,
-            min: 12,
-            max: 96,
-            unit: 'px',
-            onChanged: (value) =>
-                _updateElement(element.id, element.copyWith(iconSize: value)),
           ),
         );
         break;
@@ -1256,79 +1555,231 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     ];
   }
 
-  List<Widget> _buildStyleProperties(ElementSchema element) {
+  List<Widget> _buildActionProperties(ElementSchema element) {
+    final actionLabels = {
+      ActionType.none: 'No Action',
+      ActionType.sendMessage: 'Send Message',
+      ActionType.shareLocation: 'Share Location',
+      ActionType.traceroute: 'Traceroute',
+      ActionType.requestPositions: 'Request Positions',
+      ActionType.sos: 'Emergency SOS',
+      ActionType.navigate: 'Navigate',
+      ActionType.openUrl: 'Open URL',
+      ActionType.copyToClipboard: 'Copy to Clipboard',
+    };
+
     return [
-      _buildSliderField(
-        label: 'Width',
-        value: element.style.width ?? 0,
-        min: 0,
-        max: 400,
-        unit: 'px',
-        allowZero: true,
-        zeroLabel: 'Auto',
-        onChanged: (value) => _updateElement(
-          element.id,
-          element.copyWith(
-            style: element.style.copyWith(width: value > 0 ? value : null),
+      _buildDropdownField(
+        label: 'Add Action',
+        value: (element.action?.type ?? ActionType.none).name,
+        options: ActionType.values.map((e) => e.name).toList(),
+        displayLabels: actionLabels.values.toList(),
+        onChanged: (value) {
+          final actionType = ActionType.values.firstWhere(
+            (e) => e.name == value,
+            orElse: () => ActionType.none,
+          );
+          if (actionType == ActionType.none) {
+            _updateElement(
+              element.id,
+              ElementSchema(
+                id: element.id,
+                type: element.type,
+                style: element.style,
+                binding: element.binding,
+                condition: element.condition,
+                action: null,
+                children: element.children,
+                text: element.text,
+                iconName: element.iconName,
+                iconSize: element.iconSize,
+                gaugeType: element.gaugeType,
+                gaugeMin: element.gaugeMin,
+                gaugeMax: element.gaugeMax,
+                chartType: element.chartType,
+                shapeType: element.shapeType,
+              ),
+            );
+          } else {
+            _updateElement(
+              element.id,
+              element.copyWith(
+                action: ActionSchema(
+                  type: actionType,
+                  label: actionLabels[actionType],
+                ),
+              ),
+            );
+          }
+        },
+      ),
+      if (element.action != null &&
+          element.action!.type == ActionType.openUrl) ...[
+        const SizedBox(height: 8),
+        _buildTextField(
+          label: 'URL',
+          value: element.action?.url ?? '',
+          onChanged: (value) => _updateElement(
+            element.id,
+            element.copyWith(
+              action: ActionSchema(
+                type: element.action!.type,
+                url: value,
+                label: element.action?.label,
+              ),
+            ),
           ),
         ),
-      ),
-      const SizedBox(height: 12),
-      _buildSliderField(
-        label: 'Height',
-        value: element.style.height ?? 0,
-        min: 0,
-        max: 400,
-        unit: 'px',
-        allowZero: true,
-        zeroLabel: 'Auto',
-        onChanged: (value) => _updateElement(
-          element.id,
-          element.copyWith(
-            style: element.style.copyWith(height: value > 0 ? value : null),
+      ],
+      if (element.action != null &&
+          element.action!.type == ActionType.navigate) ...[
+        const SizedBox(height: 8),
+        _buildTextField(
+          label: 'Screen',
+          value: element.action?.navigateTo ?? '',
+          onChanged: (value) => _updateElement(
+            element.id,
+            element.copyWith(
+              action: ActionSchema(
+                type: element.action!.type,
+                navigateTo: value,
+                label: element.action?.label,
+              ),
+            ),
           ),
         ),
-      ),
-      const SizedBox(height: 12),
-      _buildSliderField(
-        label: 'Padding',
-        value: element.style.padding ?? 0,
-        min: 0,
-        max: 48,
-        unit: 'px',
-        allowZero: true,
-        zeroLabel: 'None',
-        onChanged: (value) => _updateElement(
-          element.id,
-          element.copyWith(
-            style: element.style.copyWith(padding: value > 0 ? value : null),
-          ),
-        ),
-      ),
-      const SizedBox(height: 12),
-      _buildColorField(
-        label: 'Text Color',
-        value: element.style.textColor ?? '#FFFFFF',
+      ],
+    ];
+  }
+
+  List<Widget> _buildStyleProperties(ElementSchema element) {
+    // Simplified style properties - only icon color picker using theme colors
+    final hasIcon =
+        element.type == ElementType.icon ||
+        element.iconName != null ||
+        element.type == ElementType.container;
+
+    if (!hasIcon) {
+      return []; // No style options for text-only elements
+    }
+
+    return [
+      _buildThemeColorPicker(
+        label: 'Icon Color',
+        value: element.style.textColor,
         onChanged: (value) => _updateElement(
           element.id,
           element.copyWith(style: element.style.copyWith(textColor: value)),
         ),
       ),
-      const SizedBox(height: 12),
-      _buildSliderField(
-        label: 'Font Size',
-        value: element.style.fontSize ?? 14,
-        min: 8,
-        max: 72,
-        unit: 'sp',
-        onChanged: (value) => _updateElement(
-          element.id,
-          element.copyWith(
-            style: element.style.copyWith(fontSize: value > 0 ? value : null),
-          ),
-        ),
-      ),
     ];
+  }
+
+  Widget _buildThemeColorPicker({
+    required String label,
+    required String? value,
+    required void Function(String) onChanged,
+  }) {
+    // Parse current color to find matching theme color
+    Color? currentColor;
+    if (value != null) {
+      if (value == 'accent') {
+        currentColor = context.accentColor;
+      } else if (value.startsWith('#')) {
+        final hex = value.replaceFirst('#', '');
+        if (hex.length == 6) {
+          currentColor = Color(int.parse('FF$hex', radix: 16));
+        }
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            // Accent color option (inherits from app settings)
+            _buildColorOption(
+              color: context.accentColor,
+              label: 'Accent',
+              isSelected: value == 'accent',
+              onTap: () => onChanged('accent'),
+            ),
+            // Theme colors
+            ...AccentColors.all.asMap().entries.map((entry) {
+              final color = entry.value;
+              final name = AccentColors.names[entry.key];
+              final hexValue =
+                  '#${color.toARGB32().toRadixString(16).substring(2).toUpperCase()}';
+              final isSelected =
+                  currentColor != null &&
+                  (currentColor.toARGB32() & 0xFFFFFF) ==
+                      (color.toARGB32() & 0xFFFFFF);
+              return _buildColorOption(
+                color: color,
+                label: name,
+                isSelected: isSelected && value != 'accent',
+                onTap: () => onChanged(hexValue),
+              );
+            }),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildColorOption({
+    required Color color,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isSelected ? Colors.white : Colors.transparent,
+                width: 2,
+              ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.5),
+                        blurRadius: 8,
+                        spreadRadius: 2,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: isSelected
+                ? const Icon(Icons.check, color: Colors.white, size: 18)
+                : null,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              color: isSelected ? Colors.white : AppTheme.textTertiary,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildTextField({
@@ -1439,6 +1890,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     required String value,
     required List<String> options,
     required void Function(String) onChanged,
+    List<String>? displayLabels,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1462,13 +1914,16 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
             dropdownColor: AppTheme.darkCard,
             underline: const SizedBox.shrink(),
             style: const TextStyle(color: Colors.white, fontSize: 13),
-            items: options.map((option) {
+            items: options.asMap().entries.map((entry) {
+              final index = entry.key;
+              final option = entry.value;
+              final displayText =
+                  displayLabels != null && index < displayLabels.length
+                  ? displayLabels[index]
+                  : (option.isEmpty ? '(none)' : option);
               return DropdownMenuItem(
                 value: option,
-                child: Text(
-                  option.isEmpty ? '(none)' : option,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                child: Text(displayText, overflow: TextOverflow.ellipsis),
               );
             }).toList(),
             onChanged: (newValue) {
@@ -1548,6 +2003,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         ? BindingRegistry.bindings.where((b) => b.path == value).firstOrNull
         : null;
     final accentColor = context.accentColor;
+    final hasBinding = value.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1578,9 +2034,9 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
             child: Row(
               children: [
                 Icon(
-                  binding != null ? Icons.link : Icons.link_off,
+                  hasBinding ? Icons.link : Icons.link_off,
                   size: 18,
-                  color: binding != null ? accentColor : AppTheme.textSecondary,
+                  color: hasBinding ? accentColor : AppTheme.textSecondary,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -1588,17 +2044,17 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        binding?.label ?? '(none)',
+                        binding?.label ?? (hasBinding ? value : '(none)'),
                         style: TextStyle(
-                          color: binding != null
+                          color: hasBinding
                               ? Colors.white
                               : AppTheme.textSecondary,
                           fontSize: 13,
                         ),
                       ),
-                      if (binding != null)
+                      if (hasBinding)
                         Text(
-                          binding.path,
+                          value,
                           style: TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 10,
@@ -1676,72 +2132,6 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       'help_outline': Icons.help_outline,
     };
     return iconMap[iconName] ?? Icons.help_outline;
-  }
-
-  Widget _buildColorField({
-    required String label,
-    required String value,
-    required void Function(String) onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: _parseColor(value),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: AppTheme.darkBorder),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextFormField(
-                initialValue: value,
-                onChanged: onChanged,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
-                decoration: InputDecoration(
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 8,
-                  ),
-                  filled: true,
-                  fillColor: AppTheme.darkBackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(4),
-                    borderSide: BorderSide(color: AppTheme.darkBorder),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(4),
-                    borderSide: BorderSide(color: AppTheme.darkBorder),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Color _parseColor(String hex) {
-    try {
-      final buffer = StringBuffer();
-      if (hex.length == 6 || hex.length == 7) buffer.write('ff');
-      buffer.write(hex.replaceFirst('#', ''));
-      return Color(int.parse(buffer.toString(), radix: 16));
-    } catch (_) {
-      return Colors.white;
-    }
   }
 
   /// Get max allowed rows based on widget size
@@ -1910,6 +2300,8 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         root: _updateElementInTree(_schema.root, id, updatedElement),
       );
     });
+    // Also update the property sheet if it's open
+    _sheetSetState?.call(() {});
   }
 
   ElementSchema _updateElementInTree(
@@ -1953,6 +2345,25 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     }
 
     return null;
+  }
+
+  /// Elements that can have data bindings
+  bool _isBindableElement(ElementType type) {
+    return const {
+      ElementType.text,
+      ElementType.gauge,
+      ElementType.chart,
+    }.contains(type);
+  }
+
+  /// Elements that can have tap actions
+  bool _isActionableElement(ElementType type) {
+    return const {ElementType.container, ElementType.button}.contains(type);
+  }
+
+  /// Elements that have editable styles (icon color)
+  bool _isStyleableElement(ElementType type) {
+    return const {ElementType.icon, ElementType.container}.contains(type);
   }
 
   String _getElementTypeName(ElementType type) {
@@ -2040,4 +2451,13 @@ class _ToolboxItem {
   final IconData icon;
 
   const _ToolboxItem(this.type, this.label, this.icon);
+}
+
+class _BlockItem {
+  final String type;
+  final String label;
+  final IconData icon;
+  final String description;
+
+  const _BlockItem(this.type, this.label, this.icon, this.description);
 }

@@ -62,17 +62,19 @@ class WidgetRenderer extends ConsumerWidget {
         border: Border.all(color: AppTheme.darkBorder),
       ),
       clipBehavior: Clip.antiAlias,
-      // Align content to top
-      alignment: Alignment.topCenter,
-      child: _ElementRenderer(
-        element: schema.root,
-        bindingEngine: bindingEngine,
-        accentColor: accentColor,
-        isPreview: isPreview,
-        selectedElementId: selectedElementId,
-        onElementTap: onElementTap,
-        enableActions: enableActions && !isPreview,
-        ref: ref,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: _ElementRenderer(
+          element: schema.root,
+          bindingEngine: bindingEngine,
+          accentColor: accentColor,
+          isPreview: isPreview,
+          selectedElementId: selectedElementId,
+          onElementTap: onElementTap,
+          enableActions: enableActions && !isPreview,
+          ref: ref,
+          fillParent: schema.root.style.expanded == true,
+        ),
       ),
     );
   }
@@ -88,6 +90,7 @@ class _ElementRenderer extends StatelessWidget {
   final void Function(String elementId)? onElementTap;
   final bool enableActions;
   final WidgetRef ref;
+  final bool fillParent;
 
   const _ElementRenderer({
     required this.element,
@@ -98,6 +101,7 @@ class _ElementRenderer extends StatelessWidget {
     this.selectedElementId,
     this.onElementTap,
     this.enableActions = false,
+    this.fillParent = false,
   });
 
   @override
@@ -426,6 +430,7 @@ class _ElementRenderer extends StatelessWidget {
   }
 
   Widget _buildContainer() {
+    final shouldExpand = fillParent || element.style.expanded == true;
     final children = element.children.map((child) {
       return _ElementRenderer(
         element: child,
@@ -440,24 +445,38 @@ class _ElementRenderer extends StatelessWidget {
     }).toList();
 
     if (children.isEmpty) {
+      // Even empty containers should expand if needed
+      if (shouldExpand) {
+        return const SizedBox.expand();
+      }
       return const SizedBox.shrink();
     }
 
-    if (children.length == 1) {
+    if (children.length == 1 && !shouldExpand) {
       return children.first;
     }
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    Widget content = Column(
+      mainAxisSize: shouldExpand ? MainAxisSize.max : MainAxisSize.min,
+      mainAxisAlignment:
+          element.style.mainAxisAlignmentValue ?? MainAxisAlignment.center,
       crossAxisAlignment:
-          element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.start,
+          element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.center,
       children: children,
     );
+
+    // Expand to fill parent if needed
+    if (shouldExpand) {
+      content = SizedBox.expand(child: content);
+    }
+
+    return content;
   }
 
   Widget _buildRow() {
     final spacing = element.style.spacing ?? 0;
     final children = <Widget>[];
+    final shouldStretch = fillParent || element.style.expanded == true;
 
     for (var i = 0; i < element.children.length; i++) {
       final child = element.children[i];
@@ -470,10 +489,11 @@ class _ElementRenderer extends StatelessWidget {
         onElementTap: onElementTap,
         enableActions: enableActions,
         ref: ref,
+        fillParent: child.style.expanded == true,
       );
 
-      // Wrap in Expanded if style.expanded is true
-      if (child.style.expanded == true) {
+      // Wrap in Expanded if style.expanded is true or flex is set
+      if (child.style.expanded == true || child.style.flex != null) {
         childWidget = Expanded(flex: child.style.flex ?? 1, child: childWidget);
       }
 
@@ -485,21 +505,33 @@ class _ElementRenderer extends StatelessWidget {
       }
     }
 
-    // Use max size when alignment needs space distribution
+    // Use max size when alignment needs space distribution or when filling parent
     final alignment =
         element.style.mainAxisAlignmentValue ?? MainAxisAlignment.start;
     final needsMaxSize =
+        shouldStretch ||
         alignment == MainAxisAlignment.spaceAround ||
         alignment == MainAxisAlignment.spaceBetween ||
         alignment == MainAxisAlignment.spaceEvenly;
 
-    return Row(
+    // Use stretch for cross axis when children should fill height
+    final crossAxisAlignment = shouldStretch
+        ? CrossAxisAlignment.stretch
+        : (element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.center);
+
+    Widget row = Row(
       mainAxisSize: needsMaxSize ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: alignment,
-      crossAxisAlignment:
-          element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.center,
+      crossAxisAlignment: crossAxisAlignment,
       children: children,
     );
+
+    // Wrap in IntrinsicHeight if stretching to make children fill height
+    if (shouldStretch) {
+      row = SizedBox.expand(child: row);
+    }
+
+    return row;
   }
 
   Widget _buildColumn() {
@@ -566,23 +598,38 @@ class _ElementRenderer extends StatelessWidget {
       child = Padding(padding: element.style.paddingInsets!, child: child);
     }
 
-    // Apply container decoration
-    if (element.style.backgroundColorValue != null ||
+    // Resolve colors with accent color support
+    final bgColor = element.style.backgroundColor != null
+        ? StyleSchema.resolveColor(element.style.backgroundColor!, accentColor)
+        : null;
+    final borderColor = element.style.borderColor != null
+        ? StyleSchema.resolveColor(element.style.borderColor!, accentColor)
+        : null;
+
+    // Apply container decoration with alignment
+    final hasDecoration =
+        bgColor != null ||
         element.style.borderWidth != null ||
-        element.style.borderRadius != null) {
+        element.style.borderRadius != null;
+    final hasAlignment = element.style.alignmentValue != null;
+
+    if (hasDecoration || hasAlignment) {
       child = Container(
-        decoration: BoxDecoration(
-          color: element.style.backgroundColorValue,
-          borderRadius: element.style.borderRadius != null
-              ? BorderRadius.circular(element.style.borderRadius!)
-              : null,
-          border: element.style.borderWidth != null
-              ? Border.all(
-                  color: element.style.borderColorValue ?? AppTheme.darkBorder,
-                  width: element.style.borderWidth!,
-                )
-              : null,
-        ),
+        alignment: element.style.alignmentValue,
+        decoration: hasDecoration
+            ? BoxDecoration(
+                color: bgColor,
+                borderRadius: element.style.borderRadius != null
+                    ? BorderRadius.circular(element.style.borderRadius!)
+                    : null,
+                border: element.style.borderWidth != null
+                    ? Border.all(
+                        color: borderColor ?? AppTheme.darkBorder,
+                        width: element.style.borderWidth!,
+                      )
+                    : null,
+              )
+            : null,
         child: child,
       );
     }
