@@ -163,7 +163,10 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
               ? Padding(
                   padding: const EdgeInsets.fromLTRB(12, 12, 16, 8),
                   child: CustomPaint(
-                    painter: MultiLineChartPainter(_signalHistory),
+                    painter: MultiLineChartPainter(
+                      _signalHistory,
+                      rssiColor: context.accentColor,
+                    ),
                     child: Container(),
                   ),
                 )
@@ -441,12 +444,12 @@ class MultiSignalData {
 /// Custom painter for multi-line chart
 class MultiLineChartPainter extends CustomPainter {
   final List<MultiSignalData> data;
+  final Color rssiColor;
 
-  static const Color rssiColor = AccentColors.green;
   static const Color snrColor = AppTheme.graphBlue;
   static const Color channelUtilColor = AppTheme.accentOrange;
 
-  MultiLineChartPainter(this.data);
+  MultiLineChartPainter(this.data, {required this.rssiColor});
 
   @override
   void paint(Canvas canvas, Size size) {
