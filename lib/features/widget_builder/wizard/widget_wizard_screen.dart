@@ -749,22 +749,21 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     final isGauge = _selectedTemplate?.id == 'gauge';
 
     // Filter suggested bindings for gauge (numeric only)
-    final suggestedBindings = _selectedTemplate?.suggestedBindings
-            .where((path) {
-              if (!isGauge) return true;
-              final binding = BindingRegistry.bindings.firstWhere(
-                (b) => b.path == path,
-                orElse: () => BindingDefinition(
-                  path: path,
-                  label: path,
-                  description: '',
-                  category: BindingCategory.node,
-                  valueType: String,
-                ),
-              );
-              return binding.valueType == int || binding.valueType == double;
-            })
-            .toList() ??
+    final suggestedBindings =
+        _selectedTemplate?.suggestedBindings.where((path) {
+          if (!isGauge) return true;
+          final binding = BindingRegistry.bindings.firstWhere(
+            (b) => b.path == path,
+            orElse: () => BindingDefinition(
+              path: path,
+              label: path,
+              description: '',
+              category: BindingCategory.node,
+              valueType: String,
+            ),
+          );
+          return binding.valueType == int || binding.valueType == double;
+        }).toList() ??
         [];
 
     return ListView(
@@ -788,10 +787,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 Expanded(
                   child: Text(
                     'Gauge widgets display a single numeric value with a visual indicator. Only numeric data is shown below.',
-                    style: TextStyle(
-                      color: context.accentColor,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: context.accentColor, fontSize: 12),
                   ),
                 ),
               ],
