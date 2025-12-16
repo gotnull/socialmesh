@@ -2,6 +2,7 @@ import '../../core/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
@@ -24,6 +25,7 @@ import '../presence/presence_screen.dart';
 import '../mesh3d/mesh_3d_screen.dart';
 import '../world_mesh/world_mesh_screen.dart';
 import '../settings/subscription_screen.dart';
+import '../widget_builder/widget_builder_screen.dart';
 
 /// Notifier to expose the main shell's scaffold key for drawer access
 class MainShellScaffoldKeyNotifier extends Notifier<GlobalKey<ScaffoldState>?> {
@@ -329,7 +331,9 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   /// Drawer menu items for quick access screens not in bottom nav
+  /// Organized into: Features (free) and Premium Features
   final List<_DrawerMenuItem> _drawerMenuItems = [
+    // Free features
     const _DrawerMenuItem(
       icon: Icons.public,
       label: 'World Map',
@@ -355,16 +359,18 @@ class _MainShellState extends ConsumerState<MainShell> {
       label: 'Routes',
       screen: RoutesScreen(),
     ),
+    // Premium features
+    const _DrawerMenuItem(
+      icon: Icons.widgets_outlined,
+      label: 'Widget Builder',
+      screen: WidgetBuilderScreen(),
+      premiumFeature: PremiumFeature.homeWidgets,
+    ),
     const _DrawerMenuItem(
       icon: Icons.auto_awesome,
       label: 'Automations',
       screen: AutomationsScreen(),
       premiumFeature: PremiumFeature.automations,
-    ),
-    const _DrawerMenuItem(
-      icon: Icons.settings,
-      label: 'Settings',
-      screen: SettingsScreen(),
     ),
   ];
 
@@ -417,7 +423,6 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   Widget _buildDrawer(BuildContext context) {
     final theme = Theme.of(context);
-    final accentColor = theme.colorScheme.primary;
 
     return Drawer(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -430,67 +435,8 @@ class _MainShellState extends ConsumerState<MainShell> {
       child: SafeArea(
         child: Column(
           children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          accentColor,
-                          accentColor.withValues(alpha: 0.7),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: accentColor.withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.bolt,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Quick Access',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: AppTheme.fontFamily,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                        Text(
-                          'Navigate to features',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontFamily: AppTheme.fontFamily,
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.6,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Node Info Header
+            _DrawerNodeHeader(),
 
             // Divider
             Padding(
@@ -546,7 +492,49 @@ class _MainShellState extends ConsumerState<MainShell> {
               ),
             ),
 
-            // Bottom section
+            // Divider before bottom section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
+            ),
+
+            // Bottom section - Settings & Help
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              child: Column(
+                children: [
+                  // Settings
+                  _DrawerMenuTile(
+                    icon: Icons.settings_outlined,
+                    label: 'Settings',
+                    isSelected: false,
+                    onTap: () {
+                      ref.haptics.tabChange();
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 4),
+                  // Help Center
+                  _DrawerMenuTile(
+                    icon: Icons.help_outline,
+                    label: 'Help Center',
+                    isSelected: false,
+                    onTap: () {
+                      ref.haptics.tabChange();
+                      Navigator.of(context).pop();
+                      _openHelpCenter();
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            // Tip at bottom
             Padding(
               padding: const EdgeInsets.all(16),
               child: Container(
@@ -586,6 +574,13 @@ class _MainShellState extends ConsumerState<MainShell> {
         ),
       ),
     );
+  }
+
+  void _openHelpCenter() async {
+    final uri = Uri.parse('https://protofluff.com/support');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   @override
@@ -1027,6 +1022,163 @@ class _DrawerMenuTile extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Node info header for the drawer - shows current node details
+class _DrawerNodeHeader extends ConsumerWidget {
+  const _DrawerNodeHeader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final accentColor = theme.colorScheme.primary;
+    final myNodeNum = ref.watch(myNodeNumProvider);
+    final nodes = ref.watch(nodesProvider);
+    final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
+    final connectionStateAsync = ref.watch(connectionStateProvider);
+
+    final isConnected = connectionStateAsync.when(
+      data: (state) => state == DeviceConnectionState.connected,
+      loading: () => false,
+      error: (e, s) => false,
+    );
+
+    // Get node display info
+    final nodeName = myNode?.longName ?? 'Not Connected';
+    final shortName = myNode?.shortName ?? '--';
+    final nodeId = myNodeNum != null ? '!${myNodeNum.toRadixString(16)}' : '';
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Node avatar
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: isConnected
+                      ? LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            accentColor,
+                            accentColor.withValues(alpha: 0.7),
+                          ],
+                        )
+                      : null,
+                  color: isConnected ? null : AppTheme.darkBorder,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: isConnected
+                      ? [
+                          BoxShadow(
+                            color: accentColor.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Center(
+                  child: isConnected
+                      ? Text(
+                          shortName,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: AppTheme.fontFamily,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Icon(
+                          Icons.bluetooth_disabled,
+                          color: AppTheme.textTertiary,
+                          size: 24,
+                        ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Node info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      nodeName,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: AppTheme.fontFamily,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (isConnected && nodeId.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        nodeId,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontFamily: AppTheme.fontFamily,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              // Connection status indicator
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: isConnected
+                      ? AppTheme.successGreen.withValues(alpha: 0.15)
+                      : AppTheme.errorRed.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: isConnected
+                            ? AppTheme.successGreen
+                            : AppTheme.errorRed,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isConnected ? 'Online' : 'Offline',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: AppTheme.fontFamily,
+                        color: isConnected
+                            ? AppTheme.successGreen
+                            : AppTheme.errorRed,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
