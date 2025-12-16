@@ -68,11 +68,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         subtitle: 'Customize colors and layout',
         icon: Icons.palette,
       ),
-      const _WizardStep(
-        title: 'Preview',
-        subtitle: 'Check how it looks before saving',
-        icon: Icons.preview,
-      ),
     ];
   }
 
@@ -182,6 +177,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               textAlign: TextAlign.center,
             ),
           ),
+          // Live preview (shown after step 1)
+          if (_currentStep > 0) _buildLivePreviewPanel(),
           // Page content
           Expanded(
             child: PageView(
@@ -195,7 +192,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                     ? _buildActionsStep()
                     : _buildDataStep(),
                 _buildAppearanceStep(),
-                _buildPreviewStep(),
               ],
             ),
           ),
@@ -259,6 +255,57 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             ),
           );
         }),
+      ),
+    );
+  }
+
+  /// Live preview panel - shows current widget progress
+  Widget _buildLivePreviewPanel() {
+    final previewSchema = _buildFinalSchema();
+    final nodes = ref.watch(nodesProvider);
+    final myNodeNum = ref.watch(myNodeNumProvider);
+    final node = myNodeNum != null ? nodes[myNodeNum] : null;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: Row(
+              children: [
+                Icon(Icons.preview, size: 14, color: AppTheme.textSecondary),
+                const SizedBox(width: 6),
+                Text(
+                  'Live Preview',
+                  style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Widget preview - auto-sizes to content
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+            child: WidgetRenderer(
+              schema: previewSchema,
+              node: node,
+              allNodes: nodes,
+              accentColor: _accentColor,
+              enableActions: false,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1008,102 +1055,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   // ============================================================
-  // STEP 5: Preview
-  // ============================================================
-  Widget _buildPreviewStep() {
-    final previewSchema = _buildFinalSchema();
-    final nodes = ref.watch(nodesProvider);
-    final myNodeNum = ref.watch(myNodeNumProvider);
-    final node = myNodeNum != null ? nodes[myNodeNum] : null;
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text(
-          'Your widget is ready!',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'This is how it will look on your dashboard.',
-          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 24),
-        // Preview container
-        Container(
-          decoration: BoxDecoration(
-            color: AppTheme.darkCard,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppTheme.darkBorder),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: WidgetRenderer(
-            schema: previewSchema,
-            node: node,
-            allNodes: nodes,
-            accentColor: _accentColor,
-            enableActions: false,
-          ),
-        ),
-        const SizedBox(height: 24),
-        // Summary
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppTheme.darkCard,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSummaryRow('Name', previewSchema.name),
-              const SizedBox(height: 8),
-              _buildSummaryRow('Type', _selectedTemplate?.name ?? 'Custom'),
-              if (_selectedBindings.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                _buildSummaryRow('Data', '${_selectedBindings.length} items'),
-              ],
-              if (_selectedActions.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                _buildSummaryRow(
-                  'Actions',
-                  '${_selectedActions.length} buttons',
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSummaryRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ============================================================
   // Bottom Actions
   // ============================================================
   Widget _buildBottomActions(bool isEditing) {
@@ -1159,7 +1110,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       1 => _nameController.text.trim().isNotEmpty,
       2 => true, // Data/actions selection is optional
       3 => true, // Appearance always valid
-      4 => true, // Preview always valid
       _ => false,
     };
   }

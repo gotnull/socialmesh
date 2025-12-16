@@ -134,27 +134,16 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       (w) => w.schemaId == schema.id && w.isVisible,
     );
 
-    // Height based on size - width is always full
-    final previewHeight = switch (schema.size) {
-      CustomWidgetSize.medium => 120.0,
-      CustomWidgetSize.large => 180.0,
-      CustomWidgetSize.custom => schema.customHeight ?? 120.0,
-    };
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Widget preview - full width, variable height
-        SizedBox(
-          width: double.infinity,
-          height: previewHeight,
-          child: WidgetRenderer(
-            schema: schema,
-            node: node,
-            allNodes: nodes,
-            accentColor: context.accentColor,
-            enableActions: false, // Only interactive on dashboard
-          ),
+        // Widget preview - auto-sizes to content
+        WidgetRenderer(
+          schema: schema,
+          node: node,
+          allNodes: nodes,
+          accentColor: context.accentColor,
+          enableActions: false, // Only interactive on dashboard
         ),
         const SizedBox(height: 8),
         // Info section - no horizontal padding to match widget preview width

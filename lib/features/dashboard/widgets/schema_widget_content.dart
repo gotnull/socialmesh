@@ -53,19 +53,6 @@ class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent> {
     }
   }
 
-  /// Get the height constraint based on widget size
-  /// MUST match heights in marketplace and editor (120/180px)
-  double _getWidgetHeight(CustomWidgetSize size) {
-    switch (size) {
-      case CustomWidgetSize.medium:
-        return 120;
-      case CustomWidgetSize.large:
-        return 180;
-      case CustomWidgetSize.custom:
-        return 120; // Default to medium height for custom size
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -95,21 +82,16 @@ class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent> {
     final snrAsync = ref.watch(currentSnrProvider);
     final channelUtilAsync = ref.watch(currentChannelUtilProvider);
 
-    final height = _getWidgetHeight(_schema!.size);
-
-    // Build the base widget content
-    Widget content = SizedBox(
-      height: height,
-      child: WidgetRenderer(
-        schema: _schema!,
-        node: myNode,
-        allNodes: nodes,
-        accentColor: context.accentColor,
-        isPreview: false,
-        deviceRssi: rssiAsync.value,
-        deviceSnr: snrAsync.value,
-        deviceChannelUtil: channelUtilAsync.value,
-      ),
+    // Build the base widget content - auto-sizes to content
+    Widget content = WidgetRenderer(
+      schema: _schema!,
+      node: myNode,
+      allNodes: nodes,
+      accentColor: context.accentColor,
+      isPreview: false,
+      deviceRssi: rssiAsync.value,
+      deviceSnr: snrAsync.value,
+      deviceChannelUtil: channelUtilAsync.value,
     );
 
     // Add tap-to-navigate for GPS widgets (detect by tags or name)
