@@ -1864,59 +1864,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     ];
   }
 
-  /// Creates a nice icon badge with rounded corners (not ugly circles!)
-  ElementSchema _buildIconBadge({
-    required String iconName,
-    required Color color,
-    double size = 28,
-    double iconSize = 16,
-  }) {
-    return ElementSchema(
-      type: ElementType.container,
-      style: StyleSchema(
-        width: size,
-        height: size,
-        backgroundColor: _colorToHex(color.withValues(alpha: 0.15)),
-        borderRadius: 8,
-        alignment: AlignmentOption.center,
-      ),
-      children: [
-        ElementSchema(
-          type: ElementType.icon,
-          iconName: iconName,
-          iconSize: iconSize,
-          style: StyleSchema(textColor: _colorToHex(color)),
-        ),
-      ],
-    );
-  }
-
   /// Info Card: Clean text-focused layout with icon badges
   List<ElementSchema> _buildInfoCardElements(String name) {
     final children = <ElementSchema>[];
-
-    // Title with info icon
-    children.add(
-      ElementSchema(
-        type: ElementType.row,
-        children: [
-          _buildIconBadge(iconName: 'info', color: _accentColor),
-          ElementSchema(
-            type: ElementType.spacer,
-            style: const StyleSchema(width: 10),
-          ),
-          ElementSchema(
-            type: ElementType.text,
-            text: name,
-            style: const StyleSchema(
-              textColor: '#FFFFFF',
-              fontSize: 15,
-              fontWeight: 'w600',
-            ),
-          ),
-        ],
-      ),
-    );
 
     if (_selectedBindings.isEmpty) {
       children.add(
@@ -1931,13 +1881,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       );
       return children;
     }
-
-    children.add(
-      ElementSchema(
-        type: ElementType.spacer,
-        style: const StyleSchema(height: 12),
-      ),
-    );
 
     // Info rows with subtle styling
     for (final bindingPath in _selectedBindings) {
@@ -1983,34 +1926,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   List<ElementSchema> _buildLocationElements(String name) {
     final children = <ElementSchema>[];
 
-    // Header with location pin
-    children.add(
-      ElementSchema(
-        type: ElementType.row,
-        children: [
-          _buildIconBadge(
-            iconName: 'location_on',
-            color: const Color(0xFFA78BFA),
-            size: 32,
-            iconSize: 18,
-          ),
-          ElementSchema(
-            type: ElementType.spacer,
-            style: const StyleSchema(width: 10),
-          ),
-          ElementSchema(
-            type: ElementType.text,
-            text: name,
-            style: const StyleSchema(
-              textColor: '#FFFFFF',
-              fontSize: 15,
-              fontWeight: 'w600',
-            ),
-          ),
-        ],
-      ),
-    );
-
     if (_selectedBindings.isEmpty) {
       children.add(
         ElementSchema(
@@ -2024,13 +1939,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       );
       return children;
     }
-
-    children.add(
-      ElementSchema(
-        type: ElementType.spacer,
-        style: const StyleSchema(height: 10),
-      ),
-    );
 
     // Coordinate-style display
     for (final bindingPath in _selectedBindings) {
@@ -2093,34 +2001,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   List<ElementSchema> _buildEnvironmentElements(String name) {
     final children = <ElementSchema>[];
 
-    // Header with thermometer
-    children.add(
-      ElementSchema(
-        type: ElementType.row,
-        children: [
-          _buildIconBadge(
-            iconName: 'thermostat',
-            color: const Color(0xFF22D3EE),
-            size: 32,
-            iconSize: 18,
-          ),
-          ElementSchema(
-            type: ElementType.spacer,
-            style: const StyleSchema(width: 10),
-          ),
-          ElementSchema(
-            type: ElementType.text,
-            text: name,
-            style: const StyleSchema(
-              textColor: '#FFFFFF',
-              fontSize: 15,
-              fontWeight: 'w600',
-            ),
-          ),
-        ],
-      ),
-    );
-
     if (_selectedBindings.isEmpty) {
       children.add(
         ElementSchema(
@@ -2134,13 +2014,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       );
       return children;
     }
-
-    children.add(
-      ElementSchema(
-        type: ElementType.spacer,
-        style: const StyleSchema(height: 10),
-      ),
-    );
 
     // Environment readings with appropriate icons
     for (final bindingPath in _selectedBindings) {
@@ -2203,34 +2076,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   /// Status: Dashboard-style with progress bars
   List<ElementSchema> _buildStatusElements(String name) {
     final children = <ElementSchema>[];
-
-    // Title row
-    children.add(
-      ElementSchema(
-        type: ElementType.row,
-        children: [
-          ElementSchema(
-            type: ElementType.icon,
-            iconName: 'speed',
-            iconSize: 18,
-            style: StyleSchema(textColor: _colorToHex(_accentColor)),
-          ),
-          ElementSchema(
-            type: ElementType.spacer,
-            style: const StyleSchema(width: 8),
-          ),
-          ElementSchema(
-            type: ElementType.text,
-            text: name,
-            style: const StyleSchema(
-              textColor: '#FFFFFF',
-              fontSize: 14,
-              fontWeight: 'w600',
-            ),
-          ),
-        ],
-      ),
-    );
 
     if (_selectedBindings.isEmpty) {
       children.add(

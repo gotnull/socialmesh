@@ -459,7 +459,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               config: config,
               isEditMode: _editMode,
               customName: schema.name,
-              customIcon: Icons.widgets, // Custom widgets use widgets icon
+              customIcon: _getIconForTemplate(schema.tags),
               showHeader: true, // Always show header like native widgets
               onFavorite: () {
                 ref
@@ -535,6 +535,17 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
           ),
         );
     }
+  }
+
+  /// Get the appropriate icon for a custom widget based on its template tags
+  IconData _getIconForTemplate(List<String> tags) {
+    if (tags.contains('actions')) return Icons.touch_app;
+    if (tags.contains('gauge')) return Icons.speed;
+    if (tags.contains('info')) return Icons.info_outline;
+    if (tags.contains('location')) return Icons.location_on;
+    if (tags.contains('environment')) return Icons.thermostat;
+    if (tags.contains('status')) return Icons.dashboard;
+    return Icons.widgets; // Default fallback
   }
 
   Widget _buildEmptyDashboard(BuildContext context) {
