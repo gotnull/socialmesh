@@ -559,7 +559,9 @@ class _MainShellState extends ConsumerState<MainShell> {
             // FIXED: Theme toggle at bottom
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: Row(children: [const _ThemeToggleButton(), const Spacer()]),
+              child: Row(
+                children: [const _ThemeToggleButton(), const Spacer()],
+              ),
             ),
           ],
         ),
