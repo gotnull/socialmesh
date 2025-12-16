@@ -7,7 +7,6 @@ import '../../widget_builder/models/widget_schema.dart';
 import '../../widget_builder/renderer/widget_renderer.dart';
 import '../../widget_builder/storage/widget_storage_service.dart';
 import '../../map/map_screen.dart';
-import 'dashboard_widget.dart';
 
 /// Content widget that renders a schema-based custom widget with live data
 class SchemaWidgetContent extends ConsumerStatefulWidget {
@@ -63,13 +62,9 @@ class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent> {
     }
 
     if (_error != null || _schema == null) {
-      return const SizedBox(
-        height: 120,
-        child: WidgetEmptyState(
-          icon: Icons.error_outline,
-          message: 'Widget not found',
-        ),
-      );
+      // Widget not found - return empty container
+      // The parent widget will handle cleanup
+      return const SizedBox.shrink();
     }
 
     // Get live node data from Riverpod

@@ -429,33 +429,14 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
         return schemaAsync.when(
           data: (schema) {
             if (schema == null) {
-              // Schema not found - show error widget
-              return DashboardWidget(
-                config: config,
-                reorderIndex: reorderIndex,
-                isEditMode: _editMode,
-                customName: 'Widget Not Found',
-                customIcon: Icons.error_outline,
-                onFavorite: () {
-                  ref
-                      .read(dashboardWidgetsProvider.notifier)
-                      .toggleFavorite(config.id);
-                },
-                onRemove: () {
-                  ref
-                      .read(dashboardWidgetsProvider.notifier)
-                      .removeWidget(config.id);
-                },
-                child: const SizedBox(
-                  height: 120,
-                  child: Center(
-                    child: Text(
-                      'Widget not found',
-                      style: TextStyle(color: Colors.white54),
-                    ),
-                  ),
-                ),
-              );
+              // Schema not found - auto-remove orphaned widget from dashboard
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ref
+                    .read(dashboardWidgetsProvider.notifier)
+                    .removeWidget(config.id);
+              });
+              // Return empty container while removal is processed
+              return const SizedBox.shrink();
             }
 
             // Use DashboardWidget wrapper with the schema's name and icon

@@ -510,6 +510,29 @@ class _ChartRendererState extends State<ChartRenderer> {
   bool get _isCurved => widget.element.chartCurved ?? true;
   int get _maxPoints => widget.element.chartMaxPoints ?? 30;
 
+  // Advanced options
+  ChartMergeMode get _mergeMode =>
+      widget.element.chartMergeMode ?? ChartMergeMode.overlay;
+  ChartNormalization get _normalization =>
+      widget.element.chartNormalization ?? ChartNormalization.raw;
+  ChartBaseline get _baseline =>
+      widget.element.chartBaseline ?? ChartBaseline.none;
+  bool get _showMinMax => widget.element.chartShowMinMax ?? false;
+  bool get _gradientFill => widget.element.chartGradientFill ?? false;
+  Color get _gradientLowColor => widget.element.chartGradientLowColor != null
+      ? StyleSchema.parseColor(widget.element.chartGradientLowColor!)
+      : const Color(0xFF4CAF50);
+  Color get _gradientHighColor => widget.element.chartGradientHighColor != null
+      ? StyleSchema.parseColor(widget.element.chartGradientHighColor!)
+      : const Color(0xFFFF5252);
+  List<double> get _thresholds => widget.element.chartThresholds ?? [];
+  List<Color> get _thresholdColors =>
+      (widget.element.chartThresholdColors ?? [])
+          .map((c) => StyleSchema.parseColor(c))
+          .toList();
+  List<String> get _thresholdLabels =>
+      widget.element.chartThresholdLabels ?? [];
+
   // Check if this is a multi-line chart
   bool get _isMultiLine =>
       widget.element.chartType == ChartType.multiLine &&
@@ -591,6 +614,112 @@ class _ChartRendererState extends State<ChartRenderer> {
     }
   }
 
+  // Normalize data based on normalization mode
+  List<double> _normalizeData(List<double> data) {
+    if (data.isEmpty) return data;
+
+    switch (_normalization) {
+      case ChartNormalization.raw:
+        return data;
+
+      case ChartNormalization.percentChange:
+        // Calculate percent change from first value
+        final firstValue = data.first;
+        if (firstValue == 0) return data;
+        return data
+            .map((v) => ((v - firstValue) / firstValue.abs()) * 100)
+            .toList();
+
+      case ChartNormalization.normalized:
+        // Normalize to 0-100 range
+        final minVal = data.reduce((a, b) => a < b ? a : b);
+        final maxVal = data.reduce((a, b) => a > b ? a : b);
+        final range = maxVal - minVal;
+        if (range == 0) return data.map((_) => 50.0).toList();
+        return data.map((v) => ((v - minVal) / range) * 100).toList();
+    }
+  }
+
+  // Get baseline value for comparison line
+  double? _getBaselineValue(List<double> data) {
+    if (data.isEmpty) return null;
+
+    switch (_baseline) {
+      case ChartBaseline.none:
+        return null;
+      case ChartBaseline.firstValue:
+        return data.first;
+      case ChartBaseline.average:
+        return data.reduce((a, b) => a + b) / data.length;
+    }
+  }
+
+  // Get min/max indices and values
+  (int minIdx, int maxIdx, double minVal, double maxVal)? _getMinMax(
+    List<double> data,
+  ) {
+    if (data.isEmpty) return null;
+
+    int minIdx = 0;
+    int maxIdx = 0;
+    double minVal = data.first;
+    double maxVal = data.first;
+
+    for (int i = 1; i < data.length; i++) {
+      if (data[i] < minVal) {
+        minVal = data[i];
+        minIdx = i;
+      }
+      if (data[i] > maxVal) {
+        maxVal = data[i];
+        maxIdx = i;
+      }
+    }
+
+    return (minIdx, maxIdx, minVal, maxVal);
+  }
+
+  // Get gradient color based on value position between min and max
+  Color _getGradientColor(double value, double minVal, double maxVal) {
+    if (maxVal == minVal) return _gradientLowColor;
+    final t = (value - minVal) / (maxVal - minVal);
+    return Color.lerp(_gradientLowColor, _gradientHighColor, t) ??
+        _gradientLowColor;
+  }
+
+  // Build threshold horizontal lines for fl_chart
+  List<HorizontalLine> _buildThresholdLines() {
+    final lines = <HorizontalLine>[];
+    for (int i = 0; i < _thresholds.length; i++) {
+      final color = i < _thresholdColors.length
+          ? _thresholdColors[i]
+          : const Color(0xFFFF5252);
+      final label = i < _thresholdLabels.length ? _thresholdLabels[i] : '';
+
+      lines.add(
+        HorizontalLine(
+          y: _thresholds[i],
+          color: color.withValues(alpha: 0.7),
+          strokeWidth: 1.5,
+          dashArray: [5, 5],
+          label: label.isNotEmpty
+              ? HorizontalLineLabel(
+                  show: true,
+                  alignment: Alignment.topRight,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  labelResolver: (_) => label,
+                )
+              : null,
+        ),
+      );
+    }
+    return lines;
+  }
+
   @override
   Widget build(BuildContext context) {
     // Handle multi-line chart separately
@@ -599,14 +728,17 @@ class _ChartRendererState extends State<ChartRenderer> {
     }
 
     // Use provided history, built-up history, or sample data for preview
-    List<double> data;
+    List<double> rawData;
     if (widget.historyData != null) {
-      data = widget.historyData!;
+      rawData = widget.historyData!;
     } else if (_history.isNotEmpty) {
-      data = _history;
+      rawData = _history;
     } else {
-      data = _generateSampleData();
+      rawData = _generateSampleData();
     }
+
+    // Apply normalization
+    final data = _normalizeData(rawData);
 
     final chartColor =
         widget.element.style.textColorValue ?? widget.accentColor;
@@ -625,7 +757,9 @@ class _ChartRendererState extends State<ChartRenderer> {
       case ChartType.scatter:
         return _buildScatterChart(data, chartColor);
       case ChartType.multiLine:
-        // Shouldn't reach here, handled above
+      case ChartType.stackedArea:
+      case ChartType.stackedBar:
+        // These are handled by _buildMultiLineChart above
         return _buildLineChart(data, chartColor);
     }
   }
@@ -642,44 +776,60 @@ class _ChartRendererState extends State<ChartRenderer> {
     final paths = widget.element.chartBindingPaths!;
     final colors = widget.element.chartLegendColors ?? [];
 
-    // Build line data for each series
+    // Collect raw data for each series
+    final seriesData = <String, List<double>>{};
+    for (int i = 0; i < paths.length; i++) {
+      final path = paths[i];
+      final history = _multiHistory[path] ?? [];
+
+      List<double> data;
+      if (history.isNotEmpty) {
+        data = _normalizeData(history);
+      } else {
+        // Generate slightly different sample data for each line
+        data = _normalizeData(
+          List.generate(
+            _maxPoints,
+            (j) =>
+                (50 +
+                        30 * ((j + i * 7) % 5 - 2) / 2 +
+                        10 * ((j + i * 3) % 3 - 1))
+                    .toDouble(),
+          ),
+        );
+      }
+      seriesData[path] = data;
+    }
+
+    // Handle stacked modes
+    if (_mergeMode == ChartMergeMode.stackedArea ||
+        _mergeMode == ChartMergeMode.stackedBar) {
+      return _buildStackedChart(paths, seriesData, colors);
+    }
+
+    // Default overlay mode - build line data for each series
     final lineBarsData = <LineChartBarData>[];
     double globalMinY = double.infinity;
     double globalMaxY = double.negativeInfinity;
 
     for (int i = 0; i < paths.length; i++) {
       final path = paths[i];
-      final history = _multiHistory[path] ?? [];
+      final data = seriesData[path] ?? [];
 
       // Use provided color or default
       Color lineColor;
       if (i < colors.length) {
         lineColor = StyleSchema.parseColor(colors[i]);
       } else {
-        // Default colors for each line
         final defaultColors = [
           widget.accentColor,
-          const Color(0xFF00BCD4), // Cyan
-          const Color(0xFFFF9800), // Orange
-          const Color(0xFF4CAF50), // Green
-          const Color(0xFFE91E63), // Pink
-          const Color(0xFF9C27B0), // Purple
+          const Color(0xFF00BCD4),
+          const Color(0xFFFF9800),
+          const Color(0xFF4CAF50),
+          const Color(0xFFE91E63),
+          const Color(0xFF9C27B0),
         ];
         lineColor = defaultColors[i % defaultColors.length];
-      }
-
-      // Use history or sample data
-      List<double> data;
-      if (history.isNotEmpty) {
-        data = history;
-      } else {
-        // Generate slightly different sample data for each line
-        data = List.generate(
-          _maxPoints,
-          (j) =>
-              (50 + 30 * ((j + i * 7) % 5 - 2) / 2 + 10 * ((j + i * 3) % 3 - 1))
-                  .toDouble(),
-        );
       }
 
       if (data.isEmpty) continue;
@@ -728,6 +878,9 @@ class _ChartRendererState extends State<ChartRenderer> {
 
     final interval = (globalMaxY - globalMinY) / 4;
 
+    // Build extra horizontal lines (thresholds)
+    final extraLines = _buildThresholdLines();
+
     return LineChart(
       LineChartData(
         gridData: FlGridData(
@@ -740,9 +893,200 @@ class _ChartRendererState extends State<ChartRenderer> {
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
         lineTouchData: const LineTouchData(enabled: false),
+        extraLinesData: ExtraLinesData(horizontalLines: extraLines),
         lineBarsData: lineBarsData,
         minY: globalMinY,
         maxY: globalMaxY,
+      ),
+    );
+  }
+
+  Widget _buildStackedChart(
+    List<String> paths,
+    Map<String, List<double>> seriesData,
+    List<String> colors,
+  ) {
+    if (_mergeMode == ChartMergeMode.stackedBar) {
+      return _buildStackedBarChart(paths, seriesData, colors);
+    }
+
+    // Stacked area chart - compute cumulative values
+    final int maxLen = seriesData.values.fold<int>(
+      0,
+      (a, b) => b.length > a ? b.length : a,
+    );
+    if (maxLen == 0) return const SizedBox.shrink();
+
+    // Build cumulative data
+    final cumulativeData = <List<double>>[];
+    for (int i = 0; i < paths.length; i++) {
+      final path = paths[i];
+      final data = seriesData[path] ?? [];
+      final cumulative = List<double>.filled(maxLen, 0);
+
+      for (int j = 0; j < maxLen; j++) {
+        final baseValue = i > 0 ? cumulativeData[i - 1][j] : 0.0;
+        final thisValue = j < data.length ? data[j] : 0.0;
+        cumulative[j] = baseValue + thisValue;
+      }
+      cumulativeData.add(cumulative);
+    }
+
+    double globalMaxY = 0;
+    for (final cum in cumulativeData) {
+      final maxVal = cum.reduce((a, b) => a > b ? a : b);
+      if (maxVal > globalMaxY) globalMaxY = maxVal;
+    }
+
+    // Build stacked area lines (bottom to top, so reverse order)
+    final lineBarsData = <LineChartBarData>[];
+    for (int i = paths.length - 1; i >= 0; i--) {
+      Color lineColor;
+      if (i < colors.length) {
+        lineColor = StyleSchema.parseColor(colors[i]);
+      } else {
+        final defaultColors = [
+          widget.accentColor,
+          const Color(0xFF00BCD4),
+          const Color(0xFFFF9800),
+          const Color(0xFF4CAF50),
+          const Color(0xFFE91E63),
+          const Color(0xFF9C27B0),
+        ];
+        lineColor = defaultColors[i % defaultColors.length];
+      }
+
+      final spots = cumulativeData[i]
+          .asMap()
+          .entries
+          .map((e) => FlSpot(e.key.toDouble(), e.value))
+          .toList();
+
+      lineBarsData.add(
+        LineChartBarData(
+          spots: spots,
+          isCurved: _isCurved,
+          color: lineColor,
+          barWidth: 1.5,
+          isStrokeCapRound: true,
+          dotData: const FlDotData(show: false),
+          belowBarData: BarAreaData(
+            show: true,
+            color: lineColor.withValues(alpha: 0.6),
+            cutOffY: 0,
+            applyCutOffY: true,
+          ),
+        ),
+      );
+    }
+
+    final extraLines = _buildThresholdLines();
+    final interval = globalMaxY / 4;
+
+    return LineChart(
+      LineChartData(
+        gridData: FlGridData(
+          show: _showGrid,
+          drawVerticalLine: false,
+          horizontalInterval: interval > 0 ? interval : 20,
+          getDrawingHorizontalLine: (value) =>
+              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+        ),
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        lineTouchData: const LineTouchData(enabled: false),
+        extraLinesData: ExtraLinesData(horizontalLines: extraLines),
+        lineBarsData: lineBarsData,
+        minY: 0,
+        maxY: globalMaxY * 1.1,
+      ),
+    );
+  }
+
+  Widget _buildStackedBarChart(
+    List<String> paths,
+    Map<String, List<double>> seriesData,
+    List<String> colors,
+  ) {
+    final int maxLen = seriesData.values.fold<int>(
+      0,
+      (a, b) => b.length > a ? b.length : a,
+    );
+    if (maxLen == 0) return const SizedBox.shrink();
+
+    // Find max stacked value
+    double globalMaxY = 0;
+    for (int j = 0; j < maxLen; j++) {
+      double stackTotal = 0;
+      for (final path in paths) {
+        final data = seriesData[path] ?? [];
+        if (j < data.length) stackTotal += data[j].abs();
+      }
+      if (stackTotal > globalMaxY) globalMaxY = stackTotal;
+    }
+
+    final barGroups = <BarChartGroupData>[];
+    for (int j = 0; j < maxLen; j++) {
+      final rods = <BarChartRodStackItem>[];
+      double fromY = 0;
+
+      for (int i = 0; i < paths.length; i++) {
+        final path = paths[i];
+        final data = seriesData[path] ?? [];
+        final value = j < data.length ? data[j].abs() : 0.0;
+
+        Color barColor;
+        if (i < colors.length) {
+          barColor = StyleSchema.parseColor(colors[i]);
+        } else {
+          final defaultColors = [
+            widget.accentColor,
+            const Color(0xFF00BCD4),
+            const Color(0xFFFF9800),
+            const Color(0xFF4CAF50),
+            const Color(0xFFE91E63),
+            const Color(0xFF9C27B0),
+          ];
+          barColor = defaultColors[i % defaultColors.length];
+        }
+
+        rods.add(BarChartRodStackItem(fromY, fromY + value, barColor));
+        fromY += value;
+      }
+
+      barGroups.add(
+        BarChartGroupData(
+          x: j,
+          barRods: [
+            BarChartRodData(
+              toY: fromY,
+              rodStackItems: rods,
+              width: 6,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(2),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final interval = globalMaxY / 4;
+
+    return BarChart(
+      BarChartData(
+        gridData: FlGridData(
+          show: _showGrid,
+          drawVerticalLine: false,
+          horizontalInterval: interval > 0 ? interval : 20,
+          getDrawingHorizontalLine: (value) =>
+              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+        ),
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        barTouchData: BarTouchData(enabled: false),
+        barGroups: barGroups,
+        maxY: globalMaxY * 1.1,
       ),
     );
   }
@@ -824,15 +1168,30 @@ class _ChartRendererState extends State<ChartRenderer> {
   Widget _buildLineChart(List<double> data, Color color) {
     if (data.isEmpty) return const SizedBox.shrink();
 
+    final minY = data.reduce((a, b) => a < b ? a : b);
+    final maxY = data.reduce((a, b) => a > b ? a : b);
+    final interval = (maxY - minY) / 4;
+    final minMax = _showMinMax ? _getMinMax(data) : null;
+    final baselineValue = _getBaselineValue(data);
+
     final spots = data
         .asMap()
         .entries
         .map((e) => FlSpot(e.key.toDouble(), e.value))
         .toList();
 
-    final minY = data.reduce((a, b) => a < b ? a : b);
-    final maxY = data.reduce((a, b) => a > b ? a : b);
-    final interval = (maxY - minY) / 4;
+    // Build extra horizontal lines (thresholds + baseline)
+    final extraLines = _buildThresholdLines();
+    if (baselineValue != null) {
+      extraLines.add(
+        HorizontalLine(
+          y: baselineValue,
+          color: color.withValues(alpha: 0.5),
+          strokeWidth: 1,
+          dashArray: [3, 3],
+        ),
+      );
+    }
 
     return LineChart(
       LineChartData(
@@ -846,20 +1205,55 @@ class _ChartRendererState extends State<ChartRenderer> {
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
         lineTouchData: const LineTouchData(enabled: false),
+        extraLinesData: ExtraLinesData(horizontalLines: extraLines),
         lineBarsData: [
           LineChartBarData(
             spots: spots,
             isCurved: _isCurved,
-            color: color,
+            color: _gradientFill ? null : color,
+            gradient: _gradientFill
+                ? LinearGradient(
+                    colors: [_gradientLowColor, _gradientHighColor],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  )
+                : null,
             barWidth: 2,
             isStrokeCapRound: true,
             dotData: FlDotData(
-              show: _showDots,
-              getDotPainter: (spot, percent, bar, index) =>
-                  FlDotCirclePainter(radius: 3, color: color),
+              show: _showDots || _showMinMax,
+              getDotPainter: (spot, percent, bar, index) {
+                // Highlight min/max points
+                if (_showMinMax && minMax != null) {
+                  if (index == minMax.$1) {
+                    return FlDotCirclePainter(
+                      radius: 5,
+                      color: _gradientLowColor,
+                      strokeWidth: 2,
+                      strokeColor: Colors.white,
+                    );
+                  }
+                  if (index == minMax.$2) {
+                    return FlDotCirclePainter(
+                      radius: 5,
+                      color: _gradientHighColor,
+                      strokeWidth: 2,
+                      strokeColor: Colors.white,
+                    );
+                  }
+                }
+                return FlDotCirclePainter(
+                  radius: _showDots ? 3 : 0,
+                  color: _gradientFill
+                      ? _getGradientColor(spot.y, minY, maxY)
+                      : color,
+                );
+              },
             ),
           ),
         ],
+        minY: minY - (maxY - minY) * 0.1,
+        maxY: maxY + (maxY - minY) * 0.1,
       ),
     );
   }
@@ -867,15 +1261,30 @@ class _ChartRendererState extends State<ChartRenderer> {
   Widget _buildAreaChart(List<double> data, Color color) {
     if (data.isEmpty) return const SizedBox.shrink();
 
+    final minY = data.reduce((a, b) => a < b ? a : b);
+    final maxY = data.reduce((a, b) => a > b ? a : b);
+    final interval = (maxY - minY) / 4;
+    final minMax = _showMinMax ? _getMinMax(data) : null;
+    final baselineValue = _getBaselineValue(data);
+
     final spots = data
         .asMap()
         .entries
         .map((e) => FlSpot(e.key.toDouble(), e.value))
         .toList();
 
-    final minY = data.reduce((a, b) => a < b ? a : b);
-    final maxY = data.reduce((a, b) => a > b ? a : b);
-    final interval = (maxY - minY) / 4;
+    // Build extra horizontal lines (thresholds + baseline)
+    final extraLines = _buildThresholdLines();
+    if (baselineValue != null) {
+      extraLines.add(
+        HorizontalLine(
+          y: baselineValue,
+          color: color.withValues(alpha: 0.5),
+          strokeWidth: 1,
+          dashArray: [3, 3],
+        ),
+      );
+    }
 
     return LineChart(
       LineChartData(
@@ -889,24 +1298,69 @@ class _ChartRendererState extends State<ChartRenderer> {
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
         lineTouchData: const LineTouchData(enabled: false),
+        extraLinesData: ExtraLinesData(horizontalLines: extraLines),
         lineBarsData: [
           LineChartBarData(
             spots: spots,
             isCurved: _isCurved,
-            color: color,
+            color: _gradientFill ? null : color,
+            gradient: _gradientFill
+                ? LinearGradient(
+                    colors: [_gradientLowColor, _gradientHighColor],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  )
+                : null,
             barWidth: 2,
             isStrokeCapRound: true,
             dotData: FlDotData(
-              show: _showDots,
-              getDotPainter: (spot, percent, bar, index) =>
-                  FlDotCirclePainter(radius: 3, color: color),
+              show: _showDots || _showMinMax,
+              getDotPainter: (spot, percent, bar, index) {
+                // Highlight min/max points
+                if (_showMinMax && minMax != null) {
+                  if (index == minMax.$1) {
+                    return FlDotCirclePainter(
+                      radius: 5,
+                      color: _gradientLowColor,
+                      strokeWidth: 2,
+                      strokeColor: Colors.white,
+                    );
+                  }
+                  if (index == minMax.$2) {
+                    return FlDotCirclePainter(
+                      radius: 5,
+                      color: _gradientHighColor,
+                      strokeWidth: 2,
+                      strokeColor: Colors.white,
+                    );
+                  }
+                }
+                return FlDotCirclePainter(
+                  radius: _showDots ? 3 : 0,
+                  color: _gradientFill
+                      ? _getGradientColor(spot.y, minY, maxY)
+                      : color,
+                );
+              },
             ),
             belowBarData: BarAreaData(
               show: true,
-              color: color.withValues(alpha: 0.2),
+              gradient: _gradientFill
+                  ? LinearGradient(
+                      colors: [
+                        _gradientLowColor.withValues(alpha: 0.3),
+                        _gradientHighColor.withValues(alpha: 0.3),
+                      ],
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                    )
+                  : null,
+              color: _gradientFill ? null : color.withValues(alpha: 0.2),
             ),
           ),
         ],
+        minY: minY - (maxY - minY) * 0.1,
+        maxY: maxY + (maxY - minY) * 0.1,
       ),
     );
   }

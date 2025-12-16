@@ -31,6 +31,29 @@ enum ChartType {
   stepped, // Stepped line chart
   scatter, // Scatter plot with dots only
   multiLine, // Multiple data series on one chart with legend
+  stackedArea, // Stacked area chart for merged data
+  stackedBar, // Stacked bar chart for merged data
+}
+
+/// Merge mode for combined charts
+enum ChartMergeMode {
+  overlay, // Lines overlaid (default)
+  stackedArea, // Stacked area chart
+  stackedBar, // Stacked bar chart
+}
+
+/// Data normalization mode
+enum ChartNormalization {
+  raw, // Raw values (default)
+  percentChange, // Show as percentage change from first value
+  normalized, // Normalize all values to 0-100 range
+}
+
+/// Comparison baseline mode
+enum ChartBaseline {
+  none, // No baseline
+  firstValue, // Delta from first value
+  average, // Delta from average
 }
 
 /// Types of shapes available
@@ -632,6 +655,17 @@ class ElementSchema {
   chartBindingPaths; // Multiple data sources for merged chart
   final List<String>? chartLegendLabels; // Legend labels for merged chart
   final List<String>? chartLegendColors; // Legend colors for merged chart
+  // Advanced chart features
+  final ChartMergeMode? chartMergeMode; // Merge mode for combined charts
+  final ChartNormalization? chartNormalization; // Data normalization mode
+  final ChartBaseline? chartBaseline; // Comparison baseline
+  final List<double>? chartThresholds; // Threshold/reference lines
+  final List<String>? chartThresholdColors; // Colors for threshold lines
+  final List<String>? chartThresholdLabels; // Labels for threshold lines
+  final bool? chartShowMinMax; // Show min/max indicators
+  final bool? chartGradientFill; // Use gradient fill based on value
+  final String? chartGradientLowColor; // Low value color for gradient
+  final String? chartGradientHighColor; // High value color for gradient
   final ShapeType? shapeType; // For shape elements
   final String? shapeColor;
 
@@ -662,6 +696,16 @@ class ElementSchema {
     this.chartBindingPaths,
     this.chartLegendLabels,
     this.chartLegendColors,
+    this.chartMergeMode,
+    this.chartNormalization,
+    this.chartBaseline,
+    this.chartThresholds,
+    this.chartThresholdColors,
+    this.chartThresholdLabels,
+    this.chartShowMinMax,
+    this.chartGradientFill,
+    this.chartGradientLowColor,
+    this.chartGradientHighColor,
     this.shapeType,
     this.shapeColor,
   }) : id = id ?? const Uuid().v4();
@@ -693,6 +737,16 @@ class ElementSchema {
     List<String>? chartBindingPaths,
     List<String>? chartLegendLabels,
     List<String>? chartLegendColors,
+    ChartMergeMode? chartMergeMode,
+    ChartNormalization? chartNormalization,
+    ChartBaseline? chartBaseline,
+    List<double>? chartThresholds,
+    List<String>? chartThresholdColors,
+    List<String>? chartThresholdLabels,
+    bool? chartShowMinMax,
+    bool? chartGradientFill,
+    String? chartGradientLowColor,
+    String? chartGradientHighColor,
     ShapeType? shapeType,
     String? shapeColor,
   }) {
@@ -723,6 +777,18 @@ class ElementSchema {
       chartBindingPaths: chartBindingPaths ?? this.chartBindingPaths,
       chartLegendLabels: chartLegendLabels ?? this.chartLegendLabels,
       chartLegendColors: chartLegendColors ?? this.chartLegendColors,
+      chartMergeMode: chartMergeMode ?? this.chartMergeMode,
+      chartNormalization: chartNormalization ?? this.chartNormalization,
+      chartBaseline: chartBaseline ?? this.chartBaseline,
+      chartThresholds: chartThresholds ?? this.chartThresholds,
+      chartThresholdColors: chartThresholdColors ?? this.chartThresholdColors,
+      chartThresholdLabels: chartThresholdLabels ?? this.chartThresholdLabels,
+      chartShowMinMax: chartShowMinMax ?? this.chartShowMinMax,
+      chartGradientFill: chartGradientFill ?? this.chartGradientFill,
+      chartGradientLowColor:
+          chartGradientLowColor ?? this.chartGradientLowColor,
+      chartGradientHighColor:
+          chartGradientHighColor ?? this.chartGradientHighColor,
       shapeType: shapeType ?? this.shapeType,
       shapeColor: shapeColor ?? this.shapeColor,
     );
@@ -757,6 +823,21 @@ class ElementSchema {
     if (chartBindingPaths != null) 'chartBindingPaths': chartBindingPaths,
     if (chartLegendLabels != null) 'chartLegendLabels': chartLegendLabels,
     if (chartLegendColors != null) 'chartLegendColors': chartLegendColors,
+    if (chartMergeMode != null) 'chartMergeMode': chartMergeMode!.name,
+    if (chartNormalization != null)
+      'chartNormalization': chartNormalization!.name,
+    if (chartBaseline != null) 'chartBaseline': chartBaseline!.name,
+    if (chartThresholds != null) 'chartThresholds': chartThresholds,
+    if (chartThresholdColors != null)
+      'chartThresholdColors': chartThresholdColors,
+    if (chartThresholdLabels != null)
+      'chartThresholdLabels': chartThresholdLabels,
+    if (chartShowMinMax != null) 'chartShowMinMax': chartShowMinMax,
+    if (chartGradientFill != null) 'chartGradientFill': chartGradientFill,
+    if (chartGradientLowColor != null)
+      'chartGradientLowColor': chartGradientLowColor,
+    if (chartGradientHighColor != null)
+      'chartGradientHighColor': chartGradientHighColor,
     if (shapeType != null) 'shapeType': shapeType!.name,
     if (shapeColor != null) 'shapeColor': shapeColor,
   };
@@ -822,6 +903,37 @@ class ElementSchema {
       chartLegendColors: (json['chartLegendColors'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList(),
+      chartMergeMode: json['chartMergeMode'] != null
+          ? ChartMergeMode.values.firstWhere(
+              (e) => e.name == json['chartMergeMode'],
+              orElse: () => ChartMergeMode.overlay,
+            )
+          : null,
+      chartNormalization: json['chartNormalization'] != null
+          ? ChartNormalization.values.firstWhere(
+              (e) => e.name == json['chartNormalization'],
+              orElse: () => ChartNormalization.raw,
+            )
+          : null,
+      chartBaseline: json['chartBaseline'] != null
+          ? ChartBaseline.values.firstWhere(
+              (e) => e.name == json['chartBaseline'],
+              orElse: () => ChartBaseline.none,
+            )
+          : null,
+      chartThresholds: (json['chartThresholds'] as List<dynamic>?)
+          ?.map((e) => (e as num).toDouble())
+          .toList(),
+      chartThresholdColors: (json['chartThresholdColors'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      chartThresholdLabels: (json['chartThresholdLabels'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      chartShowMinMax: json['chartShowMinMax'] as bool?,
+      chartGradientFill: json['chartGradientFill'] as bool?,
+      chartGradientLowColor: json['chartGradientLowColor'] as String?,
+      chartGradientHighColor: json['chartGradientHighColor'] as String?,
       shapeType: json['shapeType'] != null
           ? ShapeType.values.firstWhere(
               (e) => e.name == json['shapeType'],

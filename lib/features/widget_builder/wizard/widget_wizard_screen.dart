@@ -7,6 +7,19 @@ import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
 import '../../../utils/snackbar.dart';
 
+/// Helper class for threshold lines
+class _ThresholdLine {
+  double value;
+  Color color;
+  String label;
+
+  _ThresholdLine({
+    required this.value,
+    required this.color,
+    required this.label,
+  });
+}
+
 /// Result of the widget wizard
 class WidgetWizardResult {
   final WidgetSchema schema;
@@ -64,6 +77,17 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       {}; // Individual colors for merged charts
   final Map<String, ChartType> _bindingChartTypes =
       {}; // Individual chart types per binding
+
+  // Advanced chart options
+  ChartMergeMode _mergeMode = ChartMergeMode.overlay;
+  ChartNormalization _normalization = ChartNormalization.raw;
+  ChartBaseline _baseline = ChartBaseline.none;
+  int _dataPoints = 30; // Number of data points to display
+  bool _showMinMax = false; // Show min/max indicators
+  bool _gradientFill = false; // Use gradient fill
+  Color _gradientLowColor = const Color(0xFF4CAF50); // Green
+  Color _gradientHighColor = const Color(0xFFFF5252); // Red
+  final List<_ThresholdLine> _thresholds = []; // Threshold lines
 
   List<_WizardStep> get _steps {
     final isQuickActions = _selectedTemplate?.id == 'actions';
@@ -1586,6 +1610,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             ),
           ),
           const SizedBox(height: 16),
+          _buildMergeModeSelector(),
+          const SizedBox(height: 16),
           _buildMergeColorPickers(),
         ],
 
@@ -1602,6 +1628,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             ),
             const SizedBox(height: 12),
             _buildIndividualChartTypePickers(),
+            const SizedBox(height: 16),
+            _buildSeriesColorPickers(),
           ] else ...[
             // Single binding: just show the chart type grid
             _buildChartTypeGrid(),
@@ -1828,7 +1856,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         ),
       ),
       child: InkWell(
-        onTap: () => setState(() => _mergeCharts = !_mergeCharts),
+        onTap: () => _toggleMergeCharts(),
         borderRadius: BorderRadius.circular(12),
         child: Row(
           children: [
@@ -1864,11 +1892,63 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             ),
             Switch(
               value: _mergeCharts,
-              onChanged: (value) => setState(() => _mergeCharts = value),
+              onChanged: (value) => _setMergeCharts(value),
               activeTrackColor: context.accentColor,
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _toggleMergeCharts() {
+    _setMergeCharts(!_mergeCharts);
+  }
+
+  void _setMergeCharts(bool value) {
+    if (value && !_mergeCharts) {
+      // Check if there are different chart types selected
+      final chartTypes = _bindingChartTypes.values.toSet();
+      if (chartTypes.length > 1) {
+        _showMergeConfirmationDialog();
+        return;
+      }
+    }
+    setState(() => _mergeCharts = value);
+  }
+
+  void _showMergeConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        title: const Text(
+          'Merge Charts?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'You have selected different chart types for each series. '
+          'Merging will combine all series into a single multi-line chart view. '
+          'Individual chart types will no longer apply.\n\n'
+          'Do you want to continue?',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() => _mergeCharts = true);
+            },
+            child: Text('Merge', style: TextStyle(color: context.accentColor)),
+          ),
+        ],
       ),
     );
   }
@@ -2003,10 +2083,133 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     );
   }
 
+  /// Series color pickers for non-merged multi-series charts
+  Widget _buildSeriesColorPickers() {
+    final defaultColors = [
+      const Color(0xFF4F6AF6), // Blue
+      const Color(0xFF00BCD4), // Cyan
+      const Color(0xFFFF9800), // Orange
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFFE91E63), // Pink
+      const Color(0xFF9C27B0), // Purple
+    ];
+
+    final availableColors = [
+      const Color(0xFF4F6AF6), // Blue
+      const Color(0xFF4ADE80), // Green
+      const Color(0xFFFBBF24), // Yellow
+      const Color(0xFFF472B6), // Pink
+      const Color(0xFFA78BFA), // Purple
+      const Color(0xFF22D3EE), // Cyan
+      const Color(0xFFFF6B6B), // Red
+      const Color(0xFFFF9F43), // Orange
+    ];
+
+    final bindingsList = _selectedBindings.toList();
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Series Colors',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...bindingsList.asMap().entries.map((entry) {
+            final index = entry.key;
+            final bindingPath = entry.value;
+            final binding = BindingRegistry.bindings.firstWhere(
+              (b) => b.path == bindingPath,
+              orElse: () => BindingDefinition(
+                path: bindingPath,
+                label: bindingPath,
+                description: '',
+                category: BindingCategory.node,
+                valueType: double,
+              ),
+            );
+
+            final currentColor =
+                _mergeColors[bindingPath] ??
+                defaultColors[index % defaultColors.length];
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: index < bindingsList.length - 1 ? 12 : 0,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: currentColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      binding.label,
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Wrap(
+                    spacing: 6,
+                    children: availableColors.take(6).map((color) {
+                      final isSelected =
+                          currentColor.toARGB32() == color.toARGB32();
+                      return GestureDetector(
+                        onTap: () => setState(() {
+                          _mergeColors[bindingPath] = color;
+                        }),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                            border: isSelected
+                                ? Border.all(color: Colors.white, width: 2)
+                                : null,
+                          ),
+                          child: isSelected
+                              ? const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 14,
+                                )
+                              : null,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
   Widget _buildGraphToggleOptions() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Show Grid toggle
+        // Basic toggles section
         _buildToggleOption(
           'Show Grid',
           'Display horizontal grid lines',
@@ -2014,7 +2217,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           (value) => setState(() => _showGrid = value),
         ),
         const SizedBox(height: 12),
-        // Show Dots toggle (only for line/area/sparkline)
         if (_chartType != ChartType.bar)
           _buildToggleOption(
             'Show Data Points',
@@ -2023,7 +2225,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             (value) => setState(() => _showDots = value),
           ),
         if (_chartType != ChartType.bar) const SizedBox(height: 12),
-        // Smooth Curve toggle (only for line/area/sparkline)
         if (_chartType != ChartType.bar)
           _buildToggleOption(
             'Smooth Curve',
@@ -2032,7 +2233,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             (value) => setState(() => _smoothCurve = value),
           ),
         if (_chartType != ChartType.bar) const SizedBox(height: 12),
-        // Fill Area toggle (only for line)
         if (_chartType == ChartType.line)
           _buildToggleOption(
             'Fill Area',
@@ -2040,14 +2240,712 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             _fillArea,
             (value) => setState(() => _fillArea = value),
           ),
-        // Show value label toggle
         _buildToggleOption(
           'Show Current Value',
           'Display the current value above the chart',
           _showLabels,
           (value) => setState(() => _showLabels = value),
         ),
+
+        const SizedBox(height: 24),
+        // Advanced Options Header
+        Text(
+          'Advanced Options',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Data Points Slider
+        _buildDataPointsSlider(),
+        const SizedBox(height: 16),
+
+        // Min/Max Indicators
+        _buildToggleOption(
+          'Show Min/Max',
+          'Display markers at highest and lowest points',
+          _showMinMax,
+          (value) => setState(() => _showMinMax = value),
+        ),
+        const SizedBox(height: 16),
+
+        // Gradient Fill
+        _buildGradientFillOption(),
+        const SizedBox(height: 16),
+
+        // Data Normalization (only when merged or single)
+        _buildNormalizationSelector(),
+        const SizedBox(height: 16),
+
+        // Comparison Baseline
+        _buildBaselineSelector(),
+        const SizedBox(height: 16),
+
+        // Threshold Lines
+        _buildThresholdSection(),
       ],
+    );
+  }
+
+  Widget _buildDataPointsSlider() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Data Points',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
+              Text(
+                '$_dataPoints points',
+                style: TextStyle(
+                  color: context.accentColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: context.accentColor,
+              inactiveTrackColor: AppTheme.darkBorder,
+              thumbColor: context.accentColor,
+              overlayColor: context.accentColor.withValues(alpha: 0.2),
+              trackHeight: 4,
+            ),
+            child: Slider(
+              value: _dataPoints.toDouble(),
+              min: 10,
+              max: 60,
+              divisions: 10,
+              onChanged: (value) => setState(() => _dataPoints = value.toInt()),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '10',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+              ),
+              Text(
+                '60',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGradientFillOption() {
+    final gradientColors = [
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFFFBBF24), // Yellow
+      const Color(0xFFFF9800), // Orange
+      const Color(0xFFFF5252), // Red
+      const Color(0xFF4F6AF6), // Blue
+      const Color(0xFF9C27B0), // Purple
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _gradientFill
+            ? context.accentColor.withValues(alpha: 0.1)
+            : AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _gradientFill ? context.accentColor : AppTheme.darkBorder,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Gradient Fill',
+                      style: TextStyle(
+                        color: _gradientFill
+                            ? context.accentColor
+                            : Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      'Color based on value (low → high)',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _gradientFill,
+                onChanged: (value) => setState(() => _gradientFill = value),
+                activeTrackColor: context.accentColor,
+              ),
+            ],
+          ),
+          if (_gradientFill) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                // Low color
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Low',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        children: gradientColors.map((color) {
+                          final isSelected =
+                              _gradientLowColor.toARGB32() == color.toARGB32();
+                          return GestureDetector(
+                            onTap: () =>
+                                setState(() => _gradientLowColor = color),
+                            child: Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                                border: isSelected
+                                    ? Border.all(color: Colors.white, width: 2)
+                                    : null,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // High color
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'High',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        children: gradientColors.map((color) {
+                          final isSelected =
+                              _gradientHighColor.toARGB32() == color.toARGB32();
+                          return GestureDetector(
+                            onTap: () =>
+                                setState(() => _gradientHighColor = color),
+                            child: Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                                border: isSelected
+                                    ? Border.all(color: Colors.white, width: 2)
+                                    : null,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNormalizationSelector() {
+    final options = [
+      (ChartNormalization.raw, 'Raw', 'Show actual values'),
+      (ChartNormalization.percentChange, '% Change', 'Delta from start'),
+      (ChartNormalization.normalized, '0-100', 'Normalized scale'),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Data Display',
+            style: TextStyle(color: Colors.white, fontSize: 13),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: options.map((opt) {
+              final isSelected = _normalization == opt.$1;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _normalization = opt.$1),
+                  child: Container(
+                    margin: EdgeInsets.only(
+                      right: opt.$1 != ChartNormalization.normalized ? 8 : 0,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? context.accentColor.withValues(alpha: 0.15)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isSelected
+                            ? context.accentColor
+                            : AppTheme.darkBorder,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          opt.$2,
+                          style: TextStyle(
+                            color: isSelected
+                                ? context.accentColor
+                                : Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          opt.$3,
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 9,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBaselineSelector() {
+    final options = [
+      (ChartBaseline.none, 'None', Icons.remove),
+      (ChartBaseline.firstValue, 'First Value', Icons.start),
+      (ChartBaseline.average, 'Average', Icons.horizontal_rule),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Comparison Baseline',
+            style: TextStyle(color: Colors.white, fontSize: 13),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: options.map((opt) {
+              final isSelected = _baseline == opt.$1;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _baseline = opt.$1),
+                  child: Container(
+                    margin: EdgeInsets.only(
+                      right: opt.$1 != ChartBaseline.average ? 8 : 0,
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? context.accentColor.withValues(alpha: 0.15)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isSelected
+                            ? context.accentColor
+                            : AppTheme.darkBorder,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          opt.$3,
+                          color: isSelected
+                              ? context.accentColor
+                              : Colors.white,
+                          size: 18,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          opt.$2,
+                          style: TextStyle(
+                            color: isSelected
+                                ? context.accentColor
+                                : Colors.white,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThresholdSection() {
+    final thresholdColors = [
+      const Color(0xFFFF5252), // Red
+      const Color(0xFFFBBF24), // Yellow
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFF4F6AF6), // Blue
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Threshold Lines',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
+              if (_thresholds.length < 3)
+                GestureDetector(
+                  onTap: () => setState(() {
+                    _thresholds.add(
+                      _ThresholdLine(
+                        value: 50,
+                        color: const Color(0xFFFF5252),
+                        label: '',
+                      ),
+                    );
+                  }),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add, color: context.accentColor, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Add',
+                          style: TextStyle(
+                            color: context.accentColor,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (_thresholds.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Add reference lines at specific values',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+              ),
+            ),
+          if (_thresholds.isNotEmpty) const SizedBox(height: 12),
+          ..._thresholds.asMap().entries.map((entry) {
+            final index = entry.key;
+            final threshold = entry.value;
+            return Container(
+              margin: EdgeInsets.only(
+                bottom: index < _thresholds.length - 1 ? 10 : 0,
+              ),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: threshold.color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: threshold.color.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Color selector
+                  ...thresholdColors.map((color) {
+                    final isSelected =
+                        threshold.color.toARGB32() == color.toARGB32();
+                    return GestureDetector(
+                      onTap: () => setState(() => threshold.color = color),
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        margin: const EdgeInsets.only(right: 6),
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          border: isSelected
+                              ? Border.all(color: Colors.white, width: 2)
+                              : null,
+                        ),
+                      ),
+                    );
+                  }),
+                  const SizedBox(width: 8),
+                  // Value input
+                  Expanded(
+                    child: SizedBox(
+                      height: 32,
+                      child: TextField(
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Value',
+                          hintStyle: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 13,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 0,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: BorderSide(color: AppTheme.darkBorder),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: BorderSide(color: AppTheme.darkBorder),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: BorderSide(color: threshold.color),
+                          ),
+                          filled: true,
+                          fillColor: AppTheme.darkSurface,
+                        ),
+                        onChanged: (val) {
+                          final parsed = double.tryParse(val);
+                          if (parsed != null) {
+                            setState(() => threshold.value = parsed);
+                          }
+                        },
+                        controller: TextEditingController(
+                          text: '${threshold.value}',
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Label input
+                  Expanded(
+                    child: SizedBox(
+                      height: 32,
+                      child: TextField(
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Label',
+                          hintStyle: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 13,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 0,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: BorderSide(color: AppTheme.darkBorder),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: BorderSide(color: AppTheme.darkBorder),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: BorderSide(color: threshold.color),
+                          ),
+                          filled: true,
+                          fillColor: AppTheme.darkSurface,
+                        ),
+                        onChanged: (val) =>
+                            setState(() => threshold.label = val),
+                        controller: TextEditingController(
+                          text: threshold.label,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Delete button
+                  GestureDetector(
+                    onTap: () => setState(() => _thresholds.removeAt(index)),
+                    child: Icon(
+                      Icons.close,
+                      color: AppTheme.textSecondary,
+                      size: 18,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMergeModeSelector() {
+    final options = [
+      (ChartMergeMode.overlay, 'Overlay', Icons.layers),
+      (ChartMergeMode.stackedArea, 'Stacked Area', Icons.area_chart),
+      (ChartMergeMode.stackedBar, 'Stacked Bar', Icons.stacked_bar_chart),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Merge Style',
+            style: TextStyle(color: Colors.white, fontSize: 13),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: options.map((opt) {
+              final isSelected = _mergeMode == opt.$1;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _mergeMode = opt.$1),
+                  child: Container(
+                    margin: EdgeInsets.only(
+                      right: opt.$1 != ChartMergeMode.stackedBar ? 8 : 0,
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? context.accentColor.withValues(alpha: 0.15)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isSelected
+                            ? context.accentColor
+                            : AppTheme.darkBorder,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          opt.$3,
+                          color: isSelected
+                              ? context.accentColor
+                              : Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          opt.$2,
+                          style: TextStyle(
+                            color: isSelected
+                                ? context.accentColor
+                                : Colors.white,
+                            fontSize: 10,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2608,10 +3506,23 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           chartShowGrid: _showGrid,
           chartShowDots: _showDots,
           chartCurved: _smoothCurve,
-          chartMaxPoints: 30,
+          chartMaxPoints: _dataPoints,
           chartBindingPaths: bindingsList,
           chartLegendLabels: legendLabels,
           chartLegendColors: legendColors,
+          // Advanced options
+          chartMergeMode: _mergeMode,
+          chartNormalization: _normalization,
+          chartBaseline: _baseline,
+          chartShowMinMax: _showMinMax,
+          chartGradientFill: _gradientFill,
+          chartGradientLowColor: _colorToHex(_gradientLowColor),
+          chartGradientHighColor: _colorToHex(_gradientHighColor),
+          chartThresholds: _thresholds.map((t) => t.value).toList(),
+          chartThresholdColors: _thresholds
+              .map((t) => _colorToHex(t.color))
+              .toList(),
+          chartThresholdLabels: _thresholds.map((t) => t.label).toList(),
           style: StyleSchema(
             height: 120.0,
             textColor: _colorToHex(_accentColor),
@@ -2693,8 +3604,20 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             chartShowGrid: _showGrid,
             chartShowDots: _showDots,
             chartCurved: _smoothCurve,
-            chartMaxPoints: 30,
+            chartMaxPoints: _dataPoints,
             binding: BindingSchema(path: bindingPath),
+            // Advanced options
+            chartNormalization: _normalization,
+            chartBaseline: _baseline,
+            chartShowMinMax: _showMinMax,
+            chartGradientFill: _gradientFill,
+            chartGradientLowColor: _colorToHex(_gradientLowColor),
+            chartGradientHighColor: _colorToHex(_gradientHighColor),
+            chartThresholds: _thresholds.map((t) => t.value).toList(),
+            chartThresholdColors: _thresholds
+                .map((t) => _colorToHex(t.color))
+                .toList(),
+            chartThresholdLabels: _thresholds.map((t) => t.label).toList(),
             style: StyleSchema(
               height: _selectedBindings.length == 1 ? 100.0 : 70.0,
               textColor: _colorToHex(_accentColor),

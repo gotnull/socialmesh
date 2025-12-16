@@ -514,16 +514,36 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   }
 
   void _confirmDelete(WidgetSchema schema) {
+    // Check if widget is on dashboard
+    final dashboardWidgets = ref.read(dashboardWidgetsProvider);
+    final isOnDashboard = dashboardWidgets.any(
+      (w) => w.schemaId == schema.id && w.isVisible,
+    );
+
+    final warningMessage = isOnDashboard
+        ? 'This widget is currently on your Dashboard. Deleting it will also remove it from the Dashboard.\n\n'
+              'Are you sure you want to delete "${schema.name}"? This cannot be undone.'
+        : 'Are you sure you want to delete "${schema.name}"? This cannot be undone.';
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.darkCard,
-        title: const Text(
-          'Delete Widget?',
-          style: TextStyle(color: Colors.white),
+        title: Row(
+          children: [
+            if (isOnDashboard) ...[
+              Icon(
+                Icons.warning_amber_rounded,
+                color: AppTheme.warningYellow,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+            ],
+            const Text('Delete Widget?', style: TextStyle(color: Colors.white)),
+          ],
         ),
         content: Text(
-          'Are you sure you want to delete "${schema.name}"? This cannot be undone.',
+          warningMessage,
           style: TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
@@ -537,6 +557,15 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
+              // Remove from dashboard first if needed
+              if (isOnDashboard) {
+                final widgetToRemove = dashboardWidgets.firstWhere(
+                  (w) => w.schemaId == schema.id && w.isVisible,
+                );
+                ref
+                    .read(dashboardWidgetsProvider.notifier)
+                    .removeWidget(widgetToRemove.id);
+              }
               await _storageService.deleteWidget(schema.id);
               await _loadWidgets();
             },
