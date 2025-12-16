@@ -546,6 +546,47 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // Selection counter
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: _selectedBindings.length >= _maxDataItems
+                ? Colors.orange.withValues(alpha: 0.15)
+                : context.accentColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: _selectedBindings.length >= _maxDataItems
+                  ? Colors.orange.withValues(alpha: 0.3)
+                  : context.accentColor.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _selectedBindings.length >= _maxDataItems
+                    ? Icons.warning_amber
+                    : Icons.data_usage,
+                size: 16,
+                color: _selectedBindings.length >= _maxDataItems
+                    ? Colors.orange
+                    : context.accentColor,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${_selectedBindings.length} / $_maxDataItems selected',
+                style: TextStyle(
+                  color: _selectedBindings.length >= _maxDataItems
+                      ? Colors.orange
+                      : context.accentColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
         // Suggested bindings from template
         if (_selectedTemplate != null &&
             _selectedTemplate!.suggestedBindings.isNotEmpty) ...[
@@ -579,12 +620,17 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     );
   }
 
+  // Maximum number of data items allowed per widget
+  static const int _maxDataItems = 6;
+
   Widget _buildDataCategory(
     String title,
     IconData icon,
     Color color,
     List<BindingDefinition> bindings,
   ) {
+    final atLimit = _selectedBindings.length >= _maxDataItems;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -608,55 +654,65 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           runSpacing: 8,
           children: bindings.map((binding) {
             final isSelected = _selectedBindings.contains(binding.path);
+            final isDisabled = !isSelected && atLimit;
             return Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () {
-                  setState(() {
-                    if (isSelected) {
-                      _selectedBindings.remove(binding.path);
-                    } else {
-                      _selectedBindings.add(binding.path);
-                    }
-                  });
-                },
+                onTap: isDisabled
+                    ? null
+                    : () {
+                        setState(() {
+                          if (isSelected) {
+                            _selectedBindings.remove(binding.path);
+                          } else {
+                            _selectedBindings.add(binding.path);
+                          }
+                        });
+                      },
                 borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? context.accentColor.withValues(alpha: 0.2)
-                        : AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected
-                          ? context.accentColor
-                          : AppTheme.darkBorder,
+                child: Opacity(
+                  opacity: isDisabled ? 0.4 : 1.0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
                     ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isSelected) ...[
-                        Icon(Icons.check, size: 16, color: context.accentColor),
-                        const SizedBox(width: 6),
-                      ],
-                      Text(
-                        binding.label,
-                        style: TextStyle(
-                          color: isSelected
-                              ? context.accentColor
-                              : Colors.white,
-                          fontSize: 13,
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? context.accentColor.withValues(alpha: 0.2)
+                          : AppTheme.darkCard,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected
+                            ? context.accentColor
+                            : AppTheme.darkBorder,
                       ),
-                    ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isSelected) ...[
+                          Icon(
+                            Icons.check,
+                            size: 16,
+                            color: context.accentColor,
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Text(
+                          binding.label,
+                          style: TextStyle(
+                            color: isSelected
+                                ? context.accentColor
+                                : Colors.white,
+                            fontSize: 13,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

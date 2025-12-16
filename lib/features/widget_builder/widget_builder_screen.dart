@@ -295,34 +295,51 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
     required String subtitle,
     Widget? action,
   }) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 64, color: AppTheme.textTertiary),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+    return SizedBox.expand(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  size: 48,
+                  color: context.accentColor.withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                subtitle,
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+              if (action != null) ...[const SizedBox(height: 24), action],
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
-            textAlign: TextAlign.center,
-          ),
-          if (action != null) ...[const SizedBox(height: 24), action],
-        ],
+        ),
       ),
     );
   }
 
   void _createNewWidget() async {
-    final result = await Navigator.push<WidgetSchema>(
+    await Navigator.push<WidgetSchema>(
       context,
       MaterialPageRoute(
         builder: (context) => WidgetWizardScreen(
@@ -333,13 +350,13 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       ),
     );
 
-    if (result != null) {
-      await _loadWidgets();
-    }
+    // Always reload widgets after returning from wizard
+    // The save happens inside the wizard, so we should reload regardless
+    await _loadWidgets();
   }
 
   void _editWidget(WidgetSchema schema) async {
-    final result = await Navigator.push<WidgetSchema>(
+    await Navigator.push<WidgetSchema>(
       context,
       MaterialPageRoute(
         builder: (context) => WidgetWizardScreen(
@@ -351,9 +368,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       ),
     );
 
-    if (result != null) {
-      await _loadWidgets();
-    }
+    // Always reload widgets after returning from wizard
+    await _loadWidgets();
   }
 
   void _useTemplate(WidgetSchema template) async {
@@ -366,7 +382,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       tags: template.tags,
     );
 
-    final result = await Navigator.push<WidgetSchema>(
+    await Navigator.push<WidgetSchema>(
       context,
       MaterialPageRoute(
         builder: (context) => WidgetWizardScreen(
@@ -378,9 +394,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       ),
     );
 
-    if (result != null) {
-      await _loadWidgets();
-    }
+    // Always reload widgets after returning from wizard
+    await _loadWidgets();
   }
 
   void _handleAction(String action, WidgetSchema schema) async {
