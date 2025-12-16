@@ -1654,13 +1654,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // Create root based on layout style
     final ElementSchema root;
     if (_selectedTemplate?.id == 'actions') {
-      // Actions use horizontal layout with space around
+      // Actions use horizontal layout with spacing between expanded buttons
       root = ElementSchema(
         type: ElementType.row,
-        style: const StyleSchema(
-          padding: 12,
-          mainAxisAlignment: MainAxisAlignmentOption.spaceAround,
-        ),
+        style: const StyleSchema(padding: 12, spacing: 8),
         children: children,
       );
     } else if (_layoutStyle == _LayoutStyle.horizontal) {
@@ -2455,14 +2452,26 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       ];
     }
 
+    // Build rectangular action buttons matching native Quick Compose widget
     return _selectedActions.map((actionType) {
       final actionOption = _getAvailableActions().firstWhere(
         (a) => a.type == actionType,
       );
 
+      // Match native _ActionButton: height 48, borderRadius 12, icon+text inside
       return ElementSchema(
-        type: ElementType.column,
-        style: const StyleSchema(alignment: AlignmentOption.center),
+        type: ElementType.container,
+        style: StyleSchema(
+          expanded: true, // Fill available space in row
+          height: 48,
+          backgroundColor: _colorToHex(
+            actionOption.color.withValues(alpha: 0.08),
+          ),
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: _colorToHex(actionOption.color.withValues(alpha: 0.2)),
+          alignment: AlignmentOption.center,
+        ),
         action: ActionSchema(
           type: actionType,
           requiresNodeSelection:
@@ -2473,35 +2482,32 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         ),
         children: [
           ElementSchema(
-            type: ElementType.shape,
-            shapeType: ShapeType.circle,
-            style: StyleSchema(
-              width: 48,
-              height: 48,
-              backgroundColor: _colorToHex(
-                actionOption.color.withValues(alpha: 0.15),
-              ),
+            type: ElementType.column,
+            style: const StyleSchema(
+              alignment: AlignmentOption.center,
+              mainAxisAlignment: MainAxisAlignmentOption.center,
             ),
             children: [
               ElementSchema(
                 type: ElementType.icon,
                 iconName: _getIconNameFromIconData(actionOption.icon),
-                iconSize: 22,
+                iconSize: 18,
                 style: StyleSchema(textColor: _colorToHex(actionOption.color)),
               ),
+              ElementSchema(
+                type: ElementType.spacer,
+                style: const StyleSchema(height: 2),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                text: actionOption.label,
+                style: StyleSchema(
+                  textColor: _colorToHex(actionOption.color),
+                  fontSize: 8,
+                  fontWeight: 'w600',
+                ),
+              ),
             ],
-          ),
-          ElementSchema(
-            type: ElementType.spacer,
-            style: const StyleSchema(height: 6),
-          ),
-          ElementSchema(
-            type: ElementType.text,
-            text: actionOption.label,
-            style: StyleSchema(
-              textColor: _colorToHex(AppTheme.textSecondary),
-              fontSize: 11,
-            ),
           ),
         ],
       );
