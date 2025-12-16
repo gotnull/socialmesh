@@ -9,6 +9,8 @@ import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../device/device_sheet.dart';
 import '../navigation/main_shell.dart';
+import '../widget_builder/storage/widget_storage_service.dart';
+import '../widget_builder/wizard/widget_wizard_screen.dart';
 import 'models/dashboard_widget_config.dart';
 import 'providers/dashboard_providers.dart';
 import 'widgets/dashboard_widget.dart';
@@ -269,10 +271,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                 key: ValueKey(config.id),
                 padding: const EdgeInsets.only(bottom: 16),
                 child: _editMode
-                    ? ReorderableDragStartListener(
-                        index: index,
-                        child: _buildWidgetCard(config),
-                      )
+                    ? _buildWidgetCard(config, reorderIndex: index)
                     : GestureDetector(
                         onLongPress: () {
                           HapticFeedback.mediumImpact();
@@ -392,10 +391,10 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
     );
   }
 
-  Widget _buildWidgetCard(DashboardWidgetConfig config) {
+  Widget _buildWidgetCard(DashboardWidgetConfig config, {int? reorderIndex}) {
     // Custom widgets render with minimal wrapper - just the content with edit mode support
     if (config.type == DashboardWidgetType.custom && config.schemaId != null) {
-      return _buildCustomWidgetCard(config);
+      return _buildCustomWidgetCard(config, reorderIndex: reorderIndex);
     }
 
     final content = _getWidgetContent(config);
@@ -406,6 +405,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
     return DashboardWidget(
       config: config,
       isEditMode: _editMode,
+      reorderIndex: reorderIndex,
       trailing: trailing,
       onFavorite: () {
         ref.read(dashboardWidgetsProvider.notifier).toggleFavorite(config.id);
@@ -418,7 +418,10 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
   }
 
   /// Build a custom widget with edit mode support using the same DashboardWidget wrapper
-  Widget _buildCustomWidgetCard(DashboardWidgetConfig config) {
+  Widget _buildCustomWidgetCard(
+    DashboardWidgetConfig config, {
+    int? reorderIndex,
+  }) {
     return Consumer(
       builder: (context, ref, _) {
         final schemaAsync = ref.watch(customWidgetProvider(config.schemaId!));
@@ -429,6 +432,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               // Schema not found - show error widget
               return DashboardWidget(
                 config: config,
+                reorderIndex: reorderIndex,
                 isEditMode: _editMode,
                 customName: 'Widget Not Found',
                 customIcon: Icons.error_outline,
@@ -458,6 +462,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
             return DashboardWidget(
               config: config,
               isEditMode: _editMode,
+              reorderIndex: reorderIndex,
               customName: schema.name,
               customIcon: _getIconForTemplate(schema.tags),
               showHeader: true, // Always show header like native widgets
@@ -481,6 +486,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
           error: (e, _) => DashboardWidget(
             config: config,
             isEditMode: _editMode,
+            reorderIndex: reorderIndex,
             customName: 'Error Loading Widget',
             customIcon: Icons.error_outline,
             onRemove: () {
@@ -598,6 +604,33 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
     );
   }
 
+  Future<void> _editCustomWidget(String? schemaId) async {
+    if (schemaId == null) return;
+
+    final storageService = WidgetStorageService();
+    await storageService.init();
+    final schema = await storageService.getWidget(schemaId);
+
+    if (schema == null || !mounted) return;
+
+    await Navigator.push<WidgetWizardResult>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WidgetWizardScreen(
+          initialSchema: schema,
+          onSave: (updated) async {
+            await storageService.saveWidget(updated);
+          },
+        ),
+      ),
+    );
+
+    // Refresh dashboard to pick up any changes
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   void _showAddWidgetSheet(BuildContext context) {
     AppBottomSheet.showScrollable(
       context: context,
@@ -665,11 +698,9 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                 'Edit Widget',
                 style: TextStyle(color: Colors.white),
               ),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                Navigator.of(
-                  context,
-                ).pushNamed('/widget-editor', arguments: config.schemaId);
+                await _editCustomWidget(config.schemaId);
               },
             ),
           // Toggle favorite

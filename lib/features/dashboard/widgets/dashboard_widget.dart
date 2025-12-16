@@ -22,6 +22,9 @@ class DashboardWidget extends StatefulWidget {
   /// Custom overrides for widget icon (for custom schema widgets)
   final IconData? customIcon;
 
+  /// Index in the ReorderableListView for drag handling (only header is draggable)
+  final int? reorderIndex;
+
   const DashboardWidget({
     super.key,
     required this.config,
@@ -34,6 +37,7 @@ class DashboardWidget extends StatefulWidget {
     this.showHeader = true,
     this.customName,
     this.customIcon,
+    this.reorderIndex,
   });
 
   @override
@@ -187,7 +191,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
   }
 
   Widget _buildHeader(String displayName, IconData displayIcon) {
-    return Container(
+    Widget header = Container(
       padding: EdgeInsets.only(
         left: 16,
         right: widget.isEditMode ? 4 : 16,
@@ -269,6 +273,16 @@ class _DashboardWidgetState extends State<DashboardWidget>
         ],
       ),
     );
+
+    // Wrap header with drag listener in edit mode (only header is draggable)
+    if (widget.isEditMode && widget.reorderIndex != null) {
+      header = ReorderableDragStartListener(
+        index: widget.reorderIndex!,
+        child: header,
+      );
+    }
+
+    return header;
   }
 }
 

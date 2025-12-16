@@ -145,13 +145,19 @@ class _ElementRenderer extends StatelessWidget {
         ),
       );
     }
-    // Add action handling for runtime mode
+    // Add action handling for runtime mode with visual feedback
     else if (enableActions && element.action != null) {
-      child = GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () =>
-            WidgetActionHandler.handleAction(context, ref, element.action!),
-        child: child,
+      // Wrap in Material + InkWell for tap feedback
+      child = Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () =>
+              WidgetActionHandler.handleAction(context, ref, element.action!),
+          borderRadius: BorderRadius.circular(element.style.borderRadius ?? 12),
+          splashColor: accentColor.withValues(alpha: 0.3),
+          highlightColor: accentColor.withValues(alpha: 0.1),
+          child: child,
+        ),
       );
     }
 

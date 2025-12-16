@@ -124,12 +124,32 @@ class DashboardWidgetsNotifier extends Notifier<List<DashboardWidgetConfig>> {
   }
 
   void toggleFavorite(String id) {
-    state = state.map((w) {
-      if (w.id == id) {
-        return w.copyWith(isFavorite: !w.isFavorite);
-      }
-      return w;
-    }).toList();
+    // Find the widget
+    final index = state.indexWhere((w) => w.id == id);
+    if (index == -1) return;
+
+    final widget = state[index];
+    final newIsFavorite = !widget.isFavorite;
+
+    if (newIsFavorite) {
+      // Moving to favorites: move to top of list
+      final widgets = List<DashboardWidgetConfig>.from(state);
+      widgets.removeAt(index);
+      widgets.insert(0, widget.copyWith(isFavorite: true));
+
+      // Update order values
+      state = widgets.asMap().entries.map((e) {
+        return e.value.copyWith(order: e.key);
+      }).toList();
+    } else {
+      // Removing from favorites: keep position but toggle flag
+      state = state.map((w) {
+        if (w.id == id) {
+          return w.copyWith(isFavorite: false);
+        }
+        return w;
+      }).toList();
+    }
     _saveWidgets();
   }
 
