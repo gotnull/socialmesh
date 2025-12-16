@@ -168,7 +168,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
           ],
         ),
         body: _isLoading
-            ? Center(child: MeshLoadingIndicator())
+            ? Center(child: MeshLoadingIndicator(size: 48))
             : ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [

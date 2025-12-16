@@ -447,7 +447,7 @@ final secretGestureConfigProvider = FutureProvider<SecretGestureConfig>((
 /// The app's mascot/brain - used for all loading states
 /// Bounces in when loading starts, bounces out when loading finishes
 class MeshLoadingIndicator extends StatefulWidget {
-  /// Size of the loading indicator (default 64 for better visibility)
+  /// Size of the loading indicator (default 24 for icon-like usage)
   final double size;
 
   /// Custom colors (uses brand gradient by default)
@@ -464,7 +464,7 @@ class MeshLoadingIndicator extends StatefulWidget {
 
   const MeshLoadingIndicator({
     super.key,
-    this.size = 64,
+    this.size = 24,
     this.colors,
     this.animationType = MeshNodeAnimationType.tumble,
     this.glowIntensity = 0.6,

@@ -38,7 +38,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
         ),
       ),
       body: settingsAsync.when(
-        loading: () => const Center(child: MeshLoadingIndicator()),
+        loading: () => const Center(child: MeshLoadingIndicator(size: 48)),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (settingsService) => ListView(
           padding: const EdgeInsets.all(16),

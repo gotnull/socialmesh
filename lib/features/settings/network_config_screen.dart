@@ -159,7 +159,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
           ],
         ),
         body: _loading
-            ? Center(child: MeshLoadingIndicator())
+            ? Center(child: MeshLoadingIndicator(size: 48))
             : ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [

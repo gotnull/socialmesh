@@ -80,7 +80,7 @@ class _DeviceManagementScreenState
     return Scaffold(
       appBar: AppBar(title: const Text('Device Management')),
       body: _isProcessing
-          ? const Center(child: MeshLoadingIndicator())
+          ? const Center(child: MeshLoadingIndicator(size: 48))
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [

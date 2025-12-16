@@ -153,7 +153,7 @@ class _ExternalNotificationConfigScreenState
         ],
       ),
       body: _isLoading
-          ? const Center(child: MeshLoadingIndicator())
+          ? const Center(child: MeshLoadingIndicator(size: 48))
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [

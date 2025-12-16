@@ -151,7 +151,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: MeshLoadingIndicator())
+          ? const Center(child: MeshLoadingIndicator(size: 48))
           : ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [

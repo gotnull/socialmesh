@@ -25,7 +25,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       body: authState.when(
         data: (user) =>
             user != null ? _SignedInView(user: user) : const _SignedOutView(),
-        loading: () => const Center(child: MeshLoadingIndicator()),
+        loading: () => const Center(child: MeshLoadingIndicator(size: 48)),
         error: (error, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

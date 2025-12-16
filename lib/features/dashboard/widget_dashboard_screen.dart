@@ -192,7 +192,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          MeshLoadingIndicator(),
+          MeshLoadingIndicator(size: 48),
           const SizedBox(height: 24),
           Text(
             autoReconnectState == AutoReconnectState.scanning

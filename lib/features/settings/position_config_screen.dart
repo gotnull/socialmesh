@@ -237,7 +237,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
           ],
         ),
         body: _isLoading
-            ? Center(child: MeshLoadingIndicator())
+            ? Center(child: MeshLoadingIndicator(size: 48))
             : ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [

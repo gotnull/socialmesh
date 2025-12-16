@@ -323,7 +323,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
       body: settingsServiceAsync.when(
-        loading: () => const Center(child: MeshLoadingIndicator()),
+        loading: () => const Center(child: MeshLoadingIndicator(size: 48)),
         error: (error, stack) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
