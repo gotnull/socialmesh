@@ -638,14 +638,32 @@ class _NodeCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // Favorite star & chevron
+              // Status icons & chevron
               Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  if (node.isFavorite)
-                    const Icon(Icons.star, color: Color(0xFFFFD700), size: 24)
-                  else
-                    const SizedBox(height: 24),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (node.isIgnored)
+                        const Padding(
+                          padding: EdgeInsets.only(right: 4),
+                          child: Icon(
+                            Icons.volume_off,
+                            color: AppTheme.errorRed,
+                            size: 20,
+                          ),
+                        ),
+                      if (node.isFavorite)
+                        const Icon(
+                          Icons.star,
+                          color: Color(0xFFFFD700),
+                          size: 24,
+                        )
+                      else if (!node.isIgnored)
+                        const SizedBox(width: 24),
+                    ],
+                  ),
                   const SizedBox(height: 8),
                   const Icon(
                     Icons.chevron_right,
@@ -811,7 +829,6 @@ class NodeDetailsSheet extends ConsumerWidget {
   void _toggleFavorite(BuildContext context, WidgetRef ref) async {
     final protocol = ref.read(protocolServiceProvider);
     final nodesNotifier = ref.read(nodesProvider.notifier);
-    Navigator.pop(context);
 
     try {
       if (node.isFavorite) {
@@ -838,6 +855,33 @@ class NodeDetailsSheet extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         showErrorSnackBar(context, 'Failed to update favorite: $e');
+      }
+    }
+  }
+
+  void _toggleIgnored(BuildContext context, WidgetRef ref) async {
+    final protocol = ref.read(protocolServiceProvider);
+    final nodesNotifier = ref.read(nodesProvider.notifier);
+
+    try {
+      if (node.isIgnored) {
+        await protocol.removeIgnoredNode(node.nodeNum);
+        // Update local state
+        nodesNotifier.addOrUpdateNode(node.copyWith(isIgnored: false));
+        if (context.mounted) {
+          showSuccessSnackBar(context, '${node.displayName} unmuted');
+        }
+      } else {
+        await protocol.setIgnoredNode(node.nodeNum);
+        // Update local state
+        nodesNotifier.addOrUpdateNode(node.copyWith(isIgnored: true));
+        if (context.mounted) {
+          showSuccessSnackBar(context, '${node.displayName} muted');
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(context, 'Failed to update mute status: $e');
       }
     }
   }
@@ -1158,6 +1202,34 @@ class NodeDetailsSheet extends ConsumerWidget {
               _toggleFavorite(context, ref);
             },
           ),
+          ListTile(
+            leading: Icon(
+              node.isIgnored ? Icons.volume_off : Icons.volume_up,
+              color: node.isIgnored
+                  ? AppTheme.errorRed
+                  : AppTheme.textSecondary,
+            ),
+            title: Text(
+              node.isIgnored ? 'Unmute Node' : 'Mute Node',
+              style: const TextStyle(
+                color: Colors.white,
+                fontFamily: 'JetBrainsMono',
+              ),
+            ),
+            subtitle: Text(
+              node.isIgnored
+                  ? 'Receive messages from this node'
+                  : 'Hide messages from this node',
+              style: const TextStyle(
+                color: AppTheme.textTertiary,
+                fontSize: 12,
+              ),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              _toggleIgnored(context, ref);
+            },
+          ),
           if (node.hasPosition)
             ListTile(
               leading: const Icon(
@@ -1412,6 +1484,27 @@ class NodeDetailsSheet extends ConsumerWidget {
                         tooltip: node.isFavorite
                             ? 'Remove from favorites'
                             : 'Add to favorites',
+                        padding: const EdgeInsets.all(12),
+                        constraints: const BoxConstraints(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Mute button
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppTheme.darkBorder),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        onPressed: () => _toggleIgnored(context, ref),
+                        icon: Icon(
+                          node.isIgnored ? Icons.volume_off : Icons.volume_up,
+                          color: node.isIgnored
+                              ? AppTheme.errorRed
+                              : AppTheme.textSecondary,
+                          size: 22,
+                        ),
+                        tooltip: node.isIgnored ? 'Unmute node' : 'Mute node',
                         padding: const EdgeInsets.all(12),
                         constraints: const BoxConstraints(),
                       ),

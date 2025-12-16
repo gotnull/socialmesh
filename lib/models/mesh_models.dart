@@ -186,6 +186,7 @@ class MeshNode {
   final String? role; // 'CLIENT', 'ROUTER', etc.
   final double? distance; // distance in meters
   final bool isFavorite;
+  final bool isIgnored; // Whether node is muted/ignored
   final int? avatarColor; // Color value for avatar
   final bool hasPublicKey; // Whether node has encryption key set
 
@@ -278,6 +279,7 @@ class MeshNode {
     this.role,
     this.distance,
     this.isFavorite = false,
+    this.isIgnored = false,
     this.avatarColor,
     this.hasPublicKey = false,
     // Device Metrics
@@ -364,6 +366,7 @@ class MeshNode {
     String? role,
     double? distance,
     bool? isFavorite,
+    bool? isIgnored,
     int? avatarColor,
     bool? hasPublicKey,
     // Device Metrics
@@ -449,6 +452,7 @@ class MeshNode {
       role: role ?? this.role,
       distance: distance ?? this.distance,
       isFavorite: isFavorite ?? this.isFavorite,
+      isIgnored: isIgnored ?? this.isIgnored,
       avatarColor: avatarColor ?? this.avatarColor,
       hasPublicKey: hasPublicKey ?? this.hasPublicKey,
       // Device Metrics

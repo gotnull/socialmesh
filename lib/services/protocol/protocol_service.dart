@@ -7,6 +7,7 @@ import '../../core/logging.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_models.dart';
 import '../../models/device_error.dart';
+import '../../generated/meshtastic/admin.pb.dart' as admin;
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import '../../generated/meshtastic/portnums.pb.dart' as pn;
@@ -2605,7 +2606,9 @@ class ProtocolService {
       ..from = _myNodeNum!
       ..to = _myNodeNum!
       ..decoded = data
-      ..id = _generatePacketId();
+      ..id = _generatePacketId()
+      ..priority = 70
+      ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -2632,7 +2635,9 @@ class ProtocolService {
       ..from = _myNodeNum!
       ..to = _myNodeNum!
       ..decoded = data
-      ..id = _generatePacketId();
+      ..id = _generatePacketId()
+      ..priority = 70
+      ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -2659,7 +2664,9 @@ class ProtocolService {
       ..from = _myNodeNum!
       ..to = _myNodeNum!
       ..decoded = data
-      ..id = _generatePacketId();
+      ..id = _generatePacketId()
+      ..priority = 70
+      ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -2686,7 +2693,9 @@ class ProtocolService {
       ..from = _myNodeNum!
       ..to = _myNodeNum!
       ..decoded = data
-      ..id = _generatePacketId();
+      ..id = _generatePacketId()
+      ..priority = 70
+      ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -2713,7 +2722,9 @@ class ProtocolService {
       ..from = _myNodeNum!
       ..to = _myNodeNum!
       ..decoded = data
-      ..id = _generatePacketId();
+      ..id = _generatePacketId()
+      ..priority = 70
+      ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -2740,7 +2751,10 @@ class ProtocolService {
       ..from = _myNodeNum!
       ..to = _myNodeNum!
       ..decoded = data
-      ..id = _generatePacketId();
+      ..id = _generatePacketId()
+      ..channel = 0
+      ..priority = 70
+      ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -2801,12 +2815,13 @@ class ProtocolService {
       ..to = _myNodeNum!
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority = 70 // RELIABLE priority
+      ..priority =
+          70 // RELIABLE priority
       ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
-    
+
     _logger.i('Node $nodeNum removal command sent to device');
   }
 
@@ -2831,7 +2846,10 @@ class ProtocolService {
       ..from = _myNodeNum!
       ..to = _myNodeNum!
       ..decoded = data
-      ..id = _generatePacketId();
+      ..id = _generatePacketId()
+      ..priority =
+          70 // RELIABLE priority
+      ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -2858,7 +2876,10 @@ class ProtocolService {
       ..from = _myNodeNum!
       ..to = _myNodeNum!
       ..decoded = data
-      ..id = _generatePacketId();
+      ..id = _generatePacketId()
+      ..priority =
+          70 // RELIABLE priority
+      ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -2894,7 +2915,10 @@ class ProtocolService {
       ..from = _myNodeNum!
       ..to = _myNodeNum!
       ..decoded = data
-      ..id = _generatePacketId();
+      ..id = _generatePacketId()
+      ..priority =
+          70 // RELIABLE priority
+      ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -2921,7 +2945,70 @@ class ProtocolService {
       ..from = _myNodeNum!
       ..to = _myNodeNum!
       ..decoded = data
-      ..id = _generatePacketId();
+      ..id = _generatePacketId()
+      ..priority =
+          70 // RELIABLE priority
+      ..wantAck = true;
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Set a node as ignored (mute messages from this node)
+  Future<void> setIgnoredNode(int nodeNum) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot set ignored: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot set ignored: not connected');
+    }
+
+    _logger.i('Setting node $nodeNum as ignored');
+
+    final adminMsg = admin.AdminMessage()..setIgnoredNode = nodeNum;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId()
+      ..priority =
+          70 // RELIABLE priority
+      ..wantAck = true;
+
+    final toRadio = pn.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Remove a node from ignored list (un-mute)
+  Future<void> removeIgnoredNode(int nodeNum) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot remove ignored: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot remove ignored: not connected');
+    }
+
+    _logger.i('Removing node $nodeNum from ignored list');
+
+    final adminMsg = admin.AdminMessage()..removeIgnoredNode = nodeNum;
+
+    final data = pb.Data()
+      ..portnum = pb.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId()
+      ..priority =
+          70 // RELIABLE priority
+      ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -2948,7 +3035,12 @@ class ProtocolService {
       ..from = _myNodeNum!
       ..to = _myNodeNum!
       ..decoded = data
-      ..id = _generatePacketId();
+      ..id = _generatePacketId()
+      ..channel =
+          0 // Primary channel like Meshtastic iOS
+      ..priority =
+          70 // RELIABLE priority
+      ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
