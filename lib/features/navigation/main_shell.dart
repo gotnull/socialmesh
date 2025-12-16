@@ -433,116 +433,133 @@ class _MainShellState extends ConsumerState<MainShell> {
         ),
       ),
       child: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.zero,
+        child: Column(
           children: [
-            // Node Info Header
-            _DrawerNodeHeader(),
+            // FIXED: Node Info Header
+            const _DrawerNodeHeader(),
 
-            // Divider
+            // Divider after header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
             ),
 
-            const SizedBox(height: 8),
-
-            // Menu items
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Column(
-                children: _drawerMenuItems.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final item = entry.value;
-                  final isSelected = _selectedDrawerItem == index;
-
-                  // Check if this is a premium feature and if user has access
-                  final isPremium = item.premiumFeature != null;
-                  final hasAccess =
-                      !isPremium ||
-                      ref.watch(hasFeatureProvider(item.premiumFeature!));
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: _DrawerMenuTile(
-                      icon: item.icon,
-                      label: item.label,
-                      isSelected: isSelected,
-                      isPremium: isPremium,
-                      isLocked: isPremium && !hasAccess,
-                      onTap: () {
-                        ref.haptics.tabChange();
-                        Navigator.of(context).pop(); // Close drawer
-
-                        if (isPremium && !hasAccess) {
-                          // Show subscription screen for locked features
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (context) => const SubscriptionScreen(),
-                            ),
-                          );
-                        } else {
-                          setState(() {
-                            _selectedDrawerItem = index;
-                          });
-                        }
-                      },
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            // Divider before Settings/Help
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
-            ),
-
-            // Settings & Help - now part of the scrollable list
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Column(
+            // SCROLLABLE: Menu items in the middle
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
-                  // Settings
-                  _DrawerMenuTile(
-                    icon: Icons.settings_outlined,
-                    label: 'Settings',
-                    isSelected: false,
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const SettingsScreen(),
+                  // Main menu items
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Column(
+                      children: _drawerMenuItems.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final item = entry.value;
+                        final isSelected = _selectedDrawerItem == index;
+
+                        // Check if this is a premium feature and if user has access
+                        final isPremium = item.premiumFeature != null;
+                        final hasAccess =
+                            !isPremium ||
+                            ref.watch(hasFeatureProvider(item.premiumFeature!));
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: _DrawerMenuTile(
+                            icon: item.icon,
+                            label: item.label,
+                            isSelected: isSelected,
+                            isPremium: isPremium,
+                            isLocked: isPremium && !hasAccess,
+                            onTap: () {
+                              ref.haptics.tabChange();
+                              Navigator.of(context).pop(); // Close drawer
+
+                              if (isPremium && !hasAccess) {
+                                // Show subscription screen for locked features
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (context) =>
+                                        const SubscriptionScreen(),
+                                  ),
+                                );
+                              } else {
+                                setState(() {
+                                  _selectedDrawerItem = index;
+                                });
+                              }
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  // Divider before Settings/Help
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Divider(
+                      color: theme.dividerColor.withValues(alpha: 0.1),
+                    ),
+                  ),
+
+                  // Settings & Help
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Column(
+                      children: [
+                        // Settings
+                        _DrawerMenuTile(
+                          icon: Icons.settings_outlined,
+                          label: 'Settings',
+                          isSelected: false,
+                          onTap: () {
+                            ref.haptics.tabChange();
+                            Navigator.of(context).pop();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const SettingsScreen(),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                  Divider(
-                    height: 17,
-                    thickness: 1,
-                    color: theme.dividerColor.withValues(alpha: 0.1),
-                  ),
-                  // Help Center
-                  _DrawerMenuTile(
-                    icon: Icons.help_outline,
-                    label: 'Help & Support',
-                    isSelected: false,
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      Navigator.of(context).pop();
-                      LegalDocumentSheet.showSupport(context);
-                    },
+                        Divider(
+                          height: 17,
+                          thickness: 1,
+                          color: theme.dividerColor.withValues(alpha: 0.1),
+                        ),
+                        // Help & Support
+                        _DrawerMenuTile(
+                          icon: Icons.help_outline,
+                          label: 'Help & Support',
+                          isSelected: false,
+                          onTap: () {
+                            ref.haptics.tabChange();
+                            Navigator.of(context).pop();
+                            LegalDocumentSheet.showSupport(context);
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
 
-            // Theme toggle at bottom (like Twitter)
+            // FIXED: Divider before theme toggle
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Row(children: [_ThemeToggleButton(), const Spacer()]),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
+            ),
+
+            // FIXED: Theme toggle at bottom
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Row(children: [const _ThemeToggleButton(), const Spacer()]),
             ),
           ],
         ),
