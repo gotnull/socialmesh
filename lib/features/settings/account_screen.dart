@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../utils/snackbar.dart';
 
 /// Screen for managing user account and authentication
 class AccountScreen extends ConsumerStatefulWidget {
@@ -118,9 +119,7 @@ class _SignedOutView extends ConsumerWidget {
       builder: (context) => const _EmailSignInDialog(isCreateAccount: false),
     );
     if (result == true && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Signed in successfully!')));
+      showSuccessSnackBar(context, 'Signed in successfully!');
     }
   }
 
@@ -133,9 +132,7 @@ class _SignedOutView extends ConsumerWidget {
       builder: (context) => const _EmailSignInDialog(isCreateAccount: true),
     );
     if (result == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created successfully!')),
-      );
+      showSuccessSnackBar(context, 'Account created successfully!');
     }
   }
 
@@ -144,15 +141,11 @@ class _SignedOutView extends ConsumerWidget {
       final authService = ref.read(authServiceProvider);
       await authService.signInAnonymously();
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Signed in as guest')));
+        showSuccessSnackBar(context, 'Signed in as guest');
       }
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
+        showErrorSnackBar(context, 'Error: ${e.message}');
       }
     }
   }
@@ -305,9 +298,7 @@ class _SignedInView extends ConsumerWidget {
           const _EmailSignInDialog(isCreateAccount: true, isLinking: true),
     );
     if (result == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email linked successfully!')),
-      );
+      showSuccessSnackBar(context, 'Email linked successfully!');
     }
   }
 
@@ -344,15 +335,11 @@ class _SignedInView extends ConsumerWidget {
         final authService = ref.read(authServiceProvider);
         await authService.updateDisplayName(result);
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Display name updated')));
+          showSuccessSnackBar(context, 'Display name updated');
         }
       } on FirebaseAuthException catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
+          showErrorSnackBar(context, 'Error: ${e.message}');
         }
       }
     }
@@ -385,15 +372,11 @@ class _SignedInView extends ConsumerWidget {
         final authService = ref.read(authServiceProvider);
         await authService.sendPasswordResetEmail(user.email!);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Password reset email sent')),
-          );
+          showSuccessSnackBar(context, 'Password reset email sent');
         }
       } on FirebaseAuthException catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
+          showErrorSnackBar(context, 'Error: ${e.message}');
         }
       }
     }
@@ -457,15 +440,11 @@ class _SignedInView extends ConsumerWidget {
         final authService = ref.read(authServiceProvider);
         await authService.deleteAccount();
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Account deleted')));
+          showInfoSnackBar(context, 'Account deleted');
         }
       } on FirebaseAuthException catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
+          showErrorSnackBar(context, 'Error: ${e.message}');
         }
       }
     }
@@ -685,9 +664,7 @@ class _EmailSignInDialogState extends ConsumerState<_EmailSignInDialog> {
       final authService = ref.read(authServiceProvider);
       await authService.sendPasswordResetEmail(email);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Password reset email sent to $email')),
-        );
+        showSuccessSnackBar(context, 'Password reset email sent to $email');
       }
     } on FirebaseAuthException catch (e) {
       setState(() {

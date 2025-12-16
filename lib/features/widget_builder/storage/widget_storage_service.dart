@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:logger/logger.dart';
 import '../models/widget_schema.dart';
@@ -15,11 +16,14 @@ class WidgetStorageService {
 
   /// Initialize the service
   Future<void> init() async {
+    debugPrint('[WidgetStorage] Initializing...');
     _prefs = await SharedPreferences.getInstance();
+    debugPrint('[WidgetStorage] Initialized successfully');
   }
 
   SharedPreferences get _preferences {
     if (_prefs == null) {
+      debugPrint('[WidgetStorage] ERROR: Service not initialized!');
       throw Exception('WidgetStorageService not initialized');
     }
     return _prefs!;
@@ -27,19 +31,38 @@ class WidgetStorageService {
 
   /// Save a custom widget
   Future<void> saveWidget(WidgetSchema widget) async {
+    debugPrint(
+      '[WidgetStorage] saveWidget called for id=${widget.id}, name=${widget.name}',
+    );
     try {
+      // Ensure initialized
+      if (_prefs == null) {
+        debugPrint('[WidgetStorage] Not initialized, initializing now...');
+        await init();
+      }
+
       final widgets = await getWidgets();
+      debugPrint('[WidgetStorage] Current widgets count: ${widgets.length}');
+
       final index = widgets.indexWhere((w) => w.id == widget.id);
+      debugPrint('[WidgetStorage] Existing widget index: $index');
 
       if (index >= 0) {
+        debugPrint('[WidgetStorage] Updating existing widget at index $index');
         widgets[index] = widget;
       } else {
+        debugPrint('[WidgetStorage] Adding new widget');
         widgets.add(widget);
       }
 
       await _saveWidgetsList(widgets);
+      debugPrint(
+        '[WidgetStorage] Widget saved successfully, new count: ${widgets.length}',
+      );
       _logger.d('Saved widget: ${widget.name}');
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('[WidgetStorage] ERROR saving widget: $e');
+      debugPrint('[WidgetStorage] Stack: $stack');
       _logger.e('Error saving widget: $e');
       rethrow;
     }
@@ -48,14 +71,31 @@ class WidgetStorageService {
   /// Get all custom widgets
   Future<List<WidgetSchema>> getWidgets() async {
     try {
+      // Ensure initialized
+      if (_prefs == null) {
+        debugPrint(
+          '[WidgetStorage] Not initialized in getWidgets, initializing...',
+        );
+        await init();
+      }
+
       final json = _preferences.getString(_storageKey);
-      if (json == null || json.isEmpty) return [];
+      debugPrint(
+        '[WidgetStorage] getWidgets - raw json length: ${json?.length ?? 0}',
+      );
+      if (json == null || json.isEmpty) {
+        debugPrint('[WidgetStorage] No widgets stored');
+        return [];
+      }
 
       final list = jsonDecode(json) as List<dynamic>;
+      debugPrint('[WidgetStorage] Parsed ${list.length} widgets from storage');
       return list
           .map((item) => WidgetSchema.fromJson(item as Map<String, dynamic>))
           .toList();
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('[WidgetStorage] ERROR loading widgets: $e');
+      debugPrint('[WidgetStorage] Stack: $stack');
       _logger.e('Error loading widgets: $e');
       return [];
     }

@@ -6,6 +6,7 @@ import '../../core/theme.dart';
 import '../../models/world_mesh_node.dart';
 import '../../providers/node_favorites_provider.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../utils/snackbar.dart';
 import 'node_analytics_screen.dart';
 import 'node_comparison_screen.dart';
 import 'services/node_favorites_service.dart';
@@ -101,10 +102,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   void _openNodeAnalytics(_FavoriteItem item) {
     final node = item.liveNode;
     if (node == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Node not currently in mesh. Check back later.'),
-        ),
+      showWarningSnackBar(
+        context,
+        'Node not currently in mesh. Check back later.',
       );
       return;
     }
@@ -141,9 +141,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     }
 
     if (item.liveNode == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot compare nodes not in mesh')),
-      );
+      showWarningSnackBar(context, 'Cannot compare nodes not in mesh');
       return;
     }
 

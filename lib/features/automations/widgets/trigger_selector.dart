@@ -4,6 +4,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../models/mesh_models.dart';
+import '../../../utils/snackbar.dart';
 import '../../settings/geofence_picker_screen.dart';
 import '../models/automation.dart';
 
@@ -431,9 +432,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
 
   void _showNodePicker(BuildContext context) {
     if (widget.availableNodes.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('No nodes available')));
+      showWarningSnackBar(context, 'No nodes available');
       return;
     }
 

@@ -1223,14 +1223,11 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
     final isFavorite = ref.read(isNodeFavoriteProvider(node.nodeNum));
     ref.read(nodeFavoritesProvider.notifier).toggleFavorite(node);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isFavorite ? 'Removed from favorites' : 'Added to favorites',
-        ),
-        duration: const Duration(seconds: 1),
-      ),
-    );
+    if (isFavorite) {
+      showInfoSnackBar(context, 'Removed from favorites');
+    } else {
+      showSuccessSnackBar(context, 'Added to favorites');
+    }
   }
 
   @override

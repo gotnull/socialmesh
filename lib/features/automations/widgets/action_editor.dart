@@ -376,9 +376,7 @@ class _ActionEditorState extends State<ActionEditor> {
 
   void _showNodePicker(BuildContext context, List<MeshNode> nodes) {
     if (nodes.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('No nodes available')));
+      showWarningSnackBar(context, 'No nodes available');
       return;
     }
 
@@ -478,9 +476,7 @@ class _ActionEditorState extends State<ActionEditor> {
 
   void _showChannelPicker(BuildContext context, List<ChannelConfig> channels) {
     if (channels.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('No channels available')));
+      showWarningSnackBar(context, 'No channels available');
       return;
     }
 
@@ -1396,9 +1392,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
       await _player!.play(item.rtttl);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to play: $e')));
+        showErrorSnackBar(context, 'Failed to play: $e');
       }
     } finally {
       if (mounted) {

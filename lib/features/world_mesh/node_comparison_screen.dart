@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/theme.dart';
 import '../../models/world_mesh_node.dart';
+import '../../utils/snackbar.dart';
 
 /// Screen for comparing two mesh nodes side by side
 class NodeComparisonScreen extends StatelessWidget {
@@ -145,9 +146,7 @@ class NodeComparisonScreen extends StatelessWidget {
           GestureDetector(
             onTap: () {
               Clipboard.setData(ClipboardData(text: '!$nodeId'));
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Node ID copied')));
+              showSuccessSnackBar(context, 'Node ID copied');
             },
             child: Text(
               '!$nodeId',

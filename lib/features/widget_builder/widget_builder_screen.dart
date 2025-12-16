@@ -9,6 +9,7 @@ import 'renderer/widget_renderer.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../utils/snackbar.dart';
 import '../dashboard/models/dashboard_widget_config.dart';
 import '../dashboard/providers/dashboard_providers.dart';
 
@@ -339,23 +340,35 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   }
 
   void _createNewWidget() async {
+    debugPrint('[WidgetBuilder] _createNewWidget called');
+
     final result = await Navigator.push<WidgetWizardResult>(
       context,
       MaterialPageRoute(
         builder: (context) => WidgetWizardScreen(
           onSave: (schema) async {
+            debugPrint(
+              '[WidgetBuilder] onSave callback - saving new widget: ${schema.id}',
+            );
             await _storageService.saveWidget(schema);
+            debugPrint('[WidgetBuilder] New widget saved successfully');
           },
         ),
       ),
     );
 
+    debugPrint('[WidgetBuilder] Wizard returned, result: $result');
+
     // Always reload widgets after returning from wizard
     // The save happens inside the wizard, so we should reload regardless
     await _loadWidgets();
+    debugPrint('[WidgetBuilder] Widgets reloaded');
 
     // Add to dashboard if requested
     if (result != null && result.addToDashboard) {
+      debugPrint(
+        '[WidgetBuilder] Adding widget to dashboard: ${result.schema.id}',
+      );
       final widgetsNotifier = ref.read(dashboardWidgetsProvider.notifier);
       widgetsNotifier.addCustomWidget(
         DashboardWidgetConfig(
@@ -367,12 +380,9 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${result.schema.name} added to dashboard'),
-            backgroundColor: context.accentColor,
-            behavior: SnackBarBehavior.floating,
-          ),
+        showSuccessSnackBar(
+          context,
+          '${result.schema.name} added to dashboard',
         );
       }
     }
@@ -387,23 +397,34 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   }
 
   void _editWidget(WidgetSchema schema) async {
-    await Navigator.push<WidgetSchema>(
+    debugPrint('[WidgetBuilder] _editWidget called for: ${schema.id}');
+
+    final result = await Navigator.push<WidgetWizardResult>(
       context,
       MaterialPageRoute(
         builder: (context) => WidgetWizardScreen(
           initialSchema: schema,
           onSave: (updated) async {
+            debugPrint(
+              '[WidgetBuilder] onSave callback - saving widget: ${updated.id}',
+            );
             await _storageService.saveWidget(updated);
+            debugPrint('[WidgetBuilder] Widget saved successfully');
           },
         ),
       ),
     );
 
+    debugPrint('[WidgetBuilder] Wizard returned, result: $result');
+
     // Always reload widgets after returning from wizard
     await _loadWidgets();
+    debugPrint('[WidgetBuilder] Widgets reloaded');
   }
 
   void _useTemplate(WidgetSchema template) async {
+    debugPrint('[WidgetBuilder] _useTemplate called for: ${template.name}');
+
     // Create a copy of the template
     final copy = WidgetSchema(
       name: '${template.name} (Copy)',
@@ -413,23 +434,34 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       tags: template.tags,
     );
 
-    await Navigator.push<WidgetSchema>(
+    final result = await Navigator.push<WidgetWizardResult>(
       context,
       MaterialPageRoute(
         builder: (context) => WidgetWizardScreen(
           initialSchema: copy,
           onSave: (schema) async {
+            debugPrint(
+              '[WidgetBuilder] onSave callback - saving template copy: ${schema.id}',
+            );
             await _storageService.saveWidget(schema);
+            debugPrint('[WidgetBuilder] Template copy saved successfully');
           },
         ),
       ),
     );
 
+    debugPrint('[WidgetBuilder] Template wizard returned, result: $result');
+
     // Always reload widgets after returning from wizard
     await _loadWidgets();
+    debugPrint('[WidgetBuilder] Widgets reloaded');
   }
 
   void _handleAction(String action, WidgetSchema schema) async {
+    debugPrint(
+      '[WidgetBuilder] _handleAction: $action for widget: ${schema.id}',
+    );
+
     switch (action) {
       case 'add_to_dashboard':
         _addToDashboard(schema);
@@ -441,10 +473,13 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         _editWidget(schema);
         break;
       case 'duplicate':
+        debugPrint('[WidgetBuilder] Duplicating widget: ${schema.id}');
         await _storageService.duplicateWidget(schema.id);
         await _loadWidgets();
+        debugPrint('[WidgetBuilder] Widget duplicated');
         break;
       case 'export':
+        debugPrint('[WidgetBuilder] Exporting widget: ${schema.id}');
         final json = await _storageService.exportWidget(schema.id);
         await Share.share(json, subject: '${schema.name} Widget');
         break;
@@ -463,13 +498,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
 
     ref.read(dashboardWidgetsProvider.notifier).addCustomWidget(config);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${schema.name} added to Dashboard'),
-        backgroundColor: AppTheme.successGreen,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    showSuccessSnackBar(context, '${schema.name} added to Dashboard');
   }
 
   void _removeFromDashboard(WidgetSchema schema) {
@@ -481,13 +510,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
 
     ref.read(dashboardWidgetsProvider.notifier).removeWidget(widgetToRemove.id);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${schema.name} removed from Dashboard'),
-        backgroundColor: AppTheme.textSecondary,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    showInfoSnackBar(context, '${schema.name} removed from Dashboard');
   }
 
   void _confirmDelete(WidgetSchema schema) {

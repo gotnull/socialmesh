@@ -5,6 +5,7 @@ import '../models/data_binding.dart';
 import '../renderer/widget_renderer.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
+import '../../../utils/snackbar.dart';
 
 /// Result of the widget wizard
 class WidgetWizardResult {
@@ -136,6 +137,68 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     }
   }
 
+  /// Check if there are unsaved changes
+  bool _hasUnsavedChanges() {
+    // If on first step with no template selected, no changes
+    if (_currentStep == 0 && _selectedTemplate == null) {
+      return false;
+    }
+    // If template is selected or we've progressed, there are changes
+    return _selectedTemplate != null ||
+        _nameController.text.isNotEmpty ||
+        _selectedBindings.isNotEmpty ||
+        _selectedActions.isNotEmpty;
+  }
+
+  /// Handle close button with confirmation if needed
+  Future<void> _handleClose() async {
+    debugPrint('[WidgetWizard] _handleClose called');
+    debugPrint('[WidgetWizard] hasUnsavedChanges: ${_hasUnsavedChanges()}');
+
+    if (!_hasUnsavedChanges()) {
+      debugPrint('[WidgetWizard] No unsaved changes, closing immediately');
+      Navigator.pop(context);
+      return;
+    }
+
+    // Show confirmation dialog
+    final shouldClose = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        title: const Text(
+          'Discard Changes?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'You have unsaved changes. Are you sure you want to close without saving?',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep Editing'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorRed,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+
+    debugPrint('[WidgetWizard] Dialog result: $shouldClose');
+
+    if (shouldClose == true && mounted) {
+      debugPrint('[WidgetWizard] User confirmed close, popping');
+      Navigator.pop(context);
+    }
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -165,10 +228,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => Navigator.pop(context),
-          ),
+          IconButton(icon: const Icon(Icons.close), onPressed: _handleClose),
         ],
       ),
       body: Column(
@@ -1282,9 +1342,36 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   void _create() async {
+    debugPrint('[WidgetWizard] _create called');
+    debugPrint('[WidgetWizard] Building final schema...');
+
     final schema = _buildFinalSchema();
-    await widget.onSave(schema);
+    debugPrint(
+      '[WidgetWizard] Schema built: id=${schema.id}, name=${schema.name}',
+    );
+    debugPrint('[WidgetWizard] Existing ID was: $_existingId');
+
+    try {
+      debugPrint('[WidgetWizard] Calling onSave callback...');
+      await widget.onSave(schema);
+      debugPrint('[WidgetWizard] onSave completed successfully');
+    } catch (e, stack) {
+      debugPrint('[WidgetWizard] ERROR in onSave: $e');
+      debugPrint('[WidgetWizard] Stack trace: $stack');
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to save widget: $e');
+      }
+      return;
+    }
+
     if (mounted) {
+      debugPrint(
+        '[WidgetWizard] Popping with result, addToDashboard=$_addToDashboard',
+      );
+      showSuccessSnackBar(
+        context,
+        _existingId != null ? 'Widget updated!' : 'Widget created!',
+      );
       Navigator.pop(
         context,
         WidgetWizardResult(schema: schema, addToDashboard: _addToDashboard),
