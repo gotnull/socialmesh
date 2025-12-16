@@ -1956,16 +1956,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   Widget _buildMergeColorPickers() {
-    // Default colors for merged chart lines
-    final defaultColors = [
-      const Color(0xFF4F6AF6), // Blue
-      const Color(0xFF00BCD4), // Cyan
-      const Color(0xFFFF9800), // Orange
-      const Color(0xFF4CAF50), // Green
-      const Color(0xFFE91E63), // Pink
-      const Color(0xFF9C27B0), // Purple
-    ];
-
     final availableColors = [
       const Color(0xFF4F6AF6), // Blue
       const Color(0xFF4ADE80), // Green
@@ -1975,11 +1965,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       const Color(0xFF22D3EE), // Cyan
       const Color(0xFFFF6B6B), // Red
       const Color(0xFFFF9F43), // Orange
-      const Color(0xFF00BCD4), // Teal
-      const Color(0xFF4CAF50), // Forest Green
-      const Color(0xFFE91E63), // Magenta
-      const Color(0xFF9C27B0), // Deep Purple
     ];
+
+    // Default colors use the first N colors from available colors
+    // so they always match for the checkmark indicator
+    final defaultColors = availableColors;
 
     final bindingsList = _selectedBindings.toList();
 
@@ -2087,15 +2077,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   /// Series color pickers for non-merged multi-series charts
   Widget _buildSeriesColorPickers() {
-    final defaultColors = [
-      const Color(0xFF4F6AF6), // Blue
-      const Color(0xFF00BCD4), // Cyan
-      const Color(0xFFFF9800), // Orange
-      const Color(0xFF4CAF50), // Green
-      const Color(0xFFE91E63), // Pink
-      const Color(0xFF9C27B0), // Purple
-    ];
-
     final availableColors = [
       const Color(0xFF4F6AF6), // Blue
       const Color(0xFF4ADE80), // Green
@@ -2106,6 +2087,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       const Color(0xFFFF6B6B), // Red
       const Color(0xFFFF9F43), // Orange
     ];
+
+    // Default colors use the first N colors from available colors
+    // so they always match for the checkmark indicator
+    final defaultColors = availableColors;
 
     final bindingsList = _selectedBindings.toList();
 
@@ -2656,14 +2641,259 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     );
   }
 
-  Widget _buildThresholdSection() {
+  void _showThresholdEditor(int index) {
+    final threshold = _thresholds[index];
+    final valueController = TextEditingController(text: '${threshold.value}');
+    final labelController = TextEditingController(text: threshold.label);
+    Color selectedColor = threshold.color;
+
     final thresholdColors = [
       const Color(0xFFFF5252), // Red
       const Color(0xFFFBBF24), // Yellow
       const Color(0xFF4CAF50), // Green
       const Color(0xFF4F6AF6), // Blue
+      const Color(0xFFE91E63), // Pink
+      const Color(0xFF9C27B0), // Purple
     ];
 
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppTheme.darkCard,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle bar
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Title
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Edit Threshold',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                            setState(() => _thresholds.removeAt(index));
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    // Color selection
+                    Text(
+                      'Color',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 10,
+                      children: thresholdColors.map((color) {
+                        final isSelected =
+                            selectedColor.toARGB32() == color.toARGB32();
+                        return GestureDetector(
+                          onTap: () =>
+                              setSheetState(() => selectedColor = color),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              border: isSelected
+                                  ? Border.all(color: Colors.white, width: 3)
+                                  : null,
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: color.withValues(alpha: 0.5),
+                                        blurRadius: 8,
+                                        spreadRadius: 2,
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: isSelected
+                                ? const Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: 18,
+                                  )
+                                : null,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 20),
+                    // Value input
+                    Text(
+                      'Value',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: valueController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      decoration: InputDecoration(
+                        hintText: 'Enter threshold value',
+                        hintStyle: TextStyle(color: AppTheme.textSecondary),
+                        filled: true,
+                        fillColor: AppTheme.darkSurface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                            color: selectedColor,
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Label input
+                    Text(
+                      'Label (optional)',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: labelController,
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      decoration: InputDecoration(
+                        hintText: 'e.g., "Warning", "Critical"',
+                        hintStyle: TextStyle(color: AppTheme.textSecondary),
+                        filled: true,
+                        fillColor: AppTheme.darkSurface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                            color: selectedColor,
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Save button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final parsedValue =
+                              double.tryParse(valueController.text) ??
+                              threshold.value;
+                          setState(() {
+                            _thresholds[index] = _ThresholdLine(
+                              value: parsedValue,
+                              color: selectedColor,
+                              label: labelController.text,
+                            );
+                          });
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: selectedColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text(
+                          'Save Threshold',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThresholdSection() {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -2731,142 +2961,81 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ..._thresholds.asMap().entries.map((entry) {
             final index = entry.key;
             final threshold = entry.value;
-            return Container(
-              margin: EdgeInsets.only(
-                bottom: index < _thresholds.length - 1 ? 10 : 0,
-              ),
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: threshold.color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: threshold.color.withValues(alpha: 0.3),
+            return GestureDetector(
+              onTap: () => _showThresholdEditor(index),
+              child: Container(
+                margin: EdgeInsets.only(
+                  bottom: index < _thresholds.length - 1 ? 8 : 0,
                 ),
-              ),
-              child: Row(
-                children: [
-                  // Color selector
-                  ...thresholdColors.map((color) {
-                    final isSelected =
-                        threshold.color.toARGB32() == color.toARGB32();
-                    return GestureDetector(
-                      onTap: () => setState(() => threshold.color = color),
-                      child: Container(
-                        width: 20,
-                        height: 20,
-                        margin: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: threshold.color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: threshold.color.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Color indicator
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: threshold.color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Value
+                    Text(
+                      '${threshold.value}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    // Label if present
+                    if (threshold.label.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                          border: isSelected
-                              ? Border.all(color: Colors.white, width: 2)
-                              : null,
+                          color: threshold.color.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          threshold.label,
+                          style: TextStyle(
+                            color: threshold.color,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    );
-                  }),
-                  const SizedBox(width: 8),
-                  // Value input
-                  Expanded(
-                    child: SizedBox(
-                      height: 32,
-                      child: TextField(
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'Value',
-                          hintStyle: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 13,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 0,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6),
-                            borderSide: BorderSide(color: AppTheme.darkBorder),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6),
-                            borderSide: BorderSide(color: AppTheme.darkBorder),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6),
-                            borderSide: BorderSide(color: threshold.color),
-                          ),
-                          filled: true,
-                          fillColor: AppTheme.darkSurface,
-                        ),
-                        onChanged: (val) {
-                          final parsed = double.tryParse(val);
-                          if (parsed != null) {
-                            setState(() => threshold.value = parsed);
-                          }
-                        },
-                        controller: TextEditingController(
-                          text: '${threshold.value}',
-                        ),
+                    ],
+                    const Spacer(),
+                    // Edit indicator
+                    Icon(Icons.edit, color: AppTheme.textSecondary, size: 16),
+                    const SizedBox(width: 8),
+                    // Delete button
+                    GestureDetector(
+                      onTap: () => setState(() => _thresholds.removeAt(index)),
+                      child: Icon(
+                        Icons.close,
+                        color: AppTheme.textSecondary,
+                        size: 18,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Label input
-                  Expanded(
-                    child: SizedBox(
-                      height: 32,
-                      child: TextField(
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'Label',
-                          hintStyle: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 13,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 0,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6),
-                            borderSide: BorderSide(color: AppTheme.darkBorder),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6),
-                            borderSide: BorderSide(color: AppTheme.darkBorder),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6),
-                            borderSide: BorderSide(color: threshold.color),
-                          ),
-                          filled: true,
-                          fillColor: AppTheme.darkSurface,
-                        ),
-                        onChanged: (val) =>
-                            setState(() => threshold.label = val),
-                        controller: TextEditingController(
-                          text: threshold.label,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Delete button
-                  GestureDetector(
-                    onTap: () => setState(() => _thresholds.removeAt(index)),
-                    child: Icon(
-                      Icons.close,
-                      color: AppTheme.textSecondary,
-                      size: 18,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           }),
@@ -3413,14 +3582,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     final children = <ElementSchema>[];
 
-    // Default colors for merged charts (fallback)
+    // Default colors for merged charts - must match availableColors in UI pickers
     final defaultChartColors = <Color>[
       const Color(0xFF4F6AF6), // Blue
-      const Color(0xFF00BCD4), // Cyan
-      const Color(0xFFFF9800), // Orange
-      const Color(0xFF4CAF50), // Green
-      const Color(0xFFE91E63), // Pink
-      const Color(0xFF9C27B0), // Purple
+      const Color(0xFF4ADE80), // Green
+      const Color(0xFFFBBF24), // Yellow
+      const Color(0xFFF472B6), // Pink
+      const Color(0xFFA78BFA), // Purple
+      const Color(0xFF22D3EE), // Cyan
+      const Color(0xFFFF6B6B), // Red
+      const Color(0xFFFF9F43), // Orange
     ];
 
     // Merge mode: single chart with multiple data series
@@ -3553,6 +3724,26 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           bindingChartType = ChartType.area;
         }
 
+        // Get color for this specific binding (series colors)
+        final bindingIndex = _selectedBindings.toList().indexOf(bindingPath);
+        // Default colors must match availableColors in UI pickers
+        final defaultChartColorsList = [
+          const Color(0xFF4F6AF6), // Blue
+          const Color(0xFF4ADE80), // Green
+          const Color(0xFFFBBF24), // Yellow
+          const Color(0xFFF472B6), // Pink
+          const Color(0xFFA78BFA), // Purple
+          const Color(0xFF22D3EE), // Cyan
+          const Color(0xFFFF6B6B), // Red
+          const Color(0xFFFF9F43), // Orange
+        ];
+        final bindingColor =
+            _mergeColors[bindingPath] ??
+            (bindingIndex >= 0
+                ? defaultChartColorsList[bindingIndex %
+                      defaultChartColorsList.length]
+                : _accentColor);
+
         // Header row with label and current value
         if (_showLabels) {
           children.add(
@@ -3582,7 +3773,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                     defaultValue: '--',
                   ),
                   style: StyleSchema(
-                    textColor: _colorToHex(_accentColor),
+                    textColor: _colorToHex(bindingColor),
                     fontSize: 14,
                     fontWeight: 'w700',
                   ),
@@ -3622,7 +3813,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             chartThresholdLabels: _thresholds.map((t) => t.label).toList(),
             style: StyleSchema(
               height: _selectedBindings.length == 1 ? 100.0 : 70.0,
-              textColor: _colorToHex(_accentColor),
+              textColor: _colorToHex(bindingColor),
             ),
           ),
         );

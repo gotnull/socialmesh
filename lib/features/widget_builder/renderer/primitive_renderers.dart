@@ -706,12 +706,14 @@ class _ChartRendererState extends State<ChartRenderer> {
               ? HorizontalLineLabel(
                   show: true,
                   alignment: Alignment.topRight,
+                  padding: const EdgeInsets.only(right: 4, bottom: 2),
                   style: TextStyle(
-                    color: color,
-                    fontSize: 9,
+                    color: Colors.white,
+                    fontSize: 8,
                     fontWeight: FontWeight.w600,
+                    backgroundColor: color.withValues(alpha: 0.85),
                   ),
-                  labelResolver: (_) => label,
+                  labelResolver: (_) => ' $label ',
                 )
               : null,
         ),
