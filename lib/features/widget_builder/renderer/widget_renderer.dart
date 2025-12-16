@@ -597,7 +597,9 @@ class _ElementRenderer extends StatelessWidget {
     }
 
     // Resolve colors with accent color support
-    final bgColor = element.style.backgroundColor != null
+    // Note: Skip backgroundColor for shapes since ShapeRenderer handles it
+    final isShape = element.type == ElementType.shape;
+    final bgColor = (!isShape && element.style.backgroundColor != null)
         ? StyleSchema.resolveColor(element.style.backgroundColor!, accentColor)
         : null;
     final borderColor = element.style.borderColor != null
@@ -605,10 +607,11 @@ class _ElementRenderer extends StatelessWidget {
         : null;
 
     // Apply container decoration with alignment
+    // Note: Skip border for shapes since ShapeRenderer handles it
     final hasDecoration =
         bgColor != null ||
-        element.style.borderWidth != null ||
-        element.style.borderRadius != null;
+        (!isShape && element.style.borderWidth != null) ||
+        (!isShape && element.style.borderRadius != null);
     final hasAlignment = element.style.alignmentValue != null;
 
     if (hasDecoration || hasAlignment) {
@@ -633,7 +636,9 @@ class _ElementRenderer extends StatelessWidget {
     }
 
     // Apply explicit size constraints
-    if (element.style.width != null || element.style.height != null) {
+    // Note: Skip size for shapes since ShapeRenderer handles it
+    if (!isShape &&
+        (element.style.width != null || element.style.height != null)) {
       child = SizedBox(
         width: element.style.width,
         height: element.style.height,

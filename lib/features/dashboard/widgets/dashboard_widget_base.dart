@@ -68,11 +68,7 @@ class DashboardWidgetBase extends StatelessWidget {
       child: Row(
         children: [
           // Drag handle
-          Icon(
-            Icons.drag_indicator,
-            color: AppTheme.textTertiary,
-            size: 20,
-          ),
+          Icon(Icons.drag_indicator, color: AppTheme.textTertiary, size: 20),
           SizedBox(width: 8),
           Icon(icon, color: context.accentColor, size: 18),
           const SizedBox(width: 8),
@@ -111,7 +107,7 @@ class DashboardWidgetBase extends StatelessWidget {
                 color: AppTheme.errorRed,
                 size: 20,
               ),
-              onPressed: onRemove,
+              onPressed: () => _showRemoveConfirmation(context),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
               tooltip: 'Remove widget',
@@ -119,6 +115,41 @@ class DashboardWidgetBase extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _showRemoveConfirmation(BuildContext context) async {
+    final shouldRemove = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        title: const Text(
+          'Remove Widget?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'Are you sure you want to remove "$title" from your dashboard?',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorRed,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldRemove == true) {
+      onRemove?.call();
+    }
   }
 }
 

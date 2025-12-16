@@ -74,6 +74,44 @@ class _DashboardWidgetState extends State<DashboardWidget>
     super.dispose();
   }
 
+  Future<void> _showRemoveConfirmation() async {
+    final displayName =
+        widget.customName ?? WidgetRegistry.getInfo(widget.config.type).name;
+
+    final shouldRemove = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        title: const Text(
+          'Remove Widget?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'Are you sure you want to remove "$displayName" from your dashboard?',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorRed,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldRemove == true) {
+      widget.onRemove?.call();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final info = WidgetRegistry.getInfo(widget.config.type);
@@ -223,7 +261,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
               color: AppTheme.errorRed,
               onTap: () {
                 HapticFeedback.mediumImpact();
-                widget.onRemove?.call();
+                _showRemoveConfirmation();
               },
               tooltip: 'Remove widget',
             ),

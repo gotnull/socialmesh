@@ -746,10 +746,59 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   Widget _buildDataStep() {
     // Group bindings by category
     final relevantCategories = _getRelevantCategories();
+    final isGauge = _selectedTemplate?.id == 'gauge';
+
+    // Filter suggested bindings for gauge (numeric only)
+    final suggestedBindings = _selectedTemplate?.suggestedBindings
+            .where((path) {
+              if (!isGauge) return true;
+              final binding = BindingRegistry.bindings.firstWhere(
+                (b) => b.path == path,
+                orElse: () => BindingDefinition(
+                  path: path,
+                  label: path,
+                  description: '',
+                  category: BindingCategory.node,
+                  valueType: String,
+                ),
+              );
+              return binding.valueType == int || binding.valueType == double;
+            })
+            .toList() ??
+        [];
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // Gauge-specific guidance
+        if (isGauge) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: context.accentColor.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: context.accentColor, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Gauge widgets display a single numeric value with a visual indicator. Only numeric data is shown below.',
+                    style: TextStyle(
+                      color: context.accentColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         // Selection counter
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -791,17 +840,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        // Suggested bindings from template
-        if (_selectedTemplate != null &&
-            _selectedTemplate!.suggestedBindings.isNotEmpty) ...[
+        // Suggested bindings from template (filtered for gauge)
+        if (_selectedTemplate != null && suggestedBindings.isNotEmpty) ...[
           _buildDataCategory(
             'Suggested for ${_selectedTemplate!.name}',
             Icons.star,
             const Color(0xFFFBBF24),
             BindingRegistry.bindings
-                .where(
-                  (b) => _selectedTemplate!.suggestedBindings.contains(b.path),
-                )
+                .where((b) => suggestedBindings.contains(b.path))
                 .toList(),
           ),
           const SizedBox(height: 16),
@@ -824,8 +870,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     );
   }
 
-  // Maximum number of data items allowed per widget
-  static const int _maxDataItems = 6;
+  // Maximum number of data items allowed per widget - depends on template
+  int get _maxDataItems {
+    return switch (_selectedTemplate?.id) {
+      'gauge' => 1, // Gauge shows ONE big value
+      'info' => 4, // Info cards are text-focused
+      _ => 6, // Default
+    };
+  }
 
   Widget _buildDataCategory(
     String title,
@@ -933,8 +985,17 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // Filter out already-suggested bindings to avoid duplicates
     final suggestedPaths = _selectedTemplate?.suggestedBindings ?? [];
 
+    // For gauge widgets, only show numeric types
+    final isGaugeWidget = _selectedTemplate?.id == 'gauge';
+
     for (final binding in BindingRegistry.bindings) {
       if (!suggestedPaths.contains(binding.path)) {
+        // Filter by value type for gauge widgets - only numeric
+        if (isGaugeWidget) {
+          if (binding.valueType != int && binding.valueType != double) {
+            continue;
+          }
+        }
         categories.putIfAbsent(binding.category, () => []).add(binding);
       }
     }
