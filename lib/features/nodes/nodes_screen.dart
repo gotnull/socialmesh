@@ -681,7 +681,7 @@ class _NodeCard extends StatelessWidget {
 }
 
 /// Node details bottom sheet - can be used from any screen
-class NodeDetailsSheet extends ConsumerWidget {
+class NodeDetailsSheet extends ConsumerStatefulWidget {
   final MeshNode node;
   final bool isMyNode;
 
@@ -691,7 +691,18 @@ class NodeDetailsSheet extends ConsumerWidget {
     required this.isMyNode,
   });
 
-  Color _getAvatarColor() {
+  @override
+  ConsumerState<NodeDetailsSheet> createState() => _NodeDetailsSheetState();
+}
+
+class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
+  bool _isTogglingFavorite = false;
+  bool _isTogglingMute = false;
+
+  MeshNode get _initialNode => widget.node;
+  bool get isMyNode => widget.isMyNode;
+
+  Color _getAvatarColor(MeshNode node) {
     if (node.avatarColor != null) {
       return Color(node.avatarColor!);
     }
@@ -706,7 +717,7 @@ class NodeDetailsSheet extends ConsumerWidget {
     return colors[node.nodeNum % colors.length];
   }
 
-  void _showNodeQrCode(BuildContext context) {
+  void _showNodeQrCode(BuildContext context, MeshNode node) {
     // Create a shareable node info JSON
     final nodeInfo = {
       'nodeNum': node.nodeNum,
@@ -811,7 +822,7 @@ class NodeDetailsSheet extends ConsumerWidget {
     );
   }
 
-  void _sendDirectMessage(BuildContext context) {
+  void _sendDirectMessage(BuildContext context, MeshNode node) {
     Navigator.pop(context);
     Navigator.push(
       context,
@@ -826,7 +837,11 @@ class NodeDetailsSheet extends ConsumerWidget {
     );
   }
 
-  void _toggleFavorite(BuildContext context, WidgetRef ref) async {
+  void _toggleFavorite(BuildContext context, MeshNode node) async {
+    if (_isTogglingFavorite) return;
+
+    setState(() => _isTogglingFavorite = true);
+
     final protocol = ref.read(protocolServiceProvider);
     final nodesNotifier = ref.read(nodesProvider.notifier);
 
@@ -856,10 +871,33 @@ class NodeDetailsSheet extends ConsumerWidget {
       if (context.mounted) {
         showErrorSnackBar(context, 'Failed to update favorite: $e');
       }
+    } finally {
+      if (mounted) {
+        setState(() => _isTogglingFavorite = false);
+      }
     }
   }
 
-  void _toggleIgnored(BuildContext context, WidgetRef ref) async {
+  void _toggleIgnored(BuildContext context, MeshNode node) async {
+    if (_isTogglingMute) return;
+
+    // Check connection state first
+    final connectionState = ref.read(connectionStateProvider);
+    final isConnected = connectionState.maybeWhen(
+      data: (state) => state == DeviceConnectionState.connected,
+      orElse: () => false,
+    );
+
+    if (!isConnected) {
+      showErrorSnackBar(
+        context,
+        'Cannot change mute status: Device not connected',
+      );
+      return;
+    }
+
+    setState(() => _isTogglingMute = true);
+
     final protocol = ref.read(protocolServiceProvider);
     final nodesNotifier = ref.read(nodesProvider.notifier);
 
@@ -883,10 +921,14 @@ class NodeDetailsSheet extends ConsumerWidget {
       if (context.mounted) {
         showErrorSnackBar(context, 'Failed to update mute status: $e');
       }
+    } finally {
+      if (mounted) {
+        setState(() => _isTogglingMute = false);
+      }
     }
   }
 
-  void _showRebootConfirmation(BuildContext context, WidgetRef ref) {
+  void _showRebootConfirmation(BuildContext context) {
     // Check connection state before showing reboot dialog
     final connectionState = ref.read(connectionStateProvider);
     final isConnected = connectionState.maybeWhen(
@@ -967,7 +1009,7 @@ class NodeDetailsSheet extends ConsumerWidget {
     );
   }
 
-  void _showShutdownConfirmation(BuildContext context, WidgetRef ref) {
+  void _showShutdownConfirmation(BuildContext context) {
     // Check connection state before showing shutdown dialog
     final connectionState = ref.read(connectionStateProvider);
     final isConnected = connectionState.maybeWhen(
@@ -1048,7 +1090,7 @@ class NodeDetailsSheet extends ConsumerWidget {
     );
   }
 
-  void _removeNode(BuildContext context, WidgetRef ref) {
+  void _removeNode(BuildContext context, MeshNode node) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -1106,7 +1148,7 @@ class NodeDetailsSheet extends ConsumerWidget {
     );
   }
 
-  void _setFixedPosition(BuildContext context, WidgetRef ref) async {
+  void _setFixedPosition(BuildContext context, MeshNode node) async {
     if (!node.hasPosition) {
       showInfoSnackBar(context, 'Node has no position data');
       return;
@@ -1136,7 +1178,7 @@ class NodeDetailsSheet extends ConsumerWidget {
     }
   }
 
-  void _exchangePositions(BuildContext context, WidgetRef ref) async {
+  void _exchangePositions(BuildContext context, MeshNode node) async {
     Navigator.pop(context);
 
     final protocol = ref.read(protocolServiceProvider);
@@ -1158,7 +1200,7 @@ class NodeDetailsSheet extends ConsumerWidget {
     }
   }
 
-  void _showMoreOptions(BuildContext context, WidgetRef ref) {
+  void _showMoreOptions(BuildContext context, MeshNode node) {
     AppBottomSheet.show(
       context: context,
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
@@ -1180,7 +1222,7 @@ class NodeDetailsSheet extends ConsumerWidget {
             ),
             onTap: () {
               Navigator.pop(context);
-              _exchangePositions(context, ref);
+              _exchangePositions(context, node);
             },
           ),
           ListTile(
@@ -1199,7 +1241,7 @@ class NodeDetailsSheet extends ConsumerWidget {
             ),
             onTap: () {
               Navigator.pop(context);
-              _toggleFavorite(context, ref);
+              _toggleFavorite(context, node);
             },
           ),
           ListTile(
@@ -1227,7 +1269,7 @@ class NodeDetailsSheet extends ConsumerWidget {
             ),
             onTap: () {
               Navigator.pop(context);
-              _toggleIgnored(context, ref);
+              _toggleIgnored(context, node);
             },
           ),
           if (node.hasPosition)
@@ -1245,7 +1287,7 @@ class NodeDetailsSheet extends ConsumerWidget {
               ),
               onTap: () {
                 Navigator.pop(context);
-                _setFixedPosition(context, ref);
+                _setFixedPosition(context, node);
               },
             ),
           ListTile(
@@ -1259,7 +1301,7 @@ class NodeDetailsSheet extends ConsumerWidget {
             ),
             onTap: () {
               Navigator.pop(context);
-              _removeNode(context, ref);
+              _removeNode(context, node);
             },
           ),
         ],
@@ -1268,8 +1310,12 @@ class NodeDetailsSheet extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM d, yyyy HH:mm');
+
+    // Watch the nodes provider to get latest state
+    final nodesMap = ref.watch(nodesProvider);
+    final node = nodesMap[_initialNode.nodeNum] ?? _initialNode;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -1283,7 +1329,7 @@ class NodeDetailsSheet extends ConsumerWidget {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: isMyNode ? context.accentColor : _getAvatarColor(),
+                  color: isMyNode ? context.accentColor : _getAvatarColor(node),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -1365,7 +1411,7 @@ class NodeDetailsSheet extends ConsumerWidget {
                 ),
               // QR code button
               IconButton(
-                onPressed: () => _showNodeQrCode(context),
+                onPressed: () => _showNodeQrCode(context, node),
                 icon: const Icon(Icons.qr_code, color: AppTheme.textSecondary),
               ),
             ],
@@ -1472,21 +1518,35 @@ class NodeDetailsSheet extends ConsumerWidget {
                         border: Border.all(color: AppTheme.darkBorder),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: IconButton(
-                        onPressed: () => _toggleFavorite(context, ref),
-                        icon: Icon(
-                          node.isFavorite ? Icons.star : Icons.star_border,
-                          color: node.isFavorite
-                              ? AppTheme.warningYellow
-                              : AppTheme.textSecondary,
-                          size: 22,
-                        ),
-                        tooltip: node.isFavorite
-                            ? 'Remove from favorites'
-                            : 'Add to favorites',
-                        padding: const EdgeInsets.all(12),
-                        constraints: const BoxConstraints(),
-                      ),
+                      child: _isTogglingFavorite
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppTheme.warningYellow,
+                                ),
+                              ),
+                            )
+                          : IconButton(
+                              onPressed: () => _toggleFavorite(context, node),
+                              icon: Icon(
+                                node.isFavorite
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                color: node.isFavorite
+                                    ? AppTheme.warningYellow
+                                    : AppTheme.textSecondary,
+                                size: 22,
+                              ),
+                              tooltip: node.isFavorite
+                                  ? 'Remove from favorites'
+                                  : 'Add to favorites',
+                              padding: const EdgeInsets.all(12),
+                              constraints: const BoxConstraints(),
+                            ),
                     ),
                     const SizedBox(width: 8),
                     // Mute button
@@ -1495,19 +1555,35 @@ class NodeDetailsSheet extends ConsumerWidget {
                         border: Border.all(color: AppTheme.darkBorder),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: IconButton(
-                        onPressed: () => _toggleIgnored(context, ref),
-                        icon: Icon(
-                          node.isIgnored ? Icons.volume_off : Icons.volume_up,
-                          color: node.isIgnored
-                              ? AppTheme.errorRed
-                              : AppTheme.textSecondary,
-                          size: 22,
-                        ),
-                        tooltip: node.isIgnored ? 'Unmute node' : 'Mute node',
-                        padding: const EdgeInsets.all(12),
-                        constraints: const BoxConstraints(),
-                      ),
+                      child: _isTogglingMute
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppTheme.errorRed,
+                                ),
+                              ),
+                            )
+                          : IconButton(
+                              onPressed: () => _toggleIgnored(context, node),
+                              icon: Icon(
+                                node.isIgnored
+                                    ? Icons.volume_off
+                                    : Icons.volume_up,
+                                color: node.isIgnored
+                                    ? AppTheme.errorRed
+                                    : AppTheme.textSecondary,
+                                size: 22,
+                              ),
+                              tooltip: node.isIgnored
+                                  ? 'Unmute node'
+                                  : 'Mute node',
+                              padding: const EdgeInsets.all(12),
+                              constraints: const BoxConstraints(),
+                            ),
                     ),
                     const SizedBox(width: 8),
                     // More options button
@@ -1517,7 +1593,7 @@ class NodeDetailsSheet extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: IconButton(
-                        onPressed: () => _showMoreOptions(context, ref),
+                        onPressed: () => _showMoreOptions(context, node),
                         icon: const Icon(
                           Icons.more_horiz,
                           color: AppTheme.textSecondary,
@@ -1532,7 +1608,7 @@ class NodeDetailsSheet extends ConsumerWidget {
                     // QR Code button
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _showNodeQrCode(context),
+                        onPressed: () => _showNodeQrCode(context, node),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,
                           side: const BorderSide(color: AppTheme.darkBorder),
@@ -1555,7 +1631,7 @@ class NodeDetailsSheet extends ConsumerWidget {
                     // Message button
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () => _sendDirectMessage(context),
+                        onPressed: () => _sendDirectMessage(context, node),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: context.accentColor,
                           foregroundColor: Colors.white,
@@ -1585,7 +1661,7 @@ class NodeDetailsSheet extends ConsumerWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => _showNodeQrCode(context),
+                    onPressed: () => _showNodeQrCode(context, node),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: context.accentColor,
                       foregroundColor: Colors.white,
@@ -1610,7 +1686,7 @@ class NodeDetailsSheet extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _showRebootConfirmation(context, ref),
+                        onPressed: () => _showRebootConfirmation(context),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppTheme.warningYellow,
                           side: BorderSide(
@@ -1636,8 +1712,7 @@ class NodeDetailsSheet extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () =>
-                            _showShutdownConfirmation(context, ref),
+                        onPressed: () => _showShutdownConfirmation(context),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppTheme.errorRed,
                           side: BorderSide(
