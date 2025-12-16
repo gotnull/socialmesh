@@ -132,6 +132,7 @@ class _ElementRenderer extends StatelessWidget {
     if (isPreview && onElementTap != null) {
       final isSelected = selectedElementId == element.id;
       child = GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () => onElementTap!(element.id),
         child: Container(
           decoration: isSelected
@@ -147,6 +148,7 @@ class _ElementRenderer extends StatelessWidget {
     // Add action handling for runtime mode
     else if (enableActions && element.action != null) {
       child = GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () =>
             WidgetActionHandler.handleAction(context, ref, element.action!),
         child: child,
@@ -512,10 +514,9 @@ class _ElementRenderer extends StatelessWidget {
         alignment == MainAxisAlignment.spaceBetween ||
         alignment == MainAxisAlignment.spaceEvenly;
 
-    // Use stretch for cross axis when children should fill height
-    final crossAxisAlignment = shouldStretch
-        ? CrossAxisAlignment.stretch
-        : (element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.center);
+    // Use stretch for cross axis only when explicitly filling parent container
+    final crossAxisAlignment =
+        element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.center;
 
     Widget row = Row(
       mainAxisSize: needsMaxSize ? MainAxisSize.max : MainAxisSize.min,
@@ -523,11 +524,6 @@ class _ElementRenderer extends StatelessWidget {
       crossAxisAlignment: crossAxisAlignment,
       children: children,
     );
-
-    // Wrap in IntrinsicHeight if stretching to make children fill height
-    if (shouldStretch) {
-      row = SizedBox.expand(child: row);
-    }
 
     return row;
   }

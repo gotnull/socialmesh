@@ -2313,6 +2313,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     }
 
     // Simple row layout: icon badge on left, label on right
+    // expanded: true makes row fill width so entire area is tappable
     return _selectedActions.map((actionType) {
       final actionOption = _getAvailableActions().firstWhere(
         (a) => a.type == actionType,
@@ -2324,7 +2325,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           padding: 12,
           backgroundColor: _colorToHex(AppTheme.darkCard),
           borderRadius: 12,
+          borderWidth: 1,
+          borderColor: _colorToHex(AppTheme.darkBorder),
           spacing: 12,
+          expanded: true, // Fill width so entire row is tappable
         ),
         action: ActionSchema(
           type: actionType,
