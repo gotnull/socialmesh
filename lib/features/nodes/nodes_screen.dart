@@ -1032,9 +1032,16 @@ class NodeDetailsSheet extends ConsumerWidget {
               Navigator.pop(context);
 
               final protocol = ref.read(protocolServiceProvider);
+              final nodesNotifier = ref.read(nodesProvider.notifier);
 
               try {
+                // Send remove command to device
                 await protocol.removeNode(node.nodeNum);
+
+                // Remove from local state/storage immediately
+                // (like Meshtastic iOS does after sending the command)
+                nodesNotifier.removeNode(node.nodeNum);
+
                 if (context.mounted) {
                   showSuccessSnackBar(context, '${node.displayName} removed');
                 }

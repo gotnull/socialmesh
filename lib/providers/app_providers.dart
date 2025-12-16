@@ -1522,6 +1522,8 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     final newState = Map<int, MeshNode>.from(state);
     newState.remove(nodeNum);
     state = newState;
+    // Also remove from persistent storage
+    _storage?.deleteNode(nodeNum);
   }
 
   void clearNodes() {

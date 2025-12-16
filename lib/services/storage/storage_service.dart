@@ -706,6 +706,19 @@ class NodeStorageService {
     }
   }
 
+  /// Delete a specific node from storage
+  Future<void> deleteNode(int nodeNum) async {
+    try {
+      final nodes = await loadNodes();
+      nodes.removeWhere((n) => n.nodeNum == nodeNum);
+      final jsonList = nodes.map((n) => _nodeToJson(n)).toList();
+      await _preferences.setString(_nodesKey, jsonEncode(jsonList));
+      _logger.i('Deleted node $nodeNum from storage');
+    } catch (e) {
+      _logger.e('Error deleting node $nodeNum: $e');
+    }
+  }
+
   Map<String, dynamic> _nodeToJson(MeshNode node) {
     return {
       'nodeNum': node.nodeNum,

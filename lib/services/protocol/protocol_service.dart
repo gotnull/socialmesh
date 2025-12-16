@@ -2788,7 +2788,7 @@ class ProtocolService {
       throw StateError('Cannot remove node: not connected');
     }
 
-    _logger.i('Removing node $nodeNum');
+    _logger.i('Removing node $nodeNum from device database');
 
     final adminMsg = pb.AdminMessage()..removeByNodenum = nodeNum;
 
@@ -2800,10 +2800,14 @@ class ProtocolService {
       ..from = _myNodeNum!
       ..to = _myNodeNum!
       ..decoded = data
-      ..id = _generatePacketId();
+      ..id = _generatePacketId()
+      ..priority = 70 // RELIABLE priority
+      ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+    
+    _logger.i('Node $nodeNum removal command sent to device');
   }
 
   /// Set a node as favorite
