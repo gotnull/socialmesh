@@ -23,7 +23,7 @@ class WidgetEditorScreen extends ConsumerStatefulWidget {
 class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   late WidgetSchema _schema;
   String? _selectedElementId;
-  bool _showPreview = false;
+  final bool _showPreview = false;
   bool _showToolbox = true;
   bool _isMarketplaceWidget = false;
 
@@ -137,19 +137,6 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         ),
       ),
       actions: [
-        // Toggle preview
-        IconButton(
-          icon: Icon(
-            _showPreview ? Icons.edit : Icons.preview,
-            color: _showPreview ? context.accentColor : Colors.white,
-            size: 22,
-          ),
-          onPressed: () => setState(() {
-            _showPreview = !_showPreview;
-            if (_showPreview) _selectedElementId = null;
-          }),
-          tooltip: _showPreview ? 'Edit Mode' : 'Preview Mode',
-        ),
         // Save button
         TextButton.icon(
           onPressed: _saveWidget,
@@ -420,6 +407,177 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         const SizedBox(height: 8),
       ],
     );
+  }
+
+  /// Show dialog to add a child element to a layout container
+  void _showAddChildDialog(ElementSchema parent) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkCard,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'What would you like to add?',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Simple, clear options with visual previews
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  _buildSimpleAddOption(
+                    ctx,
+                    parent,
+                    ElementType.text,
+                    'Text',
+                    'Add a label or value',
+                    Icons.text_fields,
+                  ),
+                  _buildSimpleAddOption(
+                    ctx,
+                    parent,
+                    ElementType.icon,
+                    'Icon',
+                    'Add a symbol or emoji',
+                    Icons.emoji_emotions_outlined,
+                  ),
+                  _buildSimpleAddOption(
+                    ctx,
+                    parent,
+                    ElementType.gauge,
+                    'Progress Bar',
+                    'Show a value visually',
+                    Icons.linear_scale,
+                  ),
+                  _buildSimpleAddOption(
+                    ctx,
+                    parent,
+                    ElementType.spacer,
+                    'Space',
+                    'Add empty space between items',
+                    Icons.expand,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSimpleAddOption(
+    BuildContext ctx,
+    ElementSchema parent,
+    ElementType type,
+    String title,
+    String description,
+    IconData icon,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.pop(ctx);
+            _addChildToElement(parent, type);
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.darkBorder),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: context.accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 22, color: context.accentColor),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        description,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.add_circle_outline,
+                  color: context.accentColor,
+                  size: 22,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _addChildToElement(ElementSchema parent, ElementType type) {
+    final newElement = _createDefaultElement(type);
+    final updatedParent = parent.copyWith(
+      children: [...parent.children, newElement],
+    );
+    setState(() {
+      _schema = _schema.copyWith(
+        root: _updateElementInTree(_schema.root, parent.id, updatedParent),
+      );
+      _selectedElementId = newElement.id;
+    });
+    // Refresh property sheet if open
+    _sheetSetState?.call(() {});
   }
 
   Widget _buildBlockPickerCard(_BlockItem item) {
@@ -747,147 +905,157 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.3,
-        maxChildSize: 0.85,
-        expand: false,
-        builder: (context, scrollController) => StatefulBuilder(
-          builder: (context, setSheetState) {
-            // Store the sheet's setState so we can call it from _updateElement
-            _sheetSetState = setSheetState;
+      builder: (context) {
+        // Calculate safe area and keyboard height
+        final mediaQuery = MediaQuery.of(context);
+        final bottomPadding = mediaQuery.viewInsets.bottom;
+        final screenHeight = mediaQuery.size.height;
+        final availableHeight = screenHeight - mediaQuery.padding.top - 40;
+        final maxSheetHeight = availableHeight / screenHeight;
 
-            // Get fresh element data each rebuild
-            final element = _findElementById(_schema.root, _selectedElementId!);
-            if (element == null) {
-              return const Center(child: Text('Element not found'));
-            }
+        return Padding(
+          padding: EdgeInsets.only(bottom: bottomPadding),
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.85,
+            minChildSize: 0.5,
+            maxChildSize: maxSheetHeight.clamp(0.85, 0.95),
+            expand: false,
+            builder: (context, scrollController) => StatefulBuilder(
+              builder: (context, setSheetState) {
+                // Store the sheet's setState so we can call it from _updateElement
+                _sheetSetState = setSheetState;
 
-            return Column(
-              children: [
-                // Handle + Live preview row
-                Container(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Column(
-                    children: [
-                      // Drag handle
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: AppTheme.darkBorder,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Mini widget preview
-                      Container(
-                        height: 80,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: AppTheme.darkBackground,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppTheme.darkBorder),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: FittedBox(
-                            fit: BoxFit.contain,
-                            child: SizedBox(
-                              width: _getWidgetWidth(),
-                              height: _getWidgetHeight(),
-                              child: WidgetRenderer(
-                                schema: _schema,
-                                accentColor: context.accentColor,
-                                usePlaceholderData: true,
-                                isPreview: false,
-                                enableActions: false,
+                // Get fresh element data each rebuild
+                final element = _findElementById(
+                  _schema.root,
+                  _selectedElementId!,
+                );
+                if (element == null) {
+                  return const Center(child: Text('Element not found'));
+                }
+
+                return Column(
+                  children: [
+                    // Handle + Live preview row
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: Column(
+                        children: [
+                          // Drag handle
+                          Center(
+                            child: Container(
+                              width: 40,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: AppTheme.darkBorder,
+                                borderRadius: BorderRadius.circular(2),
                               ),
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 12),
+                          // Full widget preview - EXACT same size as canvas
+                          SizedBox(
+                            height: _getPreviewHeight(),
+                            width: double.infinity,
+                            child: WidgetRenderer(
+                              schema: _schema,
+                              accentColor: context.accentColor,
+                              usePlaceholderData: true,
+                              isPreview: false,
+                              enableActions: false,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                // Title row
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      Icon(Icons.tune, size: 18, color: context.accentColor),
-                      const SizedBox(width: 8),
-                      Text(
-                        _getElementTypeName(element.type),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Breadcrumb path showing where in hierarchy
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildElementBreadcrumb(element),
+                    ),
+                    const SizedBox(height: 8),
+                    // Title row
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.tune,
+                            size: 18,
+                            color: context.accentColor,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _getElementTypeName(element.type),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _deleteElement(element.id);
+                            },
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: AppTheme.errorRed,
+                              size: 20,
+                            ),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ],
                       ),
-                      const Spacer(),
-                      IconButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _deleteElement(element.id);
-                        },
-                        icon: Icon(
-                          Icons.delete_outline,
-                          color: AppTheme.errorRed,
-                          size: 20,
-                        ),
-                        visualDensity: VisualDensity.compact,
+                    ),
+                    const Divider(height: 1, color: AppTheme.darkBorder),
+                    // Properties
+                    Expanded(
+                      child: ListView(
+                        controller: scrollController,
+                        padding: const EdgeInsets.all(16),
+                        children: [
+                          _buildPropertySection(
+                            'Content',
+                            _buildContentProperties(element),
+                          ),
+                          // Only show binding for bindable elements (text, gauge, chart)
+                          if (_shouldShowBinding(element)) ...[
+                            const SizedBox(height: 16),
+                            _buildPropertySection(
+                              'Data Binding',
+                              _buildBindingProperties(element),
+                            ),
+                          ],
+                          // Only show actions for actionable elements (container, button)
+                          if (_isActionableElement(element.type)) ...[
+                            const SizedBox(height: 16),
+                            _buildPropertySection(
+                              'Action',
+                              _buildActionProperties(element),
+                            ),
+                          ],
+                          // Only show style for styleable elements
+                          if (_isStyleableElement(element.type)) ...[
+                            const SizedBox(height: 16),
+                            _buildPropertySection(
+                              'Style',
+                              _buildStyleProperties(element),
+                            ),
+                          ],
+                          const SizedBox(height: 32),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1, color: AppTheme.darkBorder),
-                // Properties
-                Expanded(
-                  child: ListView(
-                    controller: scrollController,
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      _buildPropertySection(
-                        'Content',
-                        _buildContentProperties(element),
-                      ),
-                      // Only show binding for bindable elements (text, gauge, chart)
-                      if (_isBindableElement(element.type)) ...[
-                        const SizedBox(height: 16),
-                        _buildPropertySection(
-                          'Data Binding',
-                          _buildBindingProperties(element),
-                        ),
-                      ],
-                      // Only show actions for actionable elements (container, button)
-                      if (_isActionableElement(element.type)) ...[
-                        const SizedBox(height: 16),
-                        _buildPropertySection(
-                          'Action',
-                          _buildActionProperties(element),
-                        ),
-                      ],
-                      // Only show style for styleable elements
-                      if (_isStyleableElement(element.type)) ...[
-                        const SizedBox(height: 16),
-                        _buildPropertySection(
-                          'Style',
-                          _buildStyleProperties(element),
-                        ),
-                      ],
-                      const SizedBox(height: 32),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
     ).whenComplete(() {
       // Clear the callback when sheet is dismissed
       _sheetSetState = null;
@@ -914,18 +1082,6 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           ),
           onPressed: () => setState(() => _showToolbox = !_showToolbox),
           tooltip: 'Toggle Toolbox',
-        ),
-        // Toggle preview
-        IconButton(
-          icon: Icon(
-            _showPreview ? Icons.edit : Icons.preview,
-            color: _showPreview ? context.accentColor : Colors.white,
-          ),
-          onPressed: () => setState(() {
-            _showPreview = !_showPreview;
-            if (_showPreview) _selectedElementId = null;
-          }),
-          tooltip: _showPreview ? 'Edit Mode' : 'Preview Mode',
         ),
         const SizedBox(width: 8),
         // Save button
@@ -1249,12 +1405,6 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     }
   }
 
-  /// Fixed width for mini preview in property sheets (used with FittedBox)
-  double _getWidgetWidth() => 320;
-
-  /// Height for mini preview in property sheets (used with FittedBox)
-  double _getWidgetHeight() => _getPreviewHeight();
-
   Widget _buildEditableContent() {
     return WidgetRenderer(
       schema: _schema,
@@ -1333,7 +1483,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                   'Content',
                   _buildContentProperties(element),
                 ),
-                if (_isBindableElement(element.type)) ...[
+                if (_shouldShowBinding(element)) ...[
                   const SizedBox(height: 16),
                   _buildPropertySection(
                     'Data Binding',
@@ -1388,14 +1538,17 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
 
     switch (element.type) {
       case ElementType.text:
-        properties.add(
-          _buildTextField(
-            label: 'Text',
-            value: element.text ?? '',
-            onChanged: (value) =>
-                _updateElement(element.id, element.copyWith(text: value)),
-          ),
-        );
+        // Only show text field if NOT bound - binding takes precedence
+        if (element.binding == null || element.binding!.path.isEmpty) {
+          properties.add(
+            _buildTextField(
+              label: 'Text',
+              value: element.text ?? '',
+              onChanged: (value) =>
+                  _updateElement(element.id, element.copyWith(text: value)),
+            ),
+          );
+        }
         break;
 
       case ElementType.icon:
@@ -1479,6 +1632,78 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         );
         break;
 
+      case ElementType.row:
+      case ElementType.column:
+      case ElementType.container:
+        // Human-friendly layout options
+        final isRow = element.type == ElementType.row;
+
+        // For rows: horizontal alignment (left/center/right/spread)
+        // For columns: vertical alignment (top/middle/bottom/spread)
+        properties.add(
+          _buildAlignmentSelector(
+            label: isRow ? 'Horizontal' : 'Vertical',
+            value:
+                element.style.mainAxisAlignment ??
+                MainAxisAlignmentOption.start,
+            isHorizontal: isRow,
+            onChanged: (value) => _updateElement(
+              element.id,
+              element.copyWith(
+                style: element.style.copyWith(mainAxisAlignment: value),
+              ),
+            ),
+          ),
+        );
+        properties.add(const SizedBox(height: 12));
+        // For rows: vertical alignment (top/middle/bottom)
+        // For columns: horizontal alignment (left/center/right)
+        properties.add(
+          _buildCrossAlignmentSelector(
+            label: isRow ? 'Vertical' : 'Horizontal',
+            value:
+                element.style.crossAxisAlignment ??
+                CrossAxisAlignmentOption.start,
+            isHorizontal: !isRow,
+            onChanged: (value) => _updateElement(
+              element.id,
+              element.copyWith(
+                style: element.style.copyWith(crossAxisAlignment: value),
+              ),
+            ),
+          ),
+        );
+        if (element.type == ElementType.row ||
+            element.type == ElementType.column) {
+          properties.add(const SizedBox(height: 12));
+          properties.add(
+            _buildSliderField(
+              label: 'Gap between items',
+              value: element.style.spacing ?? 0,
+              min: 0,
+              max: 32,
+              onChanged: (value) => _updateElement(
+                element.id,
+                element.copyWith(style: element.style.copyWith(spacing: value)),
+              ),
+            ),
+          );
+        }
+        // Children count with Add button
+        properties.add(const SizedBox(height: 16));
+        properties.add(
+          FilledButton.icon(
+            onPressed: () => _showAddChildDialog(element),
+            icon: const Icon(Icons.add, size: 18),
+            label: Text('Add item (${element.children.length} items)'),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.accentColor,
+              minimumSize: const Size(double.infinity, 44),
+            ),
+          ),
+        );
+        break;
+
       default:
         break;
     }
@@ -1520,38 +1745,6 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           }
         },
       ),
-      if (element.binding != null) ...[
-        const SizedBox(height: 8),
-        _buildTextField(
-          label: 'Format',
-          value: element.binding?.format ?? '{value}',
-          onChanged: (value) => _updateElement(
-            element.id,
-            element.copyWith(
-              binding: BindingSchema(
-                path: element.binding!.path,
-                format: value,
-                defaultValue: element.binding?.defaultValue,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        _buildTextField(
-          label: 'Default',
-          value: element.binding?.defaultValue ?? '',
-          onChanged: (value) => _updateElement(
-            element.id,
-            element.copyWith(
-              binding: BindingSchema(
-                path: element.binding!.path,
-                format: element.binding?.format,
-                defaultValue: value.isEmpty ? null : value,
-              ),
-            ),
-          ),
-        ),
-      ],
     ];
   }
 
@@ -1885,6 +2078,169 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     );
   }
 
+  /// Visual alignment selector with icon buttons (human-friendly)
+  Widget _buildAlignmentSelector({
+    required String label,
+    required MainAxisAlignmentOption value,
+    required bool isHorizontal,
+    required void Function(MainAxisAlignmentOption) onChanged,
+  }) {
+    // Human-friendly labels with icons
+    final options = [
+      (
+        MainAxisAlignmentOption.start,
+        isHorizontal ? 'Left' : 'Top',
+        isHorizontal ? Icons.align_horizontal_left : Icons.align_vertical_top,
+      ),
+      (
+        MainAxisAlignmentOption.center,
+        'Center',
+        isHorizontal
+            ? Icons.align_horizontal_center
+            : Icons.align_vertical_center,
+      ),
+      (
+        MainAxisAlignmentOption.end,
+        isHorizontal ? 'Right' : 'Bottom',
+        isHorizontal
+            ? Icons.align_horizontal_right
+            : Icons.align_vertical_bottom,
+      ),
+      (
+        MainAxisAlignmentOption.spaceBetween,
+        'Spread',
+        isHorizontal ? Icons.horizontal_distribute : Icons.vertical_distribute,
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: options.map((opt) {
+            final isSelected = value == opt.$1;
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: opt != options.last ? 6 : 0),
+                child: _buildAlignButton(
+                  icon: opt.$3,
+                  label: opt.$2,
+                  isSelected: isSelected,
+                  onTap: () => onChanged(opt.$1),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCrossAlignmentSelector({
+    required String label,
+    required CrossAxisAlignmentOption value,
+    required bool isHorizontal,
+    required void Function(CrossAxisAlignmentOption) onChanged,
+  }) {
+    final options = [
+      (
+        CrossAxisAlignmentOption.start,
+        isHorizontal ? 'Left' : 'Top',
+        isHorizontal ? Icons.align_horizontal_left : Icons.align_vertical_top,
+      ),
+      (
+        CrossAxisAlignmentOption.center,
+        'Center',
+        isHorizontal
+            ? Icons.align_horizontal_center
+            : Icons.align_vertical_center,
+      ),
+      (
+        CrossAxisAlignmentOption.end,
+        isHorizontal ? 'Right' : 'Bottom',
+        isHorizontal
+            ? Icons.align_horizontal_right
+            : Icons.align_vertical_bottom,
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: options.map((opt) {
+            final isSelected = value == opt.$1;
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: opt != options.last ? 6 : 0),
+                child: _buildAlignButton(
+                  icon: opt.$3,
+                  label: opt.$2,
+                  isSelected: isSelected,
+                  onTap: () => onChanged(opt.$1),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAlignButton({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final accentColor = context.accentColor;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? accentColor.withValues(alpha: 0.15)
+              : AppTheme.darkBackground,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? accentColor : AppTheme.darkBorder,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isSelected ? accentColor : AppTheme.textSecondary,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                color: isSelected ? accentColor : AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDropdownField({
     required String label,
     required String value,
@@ -2188,6 +2544,32 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
 
     final newElement = _createDefaultElement(type);
 
+    // If a layout element is selected, add as child of that element
+    // Otherwise add to root
+    if (_selectedElementId != null) {
+      final selectedElement = _findElementById(
+        _schema.root,
+        _selectedElementId!,
+      );
+      if (selectedElement != null && _isLayoutElement(selectedElement.type)) {
+        // Add to selected container
+        final updatedSelected = selectedElement.copyWith(
+          children: [...selectedElement.children, newElement],
+        );
+        setState(() {
+          _schema = _schema.copyWith(
+            root: _updateElementInTree(
+              _schema.root,
+              selectedElement.id,
+              updatedSelected,
+            ),
+          );
+          _selectedElementId = newElement.id;
+        });
+        return;
+      }
+    }
+
     // Add to root children
     final updatedRoot = _schema.root.copyWith(
       children: [..._schema.root.children, newElement],
@@ -2347,13 +2729,100 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     return null;
   }
 
-  /// Elements that can have data bindings
-  bool _isBindableElement(ElementType type) {
-    return const {
-      ElementType.text,
-      ElementType.gauge,
-      ElementType.chart,
-    }.contains(type);
+  /// Get path to element as list of (id, type) pairs
+  List<(String, ElementType)> _getElementPath(String targetId) {
+    final path = <(String, ElementType)>[];
+    _findPath(_schema.root, targetId, path);
+    return path;
+  }
+
+  bool _findPath(
+    ElementSchema current,
+    String targetId,
+    List<(String, ElementType)> path,
+  ) {
+    path.add((current.id, current.type));
+    if (current.id == targetId) return true;
+
+    for (final child in current.children) {
+      if (_findPath(child, targetId, path)) return true;
+    }
+
+    path.removeLast();
+    return false;
+  }
+
+  /// Build breadcrumb widget showing path to current element
+  Widget _buildElementBreadcrumb(ElementSchema element) {
+    final path = _getElementPath(element.id);
+    if (path.length <= 1) {
+      return const SizedBox.shrink(); // Root element, no breadcrumb needed
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (var i = 0; i < path.length; i++) ...[
+            if (i > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Icon(
+                  Icons.chevron_right,
+                  size: 14,
+                  color: AppTheme.textTertiary,
+                ),
+              ),
+            GestureDetector(
+              onTap: i < path.length - 1
+                  ? () {
+                      setState(() => _selectedElementId = path[i].$1);
+                      _sheetSetState?.call(() {});
+                    }
+                  : null,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: i == path.length - 1
+                      ? context.accentColor.withValues(alpha: 0.15)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  _getElementTypeName(path[i].$2),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: i == path.length - 1
+                        ? context.accentColor
+                        : AppTheme.textSecondary,
+                    fontWeight: i == path.length - 1
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Check if element should show binding option
+  /// Text shows binding only if it doesn't have static text OR already has a binding
+  bool _shouldShowBinding(ElementSchema element) {
+    if (element.type == ElementType.gauge ||
+        element.type == ElementType.chart) {
+      return true;
+    }
+    if (element.type == ElementType.text) {
+      // Show binding if already has one, or if text is empty
+      final hasBinding =
+          element.binding != null && element.binding!.path.isNotEmpty;
+      final hasStaticText = element.text != null && element.text!.isNotEmpty;
+      return hasBinding || !hasStaticText;
+    }
+    return false;
   }
 
   /// Elements that can have tap actions
@@ -2364,6 +2833,16 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   /// Elements that have editable styles (icon color)
   bool _isStyleableElement(ElementType type) {
     return const {ElementType.icon, ElementType.container}.contains(type);
+  }
+
+  /// Elements that can contain children (layout containers)
+  bool _isLayoutElement(ElementType type) {
+    return const {
+      ElementType.container,
+      ElementType.row,
+      ElementType.column,
+      ElementType.stack,
+    }.contains(type);
   }
 
   String _getElementTypeName(ElementType type) {
@@ -2383,19 +2862,19 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       case ElementType.shape:
         return 'Shape';
       case ElementType.conditional:
-        return 'Conditional';
+        return 'Show/Hide';
       case ElementType.container:
-        return 'Container';
+        return 'Group';
       case ElementType.row:
-        return 'Row';
+        return 'Horizontal Stack';
       case ElementType.column:
-        return 'Column';
+        return 'Vertical Stack';
       case ElementType.spacer:
-        return 'Spacer';
+        return 'Space';
       case ElementType.stack:
-        return 'Stack';
+        return 'Layer Stack';
       case ElementType.button:
-        return 'Action Button';
+        return 'Button';
     }
   }
 

@@ -62,19 +62,17 @@ class WidgetRenderer extends ConsumerWidget {
         border: Border.all(color: AppTheme.darkBorder),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: _ElementRenderer(
-          element: schema.root,
-          bindingEngine: bindingEngine,
-          accentColor: accentColor,
-          isPreview: isPreview,
-          selectedElementId: selectedElementId,
-          onElementTap: onElementTap,
-          enableActions: enableActions && !isPreview,
-          ref: ref,
-          fillParent: schema.root.style.expanded == true,
-        ),
+      alignment: Alignment.topLeft,
+      child: _ElementRenderer(
+        element: schema.root,
+        bindingEngine: bindingEngine,
+        accentColor: accentColor,
+        isPreview: isPreview,
+        selectedElementId: selectedElementId,
+        onElementTap: onElementTap,
+        enableActions: enableActions && !isPreview,
+        ref: ref,
+        fillParent: schema.root.style.expanded == true,
       ),
     );
   }
@@ -459,9 +457,9 @@ class _ElementRenderer extends StatelessWidget {
     Widget content = Column(
       mainAxisSize: shouldExpand ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment:
-          element.style.mainAxisAlignmentValue ?? MainAxisAlignment.center,
+          element.style.mainAxisAlignmentValue ?? MainAxisAlignment.start,
       crossAxisAlignment:
-          element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.center,
+          element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.start,
       children: children,
     );
 
