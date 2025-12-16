@@ -2335,24 +2335,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           label: actionOption.label,
         ),
         children: [
-          // Icon badge (like the selection cards)
+          // Direct icon - no container
           ElementSchema(
-            type: ElementType.container,
-            style: StyleSchema(
-              width: 44,
-              height: 44,
-              backgroundColor: _colorToHex(actionOption.color),
-              borderRadius: 12,
-              alignment: AlignmentOption.center,
-            ),
-            children: [
-              ElementSchema(
-                type: ElementType.icon,
-                iconName: _getIconNameFromIconData(actionOption.icon),
-                iconSize: 22,
-                style: const StyleSchema(textColor: '#FFFFFF'),
-              ),
-            ],
+            type: ElementType.icon,
+            iconName: _getIconNameFromIconData(actionOption.icon),
+            iconSize: 24,
+            style: StyleSchema(textColor: _colorToHex(actionOption.color)),
           ),
           // Label text
           ElementSchema(
