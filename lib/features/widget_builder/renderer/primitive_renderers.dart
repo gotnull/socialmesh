@@ -702,18 +702,21 @@ class _ChartRendererState extends State<ChartRenderer> {
           color: color.withValues(alpha: 0.7),
           strokeWidth: 1.5,
           dashArray: [5, 5],
+          // Use spikyLine to create a label effect at the end
           label: label.isNotEmpty
               ? HorizontalLineLabel(
                   show: true,
                   alignment: Alignment.topRight,
-                  padding: const EdgeInsets.only(right: 4, bottom: 2),
+                  padding: const EdgeInsets.only(right: 6, bottom: 4),
+                  labelResolver: (_) => label,
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 8,
+                    fontSize: 9,
                     fontWeight: FontWeight.w600,
-                    backgroundColor: color.withValues(alpha: 0.85),
+                    background: Paint()
+                      ..color = color.withValues(alpha: 0.9)
+                      ..style = PaintingStyle.fill,
                   ),
-                  labelResolver: (_) => ' $label ',
                 )
               : null,
         ),

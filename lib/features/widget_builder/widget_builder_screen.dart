@@ -91,13 +91,34 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         icon: Icons.widgets_outlined,
         title: 'No Widgets Yet',
         subtitle: 'Create your own or browse the marketplace',
-        action: TextButton.icon(
-          onPressed: _openMarketplace,
-          icon: Icon(Icons.store, color: context.accentColor),
-          label: Text(
-            'Browse Marketplace',
-            style: TextStyle(color: context.accentColor),
-          ),
+        action: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton.icon(
+              onPressed: _createNewWidget,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                'Create Widget',
+                style: TextStyle(color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.accentColor,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: _openMarketplace,
+              icon: Icon(Icons.store, color: context.accentColor),
+              label: Text(
+                'Browse Marketplace',
+                style: TextStyle(color: context.accentColor),
+              ),
+            ),
+          ],
         ),
       );
     }

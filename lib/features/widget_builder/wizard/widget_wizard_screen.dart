@@ -20,6 +20,25 @@ class _ThresholdLine {
   });
 }
 
+/// Helper class for per-series gradient config
+class _GradientConfig {
+  bool enabled;
+  Color lowColor;
+  Color highColor;
+
+  _GradientConfig._({
+    required this.enabled,
+    required this.lowColor,
+    required this.highColor,
+  });
+
+  factory _GradientConfig() => _GradientConfig._(
+    enabled: false,
+    lowColor: const Color(0xFF4CAF50),
+    highColor: const Color(0xFFFF5252),
+  );
+}
+
 /// Result of the widget wizard
 class WidgetWizardResult {
   final WidgetSchema schema;
@@ -84,10 +103,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   ChartBaseline _baseline = ChartBaseline.none;
   int _dataPoints = 30; // Number of data points to display
   bool _showMinMax = false; // Show min/max indicators
-  bool _gradientFill = false; // Use gradient fill
-  Color _gradientLowColor = const Color(0xFF4CAF50); // Green
-  Color _gradientHighColor = const Color(0xFFFF5252); // Red
-  final List<_ThresholdLine> _thresholds = []; // Threshold lines
+  // Per-series gradient settings: Map from binding path (or '_merged') to gradient config
+  final Map<String, _GradientConfig> _seriesGradients = {};
+  // Per-series thresholds: Map from binding path to list of thresholds
+  final Map<String, List<_ThresholdLine>> _seriesThresholds = {};
 
   List<_WizardStep> get _steps {
     final isQuickActions = _selectedTemplate?.id == 'actions';
@@ -989,6 +1008,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                         setState(() {
                           if (isSelected) {
                             _selectedBindings.remove(binding.path);
+                            // Clean up per-series data for removed binding
+                            _seriesThresholds.remove(binding.path);
+                            _seriesGradients.remove(binding.path);
                           } else {
                             _selectedBindings.add(binding.path);
                           }
@@ -1915,8 +1937,59 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         _showMergeConfirmationDialog();
         return;
       }
+      // Migrate thresholds and gradients from per-series to merged
+      _migrateToMerged();
+    } else if (!value && _mergeCharts) {
+      // Migrate thresholds and gradients from merged to per-series
+      _migrateFromMerged();
     }
     setState(() => _mergeCharts = value);
+  }
+
+  void _migrateToMerged() {
+    // Migrate thresholds: collect all thresholds into _merged key
+    final allThresholds = <_ThresholdLine>[];
+    for (final bindingPath in _selectedBindings) {
+      final thresholds = _seriesThresholds[bindingPath] ?? [];
+      allThresholds.addAll(thresholds);
+    }
+    _seriesThresholds.clear();
+    if (allThresholds.isNotEmpty) {
+      // Limit to max 3 thresholds when merging
+      _seriesThresholds['_merged'] = allThresholds.take(3).toList();
+    }
+
+    // Migrate gradients: if any series has gradient enabled, enable for merged
+    _GradientConfig? firstEnabled;
+    for (final bindingPath in _selectedBindings) {
+      final gradient = _seriesGradients[bindingPath];
+      if (gradient != null && gradient.enabled) {
+        firstEnabled = gradient;
+        break;
+      }
+    }
+    _seriesGradients.clear();
+    if (firstEnabled != null) {
+      _seriesGradients['_merged'] = firstEnabled;
+    }
+  }
+
+  void _migrateFromMerged() {
+    // Migrate thresholds: move _merged thresholds to first series
+    final mergedThresholds = _seriesThresholds['_merged'] ?? [];
+    _seriesThresholds.remove('_merged');
+    if (mergedThresholds.isNotEmpty && _selectedBindings.isNotEmpty) {
+      _seriesThresholds[_selectedBindings.first] = mergedThresholds;
+    }
+
+    // Migrate gradients: move _merged gradient to first series
+    final mergedGradient = _seriesGradients['_merged'];
+    _seriesGradients.remove('_merged');
+    if (mergedGradient != null &&
+        mergedGradient.enabled &&
+        _selectedBindings.isNotEmpty) {
+      _seriesGradients[_selectedBindings.first] = mergedGradient;
+    }
   }
 
   void _showMergeConfirmationDialog() {
@@ -1946,6 +2019,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
+              _migrateToMerged();
               setState(() => _mergeCharts = true);
             },
             child: Text('Merge', style: TextStyle(color: context.accentColor)),
@@ -2331,7 +2405,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   /// Get all active chart types based on current selection
   Set<ChartType> _getActiveChartTypes() {
-    if (_mergeCharts) {
+    if (_mergeCharts && _selectedBindings.length > 1) {
       // When merged, the effective type depends on merge mode
       switch (_mergeMode) {
         case ChartMergeMode.overlay:
@@ -2345,11 +2419,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     // Non-merged: collect all unique chart types from bindings
     final types = <ChartType>{};
-    if (_selectedBindings.length > 1) {
+    if (_selectedBindings.isNotEmpty) {
       for (final binding in _selectedBindings) {
         types.add(_bindingChartTypes[binding] ?? _chartType);
       }
     } else {
+      // No bindings selected yet, use the default chart type
       types.add(_chartType);
     }
     return types;
@@ -2428,137 +2503,257 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       const Color(0xFF9C27B0), // Purple
     ];
 
+    // Get the binding paths to show gradients for
+    List<String> bindingsToShow;
+    if (_mergeCharts) {
+      // In merged mode, use a synthetic "global" key since all series share Y-axis
+      bindingsToShow = ['_merged'];
+    } else {
+      // In non-merged mode, show gradients for each binding separately
+      bindingsToShow = _selectedBindings.toList();
+    }
+
+    // Get binding labels for display
+    String getBindingLabel(String bindingPath) {
+      if (bindingPath == '_merged') return 'All Series';
+      final binding = BindingRegistry.bindings.firstWhere(
+        (b) => b.path == bindingPath,
+        orElse: () => BindingDefinition(
+          path: bindingPath,
+          label: bindingPath.split('.').last,
+          description: '',
+          category: BindingCategory.node,
+          valueType: double,
+        ),
+      );
+      return binding.label;
+    }
+
+    // Get series color for visual indicator
+    Color getBindingColor(String bindingPath) {
+      if (bindingPath == '_merged') return context.accentColor;
+      final index = _selectedBindings.toList().indexOf(bindingPath);
+      final defaultColors = [
+        const Color(0xFF4F6AF6),
+        const Color(0xFF4ADE80),
+        const Color(0xFFFBBF24),
+        const Color(0xFFF472B6),
+        const Color(0xFFA78BFA),
+        const Color(0xFF22D3EE),
+        const Color(0xFFFF6B6B),
+        const Color(0xFFFF9F43),
+      ];
+      return _mergeColors[bindingPath] ??
+          (index >= 0
+              ? defaultColors[index % defaultColors.length]
+              : context.accentColor);
+    }
+
+    // Check if any gradient is enabled
+    final anyEnabled = bindingsToShow.any(
+      (path) => (_seriesGradients[path]?.enabled ?? false),
+    );
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _gradientFill
+        color: anyEnabled
             ? context.accentColor.withValues(alpha: 0.1)
             : AppTheme.darkCard,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _gradientFill ? context.accentColor : AppTheme.darkBorder,
+          color: anyEnabled ? context.accentColor : AppTheme.darkBorder,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Gradient Fill',
-                      style: TextStyle(
-                        color: _gradientFill
-                            ? context.accentColor
-                            : Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+          Text(
+            'Gradient Fill',
+            style: TextStyle(color: Colors.white, fontSize: 13),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Color based on value (low → high)',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+          ),
+          const SizedBox(height: 12),
+          // Per-series gradient sections
+          ...bindingsToShow.map((bindingPath) {
+            final config = _seriesGradients[bindingPath] ?? _GradientConfig();
+            final label = getBindingLabel(bindingPath);
+            final color = getBindingColor(bindingPath);
+
+            return Container(
+              margin: EdgeInsets.only(
+                bottom: bindingPath != bindingsToShow.last ? 10 : 0,
+              ),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: config.enabled
+                    ? color.withValues(alpha: 0.1)
+                    : color.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: config.enabled
+                      ? color.withValues(alpha: 0.4)
+                      : color.withValues(alpha: 0.15),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Series header with toggle
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Color based on value (low → high)',
-                      style: TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 11,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            color: config.enabled ? color : Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
+                      Switch(
+                        value: config.enabled,
+                        onChanged: (value) {
+                          setState(() {
+                            final current =
+                                _seriesGradients[bindingPath] ??
+                                _GradientConfig();
+                            current.enabled = value;
+                            _seriesGradients[bindingPath] = current;
+                          });
+                        },
+                        activeTrackColor: color,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ],
+                  ),
+                  // Color pickers when enabled
+                  if (config.enabled) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        // Low color
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Low',
+                                style: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 10,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Wrap(
+                                spacing: 4,
+                                runSpacing: 4,
+                                children: gradientColors.map((c) {
+                                  final isSelected =
+                                      config.lowColor.toARGB32() ==
+                                      c.toARGB32();
+                                  return GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        final current =
+                                            _seriesGradients[bindingPath] ??
+                                            _GradientConfig();
+                                        current.lowColor = c;
+                                        _seriesGradients[bindingPath] = current;
+                                      });
+                                    },
+                                    child: Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        color: c,
+                                        shape: BoxShape.circle,
+                                        border: isSelected
+                                            ? Border.all(
+                                                color: Colors.white,
+                                                width: 2,
+                                              )
+                                            : null,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // High color
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'High',
+                                style: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 10,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Wrap(
+                                spacing: 4,
+                                runSpacing: 4,
+                                children: gradientColors.map((c) {
+                                  final isSelected =
+                                      config.highColor.toARGB32() ==
+                                      c.toARGB32();
+                                  return GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        final current =
+                                            _seriesGradients[bindingPath] ??
+                                            _GradientConfig();
+                                        current.highColor = c;
+                                        _seriesGradients[bindingPath] = current;
+                                      });
+                                    },
+                                    child: Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        color: c,
+                                        shape: BoxShape.circle,
+                                        border: isSelected
+                                            ? Border.all(
+                                                color: Colors.white,
+                                                width: 2,
+                                              )
+                                            : null,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
+                ],
               ),
-              Switch(
-                value: _gradientFill,
-                onChanged: (value) => setState(() => _gradientFill = value),
-                activeTrackColor: context.accentColor,
-              ),
-            ],
-          ),
-          if (_gradientFill) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                // Low color
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Low',
-                        style: TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontSize: 11,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 6,
-                        children: gradientColors.map((color) {
-                          final isSelected =
-                              _gradientLowColor.toARGB32() == color.toARGB32();
-                          return GestureDetector(
-                            onTap: () =>
-                                setState(() => _gradientLowColor = color),
-                            child: Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
-                                border: isSelected
-                                    ? Border.all(color: Colors.white, width: 2)
-                                    : null,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // High color
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'High',
-                        style: TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontSize: 11,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 6,
-                        children: gradientColors.map((color) {
-                          final isSelected =
-                              _gradientHighColor.toARGB32() == color.toARGB32();
-                          return GestureDetector(
-                            onTap: () =>
-                                setState(() => _gradientHighColor = color),
-                            child: Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
-                                border: isSelected
-                                    ? Border.all(color: Colors.white, width: 2)
-                                    : null,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
+            );
+          }),
         ],
       ),
     );
@@ -2719,8 +2914,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     );
   }
 
-  void _showThresholdEditor(int index) {
-    final threshold = _thresholds[index];
+  void _showThresholdEditor(String bindingPath, int index) {
+    final thresholds = _seriesThresholds[bindingPath] ?? [];
+    if (index >= thresholds.length) return;
+    final threshold = thresholds[index];
     final valueController = TextEditingController(text: '${threshold.value}');
     final labelController = TextEditingController(text: threshold.label);
     Color selectedColor = threshold.color;
@@ -2784,7 +2981,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                         GestureDetector(
                           onTap: () {
                             Navigator.pop(context);
-                            setState(() => _thresholds.removeAt(index));
+                            setState(() {
+                              final thresholds =
+                                  _seriesThresholds[bindingPath] ?? [];
+                              if (index < thresholds.length) {
+                                thresholds.removeAt(index);
+                                _seriesThresholds[bindingPath] = thresholds;
+                              }
+                            });
                           },
                           child: Container(
                             padding: const EdgeInsets.all(8),
@@ -2936,11 +3140,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                               double.tryParse(valueController.text) ??
                               threshold.value;
                           setState(() {
-                            _thresholds[index] = _ThresholdLine(
-                              value: parsedValue,
-                              color: selectedColor,
-                              label: labelController.text,
-                            );
+                            final thresholds =
+                                _seriesThresholds[bindingPath] ?? [];
+                            if (index < thresholds.length) {
+                              thresholds[index] = _ThresholdLine(
+                                value: parsedValue,
+                                color: selectedColor,
+                                label: labelController.text,
+                              );
+                              _seriesThresholds[bindingPath] = thresholds;
+                            }
                           });
                           Navigator.pop(context);
                         },
@@ -2972,6 +3181,52 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   Widget _buildThresholdSection() {
+    // Get the binding paths to show thresholds for
+    List<String> bindingsToShow;
+    if (_mergeCharts) {
+      // In merged mode, use a synthetic "global" key since all series share Y-axis
+      bindingsToShow = ['_merged'];
+    } else {
+      // In non-merged mode, show thresholds for each binding separately
+      bindingsToShow = _selectedBindings.toList();
+    }
+
+    // Get binding labels for display
+    String getBindingLabel(String bindingPath) {
+      if (bindingPath == '_merged') return 'All Series';
+      final binding = BindingRegistry.bindings.firstWhere(
+        (b) => b.path == bindingPath,
+        orElse: () => BindingDefinition(
+          path: bindingPath,
+          label: bindingPath.split('.').last,
+          description: '',
+          category: BindingCategory.node,
+          valueType: double,
+        ),
+      );
+      return binding.label;
+    }
+
+    // Get series color for visual indicator
+    Color getBindingColor(String bindingPath) {
+      if (bindingPath == '_merged') return context.accentColor;
+      final index = _selectedBindings.toList().indexOf(bindingPath);
+      final defaultColors = [
+        const Color(0xFF4F6AF6),
+        const Color(0xFF4ADE80),
+        const Color(0xFFFBBF24),
+        const Color(0xFFF472B6),
+        const Color(0xFFA78BFA),
+        const Color(0xFF22D3EE),
+        const Color(0xFFFF6B6B),
+        const Color(0xFFFF9F43),
+      ];
+      return _mergeColors[bindingPath] ??
+          (index >= 0
+              ? defaultColors[index % defaultColors.length]
+              : context.accentColor);
+    }
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -2982,138 +3237,206 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Threshold Lines',
-                style: TextStyle(color: Colors.white, fontSize: 13),
-              ),
-              if (_thresholds.length < 3)
-                GestureDetector(
-                  onTap: () => setState(() {
-                    _thresholds.add(
-                      _ThresholdLine(
-                        value: 50,
-                        color: const Color(0xFFFF5252),
-                        label: '',
-                      ),
-                    );
-                  }),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add, color: context.accentColor, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Add',
-                          style: TextStyle(
-                            color: context.accentColor,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
+          Text(
+            'Threshold Lines',
+            style: TextStyle(color: Colors.white, fontSize: 13),
           ),
-          if (_thresholds.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                'Add reference lines at specific values',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+          const SizedBox(height: 4),
+          Text(
+            'Add reference lines at specific values',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+          ),
+          const SizedBox(height: 12),
+          // Per-series threshold sections
+          ...bindingsToShow.map((bindingPath) {
+            final thresholds = _seriesThresholds[bindingPath] ?? [];
+            final label = getBindingLabel(bindingPath);
+            final color = getBindingColor(bindingPath);
+
+            return Container(
+              margin: EdgeInsets.only(
+                bottom: bindingPath != bindingsToShow.last ? 12 : 0,
               ),
-            ),
-          if (_thresholds.isNotEmpty) const SizedBox(height: 12),
-          ..._thresholds.asMap().entries.map((entry) {
-            final index = entry.key;
-            final threshold = entry.value;
-            return GestureDetector(
-              onTap: () => _showThresholdEditor(index),
-              child: Container(
-                margin: EdgeInsets.only(
-                  bottom: index < _thresholds.length - 1 ? 8 : 0,
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: threshold.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: threshold.color.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    // Color indicator
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: threshold.color,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    // Value
-                    Text(
-                      '${threshold.value}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    // Label if present
-                    if (threshold.label.isNotEmpty) ...[
-                      const SizedBox(width: 8),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: color.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Series header with add button
+                  Row(
+                    children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
+                        width: 8,
+                        height: 8,
                         decoration: BoxDecoration(
-                          color: threshold.color.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(4),
+                          color: color,
+                          shape: BoxShape.circle,
                         ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
                         child: Text(
-                          threshold.label,
+                          label,
                           style: TextStyle(
-                            color: threshold.color,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
+                            color: color,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
+                      if (thresholds.length < 3)
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            setState(() {
+                              final current =
+                                  _seriesThresholds[bindingPath] ?? [];
+                              current.add(
+                                _ThresholdLine(
+                                  value: 50,
+                                  color: const Color(0xFFFF5252),
+                                  label: '',
+                                ),
+                              );
+                              _seriesThresholds[bindingPath] = current;
+                            });
+                            // Immediately open editor for new threshold
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              final thresholdCount =
+                                  (_seriesThresholds[bindingPath] ?? []).length;
+                              _showThresholdEditor(
+                                bindingPath,
+                                thresholdCount - 1,
+                              );
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.add, color: color, size: 14),
+                                const SizedBox(width: 2),
+                                Text(
+                                  'Add',
+                                  style: TextStyle(color: color, fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                     ],
-                    const Spacer(),
-                    // Edit indicator
-                    Icon(Icons.edit, color: AppTheme.textSecondary, size: 16),
-                    const SizedBox(width: 8),
-                    // Delete button
-                    GestureDetector(
-                      onTap: () => setState(() => _thresholds.removeAt(index)),
-                      child: Icon(
-                        Icons.close,
-                        color: AppTheme.textSecondary,
-                        size: 18,
-                      ),
-                    ),
+                  ),
+                  // Threshold items
+                  if (thresholds.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    ...thresholds.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final threshold = entry.value;
+                      return GestureDetector(
+                        onTap: () => _showThresholdEditor(bindingPath, index),
+                        child: Container(
+                          margin: EdgeInsets.only(top: index > 0 ? 6 : 0),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: threshold.color.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: threshold.color.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              // Color indicator
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: threshold.color,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Value
+                              Text(
+                                '${threshold.value}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              // Label if present
+                              if (threshold.label.isNotEmpty) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: threshold.color.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                  child: Text(
+                                    threshold.label,
+                                    style: TextStyle(
+                                      color: threshold.color,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              const Spacer(),
+                              // Edit indicator
+                              Icon(
+                                Icons.edit,
+                                color: AppTheme.textSecondary,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 6),
+                              // Delete button
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    final current =
+                                        _seriesThresholds[bindingPath] ?? [];
+                                    if (index < current.length) {
+                                      current.removeAt(index);
+                                      _seriesThresholds[bindingPath] = current;
+                                    }
+                                  });
+                                },
+                                child: Icon(
+                                  Icons.close,
+                                  color: AppTheme.textSecondary,
+                                  size: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
                   ],
-                ),
+                ],
               ),
             );
           }),
@@ -3750,6 +4073,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       }
 
       // Single merged chart with multiLine type
+      // For merged charts, use the "_merged" key for thresholds and gradient
+      final mergedThresholds = _seriesThresholds['_merged'] ?? [];
+      final mergedGradient = _seriesGradients['_merged'] ?? _GradientConfig();
       children.add(
         ElementSchema(
           type: ElementType.chart,
@@ -3766,14 +4092,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           chartNormalization: _normalization,
           chartBaseline: _baseline,
           chartShowMinMax: _showMinMax,
-          chartGradientFill: _gradientFill,
-          chartGradientLowColor: _colorToHex(_gradientLowColor),
-          chartGradientHighColor: _colorToHex(_gradientHighColor),
-          chartThresholds: _thresholds.map((t) => t.value).toList(),
-          chartThresholdColors: _thresholds
+          chartGradientFill: mergedGradient.enabled,
+          chartGradientLowColor: _colorToHex(mergedGradient.lowColor),
+          chartGradientHighColor: _colorToHex(mergedGradient.highColor),
+          chartThresholds: mergedThresholds.map((t) => t.value).toList(),
+          chartThresholdColors: mergedThresholds
               .map((t) => _colorToHex(t.color))
               .toList(),
-          chartThresholdLabels: _thresholds.map((t) => t.label).toList(),
+          chartThresholdLabels: mergedThresholds.map((t) => t.label).toList(),
           style: StyleSchema(
             height: 120.0,
             textColor: _colorToHex(_accentColor),
@@ -3868,6 +4194,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         }
 
         // The chart element with per-binding chart type
+        // Get per-series thresholds and gradient for this specific binding
+        final bindingThresholds = _seriesThresholds[bindingPath] ?? [];
+        final bindingGradient =
+            _seriesGradients[bindingPath] ?? _GradientConfig();
         children.add(
           ElementSchema(
             type: ElementType.chart,
@@ -3881,14 +4211,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             chartNormalization: _normalization,
             chartBaseline: _baseline,
             chartShowMinMax: _showMinMax,
-            chartGradientFill: _gradientFill,
-            chartGradientLowColor: _colorToHex(_gradientLowColor),
-            chartGradientHighColor: _colorToHex(_gradientHighColor),
-            chartThresholds: _thresholds.map((t) => t.value).toList(),
-            chartThresholdColors: _thresholds
+            chartGradientFill: bindingGradient.enabled,
+            chartGradientLowColor: _colorToHex(bindingGradient.lowColor),
+            chartGradientHighColor: _colorToHex(bindingGradient.highColor),
+            chartThresholds: bindingThresholds.map((t) => t.value).toList(),
+            chartThresholdColors: bindingThresholds
                 .map((t) => _colorToHex(t.color))
                 .toList(),
-            chartThresholdLabels: _thresholds.map((t) => t.label).toList(),
+            chartThresholdLabels: bindingThresholds
+                .map((t) => t.label)
+                .toList(),
             style: StyleSchema(
               height: _selectedBindings.length == 1 ? 100.0 : 70.0,
               textColor: _colorToHex(bindingColor),
