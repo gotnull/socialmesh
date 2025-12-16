@@ -26,7 +26,7 @@
       --bg-card: #29303D;
       --bg-card-hover: #343D4D;
       --border-color: #414A5A;
-      
+
       /* Brand colors from app */
       --accent-magenta: #E91E8C;
       --accent-purple: #8B5CF6;
@@ -34,17 +34,17 @@
       --accent: #E91E8C;
       --accent-glow: rgba(233, 30, 140, 0.4);
       --accent-secondary: #8B5CF6;
-      
+
       /* Status colors */
       --success: #4ADE80;
       --warning: #FBBF24;
       --error: #EF4444;
-      
+
       /* Text colors matching app */
       --text-primary: #FFFFFF;
       --text-secondary: #D1D5DB;
       --text-muted: #9CA3AF;
-      
+
       /* Brand gradients */
       --gradient-brand: linear-gradient(135deg, #E91E8C 0%, #8B5CF6 50%, #4F6AF6 100%);
       --gradient-brand-horizontal: linear-gradient(90deg, #E91E8C 0%, #8B5CF6 100%);
@@ -96,22 +96,40 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: 
+      background:
         radial-gradient(ellipse at 50% 0%, rgba(233, 30, 140, 0.08) 0%, transparent 50%),
         radial-gradient(ellipse at 100% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 40%);
       animation: meshPulse 8s ease-in-out infinite alternate;
     }
 
     @keyframes meshFloat {
-      0%, 100% { transform: translate(0, 0) rotate(0deg); }
-      25% { transform: translate(3%, 2%) rotate(2deg); }
-      50% { transform: translate(1%, -2%) rotate(-1deg); }
-      75% { transform: translate(-2%, 1%) rotate(1deg); }
+
+      0%,
+      100% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+
+      25% {
+        transform: translate(3%, 2%) rotate(2deg);
+      }
+
+      50% {
+        transform: translate(1%, -2%) rotate(-1deg);
+      }
+
+      75% {
+        transform: translate(-2%, 1%) rotate(1deg);
+      }
     }
 
     @keyframes meshPulse {
-      0% { opacity: 0.6; }
-      100% { opacity: 1; }
+      0% {
+        opacity: 0.6;
+      }
+
+      100% {
+        opacity: 1;
+      }
     }
 
     /* Grid pattern overlay */
@@ -154,24 +172,123 @@
       opacity: 0.25;
     }
 
-    .mesh-icon:nth-child(1) { top: 8%; left: 5%; color: var(--success); animation-delay: 0s; animation-duration: 22s; }
-    .mesh-icon:nth-child(2) { top: 12%; right: 8%; color: var(--accent-magenta); animation-delay: -3s; animation-duration: 18s; }
-    .mesh-icon:nth-child(3) { top: 25%; left: 12%; color: var(--accent-blue); animation-delay: -7s; animation-duration: 25s; }
-    .mesh-icon:nth-child(4) { top: 40%; right: 5%; color: var(--warning); animation-delay: -11s; animation-duration: 20s; }
-    .mesh-icon:nth-child(5) { top: 55%; left: 3%; color: var(--accent-purple); animation-delay: -4s; animation-duration: 23s; }
-    .mesh-icon:nth-child(6) { top: 70%; right: 10%; color: var(--accent-blue); animation-delay: -9s; animation-duration: 19s; }
-    .mesh-icon:nth-child(7) { top: 85%; left: 8%; color: var(--text-muted); animation-delay: -14s; animation-duration: 21s; }
-    .mesh-icon:nth-child(8) { top: 30%; left: 92%; color: var(--success); animation-delay: -6s; animation-duration: 24s; }
-    .mesh-icon:nth-child(9) { top: 60%; left: 95%; color: var(--accent-magenta); animation-delay: -12s; animation-duration: 17s; }
-    .mesh-icon:nth-child(10) { top: 18%; left: 45%; color: var(--accent-purple); animation-delay: -8s; animation-duration: 26s; opacity: 0.1; }
-    .mesh-icon:nth-child(11) { top: 75%; left: 35%; color: var(--accent-blue); animation-delay: -15s; animation-duration: 22s; opacity: 0.1; }
-    .mesh-icon:nth-child(12) { top: 45%; left: 55%; color: var(--warning); animation-delay: -2s; animation-duration: 28s; opacity: 0.08; }
+    .mesh-icon:nth-child(1) {
+      top: 8%;
+      left: 5%;
+      color: var(--success);
+      animation-delay: 0s;
+      animation-duration: 22s;
+    }
+
+    .mesh-icon:nth-child(2) {
+      top: 12%;
+      right: 8%;
+      color: var(--accent-magenta);
+      animation-delay: -3s;
+      animation-duration: 18s;
+    }
+
+    .mesh-icon:nth-child(3) {
+      top: 25%;
+      left: 12%;
+      color: var(--accent-blue);
+      animation-delay: -7s;
+      animation-duration: 25s;
+    }
+
+    .mesh-icon:nth-child(4) {
+      top: 40%;
+      right: 5%;
+      color: var(--warning);
+      animation-delay: -11s;
+      animation-duration: 20s;
+    }
+
+    .mesh-icon:nth-child(5) {
+      top: 55%;
+      left: 3%;
+      color: var(--accent-purple);
+      animation-delay: -4s;
+      animation-duration: 23s;
+    }
+
+    .mesh-icon:nth-child(6) {
+      top: 70%;
+      right: 10%;
+      color: var(--accent-blue);
+      animation-delay: -9s;
+      animation-duration: 19s;
+    }
+
+    .mesh-icon:nth-child(7) {
+      top: 85%;
+      left: 8%;
+      color: var(--text-muted);
+      animation-delay: -14s;
+      animation-duration: 21s;
+    }
+
+    .mesh-icon:nth-child(8) {
+      top: 30%;
+      left: 92%;
+      color: var(--success);
+      animation-delay: -6s;
+      animation-duration: 24s;
+    }
+
+    .mesh-icon:nth-child(9) {
+      top: 60%;
+      left: 95%;
+      color: var(--accent-magenta);
+      animation-delay: -12s;
+      animation-duration: 17s;
+    }
+
+    .mesh-icon:nth-child(10) {
+      top: 18%;
+      left: 45%;
+      color: var(--accent-purple);
+      animation-delay: -8s;
+      animation-duration: 26s;
+      opacity: 0.1;
+    }
+
+    .mesh-icon:nth-child(11) {
+      top: 75%;
+      left: 35%;
+      color: var(--accent-blue);
+      animation-delay: -15s;
+      animation-duration: 22s;
+      opacity: 0.1;
+    }
+
+    .mesh-icon:nth-child(12) {
+      top: 45%;
+      left: 55%;
+      color: var(--warning);
+      animation-delay: -2s;
+      animation-duration: 28s;
+      opacity: 0.08;
+    }
 
     @keyframes iconFloat {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      25% { transform: translateY(-15px) rotate(5deg); }
-      50% { transform: translateY(-8px) rotate(-3deg); }
-      75% { transform: translateY(-20px) rotate(3deg); }
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(0deg);
+      }
+
+      25% {
+        transform: translateY(-15px) rotate(5deg);
+      }
+
+      50% {
+        transform: translateY(-8px) rotate(-3deg);
+      }
+
+      75% {
+        transform: translateY(-20px) rotate(3deg);
+      }
     }
 
     .container {
@@ -438,8 +555,13 @@
     }
 
     @keyframes phoneGlow {
-      0% { box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 0 60px rgba(233, 30, 140, 0.15), 0 0 120px rgba(139, 92, 246, 0.1); }
-      100% { box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 0 80px rgba(233, 30, 140, 0.2), 0 0 150px rgba(139, 92, 246, 0.15); }
+      0% {
+        box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 0 60px rgba(233, 30, 140, 0.15), 0 0 120px rgba(139, 92, 246, 0.1);
+      }
+
+      100% {
+        box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 0 80px rgba(233, 30, 140, 0.2), 0 0 150px rgba(139, 92, 246, 0.15);
+      }
     }
 
     .phone-screen {
