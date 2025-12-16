@@ -339,7 +339,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   }
 
   void _createNewWidget() async {
-    await Navigator.push<WidgetSchema>(
+    final result = await Navigator.push<WidgetWizardResult>(
       context,
       MaterialPageRoute(
         builder: (context) => WidgetWizardScreen(
@@ -353,6 +353,37 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
     // Always reload widgets after returning from wizard
     // The save happens inside the wizard, so we should reload regardless
     await _loadWidgets();
+
+    // Add to dashboard if requested
+    if (result != null && result.addToDashboard) {
+      final widgetsNotifier = ref.read(dashboardWidgetsProvider.notifier);
+      widgetsNotifier.addCustomWidget(
+        DashboardWidgetConfig(
+          id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+          type: DashboardWidgetType.custom,
+          schemaId: result.schema.id,
+          size: _mapSchemaSize(result.schema.size),
+        ),
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${result.schema.name} added to dashboard'),
+            backgroundColor: context.accentColor,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  WidgetSize _mapSchemaSize(CustomWidgetSize schemaSize) {
+    return switch (schemaSize) {
+      CustomWidgetSize.medium => WidgetSize.medium,
+      CustomWidgetSize.large => WidgetSize.large,
+      CustomWidgetSize.custom => WidgetSize.medium, // Default custom to medium
+    };
   }
 
   void _editWidget(WidgetSchema schema) async {

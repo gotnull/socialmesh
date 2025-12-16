@@ -6,6 +6,14 @@ import '../renderer/widget_renderer.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
 
+/// Result of the widget wizard
+class WidgetWizardResult {
+  final WidgetSchema schema;
+  final bool addToDashboard;
+
+  const WidgetWizardResult({required this.schema, this.addToDashboard = false});
+}
+
 /// Widget creation wizard - guides users through building a widget step-by-step
 class WidgetWizardScreen extends ConsumerStatefulWidget {
   final Future<void> Function(WidgetSchema schema) onSave;
@@ -41,6 +49,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   // Step 4: Appearance
   Color _accentColor = const Color(0xFF4F6AF6);
   bool _showLabels = true;
+  bool _addToDashboard = true;
   _LayoutStyle _layoutStyle = _LayoutStyle.vertical;
 
   List<_WizardStep> get _steps {
@@ -141,10 +150,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: _currentStep > 0
+            ? IconButton(
+                icon: Icon(Icons.arrow_back, color: context.accentColor),
+                onPressed: _goBack,
+              )
+            : null,
         title: Text(
           _steps[_currentStep].title,
           style: const TextStyle(
@@ -154,14 +165,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ),
         ),
         actions: [
-          if (_currentStep > 0)
-            TextButton(
-              onPressed: _goBack,
-              child: Text(
-                'Back',
-                style: TextStyle(color: AppTheme.textSecondary),
-              ),
-            ),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
+          ),
         ],
       ),
       body: Column(
@@ -1135,34 +1142,85 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       ),
       child: SafeArea(
         top: false,
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const Spacer(),
-            // Continue / Create
-            SizedBox(
-              width: 160,
-              child: ElevatedButton(
-                onPressed: canContinue
-                    ? (isLastStep ? _create : _goNext)
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.accentColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  isLastStep
-                      ? (isEditing ? 'Save Changes' : 'Create Widget')
-                      : 'Continue',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
+            // Add to Dashboard checkbox on last step
+            if (isLastStep && !isEditing)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: GestureDetector(
+                  onTap: () =>
+                      setState(() => _addToDashboard = !_addToDashboard),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: _addToDashboard
+                              ? context.accentColor
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: _addToDashboard
+                                ? context.accentColor
+                                : AppTheme.textSecondary,
+                            width: 2,
+                          ),
+                        ),
+                        child: _addToDashboard
+                            ? const Icon(
+                                Icons.check,
+                                size: 16,
+                                color: Colors.white,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Add to Dashboard',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
+            // Continue / Create button
+            Row(
+              children: [
+                const Spacer(),
+                SizedBox(
+                  width: 160,
+                  child: ElevatedButton(
+                    onPressed: canContinue
+                        ? (isLastStep ? _create : _goNext)
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: context.accentColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      isLastStep
+                          ? (isEditing ? 'Save Changes' : 'Create Widget')
+                          : 'Continue',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -1227,7 +1285,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     final schema = _buildFinalSchema();
     await widget.onSave(schema);
     if (mounted) {
-      Navigator.pop(context, schema);
+      Navigator.pop(
+        context,
+        WidgetWizardResult(schema: schema, addToDashboard: _addToDashboard),
+      );
     }
   }
 
