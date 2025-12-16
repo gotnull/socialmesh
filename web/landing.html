@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socialmesh – The Complete Meshtastic Client for iOS & Android</title>
+  <meta name="description"
+    content="Socialmesh is a full-featured Meshtastic client built from scratch for iOS and Android. Complete mesh networking functionality in a modern, intuitive interface.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a24;
+      --bg-card-hover: #22222e;
+      --border-color: #2a2a3a;
+      --accent: #4f6af6;
+      --accent-glow: rgba(79, 106, 246, 0.3);
+      --accent-secondary: #6366f1;
+      --success: #4ade80;
+      --warning: #fbbf24;
+      --text-primary: #ffffff;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --gradient-mesh: linear-gradient(135deg, #4f6af6 0%, #a78bfa 50%, #f472b6 100%);
+      --gradient-dark: linear-gradient(180deg, #0a0a0f 0%, #12121a 100%);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Animated mesh background */
+    .mesh-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .mesh-bg::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(79, 106, 246, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(167, 139, 250, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 40% 60%, rgba(244, 114, 182, 0.04) 0%, transparent 40%);
+      animation: meshFloat 30s ease-in-out infinite;
+    }
+
+    @keyframes meshFloat {
+
+      0%,
+      100% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+
+      33% {
+        transform: translate(2%, 2%) rotate(1deg);
+      }
+
+      66% {
+        transform: translate(-1%, 1%) rotate(-1deg);
+      }
+    }
+
+    /* Grid pattern overlay */
+    .grid-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: -1;
+      background-image:
+        linear-gradient(rgba(79, 106, 246, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79, 106, 246, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      padding: 16px 0;
+      background: rgba(10, 10, 15, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(42, 42, 58, 0.5);
+    }
+
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--gradient-mesh);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      color: white;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .logo-text {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-cta {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-secondary);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px var(--accent-glow);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card);
+      border-color: var(--accent);
+    }
+
+    .btn-large {
+      padding: 14px 28px;
+      font-size: 16px;
+      border-radius: 10px;
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 120px 0 80px;
+      position: relative;
+    }
+
+    .hero .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .hero-content {
+      max-width: 560px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(79, 106, 246, 0.1);
+      border: 1px solid rgba(79, 106, 246, 0.3);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+      margin-bottom: 24px;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+      }
+    }
+
+    .hero h1 {
+      font-size: 56px;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 .gradient-text {
+      background: var(--gradient-mesh);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-description {
+      font-size: 18px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+      line-height: 1.7;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+    }
+
+    .stat {
+      text-align: left;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .hero-visual {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .phone-mockup {
+      position: relative;
+      width: 300px;
+      height: 620px;
+      background: var(--bg-card);
+      border-radius: 40px;
+      border: 3px solid var(--border-color);
+      overflow: hidden;
+      box-shadow:
+        0 50px 100px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    }
+
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-secondary);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .phone-status-bar {
+      height: 44px;
+      background: var(--bg-primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .phone-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 28px;
+      background: var(--bg-primary);
+      border-radius: 0 0 20px 20px;
+    }
+
+    .phone-content {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .mock-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .mock-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .mock-node-card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 14px;
+      border: 1px solid var(--border-color);
+    }
+
+    .mock-node-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .mock-node-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .mock-node-status {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+    }
+
+    .mock-node-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .mock-chart {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 14px;
+      border: 1px solid var(--border-color);
+      height: 120px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mock-chart-title {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .mock-chart-line {
+      position: absolute;
+      bottom: 20px;
+      left: 14px;
+      right: 14px;
+      height: 60px;
+    }
+
+    .mock-chart-line svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .floating-element {
+      position: absolute;
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .floating-element-1 {
+      top: 60px;
+      left: -80px;
+      animation-delay: 0s;
+    }
+
+    .floating-element-2 {
+      bottom: 100px;
+      right: -100px;
+      animation-delay: 2s;
+    }
+
+    .floating-element-3 {
+      top: 200px;
+      right: -60px;
+      animation-delay: 4s;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .floating-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--gradient-mesh);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+
+    .floating-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .floating-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Section Styles */
+    section {
+      padding: 100px 0;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 60px;
+    }
+
+    .section-tag {
+      display: inline-block;
+      padding: 6px 14px;
+      background: rgba(79, 106, 246, 0.1);
+      border: 1px solid rgba(79, 106, 246, 0.2);
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .section-description {
+      font-size: 18px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* Features Section */
+    #features {
+      background: var(--bg-secondary);
+      position: relative;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 28px;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .feature-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .feature-description {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Capabilities Section */
+    #capabilities {
+      background: var(--bg-primary);
+    }
+
+    .capabilities-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .capabilities-content {
+      max-width: 480px;
+    }
+
+    .capability-list {
+      list-style: none;
+      margin-top: 32px;
+    }
+
+    .capability-item {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .capability-item:last-child {
+      border-bottom: none;
+    }
+
+    .capability-check {
+      width: 24px;
+      height: 24px;
+      background: rgba(74, 222, 128, 0.1);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--success);
+      flex-shrink: 0;
+    }
+
+    .capability-text h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .capability-text p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .capabilities-visual {
+      position: relative;
+    }
+
+    .screenshot-placeholder {
+      background: var(--bg-card);
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      aspect-ratio: 4/3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: var(--text-muted);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .screenshot-placeholder::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(79, 106, 246, 0.05) 0%, rgba(167, 139, 250, 0.05) 100%);
+    }
+
+    .screenshot-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    .screenshot-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* Comparison Section */
+    #comparison {
+      background: var(--bg-secondary);
+    }
+
+    .comparison-table {
+      background: var(--bg-card);
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+    }
+
+    .comparison-header {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .comparison-header-cell {
+      padding: 20px 24px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .comparison-header-cell:first-child {
+      text-align: left;
+    }
+
+    .comparison-header-cell.highlight {
+      background: rgba(79, 106, 246, 0.1);
+      color: var(--accent);
+    }
+
+    .comparison-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .comparison-row:last-child {
+      border-bottom: none;
+    }
+
+    .comparison-cell {
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .comparison-cell:first-child {
+      justify-content: flex-start;
+      color: var(--text-secondary);
+    }
+
+    .comparison-cell.highlight {
+      background: rgba(79, 106, 246, 0.05);
+    }
+
+    .check-icon {
+      color: var(--success);
+      font-size: 18px;
+    }
+
+    .x-icon {
+      color: var(--text-muted);
+      font-size: 18px;
+    }
+
+    .partial-icon {
+      color: var(--warning);
+      font-size: 14px;
+    }
+
+    /* Screenshots Gallery */
+    #screenshots {
+      background: var(--bg-primary);
+    }
+
+    .screenshots-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .screenshot-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .screenshot-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      border-color: var(--accent);
+    }
+
+    .screenshot-image {
+      aspect-ratio: 9/16;
+      background: var(--bg-secondary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      gap: 12px;
+      position: relative;
+    }
+
+    .screenshot-image::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.8) 100%);
+    }
+
+    .screenshot-image span {
+      position: relative;
+      z-index: 1;
+      font-size: 13px;
+      padding: 6px 12px;
+      background: var(--bg-card);
+      border-radius: 6px;
+    }
+
+    /* Pre-release Section */
+    #prerelease {
+      background: var(--bg-secondary);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #prerelease::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      opacity: 0.3;
+    }
+
+    .prerelease-content {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .prerelease-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--warning);
+      margin-bottom: 24px;
+    }
+
+    .prerelease-title {
+      font-size: 36px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .prerelease-description {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+      line-height: 1.7;
+    }
+
+    .email-form {
+      display: flex;
+      gap: 12px;
+      max-width: 460px;
+      margin: 0 auto 24px;
+    }
+
+    .email-input {
+      flex: 1;
+      padding: 14px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .email-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .email-input:focus {
+      border-color: var(--accent);
+    }
+
+    .privacy-note {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Tech Stack Section */
+    #tech {
+      background: var(--bg-primary);
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+
+    .tech-card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    .tech-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 24px;
+    }
+
+    .tech-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .tech-description {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Footer */
+    footer {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-color);
+      padding: 60px 0 30px;
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 60px;
+      margin-bottom: 40px;
+    }
+
+    .footer-brand {
+      max-width: 280px;
+    }
+
+    .footer-brand .logo {
+      margin-bottom: 16px;
+    }
+
+    .footer-brand p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .footer-links h4 {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .footer-links ul {
+      list-style: none;
+    }
+
+    .footer-links li {
+      margin-bottom: 10px;
+    }
+
+    .footer-links a {
+      font-size: 14px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 30px;
+      border-top: 1px solid var(--border-color);
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer-social {
+      display: flex;
+      gap: 16px;
+    }
+
+    .footer-social a {
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .footer-social a:hover {
+      background: var(--accent);
+      color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .hero .container {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .hero-content {
+        max-width: 100%;
+      }
+
+      .hero-cta {
+        justify-content: center;
+      }
+
+      .hero-stats {
+        justify-content: center;
+      }
+
+      .hero-visual {
+        display: none;
+      }
+
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .capabilities-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .capabilities-visual {
+        order: -1;
+      }
+
+      .screenshots-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .tech-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .footer-content {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero h1 {
+        font-size: 36px;
+      }
+
+      .section-title {
+        font-size: 28px;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .comparison-header,
+      .comparison-row {
+        grid-template-columns: 1.5fr 1fr 1fr;
+      }
+
+      .comparison-cell {
+        padding: 12px;
+        font-size: 12px;
+      }
+
+      .screenshots-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .email-form {
+        flex-direction: column;
+      }
+
+      .tech-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        gap: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mesh-bg"></div>
+  <div class="grid-overlay"></div>
+
+  <nav>
+    <div class="container">
+      <a href="#" class="logo">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">Socialmesh</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#capabilities">Capabilities</a></li>
+        <li><a href="#screenshots">Screenshots</a></li>
+        <li><a href="#comparison">Compare</a></li>
+      </ul>
+      <div class="nav-cta">
+        <a href="#prerelease" class="btn btn-primary">Get Early Access</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge">Pre-release · Coming Soon</div>
+        <h1>The <span class="gradient-text">Complete</span> Meshtastic Client</h1>
+        <p class="hero-description">
+          Built from scratch for iOS and Android. Socialmesh delivers full Meshtastic functionality
+          with a modern interface designed for the mesh networking community.
+        </p>
+        <div class="hero-cta">
+          <a href="#prerelease" class="btn btn-primary btn-large">
+            <span>⚡</span> Join Waitlist
+          </a>
+          <a href="#features" class="btn btn-secondary btn-large">
+            <span>↓</span> Explore Features
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <div class="stat-value">100%</div>
+            <div class="stat-label">Native Code</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">iOS + Android</div>
+            <div class="stat-label">Platforms</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">Full</div>
+            <div class="stat-label">Feature Parity</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="phone-mockup">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="phone-status-bar">
+              <span>9:41</span>
+              <span>📶 🔋</span>
+            </div>
+            <div class="phone-content">
+              <div class="mock-header">
+                <span class="mock-title">Mesh Network</span>
+                <span style="color: var(--success); font-size: 12px;">● Connected</span>
+              </div>
+              <div class="mock-node-card">
+                <div class="mock-node-header">
+                  <span class="mock-node-name">BaseStation-01</span>
+                  <div class="mock-node-status"></div>
+                </div>
+                <div class="mock-node-stats">
+                  <span>SNR: 8.2 dB</span>
+                  <span>RSSI: -87 dBm</span>
+                  <span>2.1 km</span>
+                </div>
+              </div>
+              <div class="mock-node-card">
+                <div class="mock-node-header">
+                  <span class="mock-node-name">Mobile-Alpha</span>
+                  <div class="mock-node-status" style="background: var(--warning);"></div>
+                </div>
+                <div class="mock-node-stats">
+                  <span>SNR: 4.5 dB</span>
+                  <span>RSSI: -102 dBm</span>
+                  <span>5.8 km</span>
+                </div>
+              </div>
+              <div class="mock-chart">
+                <div class="mock-chart-title">Signal History</div>
+                <div class="mock-chart-line">
+                  <svg viewBox="0 0 200 60" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color: var(--accent); stop-opacity: 0.3" />
+                        <stop offset="100%" style="stop-color: var(--accent); stop-opacity: 0" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M0,40 Q25,35 50,38 T100,25 T150,30 T200,20" fill="none" stroke="var(--accent)"
+                      stroke-width="2" />
+                    <path d="M0,40 Q25,35 50,38 T100,25 T150,30 T200,20 L200,60 L0,60 Z" fill="url(#chartGradient)" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="floating-element floating-element-1">
+          <div class="floating-icon">📡</div>
+          <div class="floating-label">Nodes Online</div>
+          <div class="floating-value">12 Active</div>
+        </div>
+        <div class="floating-element floating-element-2">
+          <div class="floating-icon">🔋</div>
+          <div class="floating-label">Battery</div>
+          <div class="floating-value">87%</div>
+        </div>
+        <div class="floating-element floating-element-3">
+          <div class="floating-icon">📍</div>
+          <div class="floating-label">Position</div>
+          <div class="floating-value">Shared</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Features</div>
+        <h2 class="section-title">Everything You Need for Mesh Communication</h2>
+        <p class="section-description">
+          Purpose-built for Meshtastic with no compromises. Every feature designed
+          with input from the community.
+        </p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <h3 class="feature-title">Full Messaging</h3>
+          <p class="feature-description">
+            Direct messages, group channels, and broadcast support. Message history,
+            delivery confirmations, and emoji reactions.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🗺️</div>
+          <h3 class="feature-title">Interactive Map</h3>
+          <p class="feature-description">
+            Real-time node positions with offline map support. Track movement,
+            view historical paths, and measure distances.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3 class="feature-title">Telemetry Dashboard</h3>
+          <p class="feature-description">
+            Battery levels, signal strength, temperature, humidity, and air quality
+            sensors. Historical charts and trend analysis.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚙️</div>
+          <h3 class="feature-title">Device Configuration</h3>
+          <p class="feature-description">
+            Complete radio settings, channel configuration, and module setup.
+            No features locked behind a web interface.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔌</div>
+          <h3 class="feature-title">Multiple Connections</h3>
+          <p class="feature-description">
+            Bluetooth LE, Wi-Fi, and USB serial support. Connect to multiple
+            devices and switch seamlessly between them.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎨</div>
+          <h3 class="feature-title">Custom Widgets</h3>
+          <p class="feature-description">
+            Build your own dashboard with drag-and-drop widgets. Charts, gauges,
+            status displays, and quick action buttons.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔔</div>
+          <h3 class="feature-title">Smart Notifications</h3>
+          <p class="feature-description">
+            Customizable alerts for messages, node events, and telemetry thresholds.
+            Background operation with push notifications.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📡</div>
+          <h3 class="feature-title">Network Analysis</h3>
+          <p class="feature-description">
+            Visualize mesh topology, trace routes between nodes, and analyze
+            network health. MQTT bridge support included.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🛡️</div>
+          <h3 class="feature-title">Privacy First</h3>
+          <p class="feature-description">
+            No accounts required. No cloud dependencies. All data stays on your
+            device. Open protocol, no vendor lock-in.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="capabilities">
+    <div class="container">
+      <div class="capabilities-grid">
+        <div class="capabilities-content">
+          <div class="section-tag">Capabilities</div>
+          <h2 class="section-title">Not Just a Companion App</h2>
+          <p class="section-description">
+            Socialmesh is a standalone Meshtastic client with full feature parity.
+            Everything you can do with the official tools, you can do here.
+          </p>
+          <ul class="capability-list">
+            <li class="capability-item">
+              <div class="capability-check">✓</div>
+              <div class="capability-text">
+                <h4>Complete Channel Management</h4>
+                <p>Create, edit, share, and import channels with full encryption support</p>
+              </div>
+            </li>
+            <li class="capability-item">
+              <div class="capability-check">✓</div>
+              <div class="capability-text">
+                <h4>All Radio Settings</h4>
+                <p>Region, modem preset, hop limit, and advanced LoRa parameters</p>
+              </div>
+            </li>
+            <li class="capability-item">
+              <div class="capability-check">✓</div>
+              <div class="capability-text">
+                <h4>Module Configuration</h4>
+                <p>Position, telemetry, range test, store & forward, and external notifications</p>
+              </div>
+            </li>
+            <li class="capability-item">
+              <div class="capability-check">✓</div>
+              <div class="capability-text">
+                <h4>Firmware Updates</h4>
+                <p>OTA updates for supported devices with version management</p>
+              </div>
+            </li>
+            <li class="capability-item">
+              <div class="capability-check">✓</div>
+              <div class="capability-text">
+                <h4>Debug Tools</h4>
+                <p>Raw packet inspection, protocol debugging, and diagnostic logs</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="capabilities-visual">
+          <div class="screenshot-placeholder">
+            <div class="screenshot-icon">⚙️</div>
+            <span class="screenshot-label">Device Configuration Screenshot</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screenshots">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Screenshots</div>
+        <h2 class="section-title">Designed for Real-World Use</h2>
+        <p class="section-description">
+          Clean, intuitive interface that works in the field. Dark mode optimized
+          for outdoor visibility and battery efficiency.
+        </p>
+      </div>
+      <div class="screenshots-grid">
+        <div class="screenshot-card">
+          <div class="screenshot-image">
+            <span>Node List View</span>
+          </div>
+        </div>
+        <div class="screenshot-card">
+          <div class="screenshot-image">
+            <span>Message Thread</span>
+          </div>
+        </div>
+        <div class="screenshot-card">
+          <div class="screenshot-image">
+            <span>Map Interface</span>
+          </div>
+        </div>
+        <div class="screenshot-card">
+          <div class="screenshot-image">
+            <span>Telemetry Charts</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="comparison">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Compare</div>
+        <h2 class="section-title">How Socialmesh Stacks Up</h2>
+        <p class="section-description">
+          Built to meet the needs of serious Meshtastic users who want a complete,
+          native mobile experience.
+        </p>
+      </div>
+      <div class="comparison-table">
+        <div class="comparison-header">
+          <div class="comparison-header-cell">Feature</div>
+          <div class="comparison-header-cell highlight">Socialmesh</div>
+          <div class="comparison-header-cell">Others</div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell">Native iOS & Android</div>
+          <div class="comparison-cell highlight"><span class="check-icon">✓</span></div>
+          <div class="comparison-cell"><span class="partial-icon">Varies</span></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell">Full Device Configuration</div>
+          <div class="comparison-cell highlight"><span class="check-icon">✓</span></div>
+          <div class="comparison-cell"><span class="partial-icon">Partial</span></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell">Custom Dashboard Widgets</div>
+          <div class="comparison-cell highlight"><span class="check-icon">✓</span></div>
+          <div class="comparison-cell"><span class="x-icon">✗</span></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell">Offline Maps</div>
+          <div class="comparison-cell highlight"><span class="check-icon">✓</span></div>
+          <div class="comparison-cell"><span class="partial-icon">Limited</span></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell">Historical Telemetry Charts</div>
+          <div class="comparison-cell highlight"><span class="check-icon">✓</span></div>
+          <div class="comparison-cell"><span class="x-icon">✗</span></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell">BLE + WiFi + Serial</div>
+          <div class="comparison-cell highlight"><span class="check-icon">✓</span></div>
+          <div class="comparison-cell"><span class="partial-icon">Varies</span></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell">Built From Scratch</div>
+          <div class="comparison-cell highlight"><span class="check-icon">✓</span></div>
+          <div class="comparison-cell"><span class="x-icon">Fork</span></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell">No Account Required</div>
+          <div class="comparison-cell highlight"><span class="check-icon">✓</span></div>
+          <div class="comparison-cell"><span class="check-icon">✓</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tech">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Built Right</div>
+        <h2 class="section-title">Modern Tech Stack</h2>
+        <p class="section-description">
+          Developed with Flutter for true cross-platform performance. Single codebase,
+          native feel, consistent experience.
+        </p>
+      </div>
+      <div class="tech-grid">
+        <div class="tech-card">
+          <div class="tech-icon">📱</div>
+          <div class="tech-name">Flutter</div>
+          <div class="tech-description">Cross-platform UI framework</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon">🔗</div>
+          <div class="tech-name">Protocol Buffers</div>
+          <div class="tech-description">Native Meshtastic protocol</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon">📶</div>
+          <div class="tech-name">BLE/WiFi/Serial</div>
+          <div class="tech-description">Multiple connection methods</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon">💾</div>
+          <div class="tech-name">Local Storage</div>
+          <div class="tech-description">SQLite + secure storage</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="prerelease">
+    <div class="container">
+      <div class="prerelease-content">
+        <div class="prerelease-badge">🚀 Pre-Release</div>
+        <h2 class="prerelease-title">Get Early Access</h2>
+        <p class="prerelease-description">
+          Socialmesh is in active development. Join the waitlist to be notified when
+          beta testing opens. Early adopters will help shape the final product.
+        </p>
+        <form class="email-form" action="#" method="post">
+          <input type="email" class="email-input" placeholder="Enter your email" required>
+          <button type="submit" class="btn btn-primary btn-large">Notify Me</button>
+        </form>
+        <p class="privacy-note">No spam. Unsubscribe anytime. We respect your privacy.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <a href="#" class="logo">
+            <div class="logo-icon">S</div>
+            <span class="logo-text">Socialmesh</span>
+          </a>
+          <p>
+            A complete Meshtastic client built from scratch for iOS and Android.
+            Made for the mesh networking community.
+          </p>
+        </div>
+        <div class="footer-links">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#screenshots">Screenshots</a></li>
+            <li><a href="#comparison">Compare</a></li>
+            <li><a href="#prerelease">Early Access</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://meshtastic.org" target="_blank">Meshtastic.org</a></li>
+            <li><a href="https://reddit.com/r/meshtastic" target="_blank">r/meshtastic</a></li>
+            <li><a href="#">Documentation</a></li>
+            <li><a href="#">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy-policy">Privacy Policy</a></li>
+            <li><a href="/terms-of-service">Terms of Service</a></li>
+            <li><a href="/support">Support</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2025 Socialmesh. Not affiliated with Meshtastic LLC.</span>
+        <div class="footer-social">
+          <a href="https://reddit.com/r/meshtastic" target="_blank" title="Reddit">📣</a>
+          <a href="https://github.com" target="_blank" title="GitHub">💻</a>
+          <a href="https://discord.gg/meshtastic" target="_blank" title="Discord">💬</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+
+</html>
