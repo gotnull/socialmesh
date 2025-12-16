@@ -260,6 +260,11 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     final settings = await ref.read(settingsServiceProvider.future);
     final colorValue = settings.accentColor;
     ref.read(accentColorProvider.notifier).setColor(Color(colorValue));
+
+    // Also load theme mode
+    final themeModeIndex = settings.themeMode;
+    final themeMode = ThemeMode.values[themeModeIndex];
+    ref.read(themeModeProvider.notifier).setThemeMode(themeMode);
   }
 
   @override
@@ -275,11 +280,15 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     // Watch accent color for dynamic theme
     final accentColor = ref.watch(accentColorProvider);
 
+    // Watch theme mode for dark/light switching
+    final themeMode = ref.watch(themeModeProvider);
+
     return MaterialApp(
       title: 'Socialmesh',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme(accentColor),
-      themeMode: ThemeMode.dark,
+      theme: AppTheme.lightTheme(accentColor),
+      darkTheme: AppTheme.darkTheme(accentColor),
+      themeMode: themeMode,
       home: const _AppRouter(),
       routes: {
         '/scanner': (context) => const ScannerScreen(),

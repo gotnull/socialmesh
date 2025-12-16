@@ -132,6 +132,13 @@ class SettingsService {
 
   bool get darkMode => _preferences.getBool('dark_mode') ?? false;
 
+  // Theme Mode (0 = system, 1 = light, 2 = dark)
+  Future<void> setThemeMode(int modeIndex) async {
+    await _preferences.setInt('theme_mode', modeIndex);
+  }
+
+  int get themeMode => _preferences.getInt('theme_mode') ?? 2; // Default dark
+
   // Accent Color
   Future<void> setAccentColor(int colorValue) async {
     await _preferences.setInt('accent_color', colorValue);

@@ -20,19 +20,20 @@ class ThemeSettingsScreen extends ConsumerStatefulWidget {
 class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final currentColor = ref.watch(accentColorProvider);
     final settingsAsync = ref.watch(settingsServiceProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        title: Text(
           'Theme Settings',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: theme.colorScheme.onSurface,
           ),
         ),
       ),
@@ -44,6 +45,12 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           children: [
             // Header with current theme preview
             _buildThemePreview(context, currentColor),
+            const SizedBox(height: 24),
+
+            // Theme Mode Section
+            _buildSectionHeader('APPEARANCE'),
+            const SizedBox(height: 12),
+            _buildThemeModeSelector(context, ref, settingsService),
             const SizedBox(height: 24),
 
             // Accent Color Section
@@ -68,7 +75,111 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
     );
   }
 
+  Widget _buildThemeModeSelector(
+    BuildContext context,
+    WidgetRef ref,
+    SettingsService settingsService,
+  ) {
+    final theme = Theme.of(context);
+    final currentMode = ref.watch(themeModeProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: Row(
+        children: [
+          _buildModeOption(
+            context,
+            ref,
+            settingsService,
+            icon: Icons.dark_mode_rounded,
+            label: 'Dark',
+            mode: ThemeMode.dark,
+            isSelected: currentMode == ThemeMode.dark,
+          ),
+          _buildModeOption(
+            context,
+            ref,
+            settingsService,
+            icon: Icons.light_mode_rounded,
+            label: 'Light',
+            mode: ThemeMode.light,
+            isSelected: currentMode == ThemeMode.light,
+          ),
+          _buildModeOption(
+            context,
+            ref,
+            settingsService,
+            icon: Icons.phone_android_rounded,
+            label: 'System',
+            mode: ThemeMode.system,
+            isSelected: currentMode == ThemeMode.system,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModeOption(
+    BuildContext context,
+    WidgetRef ref,
+    SettingsService settingsService, {
+    required IconData icon,
+    required String label,
+    required ThemeMode mode,
+    required bool isSelected,
+  }) {
+    final theme = Theme.of(context);
+    final accentColor = theme.colorScheme.primary;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () async {
+          HapticFeedback.selectionClick();
+          ref.read(themeModeProvider.notifier).setThemeMode(mode);
+          await settingsService.setThemeMode(mode.index);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? accentColor.withValues(alpha: 0.15) : null,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                color: isSelected
+                    ? accentColor
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                size: 24,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected
+                      ? accentColor
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildThemePreview(BuildContext context, Color accentColor) {
+    final theme = Theme.of(context);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -116,7 +227,10 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                 ),
                 Text(
                   'Current accent color',
-                  style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
                 ),
               ],
             ),
@@ -127,14 +241,16 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
   }
 
   Widget _buildSectionHeader(String title) {
+    final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: AppTheme.textSecondary,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
           letterSpacing: 0.5,
         ),
       ),
@@ -147,12 +263,14 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
     SettingsService settingsService,
     Color currentColor,
   ) {
+    final theme = Theme.of(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Wrap(
         spacing: 12,
@@ -220,12 +338,14 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
   }
 
   Widget _buildPreviewElements(BuildContext context, Color accentColor) {
+    final theme = Theme.of(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,7 +356,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppTheme.textSecondary,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 12),
@@ -281,7 +401,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppTheme.textSecondary,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 12),
@@ -329,7 +449,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppTheme.textSecondary,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 12),
@@ -337,13 +457,17 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
             children: [
               MeshLoadingIndicator(
                 size: 24,
-                colors: [accentColor, accentColor.withValues(alpha: 0.6), accentColor.withValues(alpha: 0.3)],
+                colors: [
+                  accentColor,
+                  accentColor.withValues(alpha: 0.6),
+                  accentColor.withValues(alpha: 0.3),
+                ],
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: LinearProgressIndicator(
                   value: 0.7,
-                  backgroundColor: AppTheme.darkBorder,
+                  backgroundColor: theme.dividerColor,
                   valueColor: AlwaysStoppedAnimation(accentColor),
                 ),
               ),
@@ -357,7 +481,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppTheme.textSecondary,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 12),
@@ -409,14 +533,15 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
   }
 
   Widget _buildAppIconSection(BuildContext context) {
+    final theme = Theme.of(context);
     final accentColor = ref.watch(accentColorProvider);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

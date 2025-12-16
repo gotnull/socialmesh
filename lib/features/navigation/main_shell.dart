@@ -2,10 +2,10 @@ import '../../core/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/legal_document_sheet.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/subscription_providers.dart';
@@ -433,7 +433,8 @@ class _MainShellState extends ConsumerState<MainShell> {
         ),
       ),
       child: SafeArea(
-        child: Column(
+        child: ListView(
+          padding: EdgeInsets.zero,
           children: [
             // Node Info Header
             _DrawerNodeHeader(),
@@ -447,12 +448,12 @@ class _MainShellState extends ConsumerState<MainShell> {
             const SizedBox(height: 8),
 
             // Menu items
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: _drawerMenuItems.length,
-                itemBuilder: (context, index) {
-                  final item = _drawerMenuItems[index];
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Column(
+                children: _drawerMenuItems.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
                   final isSelected = _selectedDrawerItem == index;
 
                   // Check if this is a premium feature and if user has access
@@ -488,19 +489,19 @@ class _MainShellState extends ConsumerState<MainShell> {
                       },
                     ),
                   );
-                },
+                }).toList(),
               ),
             ),
 
-            // Divider before bottom section
+            // Divider before Settings/Help
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
             ),
 
-            // Bottom section - Settings & Help
+            // Settings & Help - now part of the scrollable list
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Column(
                 children: [
                   // Settings
@@ -526,65 +527,27 @@ class _MainShellState extends ConsumerState<MainShell> {
                   // Help Center
                   _DrawerMenuTile(
                     icon: Icons.help_outline,
-                    label: 'Help Center',
+                    label: 'Help & Support',
                     isSelected: false,
                     onTap: () {
                       ref.haptics.tabChange();
                       Navigator.of(context).pop();
-                      _openHelpCenter();
+                      LegalDocumentSheet.showSupport(context);
                     },
                   ),
                 ],
               ),
             ),
 
-            // Tip at bottom
+            // Theme toggle at bottom (like Twitter)
             Padding(
-              padding: const EdgeInsets.all(16),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: theme.dividerColor.withValues(alpha: 0.1),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.swipe,
-                      size: 20,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Swipe from left edge to open',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontFamily: AppTheme.fontFamily,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Row(children: [_ThemeToggleButton(), const Spacer()]),
             ),
           ],
         ),
       ),
     );
-  }
-
-  void _openHelpCenter() async {
-    final uri = Uri.parse('https://protofluff.com/support');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
   }
 
   @override
@@ -1077,7 +1040,7 @@ class _DrawerNodeHeader extends ConsumerWidget {
                           ],
                         )
                       : null,
-                  color: isConnected ? null : AppTheme.darkBorder,
+                  color: isConnected ? null : theme.dividerColor,
                   shape: BoxShape.circle,
                   boxShadow: isConnected
                       ? [
@@ -1236,6 +1199,49 @@ class _PulsingDotState extends State<_PulsingDot>
           ),
         );
       },
+    );
+  }
+}
+
+/// Theme toggle button like Twitter's moon icon
+class _ThemeToggleButton extends ConsumerWidget {
+  const _ThemeToggleButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final currentMode = ref.watch(themeModeProvider);
+    final isDark =
+        currentMode == ThemeMode.dark ||
+        (currentMode == ThemeMode.system &&
+            MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+
+    return GestureDetector(
+      onTap: () async {
+        HapticFeedback.selectionClick();
+        final newMode = isDark ? ThemeMode.light : ThemeMode.dark;
+        ref.read(themeModeProvider.notifier).setThemeMode(newMode);
+
+        // Save to storage
+        final settings = await ref.read(settingsServiceProvider.future);
+        await settings.setThemeMode(newMode.index);
+      },
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: theme.dividerColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Icon(
+          isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+          size: 22,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+        ),
+      ),
     );
   }
 }
