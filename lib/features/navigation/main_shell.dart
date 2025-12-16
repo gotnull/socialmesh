@@ -518,7 +518,11 @@ class _MainShellState extends ConsumerState<MainShell> {
                       );
                     },
                   ),
-                  const SizedBox(height: 4),
+                  Divider(
+                    height: 17,
+                    thickness: 1,
+                    color: theme.dividerColor.withValues(alpha: 0.1),
+                  ),
                   // Help Center
                   _DrawerMenuTile(
                     icon: Icons.help_outline,
@@ -1074,7 +1078,7 @@ class _DrawerNodeHeader extends ConsumerWidget {
                         )
                       : null,
                   color: isConnected ? null : AppTheme.darkBorder,
-                  borderRadius: BorderRadius.circular(16),
+                  shape: BoxShape.circle,
                   boxShadow: isConnected
                       ? [
                           BoxShadow(
