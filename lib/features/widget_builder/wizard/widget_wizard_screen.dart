@@ -1253,9 +1253,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     final validationError = _getValidationError();
     final isActionsTemplate = _selectedTemplate?.id == 'actions';
     final isGraphTemplate = _selectedTemplate?.id == 'graph';
-    // Hide accent color for merged graphs - they have individual colors
-    final showAccentColor =
-        !isActionsTemplate && !(isGraphTemplate && _mergeCharts);
+    // Hide accent color for graphs with multiple series - they have individual colors
+    // Also hide for merged graphs
+    final hasSeriesColors =
+        isGraphTemplate && (_mergeCharts || _selectedBindings.length > 1);
+    final showAccentColor = !isActionsTemplate && !hasSeriesColors;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -1587,6 +1589,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
         // When merged: single chart type for all + color pickers
         if (_mergeCharts && showMergeOption) ...[
+          _buildMergeColorPickers(),
+          const SizedBox(height: 16),
+          _buildMergeModeSelector(),
+          const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -1609,15 +1615,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          _buildMergeModeSelector(),
-          const SizedBox(height: 16),
-          _buildMergeColorPickers(),
         ],
 
         // When NOT merged: individual chart type per binding
         if (!_mergeCharts) ...[
           if (_selectedBindings.length > 1) ...[
+            _buildSeriesColorPickers(),
+            const SizedBox(height: 16),
             Text(
               'Chart Type per Series',
               style: TextStyle(
@@ -1628,8 +1632,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             ),
             const SizedBox(height: 12),
             _buildIndividualChartTypePickers(),
-            const SizedBox(height: 16),
-            _buildSeriesColorPickers(),
           ] else ...[
             // Single binding: just show the chart type grid
             _buildChartTypeGrid(),
