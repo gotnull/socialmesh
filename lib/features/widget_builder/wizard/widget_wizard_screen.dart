@@ -2010,8 +2010,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // Coordinate-style display
     for (final bindingPath in _selectedBindings) {
       final binding = _getBinding(bindingPath);
-      final isCoord = bindingPath.contains('latitude') ||
-          bindingPath.contains('longitude');
+      final isCoord =
+          bindingPath.contains('latitude') || bindingPath.contains('longitude');
 
       children.add(
         ElementSchema(
@@ -2424,7 +2424,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   String _getEnvironmentIcon(String path) {
     if (path.contains('temperature')) return 'thermostat';
     if (path.contains('humidity')) return 'water_drop';
-    if (path.contains('pressure') || path.contains('barometric')) return 'speed';
+    if (path.contains('pressure') || path.contains('barometric')) {
+      return 'speed';
+    }
     if (path.contains('wind')) return 'air';
     if (path.contains('uv')) return 'wb_sunny';
     if (path.contains('rain')) return 'grain';
