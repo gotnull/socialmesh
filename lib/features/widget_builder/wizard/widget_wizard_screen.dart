@@ -1176,6 +1176,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   // ============================================================
   Widget _buildAppearanceStep() {
     final validationError = _getValidationError();
+    final isActionsTemplate = _selectedTemplate?.id == 'actions';
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -1185,20 +1186,22 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           _buildValidationWarningBanner(validationError),
           const SizedBox(height: 16),
         ],
-        // Color selection
-        Text(
-          'Accent Color',
-          style: TextStyle(
-            color: AppTheme.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
+        // Color selection (not for actions - they have their own colors)
+        if (!isActionsTemplate) ...[
+          Text(
+            'Accent Color',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        _buildColorPicker(),
-        const SizedBox(height: 24),
+          const SizedBox(height: 12),
+          _buildColorPicker(),
+          const SizedBox(height: 24),
+        ],
         // Layout style (only for data widgets, not actions)
-        if (_selectedTemplate?.id != 'actions') ...[
+        if (!isActionsTemplate) ...[
           Text(
             'Layout',
             style: TextStyle(
@@ -1218,6 +1221,35 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             (value) => setState(() => _showLabels = value),
           ),
         ],
+        // For actions template, show a simple message
+        if (isActionsTemplate)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkCard,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.darkBorder),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: AppTheme.textSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Action buttons use their own colors based on the action type.',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -1832,6 +1864,33 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     ];
   }
 
+  /// Creates a nice icon badge with rounded corners (not ugly circles!)
+  ElementSchema _buildIconBadge({
+    required String iconName,
+    required Color color,
+    double size = 28,
+    double iconSize = 16,
+  }) {
+    return ElementSchema(
+      type: ElementType.container,
+      style: StyleSchema(
+        width: size,
+        height: size,
+        backgroundColor: _colorToHex(color.withValues(alpha: 0.15)),
+        borderRadius: 8,
+        alignment: AlignmentOption.center,
+      ),
+      children: [
+        ElementSchema(
+          type: ElementType.icon,
+          iconName: iconName,
+          iconSize: iconSize,
+          style: StyleSchema(textColor: _colorToHex(color)),
+        ),
+      ],
+    );
+  }
+
   /// Info Card: Clean text-focused layout with icon badges
   List<ElementSchema> _buildInfoCardElements(String name) {
     final children = <ElementSchema>[];
@@ -1841,25 +1900,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       ElementSchema(
         type: ElementType.row,
         children: [
-          ElementSchema(
-            type: ElementType.shape,
-            shapeType: ShapeType.circle,
-            style: StyleSchema(
-              width: 28,
-              height: 28,
-              backgroundColor: _colorToHex(
-                _accentColor.withValues(alpha: 0.15),
-              ),
-            ),
-            children: [
-              ElementSchema(
-                type: ElementType.icon,
-                iconName: 'info',
-                iconSize: 16,
-                style: StyleSchema(textColor: _colorToHex(_accentColor)),
-              ),
-            ],
-          ),
+          _buildIconBadge(iconName: 'info', color: _accentColor),
           ElementSchema(
             type: ElementType.spacer,
             style: const StyleSchema(width: 10),
@@ -1947,24 +1988,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       ElementSchema(
         type: ElementType.row,
         children: [
-          ElementSchema(
-            type: ElementType.shape,
-            shapeType: ShapeType.circle,
-            style: StyleSchema(
-              width: 32,
-              height: 32,
-              backgroundColor: _colorToHex(
-                const Color(0xFFA78BFA).withValues(alpha: 0.2),
-              ),
-            ),
-            children: [
-              ElementSchema(
-                type: ElementType.icon,
-                iconName: 'location_on',
-                iconSize: 18,
-                style: const StyleSchema(textColor: '#A78BFA'),
-              ),
-            ],
+          _buildIconBadge(
+            iconName: 'location_on',
+            color: const Color(0xFFA78BFA),
+            size: 32,
+            iconSize: 18,
           ),
           ElementSchema(
             type: ElementType.spacer,
@@ -2070,24 +2098,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       ElementSchema(
         type: ElementType.row,
         children: [
-          ElementSchema(
-            type: ElementType.shape,
-            shapeType: ShapeType.circle,
-            style: StyleSchema(
-              width: 32,
-              height: 32,
-              backgroundColor: _colorToHex(
-                const Color(0xFF22D3EE).withValues(alpha: 0.2),
-              ),
-            ),
-            children: [
-              ElementSchema(
-                type: ElementType.icon,
-                iconName: 'thermostat',
-                iconSize: 18,
-                style: const StyleSchema(textColor: '#22D3EE'),
-              ),
-            ],
+          _buildIconBadge(
+            iconName: 'thermostat',
+            color: const Color(0xFF22D3EE),
+            size: 32,
+            iconSize: 18,
           ),
           ElementSchema(
             type: ElementType.spacer,
@@ -2374,8 +2389,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   format: binding.defaultFormat,
                   defaultValue: '--',
                 ),
-                style: const StyleSchema(
-                  textColor: '#FFFFFF',
+                style: StyleSchema(
+                  textColor: _colorToHex(_accentColor),
                   fontSize: 14,
                   fontWeight: 'w600',
                 ),
@@ -2392,8 +2407,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               format: binding.defaultFormat,
               defaultValue: '--',
             ),
-            style: const StyleSchema(
-              textColor: '#FFFFFF',
+            style: StyleSchema(
+              textColor: _colorToHex(_accentColor),
               fontSize: 14,
               fontWeight: 'w600',
             ),

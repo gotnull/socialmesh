@@ -428,7 +428,6 @@ class _ElementRenderer extends StatelessWidget {
   }
 
   Widget _buildContainer() {
-    final shouldExpand = fillParent || element.style.expanded == true;
     final children = element.children.map((child) {
       return _ElementRenderer(
         element: child,
@@ -443,32 +442,23 @@ class _ElementRenderer extends StatelessWidget {
     }).toList();
 
     if (children.isEmpty) {
-      // Even empty containers should expand if needed
-      if (shouldExpand) {
-        return const SizedBox.expand();
-      }
       return const SizedBox.shrink();
     }
 
-    if (children.length == 1 && !shouldExpand) {
+    // Single child - just return it directly, let _applyStyle handle sizing
+    if (children.length == 1) {
       return children.first;
     }
 
-    Widget content = Column(
-      mainAxisSize: shouldExpand ? MainAxisSize.max : MainAxisSize.min,
+    // Multiple children - stack them in a column
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment:
           element.style.mainAxisAlignmentValue ?? MainAxisAlignment.start,
       crossAxisAlignment:
           element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.start,
       children: children,
     );
-
-    // Expand to fill parent if needed
-    if (shouldExpand) {
-      content = SizedBox.expand(child: content);
-    }
-
-    return content;
   }
 
   Widget _buildRow() {
@@ -614,8 +604,16 @@ class _ElementRenderer extends StatelessWidget {
         (!isShape && element.style.borderRadius != null);
     final hasAlignment = element.style.alignmentValue != null;
 
-    if (hasDecoration || hasAlignment) {
+    // Get size constraints - these should be applied WITH the decoration
+    // so alignment works correctly within the sized container
+    final hasSize =
+        !isShape &&
+        (element.style.width != null || element.style.height != null);
+
+    if (hasDecoration || hasAlignment || hasSize) {
       child = Container(
+        width: hasSize ? element.style.width : null,
+        height: hasSize ? element.style.height : null,
         alignment: element.style.alignmentValue,
         decoration: hasDecoration
             ? BoxDecoration(
@@ -631,17 +629,6 @@ class _ElementRenderer extends StatelessWidget {
                     : null,
               )
             : null,
-        child: child,
-      );
-    }
-
-    // Apply explicit size constraints
-    // Note: Skip size for shapes since ShapeRenderer handles it
-    if (!isShape &&
-        (element.style.width != null || element.style.height != null)) {
-      child = SizedBox(
-        width: element.style.width,
-        height: element.style.height,
         child: child,
       );
     }

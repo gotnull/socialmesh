@@ -49,12 +49,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
   Widget build(BuildContext context) {
     final connectionStateAsync = ref.watch(connectionStateProvider);
     final autoReconnectState = ref.watch(autoReconnectStateProvider);
-    final nodes = ref.watch(nodesProvider);
-    final myNodeNum = ref.watch(myNodeNumProvider);
     final widgetConfigs = ref.watch(dashboardWidgetsProvider);
-
-    final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
-    final batteryLevel = myNode?.batteryLevel;
 
     final connectionState = connectionStateAsync.when(
       data: (state) => state,
@@ -90,32 +85,6 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
             tooltip: 'Add Widget',
           ),
           if (!_editMode) ...[
-            // Battery indicator
-            if (batteryLevel != null && isConnected)
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _getBatteryIcon(batteryLevel),
-                      size: 20,
-                      color: _getBatteryColor(batteryLevel),
-                    ),
-                    if (batteryLevel <= 100) ...[
-                      const SizedBox(width: 2),
-                      Text(
-                        '$batteryLevel%',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _getBatteryColor(batteryLevel),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
             // Device button
             _DeviceButton(
               isConnected: isConnected,
@@ -307,7 +276,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                     : GestureDetector(
                         onLongPress: () {
                           HapticFeedback.mediumImpact();
-                          setState(() => _editMode = true);
+                          _showWidgetContextMenu(context, config);
                         },
                         child: _buildWidgetCard(config),
                       ),
@@ -491,7 +460,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               isEditMode: _editMode,
               customName: schema.name,
               customIcon: Icons.widgets, // Custom widgets use widgets icon
-              showHeader: _editMode, // Only show header in edit mode
+              showHeader: true, // Always show header like native widgets
               onFavorite: () {
                 ref
                     .read(dashboardWidgetsProvider.notifier)
@@ -632,22 +601,146 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
     );
   }
 
-  IconData _getBatteryIcon(int level) {
-    if (level > 100) return Icons.battery_charging_full;
-    if (level >= 95) return Icons.battery_full;
-    if (level >= 80) return Icons.battery_6_bar;
-    if (level >= 60) return Icons.battery_5_bar;
-    if (level >= 40) return Icons.battery_4_bar;
-    if (level >= 20) return Icons.battery_2_bar;
-    if (level >= 10) return Icons.battery_1_bar;
-    return Icons.battery_alert;
-  }
+  void _showWidgetContextMenu(
+    BuildContext context,
+    DashboardWidgetConfig config,
+  ) {
+    final isCustomWidget =
+        config.type == DashboardWidgetType.custom && config.schemaId != null;
+    final widgetInfo = WidgetRegistry.getInfo(config.type);
 
-  Color _getBatteryColor(int level) {
-    if (level > 100) return context.accentColor;
-    if (level >= 50) return context.accentColor;
-    if (level >= 20) return AppTheme.warningYellow;
-    return AppTheme.errorRed;
+    AppBottomSheet.show(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: context.accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    isCustomWidget ? Icons.widgets : widgetInfo.icon,
+                    color: context.accentColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    isCustomWidget ? 'Custom Widget' : widgetInfo.name,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: AppTheme.darkBorder),
+          // Edit option (only for custom widgets)
+          if (isCustomWidget)
+            ListTile(
+              leading: Icon(Icons.edit, color: context.accentColor),
+              title: const Text(
+                'Edit Widget',
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(
+                  context,
+                ).pushNamed('/widget-editor', arguments: config.schemaId);
+              },
+            ),
+          // Toggle favorite
+          ListTile(
+            leading: Icon(
+              config.isFavorite ? Icons.star : Icons.star_border,
+              color: config.isFavorite ? AppTheme.warningYellow : Colors.white,
+            ),
+            title: Text(
+              config.isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
+              style: const TextStyle(color: Colors.white),
+            ),
+            onTap: () {
+              ref
+                  .read(dashboardWidgetsProvider.notifier)
+                  .toggleFavorite(config.id);
+              Navigator.pop(context);
+            },
+          ),
+          // Edit dashboard mode
+          ListTile(
+            leading: const Icon(Icons.dashboard_customize, color: Colors.white),
+            title: const Text(
+              'Edit Dashboard',
+              style: TextStyle(color: Colors.white),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              setState(() => _editMode = true);
+            },
+          ),
+          // Remove widget
+          ListTile(
+            leading: const Icon(
+              Icons.remove_circle_outline,
+              color: AppTheme.errorRed,
+            ),
+            title: const Text(
+              'Remove Widget',
+              style: TextStyle(color: AppTheme.errorRed),
+            ),
+            onTap: () async {
+              Navigator.pop(context);
+              final shouldRemove = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: AppTheme.darkCard,
+                  title: const Text(
+                    'Remove Widget?',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  content: Text(
+                    'Are you sure you want to remove this widget from your dashboard?',
+                    style: TextStyle(color: AppTheme.textSecondary),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.errorRed,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Remove'),
+                    ),
+                  ],
+                ),
+              );
+              if (shouldRemove == true) {
+                ref
+                    .read(dashboardWidgetsProvider.notifier)
+                    .removeWidget(config.id);
+              }
+            },
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
   }
 }
 

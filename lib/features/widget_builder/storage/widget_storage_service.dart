@@ -901,17 +901,23 @@ class WidgetTemplates {
               ),
             ],
           ),
-          // Action buttons row
+          // Action buttons row - matching native Quick Compose style
           ElementSchema(
             type: ElementType.row,
-            style: const StyleSchema(
-              mainAxisAlignment: MainAxisAlignmentOption.spaceAround,
-            ),
+            style: const StyleSchema(spacing: 8),
             children: [
-              // Message action
+              // Message action - rectangular button
               ElementSchema(
-                type: ElementType.column,
-                style: const StyleSchema(alignment: AlignmentOption.center),
+                type: ElementType.container,
+                style: const StyleSchema(
+                  expanded: true,
+                  height: 48,
+                  backgroundColor: '#0D1F3C',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#1A3A66',
+                  alignment: AlignmentOption.center,
+                ),
                 action: const ActionSchema(
                   type: ActionType.sendMessage,
                   requiresNodeSelection: true,
@@ -920,80 +926,94 @@ class WidgetTemplates {
                 ),
                 children: [
                   ElementSchema(
-                    type: ElementType.shape,
-                    shapeType: ShapeType.circle,
+                    type: ElementType.column,
                     style: const StyleSchema(
-                      width: 44,
-                      height: 44,
-                      backgroundColor: '#1E3A5F',
+                      alignment: AlignmentOption.center,
+                      mainAxisAlignment: MainAxisAlignmentOption.center,
                     ),
                     children: [
                       ElementSchema(
                         type: ElementType.icon,
                         iconName: 'send',
-                        iconSize: 20,
+                        iconSize: 18,
                         style: const StyleSchema(textColor: '#4F6AF6'),
+                      ),
+                      ElementSchema(
+                        type: ElementType.spacer,
+                        style: const StyleSchema(height: 2),
+                      ),
+                      ElementSchema(
+                        type: ElementType.text,
+                        text: 'Message',
+                        style: const StyleSchema(
+                          textColor: '#4F6AF6',
+                          fontSize: 8,
+                          fontWeight: 'w600',
+                        ),
                       ),
                     ],
                   ),
-                  ElementSchema(
-                    type: ElementType.spacer,
-                    style: const StyleSchema(height: 4),
-                  ),
-                  ElementSchema(
-                    type: ElementType.text,
-                    text: 'Message',
-                    style: const StyleSchema(
-                      textColor: '#888888',
-                      fontSize: 10,
-                    ),
-                  ),
                 ],
               ),
-              // Location action
+              // Location action - rectangular button
               ElementSchema(
-                type: ElementType.column,
-                style: const StyleSchema(alignment: AlignmentOption.center),
+                type: ElementType.container,
+                style: const StyleSchema(
+                  expanded: true,
+                  height: 48,
+                  backgroundColor: '#0D2818',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#1A4D30',
+                  alignment: AlignmentOption.center,
+                ),
                 action: const ActionSchema(
                   type: ActionType.shareLocation,
                   label: 'Share Location',
                 ),
                 children: [
                   ElementSchema(
-                    type: ElementType.shape,
-                    shapeType: ShapeType.circle,
+                    type: ElementType.column,
                     style: const StyleSchema(
-                      width: 44,
-                      height: 44,
-                      backgroundColor: '#1E3A5F',
+                      alignment: AlignmentOption.center,
+                      mainAxisAlignment: MainAxisAlignmentOption.center,
                     ),
                     children: [
                       ElementSchema(
                         type: ElementType.icon,
                         iconName: 'location_on',
-                        iconSize: 20,
+                        iconSize: 18,
                         style: const StyleSchema(textColor: '#22C55E'),
+                      ),
+                      ElementSchema(
+                        type: ElementType.spacer,
+                        style: const StyleSchema(height: 2),
+                      ),
+                      ElementSchema(
+                        type: ElementType.text,
+                        text: 'Location',
+                        style: const StyleSchema(
+                          textColor: '#22C55E',
+                          fontSize: 8,
+                          fontWeight: 'w600',
+                        ),
                       ),
                     ],
                   ),
-                  ElementSchema(
-                    type: ElementType.spacer,
-                    style: const StyleSchema(height: 4),
-                  ),
-                  ElementSchema(
-                    type: ElementType.text,
-                    text: 'Location',
-                    style: const StyleSchema(
-                      textColor: '#888888',
-                      fontSize: 10,
-                    ),
-                  ),
                 ],
               ),
-              // Traceroute action
+              // Traceroute action - rectangular button
               ElementSchema(
-                type: ElementType.column,
-                style: const StyleSchema(alignment: AlignmentOption.center),
+                type: ElementType.container,
+                style: const StyleSchema(
+                  expanded: true,
+                  height: 48,
+                  backgroundColor: '#2D1A0D',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#5C3D1F',
+                  alignment: AlignmentOption.center,
+                ),
                 action: const ActionSchema(
                   type: ActionType.traceroute,
                   requiresNodeSelection: true,
@@ -1001,73 +1021,79 @@ class WidgetTemplates {
                 ),
                 children: [
                   ElementSchema(
-                    type: ElementType.shape,
-                    shapeType: ShapeType.circle,
+                    type: ElementType.column,
                     style: const StyleSchema(
-                      width: 44,
-                      height: 44,
-                      backgroundColor: '#1E3A5F',
+                      alignment: AlignmentOption.center,
+                      mainAxisAlignment: MainAxisAlignmentOption.center,
                     ),
                     children: [
                       ElementSchema(
                         type: ElementType.icon,
                         iconName: 'route',
-                        iconSize: 20,
+                        iconSize: 18,
                         style: const StyleSchema(textColor: '#F97316'),
+                      ),
+                      ElementSchema(
+                        type: ElementType.spacer,
+                        style: const StyleSchema(height: 2),
+                      ),
+                      ElementSchema(
+                        type: ElementType.text,
+                        text: 'Trace',
+                        style: const StyleSchema(
+                          textColor: '#F97316',
+                          fontSize: 8,
+                          fontWeight: 'w600',
+                        ),
                       ),
                     ],
                   ),
-                  ElementSchema(
-                    type: ElementType.spacer,
-                    style: const StyleSchema(height: 4),
-                  ),
-                  ElementSchema(
-                    type: ElementType.text,
-                    text: 'Trace',
-                    style: const StyleSchema(
-                      textColor: '#888888',
-                      fontSize: 10,
-                    ),
-                  ),
                 ],
               ),
-              // Request positions action
+              // Request positions action - rectangular button
               ElementSchema(
-                type: ElementType.column,
-                style: const StyleSchema(alignment: AlignmentOption.center),
+                type: ElementType.container,
+                style: const StyleSchema(
+                  expanded: true,
+                  height: 48,
+                  backgroundColor: '#0D2226',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#1A444D',
+                  alignment: AlignmentOption.center,
+                ),
                 action: const ActionSchema(
                   type: ActionType.requestPositions,
                   label: 'Request Positions',
                 ),
                 children: [
                   ElementSchema(
-                    type: ElementType.shape,
-                    shapeType: ShapeType.circle,
+                    type: ElementType.column,
                     style: const StyleSchema(
-                      width: 44,
-                      height: 44,
-                      backgroundColor: '#1E3A5F',
+                      alignment: AlignmentOption.center,
+                      mainAxisAlignment: MainAxisAlignmentOption.center,
                     ),
                     children: [
                       ElementSchema(
                         type: ElementType.icon,
                         iconName: 'refresh',
-                        iconSize: 20,
+                        iconSize: 18,
                         style: const StyleSchema(textColor: '#06B6D4'),
                       ),
+                      ElementSchema(
+                        type: ElementType.spacer,
+                        style: const StyleSchema(height: 2),
+                      ),
+                      ElementSchema(
+                        type: ElementType.text,
+                        text: 'Refresh',
+                        style: const StyleSchema(
+                          textColor: '#06B6D4',
+                          fontSize: 8,
+                          fontWeight: 'w600',
+                        ),
+                      ),
                     ],
-                  ),
-                  ElementSchema(
-                    type: ElementType.spacer,
-                    style: const StyleSchema(height: 4),
-                  ),
-                  ElementSchema(
-                    type: ElementType.text,
-                    text: 'Refresh',
-                    style: const StyleSchema(
-                      textColor: '#888888',
-                      fontSize: 10,
-                    ),
                   ),
                 ],
               ),
