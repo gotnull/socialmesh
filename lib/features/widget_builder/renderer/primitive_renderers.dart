@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/widget_schema.dart';
@@ -273,16 +274,41 @@ class GaugeRenderer extends StatelessWidget {
     Color gaugeColor,
     Color backgroundColor,
   ) {
-    final size = element.style.width ?? element.style.height ?? 60.0;
+    final size = element.style.width ?? element.style.height ?? 100.0;
+    final strokeWidth = size / 12;
 
     return SizedBox(
       width: size,
       height: size,
-      child: CircularProgressIndicator(
-        value: value,
-        backgroundColor: backgroundColor,
-        valueColor: AlwaysStoppedAnimation(gaugeColor),
-        strokeWidth: size / 8,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Background circle
+          SizedBox(
+            width: size,
+            height: size,
+            child: CircularProgressIndicator(
+              value: 1.0,
+              strokeWidth: strokeWidth,
+              backgroundColor: backgroundColor,
+              valueColor: AlwaysStoppedAnimation(
+                backgroundColor.withValues(alpha: 0.3),
+              ),
+            ),
+          ),
+          // Progress circle
+          SizedBox(
+            width: size,
+            height: size,
+            child: CircularProgressIndicator(
+              value: value,
+              strokeWidth: strokeWidth,
+              backgroundColor: Colors.transparent,
+              valueColor: AlwaysStoppedAnimation(gaugeColor),
+              strokeCap: StrokeCap.round,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -450,12 +476,13 @@ class _ArcGaugePainter extends CustomPainter {
   }
 }
 
-/// Renders a sparkline or bar chart
-class ChartRenderer extends StatelessWidget {
+/// Renders a sparkline or bar chart with live history tracking
+class ChartRenderer extends StatefulWidget {
   final ElementSchema element;
   final DataBindingEngine bindingEngine;
   final Color accentColor;
   final List<double>? historyData;
+  final bool isPreview;
 
   const ChartRenderer({
     super.key,
@@ -463,15 +490,82 @@ class ChartRenderer extends StatelessWidget {
     required this.bindingEngine,
     required this.accentColor,
     this.historyData,
+    this.isPreview = false,
   });
 
   @override
-  Widget build(BuildContext context) {
-    // Use provided history data or generate sample data
-    final data = historyData ?? _generateSampleData();
-    final chartColor = element.style.textColorValue ?? accentColor;
+  State<ChartRenderer> createState() => _ChartRendererState();
+}
 
-    switch (element.chartType ?? ChartType.sparkline) {
+class _ChartRendererState extends State<ChartRenderer> {
+  final List<double> _history = [];
+  Timer? _updateTimer;
+
+  // Accessor helpers for chart properties
+  bool get _showGrid => widget.element.chartShowGrid ?? false;
+  bool get _showDots => widget.element.chartShowDots ?? false;
+  bool get _isCurved => widget.element.chartCurved ?? true;
+  int get _maxPoints => widget.element.chartMaxPoints ?? 30;
+
+  @override
+  void initState() {
+    super.initState();
+    // Add initial data point
+    _addDataPoint();
+    // Start timer to collect history (every 2 seconds like signal strength)
+    if (!widget.isPreview) {
+      _updateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+        if (mounted) _addDataPoint();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _updateTimer?.cancel();
+    super.dispose();
+  }
+
+  void _addDataPoint() {
+    // Get current value from binding
+    final value = widget.bindingEngine.resolveBinding(
+      widget.element.binding ?? BindingSchema(path: 'node.rssi'),
+    );
+
+    double? numValue;
+    if (value is int) {
+      numValue = value.toDouble();
+    } else if (value is double) {
+      numValue = value;
+    }
+
+    if (numValue != null) {
+      setState(() {
+        _history.add(numValue!);
+        // Keep only last N points
+        while (_history.length > _maxPoints) {
+          _history.removeAt(0);
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Use provided history, built-up history, or sample data for preview
+    List<double> data;
+    if (widget.historyData != null) {
+      data = widget.historyData!;
+    } else if (_history.isNotEmpty) {
+      data = _history;
+    } else {
+      data = _generateSampleData();
+    }
+
+    final chartColor =
+        widget.element.style.textColorValue ?? widget.accentColor;
+
+    switch (widget.element.chartType ?? ChartType.sparkline) {
       case ChartType.sparkline:
         return _buildSparkline(data, chartColor);
       case ChartType.bar:
@@ -485,9 +579,8 @@ class ChartRenderer extends StatelessWidget {
 
   List<double> _generateSampleData() {
     // Generate sample data points for preview
-    final count = element.chartMaxPoints ?? 20;
     return List.generate(
-      count,
+      _maxPoints,
       (i) => (50 + 30 * (i % 5 - 2) / 2 + 10 * (i % 3 - 1)).toDouble(),
     );
   }
@@ -510,11 +603,15 @@ class ChartRenderer extends StatelessWidget {
         lineBarsData: [
           LineChartBarData(
             spots: spots,
-            isCurved: true,
+            isCurved: _isCurved,
             color: color,
             barWidth: 2,
             isStrokeCapRound: true,
-            dotData: const FlDotData(show: false),
+            dotData: FlDotData(
+              show: _showDots,
+              getDotPainter: (spot, percent, bar, index) =>
+                  FlDotCirclePainter(radius: 3, color: color),
+            ),
             belowBarData: BarAreaData(show: false),
           ),
         ],
@@ -527,9 +624,19 @@ class ChartRenderer extends StatelessWidget {
   Widget _buildBarChart(List<double> data, Color color) {
     if (data.isEmpty) return const SizedBox.shrink();
 
+    final minY = data.reduce((a, b) => a < b ? a : b);
+    final maxY = data.reduce((a, b) => a > b ? a : b);
+    final interval = (maxY - minY) / 4;
+
     return BarChart(
       BarChartData(
-        gridData: const FlGridData(show: false),
+        gridData: FlGridData(
+          show: _showGrid,
+          drawVerticalLine: false,
+          horizontalInterval: interval > 0 ? interval : 20,
+          getDrawingHorizontalLine: (value) =>
+              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+        ),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
         barTouchData: BarTouchData(enabled: false),
@@ -561,12 +668,16 @@ class ChartRenderer extends StatelessWidget {
         .map((e) => FlSpot(e.key.toDouble(), e.value))
         .toList();
 
+    final minY = data.reduce((a, b) => a < b ? a : b);
+    final maxY = data.reduce((a, b) => a > b ? a : b);
+    final interval = (maxY - minY) / 4;
+
     return LineChart(
       LineChartData(
         gridData: FlGridData(
-          show: true,
+          show: _showGrid,
           drawVerticalLine: false,
-          horizontalInterval: 20,
+          horizontalInterval: interval > 0 ? interval : 20,
           getDrawingHorizontalLine: (value) =>
               FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
         ),
@@ -576,11 +687,15 @@ class ChartRenderer extends StatelessWidget {
         lineBarsData: [
           LineChartBarData(
             spots: spots,
-            isCurved: false,
+            isCurved: _isCurved,
             color: color,
             barWidth: 2,
             isStrokeCapRound: true,
-            dotData: const FlDotData(show: false),
+            dotData: FlDotData(
+              show: _showDots,
+              getDotPainter: (spot, percent, bar, index) =>
+                  FlDotCirclePainter(radius: 3, color: color),
+            ),
           ),
         ],
       ),
@@ -596,20 +711,34 @@ class ChartRenderer extends StatelessWidget {
         .map((e) => FlSpot(e.key.toDouble(), e.value))
         .toList();
 
+    final minY = data.reduce((a, b) => a < b ? a : b);
+    final maxY = data.reduce((a, b) => a > b ? a : b);
+    final interval = (maxY - minY) / 4;
+
     return LineChart(
       LineChartData(
-        gridData: const FlGridData(show: false),
+        gridData: FlGridData(
+          show: _showGrid,
+          drawVerticalLine: false,
+          horizontalInterval: interval > 0 ? interval : 20,
+          getDrawingHorizontalLine: (value) =>
+              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+        ),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
         lineTouchData: const LineTouchData(enabled: false),
         lineBarsData: [
           LineChartBarData(
             spots: spots,
-            isCurved: true,
+            isCurved: _isCurved,
             color: color,
             barWidth: 2,
             isStrokeCapRound: true,
-            dotData: const FlDotData(show: false),
+            dotData: FlDotData(
+              show: _showDots,
+              getDotPainter: (spot, percent, bar, index) =>
+                  FlDotCirclePainter(radius: 3, color: color),
+            ),
             belowBarData: BarAreaData(
               show: true,
               color: color.withValues(alpha: 0.2),

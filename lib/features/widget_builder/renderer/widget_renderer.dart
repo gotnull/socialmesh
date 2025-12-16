@@ -195,6 +195,7 @@ class _ElementRenderer extends StatelessWidget {
           element: element,
           bindingEngine: bindingEngine,
           accentColor: accentColor,
+          isPreview: isPreview,
         );
 
       case ElementType.map:

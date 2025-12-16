@@ -53,6 +53,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   bool _addToDashboard = true;
   _LayoutStyle _layoutStyle = _LayoutStyle.vertical;
 
+  // Graph-specific options
+  ChartType _chartType = ChartType.line;
+  bool _showGrid = true;
+  bool _showDots = true;
+  bool _smoothCurve = true;
+  bool _fillArea = true;
+
   List<_WizardStep> get _steps {
     final isQuickActions = _selectedTemplate?.id == 'actions';
     return [
@@ -110,6 +117,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       _selectedTemplate = _getTemplates().firstWhere(
         (t) => t.id == 'environment',
       );
+    } else if (tags.contains('graph')) {
+      _selectedTemplate = _getTemplates().firstWhere((t) => t.id == 'graph');
     }
 
     // Extract bindings from schema
@@ -470,6 +479,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     final myNodeNum = ref.watch(myNodeNumProvider);
     final node = myNodeNum != null ? nodes[myNodeNum] : null;
 
+    // Get live signal data from protocol streams
+    final rssiAsync = ref.watch(currentRssiProvider);
+    final snrAsync = ref.watch(currentSnrProvider);
+    final channelUtilAsync = ref.watch(currentChannelUtilProvider);
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -507,6 +521,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               allNodes: nodes,
               accentColor: _accentColor,
               enableActions: false,
+              deviceRssi: rssiAsync.value,
+              deviceSnr: snrAsync.value,
+              deviceChannelUtil: channelUtilAsync.value,
             ),
           ),
         ],
@@ -519,77 +536,68 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   // ============================================================
   Widget _buildTemplateStep() {
     final templates = _getTemplates();
-    return ListView(
+    return GridView.builder(
       padding: const EdgeInsets.all(16),
-      children: [...templates.map((template) => _buildTemplateCard(template))],
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.85,
+      ),
+      itemCount: templates.length,
+      itemBuilder: (context, index) => _buildTemplateCard(templates[index]),
     );
   }
 
   Widget _buildTemplateCard(_WidgetTemplate template) {
     final isSelected = _selectedTemplate?.id == template.id;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _handleTemplateSelection(template),
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.darkCard,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isSelected ? context.accentColor : AppTheme.darkBorder,
-                width: isSelected ? 2 : 1,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _handleTemplateSelection(template),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.darkCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? context.accentColor : AppTheme.darkBorder,
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Icon
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: template.color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(template.icon, color: template.color, size: 24),
               ),
-            ),
-            child: Row(
-              children: [
-                // Icon
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: template.color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(template.icon, color: template.color, size: 28),
+              const SizedBox(height: 10),
+              // Name
+              Text(
+                template.name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(width: 16),
-                // Text
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        template.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        template.description,
-                        style: TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Selection indicator
-                if (isSelected)
-                  Icon(
-                    Icons.check_circle,
-                    color: context.accentColor,
-                    size: 24,
-                  ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              // Selection indicator
+              if (isSelected) ...[
+                const SizedBox(height: 6),
+                Icon(Icons.check_circle, color: context.accentColor, size: 18),
               ],
-            ),
+            ],
           ),
         ),
       ),
@@ -657,6 +665,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           'node.humidity',
           'node.barometricPressure',
         ],
+      ),
+      _WidgetTemplate(
+        id: 'graph',
+        name: 'Graph Widget',
+        description: 'Line, area, or bar charts for tracking data over time',
+        icon: Icons.show_chart,
+        color: const Color(0xFFFF9F43),
+        suggestedBindings: ['node.rssi', 'node.snr'],
       ),
       _WidgetTemplate(
         id: 'blank',
@@ -747,11 +763,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // Group bindings by category
     final relevantCategories = _getRelevantCategories();
     final isGauge = _selectedTemplate?.id == 'gauge';
+    final isGraph = _selectedTemplate?.id == 'graph';
 
-    // Filter suggested bindings for gauge (numeric only)
+    // Filter suggested bindings for gauge/graph (numeric only)
     final suggestedBindings =
         _selectedTemplate?.suggestedBindings.where((path) {
-          if (!isGauge) return true;
+          if (!isGauge && !isGraph) return true;
           final binding = BindingRegistry.bindings.firstWhere(
             (b) => b.path == path,
             orElse: () => BindingDefinition(
@@ -787,6 +804,32 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 Expanded(
                   child: Text(
                     'Gauge widgets display a single numeric value with a visual indicator. Only numeric data is shown below.',
+                    style: TextStyle(color: context.accentColor, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        // Graph-specific guidance
+        if (isGraph) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: context.accentColor.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.show_chart, color: context.accentColor, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Graph widgets display numeric values over time. Select up to 3 data series to track. Only numeric data is shown below.',
                     style: TextStyle(color: context.accentColor, fontSize: 12),
                   ),
                 ),
@@ -869,7 +912,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   // Maximum number of data items allowed per widget - depends on template
   int get _maxDataItems {
     return switch (_selectedTemplate?.id) {
-      'gauge' => 1, // Gauge shows ONE big value
+      'gauge' => 3, // Gauge shows up to 3 values horizontally
+      'graph' => 2, // Graph can show up to 2 data series stacked vertically
       'info' => 4, // Info cards are text-focused
       _ => 6, // Default
     };
@@ -981,13 +1025,15 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // Filter out already-suggested bindings to avoid duplicates
     final suggestedPaths = _selectedTemplate?.suggestedBindings ?? [];
 
-    // For gauge widgets, only show numeric types
+    // For gauge and graph widgets, only show numeric types
     final isGaugeWidget = _selectedTemplate?.id == 'gauge';
+    final isGraphWidget = _selectedTemplate?.id == 'graph';
+    final numericOnly = isGaugeWidget || isGraphWidget;
 
     for (final binding in BindingRegistry.bindings) {
       if (!suggestedPaths.contains(binding.path)) {
-        // Filter by value type for gauge widgets - only numeric
-        if (isGaugeWidget) {
+        // Filter by value type for gauge/graph widgets - only numeric
+        if (numericOnly) {
           if (binding.valueType != int && binding.valueType != double) {
             continue;
           }
@@ -1177,6 +1223,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   Widget _buildAppearanceStep() {
     final validationError = _getValidationError();
     final isActionsTemplate = _selectedTemplate?.id == 'actions';
+    final isGraphTemplate = _selectedTemplate?.id == 'graph';
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -1200,8 +1247,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           _buildColorPicker(),
           const SizedBox(height: 24),
         ],
-        // Layout style (only for data widgets, not actions)
-        if (!isActionsTemplate) ...[
+        // Graph-specific options
+        if (isGraphTemplate) ...[
+          _buildGraphStyleOptions(),
+          const SizedBox(height: 24),
+        ],
+        // Layout style (only for data widgets, not actions or graphs)
+        if (!isActionsTemplate && !isGraphTemplate) ...[
           Text(
             'Layout',
             style: TextStyle(
@@ -1221,6 +1273,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             (value) => setState(() => _showLabels = value),
           ),
         ],
+        // Show labels toggle for graph (outside the layout section)
+        if (isGraphTemplate) ...[_buildGraphToggleOptions()],
         // For actions template, show a simple message
         if (isActionsTemplate)
           Container(
@@ -1460,6 +1514,144 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // ============================================================
+  // Graph Style Options
+  // ============================================================
+  Widget _buildGraphStyleOptions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Chart Type selection
+        Text(
+          'Chart Type',
+          style: TextStyle(
+            color: AppTheme.textSecondary,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _buildChartTypeSelector(),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildChartTypeSelector() {
+    final chartTypes = [
+      (ChartType.line, 'Line', Icons.show_chart),
+      (ChartType.area, 'Area', Icons.area_chart),
+      (ChartType.bar, 'Bar', Icons.bar_chart),
+      (ChartType.sparkline, 'Spark', Icons.timeline),
+    ];
+
+    return Row(
+      children: chartTypes.map((type) {
+        final isSelected = _chartType == type.$1;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              right: type.$1 != ChartType.sparkline ? 8 : 0,
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => setState(() => _chartType = type.$1),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? context.accentColor.withValues(alpha: 0.15)
+                        : AppTheme.darkCard,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected
+                          ? context.accentColor
+                          : AppTheme.darkBorder,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        type.$3,
+                        color: isSelected
+                            ? context.accentColor
+                            : AppTheme.textSecondary,
+                        size: 22,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        type.$2,
+                        style: TextStyle(
+                          color: isSelected
+                              ? context.accentColor
+                              : Colors.white,
+                          fontSize: 11,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildGraphToggleOptions() {
+    return Column(
+      children: [
+        // Show Grid toggle
+        _buildToggleOption(
+          'Show Grid',
+          'Display horizontal grid lines',
+          _showGrid,
+          (value) => setState(() => _showGrid = value),
+        ),
+        const SizedBox(height: 12),
+        // Show Dots toggle (only for line/area/sparkline)
+        if (_chartType != ChartType.bar)
+          _buildToggleOption(
+            'Show Data Points',
+            'Display dots at each data point',
+            _showDots,
+            (value) => setState(() => _showDots = value),
+          ),
+        if (_chartType != ChartType.bar) const SizedBox(height: 12),
+        // Smooth Curve toggle (only for line/area/sparkline)
+        if (_chartType != ChartType.bar)
+          _buildToggleOption(
+            'Smooth Curve',
+            'Use curved lines instead of straight',
+            _smoothCurve,
+            (value) => setState(() => _smoothCurve = value),
+          ),
+        if (_chartType != ChartType.bar) const SizedBox(height: 12),
+        // Fill Area toggle (only for line)
+        if (_chartType == ChartType.line)
+          _buildToggleOption(
+            'Fill Area',
+            'Fill the area under the line',
+            _fillArea,
+            (value) => setState(() => _fillArea = value),
+          ),
+        // Show value label toggle
+        _buildToggleOption(
+          'Show Current Value',
+          'Display the current value above the chart',
+          _showLabels,
+          (value) => setState(() => _showLabels = value),
+        ),
+      ],
     );
   }
 
@@ -1793,6 +1985,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // Dispatch to template-specific builders for distinct visual styles
     return switch (_selectedTemplate?.id) {
       'gauge' => _buildGaugeElements(name),
+      'graph' => _buildGraphElements(name),
       'info' => _buildInfoCardElements(name),
       'location' => _buildLocationElements(name),
       'environment' => _buildEnvironmentElements(name),
@@ -1801,13 +1994,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     };
   }
 
-  /// Gauge: Big centered value with radial gauge visualization
+  /// Gauge: Up to 3 gauges displayed horizontally
   List<ElementSchema> _buildGaugeElements(String name) {
     if (_selectedBindings.isEmpty) {
       return [
         ElementSchema(
           type: ElementType.text,
-          text: 'Select a numeric value',
+          text: 'Select up to 3 numeric values',
           style: StyleSchema(
             textColor: _colorToHex(AppTheme.textSecondary),
             fontSize: 13,
@@ -1816,52 +2009,208 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       ];
     }
 
-    final bindingPath = _selectedBindings.first;
-    final binding = BindingRegistry.bindings.firstWhere(
-      (b) => b.path == bindingPath,
-      orElse: () => BindingDefinition(
-        path: bindingPath,
-        label: bindingPath,
-        description: '',
-        category: BindingCategory.node,
-        valueType: int,
-        minValue: 0,
-        maxValue: 100,
-      ),
-    );
+    // Build a gauge column for each binding
+    final gaugeColumns = <ElementSchema>[];
 
+    for (final bindingPath in _selectedBindings) {
+      final binding = BindingRegistry.bindings.firstWhere(
+        (b) => b.path == bindingPath,
+        orElse: () => BindingDefinition(
+          path: bindingPath,
+          label: bindingPath,
+          description: '',
+          category: BindingCategory.node,
+          valueType: int,
+          minValue: 0,
+          maxValue: 100,
+        ),
+      );
+
+      // Adjust size based on number of gauges
+      final gaugeSize = _selectedBindings.length == 1 ? 100.0 : 70.0;
+      final valueFontSize = _selectedBindings.length == 1 ? 28.0 : 20.0;
+      final labelFontSize = _selectedBindings.length == 1 ? 13.0 : 11.0;
+
+      gaugeColumns.add(
+        ElementSchema(
+          type: ElementType.column,
+          style: const StyleSchema(alignment: AlignmentOption.center),
+          children: [
+            // Value text above gauge
+            ElementSchema(
+              type: ElementType.text,
+              binding: BindingSchema(
+                path: bindingPath,
+                format: binding.defaultFormat ?? '{value}',
+                defaultValue: '--',
+              ),
+              style: StyleSchema(
+                textColor: _colorToHex(_accentColor),
+                fontSize: valueFontSize,
+                fontWeight: 'w700',
+              ),
+            ),
+            ElementSchema(
+              type: ElementType.spacer,
+              style: const StyleSchema(height: 8),
+            ),
+            // Radial gauge
+            ElementSchema(
+              type: ElementType.gauge,
+              gaugeType: GaugeType.radial,
+              gaugeMin: binding.minValue ?? 0,
+              gaugeMax: binding.maxValue ?? 100,
+              gaugeColor: _colorToHex(_accentColor),
+              binding: BindingSchema(path: bindingPath),
+              style: StyleSchema(width: gaugeSize, height: gaugeSize),
+            ),
+            ElementSchema(
+              type: ElementType.spacer,
+              style: const StyleSchema(height: 8),
+            ),
+            // Label below gauge
+            ElementSchema(
+              type: ElementType.text,
+              text: binding.label,
+              style: StyleSchema(
+                textColor: _colorToHex(AppTheme.textSecondary),
+                fontSize: labelFontSize,
+                fontWeight: 'w500',
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // If single gauge, return centered column
+    if (gaugeColumns.length == 1) {
+      return gaugeColumns;
+    }
+
+    // Multiple gauges: wrap in a row with space around
     return [
-      // Centered gauge with large value
       ElementSchema(
-        type: ElementType.column,
-        style: const StyleSchema(alignment: AlignmentOption.center),
-        children: [
-          // Radial gauge
-          ElementSchema(
-            type: ElementType.gauge,
-            gaugeType: GaugeType.radial,
-            gaugeMin: binding.minValue ?? 0,
-            gaugeMax: binding.maxValue ?? 100,
-            gaugeColor: _colorToHex(_accentColor),
-            binding: BindingSchema(path: bindingPath),
-            style: const StyleSchema(width: 120, height: 120),
+        type: ElementType.row,
+        style: const StyleSchema(
+          mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
+        ),
+        children: gaugeColumns,
+      ),
+    ];
+  }
+
+  /// Graph: Line, area, bar, or sparkline charts
+  List<ElementSchema> _buildGraphElements(String name) {
+    if (_selectedBindings.isEmpty) {
+      return [
+        ElementSchema(
+          type: ElementType.text,
+          text: 'Select data to graph',
+          style: StyleSchema(
+            textColor: _colorToHex(AppTheme.textSecondary),
+            fontSize: 13,
           ),
+        ),
+      ];
+    }
+
+    final children = <ElementSchema>[];
+
+    // For each selected binding, create a chart with optional label
+    for (final bindingPath in _selectedBindings) {
+      final binding = BindingRegistry.bindings.firstWhere(
+        (b) => b.path == bindingPath,
+        orElse: () => BindingDefinition(
+          path: bindingPath,
+          label: bindingPath,
+          description: '',
+          category: BindingCategory.node,
+          valueType: double,
+        ),
+      );
+
+      // Header row with label and current value
+      if (_showLabels) {
+        children.add(
+          ElementSchema(
+            type: ElementType.row,
+            style: const StyleSchema(
+              mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
+              padding: 4,
+            ),
+            children: [
+              // Label
+              ElementSchema(
+                type: ElementType.text,
+                text: binding.label,
+                style: StyleSchema(
+                  textColor: _colorToHex(AppTheme.textSecondary),
+                  fontSize: 12,
+                  fontWeight: 'w500',
+                ),
+              ),
+              // Current value
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: binding.defaultFormat ?? '{value}',
+                  defaultValue: '--',
+                ),
+                style: StyleSchema(
+                  textColor: _colorToHex(_accentColor),
+                  fontSize: 14,
+                  fontWeight: 'w700',
+                ),
+              ),
+            ],
+          ),
+        );
+        children.add(
           ElementSchema(
             type: ElementType.spacer,
             style: const StyleSchema(height: 8),
           ),
-          // Label
-          ElementSchema(
-            type: ElementType.text,
-            text: binding.label,
-            style: StyleSchema(
-              textColor: _colorToHex(AppTheme.textSecondary),
-              fontSize: 12,
-            ),
+        );
+      }
+
+      // Determine effective chart type
+      ChartType effectiveChartType = _chartType;
+      if (_chartType == ChartType.line && _fillArea) {
+        effectiveChartType = ChartType.area;
+      }
+
+      // The chart element
+      children.add(
+        ElementSchema(
+          type: ElementType.chart,
+          chartType: effectiveChartType,
+          chartShowGrid: _showGrid,
+          chartShowDots: _showDots,
+          chartCurved: _smoothCurve,
+          chartMaxPoints: 30,
+          binding: BindingSchema(path: bindingPath),
+          style: StyleSchema(
+            height: _selectedBindings.length == 1 ? 100.0 : 70.0,
+            textColor: _colorToHex(_accentColor),
           ),
-        ],
-      ),
-    ];
+        ),
+      );
+
+      // Add spacing between charts if multiple
+      if (_selectedBindings.length > 1 &&
+          bindingPath != _selectedBindings.last) {
+        children.add(
+          ElementSchema(
+            type: ElementType.spacer,
+            style: const StyleSchema(height: 16),
+          ),
+        );
+      }
+    }
+
+    return children;
   }
 
   /// Info Card: Clean text-focused layout with icon badges

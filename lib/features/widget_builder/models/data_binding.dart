@@ -818,11 +818,11 @@ class DataBindingEngine {
       case 'displayName':
         return node.displayName;
 
-      // Signal
+      // Signal - prefer real-time device data when available
       case 'snr':
-        return node.snr;
+        return _deviceSnr ?? node.snr;
       case 'rssi':
-        return node.rssi;
+        return _deviceRssi ?? node.rssi;
       case 'distance':
         return node.distance;
 
@@ -832,7 +832,8 @@ class DataBindingEngine {
       case 'voltage':
         return node.voltage;
       case 'channelUtilization':
-        return node.channelUtilization;
+        // Prefer real-time device data when available
+        return _deviceChannelUtil ?? node.channelUtilization;
       case 'airUtilTx':
         return node.airUtilTx;
       case 'uptimeSeconds':

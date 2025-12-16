@@ -617,6 +617,9 @@ class ElementSchema {
   final ChartType? chartType; // For chart elements
   final String? chartBindingPath; // Data source for chart
   final int? chartMaxPoints; // Max data points to display
+  final bool? chartShowGrid; // Show grid lines
+  final bool? chartShowDots; // Show data points
+  final bool? chartCurved; // Use curved lines
   final ShapeType? shapeType; // For shape elements
   final String? shapeColor;
 
@@ -641,6 +644,9 @@ class ElementSchema {
     this.chartType,
     this.chartBindingPath,
     this.chartMaxPoints,
+    this.chartShowGrid,
+    this.chartShowDots,
+    this.chartCurved,
     this.shapeType,
     this.shapeColor,
   }) : id = id ?? const Uuid().v4();
@@ -666,6 +672,9 @@ class ElementSchema {
     ChartType? chartType,
     String? chartBindingPath,
     int? chartMaxPoints,
+    bool? chartShowGrid,
+    bool? chartShowDots,
+    bool? chartCurved,
     ShapeType? shapeType,
     String? shapeColor,
   }) {
@@ -690,6 +699,9 @@ class ElementSchema {
       chartType: chartType ?? this.chartType,
       chartBindingPath: chartBindingPath ?? this.chartBindingPath,
       chartMaxPoints: chartMaxPoints ?? this.chartMaxPoints,
+      chartShowGrid: chartShowGrid ?? this.chartShowGrid,
+      chartShowDots: chartShowDots ?? this.chartShowDots,
+      chartCurved: chartCurved ?? this.chartCurved,
       shapeType: shapeType ?? this.shapeType,
       shapeColor: shapeColor ?? this.shapeColor,
     );
@@ -718,6 +730,9 @@ class ElementSchema {
     if (chartType != null) 'chartType': chartType!.name,
     if (chartBindingPath != null) 'chartBindingPath': chartBindingPath,
     if (chartMaxPoints != null) 'chartMaxPoints': chartMaxPoints,
+    if (chartShowGrid != null) 'chartShowGrid': chartShowGrid,
+    if (chartShowDots != null) 'chartShowDots': chartShowDots,
+    if (chartCurved != null) 'chartCurved': chartCurved,
     if (shapeType != null) 'shapeType': shapeType!.name,
     if (shapeColor != null) 'shapeColor': shapeColor,
   };
@@ -771,6 +786,9 @@ class ElementSchema {
           : null,
       chartBindingPath: json['chartBindingPath'] as String?,
       chartMaxPoints: json['chartMaxPoints'] as int?,
+      chartShowGrid: json['chartShowGrid'] as bool?,
+      chartShowDots: json['chartShowDots'] as bool?,
+      chartCurved: json['chartCurved'] as bool?,
       shapeType: json['shapeType'] != null
           ? ShapeType.values.firstWhere(
               (e) => e.name == json['shapeType'],
