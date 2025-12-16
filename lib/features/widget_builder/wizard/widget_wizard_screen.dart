@@ -1686,10 +1686,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // Create root based on layout style
     final ElementSchema root;
     if (_selectedTemplate?.id == 'actions') {
-      // Actions use horizontal layout with spacing between expanded buttons
+      // Actions use vertical layout - each action is a row with icon + label
       root = ElementSchema(
-        type: ElementType.row,
-        style: const StyleSchema(padding: 12, spacing: 8),
+        type: ElementType.column,
+        style: const StyleSchema(padding: 8, spacing: 8),
         children: children,
       );
     } else if (_layoutStyle == _LayoutStyle.horizontal) {
@@ -2312,27 +2312,19 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       ];
     }
 
-    // Build rectangular action buttons matching native Quick Compose widget
+    // Simple row layout: icon badge on left, label on right
     return _selectedActions.map((actionType) {
       final actionOption = _getAvailableActions().firstWhere(
         (a) => a.type == actionType,
       );
 
-      // Match native _ActionButton: height 48, borderRadius 12, icon+text inside
       return ElementSchema(
-        type: ElementType.container,
+        type: ElementType.row,
         style: StyleSchema(
-          expanded: true, // Fill available space in row
-          height: 48,
-          backgroundColor: _colorToHex(
-            actionOption.color.withValues(alpha: 0.08),
-          ),
+          padding: 12,
+          backgroundColor: _colorToHex(AppTheme.darkCard),
           borderRadius: 12,
-          borderWidth: 1,
-          borderColor: _colorToHex(actionOption.color.withValues(alpha: 0.2)),
-          alignment: AlignmentOption.center,
-          mainAxisAlignment: MainAxisAlignmentOption.center,
-          crossAxisAlignment: CrossAxisAlignmentOption.center,
+          spacing: 12,
         ),
         action: ActionSchema(
           type: actionType,
@@ -2343,22 +2335,32 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           label: actionOption.label,
         ),
         children: [
+          // Icon badge (like the selection cards)
           ElementSchema(
-            type: ElementType.icon,
-            iconName: _getIconNameFromIconData(actionOption.icon),
-            iconSize: 20,
-            style: StyleSchema(textColor: _colorToHex(actionOption.color)),
+            type: ElementType.container,
+            style: StyleSchema(
+              width: 44,
+              height: 44,
+              backgroundColor: _colorToHex(actionOption.color),
+              borderRadius: 12,
+              alignment: AlignmentOption.center,
+            ),
+            children: [
+              ElementSchema(
+                type: ElementType.icon,
+                iconName: _getIconNameFromIconData(actionOption.icon),
+                iconSize: 22,
+                style: const StyleSchema(textColor: '#FFFFFF'),
+              ),
+            ],
           ),
-          ElementSchema(
-            type: ElementType.spacer,
-            style: const StyleSchema(height: 4),
-          ),
+          // Label text
           ElementSchema(
             type: ElementType.text,
             text: actionOption.label,
-            style: StyleSchema(
-              textColor: _colorToHex(actionOption.color),
-              fontSize: 10,
+            style: const StyleSchema(
+              textColor: '#FFFFFF',
+              fontSize: 14,
               fontWeight: 'w600',
             ),
           ),
