@@ -2193,10 +2193,50 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   Widget _buildGraphToggleOptions() {
+    // Determine which chart types are in use
+    final activeChartTypes = _getActiveChartTypes();
+
+    // Feature compatibility checks
+    final showDotsApplicable = activeChartTypes.any(
+      (t) => t != ChartType.bar && t != ChartType.stackedBar,
+    );
+    final smoothCurveApplicable = activeChartTypes.any(
+      (t) =>
+          t == ChartType.line ||
+          t == ChartType.area ||
+          t == ChartType.sparkline ||
+          t == ChartType.multiLine ||
+          t == ChartType.stackedArea,
+    );
+    final fillAreaApplicable =
+        activeChartTypes.length == 1 &&
+        activeChartTypes.contains(ChartType.line);
+    final minMaxApplicable = activeChartTypes.any(
+      (t) =>
+          t != ChartType.bar &&
+          t != ChartType.stackedBar &&
+          t != ChartType.scatter,
+    );
+    final gradientApplicable = activeChartTypes.any(
+      (t) =>
+          t == ChartType.line ||
+          t == ChartType.area ||
+          t == ChartType.sparkline ||
+          t == ChartType.multiLine ||
+          t == ChartType.stackedArea,
+    );
+    final baselineApplicable = activeChartTypes.any(
+      (t) =>
+          t == ChartType.line ||
+          t == ChartType.area ||
+          t == ChartType.sparkline ||
+          t == ChartType.multiLine,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Basic toggles section
+        // Basic Display Options
         _buildToggleOption(
           'Show Grid',
           'Display horizontal grid lines',
@@ -2204,35 +2244,41 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           (value) => setState(() => _showGrid = value),
         ),
         const SizedBox(height: 12),
-        if (_chartType != ChartType.bar)
-          _buildToggleOption(
-            'Show Data Points',
-            'Display dots at each data point',
-            _showDots,
-            (value) => setState(() => _showDots = value),
-          ),
-        if (_chartType != ChartType.bar) const SizedBox(height: 12),
-        if (_chartType != ChartType.bar)
-          _buildToggleOption(
-            'Smooth Curve',
-            'Use curved lines instead of straight',
-            _smoothCurve,
-            (value) => setState(() => _smoothCurve = value),
-          ),
-        if (_chartType != ChartType.bar) const SizedBox(height: 12),
-        if (_chartType == ChartType.line)
-          _buildToggleOption(
-            'Fill Area',
-            'Fill the area under the line',
-            _fillArea,
-            (value) => setState(() => _fillArea = value),
-          ),
         _buildToggleOption(
           'Show Current Value',
           'Display the current value above the chart',
           _showLabels,
           (value) => setState(() => _showLabels = value),
         ),
+
+        // Line/Area specific options
+        if (showDotsApplicable) ...[
+          const SizedBox(height: 12),
+          _buildToggleOption(
+            'Show Data Points',
+            'Display dots at each data point',
+            _showDots,
+            (value) => setState(() => _showDots = value),
+          ),
+        ],
+        if (smoothCurveApplicable) ...[
+          const SizedBox(height: 12),
+          _buildToggleOption(
+            'Smooth Curve',
+            'Use curved lines instead of straight',
+            _smoothCurve,
+            (value) => setState(() => _smoothCurve = value),
+          ),
+        ],
+        if (fillAreaApplicable) ...[
+          const SizedBox(height: 12),
+          _buildToggleOption(
+            'Fill Area',
+            'Fill the area under the line',
+            _fillArea,
+            (value) => setState(() => _fillArea = value),
+          ),
+        ],
 
         const SizedBox(height: 24),
         // Advanced Options Header
@@ -2246,35 +2292,67 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Data Points Slider
+        // Data Points Slider - always applicable
         _buildDataPointsSlider(),
-        const SizedBox(height: 16),
 
-        // Min/Max Indicators
-        _buildToggleOption(
-          'Show Min/Max',
-          'Display markers at highest and lowest points',
-          _showMinMax,
-          (value) => setState(() => _showMinMax = value),
-        ),
+        // Thresholds - always applicable
         const SizedBox(height: 16),
-
-        // Gradient Fill
-        _buildGradientFillOption(),
-        const SizedBox(height: 16),
-
-        // Data Normalization (only when merged or single)
-        _buildNormalizationSelector(),
-        const SizedBox(height: 16),
-
-        // Comparison Baseline
-        _buildBaselineSelector(),
-        const SizedBox(height: 16),
-
-        // Threshold Lines
         _buildThresholdSection(),
+
+        // Min/Max Indicators - line/area charts only
+        if (minMaxApplicable) ...[
+          const SizedBox(height: 16),
+          _buildToggleOption(
+            'Show Min/Max',
+            'Display markers at highest and lowest points',
+            _showMinMax,
+            (value) => setState(() => _showMinMax = value),
+          ),
+        ],
+
+        // Gradient Fill - line/area charts only
+        if (gradientApplicable) ...[
+          const SizedBox(height: 16),
+          _buildGradientFillOption(),
+        ],
+
+        // Data Normalization - always available but with context
+        const SizedBox(height: 16),
+        _buildNormalizationSelector(),
+
+        // Comparison Baseline - line/area charts only
+        if (baselineApplicable) ...[
+          const SizedBox(height: 16),
+          _buildBaselineSelector(),
+        ],
       ],
     );
+  }
+
+  /// Get all active chart types based on current selection
+  Set<ChartType> _getActiveChartTypes() {
+    if (_mergeCharts) {
+      // When merged, the effective type depends on merge mode
+      switch (_mergeMode) {
+        case ChartMergeMode.overlay:
+          return {ChartType.multiLine};
+        case ChartMergeMode.stackedArea:
+          return {ChartType.stackedArea};
+        case ChartMergeMode.stackedBar:
+          return {ChartType.stackedBar};
+      }
+    }
+
+    // Non-merged: collect all unique chart types from bindings
+    final types = <ChartType>{};
+    if (_selectedBindings.length > 1) {
+      for (final binding in _selectedBindings) {
+        types.add(_bindingChartTypes[binding] ?? _chartType);
+      }
+    } else {
+      types.add(_chartType);
+    }
+    return types;
   }
 
   Widget _buildDataPointsSlider() {
