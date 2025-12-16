@@ -3,15 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
 import '../renderer/widget_renderer.dart';
-import '../editor/widget_editor_screen.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
 
 /// Widget creation wizard - guides users through building a widget step-by-step
 class WidgetWizardScreen extends ConsumerStatefulWidget {
   final Future<void> Function(WidgetSchema schema) onSave;
+  final WidgetSchema? initialSchema;
 
-  const WidgetWizardScreen({super.key, required this.onSave});
+  const WidgetWizardScreen({
+    super.key,
+    required this.onSave,
+    this.initialSchema,
+  });
 
   @override
   ConsumerState<WidgetWizardScreen> createState() => _WidgetWizardScreenState();
@@ -21,43 +25,112 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   int _currentStep = 0;
   final PageController _pageController = PageController();
 
+  // Existing schema ID for edits
+  String? _existingId;
+
   // Step 1: Template selection
   _WidgetTemplate? _selectedTemplate;
 
-  // Step 2: Basics
+  // Step 2: Name
   final _nameController = TextEditingController();
-  CustomWidgetSize _selectedSize = CustomWidgetSize.medium;
 
-  // Step 3: Data selection
+  // Step 3: Data selection (or Actions for Quick Actions template)
   final Set<String> _selectedBindings = {};
+  final Set<ActionType> _selectedActions = {};
 
   // Step 4: Appearance
   Color _accentColor = const Color(0xFF4F6AF6);
   bool _showLabels = true;
   _LayoutStyle _layoutStyle = _LayoutStyle.vertical;
 
-  final List<_WizardStep> _steps = [
-    _WizardStep(
-      title: 'Choose a Style',
-      subtitle: 'How do you want your widget to look?',
-      icon: Icons.style,
-    ),
-    _WizardStep(
-      title: 'Name & Size',
-      subtitle: 'Give it a name and pick a size',
-      icon: Icons.text_fields,
-    ),
-    _WizardStep(
-      title: 'Pick Your Data',
-      subtitle: 'What info do you want to see?',
-      icon: Icons.data_usage,
-    ),
-    _WizardStep(
-      title: 'Make it Yours',
-      subtitle: 'Customize colors and layout',
-      icon: Icons.palette,
-    ),
-  ];
+  List<_WizardStep> get _steps {
+    final isQuickActions = _selectedTemplate?.id == 'actions';
+    return [
+      const _WizardStep(
+        title: 'Choose a Style',
+        subtitle: 'How do you want your widget to look?',
+        icon: Icons.style,
+      ),
+      const _WizardStep(
+        title: 'Name Your Widget',
+        subtitle: 'Give it a memorable name',
+        icon: Icons.text_fields,
+      ),
+      _WizardStep(
+        title: isQuickActions ? 'Choose Actions' : 'Pick Your Data',
+        subtitle: isQuickActions
+            ? 'Which actions do you want quick access to?'
+            : 'What info do you want to see?',
+        icon: isQuickActions ? Icons.touch_app : Icons.data_usage,
+      ),
+      const _WizardStep(
+        title: 'Make it Yours',
+        subtitle: 'Customize colors and layout',
+        icon: Icons.palette,
+      ),
+      const _WizardStep(
+        title: 'Preview',
+        subtitle: 'Check how it looks before saving',
+        icon: Icons.preview,
+      ),
+    ];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initFromSchema();
+  }
+
+  void _initFromSchema() {
+    final schema = widget.initialSchema;
+    if (schema == null) return;
+
+    _existingId = schema.id;
+    _nameController.text = schema.name;
+
+    // Try to detect template from tags
+    final tags = schema.tags;
+    if (tags.contains('status')) {
+      _selectedTemplate = _getTemplates().firstWhere((t) => t.id == 'status');
+    } else if (tags.contains('info')) {
+      _selectedTemplate = _getTemplates().firstWhere((t) => t.id == 'info');
+    } else if (tags.contains('gauge')) {
+      _selectedTemplate = _getTemplates().firstWhere((t) => t.id == 'gauge');
+    } else if (tags.contains('actions')) {
+      _selectedTemplate = _getTemplates().firstWhere((t) => t.id == 'actions');
+    } else if (tags.contains('location')) {
+      _selectedTemplate = _getTemplates().firstWhere((t) => t.id == 'location');
+    } else if (tags.contains('environment')) {
+      _selectedTemplate = _getTemplates().firstWhere(
+        (t) => t.id == 'environment',
+      );
+    }
+
+    // Extract bindings from schema
+    _extractBindingsFromElement(schema.root);
+
+    // Extract actions from schema
+    _extractActionsFromElement(schema.root);
+  }
+
+  void _extractBindingsFromElement(ElementSchema element) {
+    if (element.binding != null) {
+      _selectedBindings.add(element.binding!.path);
+    }
+    for (final child in element.children) {
+      _extractBindingsFromElement(child);
+    }
+  }
+
+  void _extractActionsFromElement(ElementSchema element) {
+    if (element.action != null && element.action!.type != ActionType.none) {
+      _selectedActions.add(element.action!.type);
+    }
+    for (final child in element.children) {
+      _extractActionsFromElement(child);
+    }
+  }
 
   @override
   void dispose() {
@@ -68,6 +141,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.initialSchema != null;
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
@@ -116,14 +190,17 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               onPageChanged: (index) => setState(() => _currentStep = index),
               children: [
                 _buildTemplateStep(),
-                _buildBasicsStep(),
-                _buildDataStep(),
+                _buildNameStep(),
+                _selectedTemplate?.id == 'actions'
+                    ? _buildActionsStep()
+                    : _buildDataStep(),
                 _buildAppearanceStep(),
+                _buildPreviewStep(),
               ],
             ),
           ),
           // Bottom actions
-          _buildBottomActions(),
+          _buildBottomActions(isEditing),
         ],
       ),
     );
@@ -140,8 +217,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             child: Row(
               children: [
                 Container(
-                  width: 32,
-                  height: 32,
+                  width: 28,
+                  height: 28,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isCompleted
@@ -155,7 +232,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   ),
                   child: Center(
                     child: isCompleted
-                        ? const Icon(Icons.check, size: 18, color: Colors.white)
+                        ? const Icon(Icons.check, size: 16, color: Colors.white)
                         : Text(
                             '${index + 1}',
                             style: TextStyle(
@@ -163,6 +240,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                                   ? context.accentColor
                                   : AppTheme.textSecondary,
                               fontWeight: FontWeight.w600,
+                              fontSize: 12,
                             ),
                           ),
                   ),
@@ -304,7 +382,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       _WidgetTemplate(
         id: 'actions',
         name: 'Quick Actions',
-        description: 'Buttons for common tasks like messaging',
+        description: 'Tap buttons to send messages, share location, etc.',
         icon: Icons.flash_on,
         color: const Color(0xFFF472B6),
         suggestedBindings: [],
@@ -341,9 +419,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   // ============================================================
-  // STEP 2: Basics (Name & Size)
+  // STEP 2: Name
   // ============================================================
-  Widget _buildBasicsStep() {
+  Widget _buildNameStep() {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
@@ -379,97 +457,36 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 32),
-        // Size selection
-        Text(
-          'Widget Size',
-          style: TextStyle(
-            color: AppTheme.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ..._buildSizeOptions(),
-      ],
-    );
-  }
-
-  List<Widget> _buildSizeOptions() {
-    final sizes = [
-      (CustomWidgetSize.medium, 'Medium', 'Good for most widgets', 120.0),
-      (CustomWidgetSize.large, 'Large', 'More space for details', 180.0),
-    ];
-
-    return sizes.map((size) {
-      final isSelected = _selectedSize == size.$1;
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => setState(() => _selectedSize = size.$1),
+        const SizedBox(height: 24),
+        // Helpful tip
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: context.accentColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.darkCard,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isSelected ? context.accentColor : AppTheme.darkBorder,
-                  width: isSelected ? 2 : 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  // Size preview
-                  Container(
-                    width: 48,
-                    height: size.$4 / 3,
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: context.accentColor.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          size.$2,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          size.$3,
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (isSelected)
-                    Icon(
-                      Icons.check_circle,
-                      color: context.accentColor,
-                      size: 22,
-                    ),
-                ],
-              ),
+            border: Border.all(
+              color: context.accentColor.withValues(alpha: 0.3),
             ),
           ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.lightbulb_outline,
+                color: context.accentColor,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Pick a name that helps you remember what this widget shows.',
+                  style: TextStyle(color: context.accentColor, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
         ),
-      );
-    }).toList();
+      ],
+    );
   }
 
   // ============================================================
@@ -477,12 +494,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   // ============================================================
   Widget _buildDataStep() {
     // Group bindings by category
-    final categories = <BindingCategory, List<BindingDefinition>>{};
-    for (final binding in BindingRegistry.bindings) {
-      categories.putIfAbsent(binding.category, () => []).add(binding);
-    }
-
-    // Filter to show relevant categories based on template
     final relevantCategories = _getRelevantCategories();
 
     return ListView(
@@ -664,51 +675,145 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   // ============================================================
-  // STEP 4: Appearance
+  // STEP 3 (Alt): Actions Selection for Quick Actions template
   // ============================================================
-  Widget _buildAppearanceStep() {
-    // Build live preview
-    final previewSchema = _buildPreviewSchema();
-    final nodes = ref.watch(nodesProvider);
-    final myNodeNum = ref.watch(myNodeNumProvider);
-    final node = myNodeNum != null ? nodes[myNodeNum] : null;
-
-    final previewHeight = switch (_selectedSize) {
-      CustomWidgetSize.medium => 120.0,
-      CustomWidgetSize.large => 180.0,
-      CustomWidgetSize.custom => 120.0,
-    };
-
+  Widget _buildActionsStep() {
+    final actions = _getAvailableActions();
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Live preview
         Text(
-          'Preview',
-          style: TextStyle(
-            color: AppTheme.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
+          'Tap to select the actions you want:',
+          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+        ),
+        const SizedBox(height: 16),
+        ...actions.map((action) => _buildActionCard(action)),
+      ],
+    );
+  }
+
+  Widget _buildActionCard(_ActionOption action) {
+    final isSelected = _selectedActions.contains(action.type);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            setState(() {
+              if (isSelected) {
+                _selectedActions.remove(action.type);
+              } else {
+                _selectedActions.add(action.type);
+              }
+            });
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkCard,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? context.accentColor : AppTheme.darkBorder,
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: action.color.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(action.icon, color: action.color, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        action.label,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        action.description,
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  Icon(
+                    Icons.check_circle,
+                    color: context.accentColor,
+                    size: 22,
+                  ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(height: 8),
-        Container(
-          height: previewHeight,
-          decoration: BoxDecoration(
-            color: AppTheme.darkCard,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.darkBorder),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: WidgetRenderer(
-            schema: previewSchema,
-            node: node,
-            allNodes: nodes,
-            accentColor: _accentColor,
-            enableActions: false,
-          ),
-        ),
-        const SizedBox(height: 24),
+      ),
+    );
+  }
+
+  List<_ActionOption> _getAvailableActions() {
+    return [
+      _ActionOption(
+        type: ActionType.sendMessage,
+        label: 'Send Message',
+        description: 'Quickly send a message to a node',
+        icon: Icons.send,
+        color: const Color(0xFF4F6AF6),
+      ),
+      _ActionOption(
+        type: ActionType.shareLocation,
+        label: 'Share Location',
+        description: 'Send your current GPS position',
+        icon: Icons.location_on,
+        color: const Color(0xFF4ADE80),
+      ),
+      _ActionOption(
+        type: ActionType.requestPositions,
+        label: 'Request Positions',
+        description: 'Ask all nodes to share their location',
+        icon: Icons.radar,
+        color: const Color(0xFFA78BFA),
+      ),
+      _ActionOption(
+        type: ActionType.traceroute,
+        label: 'Traceroute',
+        description: 'See the path to a node',
+        icon: Icons.route,
+        color: const Color(0xFF22D3EE),
+      ),
+      _ActionOption(
+        type: ActionType.sos,
+        label: 'SOS Emergency',
+        description: 'Send an emergency alert',
+        icon: Icons.emergency,
+        color: const Color(0xFFFF6B6B),
+      ),
+    ];
+  }
+
+  // ============================================================
+  // STEP 4: Appearance
+  // ============================================================
+  Widget _buildAppearanceStep() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
         // Color selection
         Text(
           'Accent Color',
@@ -721,25 +826,27 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         const SizedBox(height: 12),
         _buildColorPicker(),
         const SizedBox(height: 24),
-        // Layout style
-        Text(
-          'Layout',
-          style: TextStyle(
-            color: AppTheme.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
+        // Layout style (only for data widgets, not actions)
+        if (_selectedTemplate?.id != 'actions') ...[
+          Text(
+            'Layout',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        _buildLayoutOptions(),
-        const SizedBox(height: 24),
-        // Show labels toggle
-        _buildToggleOption(
-          'Show Labels',
-          'Display names next to values',
-          _showLabels,
-          (value) => setState(() => _showLabels = value),
-        ),
+          const SizedBox(height: 12),
+          _buildLayoutOptions(),
+          const SizedBox(height: 24),
+          // Show labels toggle
+          _buildToggleOption(
+            'Show Labels',
+            'Display names next to values',
+            _showLabels,
+            (value) => setState(() => _showLabels = value),
+          ),
+        ],
       ],
     );
   }
@@ -901,9 +1008,105 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   // ============================================================
+  // STEP 5: Preview
+  // ============================================================
+  Widget _buildPreviewStep() {
+    final previewSchema = _buildFinalSchema();
+    final nodes = ref.watch(nodesProvider);
+    final myNodeNum = ref.watch(myNodeNumProvider);
+    final node = myNodeNum != null ? nodes[myNodeNum] : null;
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Text(
+          'Your widget is ready!',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'This is how it will look on your dashboard.',
+          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        // Preview container
+        Container(
+          decoration: BoxDecoration(
+            color: AppTheme.darkCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTheme.darkBorder),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: WidgetRenderer(
+            schema: previewSchema,
+            node: node,
+            allNodes: nodes,
+            accentColor: _accentColor,
+            enableActions: false,
+          ),
+        ),
+        const SizedBox(height: 24),
+        // Summary
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.darkCard,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSummaryRow('Name', previewSchema.name),
+              const SizedBox(height: 8),
+              _buildSummaryRow('Type', _selectedTemplate?.name ?? 'Custom'),
+              if (_selectedBindings.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _buildSummaryRow('Data', '${_selectedBindings.length} items'),
+              ],
+              if (_selectedActions.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _buildSummaryRow(
+                  'Actions',
+                  '${_selectedActions.length} buttons',
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
   // Bottom Actions
   // ============================================================
-  Widget _buildBottomActions() {
+  Widget _buildBottomActions(bool isEditing) {
     final isLastStep = _currentStep == _steps.length - 1;
     final canContinue = _canContinue();
 
@@ -917,19 +1120,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         top: false,
         child: Row(
           children: [
-            // Skip to editor
-            if (!isLastStep)
-              TextButton(
-                onPressed: _openEditor,
-                child: Text(
-                  'Advanced Editor',
-                  style: TextStyle(color: AppTheme.textSecondary),
-                ),
-              ),
             const Spacer(),
             // Continue / Create
             SizedBox(
-              width: 140,
+              width: 160,
               child: ElevatedButton(
                 onPressed: canContinue
                     ? (isLastStep ? _create : _goNext)
@@ -943,7 +1137,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   ),
                 ),
                 child: Text(
-                  isLastStep ? 'Create Widget' : 'Continue',
+                  isLastStep
+                      ? (isEditing ? 'Save Changes' : 'Create Widget')
+                      : 'Continue',
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
@@ -961,8 +1157,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return switch (_currentStep) {
       0 => _selectedTemplate != null,
       1 => _nameController.text.trim().isNotEmpty,
-      2 => true, // Data selection is optional
+      2 => true, // Data/actions selection is optional
       3 => true, // Appearance always valid
+      4 => true, // Preview always valid
       _ => false,
     };
   }
@@ -973,8 +1170,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       if (_currentStep == 0 && _nameController.text.isEmpty) {
         _nameController.text = _selectedTemplate?.name ?? 'My Widget';
       }
-      // Pre-select suggested bindings
-      if (_currentStep == 1 && _selectedTemplate != null) {
+      // Pre-select suggested bindings (only for new widgets)
+      if (_currentStep == 1 &&
+          _selectedTemplate != null &&
+          widget.initialSchema == null) {
         _selectedBindings.addAll(_selectedTemplate!.suggestedBindings);
       }
 
@@ -994,21 +1193,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     }
   }
 
-  void _openEditor() async {
-    final schema = _buildFinalSchema();
-    final result = await Navigator.push<WidgetSchema>(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            WidgetEditorScreen(initialSchema: schema, onSave: widget.onSave),
-      ),
-    );
-
-    if (result != null && mounted) {
-      Navigator.pop(context, result);
-    }
-  }
-
   void _create() async {
     final schema = _buildFinalSchema();
     await widget.onSave(schema);
@@ -1020,16 +1204,86 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   // ============================================================
   // Schema Building
   // ============================================================
-  WidgetSchema _buildPreviewSchema() {
-    return _buildFinalSchema();
-  }
-
   WidgetSchema _buildFinalSchema() {
     final name = _nameController.text.trim().isEmpty
         ? 'My Widget'
         : _nameController.text.trim();
 
-    // Build children based on selected bindings
+    // Build children based on template type
+    final children = <ElementSchema>[];
+
+    if (_selectedTemplate?.id == 'actions') {
+      // Build action buttons
+      children.addAll(_buildActionElements());
+    } else {
+      // Build data display
+      children.addAll(_buildDataElements(name));
+    }
+
+    // Create root based on layout style
+    final ElementSchema root;
+    if (_selectedTemplate?.id == 'actions') {
+      // Actions use horizontal layout with space around
+      root = ElementSchema(
+        type: ElementType.row,
+        style: const StyleSchema(
+          padding: 12,
+          mainAxisAlignment: MainAxisAlignmentOption.spaceAround,
+        ),
+        children: children,
+      );
+    } else if (_layoutStyle == _LayoutStyle.horizontal) {
+      root = ElementSchema(
+        type: ElementType.row,
+        style: const StyleSchema(
+          padding: 12,
+          spacing: 16,
+          mainAxisAlignment: MainAxisAlignmentOption.spaceAround,
+        ),
+        children: children,
+      );
+    } else if (_layoutStyle == _LayoutStyle.grid && children.length > 2) {
+      // Create a 2-column grid using rows
+      final rows = <ElementSchema>[];
+      for (var i = 0; i < children.length; i += 2) {
+        rows.add(
+          ElementSchema(
+            type: ElementType.row,
+            style: const StyleSchema(
+              spacing: 12,
+              mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
+            ),
+            children: [
+              children[i],
+              if (i + 1 < children.length) children[i + 1],
+            ],
+          ),
+        );
+      }
+      root = ElementSchema(
+        type: ElementType.column,
+        style: const StyleSchema(padding: 12, spacing: 8),
+        children: rows,
+      );
+    } else {
+      root = ElementSchema(
+        type: ElementType.column,
+        style: const StyleSchema(padding: 12, spacing: 8),
+        children: children,
+      );
+    }
+
+    return WidgetSchema(
+      id: _existingId,
+      name: name,
+      description: _selectedTemplate?.description,
+      size: CustomWidgetSize.medium, // Auto-resize, so medium is fine
+      root: root,
+      tags: _selectedTemplate != null ? [_selectedTemplate!.id] : [],
+    );
+  }
+
+  List<ElementSchema> _buildDataElements(String name) {
     final children = <ElementSchema>[];
 
     // Title row with icon
@@ -1152,7 +1406,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       children.add(
         ElementSchema(
           type: ElementType.text,
-          text: 'Add data in the editor',
+          text: 'No data selected',
           style: StyleSchema(
             textColor: _colorToHex(AppTheme.textSecondary),
             fontSize: 13,
@@ -1161,56 +1415,74 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       );
     }
 
-    // Create root based on layout style
-    final ElementSchema root;
-    if (_layoutStyle == _LayoutStyle.horizontal) {
-      root = ElementSchema(
-        type: ElementType.row,
-        style: const StyleSchema(
-          padding: 12,
-          spacing: 16,
-          mainAxisAlignment: MainAxisAlignmentOption.spaceAround,
-        ),
-        children: children,
-      );
-    } else if (_layoutStyle == _LayoutStyle.grid && children.length > 2) {
-      // Create a 2-column grid using rows
-      final rows = <ElementSchema>[];
-      for (var i = 0; i < children.length; i += 2) {
-        rows.add(
-          ElementSchema(
-            type: ElementType.row,
-            style: const StyleSchema(
-              spacing: 12,
-              mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
-            ),
-            children: [
-              children[i],
-              if (i + 1 < children.length) children[i + 1],
-            ],
+    return children;
+  }
+
+  List<ElementSchema> _buildActionElements() {
+    if (_selectedActions.isEmpty) {
+      return [
+        ElementSchema(
+          type: ElementType.text,
+          text: 'No actions selected',
+          style: StyleSchema(
+            textColor: _colorToHex(AppTheme.textSecondary),
+            fontSize: 13,
           ),
-        );
-      }
-      root = ElementSchema(
-        type: ElementType.column,
-        style: const StyleSchema(padding: 12, spacing: 8),
-        children: rows,
-      );
-    } else {
-      root = ElementSchema(
-        type: ElementType.column,
-        style: const StyleSchema(padding: 12, spacing: 8),
-        children: children,
-      );
+        ),
+      ];
     }
 
-    return WidgetSchema(
-      name: name,
-      description: _selectedTemplate?.description,
-      size: _selectedSize,
-      root: root,
-      tags: _selectedTemplate != null ? [_selectedTemplate!.id] : [],
-    );
+    return _selectedActions.map((actionType) {
+      final actionOption = _getAvailableActions().firstWhere(
+        (a) => a.type == actionType,
+      );
+
+      return ElementSchema(
+        type: ElementType.column,
+        style: const StyleSchema(alignment: AlignmentOption.center),
+        action: ActionSchema(
+          type: actionType,
+          requiresNodeSelection:
+              actionType == ActionType.sendMessage ||
+              actionType == ActionType.traceroute,
+          requiresChannelSelection: actionType == ActionType.sendMessage,
+          label: actionOption.label,
+        ),
+        children: [
+          ElementSchema(
+            type: ElementType.shape,
+            shapeType: ShapeType.circle,
+            style: StyleSchema(
+              width: 48,
+              height: 48,
+              backgroundColor: _colorToHex(
+                actionOption.color.withValues(alpha: 0.15),
+              ),
+            ),
+            children: [
+              ElementSchema(
+                type: ElementType.icon,
+                iconName: _getIconNameFromIconData(actionOption.icon),
+                iconSize: 22,
+                style: StyleSchema(textColor: _colorToHex(actionOption.color)),
+              ),
+            ],
+          ),
+          ElementSchema(
+            type: ElementType.spacer,
+            style: const StyleSchema(height: 6),
+          ),
+          ElementSchema(
+            type: ElementType.text,
+            text: actionOption.label,
+            style: StyleSchema(
+              textColor: _colorToHex(AppTheme.textSecondary),
+              fontSize: 11,
+            ),
+          ),
+        ],
+      );
+    }).toList();
   }
 
   String _getIconNameForTemplate(String templateId) {
@@ -1223,6 +1495,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       'environment' => 'thermostat',
       _ => 'widgets',
     };
+  }
+
+  String _getIconNameFromIconData(IconData icon) {
+    // Map common icons to their names
+    if (icon == Icons.send) return 'send';
+    if (icon == Icons.location_on) return 'location_on';
+    if (icon == Icons.radar) return 'radar';
+    if (icon == Icons.route) return 'route';
+    if (icon == Icons.emergency) return 'emergency';
+    return 'touch_app';
   }
 
   String _colorToHex(Color color) {
@@ -1261,6 +1543,22 @@ class _WidgetTemplate {
     required this.icon,
     required this.color,
     required this.suggestedBindings,
+  });
+}
+
+class _ActionOption {
+  final ActionType type;
+  final String label;
+  final String description;
+  final IconData icon;
+  final Color color;
+
+  const _ActionOption({
+    required this.type,
+    required this.label,
+    required this.description,
+    required this.icon,
+    required this.color,
   });
 }
 

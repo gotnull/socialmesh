@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'models/widget_schema.dart';
 import 'storage/widget_storage_service.dart';
-import 'editor/widget_editor_screen.dart';
 import 'wizard/widget_wizard_screen.dart';
 import 'marketplace/widget_marketplace_screen.dart';
 import 'renderer/widget_renderer.dart';
@@ -354,7 +353,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
     final result = await Navigator.push<WidgetSchema>(
       context,
       MaterialPageRoute(
-        builder: (context) => WidgetEditorScreen(
+        builder: (context) => WidgetWizardScreen(
           initialSchema: schema,
           onSave: (updated) async {
             await _storageService.saveWidget(updated);
@@ -381,7 +380,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
     final result = await Navigator.push<WidgetSchema>(
       context,
       MaterialPageRoute(
-        builder: (context) => WidgetEditorScreen(
+        builder: (context) => WidgetWizardScreen(
           initialSchema: copy,
           onSave: (schema) async {
             await _storageService.saveWidget(schema);
