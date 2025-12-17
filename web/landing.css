@@ -918,6 +918,38 @@ section {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
+/* Torn/faded bottom effect for screenshots */
+.screenshot-card.torn-bottom {
+  position: relative;
+}
+
+.screenshot-card.torn-bottom .screenshot-img-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  max-height: 400px;
+}
+
+.screenshot-card.torn-bottom .screenshot-img-wrapper::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(to bottom,
+      transparent 0%,
+      rgba(41, 48, 61, 0.5) 40%,
+      rgba(41, 48, 61, 0.9) 70%,
+      var(--bg-card) 100%);
+  pointer-events: none;
+}
+
+.screenshot-card.torn-bottom img {
+  border-radius: 10px 10px 0 0;
+  box-shadow: none;
+}
+
 .screenshot-label {
   font-size: 12px;
   font-weight: 600;
