@@ -12,6 +12,7 @@ import '../../utils/snackbar.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/node_avatar.dart';
 import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
 import '../navigation/main_shell.dart';
@@ -644,31 +645,18 @@ class _NodeCard extends StatelessWidget {
                 children: [
                   Stack(
                     children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: isMyNode
-                              ? context.accentColor
-                              : _getAvatarColor(),
-                          shape: BoxShape.circle,
-                          border: isMyNode
-                              ? Border.all(
-                                  color: Colors.white.withValues(alpha: 0.3),
-                                  width: 2,
-                                )
-                              : null,
-                        ),
-                        child: Center(
-                          child: Text(
-                            node.avatarName,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
+                      NodeAvatar(
+                        text: node.avatarName,
+                        color: isMyNode
+                            ? context.accentColor
+                            : _getAvatarColor(),
+                        size: 56,
+                        border: isMyNode
+                            ? Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                width: 2,
+                              )
+                            : null,
                       ),
                       // "You" indicator on avatar
                       if (isMyNode)
@@ -1667,23 +1655,10 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
         children: [
           Row(
             children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: isMyNode ? context.accentColor : _getAvatarColor(node),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    node.avatarName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
+              NodeAvatar(
+                text: node.avatarName,
+                color: isMyNode ? context.accentColor : _getAvatarColor(node),
+                size: 64,
               ),
               const SizedBox(width: 16),
               Expanded(

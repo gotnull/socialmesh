@@ -15,6 +15,7 @@ import '../../core/transport.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/node_avatar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../services/messaging/offline_queue_service.dart';
 import '../../services/haptic_service.dart';
@@ -331,25 +332,12 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
             ),
             for (final node in otherNodes.take(10))
               ListTile(
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: node.avatarColor != null
-                        ? Color(node.avatarColor!)
-                        : AppTheme.graphPurple,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      node.avatarName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
+                leading: NodeAvatar(
+                  text: node.avatarName,
+                  color: node.avatarColor != null
+                      ? Color(node.avatarColor!)
+                      : AppTheme.graphPurple,
+                  size: 40,
                 ),
                 title: Text(
                   node.displayName,
@@ -424,28 +412,15 @@ class _ConversationTile extends StatelessWidget {
           child: Row(
             children: [
               // Avatar
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: conversation.avatarColor != null
-                      ? Color(conversation.avatarColor!)
-                      : AppTheme.graphPurple,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    conversation.shortName ??
-                        (conversation.name.length >= 2
-                            ? conversation.name.substring(0, 2)
-                            : conversation.name),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
+              NodeAvatar(
+                text: conversation.shortName ??
+                    (conversation.name.length >= 2
+                        ? conversation.name.substring(0, 2)
+                        : conversation.name),
+                color: conversation.avatarColor != null
+                    ? Color(conversation.avatarColor!)
+                    : AppTheme.graphPurple,
+                size: 52,
               ),
               const SizedBox(width: 12),
               // Content
@@ -1073,32 +1048,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             behavior: HitTestBehavior.opaque,
             child: Row(
               children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: widget.type == ConversationType.channel
-                        ? context.accentColor.withValues(alpha: 0.2)
-                        : widget.avatarColor != null
+                if (widget.type == ConversationType.channel)
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.tag, color: context.accentColor, size: 18),
+                  )
+                else
+                  NodeAvatar(
+                    text: widget.title.length >= 2
+                        ? widget.title.substring(0, 2)
+                        : widget.title,
+                    color: widget.avatarColor != null
                         ? Color(widget.avatarColor!)
                         : AppTheme.graphPurple,
-                    shape: BoxShape.circle,
+                    size: 36,
                   ),
-                  child: Center(
-                    child: widget.type == ConversationType.channel
-                        ? Icon(Icons.tag, color: context.accentColor, size: 18)
-                        : Text(
-                            widget.title.length >= 2
-                                ? widget.title.substring(0, 2)
-                                : widget.title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                  ),
-                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -1686,23 +1655,12 @@ class _MessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (showSender)
-            Container(
-              width: 32,
-              height: 32,
-              margin: const EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: NodeAvatar(
+                text: _getSafeShortName(),
                 color: _getAvatarColor(),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  _getSafeShortName(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                size: 32,
               ),
             ),
           Flexible(
