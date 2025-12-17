@@ -59,13 +59,38 @@ class _MeshReachabilityScreenState
           backgroundColor: AppTheme.darkBackground,
           leading: const HamburgerMenuButton(),
           centerTitle: true,
-          title: const Text(
-            'Mesh Reachability',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Mesh Reachability',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppTheme.warningYellow.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: AppTheme.warningYellow.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Text(
+                  'BETA',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.warningYellow,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
           ),
           actions: [
             IconButton(
@@ -163,7 +188,12 @@ class _MeshReachabilityScreenState
           children: [
             Icon(Icons.info_outline, color: AppTheme.textSecondary),
             SizedBox(width: 12),
-            Text('About Reachability', style: TextStyle(color: Colors.white)),
+            Expanded(
+              child: Text(
+                'About Reachability',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
           ],
         ),
         content: const SingleChildScrollView(
@@ -180,13 +210,25 @@ class _MeshReachabilityScreenState
               ),
               SizedBox(height: 16),
               _InfoSection(
+                title: 'Scoring Model',
+                content:
+                    'Opportunistic Mesh Reach Likelihood Model (v1) — BETA\n\n'
+                    'A heuristic scoring model that estimates likelihood of '
+                    'reaching a node based on observed RF metrics and packet '
+                    'history. This score represents likelihood, not reachability. '
+                    'Meshtastic forwards packets opportunistically without routing. '
+                    'A high score does not guarantee delivery.',
+              ),
+              SizedBox(height: 16),
+              _InfoSection(
                 title: 'How is it calculated?',
                 content:
                     'The likelihood score combines several factors:\n'
                     '• Freshness: How recently we heard from the node\n'
                     '• Path Depth: Number of hops observed\n'
                     '• Signal Quality: RSSI and SNR when available\n'
-                    '• Observation Pattern: Direct vs relayed packets',
+                    '• Observation Pattern: Direct vs relayed packets\n'
+                    '• ACK History: DM acknowledgement success rate',
               ),
               SizedBox(height: 16),
               _InfoSection(
