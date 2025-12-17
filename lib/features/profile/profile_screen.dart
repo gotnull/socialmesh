@@ -1235,7 +1235,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
         final file = File(result.files.first.path!);
         await ref.read(userProfileProvider.notifier).saveAvatarFromFile(file);
         if (mounted) {
-          setState(() => _hasChanges = true);
+          // Avatar is saved immediately - no need to mark form as having changes
           showSuccessSnackBar(context, 'Avatar updated');
         }
       } catch (e) {
