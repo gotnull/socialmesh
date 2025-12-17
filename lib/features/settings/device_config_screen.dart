@@ -24,6 +24,13 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   bool _serialEnabled = true;
   bool _ledHeartbeatDisabled = false;
   int _nodeInfoBroadcastSecs = 900;
+  // Additional settings matching iOS
+  int _buttonGpio = 0;
+  int _buzzerGpio = 0;
+  bool _doubleTapAsButtonPress = false;
+  bool _tripleClickEnabled =
+      true; // Note: protobuf is "disableTripleClick" (inverted)
+  String _tzdef = '';
   StreamSubscription<pb.Config_DeviceConfig>? _configSubscription;
 
   @override
@@ -47,6 +54,12 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       _nodeInfoBroadcastSecs = config.nodeInfoBroadcastSecs > 0
           ? config.nodeInfoBroadcastSecs
           : 900;
+      // Additional settings
+      _buttonGpio = config.buttonGpio;
+      _buzzerGpio = config.buzzerGpio;
+      _doubleTapAsButtonPress = config.doubleTapAsButtonPress;
+      _tripleClickEnabled = !config.disableTripleClick;
+      _tzdef = config.tzdef;
     });
   }
 
@@ -87,6 +100,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         serialEnabled: _serialEnabled,
         nodeInfoBroadcastSecs: _nodeInfoBroadcastSecs,
         ledHeartbeatDisabled: _ledHeartbeatDisabled,
+        doubleTapAsButtonPress: _doubleTapAsButtonPress,
+        buttonGpio: _buttonGpio,
+        buzzerGpio: _buzzerGpio,
+        disableTripleClick: !_tripleClickEnabled,
+        tzdef: _tzdef,
       );
 
       if (mounted) {
@@ -263,9 +281,218 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                const _SectionHeader(title: 'HARDWARE'),
+                _SettingsTile(
+                  icon: Icons.touch_app,
+                  iconColor: _doubleTapAsButtonPress
+                      ? context.accentColor
+                      : null,
+                  title: 'Double Tap as Button',
+                  subtitle: 'Treat double tap on accelerometer as button press',
+                  trailing: ThemedSwitch(
+                    value: _doubleTapAsButtonPress,
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _doubleTapAsButtonPress = value);
+                    },
+                  ),
+                ),
+                _SettingsTile(
+                  icon: Icons.location_pin,
+                  iconColor: _tripleClickEnabled ? context.accentColor : null,
+                  title: 'Triple Click Ad Hoc Ping',
+                  subtitle: 'Send position on triple click',
+                  trailing: ThemedSwitch(
+                    value: _tripleClickEnabled,
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _tripleClickEnabled = value);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const _SectionHeader(title: 'GPIO'),
+                _buildGpioSettings(),
+                const SizedBox(height: 16),
+                const _SectionHeader(title: 'DEBUG'),
+                _buildTimezoneSettings(),
                 const SizedBox(height: 32),
               ],
             ),
+    );
+  }
+
+  Widget _buildGpioSettings() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Button GPIO
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Button GPIO',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBackground,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppTheme.darkBorder),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: DropdownButton<int>(
+                  underline: const SizedBox.shrink(),
+                  dropdownColor: AppTheme.darkCard,
+                  style: const TextStyle(color: Colors.white),
+                  value: _buttonGpio,
+                  items: List.generate(49, (i) {
+                    return DropdownMenuItem(
+                      value: i,
+                      child: Text(i == 0 ? 'Unset' : 'Pin $i'),
+                    );
+                  }),
+                  onChanged: (value) {
+                    if (value != null) setState(() => _buttonGpio = value);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'GPIO pin for user button',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          ),
+          const Divider(height: 24, color: AppTheme.darkBorder),
+          // Buzzer GPIO
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Buzzer GPIO',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBackground,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppTheme.darkBorder),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: DropdownButton<int>(
+                  underline: const SizedBox.shrink(),
+                  dropdownColor: AppTheme.darkCard,
+                  style: const TextStyle(color: Colors.white),
+                  value: _buzzerGpio,
+                  items: List.generate(49, (i) {
+                    return DropdownMenuItem(
+                      value: i,
+                      child: Text(i == 0 ? 'Unset' : 'Pin $i'),
+                    );
+                  }),
+                  onChanged: (value) {
+                    if (value != null) setState(() => _buzzerGpio = value);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'GPIO pin for PWM buzzer',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimezoneSettings() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.schedule, color: AppTheme.textSecondary, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Time Zone',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'POSIX timezone for device display',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+              fillColor: AppTheme.darkBackground,
+              filled: true,
+              hintText: 'e.g., EST5EDT,M3.2.0,M11.1.0',
+              hintStyle: TextStyle(color: AppTheme.textTertiary),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppTheme.darkBorder),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppTheme.darkBorder),
+              ),
+            ),
+            controller: TextEditingController(text: _tzdef),
+            onChanged: (value) {
+              // Limit to 63 bytes as per iOS
+              if (value.length <= 63) {
+                setState(() => _tzdef = value);
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 

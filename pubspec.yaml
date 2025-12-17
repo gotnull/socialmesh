@@ -80,6 +80,7 @@ dependencies:
   flutter_inappwebview: ^6.1.5
   ditredi: ^2.0.2
   vector_math: ^2.2.0
+  cryptography: ^2.9.0
 
 dev_dependencies:
   flutter_test:

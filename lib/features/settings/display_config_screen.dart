@@ -27,6 +27,10 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
   pb.Config_DisplayConfig_DisplayMode? _displayMode;
   bool _headingBold = false;
   bool _wakeOnTapOrMotion = false;
+  // New fields from iOS
+  bool _use12hClock = false;
+  pb.Config_DisplayConfig_OledType? _oledType;
+  pb.Config_DisplayConfig_CompassOrientation? _compassOrientation;
   StreamSubscription<pb.Config_DisplayConfig>? _configSubscription;
 
   @override
@@ -50,6 +54,10 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
       _displayMode = config.displaymode;
       _headingBold = config.headingBold;
       _wakeOnTapOrMotion = config.wakeOnTapOrMotion;
+      // New fields
+      _use12hClock = config.use12hClock;
+      _oledType = config.oled;
+      _compassOrientation = config.compassOrientation;
     });
   }
 
@@ -92,6 +100,11 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
             _displayMode ?? pb.Config_DisplayConfig_DisplayMode.DEFAULT,
         headingBold: _headingBold,
         wakeOnTapOrMotion: _wakeOnTapOrMotion,
+        use12hClock: _use12hClock,
+        oledType: _oledType ?? pb.Config_DisplayConfig_OledType.OLED_AUTO,
+        compassOrientation:
+            _compassOrientation ??
+            pb.Config_DisplayConfig_CompassOrientation.DEGREES_0,
       );
 
       if (mounted) {
@@ -135,6 +148,14 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                 _SectionHeader(title: 'SCREEN'),
                 const SizedBox(height: 8),
                 _buildScreenSettings(),
+                const SizedBox(height: 24),
+                _SectionHeader(title: 'TIME & COMPASS'),
+                const SizedBox(height: 8),
+                _buildTimeAndCompassSettings(),
+                const SizedBox(height: 24),
+                _SectionHeader(title: 'OLED SCREEN TYPE'),
+                const SizedBox(height: 8),
+                _buildOledTypeSelector(),
                 const SizedBox(height: 24),
                 _SectionHeader(title: 'UNITS & FORMAT'),
                 const SizedBox(height: 8),
@@ -248,6 +269,219 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
               },
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeAndCompassSettings() {
+    final compassOrientations = [
+      (pb.Config_DisplayConfig_CompassOrientation.DEGREES_0, '0°'),
+      (pb.Config_DisplayConfig_CompassOrientation.DEGREES_90, '90°'),
+      (pb.Config_DisplayConfig_CompassOrientation.DEGREES_180, '180°'),
+      (pb.Config_DisplayConfig_CompassOrientation.DEGREES_270, '270°'),
+      (
+        pb.Config_DisplayConfig_CompassOrientation.DEGREES_0_INVERTED,
+        '0° Inverted',
+      ),
+      (
+        pb.Config_DisplayConfig_CompassOrientation.DEGREES_90_INVERTED,
+        '90° Inverted',
+      ),
+      (
+        pb.Config_DisplayConfig_CompassOrientation.DEGREES_180_INVERTED,
+        '180° Inverted',
+      ),
+      (
+        pb.Config_DisplayConfig_CompassOrientation.DEGREES_270_INVERTED,
+        '270° Inverted',
+      ),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SettingsTile(
+            icon: Icons.access_time,
+            title: '12 Hour Clock',
+            subtitle: 'Display time in 12-hour format (AM/PM)',
+            trailing: ThemedSwitch(
+              value: _use12hClock,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                setState(() => _use12hClock = value);
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          Divider(color: AppTheme.darkBorder),
+          const SizedBox(height: 16),
+          const Text(
+            'Compass Orientation',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Adjust compass display rotation',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppTheme.darkBorder),
+            ),
+            child: DropdownButton<pb.Config_DisplayConfig_CompassOrientation>(
+              value:
+                  _compassOrientation ??
+                  pb.Config_DisplayConfig_CompassOrientation.DEGREES_0,
+              isExpanded: true,
+              underline: const SizedBox(),
+              dropdownColor: AppTheme.darkCard,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+              items: compassOrientations.map((item) {
+                return DropdownMenuItem(value: item.$1, child: Text(item.$2));
+              }).toList(),
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                setState(() => _compassOrientation = value);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOledTypeSelector() {
+    final oledTypes = [
+      (
+        pb.Config_DisplayConfig_OledType.OLED_AUTO,
+        'Auto',
+        'Automatically detect OLED type',
+      ),
+      (
+        pb.Config_DisplayConfig_OledType.OLED_SSD1306,
+        'SSD1306',
+        'Common 128x64 OLED',
+      ),
+      (
+        pb.Config_DisplayConfig_OledType.OLED_SH1106,
+        'SH1106',
+        '132x64 OLED controller',
+      ),
+      (
+        pb.Config_DisplayConfig_OledType.OLED_SH1107,
+        'SH1107',
+        '64x128 vertical OLED',
+      ),
+      (
+        pb.Config_DisplayConfig_OledType.OLED_SH1107_128_128,
+        'SH1107 128x128',
+        '128x128 square OLED',
+      ),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'OLED Type',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Override automatic OLED detection',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          ),
+          const SizedBox(height: 16),
+          ...oledTypes.map((item) {
+            final isSelected =
+                (_oledType ?? pb.Config_DisplayConfig_OledType.OLED_AUTO) ==
+                item.$1;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _oledType = item.$1);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected
+                          ? context.accentColor
+                          : AppTheme.darkBorder,
+                      width: isSelected ? 2 : 1,
+                    ),
+                    color: isSelected
+                        ? context.accentColor.withAlpha(20)
+                        : AppTheme.darkBackground,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: isSelected ? context.accentColor : Colors.grey,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.$2,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              item.$3,
+                              style: TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (isSelected)
+                        Icon(Icons.check_circle, color: context.accentColor),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
         ],
       ),
     );

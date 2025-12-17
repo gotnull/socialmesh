@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +10,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import 'package:cryptography/cryptography.dart';
 
 class SecurityConfigScreen extends ConsumerStatefulWidget {
   const SecurityConfigScreen({super.key});
@@ -24,6 +27,15 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
   bool _adminChannelEnabled = false;
   bool _saving = false;
   bool _loading = false;
+
+  // PKI Keys
+  String _publicKey = '';
+  String _privateKey = '';
+  String _adminKey1 = '';
+  String _adminKey2 = '';
+  String _adminKey3 = '';
+  bool _privateKeyVisible = false;
+
   StreamSubscription<pb.Config_SecurityConfig>? _configSubscription;
 
   @override
@@ -44,6 +56,25 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
       _serialEnabled = config.serialEnabled;
       _debugLogEnabled = config.debugLogApiEnabled;
       _adminChannelEnabled = config.adminChannelEnabled;
+
+      // PKI Keys
+      if (config.publicKey.isNotEmpty) {
+        _publicKey = base64Encode(config.publicKey);
+      }
+      if (config.privateKey.isNotEmpty) {
+        _privateKey = base64Encode(config.privateKey);
+      }
+      // Admin keys are stored as a list
+      final adminKeys = config.adminKey;
+      if (adminKeys.isNotEmpty) {
+        _adminKey1 = base64Encode(adminKeys[0]);
+      }
+      if (adminKeys.length > 1) {
+        _adminKey2 = base64Encode(adminKeys[1]);
+      }
+      if (adminKeys.length > 2) {
+        _adminKey3 = base64Encode(adminKeys[2]);
+      }
     });
   }
 
@@ -73,17 +104,94 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
     }
   }
 
+  /// Generate a new Curve25519 private key
+  Future<void> _regeneratePrivateKey() async {
+    try {
+      final algorithm = X25519();
+      final keyPair = await algorithm.newKeyPair();
+      final privateKeyBytes = await keyPair.extractPrivateKeyBytes();
+      final publicKey = await keyPair.extractPublicKey();
+
+      setState(() {
+        _privateKey = base64Encode(Uint8List.fromList(privateKeyBytes));
+        _publicKey = base64Encode(Uint8List.fromList(publicKey.bytes));
+        _privateKeyVisible = true;
+      });
+
+      if (mounted) {
+        showSuccessSnackBar(context, 'New key pair generated');
+      }
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to generate key: $e');
+      }
+    }
+  }
+
+  /// Recalculate public key from private key
+  Future<void> _recalculatePublicKey() async {
+    if (_privateKey.isEmpty) return;
+
+    try {
+      final privateKeyBytes = base64Decode(_privateKey);
+      if (privateKeyBytes.length != 32) return;
+
+      final algorithm = X25519();
+      final keyPair = await algorithm.newKeyPairFromSeed(privateKeyBytes);
+      final publicKey = await keyPair.extractPublicKey();
+
+      setState(() {
+        _publicKey = base64Encode(Uint8List.fromList(publicKey.bytes));
+      });
+    } catch (e) {
+      debugPrint('Failed to recalculate public key: $e');
+    }
+  }
+
+  bool _isValidBase64Key(String key) {
+    if (key.isEmpty) return true; // Empty is valid (means unset)
+    try {
+      final bytes = base64Decode(key);
+      return bytes.length == 32;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<void> _saveConfig() async {
+    // Validate keys
+    if (!_isValidBase64Key(_privateKey)) {
+      showErrorSnackBar(context, 'Invalid private key format');
+      return;
+    }
+    if (!_isValidBase64Key(_adminKey1) ||
+        !_isValidBase64Key(_adminKey2) ||
+        !_isValidBase64Key(_adminKey3)) {
+      showErrorSnackBar(context, 'Invalid admin key format');
+      return;
+    }
+
     final protocol = ref.read(protocolServiceProvider);
 
     setState(() => _saving = true);
 
     try {
+      // Convert base64 keys to bytes
+      final privateKeyBytes = _privateKey.isNotEmpty
+          ? base64Decode(_privateKey)
+          : <int>[];
+      final adminKeys = <List<int>>[];
+      if (_adminKey1.isNotEmpty) adminKeys.add(base64Decode(_adminKey1));
+      if (_adminKey2.isNotEmpty) adminKeys.add(base64Decode(_adminKey2));
+      if (_adminKey3.isNotEmpty) adminKeys.add(base64Decode(_adminKey3));
+
       await protocol.setSecurityConfig(
         isManaged: _isManaged,
         serialEnabled: _serialEnabled,
         debugLogEnabled: _debugLogEnabled,
         adminChannelEnabled: _adminChannelEnabled,
+        privateKey: privateKeyBytes,
+        adminKeys: adminKeys,
       );
 
       if (mounted) {
@@ -149,6 +257,16 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
           : ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
+                // PKI Keys Section
+                const _SectionHeader(title: 'DIRECT MESSAGE KEY'),
+                _buildKeySection(),
+                const SizedBox(height: 16),
+
+                // Admin Keys Section
+                const _SectionHeader(title: 'ADMIN KEYS'),
+                _buildAdminKeysSection(),
+                const SizedBox(height: 16),
+
                 // Managed Device
                 const _SectionHeader(title: 'DEVICE MANAGEMENT'),
 
@@ -249,6 +367,270 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                 const SizedBox(height: 32),
               ],
             ),
+    );
+  }
+
+  Widget _buildKeySection() {
+    final isValidPrivateKey = _isValidBase64Key(_privateKey);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Public Key (read-only display)
+          Row(
+            children: [
+              Icon(Icons.key, color: AppTheme.textSecondary, size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                'Public Key',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppTheme.darkBorder),
+            ),
+            child: SelectableText(
+              _publicKey.isEmpty ? 'No key set' : _publicKey,
+              style: TextStyle(
+                color: _publicKey.isEmpty
+                    ? AppTheme.textTertiary
+                    : Colors.white,
+                fontFamily: 'JetBrainsMono',
+                fontSize: 11,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Your public key is sent to other nodes for secure messaging',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          ),
+
+          const Divider(height: 24, color: AppTheme.darkBorder),
+
+          // Private Key
+          Row(
+            children: [
+              Icon(Icons.vpn_key, color: AppTheme.textSecondary, size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                'Private Key',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: Icon(
+                  _privateKeyVisible ? Icons.visibility_off : Icons.visibility,
+                  color: AppTheme.textSecondary,
+                  size: 20,
+                ),
+                onPressed: () {
+                  setState(() => _privateKeyVisible = !_privateKeyVisible);
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            obscureText: !_privateKeyVisible,
+            style: const TextStyle(
+              color: Colors.white,
+              fontFamily: 'JetBrainsMono',
+              fontSize: 11,
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.all(12),
+              fillColor: AppTheme.darkBackground,
+              filled: true,
+              hintText: 'Base64 encoded 32-byte key',
+              hintStyle: TextStyle(color: AppTheme.textTertiary),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: isValidPrivateKey
+                      ? AppTheme.darkBorder
+                      : AppTheme.errorRed,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: isValidPrivateKey
+                      ? AppTheme.darkBorder
+                      : AppTheme.errorRed,
+                ),
+              ),
+            ),
+            controller: TextEditingController(text: _privateKey),
+            onChanged: (value) {
+              setState(() => _privateKey = value);
+              _recalculatePublicKey();
+            },
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Used to compute shared secret with remote devices',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          ),
+
+          const Divider(height: 24, color: AppTheme.darkBorder),
+
+          // Regenerate button
+          Row(
+            children: [
+              Icon(Icons.refresh, color: AppTheme.textSecondary, size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                'Regenerate Key Pair',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: _regeneratePrivateKey,
+                icon: Icon(Icons.autorenew, size: 18),
+                label: const Text('Generate'),
+                style: TextButton.styleFrom(
+                  foregroundColor: context.accentColor,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            'Generate a new key pair (public key will be automatically derived)',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminKeysSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Public keys authorized to send admin messages to this node',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          ),
+          const SizedBox(height: 16),
+
+          // Admin Key 1
+          _buildAdminKeyField(
+            label: 'Primary Admin Key',
+            value: _adminKey1,
+            onChanged: (v) => setState(() => _adminKey1 = v),
+          ),
+          const SizedBox(height: 12),
+
+          // Admin Key 2
+          _buildAdminKeyField(
+            label: 'Secondary Admin Key',
+            value: _adminKey2,
+            onChanged: (v) => setState(() => _adminKey2 = v),
+          ),
+          const SizedBox(height: 12),
+
+          // Admin Key 3
+          _buildAdminKeyField(
+            label: 'Tertiary Admin Key',
+            value: _adminKey3,
+            onChanged: (v) => setState(() => _adminKey3 = v),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminKeyField({
+    required String label,
+    required String value,
+    required ValueChanged<String> onChanged,
+  }) {
+    final isValid = _isValidBase64Key(value);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.admin_panel_settings,
+              color: AppTheme.textSecondary,
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          style: const TextStyle(
+            color: Colors.white,
+            fontFamily: 'JetBrainsMono',
+            fontSize: 11,
+          ),
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.all(12),
+            fillColor: AppTheme.darkBackground,
+            filled: true,
+            hintText: 'Base64 encoded public key',
+            hintStyle: TextStyle(color: AppTheme.textTertiary, fontSize: 11),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: isValid ? AppTheme.darkBorder : AppTheme.errorRed,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: isValid ? AppTheme.darkBorder : AppTheme.errorRed,
+              ),
+            ),
+          ),
+          controller: TextEditingController(text: value),
+          onChanged: onChanged,
+        ),
+      ],
     );
   }
 }

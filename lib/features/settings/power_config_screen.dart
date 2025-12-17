@@ -22,6 +22,11 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
   int _sdsSecs = 3600; // 1 hour
   int _lsSecs = 300; // 5 minutes
   double _minWakeSecs = 10;
+  // New settings matching iOS
+  bool _shutdownOnPowerLoss = false;
+  int _shutdownAfterSecs = 0;
+  bool _adcOverride = false;
+  double _adcMultiplier = 0.0;
   bool _saving = false;
   bool _loading = false;
   StreamSubscription<pb.Config_PowerConfig>? _configSubscription;
@@ -49,6 +54,11 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
       _minWakeSecs = config.minWakeSecs > 0
           ? config.minWakeSecs.toDouble()
           : 10;
+      // New settings
+      _shutdownAfterSecs = config.onBatteryShutdownAfterSecs;
+      _shutdownOnPowerLoss = _shutdownAfterSecs > 0;
+      _adcMultiplier = config.adcMultiplierOverride;
+      _adcOverride = _adcMultiplier > 0;
     });
   }
 
@@ -90,6 +100,10 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
         sdsSecs: _sdsSecs,
         lsSecs: _lsSecs,
         minWakeSecs: _minWakeSecs.toInt(),
+        onBatteryShutdownAfterSecs: _shutdownOnPowerLoss
+            ? _shutdownAfterSecs
+            : 0,
+        adcMultiplierOverride: _adcOverride ? _adcMultiplier : 0.0,
       );
 
       if (mounted) {
@@ -163,6 +177,8 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
           : ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
+                // Power Section
+                const _SectionHeader(title: 'POWER'),
                 // Power saving mode toggle
                 _SettingsTile(
                   icon: _isPowerSaving
@@ -179,6 +195,152 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                     },
                   ),
                 ),
+                _SettingsTile(
+                  icon: Icons.power_settings_new,
+                  iconColor: _shutdownOnPowerLoss ? context.accentColor : null,
+                  title: 'Shutdown on Power Loss',
+                  subtitle: 'Power off device when external power removed',
+                  trailing: ThemedSwitch(
+                    value: _shutdownOnPowerLoss,
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        _shutdownOnPowerLoss = value;
+                        if (value && _shutdownAfterSecs == 0) {
+                          _shutdownAfterSecs = 60; // Default to 1 minute
+                        }
+                      });
+                    },
+                  ),
+                ),
+                // Shutdown After Secs slider (only show when shutdown enabled)
+                if (_shutdownOnPowerLoss)
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 2,
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkCard,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: _buildSliderSetting(
+                      title: 'Shutdown Delay',
+                      subtitle: 'Time to wait before shutdown after power loss',
+                      value: _shutdownAfterSecs.toDouble(),
+                      min: 10,
+                      max: 3600,
+                      divisions: 36,
+                      formatValue: (v) => _formatDuration(v.toInt()),
+                      onChanged: (value) =>
+                          setState(() => _shutdownAfterSecs = value.toInt()),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+
+                // Battery Section (ADC Multiplier)
+                const _SectionHeader(title: 'BATTERY'),
+                _SettingsTile(
+                  icon: Icons.battery_charging_full,
+                  iconColor: _adcOverride ? context.accentColor : null,
+                  title: 'ADC Multiplier Override',
+                  subtitle:
+                      'Override voltage divider ratio for battery reading',
+                  trailing: ThemedSwitch(
+                    value: _adcOverride,
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        _adcOverride = value;
+                        if (value && _adcMultiplier == 0.0) {
+                          _adcMultiplier = 3.2; // Default ratio
+                        }
+                      });
+                    },
+                  ),
+                ),
+                // ADC Multiplier input (only show when override enabled)
+                if (_adcOverride)
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 2,
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkCard,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'ADC Multiplier',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 80,
+                              child: TextField(
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  fillColor: AppTheme.darkBackground,
+                                  filled: true,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                      color: AppTheme.darkBorder,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                      color: AppTheme.darkBorder,
+                                    ),
+                                  ),
+                                ),
+                                controller: TextEditingController(
+                                  text: _adcMultiplier.toStringAsFixed(2),
+                                ),
+                                onChanged: (value) {
+                                  final parsed = double.tryParse(value);
+                                  if (parsed != null &&
+                                      parsed >= 2.0 &&
+                                      parsed <= 6.0) {
+                                    setState(() => _adcMultiplier = parsed);
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Voltage divider ratio (2.0 - 6.0)',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 const SizedBox(height: 16),
 
                 // Sleep Settings Section

@@ -43,6 +43,7 @@ import 'theme_settings_screen.dart';
 import 'home_widgets_screen.dart';
 import '../automations/automations_screen.dart';
 import 'canned_responses_screen.dart';
+import 'canned_message_module_config_screen.dart';
 import 'range_test_screen.dart';
 import 'store_forward_config_screen.dart';
 import 'detection_sensor_config_screen.dart';
@@ -566,6 +567,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (_) => const CannedResponsesScreen(),
+                  ),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.message,
+                title: 'Canned Messages Module',
+                subtitle: 'Device-side canned message settings',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const CannedMessageModuleConfigScreen(),
                   ),
                 ),
               ),

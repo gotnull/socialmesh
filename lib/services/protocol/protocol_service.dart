@@ -75,6 +75,8 @@ class ProtocolService {
   _rangeTestConfigController;
   final StreamController<pb.ModuleConfig_ExternalNotificationConfig>
   _externalNotificationConfigController;
+  final StreamController<pb.ModuleConfig_CannedMessageConfig>
+  _cannedMessageConfigController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
@@ -104,6 +106,7 @@ class ProtocolService {
   pb.ModuleConfig_RangeTestConfig? _currentRangeTestConfig;
   pb.ModuleConfig_ExternalNotificationConfig?
   _currentExternalNotificationConfig;
+  pb.ModuleConfig_CannedMessageConfig? _currentCannedMessageConfig;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
   final Random _random = Random();
@@ -163,7 +166,9 @@ class ProtocolService {
       _externalNotificationConfigController =
           StreamController<
             pb.ModuleConfig_ExternalNotificationConfig
-          >.broadcast();
+          >.broadcast(),
+      _cannedMessageConfigController =
+          StreamController<pb.ModuleConfig_CannedMessageConfig>.broadcast();
 
   /// Set the BLE device name for hardware model inference
   void setDeviceName(String? name) {
@@ -315,6 +320,14 @@ class ProtocolService {
   /// Current detection sensor config
   pb.ModuleConfig_DetectionSensorConfig? get currentDetectionSensorConfig =>
       _currentDetectionSensorConfig;
+
+  /// Stream of canned message config updates
+  Stream<pb.ModuleConfig_CannedMessageConfig> get cannedMessageConfigStream =>
+      _cannedMessageConfigController.stream;
+
+  /// Current canned message config
+  pb.ModuleConfig_CannedMessageConfig? get currentCannedMessageConfig =>
+      _currentCannedMessageConfig;
 
   /// Stream of RSSI updates
   Stream<int> get rssiStream => _rssiController.stream;
@@ -812,6 +825,16 @@ class ProtocolService {
           );
           _currentExternalNotificationConfig = extNotifConfig;
           _externalNotificationConfigController.add(extNotifConfig);
+        }
+
+        // Handle Canned Message config
+        if (moduleConfig.hasCannedMessage()) {
+          final cannedConfig = moduleConfig.cannedMessage;
+          _logger.i(
+            'Received Canned Message config - enabled: ${cannedConfig.enabled}',
+          );
+          _currentCannedMessageConfig = cannedConfig;
+          _cannedMessageConfigController.add(cannedConfig);
         }
       } else if (adminMsg.hasGetChannelResponse()) {
         // Handle channel response - update local channel list
@@ -3199,6 +3222,14 @@ class ProtocolService {
     required int txPower,
     bool usePreset = true,
     bool overrideDutyCycle = false,
+    int channelNum = 0,
+    int bandwidth = 0,
+    int spreadFactor = 0,
+    int codingRate = 0,
+    bool sx126xRxBoostedGain = false,
+    double overrideFrequency = 0.0,
+    bool ignoreMqtt = false,
+    bool configOkToMqtt = false,
   }) async {
     _logger.i('Setting LoRa config');
 
@@ -3209,7 +3240,15 @@ class ProtocolService {
       ..hopLimit = hopLimit
       ..txEnabled = txEnabled
       ..txPower = txPower
-      ..overrideDutyCycle = overrideDutyCycle;
+      ..overrideDutyCycle = overrideDutyCycle
+      ..channelNum = channelNum
+      ..bandwidth = bandwidth
+      ..spreadFactor = spreadFactor
+      ..codingRate = codingRate
+      ..sx126xRxBoostedGain = sx126xRxBoostedGain
+      ..overrideFrequency = overrideFrequency
+      ..ignoreMqtt = ignoreMqtt
+      ..configOkToMqtt = configOkToMqtt;
 
     final config = pb.Config()..lora = loraConfig;
     await setConfig(config);
@@ -3223,6 +3262,10 @@ class ProtocolService {
     required int nodeInfoBroadcastSecs,
     required bool ledHeartbeatDisabled,
     bool doubleTapAsButtonPress = false,
+    int buttonGpio = 0,
+    int buzzerGpio = 0,
+    bool disableTripleClick = false,
+    String tzdef = '',
   }) async {
     _logger.i('Setting device config');
 
@@ -3232,7 +3275,11 @@ class ProtocolService {
       ..serialEnabled = serialEnabled
       ..nodeInfoBroadcastSecs = nodeInfoBroadcastSecs
       ..doubleTapAsButtonPress = doubleTapAsButtonPress
-      ..ledHeartbeatDisabled = ledHeartbeatDisabled;
+      ..ledHeartbeatDisabled = ledHeartbeatDisabled
+      ..buttonGpio = buttonGpio
+      ..buzzerGpio = buzzerGpio
+      ..disableTripleClick = disableTripleClick
+      ..tzdef = tzdef;
 
     final config = pb.Config()..device = deviceConfig;
     await setConfig(config);
@@ -3276,12 +3323,14 @@ class ProtocolService {
     required int lsSecs,
     required int minWakeSecs,
     int onBatteryShutdownAfterSecs = 0,
+    double adcMultiplierOverride = 0.0,
   }) async {
     _logger.i('Setting power config');
 
     final powerConfig = pb.Config_PowerConfig()
       ..isPowerSaving = isPowerSaving
       ..onBatteryShutdownAfterSecs = onBatteryShutdownAfterSecs
+      ..adcMultiplierOverride = adcMultiplierOverride
       ..waitBluetoothSecs = waitBluetoothSecs
       ..sdsSecs = sdsSecs
       ..lsSecs = lsSecs
@@ -3300,6 +3349,11 @@ class ProtocolService {
     required pb.Config_DisplayConfig_DisplayMode displayMode,
     required bool headingBold,
     required bool wakeOnTapOrMotion,
+    bool use12hClock = false,
+    pb.Config_DisplayConfig_OledType oledType =
+        pb.Config_DisplayConfig_OledType.OLED_AUTO,
+    pb.Config_DisplayConfig_CompassOrientation compassOrientation =
+        pb.Config_DisplayConfig_CompassOrientation.DEGREES_0,
     int gpsFormat = 0,
   }) async {
     _logger.i('Setting display config');
@@ -3312,7 +3366,10 @@ class ProtocolService {
       ..units = units
       ..displaymode = displayMode
       ..headingBold = headingBold
-      ..wakeOnTapOrMotion = wakeOnTapOrMotion;
+      ..wakeOnTapOrMotion = wakeOnTapOrMotion
+      ..use12hClock = use12hClock
+      ..oled = oledType
+      ..compassOrientation = compassOrientation;
 
     final config = pb.Config()..display = displayConfig;
     await setConfig(config);
@@ -3362,6 +3419,8 @@ class ProtocolService {
     required bool serialEnabled,
     required bool debugLogEnabled,
     required bool adminChannelEnabled,
+    List<int> privateKey = const [],
+    List<List<int>> adminKeys = const [],
   }) async {
     _logger.i('Setting security config');
 
@@ -3370,6 +3429,16 @@ class ProtocolService {
       ..serialEnabled = serialEnabled
       ..debugLogApiEnabled = debugLogEnabled
       ..adminChannelEnabled = adminChannelEnabled;
+
+    // Set private key if provided
+    if (privateKey.isNotEmpty) {
+      secConfig.privateKey = privateKey;
+    }
+
+    // Set admin keys if provided
+    if (adminKeys.isNotEmpty) {
+      secConfig.adminKey.addAll(adminKeys);
+    }
 
     final config = pb.Config()..security = secConfig;
     await setConfig(config);
@@ -3450,8 +3519,14 @@ class ProtocolService {
     required String root,
     required bool proxyToClientEnabled,
     required bool mapReportingEnabled,
+    int mapPublishIntervalSecs = 3600,
+    int mapPositionPrecision = 14,
   }) async {
     _logger.i('Setting MQTT config');
+
+    final mapReportSettings = pb.ModuleConfig_MapReportSettings()
+      ..publishIntervalSecs = mapPublishIntervalSecs
+      ..positionPrecision = mapPositionPrecision;
 
     final mqttConfig = pb.ModuleConfig_MQTTConfig()
       ..enabled = enabled
@@ -3463,9 +3538,46 @@ class ProtocolService {
       ..tlsEnabled = tlsEnabled
       ..root = root
       ..proxyToClientEnabled = proxyToClientEnabled
-      ..mapReportingEnabled = mapReportingEnabled;
+      ..mapReportingEnabled = mapReportingEnabled
+      ..mapReportSettings = mapReportSettings;
 
     final moduleConfig = pb.ModuleConfig()..mqtt = mqttConfig;
+    await setModuleConfig(moduleConfig);
+  }
+
+  /// Set canned message module configuration
+  Future<void> setCannedMessageConfig({
+    required bool enabled,
+    required bool sendBell,
+    required bool rotary1Enabled,
+    required bool updown1Enabled,
+    required String allowInputSource,
+    required int inputbrokerPinA,
+    required int inputbrokerPinB,
+    required int inputbrokerPinPress,
+    required pb.ModuleConfig_CannedMessageConfig_InputEventChar
+    inputbrokerEventCw,
+    required pb.ModuleConfig_CannedMessageConfig_InputEventChar
+    inputbrokerEventCcw,
+    required pb.ModuleConfig_CannedMessageConfig_InputEventChar
+    inputbrokerEventPress,
+  }) async {
+    _logger.i('Setting canned message config');
+
+    final cannedConfig = pb.ModuleConfig_CannedMessageConfig()
+      ..enabled = enabled
+      ..sendBell = sendBell
+      ..rotary1Enabled = rotary1Enabled
+      ..updown1Enabled = updown1Enabled
+      ..allowInputSource = allowInputSource
+      ..inputbrokerPinA = inputbrokerPinA
+      ..inputbrokerPinB = inputbrokerPinB
+      ..inputbrokerPinPress = inputbrokerPinPress
+      ..inputbrokerEventCw = inputbrokerEventCw
+      ..inputbrokerEventCcw = inputbrokerEventCcw
+      ..inputbrokerEventPress = inputbrokerEventPress;
+
+    final moduleConfig = pb.ModuleConfig()..cannedMessage = cannedConfig;
     await setModuleConfig(moduleConfig);
   }
 

@@ -25,6 +25,16 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
   int _hopLimit = 3;
   bool _txEnabled = true;
   int _txPower = 0;
+  // Advanced settings
+  bool _usePreset = true;
+  int _channelNum = 0;
+  int _bandwidth = 0;
+  int _spreadFactor = 0;
+  int _codingRate = 0;
+  bool _rxBoostedGain = false;
+  double _overrideFrequency = 0.0;
+  bool _ignoreMqtt = false;
+  bool _okToMqtt = false;
   StreamSubscription<pb.Config_LoRaConfig>? _configSubscription;
 
   @override
@@ -46,6 +56,16 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
       _hopLimit = config.hopLimit > 0 ? config.hopLimit : 3;
       _txEnabled = config.txEnabled;
       _txPower = config.txPower;
+      // Advanced settings
+      _usePreset = config.usePreset;
+      _channelNum = config.channelNum;
+      _bandwidth = config.bandwidth;
+      _spreadFactor = config.spreadFactor;
+      _codingRate = config.codingRate;
+      _rxBoostedGain = config.sx126xRxBoostedGain;
+      _overrideFrequency = config.overrideFrequency;
+      _ignoreMqtt = config.ignoreMqtt;
+      _okToMqtt = config.configOkToMqtt;
     });
   }
 
@@ -85,6 +105,15 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
         hopLimit: _hopLimit,
         txEnabled: _txEnabled,
         txPower: _txPower,
+        usePreset: _usePreset,
+        channelNum: _channelNum,
+        bandwidth: _bandwidth,
+        spreadFactor: _spreadFactor,
+        codingRate: _codingRate,
+        sx126xRxBoostedGain: _rxBoostedGain,
+        overrideFrequency: _overrideFrequency,
+        ignoreMqtt: _ignoreMqtt,
+        configOkToMqtt: _okToMqtt,
       );
 
       // Mark region as configured if a valid region was set
@@ -313,10 +342,445 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                const _SectionHeader(title: 'ADVANCED'),
+                _buildAdvancedSettings(),
+                const SizedBox(height: 16),
                 _buildInfoCard(),
                 const SizedBox(height: 32),
               ],
             ),
+    );
+  }
+
+  Widget _buildAdvancedSettings() {
+    final bandwidthOptions = [
+      (0, 'Auto'),
+      (31, '31.25 kHz'),
+      (62, '62.5 kHz'),
+      (125, '125 kHz'),
+      (250, '250 kHz'),
+      (500, '500 kHz'),
+    ];
+
+    final spreadFactorOptions = [
+      (0, 'Auto'),
+      (7, 'SF7'),
+      (8, 'SF8'),
+      (9, 'SF9'),
+      (10, 'SF10'),
+      (11, 'SF11'),
+      (12, 'SF12'),
+    ];
+
+    final codingRateOptions = [
+      (0, 'Auto'),
+      (5, '4/5'),
+      (6, '4/6'),
+      (7, '4/7'),
+      (8, '4/8'),
+    ];
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Use Preset toggle
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Use Preset',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Use preset modem settings instead of custom',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ThemedSwitch(
+                value: _usePreset,
+                onChanged: (value) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _usePreset = value);
+                },
+              ),
+            ],
+          ),
+
+          // Custom modem settings (only when preset disabled)
+          if (!_usePreset) ...[
+            const Divider(height: 24, color: AppTheme.darkBorder),
+            // Bandwidth
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Bandwidth',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkBackground,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.darkBorder),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: DropdownButton<int>(
+                    underline: const SizedBox.shrink(),
+                    dropdownColor: AppTheme.darkCard,
+                    style: const TextStyle(color: Colors.white),
+                    value: _bandwidth,
+                    items: bandwidthOptions.map((b) {
+                      return DropdownMenuItem(value: b.$1, child: Text(b.$2));
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) setState(() => _bandwidth = value);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Spread Factor
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Spread Factor',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkBackground,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.darkBorder),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: DropdownButton<int>(
+                    underline: const SizedBox.shrink(),
+                    dropdownColor: AppTheme.darkCard,
+                    style: const TextStyle(color: Colors.white),
+                    value: _spreadFactor,
+                    items: spreadFactorOptions.map((s) {
+                      return DropdownMenuItem(value: s.$1, child: Text(s.$2));
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) setState(() => _spreadFactor = value);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Coding Rate
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Coding Rate',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkBackground,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.darkBorder),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: DropdownButton<int>(
+                    underline: const SizedBox.shrink(),
+                    dropdownColor: AppTheme.darkCard,
+                    style: const TextStyle(color: Colors.white),
+                    value: _codingRate,
+                    items: codingRateOptions.map((c) {
+                      return DropdownMenuItem(value: c.$1, child: Text(c.$2));
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) setState(() => _codingRate = value);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          const Divider(height: 24, color: AppTheme.darkBorder),
+
+          // Frequency Slot
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Frequency Slot',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Channel number for frequency calculation',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 80,
+                child: TextField(
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    fillColor: AppTheme.darkBackground,
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppTheme.darkBorder),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppTheme.darkBorder),
+                    ),
+                  ),
+                  controller: TextEditingController(text: '$_channelNum'),
+                  onChanged: (value) {
+                    final parsed = int.tryParse(value);
+                    if (parsed != null) setState(() => _channelNum = parsed);
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          const Divider(height: 24, color: AppTheme.darkBorder),
+
+          // RX Boosted Gain
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'RX Boosted Gain',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Enable boosted gain on SX126x receivers',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ThemedSwitch(
+                value: _rxBoostedGain,
+                onChanged: (value) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _rxBoostedGain = value);
+                },
+              ),
+            ],
+          ),
+
+          const Divider(height: 24, color: AppTheme.darkBorder),
+
+          // Frequency Override
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Frequency Override',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Override frequency in MHz (0 = disabled)',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 100,
+                child: TextField(
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    fillColor: AppTheme.darkBackground,
+                    filled: true,
+                    hintText: '0.0',
+                    hintStyle: TextStyle(color: AppTheme.textTertiary),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppTheme.darkBorder),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppTheme.darkBorder),
+                    ),
+                  ),
+                  controller: TextEditingController(
+                    text: _overrideFrequency > 0
+                        ? _overrideFrequency.toStringAsFixed(3)
+                        : '',
+                  ),
+                  onChanged: (value) {
+                    final parsed = double.tryParse(value);
+                    if (parsed != null) {
+                      setState(() => _overrideFrequency = parsed);
+                    } else if (value.isEmpty) {
+                      setState(() => _overrideFrequency = 0.0);
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          const Divider(height: 24, color: AppTheme.darkBorder),
+
+          // Ignore MQTT
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Ignore MQTT',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Ignore messages via MQTT from this device',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ThemedSwitch(
+                value: _ignoreMqtt,
+                onChanged: (value) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _ignoreMqtt = value);
+                },
+              ),
+            ],
+          ),
+
+          const Divider(height: 24, color: AppTheme.darkBorder),
+
+          // Ok to MQTT
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Ok to MQTT',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Config is ok to send via MQTT uplink',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ThemedSwitch(
+                value: _okToMqtt,
+                onChanged: (value) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _okToMqtt = value);
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

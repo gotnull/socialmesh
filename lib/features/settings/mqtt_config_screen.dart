@@ -30,6 +30,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
   bool _proxyToClientEnabled = false;
   bool _mapReportingEnabled = false;
   bool _obscurePassword = true;
+  // Map Report Settings
+  int _mapPublishIntervalSecs = 3600;
+  double _mapPositionPrecision = 14;
   StreamSubscription<pb.ModuleConfig_MQTTConfig>? _configSubscription;
 
   @override
@@ -60,6 +63,17 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
       _tlsEnabled = config.tlsEnabled;
       _proxyToClientEnabled = config.proxyToClientEnabled;
       _mapReportingEnabled = config.mapReportingEnabled;
+      // Map Report Settings
+      final mapSettings = config.mapReportSettings;
+      _mapPublishIntervalSecs = mapSettings.publishIntervalSecs > 0
+          ? mapSettings.publishIntervalSecs
+          : 3600;
+      final precision = mapSettings.positionPrecision;
+      if (precision >= 12 && precision <= 15) {
+        _mapPositionPrecision = precision.toDouble();
+      } else {
+        _mapPositionPrecision = 14;
+      }
     });
   }
 
@@ -107,6 +121,8 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
         root: root.isNotEmpty ? root : 'msh',
         proxyToClientEnabled: _proxyToClientEnabled,
         mapReportingEnabled: _mapReportingEnabled,
+        mapPublishIntervalSecs: _mapPublishIntervalSecs,
+        mapPositionPrecision: _mapPositionPrecision.round(),
       );
 
       if (mounted) {
@@ -464,6 +480,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                         },
                       ),
                     ),
+                    if (_mapReportingEnabled) ...[_buildMapReportSettings()],
                   ],
                   SizedBox(height: 16),
                   _buildInfoCard(),
@@ -494,6 +511,128 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
               'to the internet. This enables communication with nodes '
               'that are not in direct radio range.',
               style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getPositionPrecisionLabel(int precision) {
+    switch (precision) {
+      case 12:
+        return 'Within 5.8 km';
+      case 13:
+        return 'Within 2.9 km';
+      case 14:
+        return 'Within 1.5 km';
+      case 15:
+        return 'Within 700 m';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  Widget _buildMapReportSettings() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'MAP REPORT SETTINGS',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textTertiary,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Publish Interval
+          Text(
+            'Publish Interval: ${_mapPublishIntervalSecs ~/ 60} minutes',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'How often to report position to map',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          ),
+          SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: context.accentColor,
+              inactiveTrackColor: context.accentColor.withValues(alpha: 0.2),
+              thumbColor: context.accentColor,
+              overlayColor: context.accentColor.withValues(alpha: 0.2),
+              trackHeight: 4,
+            ),
+            child: Slider(
+              value: _mapPublishIntervalSecs.toDouble(),
+              min: 300,
+              max: 14400,
+              divisions: 28,
+              onChanged: (value) {
+                setState(() {
+                  _mapPublishIntervalSecs = value.round();
+                });
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Divider(color: AppTheme.darkBorder),
+          const SizedBox(height: 16),
+          // Position Precision
+          Text(
+            'Position Precision',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Approximate location accuracy for map',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          ),
+          SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: context.accentColor,
+              inactiveTrackColor: context.accentColor.withValues(alpha: 0.2),
+              thumbColor: context.accentColor,
+              overlayColor: context.accentColor.withValues(alpha: 0.2),
+              trackHeight: 4,
+            ),
+            child: Slider(
+              value: _mapPositionPrecision,
+              min: 12,
+              max: 15,
+              divisions: 3,
+              onChanged: (value) {
+                setState(() {
+                  _mapPositionPrecision = value;
+                });
+              },
+            ),
+          ),
+          Center(
+            child: Text(
+              _getPositionPrecisionLabel(_mapPositionPrecision.round()),
+              style: TextStyle(
+                fontSize: 13,
+                color: context.accentColor,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
