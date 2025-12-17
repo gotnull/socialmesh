@@ -6,9 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_providers.dart';
 import 'animated_mesh_node.dart';
 
-/// A mesh node that displays discovered node names on its vertices during initialization.
-/// The icosahedron has 12 vertices, so up to 12 node names can be displayed.
-/// Names fade in as nodes are discovered, creating a dynamic loading experience.
+/// A mesh node that displays discovered node names orbiting around it during initialization.
+/// Names appear as glowing chips that bounce in elegantly and fade out after a delay,
+/// creating a dynamic and visually stunning loading experience.
 class NodeNamesMeshNode extends ConsumerStatefulWidget {
   /// Size of the mesh node
   final double size;
@@ -31,14 +31,11 @@ class NodeNamesMeshNode extends ConsumerStatefulWidget {
   /// Whether to show node names
   final bool showNodeNames;
 
-  /// Maximum number of names to display (max 12 for icosahedron vertices)
-  final int maxNames;
+  /// Maximum number of names to display simultaneously
+  final int maxVisibleNames;
 
-  /// Text style for node names
-  final TextStyle? nameTextStyle;
-
-  /// Whether names should orbit with the mesh rotation
-  final bool namesOrbitWithMesh;
+  /// How long each name chip stays visible before fading out
+  final Duration chipDisplayDuration;
 
   const NodeNamesMeshNode({
     super.key,
@@ -53,9 +50,8 @@ class NodeNamesMeshNode extends ConsumerStatefulWidget {
       Color(0xFF4F6AF6),
     ],
     this.showNodeNames = true,
-    this.maxNames = 12,
-    this.nameTextStyle,
-    this.namesOrbitWithMesh = true,
+    this.maxVisibleNames = 6,
+    this.chipDisplayDuration = const Duration(seconds: 4),
   });
 
   @override
@@ -64,76 +60,126 @@ class NodeNamesMeshNode extends ConsumerStatefulWidget {
 
 class _NodeNamesMeshNodeState extends ConsumerState<NodeNamesMeshNode>
     with TickerProviderStateMixin {
-  final List<_NodeNameEntry> _nodeNames = [];
-  late AnimationController _rotationController;
-
-  // Icosahedron vertex positions (normalized -1 to 1)
-  // Using golden ratio for icosahedron geometry
-  static final List<Offset> _vertexPositions = _generateVertexPositions();
-
-  static List<Offset> _generateVertexPositions() {
-    // Scale to position names around the mesh
-    const scale = 0.35;
-
-    // 12 vertices of an icosahedron projected to 2D
-    // We use a simplified projection that looks good on screen
-    final vertices = <Offset>[
-      Offset(0, -1 * scale), // Top
-      Offset(0.95 * scale, -0.45 * scale), // Upper ring
-      Offset(0.59 * scale, 0.8 * scale),
-      Offset(-0.59 * scale, 0.8 * scale),
-      Offset(-0.95 * scale, -0.45 * scale),
-      Offset(0.59 * scale, -0.8 * scale), // Lower ring
-      Offset(0.95 * scale, 0.45 * scale),
-      Offset(0, 1 * scale), // Bottom
-      Offset(-0.95 * scale, 0.45 * scale),
-      Offset(-0.59 * scale, -0.8 * scale),
-      Offset(0.3 * scale, 0.3 * scale), // Inner vertices
-      Offset(-0.3 * scale, -0.3 * scale),
-    ];
-
-    return vertices;
-  }
+  final List<_NodeChipEntry> _activeChips = [];
+  final Set<String> _seenNames = {};
+  final List<String> _nameQueue = [];
+  late AnimationController _orbitController;
+  int _nextSlotIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _rotationController = AnimationController(
+    // Slow orbit animation for the chip ring
+    _orbitController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 10),
+      duration: const Duration(seconds: 30),
     )..repeat();
   }
 
   @override
   void dispose() {
-    _rotationController.dispose();
-    for (final entry in _nodeNames) {
-      entry.controller.dispose();
+    _orbitController.dispose();
+    for (final chip in _activeChips) {
+      chip.dispose();
     }
     super.dispose();
   }
 
   void _addNodeName(String name) {
-    if (_nodeNames.length >= widget.maxNames) return;
-    if (_nodeNames.any((e) => e.name == name)) return;
+    if (_seenNames.contains(name)) return;
+    _seenNames.add(name);
+    _nameQueue.add(name);
+    _processQueue();
+  }
 
-    final controller = AnimationController(
+  void _processQueue() {
+    if (_nameQueue.isEmpty) return;
+    if (_activeChips.length >= widget.maxVisibleNames) return;
+
+    final name = _nameQueue.removeAt(0);
+    _spawnChip(name);
+  }
+
+  void _spawnChip(String name) {
+    // Calculate slot position (evenly distributed around the orbit)
+    final slotAngle = (_nextSlotIndex * 2 * math.pi) / widget.maxVisibleNames;
+    _nextSlotIndex = (_nextSlotIndex + 1) % widget.maxVisibleNames;
+
+    // Create entrance animation with spring effect
+    final entranceController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 800),
     );
 
-    final entry = _NodeNameEntry(
+    // Create exit animation
+    final exitController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    // Spring curve for bouncy entrance
+    final scaleAnimation = CurvedAnimation(
+      parent: entranceController,
+      curve: Curves.elasticOut,
+    );
+
+    final opacityAnimation = CurvedAnimation(
+      parent: entranceController,
+      curve: Curves.easeOut,
+    );
+
+    // Exit animations
+    final exitScale = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: exitController, curve: Curves.easeInBack),
+    );
+
+    final exitOpacity = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: exitController, curve: Curves.easeIn));
+
+    // Random slight offset for organic feel
+    final random = math.Random();
+    final radiusVariation = 0.9 + random.nextDouble() * 0.2; // 0.9-1.1
+    final floatSpeed = 0.5 + random.nextDouble() * 1.0; // Varied float speed
+
+    // Pick a color from gradient
+    final colorIndex = _activeChips.length % widget.gradientColors.length;
+
+    final chip = _NodeChipEntry(
       name: name,
-      vertexIndex: _nodeNames.length,
-      controller: controller,
-      opacity: CurvedAnimation(parent: controller, curve: Curves.easeOut),
+      baseAngle: slotAngle,
+      radiusMultiplier: radiusVariation,
+      floatSpeed: floatSpeed,
+      entranceController: entranceController,
+      exitController: exitController,
+      scaleAnimation: scaleAnimation,
+      opacityAnimation: opacityAnimation,
+      exitScale: exitScale,
+      exitOpacity: exitOpacity,
+      color: widget.gradientColors[colorIndex],
     );
 
     setState(() {
-      _nodeNames.add(entry);
+      _activeChips.add(chip);
     });
 
-    controller.forward();
+    // Start entrance animation
+    entranceController.forward();
+
+    // Schedule exit after display duration
+    Future.delayed(widget.chipDisplayDuration, () {
+      if (!mounted) return;
+      exitController.forward().then((_) {
+        if (!mounted) return;
+        setState(() {
+          _activeChips.remove(chip);
+          chip.dispose();
+        });
+        // Process next in queue
+        _processQueue();
+      });
+    });
   }
 
   @override
@@ -157,9 +203,9 @@ class _NodeNamesMeshNodeState extends ConsumerState<NodeNamesMeshNode>
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // The mesh node itself
+          // The mesh node itself (centered, slightly smaller)
           AccelerometerMeshNode(
-            size: widget.size * 0.7, // Slightly smaller to make room for names
+            size: widget.size * 0.55,
             animationType: widget.animationType,
             glowIntensity: widget.glowIntensity,
             lineThickness: widget.lineThickness,
@@ -171,34 +217,20 @@ class _NodeNamesMeshNodeState extends ConsumerState<NodeNamesMeshNode>
             enableTouch: false,
             enablePullToStretch: false,
           ),
-          // Node names floating around
+          // Orbiting node name chips
           if (widget.showNodeNames)
             AnimatedBuilder(
-              animation: _rotationController,
+              animation: Listenable.merge([
+                _orbitController,
+                ..._activeChips.map((c) => c.entranceController),
+                ..._activeChips.map((c) => c.exitController),
+              ]),
               builder: (context, child) {
                 return CustomPaint(
                   size: Size(widget.size, widget.size),
-                  painter: _NodeNamesPainter(
-                    entries: _nodeNames,
-                    vertexPositions: _vertexPositions,
-                    rotationAngle: widget.namesOrbitWithMesh
-                        ? _rotationController.value * 2 * math.pi
-                        : 0,
-                    textStyle:
-                        widget.nameTextStyle ??
-                        TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white.withValues(alpha: 0.8),
-                          shadows: [
-                            Shadow(
-                              color: widget.gradientColors.first.withValues(
-                                alpha: 0.5,
-                              ),
-                              blurRadius: 4,
-                            ),
-                          ],
-                        ),
+                  painter: _OrbitingChipsPainter(
+                    chips: _activeChips,
+                    orbitProgress: _orbitController.value,
                     gradientColors: widget.gradientColors,
                   ),
                 );
@@ -210,115 +242,213 @@ class _NodeNamesMeshNodeState extends ConsumerState<NodeNamesMeshNode>
   }
 }
 
-class _NodeNameEntry {
+class _NodeChipEntry {
   final String name;
-  final int vertexIndex;
-  final AnimationController controller;
-  final Animation<double> opacity;
+  final double baseAngle;
+  final double radiusMultiplier;
+  final double floatSpeed;
+  final AnimationController entranceController;
+  final AnimationController exitController;
+  final Animation<double> scaleAnimation;
+  final Animation<double> opacityAnimation;
+  final Animation<double> exitScale;
+  final Animation<double> exitOpacity;
+  final Color color;
 
-  _NodeNameEntry({
+  _NodeChipEntry({
     required this.name,
-    required this.vertexIndex,
-    required this.controller,
-    required this.opacity,
+    required this.baseAngle,
+    required this.radiusMultiplier,
+    required this.floatSpeed,
+    required this.entranceController,
+    required this.exitController,
+    required this.scaleAnimation,
+    required this.opacityAnimation,
+    required this.exitScale,
+    required this.exitOpacity,
+    required this.color,
   });
+
+  void dispose() {
+    entranceController.dispose();
+    exitController.dispose();
+  }
+
+  double get currentScale {
+    if (exitController.isAnimating || exitController.isCompleted) {
+      return scaleAnimation.value * exitScale.value;
+    }
+    return scaleAnimation.value;
+  }
+
+  double get currentOpacity {
+    if (exitController.isAnimating || exitController.isCompleted) {
+      return opacityAnimation.value * exitOpacity.value;
+    }
+    return opacityAnimation.value;
+  }
+
+  bool get isExiting =>
+      exitController.isAnimating || exitController.isCompleted;
 }
 
-class _NodeNamesPainter extends CustomPainter {
-  final List<_NodeNameEntry> entries;
-  final List<Offset> vertexPositions;
-  final double rotationAngle;
-  final TextStyle textStyle;
+class _OrbitingChipsPainter extends CustomPainter {
+  final List<_NodeChipEntry> chips;
+  final double orbitProgress;
   final List<Color> gradientColors;
 
-  _NodeNamesPainter({
-    required this.entries,
-    required this.vertexPositions,
-    required this.rotationAngle,
-    required this.textStyle,
+  _OrbitingChipsPainter({
+    required this.chips,
+    required this.orbitProgress,
     required this.gradientColors,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
+    final baseRadius = size.width * 0.42; // Orbit radius
 
-    for (final entry in entries) {
-      if (entry.vertexIndex >= vertexPositions.length) continue;
+    for (final chip in chips) {
+      final opacity = chip.currentOpacity;
+      if (opacity <= 0.01) continue;
 
-      final basePos = vertexPositions[entry.vertexIndex];
+      final scale = chip.currentScale.clamp(0.0, 1.5);
+      if (scale <= 0.01) continue;
 
-      // Apply rotation
-      final rotatedX =
-          basePos.dx * math.cos(rotationAngle) -
-          basePos.dy * math.sin(rotationAngle);
-      final rotatedY =
-          basePos.dx * math.sin(rotationAngle) +
-          basePos.dy * math.cos(rotationAngle);
+      // Calculate position with gentle orbit and float
+      final orbitAngle =
+          chip.baseAngle +
+          (orbitProgress * 2 * math.pi * chip.floatSpeed * 0.1);
+      final radius = baseRadius * chip.radiusMultiplier;
 
-      final position = Offset(
-        center.dx + rotatedX * radius,
-        center.dy + rotatedY * radius,
-      );
+      // Add subtle vertical bobbing
+      final bobOffset =
+          math.sin(orbitProgress * 2 * math.pi * 2 + chip.baseAngle) * 4;
 
-      // Calculate color based on vertex index
-      final colorIndex = entry.vertexIndex % gradientColors.length;
-      final color = gradientColors[colorIndex];
+      final x = center.dx + math.cos(orbitAngle) * radius;
+      final y = center.dy + math.sin(orbitAngle) * radius + bobOffset;
+      final position = Offset(x, y);
 
-      // Draw text with fade-in opacity
-      final opacity = entry.opacity.value;
-      if (opacity <= 0) continue;
-
-      final textSpan = TextSpan(
-        text: _truncateName(entry.name),
-        style: textStyle.copyWith(
-          color:
-              textStyle.color?.withValues(alpha: opacity) ??
-              Colors.white.withValues(alpha: opacity),
-          shadows: [
-            Shadow(
-              color: color.withValues(alpha: 0.6 * opacity),
-              blurRadius: 6,
-            ),
-            Shadow(
-              color: Colors.black.withValues(alpha: 0.3 * opacity),
-              blurRadius: 2,
-            ),
-          ],
-        ),
-      );
-
-      final textPainter = TextPainter(
-        text: textSpan,
-        textDirection: TextDirection.ltr,
-        textAlign: TextAlign.center,
-      )..layout();
-
-      // Center the text on the position
-      final textOffset = Offset(
-        position.dx - textPainter.width / 2,
-        position.dy - textPainter.height / 2,
-      );
-
-      textPainter.paint(canvas, textOffset);
+      _drawChip(canvas, position, chip, scale, opacity);
     }
   }
 
-  String _truncateName(String name) {
-    // Truncate long names
-    if (name.length > 10) {
-      return '${name.substring(0, 8)}…';
+  void _drawChip(
+    Canvas canvas,
+    Offset position,
+    _NodeChipEntry chip,
+    double scale,
+    double opacity,
+  ) {
+    final displayName = _formatName(chip.name);
+
+    // Measure text first
+    final textSpan = TextSpan(
+      text: displayName,
+      style: TextStyle(
+        fontSize: 11 * scale,
+        fontWeight: FontWeight.w600,
+        color: Colors.white.withValues(alpha: opacity),
+        letterSpacing: 0.3,
+      ),
+    );
+
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    )..layout();
+
+    // Chip dimensions
+    final chipWidth = textPainter.width + 16 * scale;
+    final chipHeight = textPainter.height + 10 * scale;
+    final chipRadius = chipHeight / 2;
+
+    final chipRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: position, width: chipWidth, height: chipHeight),
+      Radius.circular(chipRadius),
+    );
+
+    // Draw outer glow
+    final glowPaint = Paint()
+      ..color = chip.color.withValues(alpha: 0.4 * opacity)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 12 * scale);
+    canvas.drawRRect(chipRect, glowPaint);
+
+    // Draw chip background with gradient
+    final bgRect = chipRect.outerRect;
+    final gradient = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        chip.color.withValues(alpha: 0.25 * opacity),
+        chip.color.withValues(alpha: 0.15 * opacity),
+      ],
+    );
+
+    final bgPaint = Paint()
+      ..shader = gradient.createShader(bgRect)
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(chipRect, bgPaint);
+
+    // Draw border with glow effect
+    final borderPaint = Paint()
+      ..color = chip.color.withValues(alpha: 0.6 * opacity)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0 * scale;
+    canvas.drawRRect(chipRect, borderPaint);
+
+    // Draw subtle inner highlight
+    final highlightRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: Offset(position.dx, position.dy - chipHeight * 0.15),
+        width: chipWidth - 4 * scale,
+        height: chipHeight * 0.4,
+      ),
+      Radius.circular(chipRadius * 0.8),
+    );
+    final highlightPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.1 * opacity)
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(highlightRect, highlightPaint);
+
+    // Draw text
+    final textOffset = Offset(
+      position.dx - textPainter.width / 2,
+      position.dy - textPainter.height / 2,
+    );
+
+    // Text shadow for depth
+    final shadowSpan = TextSpan(
+      text: displayName,
+      style: TextStyle(
+        fontSize: 11 * scale,
+        fontWeight: FontWeight.w600,
+        color: Colors.black.withValues(alpha: 0.3 * opacity),
+        letterSpacing: 0.3,
+      ),
+    );
+    final shadowPainter = TextPainter(
+      text: shadowSpan,
+      textDirection: TextDirection.ltr,
+    )..layout();
+    shadowPainter.paint(canvas, textOffset + Offset(0, 1 * scale));
+
+    // Main text
+    textPainter.paint(canvas, textOffset);
+  }
+
+  String _formatName(String name) {
+    // Clean up and truncate
+    final cleaned = name.trim();
+    if (cleaned.length > 12) {
+      return '${cleaned.substring(0, 10)}…';
     }
-    return name;
+    return cleaned;
   }
 
   @override
-  bool shouldRepaint(_NodeNamesPainter oldDelegate) {
-    return oldDelegate.entries.length != entries.length ||
-        oldDelegate.rotationAngle != rotationAngle ||
-        entries.any((e) => e.controller.isAnimating);
-  }
+  bool shouldRepaint(_OrbitingChipsPainter oldDelegate) => true;
 }
 
 /// A splash screen variant that shows node names during initialization
@@ -341,6 +471,8 @@ class NodeNamesLoadingSplash extends ConsumerWidget {
       glowIntensity: 0.6,
       lineThickness: 0.6,
       nodeSize: 1.0,
+      maxVisibleNames: 6,
+      chipDisplayDuration: const Duration(seconds: 5),
     );
   }
 }

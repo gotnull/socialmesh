@@ -337,7 +337,8 @@ class _ConfiguredSplashMeshNodeState
             nodeSize: config.nodeSize,
             gradientColors: config.gradientColors,
             showNodeNames: true,
-            namesOrbitWithMesh: true,
+            maxVisibleNames: 6,
+            chipDisplayDuration: const Duration(seconds: 5),
           )
         : AccelerometerMeshNode(
             size: meshSize,
