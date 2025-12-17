@@ -817,24 +817,24 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                             ),
                                           )
                                         : profile?.avatarUrl != null
-                                            ? (profile!.avatarUrl!.startsWith(
-                                                    'http',
-                                                  )
-                                                  ? Image.network(
-                                                      profile.avatarUrl!,
-                                                      fit: BoxFit.cover,
-                                                    )
-                                                  : Image.file(
-                                                      File(profile.avatarUrl!),
-                                                      fit: BoxFit.cover,
-                                                    ))
-                                            : Center(
-                                                child: Text(
-                                                  profile?.initials ?? '?',
-                                                  style: TextStyle(
-                                                    fontSize: 32,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: accentColor,
+                                        ? (profile!.avatarUrl!.startsWith(
+                                                'http',
+                                              )
+                                              ? Image.network(
+                                                  profile.avatarUrl!,
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : Image.file(
+                                                  File(profile.avatarUrl!),
+                                                  fit: BoxFit.cover,
+                                                ))
+                                        : Center(
+                                            child: Text(
+                                              profile?.initials ?? '?',
+                                              style: TextStyle(
+                                                fontSize: 32,
+                                                fontWeight: FontWeight.bold,
+                                                color: accentColor,
                                               ),
                                             ),
                                           ),
@@ -868,7 +868,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                           const SizedBox(height: 8),
                           Center(
                             child: TextButton(
-                              onPressed: _isUploadingAvatar ? null : _removeAvatar,
+                              onPressed: _isUploadingAvatar
+                                  ? null
+                                  : _removeAvatar,
                               child: _isUploadingAvatar
                                   ? SizedBox(
                                       width: 16,
@@ -880,7 +882,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                     )
                                   : const Text(
                                       'Remove Avatar',
-                                      style: TextStyle(color: AppTheme.errorRed),
+                                      style: TextStyle(
+                                        color: AppTheme.errorRed,
+                                      ),
                                     ),
                             ),
                           ),
