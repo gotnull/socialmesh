@@ -45,6 +45,8 @@ class NodesScreen extends ConsumerStatefulWidget {
 
 class _NodesScreenState extends ConsumerState<NodesScreen> {
   String _searchQuery = '';
+  NodeFilter _activeFilter = NodeFilter.all;
+  NodeSortOrder _sortOrder = NodeSortOrder.lastHeard;
 
   void _dismissKeyboard() {
     FocusScope.of(context).unfocus();
@@ -55,19 +57,13 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
-    var nodesList = nodes.values.toList()
-      ..sort((a, b) {
-        // My node always first
-        if (a.nodeNum == myNodeNum) return -1;
-        if (b.nodeNum == myNodeNum) return 1;
-        // Favorites second
-        if (a.isFavorite && !b.isFavorite) return -1;
-        if (!a.isFavorite && b.isFavorite) return 1;
-        // Then by last heard (most recent first)
-        if (a.lastHeard == null) return 1;
-        if (b.lastHeard == null) return -1;
-        return b.lastHeard!.compareTo(a.lastHeard!);
-      });
+    var nodesList = nodes.values.toList();
+
+    // Apply filter
+    nodesList = _applyFilter(nodesList, myNodeNum);
+
+    // Apply sort
+    nodesList = _applySort(nodesList, myNodeNum);
 
     // Filter by search
     if (_searchQuery.isNotEmpty) {
@@ -78,6 +74,14 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
             node.nodeNum.toString().contains(query);
       }).toList();
     }
+
+    // Count nodes by filter for badges
+    final allNodes = nodes.values.toList();
+    final onlineCount = allNodes.where((n) => n.isOnline).length;
+    final favoritesCount = allNodes.where((n) => n.isFavorite).length;
+    final withPositionCount = allNodes
+        .where((n) => n.latitude != null && n.longitude != null)
+        .length;
 
     return GestureDetector(
       onTap: _dismissKeyboard,
@@ -112,7 +116,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
           children: [
             // Search bar
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Container(
                 decoration: BoxDecoration(
                   color: AppTheme.darkCard,
@@ -137,6 +141,67 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                 ),
               ),
             ),
+            // Filter chips row
+            SizedBox(
+              height: 44,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  _FilterChip(
+                    label: 'All',
+                    count: nodes.length,
+                    isSelected: _activeFilter == NodeFilter.all,
+                    onTap: () => setState(() => _activeFilter = NodeFilter.all),
+                  ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: 'Online',
+                    count: onlineCount,
+                    isSelected: _activeFilter == NodeFilter.online,
+                    color: AccentColors.green,
+                    onTap: () =>
+                        setState(() => _activeFilter = NodeFilter.online),
+                  ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: 'Favorites',
+                    count: favoritesCount,
+                    isSelected: _activeFilter == NodeFilter.favorites,
+                    color: AppTheme.warningYellow,
+                    icon: Icons.star,
+                    onTap: () =>
+                        setState(() => _activeFilter = NodeFilter.favorites),
+                  ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: 'With Position',
+                    count: withPositionCount,
+                    isSelected: _activeFilter == NodeFilter.withPosition,
+                    color: AccentColors.cyan,
+                    icon: Icons.location_on,
+                    onTap: () =>
+                        setState(() => _activeFilter = NodeFilter.withPosition),
+                  ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: 'Offline',
+                    count: nodes.length - onlineCount,
+                    isSelected: _activeFilter == NodeFilter.offline,
+                    color: AppTheme.textTertiary,
+                    onTap: () =>
+                        setState(() => _activeFilter = NodeFilter.offline),
+                  ),
+                  const SizedBox(width: 16),
+                  // Sort dropdown
+                  _SortButton(
+                    sortOrder: _sortOrder,
+                    onChanged: (order) => setState(() => _sortOrder = order),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
             // Divider
             Container(
               height: 1,
@@ -144,7 +209,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
             ),
             // Node list
             Expanded(
-              child: nodes.isEmpty
+              child: nodesList.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -163,14 +228,25 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          const Text(
-                            'No nodes discovered yet',
-                            style: TextStyle(
+                          Text(
+                            _activeFilter == NodeFilter.all
+                                ? 'No nodes discovered yet'
+                                : 'No nodes match this filter',
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                               color: AppTheme.textSecondary,
                             ),
                           ),
+                          if (_activeFilter != NodeFilter.all) ...[
+                            const SizedBox(height: 12),
+                            TextButton(
+                              onPressed: () => setState(
+                                () => _activeFilter = NodeFilter.all,
+                              ),
+                              child: const Text('Show all nodes'),
+                            ),
+                          ],
                         ],
                       ),
                     )
@@ -204,8 +280,254 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     );
   }
 
+  List<MeshNode> _applyFilter(List<MeshNode> nodes, int? myNodeNum) {
+    switch (_activeFilter) {
+      case NodeFilter.all:
+        return nodes;
+      case NodeFilter.online:
+        return nodes.where((n) => n.isOnline).toList();
+      case NodeFilter.offline:
+        return nodes.where((n) => !n.isOnline).toList();
+      case NodeFilter.favorites:
+        return nodes.where((n) => n.isFavorite).toList();
+      case NodeFilter.withPosition:
+        return nodes
+            .where((n) => n.latitude != null && n.longitude != null)
+            .toList();
+    }
+  }
+
+  List<MeshNode> _applySort(List<MeshNode> nodes, int? myNodeNum) {
+    final sorted = List<MeshNode>.from(nodes);
+    sorted.sort((a, b) {
+      // My node always first
+      if (a.nodeNum == myNodeNum) return -1;
+      if (b.nodeNum == myNodeNum) return 1;
+
+      switch (_sortOrder) {
+        case NodeSortOrder.lastHeard:
+          // Favorites second when sorting by last heard
+          if (a.isFavorite && !b.isFavorite) return -1;
+          if (!a.isFavorite && b.isFavorite) return 1;
+          if (a.lastHeard == null) return 1;
+          if (b.lastHeard == null) return -1;
+          return b.lastHeard!.compareTo(a.lastHeard!);
+
+        case NodeSortOrder.name:
+          return a.displayName.toLowerCase().compareTo(
+            b.displayName.toLowerCase(),
+          );
+
+        case NodeSortOrder.signalStrength:
+          final aSnr = a.snr ?? -999;
+          final bSnr = b.snr ?? -999;
+          return bSnr.compareTo(aSnr); // Higher is better
+
+        case NodeSortOrder.batteryLevel:
+          final aBat = a.batteryLevel ?? -1;
+          final bBat = b.batteryLevel ?? -1;
+          return bBat.compareTo(aBat); // Higher is better
+      }
+    });
+    return sorted;
+  }
+
   void _showNodeDetails(BuildContext context, MeshNode node, bool isMyNode) {
     showNodeDetailsSheet(context, node, isMyNode);
+  }
+}
+
+/// Filter options for the nodes list
+enum NodeFilter { all, online, offline, favorites, withPosition }
+
+/// Sort order options for the nodes list
+enum NodeSortOrder { lastHeard, name, signalStrength, batteryLevel }
+
+/// Filter chip widget
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final int count;
+  final bool isSelected;
+  final Color? color;
+  final IconData? icon;
+  final VoidCallback onTap;
+
+  const _FilterChip({
+    required this.label,
+    required this.count,
+    required this.isSelected,
+    required this.onTap,
+    this.color,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final chipColor = color ?? AppTheme.primaryBlue;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? chipColor.withValues(alpha: 0.2)
+              : AppTheme.darkCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? chipColor.withValues(alpha: 0.5)
+                : AppTheme.darkBorder.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 14,
+                color: isSelected ? chipColor : AppTheme.textTertiary,
+              ),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? chipColor : AppTheme.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? chipColor.withValues(alpha: 0.3)
+                    : AppTheme.darkBorder.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? chipColor : AppTheme.textTertiary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Sort button with dropdown
+class _SortButton extends StatelessWidget {
+  final NodeSortOrder sortOrder;
+  final ValueChanged<NodeSortOrder> onChanged;
+
+  const _SortButton({required this.sortOrder, required this.onChanged});
+
+  String get _sortLabel {
+    switch (sortOrder) {
+      case NodeSortOrder.lastHeard:
+        return 'Recent';
+      case NodeSortOrder.name:
+        return 'Name';
+      case NodeSortOrder.signalStrength:
+        return 'Signal';
+      case NodeSortOrder.batteryLevel:
+        return 'Battery';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<NodeSortOrder>(
+      initialValue: sortOrder,
+      onSelected: onChanged,
+      color: AppTheme.darkCard,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      offset: const Offset(0, 40),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppTheme.darkCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.sort, size: 14, color: AppTheme.textTertiary),
+            const SizedBox(width: 4),
+            Text(
+              _sortLabel,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 2),
+            const Icon(
+              Icons.arrow_drop_down,
+              size: 18,
+              color: AppTheme.textTertiary,
+            ),
+          ],
+        ),
+      ),
+      itemBuilder: (context) => [
+        _buildMenuItem(NodeSortOrder.lastHeard, 'Most Recent', Icons.schedule),
+        _buildMenuItem(NodeSortOrder.name, 'Name (A-Z)', Icons.sort_by_alpha),
+        _buildMenuItem(
+          NodeSortOrder.signalStrength,
+          'Signal Strength',
+          Icons.signal_cellular_alt,
+        ),
+        _buildMenuItem(
+          NodeSortOrder.batteryLevel,
+          'Battery Level',
+          Icons.battery_full,
+        ),
+      ],
+    );
+  }
+
+  PopupMenuItem<NodeSortOrder> _buildMenuItem(
+    NodeSortOrder value,
+    String label,
+    IconData icon,
+  ) {
+    final isSelected = sortOrder == value;
+    return PopupMenuItem<NodeSortOrder>(
+      value: value,
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: isSelected ? AppTheme.primaryBlue : AppTheme.textTertiary,
+          ),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? AppTheme.primaryBlue : Colors.white,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            ),
+          ),
+          const Spacer(),
+          if (isSelected)
+            const Icon(Icons.check, size: 18, color: AppTheme.primaryBlue),
+        ],
+      ),
+    );
   }
 }
 
