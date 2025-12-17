@@ -420,7 +420,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const ConfiguredSplashMeshNode(),
+                      const ConfiguredSplashMeshNode(showNodeNames: true),
                       const SizedBox(height: 32),
                       const Text(
                         'Socialmesh',

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/logging.dart';
 import '../core/widgets/animated_mesh_node.dart';
+import '../core/widgets/node_names_mesh.dart';
 import '../core/widgets/secret_gesture_detector.dart';
 import '../features/onboarding/widgets/mesh_node_brain.dart';
 import '../services/config/mesh_firestore_config_service.dart';
@@ -240,11 +241,15 @@ class ConfiguredSplashMeshNode extends ConsumerStatefulWidget {
   /// Duration of bounce-in animation
   final Duration animationDuration;
 
+  /// Whether to show node names on the mesh vertices during initialization
+  final bool showNodeNames;
+
   const ConfiguredSplashMeshNode({
     super.key,
     this.layoutSize,
     this.animateIn = true,
     this.animationDuration = const Duration(milliseconds: 800),
+    this.showNodeNames = false,
   });
 
   @override
@@ -322,19 +327,19 @@ class _ConfiguredSplashMeshNodeState
     final layoutSize = widget.layoutSize ?? 200.0;
     final meshSize = config.size;
 
-    return SizedBox(
-      width: layoutSize,
-      height: layoutSize,
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          final scale = widget.animateIn ? _scaleAnimation.value : 1.0;
-          return Transform.scale(scale: scale, child: child);
-        },
-        child: OverflowBox(
-          maxWidth: meshSize,
-          maxHeight: meshSize,
-          child: AccelerometerMeshNode(
+    // Use NodeNamesMeshNode when showNodeNames is enabled
+    final meshWidget = widget.showNodeNames
+        ? NodeNamesMeshNode(
+            size: meshSize,
+            animationType: config.animationType,
+            glowIntensity: config.glowIntensity,
+            lineThickness: config.lineThickness,
+            nodeSize: config.nodeSize,
+            gradientColors: config.gradientColors,
+            showNodeNames: true,
+            namesOrbitWithMesh: true,
+          )
+        : AccelerometerMeshNode(
             size: meshSize,
             animationType: config.animationType,
             glowIntensity: config.glowIntensity,
@@ -350,7 +355,21 @@ class _ConfiguredSplashMeshNodeState
             enablePullToStretch: config.enablePullToStretch,
             touchIntensity: config.touchIntensity,
             stretchIntensity: config.stretchIntensity,
-          ),
+          );
+
+    return SizedBox(
+      width: layoutSize,
+      height: layoutSize,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          final scale = widget.animateIn ? _scaleAnimation.value : 1.0;
+          return Transform.scale(scale: scale, child: child);
+        },
+        child: OverflowBox(
+          maxWidth: meshSize,
+          maxHeight: meshSize,
+          child: meshWidget,
         ),
       ),
     );

@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
-import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/user_profile.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
@@ -81,11 +80,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void _showEditSheet(BuildContext context) {
-    AppBottomSheet.show(
+    showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      padding: EdgeInsets.zero,
-      child: const _EditProfileSheet(),
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (context) => const _EditProfileSheet(),
     );
   }
 }
@@ -194,7 +194,7 @@ class _ProfileView extends ConsumerWidget {
 
           // Info cards
           _ProfileInfoCard(
-            title: 'Account',
+            title: 'Details',
             items: [
               if (profile.email != null)
                 _InfoItem(
@@ -288,7 +288,7 @@ class _ProfileView extends ConsumerWidget {
                   icon: Icon(
                     isSignedIn ? Icons.cloud_sync : Icons.cloud_upload,
                   ),
-                  label: Text(isSignedIn ? 'Account' : 'Sign In'),
+                  label: Text(isSignedIn ? 'Cloud Sync' : 'Sign In'),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
@@ -658,6 +658,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
             clearSocialLinks: socialLinks.isEmpty,
           );
 
+      // Force refresh to ensure UI updates
+      ref.invalidate(userProfileProvider);
+
       if (mounted) {
         Navigator.pop(context);
         showSuccessSnackBar(context, 'Profile updated');
@@ -685,15 +688,32 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       expand: false,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppTheme.darkBackground,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
           ),
           child: Column(
             children: [
+              // Drag pill
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                decoration: BoxDecoration(
+                  color: AppTheme.textTertiary.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               // Header
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
