@@ -415,7 +415,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                         const SizedBox(width: 12),
                         const Expanded(
                           child: Text(
-                            'Bluetooth settings control how your device pairs with phones and other devices. Changes require a device reboot to take effect.',
+                            'Bluetooth settings control how your device pairs with phones and other devices.',
                             style: TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 13,

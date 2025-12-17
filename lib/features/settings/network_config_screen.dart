@@ -398,7 +398,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                         const SizedBox(width: 12),
                         const Expanded(
                           child: Text(
-                            'Network settings are only available on devices with WiFi or Ethernet hardware support. Changes require a device reboot.',
+                            'Network settings are only available on devices with WiFi or Ethernet hardware support.',
                             style: TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 13,

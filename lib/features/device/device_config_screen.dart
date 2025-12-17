@@ -172,10 +172,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
 
       if (mounted) {
         setState(() => _hasChanges = false);
-        showSuccessSnackBar(
-          context,
-          'Device configuration saved. Device may reboot.',
-        );
+        showSuccessSnackBar(context, 'Device configuration saved');
       }
     } catch (e) {
       if (mounted) {
@@ -420,18 +417,18 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             ),
             child: Row(
               children: [
-                const Icon(
-                  Icons.warning_amber_rounded,
-                  color: AppTheme.warningYellow,
+                Icon(
+                  Icons.info_outline_rounded,
+                  color: AppTheme.primaryBlue,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Changing device role may cause the device to reboot and temporarily disconnect.',
+                    'Device role determines how your node behaves in the mesh network.',
                     style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.warningYellow.withValues(alpha: 0.9),
+                      color: AppTheme.primaryBlue.withValues(alpha: 0.9),
                     ),
                   ),
                 ),

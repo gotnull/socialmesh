@@ -2196,53 +2196,7 @@ class ProtocolService {
     await _transport.send(_prepareForSend(bytes));
   }
 
-  /// Begin edit settings transaction
-  Future<void> _beginEditSettings() async {
-    _logger.d('Beginning edit settings transaction');
-
-    final adminMsg = pb.AdminMessage()..beginEditSettings = true;
-
-    final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
-      ..payload = adminMsg.writeToBuffer();
-
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId();
-
-    final toRadio = pn.ToRadio()..packet = packet;
-    final bytes = toRadio.writeToBuffer();
-
-    await _transport.send(_prepareForSend(bytes));
-    // Small delay to let device process
-    await Future.delayed(const Duration(milliseconds: 100));
-  }
-
-  /// Commit edit settings transaction
-  Future<void> _commitEditSettings() async {
-    _logger.d('Committing edit settings transaction');
-
-    final adminMsg = pb.AdminMessage()..commitEditSettings = true;
-
-    final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
-      ..payload = adminMsg.writeToBuffer();
-
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId();
-
-    final toRadio = pn.ToRadio()..packet = packet;
-    final bytes = toRadio.writeToBuffer();
-
-    await _transport.send(_prepareForSend(bytes));
-  }
-
-  /// Set channel with proper transaction handling
+  /// Set channel configuration
   Future<void> setChannel(ChannelConfig config) async {
     // Validate we're ready to send
     if (_myNodeNum == null) {
@@ -2256,10 +2210,6 @@ class ProtocolService {
       AppLogging.debug(
         '📡 Setting channel ${config.index}: "${config.name}" (role: ${config.role})',
       );
-
-      // Note: iOS app does NOT use beginEditSettings/commitEditSettings for channel changes
-      // Those cause a device reboot which is unnecessary for channel settings
-      // We send the channel directly like iOS does
 
       final channelSettings = pb.ChannelSettings()
         ..name = config.name
@@ -3119,7 +3069,7 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Set device configuration (wraps with begin/commit transaction)
+  /// Set device configuration
   Future<void> setConfig(pb.Config config) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot set config: device not ready');
@@ -3129,8 +3079,6 @@ class ProtocolService {
     }
 
     _logger.i('Setting config');
-
-    await _beginEditSettings();
 
     final adminMsg = pb.AdminMessage()..setConfig = config;
 
@@ -3143,13 +3091,11 @@ class ProtocolService {
       ..from = _myNodeNum!
       ..to = _myNodeNum!
       ..decoded = data
-      ..id = _generatePacketId();
+      ..id = _generatePacketId()
+      ..priority = 70;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
-
-    await Future.delayed(const Duration(milliseconds: 200));
-    await _commitEditSettings();
   }
 
   /// Set LoRa configuration (region, modem preset, TX power, etc.)
@@ -3371,7 +3317,7 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Set module configuration (wraps with begin/commit transaction)
+  /// Set module configuration
   Future<void> setModuleConfig(pb.ModuleConfig moduleConfig) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot set module config: device not ready');
@@ -3381,8 +3327,6 @@ class ProtocolService {
     }
 
     _logger.i('Setting module config');
-
-    await _beginEditSettings();
 
     final adminMsg = pb.AdminMessage()..setModuleConfig = moduleConfig;
 
@@ -3395,13 +3339,11 @@ class ProtocolService {
       ..from = _myNodeNum!
       ..to = _myNodeNum!
       ..decoded = data
-      ..id = _generatePacketId();
+      ..id = _generatePacketId()
+      ..priority = 70;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
-
-    await Future.delayed(const Duration(milliseconds: 200));
-    await _commitEditSettings();
   }
 
   /// Set MQTT module configuration
