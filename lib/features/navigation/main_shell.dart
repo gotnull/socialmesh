@@ -1057,10 +1057,7 @@ class _DrawerNodeHeader extends ConsumerWidget {
                   ? LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        accentColor,
-                        accentColor.withValues(alpha: 0.7),
-                      ],
+                      colors: [accentColor, accentColor.withValues(alpha: 0.7)],
                     )
                   : null,
               color: isConnected ? null : theme.dividerColor,
