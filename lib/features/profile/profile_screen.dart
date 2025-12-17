@@ -530,6 +530,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   late TextEditingController _telegramController;
 
   bool _isLoading = false;
+  bool _isUploadingAvatar = false;
   bool _hasChanges = false;
 
   @override
@@ -601,18 +602,42 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     );
 
     if (result != null && result.files.isNotEmpty) {
-      final file = File(result.files.first.path!);
-      await ref.read(userProfileProvider.notifier).saveAvatarFromFile(file);
-      if (mounted) {
-        showSuccessSnackBar(context, 'Avatar updated');
+      setState(() => _isUploadingAvatar = true);
+      try {
+        final file = File(result.files.first.path!);
+        await ref.read(userProfileProvider.notifier).saveAvatarFromFile(file);
+        if (mounted) {
+          setState(() => _hasChanges = true);
+          showSuccessSnackBar(context, 'Avatar updated');
+        }
+      } catch (e) {
+        if (mounted) {
+          showErrorSnackBar(context, 'Failed to upload avatar: $e');
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isUploadingAvatar = false);
+        }
       }
     }
   }
 
   Future<void> _removeAvatar() async {
-    await ref.read(userProfileProvider.notifier).deleteAvatar();
-    if (mounted) {
-      showSuccessSnackBar(context, 'Avatar removed');
+    setState(() => _isUploadingAvatar = true);
+    try {
+      await ref.read(userProfileProvider.notifier).deleteAvatar();
+      if (mounted) {
+        setState(() => _hasChanges = true);
+        showSuccessSnackBar(context, 'Avatar removed');
+      }
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to remove avatar: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingAvatar = false);
+      }
     }
   }
 
@@ -769,7 +794,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                         // Avatar edit
                         Center(
                           child: GestureDetector(
-                            onTap: _pickAvatar,
+                            onTap: _isUploadingAvatar ? null : _pickAvatar,
                             child: Stack(
                               children: [
                                 Container(
@@ -784,25 +809,32 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                     ),
                                   ),
                                   child: ClipOval(
-                                    child: profile?.avatarUrl != null
-                                        ? (profile!.avatarUrl!.startsWith(
-                                                'http',
-                                              )
-                                              ? Image.network(
-                                                  profile.avatarUrl!,
-                                                  fit: BoxFit.cover,
-                                                )
-                                              : Image.file(
-                                                  File(profile.avatarUrl!),
-                                                  fit: BoxFit.cover,
-                                                ))
-                                        : Center(
-                                            child: Text(
-                                              profile?.initials ?? '?',
-                                              style: TextStyle(
-                                                fontSize: 32,
-                                                fontWeight: FontWeight.bold,
-                                                color: accentColor,
+                                    child: _isUploadingAvatar
+                                        ? Center(
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: accentColor,
+                                            ),
+                                          )
+                                        : profile?.avatarUrl != null
+                                            ? (profile!.avatarUrl!.startsWith(
+                                                    'http',
+                                                  )
+                                                  ? Image.network(
+                                                      profile.avatarUrl!,
+                                                      fit: BoxFit.cover,
+                                                    )
+                                                  : Image.file(
+                                                      File(profile.avatarUrl!),
+                                                      fit: BoxFit.cover,
+                                                    ))
+                                            : Center(
+                                                child: Text(
+                                                  profile?.initials ?? '?',
+                                                  style: TextStyle(
+                                                    fontSize: 32,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: accentColor,
                                               ),
                                             ),
                                           ),
@@ -836,11 +868,20 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                           const SizedBox(height: 8),
                           Center(
                             child: TextButton(
-                              onPressed: _removeAvatar,
-                              child: const Text(
-                                'Remove Avatar',
-                                style: TextStyle(color: AppTheme.errorRed),
-                              ),
+                              onPressed: _isUploadingAvatar ? null : _removeAvatar,
+                              child: _isUploadingAvatar
+                                  ? SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppTheme.errorRed,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Remove Avatar',
+                                      style: TextStyle(color: AppTheme.errorRed),
+                                    ),
                             ),
                           ),
                         ],
