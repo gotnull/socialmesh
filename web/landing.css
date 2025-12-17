@@ -886,8 +886,7 @@ section {
 }
 
 .screenshots-category {
-  margin-bottom: 60px;
-  text-align: center;
+  margin-bottom: 80px;
 }
 
 .screenshots-category:last-child {
@@ -895,11 +894,12 @@ section {
 }
 
 .screenshots-category h3 {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.5px;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
   color: var(--text-primary);
+  text-align: center;
 }
 
 .screenshots-category h3.premium-label {
@@ -907,44 +907,51 @@ section {
 }
 
 .screenshots-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+}
+
+@media (max-width: 1024px) {
+  .screenshots-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  .screenshots-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
 }
 
 .screenshot-card {
   background: var(--bg-card);
-  border-radius: 16px;
+  border-radius: 20px;
   border: 1px solid var(--border-color);
-  overflow: visible;
-  transition: all 0.3s;
-  text-align: center;
-  padding: 10px;
-  padding-bottom: 0;
-  width: 160px;
-  flex-shrink: 0;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
 }
 
 .screenshot-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 0 40px rgba(233, 30, 140, 0.1);
+  transform: translateY(-8px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3), 0 0 60px rgba(233, 30, 140, 0.15);
   border-color: var(--accent);
 }
 
 .screenshot-card img {
   width: 100%;
   height: auto;
-  border-radius: 10px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   display: block;
 }
 
-/* Torn/faded bottom effect for screenshots */
+/* Screenshot image with subtle fade at bottom */
 .screenshot-card .screenshot-img-wrapper {
   position: relative;
   overflow: hidden;
-  border-radius: 10px;
 }
 
 .screenshot-card .screenshot-img-wrapper::after {
@@ -953,28 +960,35 @@ section {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  height: 80px;
   background: linear-gradient(to bottom,
       transparent 0%,
-      rgba(41, 48, 61, 0.6) 50%,
+      rgba(41, 48, 61, 0.4) 60%,
       var(--bg-card) 100%);
   pointer-events: none;
 }
 
 .screenshot-card .screenshot-img-wrapper img {
-  border-radius: 10px 10px 0 0;
   box-shadow: none;
 }
 
+.screenshot-content {
+  padding: 24px;
+  text-align: left;
+}
+
 .screenshot-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-top: 14px;
-  padding-bottom: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+}
+
+.screenshot-description {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
 }
 
 /* Comparison Section */
