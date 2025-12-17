@@ -190,7 +190,8 @@ class _NodeNamesMeshNodeState extends ConsumerState<NodeNamesMeshNode>
     // Add new node names as they come in
     if (widget.showNodeNames) {
       for (final node in nodes.values) {
-        final displayName = node.longName ?? node.shortName;
+        // Prefer shortName (compact 4-char ID) over longName for cleaner display
+        final displayName = node.shortName ?? node.longName;
         if (displayName != null && displayName.isNotEmpty) {
           _addNodeName(displayName);
         }
