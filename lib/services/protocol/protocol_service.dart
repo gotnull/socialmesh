@@ -572,8 +572,12 @@ class ProtocolService {
           Future.delayed(const Duration(milliseconds: 300), () {
             getDeviceMetadata();
           });
+          // Request full channel details (initial config dump doesn't include moduleSettings)
+          Future.delayed(const Duration(milliseconds: 400), () {
+            _requestAllChannelDetails();
+          });
           // Request positions from all nodes including ourselves
-          Future.delayed(const Duration(milliseconds: 500), () {
+          Future.delayed(const Duration(milliseconds: 600), () {
             requestAllPositions();
           });
         });
@@ -2498,6 +2502,53 @@ class ProtocolService {
     } catch (e) {
       _logger.e('Error setting region: $e');
       rethrow;
+    }
+  }
+
+  /// Request full channel details from device
+  /// The initial config dump doesn't include moduleSettings (which has positionPrecision)
+  /// So we need to explicitly request each channel to get full details
+  Future<void> _requestAllChannelDetails() async {
+    if (_myNodeNum == null || !_transport.isConnected) return;
+
+    AppLogging.debug('📡 Requesting full channel details for all channels...');
+
+    // Request channels 0-7 (Meshtastic supports up to 8 channels)
+    for (var i = 0; i < 8; i++) {
+      try {
+        await _requestChannelDetails(i);
+        // Small delay between requests to avoid overwhelming the device
+        await Future.delayed(const Duration(milliseconds: 50));
+      } catch (e) {
+        AppLogging.debug('📡 Error requesting channel $i: $e');
+      }
+    }
+  }
+
+  /// Request details for a specific channel
+  Future<void> _requestChannelDetails(int channelIndex) async {
+    try {
+      AppLogging.debug('📡 Requesting channel $channelIndex details');
+
+      final adminMsg = pb.AdminMessage()..getChannelRequest = channelIndex;
+
+      final data = pb.Data()
+        ..portnum = pb.PortNum.ADMIN_APP
+        ..payload = adminMsg.writeToBuffer()
+        ..wantResponse = true;
+
+      final packet = pb.MeshPacket()
+        ..from = _myNodeNum!
+        ..to = _myNodeNum!
+        ..decoded = data
+        ..id = _generatePacketId();
+
+      final toRadio = pn.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+    } catch (e) {
+      _logger.e('Error requesting channel $channelIndex: $e');
     }
   }
 
