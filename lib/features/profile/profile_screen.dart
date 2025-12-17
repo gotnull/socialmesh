@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,9 +13,8 @@ import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
-import '../settings/account_screen.dart';
 
-/// Screen for viewing and editing user profile
+/// Screen for viewing and editing user profile with integrated cloud backup
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
@@ -54,7 +54,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         data: (profile) => profile != null
             ? _ProfileView(
                 profile: profile,
-                isSignedIn: authState.value != null,
+                user: authState.value,
                 onEditTap: () => _showEditSheet(context),
               )
             : const Center(child: Text('No profile found')),
@@ -92,14 +92,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
 class _ProfileView extends ConsumerWidget {
   final UserProfile profile;
-  final bool isSignedIn;
+  final User? user;
   final VoidCallback onEditTap;
 
   const _ProfileView({
     required this.profile,
-    required this.isSignedIn,
+    required this.user,
     required this.onEditTap,
   });
+
+  bool get isSignedIn => user != null;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -142,29 +144,6 @@ class _ProfileView extends ConsumerWidget {
               ),
             ),
           ],
-          const SizedBox(height: 8),
-
-          // Sync status
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                isSignedIn ? Icons.cloud_done : Icons.cloud_off,
-                size: 16,
-                color: isSignedIn ? AccentColors.green : AppTheme.textTertiary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                isSignedIn ? 'Synced to cloud' : 'Local only',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isSignedIn
-                      ? AppTheme.textSecondary
-                      : AppTheme.textTertiary,
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 24),
 
           // Bio
@@ -264,38 +243,24 @@ class _ProfileView extends ConsumerWidget {
             const SizedBox(height: 12),
           ],
 
-          // Action buttons
+          // Edit profile button
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onEditTap,
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Edit Profile'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onEditTap,
+              icon: const Icon(Icons.edit),
+              label: const Text('Edit Profile'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AccountScreen()),
-                  ),
-                  icon: Icon(
-                    isSignedIn ? Icons.cloud_sync : Icons.cloud_upload,
-                  ),
-                  label: Text(isSignedIn ? 'Cloud Sync' : 'Sign In'),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
+
+          // Cloud Backup Section (collapsible)
+          const SizedBox(height: 24),
+          _CloudBackupSection(user: user),
+
           const SizedBox(height: 32),
         ],
       ),
@@ -319,6 +284,715 @@ class _ProfileView extends ConsumerWidget {
     ];
     return '${months[date.month - 1]} ${date.year}';
   }
+}
+
+/// Collapsible Cloud Backup Section - integrates sign in/out and sync
+class _CloudBackupSection extends ConsumerStatefulWidget {
+  final User? user;
+
+  const _CloudBackupSection({required this.user});
+
+  @override
+  ConsumerState<_CloudBackupSection> createState() =>
+      _CloudBackupSectionState();
+}
+
+class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
+  bool _isExpanded = false;
+  bool _isSyncing = false;
+
+  bool get isSignedIn => widget.user != null;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start expanded if not signed in or if anonymous (to prompt action)
+    _isExpanded = !isSignedIn || (widget.user?.isAnonymous ?? false);
+  }
+
+  String _getBackupStatusText() {
+    if (!isSignedIn) {
+      return 'Not backed up';
+    }
+    if (widget.user!.isAnonymous) {
+      return 'Device only • Link email to sync';
+    }
+    return 'Synced • ${widget.user!.email}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accentColor = context.accentColor;
+    final isAnonymous = widget.user?.isAnonymous ?? false;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSignedIn
+              ? (isAnonymous
+                    ? AccentColors.orange.withValues(alpha: 0.3)
+                    : AccentColors.green.withValues(alpha: 0.3))
+              : AppTheme.darkBorder.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Header - always visible
+          InkWell(
+            onTap: () => setState(() => _isExpanded = !_isExpanded),
+            borderRadius: BorderRadius.vertical(
+              top: const Radius.circular(12),
+              bottom: Radius.circular(_isExpanded ? 0 : 12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color:
+                          (isSignedIn
+                                  ? (isAnonymous
+                                        ? AccentColors.orange
+                                        : AccentColors.green)
+                                  : accentColor)
+                              .withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      isSignedIn
+                          ? (isAnonymous
+                                ? Icons.cloud_outlined
+                                : Icons.cloud_done)
+                          : Icons.cloud_off_outlined,
+                      size: 20,
+                      color: isSignedIn
+                          ? (isAnonymous
+                                ? AccentColors.orange
+                                : AccentColors.green)
+                          : accentColor,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Cloud Backup',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _getBackupStatusText(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isSignedIn
+                                ? (widget.user!.isAnonymous
+                                      ? AccentColors.orange
+                                      : AccentColors.green)
+                                : AppTheme.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    _isExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    color: AppTheme.textTertiary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Expandable content
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: _buildExpandedContent(context),
+            crossFadeState: _isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpandedContent(BuildContext context) {
+    if (isSignedIn) {
+      return _buildSignedInContent(context);
+    }
+    return _buildSignedOutContent(context);
+  }
+
+  Widget _buildSignedOutContent(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Divider(color: AppTheme.darkBorder),
+          const SizedBox(height: 12),
+          const Text(
+            'Sign in to backup your profile to the cloud and sync across devices.',
+            style: TextStyle(
+              fontSize: 13,
+              color: AppTheme.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Google Sign-In button
+          _SocialSignInButton(
+            onPressed: () => _signInWithGoogle(context),
+            icon: _GoogleLogo(),
+            label: 'Continue with Google',
+            backgroundColor: Colors.white,
+            textColor: Colors.black87,
+          ),
+          const SizedBox(height: 10),
+
+          // Apple Sign-In button (iOS/macOS only)
+          if (Platform.isIOS || Platform.isMacOS) ...[
+            _SocialSignInButton(
+              onPressed: () => _signInWithApple(context),
+              icon: const Icon(Icons.apple, color: Colors.white, size: 22),
+              label: 'Continue with Apple',
+              backgroundColor: Colors.black,
+              textColor: Colors.white,
+            ),
+            const SizedBox(height: 10),
+          ],
+
+          // Divider with "or"
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Expanded(child: Divider(color: AppTheme.darkBorder)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  'or',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+                ),
+              ),
+              const Expanded(child: Divider(color: AppTheme.darkBorder)),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Email sign-in
+          OutlinedButton.icon(
+            onPressed: () => _showSignInDialog(context),
+            icon: const Icon(Icons.email_outlined, size: 18),
+            label: const Text('Sign in with Email'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: TextButton(
+              onPressed: () => _showCreateAccountDialog(context),
+              child: const Text(
+                'Create account with email',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSignedInContent(BuildContext context) {
+    final user = widget.user!;
+    final isAnonymous = user.isAnonymous;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Divider(color: AppTheme.darkBorder),
+          const SizedBox(height: 12),
+
+          // Anonymous upgrade prompt
+          if (isAnonymous) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AccentColors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AccentColors.orange.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 18,
+                    color: AccentColors.orange,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Link an email to keep your data across devices.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AccentColors.orange,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: () => _linkEmailAccount(context),
+              icon: const Icon(Icons.link, size: 18),
+              label: const Text('Link Email'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+
+          // Sync button
+          OutlinedButton.icon(
+            onPressed: _isSyncing ? null : () => _syncNow(context),
+            icon: _isSyncing
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync, size: 18),
+            label: Text(_isSyncing ? 'Syncing...' : 'Sync Now'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+
+          // Account management for non-anonymous
+          if (!isAnonymous) ...[
+            const SizedBox(height: 16),
+            const Divider(color: AppTheme.darkBorder),
+            const SizedBox(height: 8),
+            _AccountOptionTile(
+              icon: Icons.lock_outline,
+              label: 'Change Password',
+              onTap: () => _sendPasswordReset(context),
+            ),
+          ],
+
+          // Sign out
+          const SizedBox(height: 8),
+          _AccountOptionTile(
+            icon: Icons.logout,
+            label: 'Sign Out',
+            onTap: () => _signOut(context),
+          ),
+
+          // Delete account (non-anonymous only)
+          if (!isAnonymous) ...[
+            const SizedBox(height: 8),
+            _AccountOptionTile(
+              icon: Icons.delete_outline,
+              label: 'Delete Account',
+              isDestructive: true,
+              onTap: () => _deleteAccount(context),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showSignInDialog(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => const _EmailSignInDialog(isCreateAccount: false),
+    );
+    if (result == true && context.mounted) {
+      showSuccessSnackBar(context, 'Signed in successfully!');
+    }
+  }
+
+  Future<void> _showCreateAccountDialog(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => const _EmailSignInDialog(isCreateAccount: true),
+    );
+    if (result == true && context.mounted) {
+      showSuccessSnackBar(context, 'Account created successfully!');
+    }
+  }
+
+  Future<void> _signInWithGoogle(BuildContext context) async {
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.signInWithGoogle();
+      if (context.mounted) {
+        showSuccessSnackBar(context, 'Signed in with Google');
+      }
+    } on FirebaseAuthException catch (e) {
+      if (context.mounted) {
+        if (e.code != 'sign-in-cancelled') {
+          showErrorSnackBar(context, 'Error: ${e.message}');
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(context, 'Sign in failed');
+      }
+    }
+  }
+
+  Future<void> _signInWithApple(BuildContext context) async {
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.signInWithApple();
+      if (context.mounted) {
+        showSuccessSnackBar(context, 'Signed in with Apple');
+      }
+    } on FirebaseAuthException catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(context, 'Error: ${e.message}');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        // User cancelled
+        debugPrint('Apple sign in: $e');
+      }
+    }
+  }
+
+  Future<void> _linkEmailAccount(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) =>
+          const _EmailSignInDialog(isCreateAccount: true, isLinking: true),
+    );
+    if (result == true && context.mounted) {
+      showSuccessSnackBar(context, 'Email linked successfully!');
+    }
+  }
+
+  Future<void> _syncNow(BuildContext context) async {
+    final uid = widget.user?.uid;
+    if (uid == null) return;
+
+    setState(() => _isSyncing = true);
+    try {
+      await ref.read(userProfileProvider.notifier).fullSync(uid);
+      if (context.mounted) {
+        showSuccessSnackBar(context, 'Profile synced!');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(context, 'Sync failed: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSyncing = false);
+      }
+    }
+  }
+
+  Future<void> _sendPasswordReset(BuildContext context) async {
+    final email = widget.user?.email;
+    if (email == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        title: const Text('Reset Password'),
+        content: Text('Send password reset email to $email?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        final authService = ref.read(authServiceProvider);
+        await authService.sendPasswordResetEmail(email);
+        if (context.mounted) {
+          showSuccessSnackBar(context, 'Password reset email sent');
+        }
+      } on FirebaseAuthException catch (e) {
+        if (context.mounted) {
+          showErrorSnackBar(context, 'Error: ${e.message}');
+        }
+      }
+    }
+  }
+
+  Future<void> _signOut(BuildContext context) async {
+    final isAnonymous = widget.user?.isAnonymous ?? false;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        title: const Text('Sign Out'),
+        content: Text(
+          isAnonymous
+              ? 'As a guest, signing out will lose any unsaved work. Continue?'
+              : 'Are you sure you want to sign out?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      final authService = ref.read(authServiceProvider);
+      await authService.signOut();
+    }
+  }
+
+  Future<void> _deleteAccount(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        title: const Text('Delete Account'),
+        content: const Text(
+          'This will permanently delete your account and all associated data. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.errorRed),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        final authService = ref.read(authServiceProvider);
+        await authService.deleteAccount();
+        if (context.mounted) {
+          showInfoSnackBar(context, 'Account deleted');
+        }
+      } on FirebaseAuthException catch (e) {
+        if (context.mounted) {
+          showErrorSnackBar(context, 'Error: ${e.message}');
+        }
+      }
+    }
+  }
+}
+
+/// Small tile for account options within cloud backup section
+class _AccountOptionTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool isDestructive;
+
+  const _AccountOptionTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.isDestructive = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isDestructive ? AppTheme.errorRed : AppTheme.textSecondary;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: 12),
+            Text(label, style: TextStyle(fontSize: 14, color: color)),
+            const Spacer(),
+            Icon(Icons.chevron_right, size: 18, color: AppTheme.textTertiary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Social sign-in button with custom styling
+class _SocialSignInButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final Widget icon;
+  final String label;
+  final Color backgroundColor;
+  final Color textColor;
+
+  const _SocialSignInButton({
+    required this.onPressed,
+    required this.icon,
+    required this.label,
+    required this.backgroundColor,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: backgroundColor,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              icon,
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: textColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Custom Google logo widget
+class _GoogleLogo extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 20,
+      height: 20,
+      child: CustomPaint(painter: _GoogleLogoPainter()),
+    );
+  }
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.width / 24;
+    canvas.scale(scale, scale);
+
+    // Blue
+    final bluePaint = Paint()
+      ..color = const Color(0xFF4285F4)
+      ..style = PaintingStyle.fill;
+    final bluePath = Path()
+      ..moveTo(22.56, 12.25)
+      ..cubicTo(22.56, 11.47, 22.49, 10.72, 22.36, 10)
+      ..lineTo(12, 10)
+      ..lineTo(12, 14.26)
+      ..lineTo(17.92, 14.26)
+      ..cubicTo(17.66, 15.63, 16.88, 16.79, 15.71, 17.57)
+      ..lineTo(15.71, 20.34)
+      ..lineTo(19.28, 20.34)
+      ..cubicTo(21.36, 18.42, 22.56, 15.6, 22.56, 12.25)
+      ..close();
+    canvas.drawPath(bluePath, bluePaint);
+
+    // Green
+    final greenPaint = Paint()
+      ..color = const Color(0xFF34A853)
+      ..style = PaintingStyle.fill;
+    final greenPath = Path()
+      ..moveTo(12, 23)
+      ..cubicTo(14.97, 23, 17.46, 22.02, 19.28, 20.34)
+      ..lineTo(15.71, 17.57)
+      ..cubicTo(14.73, 18.23, 13.48, 18.63, 12, 18.63)
+      ..cubicTo(9.14, 18.63, 6.71, 16.7, 5.84, 14.1)
+      ..lineTo(2.18, 14.1)
+      ..lineTo(2.18, 16.94)
+      ..cubicTo(3.99, 20.53, 7.7, 23, 12, 23)
+      ..close();
+    canvas.drawPath(greenPath, greenPaint);
+
+    // Yellow
+    final yellowPaint = Paint()
+      ..color = const Color(0xFFFBBC05)
+      ..style = PaintingStyle.fill;
+    final yellowPath = Path()
+      ..moveTo(5.84, 14.09)
+      ..cubicTo(5.62, 13.43, 5.49, 12.73, 5.49, 12)
+      ..cubicTo(5.49, 11.27, 5.62, 10.57, 5.84, 9.91)
+      ..lineTo(5.84, 7.07)
+      ..lineTo(2.18, 7.07)
+      ..cubicTo(1.43, 8.55, 1, 10.22, 1, 12)
+      ..cubicTo(1, 13.78, 1.43, 15.45, 2.18, 16.93)
+      ..lineTo(5.03, 14.71)
+      ..lineTo(5.84, 14.09)
+      ..close();
+    canvas.drawPath(yellowPath, yellowPaint);
+
+    // Red
+    final redPaint = Paint()
+      ..color = const Color(0xFFEA4335)
+      ..style = PaintingStyle.fill;
+    final redPath = Path()
+      ..moveTo(12, 5.38)
+      ..cubicTo(13.62, 5.38, 15.06, 5.94, 16.21, 7.02)
+      ..lineTo(19.36, 3.87)
+      ..cubicTo(17.45, 2.09, 14.97, 1, 12, 1)
+      ..cubicTo(7.7, 1, 3.99, 3.47, 2.18, 7.07)
+      ..lineTo(5.84, 9.91)
+      ..cubicTo(6.71, 7.31, 9.14, 5.38, 12, 5.38)
+      ..close();
+    canvas.drawPath(redPath, redPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _AvatarSection extends StatelessWidget {
@@ -1048,6 +1722,252 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
           ? [UpperCaseTextFormatter()]
           : null,
     );
+  }
+}
+
+/// Email sign in dialog
+class _EmailSignInDialog extends ConsumerStatefulWidget {
+  final bool isCreateAccount;
+  final bool isLinking;
+
+  const _EmailSignInDialog({
+    required this.isCreateAccount,
+    this.isLinking = false,
+  });
+
+  @override
+  ConsumerState<_EmailSignInDialog> createState() => _EmailSignInDialogState();
+}
+
+class _EmailSignInDialogState extends ConsumerState<_EmailSignInDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String title;
+    if (widget.isLinking) {
+      title = 'Link Email';
+    } else if (widget.isCreateAccount) {
+      title = 'Create Account';
+    } else {
+      title = 'Sign In';
+    }
+
+    return AlertDialog(
+      backgroundColor: AppTheme.darkCard,
+      title: Text(title),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_errorMessage != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.errorRed.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: AppTheme.errorRed),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  hintText: 'you@example.com',
+                  prefixIcon: Icon(Icons.email_outlined),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                autofocus: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  if (!value.contains('@') || !value.contains('.')) {
+                    return 'Please enter a valid email';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  prefixIcon: const Icon(Icons.lock_outlined),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
+                    onPressed: () {
+                      setState(() => _obscurePassword = !_obscurePassword);
+                    },
+                  ),
+                ),
+                obscureText: _obscurePassword,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your password';
+                  }
+                  if (widget.isCreateAccount && value.length < 6) {
+                    return 'Password must be at least 6 characters';
+                  }
+                  return null;
+                },
+              ),
+              if (widget.isCreateAccount) ...[
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Confirm Password',
+                    prefixIcon: Icon(Icons.lock_outlined),
+                  ),
+                  obscureText: _obscurePassword,
+                  validator: (value) {
+                    if (value != _passwordController.text) {
+                      return 'Passwords do not match';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+              if (!widget.isCreateAccount && !widget.isLinking) ...[
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: _isLoading ? null : _forgotPassword,
+                    child: const Text('Forgot password?'),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _isLoading ? null : _submit,
+          child: _isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: MeshLoadingIndicator(size: 20),
+                )
+              : Text(widget.isCreateAccount ? 'Create' : 'Sign In'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+
+      if (widget.isLinking) {
+        // Link email to anonymous account
+        final credential = EmailAuthProvider.credential(
+          email: email,
+          password: password,
+        );
+        await FirebaseAuth.instance.currentUser?.linkWithCredential(credential);
+      } else if (widget.isCreateAccount) {
+        await authService.createAccount(email: email, password: password);
+      } else {
+        await authService.signInWithEmail(email: email, password: password);
+      }
+
+      if (mounted) {
+        Navigator.pop(context, true);
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _errorMessage = _getErrorMessage(e.code);
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _forgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() {
+        _errorMessage = 'Please enter your email address first';
+      });
+      return;
+    }
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.sendPasswordResetEmail(email);
+      if (mounted) {
+        showSuccessSnackBar(context, 'Password reset email sent to $email');
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _errorMessage = _getErrorMessage(e.code);
+      });
+    }
+  }
+
+  String _getErrorMessage(String code) {
+    switch (code) {
+      case 'user-not-found':
+        return 'No account found with this email';
+      case 'wrong-password':
+        return 'Incorrect password';
+      case 'invalid-credential':
+        return 'Invalid email or password';
+      case 'email-already-in-use':
+        return 'An account already exists with this email';
+      case 'weak-password':
+        return 'Password is too weak';
+      case 'invalid-email':
+        return 'Invalid email address';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later';
+      case 'credential-already-in-use':
+        return 'This email is already linked to another account';
+      default:
+        return 'An error occurred: $code';
+    }
   }
 }
 

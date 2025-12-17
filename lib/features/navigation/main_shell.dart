@@ -25,7 +25,6 @@ import '../timeline/timeline_screen.dart';
 import '../routes/routes_screen.dart';
 import '../automations/automations_screen.dart';
 import '../settings/settings_screen.dart';
-import '../settings/account_screen.dart';
 import '../presence/presence_screen.dart';
 import '../mesh3d/mesh_3d_screen.dart';
 import '../world_mesh/world_mesh_screen.dart';
@@ -901,7 +900,6 @@ class _DrawerMenuTile extends StatelessWidget {
   final bool isSelected;
   final bool isPremium;
   final bool isLocked;
-  final Widget? trailing;
   final VoidCallback onTap;
 
   const _DrawerMenuTile({
@@ -911,7 +909,6 @@ class _DrawerMenuTile extends StatelessWidget {
     required this.onTap,
     this.isPremium = false,
     this.isLocked = false,
-    this.trailing,
   });
 
   @override
@@ -1020,8 +1017,6 @@ class _DrawerMenuTile extends StatelessWidget {
                   ],
                 ),
               ),
-            ] else if (trailing != null) ...[
-              trailing!,
             ] else if (isPremium) ...[
               // Show unlocked badge for purchased premium features
               Icon(
@@ -1251,9 +1246,7 @@ class _PulsingDotState extends State<_PulsingDot>
   }
 }
 
-/// Theme toggle button like Twitter's moon icon
-/// Profile & Account section for the drawer
-/// Shows profile info, sign in status, and sync options
+/// Profile section for the drawer - simplified, just links to Profile screen
 class _DrawerProfileSection extends ConsumerWidget {
   const _DrawerProfileSection();
 
@@ -1273,7 +1266,7 @@ class _DrawerProfileSection extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(left: 12, bottom: 8),
             child: Text(
-              'ACCOUNT',
+              'PROFILE',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -1283,7 +1276,7 @@ class _DrawerProfileSection extends ConsumerWidget {
             ),
           ),
 
-          // Profile tile with avatar
+          // Profile tile with avatar - now the single destination for all profile/account needs
           profileAsync.when(
             data: (profile) => _ProfileTile(
               profile: profile,
@@ -1313,106 +1306,6 @@ class _DrawerProfileSection extends ConsumerWidget {
               },
             ),
           ),
-
-          const SizedBox(height: 4),
-
-          // Sign In / Account tile
-          _DrawerMenuTile(
-            icon: isSignedIn ? Icons.manage_accounts_outlined : Icons.login,
-            label: isSignedIn ? 'Cloud Account' : 'Sign In',
-            isSelected: false,
-            trailing: isSignedIn
-                ? Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.successGreen.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.cloud_done,
-                          size: 12,
-                          color: AppTheme.successGreen,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Synced',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.successGreen,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : null,
-            onTap: () {
-              ref.haptics.tabChange();
-              Navigator.of(context).pop();
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const AccountScreen()));
-            },
-          ),
-
-          // Sync button if signed in
-          if (isSignedIn) ...[
-            const SizedBox(height: 4),
-            _DrawerMenuTile(
-              icon: Icons.sync,
-              label: 'Sync Now',
-              isSelected: false,
-              onTap: () async {
-                ref.haptics.tabChange();
-                final uid = authState.value?.uid;
-                if (uid != null) {
-                  // Show syncing feedback
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Row(
-                        children: [
-                          SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Text('Syncing profile...'),
-                        ],
-                      ),
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
-                  await ref.read(userProfileProvider.notifier).fullSync(uid);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Row(
-                          children: [
-                            Icon(Icons.check_circle, color: Colors.white),
-                            SizedBox(width: 12),
-                            Text('Profile synced!'),
-                          ],
-                        ),
-                        backgroundColor: AppTheme.successGreen,
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  }
-                }
-              },
-            ),
-          ],
         ],
       ),
     );

@@ -76,6 +76,9 @@ dependencies:
   firebase_auth: ^6.0.1
   firebase_storage: ^13.0.4
   cloud_firestore: ^6.1.0
+  google_sign_in: ^6.2.2
+  sign_in_with_apple: ^6.1.4
+  crypto: ^3.0.6
   flutter_box_transform: ^0.4.7
   flutter_inappwebview: ^6.1.5
   ditredi: ^2.0.2
