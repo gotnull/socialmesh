@@ -90,6 +90,9 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     final withPositionCount = allNodes
         .where((n) => n.latitude != null && n.longitude != null)
         .length;
+    final recentlyDiscoveredCount = allNodes
+        .where((n) => n.isRecentlyDiscovered)
+        .length;
 
     return GestureDetector(
       onTap: _dismissKeyboard,
@@ -213,6 +216,17 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                     onTap: () =>
                         setState(() => _activeFilter = NodeFilter.offline),
                   ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: 'New',
+                    count: recentlyDiscoveredCount,
+                    isSelected: _activeFilter == NodeFilter.recentlyDiscovered,
+                    color: AccentColors.purple,
+                    icon: Icons.fiber_new,
+                    onTap: () => setState(
+                      () => _activeFilter = NodeFilter.recentlyDiscovered,
+                    ),
+                  ),
                   const SizedBox(width: 16),
                   // Sort dropdown
                   _SortButton(
@@ -315,6 +329,8 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
         return nodes
             .where((n) => n.latitude != null && n.longitude != null)
             .toList();
+      case NodeFilter.recentlyDiscovered:
+        return nodes.where((n) => n.isRecentlyDiscovered).toList();
     }
   }
 
@@ -359,7 +375,14 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
 }
 
 /// Filter options for the nodes list
-enum NodeFilter { all, online, offline, favorites, withPosition }
+enum NodeFilter {
+  all,
+  online,
+  offline,
+  favorites,
+  withPosition,
+  recentlyDiscovered,
+}
 
 /// Sort order options for the nodes list
 enum NodeSortOrder { lastHeard, name, signalStrength, batteryLevel }

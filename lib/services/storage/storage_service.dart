@@ -622,8 +622,16 @@ class NodeStorageService {
             altitude: nodes[index].altitude,
           );
         }
+        // Preserve firstHeard from existing node
+        if (nodes[index].firstHeard != null && node.firstHeard == null) {
+          node = node.copyWith(firstHeard: nodes[index].firstHeard);
+        }
         nodes[index] = node;
       } else {
+        // New node - set firstHeard to now if not already set
+        if (node.firstHeard == null) {
+          node = node.copyWith(firstHeard: DateTime.now());
+        }
         nodes.add(node);
       }
 
@@ -646,15 +654,27 @@ class NodeStorageService {
         nodeMap[node.nodeNum] = node;
       }
 
-      // Update with new nodes, preserving positions when needed
+      // Update with new nodes, preserving positions and firstHeard when needed
       for (var node in nodesToSave) {
         final existing = nodeMap[node.nodeNum];
-        if (existing != null && !node.hasPosition && existing.hasPosition) {
-          node = node.copyWith(
-            latitude: existing.latitude,
-            longitude: existing.longitude,
-            altitude: existing.altitude,
-          );
+        if (existing != null) {
+          // Preserve position if new node doesn't have one
+          if (!node.hasPosition && existing.hasPosition) {
+            node = node.copyWith(
+              latitude: existing.latitude,
+              longitude: existing.longitude,
+              altitude: existing.altitude,
+            );
+          }
+          // Preserve firstHeard from existing node
+          if (existing.firstHeard != null && node.firstHeard == null) {
+            node = node.copyWith(firstHeard: existing.firstHeard);
+          }
+        } else {
+          // New node - set firstHeard to now if not already set
+          if (node.firstHeard == null) {
+            node = node.copyWith(firstHeard: DateTime.now());
+          }
         }
         nodeMap[node.nodeNum] = node;
       }
@@ -734,6 +754,7 @@ class NodeStorageService {
       'rssi': node.rssi,
       'firmwareVersion': node.firmwareVersion,
       'lastHeard': node.lastHeard?.millisecondsSinceEpoch,
+      'firstHeard': node.firstHeard?.millisecondsSinceEpoch,
       'avatarColor': node.avatarColor,
       'role': node.role,
       'isFavorite': node.isFavorite,
@@ -759,6 +780,9 @@ class NodeStorageService {
       firmwareVersion: json['firmwareVersion'] as String?,
       lastHeard: json['lastHeard'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['lastHeard'] as int)
+          : null,
+      firstHeard: json['firstHeard'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['firstHeard'] as int)
           : null,
       avatarColor: json['avatarColor'] as int? ?? 0xFF1976D2,
       role: json['role'] as String?,

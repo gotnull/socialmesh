@@ -176,6 +176,7 @@ class MeshNode {
   final double? longitude;
   final int? altitude;
   final DateTime? lastHeard;
+  final DateTime? firstHeard; // When node was first discovered
   final int? snr;
   final int? rssi;
   final int? batteryLevel;
@@ -269,6 +270,7 @@ class MeshNode {
     this.longitude,
     this.altitude,
     this.lastHeard,
+    this.firstHeard,
     this.snr,
     this.rssi,
     this.batteryLevel,
@@ -356,6 +358,7 @@ class MeshNode {
     double? longitude,
     int? altitude,
     DateTime? lastHeard,
+    DateTime? firstHeard,
     int? snr,
     int? rssi,
     int? batteryLevel,
@@ -442,6 +445,7 @@ class MeshNode {
       longitude: longitude ?? this.longitude,
       altitude: altitude ?? this.altitude,
       lastHeard: lastHeard ?? this.lastHeard,
+      firstHeard: firstHeard ?? this.firstHeard,
       snr: snr ?? this.snr,
       rssi: rssi ?? this.rssi,
       batteryLevel: batteryLevel ?? this.batteryLevel,
@@ -565,6 +569,13 @@ class MeshNode {
     final heard = lastHeard;
     if (heard == null) return true;
     return DateTime.now().difference(heard).inHours >= 24;
+  }
+
+  /// Check if node was recently discovered (first heard within last 24 hours)
+  bool get isRecentlyDiscovered {
+    final discovered = firstHeard;
+    if (discovered == null) return false;
+    return DateTime.now().difference(discovered).inHours < 24;
   }
 
   @override
