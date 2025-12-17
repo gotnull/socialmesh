@@ -4,7 +4,8 @@ describe('NodeStore', () => {
   let store: NodeStore;
 
   beforeEach(() => {
-    store = new NodeStore(24); // 24 hour expiry
+    // Use in-memory database for tests to ensure isolation
+    store = new NodeStore(24, ':memory:');
   });
 
   afterEach(() => {

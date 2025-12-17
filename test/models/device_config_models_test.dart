@@ -306,7 +306,10 @@ void main() {
       expect(config.txEnabled, true);
       expect(config.txPower, 0);
       expect(config.overrideDutyCycle, false);
-      expect(config.sx126xRxBoostedGain, false);
+      expect(
+        config.sx126xRxBoostedGain,
+        true,
+      ); // Boosted gain is enabled by default
       expect(config.ignoreMqtt, false);
     });
 

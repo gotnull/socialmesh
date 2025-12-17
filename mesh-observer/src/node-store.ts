@@ -56,9 +56,9 @@ export class NodeStore {
   private saveInterval: NodeJS.Timeout;
   private pendingSaves: Set<number> = new Set();
 
-  constructor(expiryHours: number = 24) {
+  constructor(expiryHours: number = 24, dbPath?: string) {
     // Initialize database
-    this.db = new MeshDatabase();
+    this.db = new MeshDatabase(dbPath);
 
     // Load existing nodes from database
     this.loadFromDatabase();
