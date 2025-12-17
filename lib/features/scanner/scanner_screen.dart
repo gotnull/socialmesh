@@ -262,7 +262,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         );
       }
 
-      // Start phone GPS location updates (like iOS app does)
+      // Start phone GPS location updates
       // This sends phone GPS to mesh for devices without GPS hardware
       final locationService = ref.read(locationServiceProvider);
       await locationService.startLocationUpdates();

@@ -549,7 +549,7 @@ class MeshNode {
       !(latitude == 0.0 && longitude == 0.0);
 
   /// Check if node is online (heard within last 2 hours)
-  /// This matches meshtastic-ios behavior which uses 120 minutes
+  /// Using 120 minutes as the stale threshold
   bool get isOnline {
     final heard = lastHeard;
     if (heard == null) return false;

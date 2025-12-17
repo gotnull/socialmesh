@@ -1794,7 +1794,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                 await protocol.removeNode(node.nodeNum);
 
                 // Remove from local state/storage immediately
-                // (like Meshtastic iOS does after sending the command)
+                // Brief delay after sending command
                 nodesNotifier.removeNode(node.nodeNum);
 
                 if (context.mounted) {

@@ -123,7 +123,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
       }
     } else {
       _selectedKeySize = KeySize.bit256;
-      // Match Meshtastic iOS: all disabled by default
+      // All options disabled by default
       _uplinkEnabled = false;
       _downlinkEnabled = false;
       _positionEnabled = false;
@@ -153,7 +153,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
 
     // For Default (Simple), always use the standard Meshtastic default key AQ==
     // This is base64 for [1] - the single byte with value 1
-    // This matches the official Meshtastic iOS app behavior
+    // Standard behavior for key generation
     if (_selectedKeySize == KeySize.default1) {
       _keyController.text = 'AQ==';
       _validateAndDetectKey(_keyController.text);

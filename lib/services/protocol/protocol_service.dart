@@ -2982,7 +2982,7 @@ class ProtocolService {
       ..decoded = data
       ..id = _generatePacketId()
       ..channel =
-          0 // Primary channel like Meshtastic iOS
+          0 // Primary channel
       ..priority =
           70 // RELIABLE priority
       ..wantAck = true;
