@@ -27,11 +27,22 @@ import '../navigation/main_shell.dart';
 enum ConversationType { channel, directMessage }
 
 /// Main messaging screen - shows list of conversations
-class MessagingScreen extends ConsumerWidget {
+class MessagingScreen extends ConsumerStatefulWidget {
   const MessagingScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MessagingScreen> createState() => _MessagingScreenState();
+}
+
+class _MessagingScreenState extends ConsumerState<MessagingScreen> {
+  String _searchQuery = '';
+
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final nodes = ref.watch(nodesProvider);
     final messages = ref.watch(messagesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
@@ -79,98 +90,165 @@ class MessagingScreen extends ConsumerWidget {
       return b.lastMessageTime!.compareTo(a.lastMessageTime!);
     });
 
-    return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
+    // Filter conversations by search
+    var filteredConversations = conversations;
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      filteredConversations = conversations.where((conv) {
+        return conv.name.toLowerCase().contains(query) ||
+            (conv.shortName?.toLowerCase().contains(query) ?? false) ||
+            (conv.lastMessage?.toLowerCase().contains(query) ?? false);
+      }).toList();
+    }
+
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: Scaffold(
         backgroundColor: AppTheme.darkBackground,
-        leading: const HamburgerMenuButton(),
-        centerTitle: true,
-        title: const Text(
-          'Messages',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_square, color: Colors.white),
-            onPressed: () => _showNewMessageSheet(context, ref),
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Colors.white),
-            tooltip: 'Settings',
-            onPressed: () => Navigator.of(context).pushNamed('/settings'),
-          ),
-        ],
-      ),
-      body: conversations.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: AppTheme.darkCard,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.chat_bubble_outline,
-                      size: 40,
-                      color: AppTheme.textTertiary,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'No conversations yet',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Start a new message',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              itemCount: conversations.length,
-              itemBuilder: (context, index) {
-                final conv = conversations[index];
-                final animationsEnabled = ref.watch(animationsEnabledProvider);
-                return Perspective3DSlide(
-                  index: index,
-                  direction: SlideDirection.left,
-                  enabled: animationsEnabled,
-                  child: _ConversationTile(
-                    conversation: conv,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChatScreen(
-                            type: conv.type,
-                            nodeNum: conv.nodeNum,
-                            title: conv.name,
-                            avatarColor: conv.avatarColor,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkBackground,
+          leading: const HamburgerMenuButton(),
+          centerTitle: true,
+          title: Text(
+            'Messages${conversations.isNotEmpty ? ' (${conversations.length})' : ''}',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
             ),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.edit_square, color: Colors.white),
+              onPressed: () => _showNewMessageSheet(context, ref),
+            ),
+            IconButton(
+              icon: const Icon(Icons.settings_outlined, color: Colors.white),
+              tooltip: 'Settings',
+              onPressed: () => Navigator.of(context).pushNamed('/settings'),
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.darkCard,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TextField(
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    hintText: 'Search conversations',
+                    hintStyle: TextStyle(color: AppTheme.textTertiary),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: AppTheme.textTertiary,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Divider
+            Container(
+              height: 1,
+              color: AppTheme.darkBorder.withValues(alpha: 0.3),
+            ),
+            // Conversations list
+            Expanded(
+              child: filteredConversations.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: AppTheme.darkCard,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(
+                              Icons.chat_bubble_outline,
+                              size: 40,
+                              color: AppTheme.textTertiary,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            _searchQuery.isNotEmpty
+                                ? 'No conversations match "$_searchQuery"'
+                                : 'No conversations yet',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                          if (_searchQuery.isEmpty) ...[
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Start a new message',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppTheme.textTertiary,
+                              ),
+                            ),
+                          ],
+                          if (_searchQuery.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            TextButton(
+                              onPressed: () =>
+                                  setState(() => _searchQuery = ''),
+                              child: const Text('Clear search'),
+                            ),
+                          ],
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: filteredConversations.length,
+                      itemBuilder: (context, index) {
+                        final conv = filteredConversations[index];
+                        final animationsEnabled = ref.watch(
+                          animationsEnabledProvider,
+                        );
+                        return Perspective3DSlide(
+                          index: index,
+                          direction: SlideDirection.left,
+                          enabled: animationsEnabled,
+                          child: _ConversationTile(
+                            conversation: conv,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ChatScreen(
+                                    type: conv.type,
+                                    nodeNum: conv.nodeNum,
+                                    title: conv.name,
+                                    avatarColor: conv.avatarColor,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

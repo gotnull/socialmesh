@@ -16,120 +16,197 @@ import '../navigation/main_shell.dart';
 import 'channel_form_screen.dart';
 import 'channel_wizard_screen.dart';
 
-class ChannelsScreen extends ConsumerWidget {
+class ChannelsScreen extends ConsumerStatefulWidget {
   const ChannelsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ChannelsScreen> createState() => _ChannelsScreenState();
+}
+
+class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
+  String _searchQuery = '';
+
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final channels = ref.watch(channelsProvider);
 
-    return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
+    // Filter channels by search
+    var filteredChannels = channels;
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      filteredChannels = channels.where((channel) {
+        return channel.name.toLowerCase().contains(query) ||
+            channel.index.toString().contains(query);
+      }).toList();
+    }
+
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: Scaffold(
         backgroundColor: AppTheme.darkBackground,
-        leading: const HamburgerMenuButton(),
-        centerTitle: true,
-        title: const Text(
-          'Channels',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkBackground,
+          leading: const HamburgerMenuButton(),
+          centerTitle: true,
+          title: Text(
+            'Channels (${channels.length})',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            tooltip: 'Scan QR code',
-            onPressed: () {
-              Navigator.of(context).pushNamed('/qr-import');
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Add channel',
-            onPressed: () {
-              // Find next available channel index (1-7, 0 is Primary)
-              final usedIndices = channels.map((c) => c.index).toSet();
-              int nextIndex = 1;
-              for (int i = 1; i <= 7; i++) {
-                if (!usedIndices.contains(i)) {
-                  nextIndex = i;
-                  break;
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.qr_code_scanner),
+              tooltip: 'Scan QR code',
+              onPressed: () {
+                Navigator.of(context).pushNamed('/qr-import');
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Add channel',
+              onPressed: () {
+                // Find next available channel index (1-7, 0 is Primary)
+                final usedIndices = channels.map((c) => c.index).toSet();
+                int nextIndex = 1;
+                for (int i = 1; i <= 7; i++) {
+                  if (!usedIndices.contains(i)) {
+                    nextIndex = i;
+                    break;
+                  }
                 }
-              }
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      ChannelWizardScreen(channelIndex: nextIndex),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Settings',
-            onPressed: () => Navigator.of(context).pushNamed('/settings'),
-          ),
-        ],
-      ),
-      body: channels.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: AppTheme.darkCard,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.wifi_tethering,
-                      size: 40,
-                      color: AppTheme.textTertiary,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'No channels configured',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Channels are still being loaded from device\nor use the icons above to add channels',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.textTertiary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: channels.length,
-              itemBuilder: (context, index) {
-                final channel = channels[index];
-                final animationsEnabled = ref.watch(animationsEnabledProvider);
-                return Perspective3DSlide(
-                  index: index,
-                  direction: SlideDirection.left,
-                  enabled: animationsEnabled,
-                  child: _ChannelTile(
-                    channel: channel,
-                    animationsEnabled: animationsEnabled,
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ChannelWizardScreen(channelIndex: nextIndex),
                   ),
                 );
               },
             ),
+            IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: 'Settings',
+              onPressed: () => Navigator.of(context).pushNamed('/settings'),
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.darkCard,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TextField(
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    hintText: 'Search channels',
+                    hintStyle: TextStyle(color: AppTheme.textTertiary),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: AppTheme.textTertiary,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Divider
+            Container(
+              height: 1,
+              color: AppTheme.darkBorder.withValues(alpha: 0.3),
+            ),
+            // Channels list
+            Expanded(
+              child: filteredChannels.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: AppTheme.darkCard,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(
+                              Icons.wifi_tethering,
+                              size: 40,
+                              color: AppTheme.textTertiary,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            _searchQuery.isNotEmpty
+                                ? 'No channels match "$_searchQuery"'
+                                : 'No channels configured',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                          if (_searchQuery.isEmpty) ...[
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Channels are still being loaded from device\nor use the icons above to add channels',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppTheme.textTertiary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                          if (_searchQuery.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            TextButton(
+                              onPressed: () =>
+                                  setState(() => _searchQuery = ''),
+                              child: const Text('Clear search'),
+                            ),
+                          ],
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: filteredChannels.length,
+                      itemBuilder: (context, index) {
+                        final channel = filteredChannels[index];
+                        final animationsEnabled = ref.watch(
+                          animationsEnabledProvider,
+                        );
+                        return Perspective3DSlide(
+                          index: index,
+                          direction: SlideDirection.left,
+                          enabled: animationsEnabled,
+                          child: _ChannelTile(
+                            channel: channel,
+                            animationsEnabled: animationsEnabled,
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
