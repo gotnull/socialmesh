@@ -10,12 +10,14 @@ import 'app_providers.dart';
 /// This stores passively observed reachability metadata for each node.
 /// Data is collected from packet observations without any probing traffic.
 final nodeReachabilityDataProvider =
-    NotifierProvider<NodeReachabilityDataNotifier, Map<int, NodeReachabilityData>>(
-  NodeReachabilityDataNotifier.new,
-);
+    NotifierProvider<
+      NodeReachabilityDataNotifier,
+      Map<int, NodeReachabilityData>
+    >(NodeReachabilityDataNotifier.new);
 
 /// Notifier that manages per-node reachability observation data.
-class NodeReachabilityDataNotifier extends Notifier<Map<int, NodeReachabilityData>> {
+class NodeReachabilityDataNotifier
+    extends Notifier<Map<int, NodeReachabilityData>> {
   @override
   Map<int, NodeReachabilityData> build() {
     return {};
@@ -95,7 +97,9 @@ class NodeWithReachability {
 ///
 /// This combines MeshNode data with reachability observations to produce
 /// a sorted list of nodes with their reach likelihood assessments.
-final nodesWithReachabilityProvider = Provider<List<NodeWithReachability>>((ref) {
+final nodesWithReachabilityProvider = Provider<List<NodeWithReachability>>((
+  ref,
+) {
   final nodes = ref.watch(nodesProvider);
   final reachabilityData = ref.watch(nodeReachabilityDataProvider);
   final myNodeNum = ref.watch(myNodeNumProvider);
@@ -126,11 +130,13 @@ final nodesWithReachabilityProvider = Provider<List<NodeWithReachability>>((ref)
       snrFromMeshNode: node.snr?.toDouble(),
     );
 
-    results.add(NodeWithReachability(
-      node: node,
-      reachability: result,
-      observationData: obsData,
-    ));
+    results.add(
+      NodeWithReachability(
+        node: node,
+        reachability: result,
+        observationData: obsData,
+      ),
+    );
   }
 
   // Sort by score descending (most reachable first)

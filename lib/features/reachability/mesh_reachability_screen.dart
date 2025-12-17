@@ -161,15 +161,9 @@ class _MeshReachabilityScreenState
         backgroundColor: AppTheme.darkCard,
         title: const Row(
           children: [
-            Icon(
-              Icons.info_outline,
-              color: AppTheme.textSecondary,
-            ),
+            Icon(Icons.info_outline, color: AppTheme.textSecondary),
             SizedBox(width: 12),
-            Text(
-              'About Reachability',
-              style: TextStyle(color: Colors.white),
-            ),
+            Text('About Reachability', style: TextStyle(color: Colors.white)),
           ],
         ),
         content: const SingleChildScrollView(
@@ -187,7 +181,8 @@ class _MeshReachabilityScreenState
               SizedBox(height: 16),
               _InfoSection(
                 title: 'How is it calculated?',
-                content: 'The likelihood score combines several factors:\n'
+                content:
+                    'The likelihood score combines several factors:\n'
                     '• Freshness: How recently we heard from the node\n'
                     '• Path Depth: Number of hops observed\n'
                     '• Signal Quality: RSSI and SNR when available\n'
@@ -204,7 +199,8 @@ class _MeshReachabilityScreenState
               SizedBox(height: 16),
               _InfoSection(
                 title: 'Important limitations',
-                content: '• Meshtastic has no true routing tables\n'
+                content:
+                    '• Meshtastic has no true routing tables\n'
                     '• No end-to-end acknowledgements exist\n'
                     '• Forwarding is opportunistic\n'
                     '• Mesh topology changes constantly\n'
@@ -228,10 +224,7 @@ class _InfoSection extends StatelessWidget {
   final String title;
   final String content;
 
-  const _InfoSection({
-    required this.title,
-    required this.content,
-  });
+  const _InfoSection({required this.title, required this.content});
 
   @override
   Widget build(BuildContext context) {
@@ -275,11 +268,7 @@ class _DisclaimerBanner extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          Icon(
-            Icons.info_outline,
-            size: 20,
-            color: AppTheme.warningYellow,
-          ),
+          Icon(Icons.info_outline, size: 20, color: AppTheme.warningYellow),
           SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -356,9 +345,7 @@ class _SummaryChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: color.withValues(alpha: 0.3),
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -419,10 +406,7 @@ class _EmptyState extends StatelessWidget {
           const Text(
             'Nodes will appear as they\'re observed\non the mesh network.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              color: AppTheme.textTertiary,
-            ),
+            style: TextStyle(fontSize: 13, color: AppTheme.textTertiary),
           ),
         ],
       ),
@@ -472,9 +456,7 @@ class _ReachabilityNodeCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppTheme.darkCard,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppTheme.darkBorder,
-          ),
+          border: Border.all(color: AppTheme.darkBorder),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -595,28 +577,18 @@ class _MetricItem extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const _MetricItem({
-    required this.icon,
-    required this.label,
-  });
+  const _MetricItem({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          icon,
-          size: 14,
-          color: AppTheme.textTertiary,
-        ),
+        Icon(icon, size: 14, color: AppTheme.textTertiary),
         const SizedBox(width: 4),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppTheme.textSecondary,
-          ),
+          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
         ),
       ],
     );
@@ -627,10 +599,7 @@ class _ScoreIndicator extends StatelessWidget {
   final double score;
   final Color color;
 
-  const _ScoreIndicator({
-    required this.score,
-    required this.color,
-  });
+  const _ScoreIndicator({required this.score, required this.color});
 
   @override
   Widget build(BuildContext context) {
