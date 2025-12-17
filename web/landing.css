@@ -603,6 +603,14 @@ section {
   background-clip: text;
 }
 
+/* General gradient text utility */
+.gradient-text {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .section-description {
   font-size: 18px;
   color: var(--text-secondary);
@@ -871,6 +879,7 @@ section {
 
 .screenshots-category {
   margin-bottom: 60px;
+  text-align: center;
 }
 
 .screenshots-category:last-child {
@@ -878,11 +887,14 @@ section {
 }
 
 .screenshots-category h3 {
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 20px;
-  color: var(--text-secondary);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 30px;
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .screenshots-category h3.premium-label {
@@ -890,8 +902,9 @@ section {
 }
 
 .screenshots-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
 }
 
@@ -899,10 +912,13 @@ section {
   background: var(--bg-card);
   border-radius: 16px;
   border: 1px solid var(--border-color);
-  overflow: hidden;
+  overflow: visible;
   transition: all 0.3s;
   text-align: center;
   padding: 10px;
+  padding-bottom: 0;
+  width: 160px;
+  flex-shrink: 0;
 }
 
 .screenshot-card:hover {
@@ -916,20 +932,17 @@ section {
   height: auto;
   border-radius: 10px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  display: block;
 }
 
 /* Torn/faded bottom effect for screenshots */
-.screenshot-card.torn-bottom {
-  position: relative;
-}
-
-.screenshot-card.torn-bottom .screenshot-img-wrapper {
+.screenshot-card .screenshot-img-wrapper {
   position: relative;
   overflow: hidden;
   border-radius: 10px;
 }
 
-.screenshot-card.torn-bottom .screenshot-img-wrapper::after {
+.screenshot-card .screenshot-img-wrapper::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -943,19 +956,17 @@ section {
   pointer-events: none;
 }
 
-.screenshot-card.torn-bottom img {
-  width: 100%;
-  height: auto;
+.screenshot-card .screenshot-img-wrapper img {
   border-radius: 10px 10px 0 0;
   box-shadow: none;
-  display: block;
 }
 
 .screenshot-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
-  margin-top: 10px;
+  margin-top: 14px;
+  padding-bottom: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
