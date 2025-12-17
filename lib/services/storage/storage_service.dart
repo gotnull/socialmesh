@@ -737,6 +737,7 @@ class NodeStorageService {
       'avatarColor': node.avatarColor,
       'role': node.role,
       'isFavorite': node.isFavorite,
+      'isIgnored': node.isIgnored,
       'distance': node.distance,
       'hasPublicKey': node.hasPublicKey,
     };
@@ -762,6 +763,7 @@ class NodeStorageService {
       avatarColor: json['avatarColor'] as int? ?? 0xFF1976D2,
       role: json['role'] as String?,
       isFavorite: json['isFavorite'] as bool? ?? false,
+      isIgnored: json['isIgnored'] as bool? ?? false,
       distance: (json['distance'] as num?)?.toDouble(),
       hasPublicKey: json['hasPublicKey'] as bool? ?? false,
     );

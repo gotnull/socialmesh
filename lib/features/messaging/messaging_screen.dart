@@ -36,6 +36,13 @@ class MessagingScreen extends ConsumerStatefulWidget {
 
 class _MessagingScreenState extends ConsumerState<MessagingScreen> {
   String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   void _dismissKeyboard() {
     FocusScope.of(context).unfocus();
@@ -140,17 +147,30 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextField(
+                  controller: _searchController,
                   onChanged: (value) => setState(() => _searchQuery = value),
                   style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Search conversations',
-                    hintStyle: TextStyle(color: AppTheme.textTertiary),
-                    prefixIcon: Icon(
+                    hintStyle: const TextStyle(color: AppTheme.textTertiary),
+                    prefixIcon: const Icon(
                       Icons.search,
                       color: AppTheme.textTertiary,
                     ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(
+                              Icons.clear,
+                              color: AppTheme.textTertiary,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
+                    contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 14,
                     ),

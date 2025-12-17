@@ -1420,12 +1420,16 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     for (final entry in protocolNodes.entries) {
       var node = entry.value;
       final existing = state[entry.key];
-      // If protocol node has no position but stored node does, preserve stored position
-      if (!node.hasPosition && existing != null && existing.hasPosition) {
+      if (existing != null) {
+        // Preserve stored properties that don't come from protocol
         node = node.copyWith(
-          latitude: existing.latitude,
-          longitude: existing.longitude,
-          altitude: existing.altitude,
+          // Preserve position if protocol node doesn't have one
+          latitude: node.hasPosition ? node.latitude : existing.latitude,
+          longitude: node.hasPosition ? node.longitude : existing.longitude,
+          altitude: node.hasPosition ? node.altitude : existing.altitude,
+          // Always preserve user preferences from storage
+          isFavorite: existing.isFavorite,
+          isIgnored: existing.isIgnored,
         );
       }
       state = {...state, entry.key: node};
@@ -1442,12 +1446,16 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       final isNewNode = !state.containsKey(node.nodeNum);
       final existing = state[node.nodeNum];
 
-      // Preserve position from storage if new node doesn't have one
-      if (!node.hasPosition && existing != null && existing.hasPosition) {
+      if (existing != null) {
+        // Preserve stored properties that don't come from protocol
         node = node.copyWith(
-          latitude: existing.latitude,
-          longitude: existing.longitude,
-          altitude: existing.altitude,
+          // Preserve position if new node doesn't have one
+          latitude: node.hasPosition ? node.latitude : existing.latitude,
+          longitude: node.hasPosition ? node.longitude : existing.longitude,
+          altitude: node.hasPosition ? node.altitude : existing.altitude,
+          // Always preserve user preferences from storage
+          isFavorite: existing.isFavorite,
+          isIgnored: existing.isIgnored,
         );
       }
 

@@ -23,22 +23,55 @@ class ChannelsScreen extends ConsumerStatefulWidget {
   ConsumerState<ChannelsScreen> createState() => _ChannelsScreenState();
 }
 
+enum ChannelFilter { all, primary, encrypted, position, mqtt }
+
 class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
   String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+  ChannelFilter _activeFilter = ChannelFilter.all;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   void _dismissKeyboard() {
     FocusScope.of(context).unfocus();
+  }
+
+  List<ChannelConfig> _applyFilter(List<ChannelConfig> channels) {
+    switch (_activeFilter) {
+      case ChannelFilter.all:
+        return channels;
+      case ChannelFilter.primary:
+        return channels.where((c) => c.role == 'PRIMARY').toList();
+      case ChannelFilter.encrypted:
+        return channels.where((c) => c.hasSecureKey).toList();
+      case ChannelFilter.position:
+        return channels.where((c) => c.positionEnabled).toList();
+      case ChannelFilter.mqtt:
+        return channels.where((c) => c.uplink || c.downlink).toList();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final channels = ref.watch(channelsProvider);
 
-    // Filter channels by search
-    var filteredChannels = channels;
+    // Count channels by filter for badges
+    final primaryCount = channels.where((c) => c.role == 'PRIMARY').length;
+    final encryptedCount = channels.where((c) => c.hasSecureKey).length;
+    final positionCount = channels.where((c) => c.positionEnabled).length;
+    final mqttCount = channels.where((c) => c.uplink || c.downlink).length;
+
+    // Apply filter first
+    var filteredChannels = _applyFilter(channels);
+
+    // Then filter by search
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
-      filteredChannels = channels.where((channel) {
+      filteredChannels = filteredChannels.where((channel) {
         return channel.name.toLowerCase().contains(query) ||
             channel.index.toString().contains(query);
       }).toList();
@@ -108,17 +141,30 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextField(
+                  controller: _searchController,
                   onChanged: (value) => setState(() => _searchQuery = value),
                   style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Search channels',
-                    hintStyle: TextStyle(color: AppTheme.textTertiary),
-                    prefixIcon: Icon(
+                    hintStyle: const TextStyle(color: AppTheme.textTertiary),
+                    prefixIcon: const Icon(
                       Icons.search,
                       color: AppTheme.textTertiary,
                     ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(
+                              Icons.clear,
+                              color: AppTheme.textTertiary,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
+                    contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 14,
                     ),
@@ -126,6 +172,64 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
                 ),
               ),
             ),
+            // Filter chips row
+            SizedBox(
+              height: 44,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  _ChannelFilterChip(
+                    label: 'All',
+                    count: channels.length,
+                    isSelected: _activeFilter == ChannelFilter.all,
+                    onTap: () =>
+                        setState(() => _activeFilter = ChannelFilter.all),
+                  ),
+                  const SizedBox(width: 8),
+                  _ChannelFilterChip(
+                    label: 'Primary',
+                    count: primaryCount,
+                    isSelected: _activeFilter == ChannelFilter.primary,
+                    color: AccentColors.blue,
+                    icon: Icons.star,
+                    onTap: () =>
+                        setState(() => _activeFilter = ChannelFilter.primary),
+                  ),
+                  const SizedBox(width: 8),
+                  _ChannelFilterChip(
+                    label: 'Encrypted',
+                    count: encryptedCount,
+                    isSelected: _activeFilter == ChannelFilter.encrypted,
+                    color: AccentColors.green,
+                    icon: Icons.lock,
+                    onTap: () =>
+                        setState(() => _activeFilter = ChannelFilter.encrypted),
+                  ),
+                  const SizedBox(width: 8),
+                  _ChannelFilterChip(
+                    label: 'Position',
+                    count: positionCount,
+                    isSelected: _activeFilter == ChannelFilter.position,
+                    color: AccentColors.orange,
+                    icon: Icons.location_on,
+                    onTap: () =>
+                        setState(() => _activeFilter = ChannelFilter.position),
+                  ),
+                  const SizedBox(width: 8),
+                  _ChannelFilterChip(
+                    label: 'MQTT',
+                    count: mqttCount,
+                    isSelected: _activeFilter == ChannelFilter.mqtt,
+                    color: AccentColors.purple,
+                    icon: Icons.cloud,
+                    onTap: () =>
+                        setState(() => _activeFilter = ChannelFilter.mqtt),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
             // Divider
             Container(
               height: 1,
@@ -719,6 +823,88 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// Filter chip widget for channels
+class _ChannelFilterChip extends StatelessWidget {
+  final String label;
+  final int count;
+  final bool isSelected;
+  final Color? color;
+  final IconData? icon;
+  final VoidCallback onTap;
+
+  const _ChannelFilterChip({
+    required this.label,
+    required this.count,
+    required this.isSelected,
+    required this.onTap,
+    this.color,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final chipColor = color ?? AppTheme.primaryBlue;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? chipColor.withValues(alpha: 0.2)
+              : AppTheme.darkCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? chipColor.withValues(alpha: 0.5)
+                : AppTheme.darkBorder.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 14,
+                color: isSelected ? chipColor : AppTheme.textTertiary,
+              ),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? chipColor : AppTheme.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? chipColor.withValues(alpha: 0.3)
+                    : AppTheme.darkBorder.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? chipColor : AppTheme.textTertiary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
