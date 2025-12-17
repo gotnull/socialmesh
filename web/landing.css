@@ -899,10 +899,7 @@ section {
   font-weight: 700;
   letter-spacing: -0.5px;
   margin-bottom: 30px;
-  background: var(--gradient-brand);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
 }
 
 .screenshots-category h3.premium-label {
