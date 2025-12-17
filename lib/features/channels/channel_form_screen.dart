@@ -106,7 +106,11 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
       // Initialize position settings from device
       // positionPrecision: 0 = disabled, 12-15 = approximate, 32 = precise
       final precision = channel.positionPrecision;
+      debugPrint(
+        '📡 ChannelFormScreen: channel ${channel.index} positionPrecision=$precision',
+      );
       _positionEnabled = precision > 0;
+      debugPrint('📡 ChannelFormScreen: _positionEnabled=$_positionEnabled');
       if (precision == 32) {
         _preciseLocation = true;
         _positionPrecision = 14; // Default slider position
@@ -121,6 +125,9 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         _preciseLocation = false;
         _positionPrecision = 14; // Default slider position
       }
+      debugPrint(
+        '📡 ChannelFormScreen: _preciseLocation=$_preciseLocation, _positionPrecision=$_positionPrecision',
+      );
     } else {
       _selectedKeySize = KeySize.bit256;
       // All options disabled by default

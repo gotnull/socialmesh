@@ -364,6 +364,12 @@ class ProtocolService {
     AppLogging.debug('🔵 Protocol.start() called - instance: $hashCode');
     _logger.i('Starting protocol service');
 
+    // Clear previous connection state
+    _channels.clear();
+    _nodes.clear();
+    _myNodeNum = null;
+    _configurationComplete = false;
+
     _configCompleter = Completer<void>();
     var waitingForConfig = false; // Track if we're past initial setup
 
@@ -1803,10 +1809,27 @@ class ProtocolService {
   /// Handle channel configuration
   void _handleChannel(pb.Channel channel) {
     AppLogging.debug(
-      '📡 Channel ${channel.index} received from device: '
-      'role=${channel.role.name}, name="${channel.hasSettings() ? channel.settings.name : ""}", '
-      'psk=${channel.hasSettings() ? channel.settings.psk.length : 0} bytes',
+      '📡 Channel ${channel.index} RAW received: '
+      'hasSettings=${channel.hasSettings()}, role=${channel.role.name}',
     );
+    if (channel.hasSettings()) {
+      final settings = channel.settings;
+      AppLogging.debug(
+        '📡 Channel ${channel.index} settings: '
+        'name="${settings.name}", psk=${settings.psk.length} bytes, '
+        'uplink=${settings.uplinkEnabled}, downlink=${settings.downlinkEnabled}, '
+        'hasModuleSettings=${settings.hasModuleSettings()}',
+      );
+      if (settings.hasModuleSettings()) {
+        final mod = settings.moduleSettings;
+        AppLogging.debug(
+          '📡 Channel ${channel.index} moduleSettings: '
+          'positionPrecision=${mod.positionPrecision}, '
+          'hasPositionPrecision=${mod.hasPositionPrecision()}, '
+          'isMuted=${mod.isMuted}',
+        );
+      }
+    }
 
     // Map protobuf role to string
     String roleStr;
@@ -1827,8 +1850,18 @@ class ProtocolService {
     // Note: Don't use hasPositionPrecision() - in proto3 it returns false for default (0) values
     // Just read the value directly when moduleSettings exists (iOS does the same)
     int positionPrecision = 0;
-    if (channel.hasSettings() && channel.settings.hasModuleSettings()) {
-      positionPrecision = channel.settings.moduleSettings.positionPrecision;
+    if (channel.hasSettings()) {
+      AppLogging.debug(
+        '📡 Channel ${channel.index} settings: hasModuleSettings=${channel.settings.hasModuleSettings()}',
+      );
+      if (channel.settings.hasModuleSettings()) {
+        positionPrecision = channel.settings.moduleSettings.positionPrecision;
+        AppLogging.debug(
+          '📡 Channel ${channel.index} moduleSettings.positionPrecision=$positionPrecision',
+        );
+      } else {
+        AppLogging.debug('📡 Channel ${channel.index} has NO moduleSettings!');
+      }
     }
 
     final channelConfig = ChannelConfig(

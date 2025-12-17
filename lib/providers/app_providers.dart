@@ -1570,7 +1570,9 @@ class ChannelsNotifier extends Notifier<List<ChannelConfig>> {
     // Listen for future channel updates
     protocol.channelStream.listen((channel) {
       AppLogging.debug(
-        '🔵 ChannelsNotifier received channel update: index=${channel.index}, name="${channel.name}"',
+        '🔵 ChannelsNotifier received channel update: '
+        'index=${channel.index}, name="${channel.name}", '
+        'positionPrecision=${channel.positionPrecision}, positionEnabled=${channel.positionEnabled}',
       );
       final index = state.indexWhere((c) => c.index == channel.index);
       if (index >= 0) {
