@@ -1245,6 +1245,9 @@ PODS:
   - Firebase/Firestore (12.4.0):
     - Firebase/CoreOnly
     - FirebaseFirestore (~> 12.4.0)
+  - Firebase/Storage (12.4.0):
+    - Firebase/CoreOnly
+    - FirebaseStorage (~> 12.4.0)
   - firebase_auth (6.1.2):
     - Firebase/Auth (= 12.4.0)
     - firebase_core
@@ -1254,6 +1257,10 @@ PODS:
     - Flutter
   - firebase_crashlytics (5.0.5):
     - Firebase/Crashlytics (= 12.4.0)
+    - firebase_core
+    - Flutter
+  - firebase_storage (13.0.4):
+    - Firebase/Storage (= 12.4.0)
     - firebase_core
     - Flutter
   - FirebaseAppCheckInterop (12.4.0)
@@ -1320,6 +1327,13 @@ PODS:
     - nanopb (~> 3.30910.0)
     - PromisesSwift (~> 2.1)
   - FirebaseSharedSwift (12.4.0)
+  - FirebaseStorage (12.4.0):
+    - FirebaseAppCheckInterop (~> 12.4.0)
+    - FirebaseAuthInterop (~> 12.4.0)
+    - FirebaseCore (~> 12.4.0)
+    - FirebaseCoreExtension (~> 12.4.0)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GTMSessionFetcher/Core (< 6.0, >= 3.4)
   - Flutter (1.0.0)
   - flutter_angle (0.3.8):
     - Flutter
@@ -1523,6 +1537,7 @@ DEPENDENCIES:
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_crashlytics (from `.symlinks/plugins/firebase_crashlytics/ios`)
+  - firebase_storage (from `.symlinks/plugins/firebase_storage/ios`)
   - Flutter (from `Flutter`)
   - flutter_angle (from `.symlinks/plugins/flutter_angle/darwin`)
   - flutter_app_group_directory (from `.symlinks/plugins/flutter_app_group_directory/ios`)
@@ -1565,6 +1580,7 @@ SPEC REPOS:
     - FirebaseRemoteConfigInterop
     - FirebaseSessions
     - FirebaseSharedSwift
+    - FirebaseStorage
     - FlutterAngle
     - GoogleDataTransport
     - GoogleUtilities
@@ -1595,6 +1611,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_core/ios"
   firebase_crashlytics:
     :path: ".symlinks/plugins/firebase_crashlytics/ios"
+  firebase_storage:
+    :path: ".symlinks/plugins/firebase_storage/ios"
   Flutter:
     :path: Flutter
   flutter_angle:
@@ -1650,6 +1668,7 @@ SPEC CHECKSUMS:
   firebase_auth: 9225db04db5d8e3b46dc8940e04bc6aec6833e27
   firebase_core: f1aafb21c14f497e5498f7ffc4dc63cbb52b2594
   firebase_crashlytics: c039028126cb45e32f4c217aa392408b0963d081
+  firebase_storage: d558bbfa99449fff39352db83c466c8515fa1afa
   FirebaseAppCheckInterop: f734c802f21fe1da0837708f0f9a27218c8a4ed0
   FirebaseAuth: 4a2aed737c84114a9d9b33d11ae1b147d6b94889
   FirebaseAuthInterop: 858e6b754966e70740a4370dd1503dfffe6dbb49
@@ -1663,6 +1682,7 @@ SPEC CHECKSUMS:
   FirebaseRemoteConfigInterop: 1e31ec72b89c9924367c59bfb5ec9ab60d1d6766
   FirebaseSessions: ba7c7a7ca8696a8d540eb3fe3800fbe98c79786d
   FirebaseSharedSwift: 93426a1de92f19e1199fac5295a4f8df16458daa
+  FirebaseStorage: 20d6b56fb8a40ebaa03d6a2889fe33dac64adb73
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_angle: 7b1a2b3e733221bf2e0325e42fc3edf95b5d44c4
   flutter_app_group_directory: 55b5362007d1c0cb45dc1dd1e94f67d615f45a6b
