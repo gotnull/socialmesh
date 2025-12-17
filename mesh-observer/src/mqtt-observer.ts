@@ -29,7 +29,19 @@ interface DecodeStats {
   neighborinfoUpdates: number;
   mapreportUpdates: number;
   nodesCreated: number;
+  queueDropped: number;
 }
+
+// Message queue item
+interface QueuedMessage {
+  topic: string;
+  message: Buffer;
+}
+
+// Configuration for queue processing
+const QUEUE_MAX_SIZE = 10000; // Max messages to queue before dropping
+const BATCH_SIZE = 100; // Process this many messages per batch
+const BATCH_INTERVAL_MS = 50; // Process batches every 50ms (yields to event loop)
 
 export class MqttObserver {
   private client: MqttClient | null = null;
@@ -37,6 +49,9 @@ export class MqttObserver {
   private decoder: MeshtasticDecoder;
   private username?: string;
   private password?: string;
+  private messageQueue: QueuedMessage[] = [];
+  private processingQueue: boolean = false;
+  private batchTimer: NodeJS.Timeout | null = null;
   private stats: DecodeStats = {
     totalMessages: 0,
     envelopesDecoded: 0,
@@ -50,6 +65,7 @@ export class MqttObserver {
     neighborinfoUpdates: 0,
     mapreportUpdates: 0,
     nodesCreated: 0,
+    queueDropped: 0,
   };
   private lastLogTime: number = 0;
 
@@ -99,7 +115,7 @@ export class MqttObserver {
     });
 
     this.client.on('message', (topic, message) => {
-      this.handleMessage(topic, message);
+      this.queueMessage(topic, message);
     });
 
     this.client.on('error', (err) => {
@@ -114,6 +130,66 @@ export class MqttObserver {
     this.client.on('reconnect', () => {
       console.log('Reconnecting to MQTT broker...');
     });
+
+    // Start the batch processing timer
+    this.startBatchProcessing();
+  }
+
+  /**
+   * Queue an incoming message for batch processing
+   * This prevents blocking the event loop on high message volume
+   */
+  private queueMessage(topic: string, message: Buffer): void {
+    // Drop messages if queue is full to prevent memory issues
+    if (this.messageQueue.length >= QUEUE_MAX_SIZE) {
+      this.stats.queueDropped++;
+      return;
+    }
+
+    this.messageQueue.push({ topic, message });
+  }
+
+  /**
+   * Start the batch processing timer
+   */
+  private startBatchProcessing(): void {
+    if (this.batchTimer) return;
+
+    this.batchTimer = setInterval(() => {
+      this.processBatch();
+    }, BATCH_INTERVAL_MS);
+
+    console.log(`📦 Batch processing started: ${BATCH_SIZE} msgs every ${BATCH_INTERVAL_MS}ms`);
+  }
+
+  /**
+   * Stop the batch processing timer
+   */
+  private stopBatchProcessing(): void {
+    if (this.batchTimer) {
+      clearInterval(this.batchTimer);
+      this.batchTimer = null;
+    }
+  }
+
+  /**
+   * Process a batch of queued messages
+   * Uses setImmediate to yield to the event loop between processing
+   */
+  private processBatch(): void {
+    if (this.processingQueue || this.messageQueue.length === 0) return;
+
+    this.processingQueue = true;
+
+    // Take a batch of messages from the queue
+    const batch = this.messageQueue.splice(0, BATCH_SIZE);
+
+    // Process each message in the batch
+    for (const { topic, message } of batch) {
+      this.handleMessage(topic, message);
+    }
+
+    this.processingQueue = false;
   }
 
   /**
@@ -372,7 +448,7 @@ export class MqttObserver {
     const s = this.stats;
     console.log(`📊 Stats: msgs=${s.totalMessages} envelopes=${s.envelopesDecoded} packets=${s.packetsWithFrom} decoded=${s.decryptedSuccess} failed=${s.decryptedFailed} json=${s.jsonMessages}`);
     console.log(`   Updates: position=${s.positionUpdates} nodeinfo=${s.nodeinfoUpdates} telemetry=${s.telemetryUpdates} neighbors=${s.neighborinfoUpdates} mapreport=${s.mapreportUpdates}`);
-    console.log(`   Nodes: total=${this.nodeStore.getNodeCount()} new=${s.nodesCreated}`);
+    console.log(`   Nodes: total=${this.nodeStore.getNodeCount()} new=${s.nodesCreated} | Queue: ${this.messageQueue.length} dropped=${s.queueDropped}`);
   }
 
   /**
@@ -393,13 +469,14 @@ export class MqttObserver {
    * Get detailed stats
    */
   getStats(): DecodeStats {
-    return { ...this.stats };
+    return { ...this.stats, queueSize: this.messageQueue.length } as DecodeStats & { queueSize: number };
   }
 
   /**
    * Disconnect from broker
    */
   disconnect(): void {
+    this.stopBatchProcessing();
     this.client?.end();
     this.connected = false;
   }
