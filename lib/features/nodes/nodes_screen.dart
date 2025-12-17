@@ -48,6 +48,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
   String _searchQuery = '';
   NodeFilter _activeFilter = NodeFilter.all;
   NodeSortOrder _sortOrder = NodeSortOrder.lastHeard;
+  bool _showSectionHeaders = true;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -228,6 +229,14 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                     ),
                   ),
                   const SizedBox(width: 16),
+                  // Section headers toggle
+                  _HeadersToggle(
+                    enabled: _showSectionHeaders,
+                    onToggle: () => setState(
+                      () => _showSectionHeaders = !_showSectionHeaders,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   // Sort dropdown
                   _SortButton(
                     sortOrder: _sortOrder,
@@ -285,34 +294,195 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                         ],
                       ),
                     )
-                  : ListView.builder(
-                      itemCount: nodesList.length,
-                      itemBuilder: (context, index) {
-                        final node = nodesList[index];
-                        final isMyNode = node.nodeNum == myNodeNum;
-                        final animationsEnabled = ref.watch(
-                          animationsEnabledProvider,
-                        );
-
-                        return Perspective3DSlide(
-                          index: index,
-                          direction: SlideDirection.left,
-                          enabled: animationsEnabled,
-                          child: _NodeCard(
-                            node: node,
-                            isMyNode: isMyNode,
-                            animationsEnabled: animationsEnabled,
-                            onTap: () =>
-                                _showNodeDetails(context, node, isMyNode),
-                          ),
-                        );
-                      },
-                    ),
+                  : _buildNodeList(nodesList, myNodeNum),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildNodeList(List<MeshNode> nodesList, int? myNodeNum) {
+    final animationsEnabled = ref.watch(animationsEnabledProvider);
+
+    if (!_showSectionHeaders) {
+      // Simple list without headers
+      return ListView.builder(
+        itemCount: nodesList.length,
+        itemBuilder: (context, index) {
+          final node = nodesList[index];
+          final isMyNode = node.nodeNum == myNodeNum;
+          return Perspective3DSlide(
+            index: index,
+            direction: SlideDirection.left,
+            enabled: animationsEnabled,
+            child: _NodeCard(
+              node: node,
+              isMyNode: isMyNode,
+              animationsEnabled: animationsEnabled,
+              onTap: () => _showNodeDetails(context, node, isMyNode),
+            ),
+          );
+        },
+      );
+    }
+
+    // Build grouped list with section headers
+    final sections = _groupNodesIntoSections(nodesList, myNodeNum);
+    final items = <_ListItem>[];
+
+    for (final section in sections) {
+      if (section.nodes.isNotEmpty) {
+        items.add(_ListItem.header(section.title, section.nodes.length));
+        for (final node in section.nodes) {
+          items.add(_ListItem.node(node));
+        }
+      }
+    }
+
+    return ListView.builder(
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+
+        if (item.isHeader) {
+          return _SectionHeader(
+            title: item.headerTitle!,
+            count: item.headerCount!,
+          );
+        }
+
+        final node = item.node!;
+        final isMyNode = node.nodeNum == myNodeNum;
+        return Perspective3DSlide(
+          index: index,
+          direction: SlideDirection.left,
+          enabled: animationsEnabled,
+          child: _NodeCard(
+            node: node,
+            isMyNode: isMyNode,
+            animationsEnabled: animationsEnabled,
+            onTap: () => _showNodeDetails(context, node, isMyNode),
+          ),
+        );
+      },
+    );
+  }
+
+  List<_NodeSection> _groupNodesIntoSections(
+    List<MeshNode> nodes,
+    int? myNodeNum,
+  ) {
+    switch (_sortOrder) {
+      case NodeSortOrder.lastHeard:
+        return _groupByStatus(nodes, myNodeNum);
+      case NodeSortOrder.name:
+        return _groupByAlphabet(nodes, myNodeNum);
+      case NodeSortOrder.signalStrength:
+        return _groupBySignal(nodes, myNodeNum);
+      case NodeSortOrder.batteryLevel:
+        return _groupByBattery(nodes, myNodeNum);
+    }
+  }
+
+  List<_NodeSection> _groupByStatus(List<MeshNode> nodes, int? myNodeNum) {
+    final myNode = nodes.where((n) => n.nodeNum == myNodeNum).toList();
+    final online = nodes
+        .where((n) => n.nodeNum != myNodeNum && n.isOnline)
+        .toList();
+    final idle = nodes
+        .where((n) => n.nodeNum != myNodeNum && n.isIdle)
+        .toList();
+    final offline = nodes
+        .where((n) => n.nodeNum != myNodeNum && n.isOffline)
+        .toList();
+
+    return [
+      if (myNode.isNotEmpty) _NodeSection('Your Device', myNode),
+      _NodeSection('Online', online),
+      _NodeSection('Idle (2-24h)', idle),
+      _NodeSection('Offline', offline),
+    ];
+  }
+
+  List<_NodeSection> _groupByAlphabet(List<MeshNode> nodes, int? myNodeNum) {
+    final myNode = nodes.where((n) => n.nodeNum == myNodeNum).toList();
+    final others = nodes.where((n) => n.nodeNum != myNodeNum).toList();
+
+    final grouped = <String, List<MeshNode>>{};
+    for (final node in others) {
+      final firstChar = node.displayName.isNotEmpty
+          ? node.displayName[0].toUpperCase()
+          : '#';
+      final key = RegExp(r'[A-Z]').hasMatch(firstChar) ? firstChar : '#';
+      grouped.putIfAbsent(key, () => []).add(node);
+    }
+
+    final sortedKeys = grouped.keys.toList()..sort();
+    return [
+      if (myNode.isNotEmpty) _NodeSection('Your Device', myNode),
+      ...sortedKeys.map((key) => _NodeSection(key, grouped[key]!)),
+    ];
+  }
+
+  List<_NodeSection> _groupBySignal(List<MeshNode> nodes, int? myNodeNum) {
+    final myNode = nodes.where((n) => n.nodeNum == myNodeNum).toList();
+    final others = nodes.where((n) => n.nodeNum != myNodeNum).toList();
+
+    final strong = others.where((n) => (n.snr ?? -999) > 0).toList();
+    final medium = others
+        .where((n) => (n.snr ?? -999) <= 0 && (n.snr ?? -999) > -10)
+        .toList();
+    final weak = others
+        .where((n) => (n.snr ?? -999) <= -10 && n.snr != null)
+        .toList();
+    final unknown = others.where((n) => n.snr == null).toList();
+
+    return [
+      if (myNode.isNotEmpty) _NodeSection('Your Device', myNode),
+      _NodeSection('Strong (>0 dB)', strong),
+      _NodeSection('Medium (-10 to 0 dB)', medium),
+      _NodeSection('Weak (<-10 dB)', weak),
+      _NodeSection('Unknown', unknown),
+    ];
+  }
+
+  List<_NodeSection> _groupByBattery(List<MeshNode> nodes, int? myNodeNum) {
+    final myNode = nodes.where((n) => n.nodeNum == myNodeNum).toList();
+    final others = nodes.where((n) => n.nodeNum != myNodeNum).toList();
+
+    final charging = others.where((n) => (n.batteryLevel ?? -1) > 100).toList();
+    final full = others
+        .where(
+          (n) => (n.batteryLevel ?? -1) >= 80 && (n.batteryLevel ?? -1) <= 100,
+        )
+        .toList();
+    final good = others
+        .where(
+          (n) => (n.batteryLevel ?? -1) >= 50 && (n.batteryLevel ?? -1) < 80,
+        )
+        .toList();
+    final low = others
+        .where(
+          (n) => (n.batteryLevel ?? -1) >= 20 && (n.batteryLevel ?? -1) < 50,
+        )
+        .toList();
+    final critical = others
+        .where((n) => (n.batteryLevel ?? -1) > 0 && (n.batteryLevel ?? -1) < 20)
+        .toList();
+    final unknown = others
+        .where((n) => n.batteryLevel == null || n.batteryLevel == 0)
+        .toList();
+
+    return [
+      if (myNode.isNotEmpty) _NodeSection('Your Device', myNode),
+      _NodeSection('Charging', charging),
+      _NodeSection('Full (80-100%)', full),
+      _NodeSection('Good (50-80%)', good),
+      _NodeSection('Low (20-50%)', low),
+      _NodeSection('Critical (<20%)', critical),
+      _NodeSection('Unknown', unknown),
+    ];
   }
 
   List<MeshNode> _applyFilter(List<MeshNode> nodes, int? myNodeNum) {
@@ -578,6 +748,113 @@ class _SortButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Toggle button for section headers
+class _HeadersToggle extends StatelessWidget {
+  final bool enabled;
+  final VoidCallback onToggle;
+
+  const _HeadersToggle({required this.enabled, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onToggle,
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: enabled
+              ? context.accentColor.withValues(alpha: 0.2)
+              : AppTheme.darkCard,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: enabled
+                ? context.accentColor.withValues(alpha: 0.5)
+                : AppTheme.darkBorder.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Icon(
+          Icons.view_agenda_outlined,
+          size: 16,
+          color: enabled ? context.accentColor : AppTheme.textTertiary,
+        ),
+      ),
+    );
+  }
+}
+
+/// Section header widget
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final int count;
+
+  const _SectionHeader({required this.title, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: context.accentColor,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              count.toString(),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: context.accentColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Helper class for section grouping
+class _NodeSection {
+  final String title;
+  final List<MeshNode> nodes;
+
+  _NodeSection(this.title, this.nodes);
+}
+
+/// Helper class for list items (either header or node)
+class _ListItem {
+  final bool isHeader;
+  final String? headerTitle;
+  final int? headerCount;
+  final MeshNode? node;
+
+  _ListItem._({
+    required this.isHeader,
+    this.headerTitle,
+    this.headerCount,
+    this.node,
+  });
+
+  factory _ListItem.header(String title, int count) =>
+      _ListItem._(isHeader: true, headerTitle: title, headerCount: count);
+
+  factory _ListItem.node(MeshNode node) =>
+      _ListItem._(isHeader: false, node: node);
 }
 
 /// Shows the node details bottom sheet. Can be called from any screen.
