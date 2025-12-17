@@ -84,6 +84,14 @@
 					<string>socialmesh</string>
 				</array>
 			</dict>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>com.googleusercontent.apps.571509151050-7fa2c8p7b88ibpkd3hcpgr85v5kl7cjf</string>
+				</array>
+			</dict>
 		</array>
 	</dict>
 </plist>
