@@ -1044,131 +1044,133 @@ class _DrawerNodeHeader extends ConsumerWidget {
     final nodeId = myNodeNum != null ? '!${myNodeNum.toRadixString(16)}' : '';
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-      child: Column(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              // Node avatar
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: isConnected
-                      ? LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            accentColor,
-                            accentColor.withValues(alpha: 0.7),
-                          ],
-                        )
-                      : null,
-                  color: isConnected ? null : theme.dividerColor,
-                  shape: BoxShape.circle,
-                  boxShadow: isConnected
-                      ? [
-                          BoxShadow(
-                            color: accentColor.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Center(
-                  child: isConnected
-                      ? Text(
-                          shortName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: AppTheme.fontFamily,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Icon(
-                          Icons.bluetooth_disabled,
-                          color: AppTheme.textTertiary,
-                          size: 24,
-                        ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Node info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      nodeName,
-                      style: TextStyle(
+          // Node avatar
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: isConnected
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        accentColor,
+                        accentColor.withValues(alpha: 0.7),
+                      ],
+                    )
+                  : null,
+              color: isConnected ? null : theme.dividerColor,
+              shape: BoxShape.circle,
+              boxShadow: isConnected
+                  ? [
+                      BoxShadow(
+                        color: accentColor.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Center(
+              child: isConnected
+                  ? Text(
+                      shortName,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         fontFamily: AppTheme.fontFamily,
-                        color: theme.colorScheme.onSurface,
+                        color: Colors.white,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    )
+                  : Icon(
+                      Icons.bluetooth_disabled,
+                      color: AppTheme.textTertiary,
+                      size: 24,
                     ),
-                    if (isConnected && nodeId.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        nodeId,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontFamily: AppTheme.fontFamily,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.6,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              // Connection status indicator
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: isConnected
-                      ? AppTheme.successGreen.withValues(alpha: 0.15)
-                      : AppTheme.errorRed.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Node info - flexible column
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Name and status on same row
+                Row(
                   children: [
+                    Flexible(
+                      child: Text(
+                        nodeName,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: AppTheme.fontFamily,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Connection status indicator (compact)
                     Container(
-                      width: 8,
-                      height: 8,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: isConnected
-                            ? AppTheme.successGreen
-                            : AppTheme.errorRed,
-                        shape: BoxShape.circle,
+                            ? AppTheme.successGreen.withValues(alpha: 0.15)
+                            : AppTheme.errorRed.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      isConnected ? 'Online' : 'Offline',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: AppTheme.fontFamily,
-                        color: isConnected
-                            ? AppTheme.successGreen
-                            : AppTheme.errorRed,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: isConnected
+                                  ? AppTheme.successGreen
+                                  : AppTheme.errorRed,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            isConnected ? 'Online' : 'Offline',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: AppTheme.fontFamily,
+                              color: isConnected
+                                  ? AppTheme.successGreen
+                                  : AppTheme.errorRed,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                if (isConnected && nodeId.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    nodeId,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontFamily: AppTheme.fontFamily,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ],
       ),
