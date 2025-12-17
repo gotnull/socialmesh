@@ -171,7 +171,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
               height: 44,
               child: Row(
                 children: [
-                  // Scrollable filter chips
+                  // Scrollable filter chips and sort button
                   Expanded(
                     child: ListView(
                       scrollDirection: Axis.horizontal,
@@ -238,20 +238,21 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
+                        _SortButton(
+                          sortOrder: _sortOrder,
+                          onChanged: (order) =>
+                              setState(() => _sortOrder = order),
+                        ),
+                        const SizedBox(width: 8),
                       ],
                     ),
                   ),
-                  // Static controls at end
+                  // Static toggle at end
                   _HeadersToggle(
                     enabled: _showSectionHeaders,
                     onToggle: () => setState(
                       () => _showSectionHeaders = !_showSectionHeaders,
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  _SortButton(
-                    sortOrder: _sortOrder,
-                    onChanged: (order) => setState(() => _sortOrder = order),
                   ),
                   const SizedBox(width: 12),
                 ],
