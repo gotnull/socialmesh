@@ -78,28 +78,56 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
     }
   }
 
-  /// Save avatar from file
+  /// Save avatar from file (and upload to cloud if signed in)
   Future<void> saveAvatarFromFile(File imageFile) async {
     final profile = state.value;
     if (profile == null) return;
 
     try {
+      // Save locally first
       await profileService.saveAvatarFromFile(profile.id, imageFile);
-      await refresh();
+
+      // If user is signed in, also upload to cloud
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        debugPrint('[UserProfile] User signed in, uploading avatar to cloud');
+        final cloudUrl = await profileCloudSyncService.uploadAvatar(
+          user.uid,
+          imageFile,
+        );
+
+        // Update profile with cloud URL
+        final updated = profile.copyWith(avatarUrl: cloudUrl, isSynced: true);
+        await profileService.saveProfile(updated);
+        state = AsyncValue.data(updated);
+      } else {
+        await refresh();
+      }
     } catch (e, st) {
+      debugPrint('[UserProfile] Error saving avatar: $e');
       state = AsyncValue.error(e, st);
     }
   }
 
-  /// Delete avatar
+  /// Delete avatar (and from cloud if signed in)
   Future<void> deleteAvatar() async {
     final profile = state.value;
     if (profile == null) return;
 
     try {
+      // Delete locally
       await profileService.deleteAvatar(profile.id);
+
+      // If signed in, also delete from cloud
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        debugPrint('[UserProfile] Deleting avatar from cloud');
+        await profileCloudSyncService.deleteCloudAvatar(user.uid);
+      }
+
       await refresh();
     } catch (e, st) {
+      debugPrint('[UserProfile] Error deleting avatar: $e');
       state = AsyncValue.error(e, st);
     }
   }
@@ -171,9 +199,17 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
   /// Full two-way sync with cloud (requires authenticated user)
   Future<void> fullSync(String uid) async {
     try {
+      // Sync profile data
       final synced = await profileCloudSyncService.fullSync(uid);
       if (synced != null) {
         state = AsyncValue.data(synced);
+
+        // Also sync avatar if it's a local file path
+        if (synced.avatarUrl != null && !synced.avatarUrl!.startsWith('http')) {
+          debugPrint('[UserProfile] Syncing local avatar to cloud');
+          await profileCloudSyncService.syncAvatarToCloud(uid);
+          await refresh();
+        }
       }
     } catch (e, st) {
       debugPrint('[UserProfile] Error during full sync: $e');
