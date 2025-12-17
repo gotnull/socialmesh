@@ -527,17 +527,29 @@ class _SortButton extends StatelessWidget {
         ),
       ),
       itemBuilder: (context) => [
-        _buildMenuItem(NodeSortOrder.lastHeard, 'Most Recent', Icons.schedule),
-        _buildMenuItem(NodeSortOrder.name, 'Name (A-Z)', Icons.sort_by_alpha),
+        _buildMenuItem(
+          NodeSortOrder.lastHeard,
+          'Most Recent',
+          Icons.schedule,
+          context,
+        ),
+        _buildMenuItem(
+          NodeSortOrder.name,
+          'Name (A-Z)',
+          Icons.sort_by_alpha,
+          context,
+        ),
         _buildMenuItem(
           NodeSortOrder.signalStrength,
           'Signal Strength',
           Icons.signal_cellular_alt,
+          context,
         ),
         _buildMenuItem(
           NodeSortOrder.batteryLevel,
           'Battery Level',
           Icons.battery_full,
+          context,
         ),
       ],
     );
@@ -547,28 +559,21 @@ class _SortButton extends StatelessWidget {
     NodeSortOrder value,
     String label,
     IconData icon,
+    BuildContext context,
   ) {
     final isSelected = sortOrder == value;
+    final accentColor = context.accentColor;
     return PopupMenuItem<NodeSortOrder>(
       value: value,
       child: Row(
         children: [
           Icon(
-            icon,
+            isSelected ? Icons.check : icon,
             size: 18,
-            color: isSelected ? AppTheme.primaryBlue : AppTheme.textTertiary,
+            color: isSelected ? accentColor : AppTheme.textSecondary,
           ),
           const SizedBox(width: 12),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? AppTheme.primaryBlue : Colors.white,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-            ),
-          ),
-          const Spacer(),
-          if (isSelected)
-            const Icon(Icons.check, size: 18, color: AppTheme.primaryBlue),
+          Text(label),
         ],
       ),
     );
