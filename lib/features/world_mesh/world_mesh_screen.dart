@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../models/world_mesh_node.dart';
 import '../../providers/node_favorites_provider.dart';
@@ -795,17 +796,12 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             _buildStatItem(
               theme,
               hasFilters ? Icons.filter_alt : Icons.public,
-              '$visibleCount',
+              visibleCount,
               hasFilters ? 'filtered' : 'visible',
               highlight: hasFilters,
             ),
             const SizedBox(width: 24),
-            _buildStatItem(
-              theme,
-              Icons.cloud_done,
-              '${state.nodeCount}',
-              'total',
-            ),
+            _buildStatItem(theme, Icons.cloud_done, state.nodeCount, 'total'),
             const Spacer(),
             if (state.lastUpdated != null)
               Text(
@@ -823,7 +819,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   Widget _buildStatItem(
     ThemeData theme,
     IconData icon,
-    String value,
+    int value,
     String label, {
     bool highlight = false,
   }) {
@@ -834,8 +830,9 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
       children: [
         Icon(icon, size: 16, color: color),
         const SizedBox(width: 6),
-        Text(
-          value,
+        AnimatedCounter(
+          value: value,
+          duration: const Duration(milliseconds: 600),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: highlight ? theme.colorScheme.primary : null,

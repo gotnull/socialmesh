@@ -656,30 +656,74 @@ class _TypewriterTextState extends State<TypewriterText> {
   }
 }
 
-/// Animated counter for numbers
-class AnimatedCounter extends StatelessWidget {
+/// Animated counter for numbers - animates smoothly from previous value to new value
+class AnimatedCounter extends StatefulWidget {
   final int value;
   final Duration duration;
   final TextStyle? style;
   final String? prefix;
   final String? suffix;
+  final Curve curve;
 
   const AnimatedCounter({
     super.key,
     required this.value,
-    this.duration = const Duration(milliseconds: 500),
+    this.duration = const Duration(milliseconds: 800),
     this.style,
     this.prefix,
     this.suffix,
+    this.curve = Curves.easeOutCubic,
   });
 
   @override
+  State<AnimatedCounter> createState() => _AnimatedCounterState();
+}
+
+class _AnimatedCounterState extends State<AnimatedCounter>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  late int _previousValue;
+  late int _currentValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _previousValue = widget.value;
+    _currentValue = widget.value;
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    _animation = CurvedAnimation(parent: _controller, curve: widget.curve);
+  }
+
+  @override
+  void didUpdateWidget(AnimatedCounter oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      _previousValue = _currentValue;
+      _currentValue = widget.value;
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<int>(
-      tween: IntTween(begin: 0, end: value),
-      duration: duration,
-      builder: (context, value, child) {
-        return Text('${prefix ?? ''}$value${suffix ?? ''}', style: style);
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final displayValue =
+            (_previousValue +
+                    (_currentValue - _previousValue) * _animation.value)
+                .round();
+        return Text(
+          '${widget.prefix ?? ''}$displayValue${widget.suffix ?? ''}',
+          style: widget.style,
+        );
       },
     );
   }
