@@ -518,6 +518,14 @@ nav .container {
   border-color: rgba(79, 106, 246, 0.4);
 }
 
+.floating-element-shortcuts {
+  top: -20px;
+  left: 50%;
+  margin-left: -60px;
+  animation-delay: 3s;
+  border-color: rgba(255, 45, 85, 0.4);
+}
+
 @keyframes float {
 
   0%,
