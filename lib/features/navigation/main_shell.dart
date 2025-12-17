@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../../core/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +10,8 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/auth_providers.dart';
+import '../../providers/profile_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/haptic_service.dart';
 import '../channels/channels_screen.dart';
@@ -21,12 +25,14 @@ import '../timeline/timeline_screen.dart';
 import '../routes/routes_screen.dart';
 import '../automations/automations_screen.dart';
 import '../settings/settings_screen.dart';
+import '../settings/account_screen.dart';
 import '../presence/presence_screen.dart';
 import '../mesh3d/mesh_3d_screen.dart';
 import '../world_mesh/world_mesh_screen.dart';
 import '../settings/subscription_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import '../reachability/mesh_reachability_screen.dart';
+import '../profile/profile_screen.dart';
 
 /// Notifier to expose the main shell's scaffold key for drawer access
 class MainShellScaffoldKeyNotifier extends Notifier<GlobalKey<ScaffoldState>?> {
@@ -502,6 +508,20 @@ class _MainShellState extends ConsumerState<MainShell> {
                     ),
                   ),
 
+                  // Divider before Profile/Account
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Divider(
+                      color: theme.dividerColor.withValues(alpha: 0.1),
+                    ),
+                  ),
+
+                  // Profile & Account section
+                  const _DrawerProfileSection(),
+
                   // Divider before Settings/Help
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -881,6 +901,7 @@ class _DrawerMenuTile extends StatelessWidget {
   final bool isSelected;
   final bool isPremium;
   final bool isLocked;
+  final Widget? trailing;
   final VoidCallback onTap;
 
   const _DrawerMenuTile({
@@ -890,6 +911,7 @@ class _DrawerMenuTile extends StatelessWidget {
     required this.onTap,
     this.isPremium = false,
     this.isLocked = false,
+    this.trailing,
   });
 
   @override
@@ -998,6 +1020,8 @@ class _DrawerMenuTile extends StatelessWidget {
                   ],
                 ),
               ),
+            ] else if (trailing != null) ...[
+              trailing!,
             ] else if (isPremium) ...[
               // Show unlocked badge for purchased premium features
               Icon(
@@ -1228,6 +1252,289 @@ class _PulsingDotState extends State<_PulsingDot>
 }
 
 /// Theme toggle button like Twitter's moon icon
+/// Profile & Account section for the drawer
+/// Shows profile info, sign in status, and sync options
+class _DrawerProfileSection extends ConsumerWidget {
+  const _DrawerProfileSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final authState = ref.watch(authStateProvider);
+    final profileAsync = ref.watch(userProfileProvider);
+    final isSignedIn = authState.value != null;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Padding(
+            padding: const EdgeInsets.only(left: 12, bottom: 8),
+            child: Text(
+              'ACCOUNT',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.2,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+
+          // Profile tile with avatar
+          profileAsync.when(
+            data: (profile) => _ProfileTile(
+              profile: profile,
+              isSignedIn: isSignedIn,
+              onTap: () {
+                ref.haptics.tabChange();
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                );
+              },
+            ),
+            loading: () => const SizedBox(
+              height: 56,
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+            error: (e, st) => _DrawerMenuTile(
+              icon: Icons.person_outline,
+              label: 'Profile',
+              isSelected: false,
+              onTap: () {
+                ref.haptics.tabChange();
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 4),
+
+          // Sign In / Account tile
+          _DrawerMenuTile(
+            icon: isSignedIn ? Icons.manage_accounts_outlined : Icons.login,
+            label: isSignedIn ? 'Cloud Account' : 'Sign In',
+            isSelected: false,
+            trailing: isSignedIn
+                ? Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.successGreen.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.cloud_done,
+                          size: 12,
+                          color: AppTheme.successGreen,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Synced',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.successGreen,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : null,
+            onTap: () {
+              ref.haptics.tabChange();
+              Navigator.of(context).pop();
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const AccountScreen()));
+            },
+          ),
+
+          // Sync button if signed in
+          if (isSignedIn) ...[
+            const SizedBox(height: 4),
+            _DrawerMenuTile(
+              icon: Icons.sync,
+              label: 'Sync Now',
+              isSelected: false,
+              onTap: () async {
+                ref.haptics.tabChange();
+                final uid = authState.value?.uid;
+                if (uid != null) {
+                  // Show syncing feedback
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Row(
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text('Syncing profile...'),
+                        ],
+                      ),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                  await ref.read(userProfileProvider.notifier).fullSync(uid);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Row(
+                          children: [
+                            Icon(Icons.check_circle, color: Colors.white),
+                            SizedBox(width: 12),
+                            Text('Profile synced!'),
+                          ],
+                        ),
+                        backgroundColor: AppTheme.successGreen,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Profile tile with avatar for the drawer
+class _ProfileTile extends StatelessWidget {
+  final dynamic profile; // UserProfile?
+  final bool isSignedIn;
+  final VoidCallback onTap;
+
+  const _ProfileTile({
+    required this.profile,
+    required this.isSignedIn,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accentColor = theme.colorScheme.primary;
+
+    final displayName = profile?.displayName ?? 'Mesh User';
+    final initials = profile?.initials ?? '?';
+    final avatarUrl = profile?.avatarUrl;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              // Avatar
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: accentColor.withValues(alpha: 0.15),
+                  border: Border.all(
+                    color: accentColor.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
+                ),
+                child: ClipOval(
+                  child: avatarUrl != null
+                      ? (avatarUrl.startsWith('http')
+                            ? Image.network(
+                                avatarUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (ctx, err, stack) =>
+                                    _buildInitials(initials, accentColor),
+                              )
+                            : Image.file(
+                                File(avatarUrl),
+                                fit: BoxFit.cover,
+                                errorBuilder: (ctx, err, stack) =>
+                                    _buildInitials(initials, accentColor),
+                              ))
+                      : _buildInitials(initials, accentColor),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Name and subtitle
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'View Profile',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Arrow
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInitials(String initials, Color accentColor) {
+    return Center(
+      child: Text(
+        initials,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: accentColor,
+        ),
+      ),
+    );
+  }
+}
+
 class _ThemeToggleButton extends ConsumerWidget {
   const _ThemeToggleButton();
 
