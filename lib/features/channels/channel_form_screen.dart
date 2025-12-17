@@ -839,8 +839,8 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
 
   /// Returns the distance description for a position precision value
   String _getPositionPrecisionLabel(int precision) {
-    // Based on geohash precision - meters per bit
-    // iOS uses: 12 ≈ 5.8km, 13 ≈ 2.9km, 14 ≈ 1.5km, 15 ≈ 730m
+    // Based on geohash precision - matches iOS MKDistanceFormatter rounding
+    // iOS values: 12 ≈ 5.8km, 13 ≈ 2.9km, 14 ≈ 1.5km, 15 ≈ 700m
     switch (precision) {
       case 12:
         return 'Within 5.8 km';
@@ -849,7 +849,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
       case 14:
         return 'Within 1.5 km';
       case 15:
-        return 'Within 730 m';
+        return 'Within 700 m';
       case 32:
         return 'Precise location';
       default:
