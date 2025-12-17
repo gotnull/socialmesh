@@ -398,24 +398,20 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
   @override
   void initState() {
     super.initState();
-    // Start expanded if not signed in or if anonymous (to prompt action)
-    _isExpanded = !isSignedIn || (widget.user?.isAnonymous ?? false);
+    // Start expanded if not signed in (to prompt action)
+    _isExpanded = !isSignedIn;
   }
 
   String _getBackupStatusText() {
     if (!isSignedIn) {
       return 'Not backed up';
     }
-    if (widget.user!.isAnonymous) {
-      return 'Device only • Link email to sync';
-    }
-    return 'Synced • ${widget.user!.email}';
+    return 'Synced • ${widget.user!.email ?? 'Connected'}';
   }
 
   @override
   Widget build(BuildContext context) {
     final accentColor = context.accentColor;
-    final isAnonymous = widget.user?.isAnonymous ?? false;
 
     return Container(
       decoration: BoxDecoration(
@@ -423,9 +419,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSignedIn
-              ? (isAnonymous
-                    ? AccentColors.orange.withValues(alpha: 0.3)
-                    : AccentColors.green.withValues(alpha: 0.3))
+              ? AccentColors.green.withValues(alpha: 0.3)
               : AppTheme.darkBorder.withValues(alpha: 0.3),
         ),
       ),
@@ -445,27 +439,14 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color:
-                          (isSignedIn
-                                  ? (isAnonymous
-                                        ? AccentColors.orange
-                                        : AccentColors.green)
-                                  : accentColor)
-                              .withValues(alpha: 0.15),
+                      color: (isSignedIn ? AccentColors.green : accentColor)
+                          .withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
-                      isSignedIn
-                          ? (isAnonymous
-                                ? Icons.cloud_outlined
-                                : Icons.cloud_done)
-                          : Icons.cloud_off_outlined,
+                      isSignedIn ? Icons.cloud_done : Icons.cloud_off_outlined,
                       size: 20,
-                      color: isSignedIn
-                          ? (isAnonymous
-                                ? AccentColors.orange
-                                : AccentColors.green)
-                          : accentColor,
+                      color: isSignedIn ? AccentColors.green : accentColor,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -487,9 +468,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
                           style: TextStyle(
                             fontSize: 12,
                             color: isSignedIn
-                                ? (widget.user!.isAnonymous
-                                      ? AccentColors.orange
-                                      : AccentColors.green)
+                                ? AccentColors.green
                                 : AppTheme.textTertiary,
                           ),
                         ),
@@ -557,7 +536,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
           const SizedBox(height: 10),
 
           // Apple Sign-In button (iOS/macOS only)
-          if (Platform.isIOS || Platform.isMacOS) ...[
+          if (Platform.isIOS || Platform.isMacOS)
             _SocialSignInButton(
               onPressed: () => _signInWithApple(context),
               icon: const Icon(Icons.apple, color: Colors.white, size: 22),
@@ -565,54 +544,12 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
               backgroundColor: Colors.black,
               textColor: Colors.white,
             ),
-            const SizedBox(height: 10),
-          ],
-
-          // Divider with "or"
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              const Expanded(child: Divider(color: AppTheme.darkBorder)),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  'or',
-                  style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
-                ),
-              ),
-              const Expanded(child: Divider(color: AppTheme.darkBorder)),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Email sign-in
-          OutlinedButton.icon(
-            onPressed: () => _showSignInDialog(context),
-            icon: const Icon(Icons.email_outlined, size: 18),
-            label: const Text('Sign in with Email'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Center(
-            child: TextButton(
-              onPressed: () => _showCreateAccountDialog(context),
-              child: const Text(
-                'Create account with email',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
   Widget _buildSignedInContent(BuildContext context) {
-    final user = widget.user!;
-    final isAnonymous = user.isAnonymous;
-
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Column(
@@ -620,49 +557,6 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
         children: [
           const Divider(color: AppTheme.darkBorder),
           const SizedBox(height: 12),
-
-          // Anonymous upgrade prompt
-          if (isAnonymous) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AccentColors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AccentColors.orange.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 18,
-                    color: AccentColors.orange,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Link an email to keep your data across devices.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AccentColors.orange,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            FilledButton.icon(
-              onPressed: () => _linkEmailAccount(context),
-              icon: const Icon(Icons.link, size: 18),
-              label: const Text('Link Email'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
 
           // Sync button
           OutlinedButton.icon(
@@ -680,18 +574,6 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
             ),
           ),
 
-          // Account management for email/password users only
-          if (!isAnonymous && _isEmailPasswordUser(user)) ...[
-            const SizedBox(height: 16),
-            const Divider(color: AppTheme.darkBorder),
-            const SizedBox(height: 8),
-            _AccountOptionTile(
-              icon: Icons.lock_outline,
-              label: 'Change Password',
-              onTap: () => _sendPasswordReset(context),
-            ),
-          ],
-
           // Sign out
           const SizedBox(height: 8),
           _AccountOptionTile(
@@ -700,44 +582,17 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
             onTap: () => _signOut(context),
           ),
 
-          // Delete account (non-anonymous only)
-          if (!isAnonymous) ...[
-            const SizedBox(height: 8),
-            _AccountOptionTile(
-              icon: Icons.delete_outline,
-              label: 'Delete Account',
-              isDestructive: true,
-              onTap: () => _deleteAccount(context),
-            ),
-          ],
+          // Delete account
+          const SizedBox(height: 8),
+          _AccountOptionTile(
+            icon: Icons.delete_outline,
+            label: 'Delete Account',
+            isDestructive: true,
+            onTap: () => _deleteAccount(context),
+          ),
         ],
       ),
     );
-  }
-
-  /// Check if user signed in with email/password (not Google/Apple)
-  bool _isEmailPasswordUser(User user) {
-    return user.providerData.any((info) => info.providerId == 'password');
-  }
-
-  Future<void> _showSignInDialog(BuildContext context) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => const _EmailSignInDialog(isCreateAccount: false),
-    );
-    if (result == true && context.mounted) {
-      showSuccessSnackBar(context, 'Signed in successfully!');
-    }
-  }
-
-  Future<void> _showCreateAccountDialog(BuildContext context) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => const _EmailSignInDialog(isCreateAccount: true),
-    );
-    if (result == true && context.mounted) {
-      showSuccessSnackBar(context, 'Account created successfully!');
-    }
   }
 
   Future<void> _signInWithGoogle(BuildContext context) async {
@@ -779,17 +634,6 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     }
   }
 
-  Future<void> _linkEmailAccount(BuildContext context) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) =>
-          const _EmailSignInDialog(isCreateAccount: true, isLinking: true),
-    );
-    if (result == true && context.mounted) {
-      showSuccessSnackBar(context, 'Email linked successfully!');
-    }
-  }
-
   Future<void> _syncNow(BuildContext context) async {
     final uid = widget.user?.uid;
     if (uid == null) return;
@@ -811,57 +655,13 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     }
   }
 
-  Future<void> _sendPasswordReset(BuildContext context) async {
-    final email = widget.user?.email;
-    if (email == null) return;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text('Reset Password'),
-        content: Text('Send password reset email to $email?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Send'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      try {
-        final authService = ref.read(authServiceProvider);
-        await authService.sendPasswordResetEmail(email);
-        if (context.mounted) {
-          showSuccessSnackBar(context, 'Password reset email sent');
-        }
-      } on FirebaseAuthException catch (e) {
-        if (context.mounted) {
-          showErrorSnackBar(context, 'Error: ${e.message}');
-        }
-      }
-    }
-  }
-
   Future<void> _signOut(BuildContext context) async {
-    final isAnonymous = widget.user?.isAnonymous ?? false;
-
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.darkCard,
         title: const Text('Sign Out'),
-        content: Text(
-          isAnonymous
-              ? 'As a guest, signing out will lose any unsaved work. Continue?'
-              : 'Are you sure you want to sign out?',
-        ),
+        content: const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -1876,252 +1676,6 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
           ? [UpperCaseTextFormatter()]
           : null,
     );
-  }
-}
-
-/// Email sign in dialog
-class _EmailSignInDialog extends ConsumerStatefulWidget {
-  final bool isCreateAccount;
-  final bool isLinking;
-
-  const _EmailSignInDialog({
-    required this.isCreateAccount,
-    this.isLinking = false,
-  });
-
-  @override
-  ConsumerState<_EmailSignInDialog> createState() => _EmailSignInDialogState();
-}
-
-class _EmailSignInDialogState extends ConsumerState<_EmailSignInDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  bool _isLoading = false;
-  bool _obscurePassword = true;
-  String? _errorMessage;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    String title;
-    if (widget.isLinking) {
-      title = 'Link Email';
-    } else if (widget.isCreateAccount) {
-      title = 'Create Account';
-    } else {
-      title = 'Sign In';
-    }
-
-    return AlertDialog(
-      backgroundColor: AppTheme.darkCard,
-      title: Text(title),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (_errorMessage != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.errorRed.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _errorMessage!,
-                    style: const TextStyle(color: AppTheme.errorRed),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  hintText: 'you@example.com',
-                  prefixIcon: Icon(Icons.email_outlined),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                autofocus: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!value.contains('@') || !value.contains('.')) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: const Icon(Icons.lock_outlined),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                    ),
-                    onPressed: () {
-                      setState(() => _obscurePassword = !_obscurePassword);
-                    },
-                  ),
-                ),
-                obscureText: _obscurePassword,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  if (widget.isCreateAccount && value.length < 6) {
-                    return 'Password must be at least 6 characters';
-                  }
-                  return null;
-                },
-              ),
-              if (widget.isCreateAccount) ...[
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Confirm Password',
-                    prefixIcon: Icon(Icons.lock_outlined),
-                  ),
-                  obscureText: _obscurePassword,
-                  validator: (value) {
-                    if (value != _passwordController.text) {
-                      return 'Passwords do not match';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-              if (!widget.isCreateAccount && !widget.isLinking) ...[
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: _isLoading ? null : _forgotPassword,
-                    child: const Text('Forgot password?'),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _isLoading ? null : _submit,
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: MeshLoadingIndicator(size: 20),
-                )
-              : Text(widget.isCreateAccount ? 'Create' : 'Sign In'),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final authService = ref.read(authServiceProvider);
-      final email = _emailController.text.trim();
-      final password = _passwordController.text;
-
-      if (widget.isLinking) {
-        // Link email to anonymous account
-        final credential = EmailAuthProvider.credential(
-          email: email,
-          password: password,
-        );
-        await FirebaseAuth.instance.currentUser?.linkWithCredential(credential);
-      } else if (widget.isCreateAccount) {
-        await authService.createAccount(email: email, password: password);
-      } else {
-        await authService.signInWithEmail(email: email, password: password);
-      }
-
-      if (mounted) {
-        Navigator.pop(context, true);
-      }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = _getErrorMessage(e.code);
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _forgotPassword() async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty || !email.contains('@')) {
-      setState(() {
-        _errorMessage = 'Please enter your email address first';
-      });
-      return;
-    }
-
-    try {
-      final authService = ref.read(authServiceProvider);
-      await authService.sendPasswordResetEmail(email);
-      if (mounted) {
-        showSuccessSnackBar(context, 'Password reset email sent to $email');
-      }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = _getErrorMessage(e.code);
-      });
-    }
-  }
-
-  String _getErrorMessage(String code) {
-    switch (code) {
-      case 'user-not-found':
-        return 'No account found with this email';
-      case 'wrong-password':
-        return 'Incorrect password';
-      case 'invalid-credential':
-        return 'Invalid email or password';
-      case 'email-already-in-use':
-        return 'An account already exists with this email';
-      case 'weak-password':
-        return 'Password is too weak';
-      case 'invalid-email':
-        return 'Invalid email address';
-      case 'too-many-requests':
-        return 'Too many attempts. Please try again later';
-      case 'credential-already-in-use':
-        return 'This email is already linked to another account';
-      default:
-        return 'An error occurred: $code';
-    }
   }
 }
 
