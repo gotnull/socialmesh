@@ -13,6 +13,7 @@ import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/node_avatar.dart';
+import '../../core/widgets/edge_fade.dart';
 import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
 import '../navigation/main_shell.dart';
@@ -171,80 +172,87 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
               height: 44,
               child: Row(
                 children: [
-                  // Scrollable filter chips and sort button
+                  // Scrollable filter chips and sort button with edge fade
                   Expanded(
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.only(left: 16),
-                      children: [
-                        _FilterChip(
-                          label: 'All',
-                          count: nodes.length,
-                          isSelected: _activeFilter == NodeFilter.all,
-                          onTap: () =>
-                              setState(() => _activeFilter = NodeFilter.all),
-                        ),
-                        const SizedBox(width: 8),
-                        _FilterChip(
-                          label: 'Online',
-                          count: onlineCount,
-                          isSelected: _activeFilter == NodeFilter.online,
-                          color: AccentColors.green,
-                          onTap: () =>
-                              setState(() => _activeFilter = NodeFilter.online),
-                        ),
-                        const SizedBox(width: 8),
-                        _FilterChip(
-                          label: 'Favorites',
-                          count: favoritesCount,
-                          isSelected: _activeFilter == NodeFilter.favorites,
-                          color: AppTheme.warningYellow,
-                          icon: Icons.star,
-                          onTap: () => setState(
-                            () => _activeFilter = NodeFilter.favorites,
+                    child: EdgeFade.end(
+                      fadeSize: 32,
+                      fadeColor: AppTheme.darkBackground,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.only(left: 16),
+                        children: [
+                          _FilterChip(
+                            label: 'All',
+                            count: nodes.length,
+                            isSelected: _activeFilter == NodeFilter.all,
+                            onTap: () =>
+                                setState(() => _activeFilter = NodeFilter.all),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        _FilterChip(
-                          label: 'With Position',
-                          count: withPositionCount,
-                          isSelected: _activeFilter == NodeFilter.withPosition,
-                          color: AccentColors.cyan,
-                          icon: Icons.location_on,
-                          onTap: () => setState(
-                            () => _activeFilter = NodeFilter.withPosition,
+                          const SizedBox(width: 8),
+                          _FilterChip(
+                            label: 'Online',
+                            count: onlineCount,
+                            isSelected: _activeFilter == NodeFilter.online,
+                            color: AccentColors.green,
+                            onTap: () => setState(
+                              () => _activeFilter = NodeFilter.online,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        _FilterChip(
-                          label: 'Offline',
-                          count: nodes.length - onlineCount,
-                          isSelected: _activeFilter == NodeFilter.offline,
-                          color: AppTheme.textTertiary,
-                          onTap: () => setState(
-                            () => _activeFilter = NodeFilter.offline,
+                          const SizedBox(width: 8),
+                          _FilterChip(
+                            label: 'Favorites',
+                            count: favoritesCount,
+                            isSelected: _activeFilter == NodeFilter.favorites,
+                            color: AppTheme.warningYellow,
+                            icon: Icons.star,
+                            onTap: () => setState(
+                              () => _activeFilter = NodeFilter.favorites,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        _FilterChip(
-                          label: 'New',
-                          count: recentlyDiscoveredCount,
-                          isSelected:
-                              _activeFilter == NodeFilter.recentlyDiscovered,
-                          color: AccentColors.purple,
-                          icon: Icons.fiber_new,
-                          onTap: () => setState(
-                            () => _activeFilter = NodeFilter.recentlyDiscovered,
+                          const SizedBox(width: 8),
+                          _FilterChip(
+                            label: 'With Position',
+                            count: withPositionCount,
+                            isSelected:
+                                _activeFilter == NodeFilter.withPosition,
+                            color: AccentColors.cyan,
+                            icon: Icons.location_on,
+                            onTap: () => setState(
+                              () => _activeFilter = NodeFilter.withPosition,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        _SortButton(
-                          sortOrder: _sortOrder,
-                          onChanged: (order) =>
-                              setState(() => _sortOrder = order),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
+                          const SizedBox(width: 8),
+                          _FilterChip(
+                            label: 'Offline',
+                            count: nodes.length - onlineCount,
+                            isSelected: _activeFilter == NodeFilter.offline,
+                            color: AppTheme.textTertiary,
+                            onTap: () => setState(
+                              () => _activeFilter = NodeFilter.offline,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _FilterChip(
+                            label: 'New',
+                            count: recentlyDiscoveredCount,
+                            isSelected:
+                                _activeFilter == NodeFilter.recentlyDiscovered,
+                            color: AccentColors.purple,
+                            icon: Icons.fiber_new,
+                            onTap: () => setState(
+                              () =>
+                                  _activeFilter = NodeFilter.recentlyDiscovered,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _SortButton(
+                            sortOrder: _sortOrder,
+                            onChanged: (order) =>
+                                setState(() => _sortOrder = order),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                      ),
                     ),
                   ),
                   // Static toggle at end
@@ -856,7 +864,13 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return _SectionHeader(title: title, count: count);
+    // Show shadow when content is scrolling underneath
+    final showShadow = shrinkOffset > 0 || overlapsContent;
+    return StickyHeaderShadow(
+      blurRadius: showShadow ? 8 : 0,
+      offsetY: showShadow ? 2 : 0,
+      child: _SectionHeader(title: title, count: count),
+    );
   }
 
   @override

@@ -10,6 +10,7 @@ import '../../core/transport.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/edge_fade.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
@@ -175,58 +176,64 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
             // Filter chips row
             SizedBox(
               height: 44,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _ChannelFilterChip(
-                    label: 'All',
-                    count: channels.length,
-                    isSelected: _activeFilter == ChannelFilter.all,
-                    onTap: () =>
-                        setState(() => _activeFilter = ChannelFilter.all),
-                  ),
-                  const SizedBox(width: 8),
-                  _ChannelFilterChip(
-                    label: 'Primary',
-                    count: primaryCount,
-                    isSelected: _activeFilter == ChannelFilter.primary,
-                    color: AccentColors.blue,
-                    icon: Icons.star,
-                    onTap: () =>
-                        setState(() => _activeFilter = ChannelFilter.primary),
-                  ),
-                  const SizedBox(width: 8),
-                  _ChannelFilterChip(
-                    label: 'Encrypted',
-                    count: encryptedCount,
-                    isSelected: _activeFilter == ChannelFilter.encrypted,
-                    color: AccentColors.green,
-                    icon: Icons.lock,
-                    onTap: () =>
-                        setState(() => _activeFilter = ChannelFilter.encrypted),
-                  ),
-                  const SizedBox(width: 8),
-                  _ChannelFilterChip(
-                    label: 'Position',
-                    count: positionCount,
-                    isSelected: _activeFilter == ChannelFilter.position,
-                    color: AccentColors.orange,
-                    icon: Icons.location_on,
-                    onTap: () =>
-                        setState(() => _activeFilter = ChannelFilter.position),
-                  ),
-                  const SizedBox(width: 8),
-                  _ChannelFilterChip(
-                    label: 'MQTT',
-                    count: mqttCount,
-                    isSelected: _activeFilter == ChannelFilter.mqtt,
-                    color: AccentColors.purple,
-                    icon: Icons.cloud,
-                    onTap: () =>
-                        setState(() => _activeFilter = ChannelFilter.mqtt),
-                  ),
-                ],
+              child: EdgeFade.end(
+                fadeSize: 32,
+                fadeColor: AppTheme.darkBackground,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    _ChannelFilterChip(
+                      label: 'All',
+                      count: channels.length,
+                      isSelected: _activeFilter == ChannelFilter.all,
+                      onTap: () =>
+                          setState(() => _activeFilter = ChannelFilter.all),
+                    ),
+                    const SizedBox(width: 8),
+                    _ChannelFilterChip(
+                      label: 'Primary',
+                      count: primaryCount,
+                      isSelected: _activeFilter == ChannelFilter.primary,
+                      color: AccentColors.blue,
+                      icon: Icons.star,
+                      onTap: () =>
+                          setState(() => _activeFilter = ChannelFilter.primary),
+                    ),
+                    const SizedBox(width: 8),
+                    _ChannelFilterChip(
+                      label: 'Encrypted',
+                      count: encryptedCount,
+                      isSelected: _activeFilter == ChannelFilter.encrypted,
+                      color: AccentColors.green,
+                      icon: Icons.lock,
+                      onTap: () => setState(
+                        () => _activeFilter = ChannelFilter.encrypted,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _ChannelFilterChip(
+                      label: 'Position',
+                      count: positionCount,
+                      isSelected: _activeFilter == ChannelFilter.position,
+                      color: AccentColors.orange,
+                      icon: Icons.location_on,
+                      onTap: () => setState(
+                        () => _activeFilter = ChannelFilter.position,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _ChannelFilterChip(
+                      label: 'MQTT',
+                      count: mqttCount,
+                      isSelected: _activeFilter == ChannelFilter.mqtt,
+                      color: AccentColors.purple,
+                      icon: Icons.cloud,
+                      onTap: () =>
+                          setState(() => _activeFilter = ChannelFilter.mqtt),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),

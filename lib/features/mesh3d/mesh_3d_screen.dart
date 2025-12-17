@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vector_math/vector_math_64.dart' as vector;
 
 import '../../core/theme.dart';
+import '../../core/widgets/edge_fade.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../navigation/main_shell.dart';
@@ -341,51 +342,55 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
   }
 
   Widget _buildViewModeChips(ThemeData theme) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: Mesh3DViewMode.values.map((mode) {
-          final isSelected = mode == _currentMode;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              selected: isSelected,
-              showCheckmark: false,
-              label: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    mode.icon,
-                    size: 16,
-                    color: isSelected
-                        ? Colors.white
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(mode.label),
-                ],
+    return EdgeFade.horizontal(
+      fadeSize: 24,
+      fadeColor: AppTheme.darkBackground,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: Mesh3DViewMode.values.map((mode) {
+            final isSelected = mode == _currentMode;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                selected: isSelected,
+                showCheckmark: false,
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      mode.icon,
+                      size: 16,
+                      color: isSelected
+                          ? Colors.white
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(mode.label),
+                  ],
+                ),
+                labelStyle: TextStyle(
+                  color: isSelected
+                      ? Colors.white
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                backgroundColor: theme.colorScheme.surface,
+                selectedColor: theme.colorScheme.primary,
+                side: BorderSide(
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : theme.dividerColor.withValues(alpha: 0.2),
+                ),
+                onSelected: (_) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _currentMode = mode);
+                },
               ),
-              labelStyle: TextStyle(
-                color: isSelected
-                    ? Colors.white
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-              backgroundColor: theme.colorScheme.surface,
-              selectedColor: theme.colorScheme.primary,
-              side: BorderSide(
-                color: isSelected
-                    ? theme.colorScheme.primary
-                    : theme.dividerColor.withValues(alpha: 0.2),
-              ),
-              onSelected: (_) {
-                HapticFeedback.selectionClick();
-                setState(() => _currentMode = mode);
-              },
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }

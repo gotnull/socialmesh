@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/edge_fade.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../navigation/main_shell.dart';
@@ -346,34 +347,38 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     return Container(
       height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: TimelineFilter.values.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final filter = TimelineFilter.values[index];
-          final isSelected = _filter == filter;
-          return FilterChip(
-            selected: isSelected,
-            showCheckmark: false,
-            label: Text(filter.label),
-            avatar: Icon(
-              filter.icon,
-              size: 18,
-              color: isSelected ? Colors.white : AppTheme.textSecondary,
-            ),
-            onSelected: (selected) {
-              setState(() {
-                _filter = filter;
-              });
-            },
-            selectedColor: context.accentColor,
-            backgroundColor: AppTheme.darkSurface,
-            labelStyle: TextStyle(
-              color: isSelected ? Colors.white : AppTheme.textSecondary,
-            ),
-          );
-        },
+      child: EdgeFade.end(
+        fadeSize: 32,
+        fadeColor: AppTheme.darkBackground,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: TimelineFilter.values.length,
+          separatorBuilder: (context, index) => const SizedBox(width: 8),
+          itemBuilder: (context, index) {
+            final filter = TimelineFilter.values[index];
+            final isSelected = _filter == filter;
+            return FilterChip(
+              selected: isSelected,
+              showCheckmark: false,
+              label: Text(filter.label),
+              avatar: Icon(
+                filter.icon,
+                size: 18,
+                color: isSelected ? Colors.white : AppTheme.textSecondary,
+              ),
+              onSelected: (selected) {
+                setState(() {
+                  _filter = filter;
+                });
+              },
+              selectedColor: context.accentColor,
+              backgroundColor: AppTheme.darkSurface,
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.white : AppTheme.textSecondary,
+              ),
+            );
+          },
+        ),
       ),
     );
   }
