@@ -1,0 +1,358 @@
+import 'dart:convert';
+
+/// User profile model for the Socialmesh ecosystem.
+///
+/// This represents a user's identity across the app, enabling:
+/// - Profile display and customization
+/// - Cloud sync when signed in
+/// - QR-based profile sharing
+/// - Social features and connections
+class UserProfile {
+  /// Unique identifier (matches Firebase Auth UID when signed in)
+  final String id;
+
+  /// Display name shown throughout the app
+  final String displayName;
+
+  /// Optional avatar image URL (local file path or cloud URL)
+  final String? avatarUrl;
+
+  /// Short bio or status message
+  final String? bio;
+
+  /// Amateur radio callsign or mesh identifier
+  final String? callsign;
+
+  /// Email address (from Firebase Auth when signed in)
+  final String? email;
+
+  /// Optional website or link
+  final String? website;
+
+  /// Social media handles
+  final ProfileSocialLinks? socialLinks;
+
+  /// Favorite Meshtastic node ID (their primary device)
+  final int? primaryNodeId;
+
+  /// User's preferred accent color index
+  final int? accentColorIndex;
+
+  /// When the profile was created
+  final DateTime createdAt;
+
+  /// When the profile was last updated
+  final DateTime updatedAt;
+
+  /// Whether this profile has been synced to cloud
+  final bool isSynced;
+
+  /// Whether the user is verified (e.g., email verified, identity confirmed)
+  final bool isVerified;
+
+  const UserProfile({
+    required this.id,
+    required this.displayName,
+    this.avatarUrl,
+    this.bio,
+    this.callsign,
+    this.email,
+    this.website,
+    this.socialLinks,
+    this.primaryNodeId,
+    this.accentColorIndex,
+    required this.createdAt,
+    required this.updatedAt,
+    this.isSynced = false,
+    this.isVerified = false,
+  });
+
+  /// Create an empty/guest profile
+  factory UserProfile.guest() {
+    final now = DateTime.now();
+    return UserProfile(
+      id: 'guest_${now.millisecondsSinceEpoch}',
+      displayName: 'Mesh User',
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  /// Create from Firebase Auth user
+  factory UserProfile.fromFirebaseUser({
+    required String uid,
+    String? email,
+    String? displayName,
+    String? photoUrl,
+  }) {
+    final now = DateTime.now();
+    return UserProfile(
+      id: uid,
+      displayName: displayName ?? email?.split('@').first ?? 'Mesh User',
+      email: email,
+      avatarUrl: photoUrl,
+      createdAt: now,
+      updatedAt: now,
+      isSynced: true,
+    );
+  }
+
+  /// Create from JSON
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    return UserProfile(
+      id: json['id'] as String,
+      displayName: json['displayName'] as String,
+      avatarUrl: json['avatarUrl'] as String?,
+      bio: json['bio'] as String?,
+      callsign: json['callsign'] as String?,
+      email: json['email'] as String?,
+      website: json['website'] as String?,
+      socialLinks: json['socialLinks'] != null
+          ? ProfileSocialLinks.fromJson(
+              json['socialLinks'] as Map<String, dynamic>,
+            )
+          : null,
+      primaryNodeId: json['primaryNodeId'] as int?,
+      accentColorIndex: json['accentColorIndex'] as int?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      isSynced: json['isSynced'] as bool? ?? false,
+      isVerified: json['isVerified'] as bool? ?? false,
+    );
+  }
+
+  /// Convert to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'displayName': displayName,
+      'avatarUrl': avatarUrl,
+      'bio': bio,
+      'callsign': callsign,
+      'email': email,
+      'website': website,
+      'socialLinks': socialLinks?.toJson(),
+      'primaryNodeId': primaryNodeId,
+      'accentColorIndex': accentColorIndex,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'isSynced': isSynced,
+      'isVerified': isVerified,
+    };
+  }
+
+  /// Convert to JSON string
+  String toJsonString() => jsonEncode(toJson());
+
+  /// Create from JSON string
+  factory UserProfile.fromJsonString(String jsonString) {
+    return UserProfile.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
+  }
+
+  /// Create a copy with updated fields
+  UserProfile copyWith({
+    String? id,
+    String? displayName,
+    String? avatarUrl,
+    String? bio,
+    String? callsign,
+    String? email,
+    String? website,
+    ProfileSocialLinks? socialLinks,
+    int? primaryNodeId,
+    int? accentColorIndex,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? isSynced,
+    bool? isVerified,
+    bool clearAvatarUrl = false,
+    bool clearBio = false,
+    bool clearCallsign = false,
+    bool clearWebsite = false,
+    bool clearSocialLinks = false,
+    bool clearPrimaryNodeId = false,
+  }) {
+    return UserProfile(
+      id: id ?? this.id,
+      displayName: displayName ?? this.displayName,
+      avatarUrl: clearAvatarUrl ? null : (avatarUrl ?? this.avatarUrl),
+      bio: clearBio ? null : (bio ?? this.bio),
+      callsign: clearCallsign ? null : (callsign ?? this.callsign),
+      email: email ?? this.email,
+      website: clearWebsite ? null : (website ?? this.website),
+      socialLinks: clearSocialLinks ? null : (socialLinks ?? this.socialLinks),
+      primaryNodeId: clearPrimaryNodeId
+          ? null
+          : (primaryNodeId ?? this.primaryNodeId),
+      accentColorIndex: accentColorIndex ?? this.accentColorIndex,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
+      isSynced: isSynced ?? this.isSynced,
+      isVerified: isVerified ?? this.isVerified,
+    );
+  }
+
+  /// Whether this is a guest profile (not signed in)
+  bool get isGuest => id.startsWith('guest_');
+
+  /// Get initials for avatar fallback
+  String get initials {
+    final parts = displayName.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+    }
+    return displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+  }
+
+  /// Get a display identifier (callsign if available, otherwise display name)
+  String get displayIdentifier => callsign ?? displayName;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is UserProfile && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
+
+  @override
+  String toString() => 'UserProfile(id: $id, displayName: $displayName)';
+}
+
+/// Social media links for a user profile
+class ProfileSocialLinks {
+  final String? twitter;
+  final String? mastodon;
+  final String? github;
+  final String? linkedin;
+  final String? discord;
+  final String? telegram;
+
+  const ProfileSocialLinks({
+    this.twitter,
+    this.mastodon,
+    this.github,
+    this.linkedin,
+    this.discord,
+    this.telegram,
+  });
+
+  factory ProfileSocialLinks.fromJson(Map<String, dynamic> json) {
+    return ProfileSocialLinks(
+      twitter: json['twitter'] as String?,
+      mastodon: json['mastodon'] as String?,
+      github: json['github'] as String?,
+      linkedin: json['linkedin'] as String?,
+      discord: json['discord'] as String?,
+      telegram: json['telegram'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'twitter': twitter,
+      'mastodon': mastodon,
+      'github': github,
+      'linkedin': linkedin,
+      'discord': discord,
+      'telegram': telegram,
+    };
+  }
+
+  ProfileSocialLinks copyWith({
+    String? twitter,
+    String? mastodon,
+    String? github,
+    String? linkedin,
+    String? discord,
+    String? telegram,
+    bool clearTwitter = false,
+    bool clearMastodon = false,
+    bool clearGithub = false,
+    bool clearLinkedin = false,
+    bool clearDiscord = false,
+    bool clearTelegram = false,
+  }) {
+    return ProfileSocialLinks(
+      twitter: clearTwitter ? null : (twitter ?? this.twitter),
+      mastodon: clearMastodon ? null : (mastodon ?? this.mastodon),
+      github: clearGithub ? null : (github ?? this.github),
+      linkedin: clearLinkedin ? null : (linkedin ?? this.linkedin),
+      discord: clearDiscord ? null : (discord ?? this.discord),
+      telegram: clearTelegram ? null : (telegram ?? this.telegram),
+    );
+  }
+
+  /// Whether all links are empty
+  bool get isEmpty =>
+      twitter == null &&
+      mastodon == null &&
+      github == null &&
+      linkedin == null &&
+      discord == null &&
+      telegram == null;
+
+  /// Count of non-null links
+  int get linkCount {
+    var count = 0;
+    if (twitter != null) count++;
+    if (mastodon != null) count++;
+    if (github != null) count++;
+    if (linkedin != null) count++;
+    if (discord != null) count++;
+    if (telegram != null) count++;
+    return count;
+  }
+}
+
+/// Compact profile data for QR code sharing
+class SharedProfileData {
+  final String displayName;
+  final String? callsign;
+  final String? bio;
+  final int? primaryNodeId;
+
+  const SharedProfileData({
+    required this.displayName,
+    this.callsign,
+    this.bio,
+    this.primaryNodeId,
+  });
+
+  factory SharedProfileData.fromProfile(UserProfile profile) {
+    return SharedProfileData(
+      displayName: profile.displayName,
+      callsign: profile.callsign,
+      bio: profile.bio,
+      primaryNodeId: profile.primaryNodeId,
+    );
+  }
+
+  factory SharedProfileData.fromJson(Map<String, dynamic> json) {
+    return SharedProfileData(
+      displayName: json['n'] as String,
+      callsign: json['c'] as String?,
+      bio: json['b'] as String?,
+      primaryNodeId: json['p'] as int?,
+    );
+  }
+
+  /// Compact JSON for QR codes (short keys to reduce data size)
+  Map<String, dynamic> toJson() {
+    return {
+      'n': displayName,
+      if (callsign != null) 'c': callsign,
+      if (bio != null) 'b': bio,
+      if (primaryNodeId != null) 'p': primaryNodeId,
+    };
+  }
+
+  String toJsonString() => jsonEncode(toJson());
+
+  factory SharedProfileData.fromJsonString(String jsonString) {
+    return SharedProfileData.fromJson(
+      jsonDecode(jsonString) as Map<String, dynamic>,
+    );
+  }
+}

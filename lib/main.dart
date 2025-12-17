@@ -18,6 +18,7 @@ import 'providers/telemetry_providers.dart';
 import 'providers/subscription_providers.dart';
 import 'models/mesh_models.dart';
 import 'services/app_intents/app_intents_service.dart';
+import 'services/profile/profile_cloud_sync_service.dart';
 import 'features/scanner/scanner_screen.dart';
 import 'features/scanner/widgets/connecting_animation.dart';
 import 'features/messaging/messaging_screen.dart';
@@ -72,6 +73,9 @@ Future<void> _initializeFirebaseInBackground() async {
 
     // Configure Crashlytics only if Firebase initialized successfully
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+    // Initialize profile cloud sync service (requires Firebase)
+    initProfileCloudSyncService();
 
     // Set up async error handler
     PlatformDispatcher.instance.onError = (error, stack) {

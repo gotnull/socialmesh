@@ -74,6 +74,7 @@ dependencies:
   firebase_crashlytics: ^5.0.5
   firebase_core: ^4.2.1
   firebase_auth: ^6.0.1
+  firebase_storage: ^13.0.4
   cloud_firestore: ^6.1.0
   flutter_box_transform: ^0.4.7
   flutter_inappwebview: ^6.1.5

@@ -1,3 +1,5 @@
+import 'dart:io' as io;
+
 import '../../core/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +9,7 @@ import '../../config/admin_config.dart';
 import '../../core/transport.dart' show DeviceConnectionState;
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
+import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
 import '../../models/subscription_models.dart';
@@ -22,6 +25,7 @@ import '../../core/widgets/secret_gesture_detector.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import '../device/region_selection_screen.dart';
+import '../profile/profile_screen.dart';
 import 'device_management_screen.dart';
 import 'device_config_screen.dart';
 import 'radio_config_screen.dart';
@@ -61,7 +65,6 @@ import '../telemetry/pax_counter_log_screen.dart';
 import '../telemetry/detection_sensor_log_screen.dart';
 import '../routes/routes_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
-import 'account_screen.dart';
 import 'debug_settings_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -1010,11 +1013,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               const SizedBox(height: 16),
 
               // Account Section
-              _SectionHeader(title: 'ACCOUNT'),
-              _AccountTile(
+              _SectionHeader(title: 'PROFILE'),
+              _ProfileTile(
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const AccountScreen()),
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
                 ),
               ),
 
@@ -1795,55 +1798,209 @@ class _PremiumFeatureTile extends ConsumerWidget {
   }
 }
 
-/// Account tile showing current auth status
-class _AccountTile extends ConsumerWidget {
+/// Profile tile showing user profile info
+class _ProfileTile extends ConsumerWidget {
   final VoidCallback? onTap;
 
-  const _AccountTile({this.onTap});
+  const _ProfileTile({this.onTap});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(userProfileProvider);
     final authState = ref.watch(authStateProvider);
+    final isSignedIn = authState.value != null;
+    final accentColor = context.accentColor;
 
-    return authState.when(
-      data: (user) {
-        String subtitle;
-        IconData icon;
-        Color? iconColor;
-
-        if (user == null) {
-          subtitle = 'Sign in to submit & manage widgets';
-          icon = Icons.account_circle_outlined;
-          iconColor = AppTheme.textSecondary;
-        } else if (user.isAnonymous) {
-          subtitle = 'Guest account';
-          icon = Icons.person_outline;
-          iconColor = AppTheme.textSecondary;
-        } else {
-          subtitle = user.email ?? 'Signed in';
-          icon = Icons.account_circle;
-          iconColor = context.accentColor;
+    return profileAsync.when(
+      data: (profile) {
+        if (profile == null) {
+          return _SettingsTile(
+            icon: Icons.person_outline,
+            title: 'Profile',
+            subtitle: 'Set up your profile',
+            onTap: onTap,
+          );
         }
 
-        return _SettingsTile(
-          icon: icon,
-          iconColor: iconColor,
-          title: 'Marketplace Account',
-          subtitle: subtitle,
-          onTap: onTap,
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          decoration: BoxDecoration(
+            color: AppTheme.darkCard,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppTheme.darkBorder.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    // Avatar
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppTheme.darkSurface,
+                        border: Border.all(
+                          color: accentColor.withValues(alpha: 0.5),
+                          width: 2,
+                        ),
+                      ),
+                      child: ClipOval(
+                        child: profile.avatarUrl != null
+                            ? (profile.avatarUrl!.startsWith('http')
+                                  ? Image.network(
+                                      profile.avatarUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              _buildInitials(
+                                                profile.initials,
+                                                accentColor,
+                                              ),
+                                    )
+                                  : Image.file(
+                                      io.File(profile.avatarUrl!),
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              _buildInitials(
+                                                profile.initials,
+                                                accentColor,
+                                              ),
+                                    ))
+                            : _buildInitials(profile.initials, accentColor),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  profile.displayName,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (profile.callsign != null) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: accentColor.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    profile.callsign!,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: accentColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                isSignedIn ? Icons.cloud_done : Icons.cloud_off,
+                                size: 12,
+                                color: isSignedIn
+                                    ? AccentColors.green
+                                    : AppTheme.textTertiary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                isSignedIn ? 'Synced' : 'Local only',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                              if (profile.bio != null &&
+                                  profile.bio!.isNotEmpty) ...[
+                                const Text(
+                                  ' • ',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.textTertiary,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    profile.bio!,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.textTertiary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: AppTheme.textTertiary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         );
       },
       loading: () => _SettingsTile(
-        icon: Icons.account_circle_outlined,
-        title: 'Marketplace Account',
+        icon: Icons.person_outline,
+        title: 'Profile',
         subtitle: 'Loading...',
         onTap: onTap,
       ),
-      error: (error, stack) => _SettingsTile(
-        icon: Icons.account_circle_outlined,
-        title: 'Marketplace Account',
-        subtitle: 'Sign in to submit & manage widgets',
+      error: (error, stackTrace) => _SettingsTile(
+        icon: Icons.person_outline,
+        title: 'Profile',
+        subtitle: 'Set up your profile',
         onTap: onTap,
+      ),
+    );
+  }
+
+  Widget _buildInitials(String initials, Color accentColor) {
+    return Center(
+      child: Text(
+        initials,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: accentColor,
+        ),
       ),
     );
   }
