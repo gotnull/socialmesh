@@ -343,6 +343,9 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
               isMyNode: isMyNode,
               animationsEnabled: animationsEnabled,
               onTap: () => _showNodeDetails(context, node, isMyNode),
+              onLongPress: isMyNode
+                  ? () => _showNodeLongPressMenu(context, node, isMyNode)
+                  : null,
             ),
           );
         },
@@ -382,6 +385,9 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                   isMyNode: isMyNode,
                   animationsEnabled: animationsEnabled,
                   onTap: () => _showNodeDetails(context, node, isMyNode),
+                  onLongPress: isMyNode
+                      ? () => _showNodeLongPressMenu(context, node, isMyNode)
+                      : null,
                 ),
               );
             }, childCount: nonEmptySections[sectionIndex].nodes.length),
@@ -563,6 +569,96 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
 
   void _showNodeDetails(BuildContext context, MeshNode node, bool isMyNode) {
     showNodeDetailsSheet(context, node, isMyNode);
+  }
+
+  void _showNodeLongPressMenu(
+    BuildContext context,
+    MeshNode node,
+    bool isMyNode,
+  ) {
+    // Only show menu for the connected device (myNode)
+    if (!isMyNode) return;
+
+    HapticFeedback.mediumImpact();
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppTheme.darkCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    NodeAvatar(
+                      text: node.avatarName,
+                      color: context.accentColor,
+                      size: 40,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            node.displayName,
+                            style: const TextStyle(
+                              color: AppTheme.textPrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            'Connected Device',
+                            style: TextStyle(
+                              color: context.accentColor,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(color: AppTheme.darkBorder),
+              // Disconnect option
+              ListTile(
+                leading: Icon(Icons.link_off_rounded, color: AppTheme.errorRed),
+                title: const Text(
+                  'Disconnect',
+                  style: TextStyle(
+                    color: AppTheme.errorRed,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _disconnectDevice();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _disconnectDevice() async {
+    final transport = ref.read(transportProvider);
+    await transport.disconnect();
+    ref.read(connectedDeviceProvider.notifier).setState(null);
   }
 }
 
@@ -906,12 +1002,14 @@ class _NodeCard extends StatelessWidget {
   final MeshNode node;
   final bool isMyNode;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final bool animationsEnabled;
 
   const _NodeCard({
     required this.node,
     required this.isMyNode,
     required this.onTap,
+    this.onLongPress,
     this.animationsEnabled = true,
   });
 
@@ -959,6 +1057,7 @@ class _NodeCard extends StatelessWidget {
 
     return BouncyTap(
       onTap: onTap,
+      onLongPress: onLongPress,
       scaleFactor: animationsEnabled ? 0.98 : 1.0,
       enable3DPress: animationsEnabled,
       tiltDegrees: 4.0,

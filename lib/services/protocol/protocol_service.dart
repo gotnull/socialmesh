@@ -2217,11 +2217,10 @@ class ProtocolService {
         ..uplinkEnabled = config.uplink
         ..downlinkEnabled = config.downlink;
 
-      // Set position precision via moduleSettings
-      if (config.positionPrecision > 0) {
-        channelSettings.moduleSettings = pb.ModuleSettings()
-          ..positionPrecision = config.positionPrecision;
-      }
+      // Always set position precision via moduleSettings (even when 0 to disable)
+      // This matches iOS behavior - the device needs moduleSettings to be explicitly set
+      channelSettings.moduleSettings = pb.ModuleSettings()
+        ..positionPrecision = config.positionPrecision;
 
       // Determine channel role from config
       pb.Channel_Role role;
