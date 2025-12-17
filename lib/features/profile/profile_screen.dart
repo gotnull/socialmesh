@@ -57,24 +57,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 user: authState.value,
                 onEditTap: () => _showEditSheet(context),
               )
-            : const Center(child: Text('No profile found')),
+            : _EmptyProfileView(onEditTap: () => _showEditSheet(context)),
         loading: () => const Center(child: MeshLoadingIndicator(size: 48)),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: context.accentColor),
-              const SizedBox(height: 16),
-              Text('Error loading profile: $e'),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () =>
-                    ref.read(userProfileProvider.notifier).refresh(),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
+        error: (e, _) {
+          // Try to show cached/previous data with an error banner
+          final cachedProfile = profileAsync.value;
+          if (cachedProfile != null) {
+            return _ProfileView(
+              profile: cachedProfile,
+              user: authState.value,
+              onEditTap: () => _showEditSheet(context),
+              syncError: e.toString(),
+            );
+          }
+          // No cached data - show empty profile with setup prompt
+          return _EmptyProfileView(
+            onEditTap: () => _showEditSheet(context),
+            syncError: e.toString(),
+          );
+        },
       ),
     );
   }
@@ -90,15 +91,100 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 }
 
+/// Empty profile view for new users or when no profile exists
+class _EmptyProfileView extends StatelessWidget {
+  final VoidCallback onEditTap;
+  final String? syncError;
+
+  const _EmptyProfileView({required this.onEditTap, this.syncError});
+
+  @override
+  Widget build(BuildContext context) {
+    final accentColor = context.accentColor;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          // Sync error banner (if any)
+          if (syncError != null) ...[
+            _SyncErrorBanner(error: syncError!),
+            const SizedBox(height: 16),
+          ],
+
+          const SizedBox(height: 40),
+
+          // Empty avatar placeholder
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: accentColor.withValues(alpha: 0.1),
+              border: Border.all(
+                color: accentColor.withValues(alpha: 0.3),
+                width: 2,
+              ),
+            ),
+            child: Icon(
+              Icons.person_outline,
+              size: 56,
+              color: accentColor.withValues(alpha: 0.5),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          const Text(
+            'Set up your profile',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          const Text(
+            'Add your name, photo, and bio to personalize your mesh presence.',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppTheme.textSecondary,
+              height: 1.4,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 32),
+
+          FilledButton.icon(
+            onPressed: onEditTap,
+            icon: const Icon(Icons.edit),
+            label: const Text('Create Profile'),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+            ),
+          ),
+
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+}
+
 class _ProfileView extends ConsumerWidget {
   final UserProfile profile;
   final User? user;
   final VoidCallback onEditTap;
+  final String? syncError;
 
   const _ProfileView({
     required this.profile,
     required this.user,
     required this.onEditTap,
+    this.syncError,
   });
 
   bool get isSignedIn => user != null;
@@ -111,6 +197,12 @@ class _ProfileView extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          // Sync error banner (if any)
+          if (syncError != null) ...[
+            _SyncErrorBanner(error: syncError!),
+            const SizedBox(height: 16),
+          ],
+
           // Avatar section
           _AvatarSection(profile: profile),
           const SizedBox(height: 24),
@@ -588,8 +680,8 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
             ),
           ),
 
-          // Account management for non-anonymous
-          if (!isAnonymous) ...[
+          // Account management for email/password users only
+          if (!isAnonymous && _isEmailPasswordUser(user)) ...[
             const SizedBox(height: 16),
             const Divider(color: AppTheme.darkBorder),
             const SizedBox(height: 8),
@@ -621,6 +713,11 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
         ],
       ),
     );
+  }
+
+  /// Check if user signed in with email/password (not Google/Apple)
+  bool _isEmailPasswordUser(User user) {
+    return user.providerData.any((info) => info.providerId == 'password');
   }
 
   Future<void> _showSignInDialog(BuildContext context) async {
@@ -902,6 +999,63 @@ class _SocialSignInButton extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Subtle banner for sync errors - doesn't block the UI
+class _SyncErrorBanner extends ConsumerWidget {
+  final String error;
+
+  const _SyncErrorBanner({required this.error});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Parse error to show user-friendly message
+    String message = 'Sync temporarily unavailable';
+    if (error.contains('unavailable')) {
+      message = 'Cloud sync temporarily unavailable';
+    } else if (error.contains('permission')) {
+      message = 'Sync permission denied';
+    } else if (error.contains('network') || error.contains('connection')) {
+      message = 'No internet connection';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AccentColors.orange.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AccentColors.orange.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.cloud_off_outlined, size: 18, color: AccentColors.orange),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(fontSize: 13, color: AccentColors.orange),
+            ),
+          ),
+          TextButton(
+            onPressed: () => ref.read(userProfileProvider.notifier).refresh(),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              'Retry',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AccentColors.orange,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
