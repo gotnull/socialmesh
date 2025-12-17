@@ -519,9 +519,8 @@ nav .container {
 }
 
 .floating-element-shortcuts {
-  top: -20px;
-  left: 50%;
-  margin-left: -60px;
+  top: 60px;
+  left: -80px;
   animation-delay: 3s;
   border-color: rgba(255, 45, 85, 0.4);
 }
@@ -907,23 +906,10 @@ section {
 }
 
 .screenshots-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 30px;
-}
-
-@media (max-width: 1024px) {
-  .screenshots-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-  }
-}
-
-@media (max-width: 640px) {
-  .screenshots-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
 }
 
 .screenshot-card {
@@ -934,6 +920,22 @@ section {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
+  width: calc(25% - 23px);
+  max-width: 280px;
+}
+
+@media (max-width: 1024px) {
+  .screenshot-card {
+    width: calc(50% - 15px);
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .screenshot-card {
+    width: 100%;
+    max-width: 320px;
+  }
 }
 
 .screenshot-card:hover {
