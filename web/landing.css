@@ -482,6 +482,42 @@ nav .container {
   border-color: rgba(233, 30, 140, 0.3);
 }
 
+/* Premium Feature Floating Elements */
+.floating-element-themes {
+  top: 30px;
+  right: -40px;
+  animation-delay: 0s;
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.floating-element-ringtones {
+  bottom: 40px;
+  left: -50px;
+  animation-delay: 1s;
+  border-color: rgba(233, 30, 140, 0.4);
+}
+
+.floating-element-widgets {
+  top: 50px;
+  right: -45px;
+  animation-delay: 2s;
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+.floating-element-automation {
+  top: -30px;
+  right: -40px;
+  animation-delay: 1.5s;
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+.floating-element-ifttt {
+  bottom: 50px;
+  right: -50px;
+  animation-delay: 2.5s;
+  border-color: rgba(79, 106, 246, 0.4);
+}
+
 @keyframes float {
 
   0%,
@@ -1309,6 +1345,15 @@ footer::before {
 
   .screenshots-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Hide floating elements on premium features at smaller screens */
+  .floating-element-themes,
+  .floating-element-ringtones,
+  .floating-element-widgets,
+  .floating-element-automation,
+  .floating-element-ifttt {
+    display: none;
   }
 
   .tech-grid {
