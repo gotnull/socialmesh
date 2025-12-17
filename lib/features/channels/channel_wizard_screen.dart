@@ -1010,33 +1010,6 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.accentOrange.withAlpha(26),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppTheme.accentOrange.withAlpha(77)),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.restart_alt,
-                  color: AppTheme.accentOrange,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Your device will reboot after creating this channel. The app will automatically reconnect.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.accentOrange,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

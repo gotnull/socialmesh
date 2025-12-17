@@ -64,6 +64,8 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
   bool _uplinkEnabled = false;
   bool _downlinkEnabled = false;
   bool _positionEnabled = false;
+  double _positionPrecision = 14; // Default: ~1.5km - slider range is 12-15
+  bool _preciseLocation = false; // Uses precision 32 instead of slider
   bool _isSaving = false;
   String? _keyValidationError;
   KeySize? _detectedKeySize;
@@ -101,7 +103,24 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
 
       _uplinkEnabled = channel.uplink;
       _downlinkEnabled = channel.downlink;
-      _positionEnabled = channel.positionEnabled;
+      // Initialize position settings from device
+      // positionPrecision: 0 = disabled, 12-15 = approximate, 32 = precise
+      final precision = channel.positionPrecision;
+      _positionEnabled = precision > 0;
+      if (precision == 32) {
+        _preciseLocation = true;
+        _positionPrecision = 14; // Default slider position
+      } else if (precision >= 12 && precision <= 15) {
+        _preciseLocation = false;
+        _positionPrecision = precision.toDouble();
+      } else if (precision > 0) {
+        // Other valid precision values - treat as approximate
+        _preciseLocation = false;
+        _positionPrecision = precision.clamp(12, 15).toDouble();
+      } else {
+        _preciseLocation = false;
+        _positionPrecision = 14; // Default slider position
+      }
     } else {
       _selectedKeySize = KeySize.bit256;
       // Match Meshtastic iOS: all disabled by default
@@ -244,13 +263,24 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         role = 'SECONDARY';
       }
 
+      // Calculate position precision value
+      // 0 = disabled, 12-15 = approximate, 32 = precise
+      int positionPrecision = 0;
+      if (_positionEnabled) {
+        if (_preciseLocation) {
+          positionPrecision = 32;
+        } else {
+          positionPrecision = _positionPrecision.round();
+        }
+      }
+
       final newChannel = ChannelConfig(
         index: index,
         name: _nameController.text.trim(),
         psk: psk,
         uplink: _uplinkEnabled,
         downlink: _downlinkEnabled,
-        positionPrecision: _positionEnabled ? 32 : 0,
+        positionPrecision: positionPrecision,
         role: role,
       );
 
@@ -382,8 +412,15 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
 
               const SizedBox(height: 28),
 
-              // MQTT Options
-              _buildFieldLabel('MQTT Settings'),
+              // Position Settings
+              _buildFieldLabel('Position'),
+              const SizedBox(height: 8),
+              _buildPositionOptions(),
+
+              const SizedBox(height: 28),
+
+              // MQTT Settings
+              _buildFieldLabel('MQTT'),
               const SizedBox(height: 8),
               _buildMqttOptions(),
 
@@ -391,9 +428,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                 const SizedBox(height: 20),
                 _buildPrimaryChannelNote(),
               ],
-
-              const SizedBox(height: 20),
-              _buildRebootWarning(),
             ],
           ),
         ),
@@ -674,6 +708,45 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
     );
   }
 
+  Widget _buildPositionOptions() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        children: [
+          _buildToggleRow(
+            icon: Icons.location_on_outlined,
+            iconColor: context.accentColor,
+            title: 'Positions Enabled',
+            subtitle: 'Share position on this channel',
+            value: _positionEnabled,
+            onChanged: (v) {
+              setState(() {
+                _positionEnabled = v;
+                if (v && _positionPrecision == 0) {
+                  _positionPrecision =
+                      15; // Default to most precise approximate
+                }
+              });
+            },
+          ),
+          // Position precision controls - shown when position is enabled
+          if (_positionEnabled) ...[
+            Container(
+              height: 1,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              color: AppTheme.darkBorder.withValues(alpha: 0.5),
+            ),
+            _buildPositionPrecisionSection(),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildMqttOptions() {
     return Container(
       decoration: BoxDecoration(
@@ -686,7 +759,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
           _buildToggleRow(
             icon: Icons.cloud_upload_outlined,
             iconColor: context.accentColor,
-            title: 'Uplink',
+            title: 'Uplink Enabled',
             subtitle: 'Forward messages to MQTT server',
             value: _uplinkEnabled,
             onChanged: (v) => setState(() => _uplinkEnabled = v),
@@ -699,23 +772,10 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
           _buildToggleRow(
             icon: Icons.cloud_download_outlined,
             iconColor: context.accentColor,
-            title: 'Downlink',
+            title: 'Downlink Enabled',
             subtitle: 'Receive messages from MQTT server',
             value: _downlinkEnabled,
             onChanged: (v) => setState(() => _downlinkEnabled = v),
-          ),
-          Container(
-            height: 1,
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            color: AppTheme.darkBorder.withValues(alpha: 0.5),
-          ),
-          _buildToggleRow(
-            icon: Icons.location_on_outlined,
-            iconColor: context.accentColor,
-            title: 'Position',
-            subtitle: 'Share position on this channel',
-            value: _positionEnabled,
-            onChanged: (v) => setState(() => _positionEnabled = v),
           ),
         ],
       ),
@@ -770,6 +830,159 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
     );
   }
 
+  /// Returns the distance description for a position precision value
+  String _getPositionPrecisionLabel(int precision) {
+    // Based on geohash precision - meters per bit
+    // iOS uses: 12 ≈ 5.8km, 13 ≈ 2.9km, 14 ≈ 1.5km, 15 ≈ 730m
+    switch (precision) {
+      case 12:
+        return 'Within 5.8 km';
+      case 13:
+        return 'Within 2.9 km';
+      case 14:
+        return 'Within 1.5 km';
+      case 15:
+        return 'Within 730 m';
+      case 32:
+        return 'Precise location';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  Widget _buildPositionPrecisionSection() {
+    final accentColor = context.accentColor;
+    final hasSecureKey =
+        _selectedKeySize != KeySize.none &&
+        _selectedKeySize != KeySize.default1;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Precise location toggle - only available with secure key
+          if (hasSecureKey) ...[
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: _preciseLocation
+                        ? accentColor.withValues(alpha: 0.15)
+                        : Colors.grey.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.my_location,
+                    color: _preciseLocation ? accentColor : Colors.grey,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Precise Location',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Share exact GPS coordinates',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ThemedSwitch(
+                  value: _preciseLocation,
+                  onChanged: (v) {
+                    setState(() {
+                      _preciseLocation = v;
+                    });
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
+          // Approximate location slider - shown when NOT using precise location
+          if (!_preciseLocation) ...[
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.location_searching,
+                    color: accentColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Text(
+                    'Approximate Location',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SliderTheme(
+              data: SliderThemeData(
+                activeTrackColor: accentColor,
+                inactiveTrackColor: accentColor.withValues(alpha: 0.2),
+                thumbColor: accentColor,
+                overlayColor: accentColor.withValues(alpha: 0.2),
+                trackHeight: 4,
+              ),
+              child: Slider(
+                value: _positionPrecision,
+                min: 12,
+                max: 15,
+                divisions: 3,
+                onChanged: (value) {
+                  setState(() {
+                    _positionPrecision = value;
+                  });
+                },
+              ),
+            ),
+            Center(
+              child: Text(
+                _getPositionPrecisionLabel(_positionPrecision.round()),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: accentColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildPrimaryChannelNote() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -811,55 +1024,6 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                 SizedBox(height: 4),
                 Text(
                   'This is the main channel for device communication. Changes may affect connectivity.',
-                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRebootWarning() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.accentOrange.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.accentOrange.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppTheme.accentOrange.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.restart_alt,
-              color: AppTheme.accentOrange,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 14),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Device Will Reboot',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.accentOrange,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Saving this channel will cause your device to reboot. The app will automatically reconnect.',
                   style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                 ),
               ],

@@ -1824,10 +1824,10 @@ class ProtocolService {
     }
 
     // Extract position precision from moduleSettings if present
+    // Note: Don't use hasPositionPrecision() - in proto3 it returns false for default (0) values
+    // Just read the value directly when moduleSettings exists (iOS does the same)
     int positionPrecision = 0;
-    if (channel.hasSettings() &&
-        channel.settings.hasModuleSettings() &&
-        channel.settings.moduleSettings.hasPositionPrecision()) {
+    if (channel.hasSettings() && channel.settings.hasModuleSettings()) {
       positionPrecision = channel.settings.moduleSettings.positionPrecision;
     }
 
@@ -2257,8 +2257,9 @@ class ProtocolService {
         '📡 Setting channel ${config.index}: "${config.name}" (role: ${config.role})',
       );
 
-      // Begin edit transaction
-      await _beginEditSettings();
+      // Note: iOS app does NOT use beginEditSettings/commitEditSettings for channel changes
+      // Those cause a device reboot which is unnecessary for channel settings
+      // We send the channel directly like iOS does
 
       final channelSettings = pb.ChannelSettings()
         ..name = config.name
@@ -2308,20 +2309,14 @@ class ProtocolService {
         ..from = _myNodeNum!
         ..to = _myNodeNum!
         ..decoded = data
-        ..id = _generatePacketId();
+        ..id = _generatePacketId()
+        ..priority = 70; // RELIABLE priority (70) for admin messages
 
       final toRadio = pn.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
       AppLogging.channels('Channel ${config.index} sent to device');
-
-      // Small delay before commit
-      await Future.delayed(const Duration(milliseconds: 200));
-
-      // Commit the transaction - this triggers the save to flash
-      await _commitEditSettings();
-      AppLogging.channels('Channel settings committed to flash');
 
       // Wait a bit then request the channel back to verify
       await Future.delayed(const Duration(milliseconds: 500));
