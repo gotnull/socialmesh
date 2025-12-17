@@ -1824,13 +1824,23 @@ class ProtocolService {
         'uplink=${settings.uplinkEnabled}, downlink=${settings.downlinkEnabled}, '
         'hasModuleSettings=${settings.hasModuleSettings()}',
       );
+
+      // Always try to read moduleSettings even if hasModuleSettings returns false
+      // because proto3 returns false for sub-messages with all default values
+      final mod = settings.moduleSettings;
+      AppLogging.debug(
+        '📡 Channel ${channel.index} moduleSettings (always read): '
+        'positionPrecision=${mod.positionPrecision}, '
+        'isMuted=${mod.isMuted}',
+      );
+
       if (settings.hasModuleSettings()) {
-        final mod = settings.moduleSettings;
         AppLogging.debug(
-          '📡 Channel ${channel.index} moduleSettings: '
-          'positionPrecision=${mod.positionPrecision}, '
-          'hasPositionPrecision=${mod.hasPositionPrecision()}, '
-          'isMuted=${mod.isMuted}',
+          '📡 Channel ${channel.index} has moduleSettings marker set',
+        );
+      } else {
+        AppLogging.debug(
+          '📡 Channel ${channel.index} has NO moduleSettings marker',
         );
       }
     }
@@ -1850,22 +1860,18 @@ class ProtocolService {
         break;
     }
 
-    // Extract position precision from moduleSettings if present
-    // Note: Don't use hasPositionPrecision() - in proto3 it returns false for default (0) values
-    // Just read the value directly when moduleSettings exists (iOS does the same)
+    // Extract position precision from moduleSettings
+    // Note: In proto3, hasModuleSettings() returns false when all fields are default (0)
+    // So we ALWAYS read the value directly, regardless of hasModuleSettings()
+    // This matches what iOS does
     int positionPrecision = 0;
     if (channel.hasSettings()) {
+      // Always read moduleSettings.positionPrecision directly
+      positionPrecision = channel.settings.moduleSettings.positionPrecision;
       AppLogging.debug(
-        '📡 Channel ${channel.index} settings: hasModuleSettings=${channel.settings.hasModuleSettings()}',
+        '📡 Channel ${channel.index} positionPrecision=$positionPrecision '
+        '(hasModuleSettings=${channel.settings.hasModuleSettings()})',
       );
-      if (channel.settings.hasModuleSettings()) {
-        positionPrecision = channel.settings.moduleSettings.positionPrecision;
-        AppLogging.debug(
-          '📡 Channel ${channel.index} moduleSettings.positionPrecision=$positionPrecision',
-        );
-      } else {
-        AppLogging.debug('📡 Channel ${channel.index} has NO moduleSettings!');
-      }
     }
 
     final channelConfig = ChannelConfig(
@@ -2526,11 +2532,14 @@ class ProtocolService {
   }
 
   /// Request details for a specific channel
+  /// Note: getChannelRequest uses 1-based indexing (channel index + 1)
+  /// to avoid sending zero which protobufs treats as not present
   Future<void> _requestChannelDetails(int channelIndex) async {
     try {
       AppLogging.debug('📡 Requesting channel $channelIndex details');
 
-      final adminMsg = pb.AdminMessage()..getChannelRequest = channelIndex;
+      // Protocol uses 1-based indexing: send channelIndex + 1
+      final adminMsg = pb.AdminMessage()..getChannelRequest = channelIndex + 1;
 
       final data = pb.Data()
         ..portnum = pb.PortNum.ADMIN_APP
