@@ -248,6 +248,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                     ),
                   ),
                   // Static toggle at end
+                  const SizedBox(width: 8),
                   _HeadersToggle(
                     enabled: _showSectionHeaders,
                     onToggle: () => setState(
@@ -340,45 +341,45 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
       );
     }
 
-    // Build grouped list with section headers
+    // Build grouped list with sticky section headers
     final sections = _groupNodesIntoSections(nodesList, myNodeNum);
-    final items = <_ListItem>[];
+    final nonEmptySections = sections.where((s) => s.nodes.isNotEmpty).toList();
 
-    for (final section in sections) {
-      if (section.nodes.isNotEmpty) {
-        items.add(_ListItem.header(section.title, section.nodes.length));
-        for (final node in section.nodes) {
-          items.add(_ListItem.node(node));
-        }
-      }
-    }
-
-    return ListView.builder(
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-
-        if (item.isHeader) {
-          return _SectionHeader(
-            title: item.headerTitle!,
-            count: item.headerCount!,
-          );
-        }
-
-        final node = item.node!;
-        final isMyNode = node.nodeNum == myNodeNum;
-        return Perspective3DSlide(
-          index: index,
-          direction: SlideDirection.left,
-          enabled: animationsEnabled,
-          child: _NodeCard(
-            node: node,
-            isMyNode: isMyNode,
-            animationsEnabled: animationsEnabled,
-            onTap: () => _showNodeDetails(context, node, isMyNode),
+    return CustomScrollView(
+      slivers: [
+        for (
+          var sectionIndex = 0;
+          sectionIndex < nonEmptySections.length;
+          sectionIndex++
+        ) ...[
+          // Sticky header
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _StickyHeaderDelegate(
+              title: nonEmptySections[sectionIndex].title,
+              count: nonEmptySections[sectionIndex].nodes.length,
+            ),
           ),
-        );
-      },
+          // Section nodes
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final node = nonEmptySections[sectionIndex].nodes[index];
+              final isMyNode = node.nodeNum == myNodeNum;
+              return Perspective3DSlide(
+                index: index,
+                direction: SlideDirection.left,
+                enabled: animationsEnabled,
+                child: _NodeCard(
+                  node: node,
+                  isMyNode: isMyNode,
+                  animationsEnabled: animationsEnabled,
+                  onTap: () => _showNodeDetails(context, node, isMyNode),
+                ),
+              );
+            }, childCount: nonEmptySections[sectionIndex].nodes.length),
+          ),
+        ],
+      ],
     );
   }
 
@@ -807,7 +808,8 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      color: AppTheme.darkBackground,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
         children: [
           Text(
@@ -841,33 +843,40 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
+/// Delegate for sticky section headers
+class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final String title;
+  final int count;
+
+  _StickyHeaderDelegate({required this.title, required this.count});
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return _SectionHeader(title: title, count: count);
+  }
+
+  @override
+  double get maxExtent => 40;
+
+  @override
+  double get minExtent => 40;
+
+  @override
+  bool shouldRebuild(covariant _StickyHeaderDelegate oldDelegate) {
+    return title != oldDelegate.title || count != oldDelegate.count;
+  }
+}
+
 /// Helper class for section grouping
 class _NodeSection {
   final String title;
   final List<MeshNode> nodes;
 
   _NodeSection(this.title, this.nodes);
-}
-
-/// Helper class for list items (either header or node)
-class _ListItem {
-  final bool isHeader;
-  final String? headerTitle;
-  final int? headerCount;
-  final MeshNode? node;
-
-  _ListItem._({
-    required this.isHeader,
-    this.headerTitle,
-    this.headerCount,
-    this.node,
-  });
-
-  factory _ListItem.header(String title, int count) =>
-      _ListItem._(isHeader: true, headerTitle: title, headerCount: count);
-
-  factory _ListItem.node(MeshNode node) =>
-      _ListItem._(isHeader: false, node: node);
 }
 
 /// Shows the node details bottom sheet. Can be called from any screen.
