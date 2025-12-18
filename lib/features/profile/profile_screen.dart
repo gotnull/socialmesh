@@ -438,16 +438,18 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     final providers = widget.user!.providerData;
     if (providers.isEmpty) return const SizedBox.shrink();
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+    return Row(
       children: [
         Text(
-          'Signed in with',
+          'Linked accounts',
           style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
         ),
+        const SizedBox(width: 12),
         ...providers.map(
-          (provider) => _ProviderChip(providerId: provider.providerId),
+          (provider) => Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: _ProviderIcon(providerId: provider.providerId),
+          ),
         ),
       ],
     );
@@ -887,71 +889,40 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
   }
 }
 
-/// Chip showing a linked authentication provider
-class _ProviderChip extends StatelessWidget {
+/// Small icon showing a linked authentication provider
+class _ProviderIcon extends StatelessWidget {
   final String providerId;
 
-  const _ProviderChip({required this.providerId});
+  const _ProviderIcon({required this.providerId});
 
   @override
   Widget build(BuildContext context) {
-    final (icon, label, color) = _getProviderInfo();
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      width: 28,
+      height: 28,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: AppTheme.darkBackground,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppTheme.darkBorder),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          icon,
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: color,
-            ),
-          ),
-        ],
-      ),
+      child: Center(child: _getIcon()),
     );
   }
 
-  (Widget, String, Color) _getProviderInfo() {
+  Widget _getIcon() {
     return switch (providerId) {
-      'google.com' => (
-        SizedBox(
-          width: 14,
-          height: 14,
-          child: CustomPaint(painter: _GoogleLogoSmallPainter()),
-        ),
-        'Google',
-        const Color(0xFF4285F4),
+      'google.com' => SizedBox(
+        width: 14,
+        height: 14,
+        child: CustomPaint(painter: _GoogleLogoSmallPainter()),
       ),
-      'apple.com' => (
-        const Icon(Icons.apple, size: 14, color: Colors.white),
-        'Apple',
-        Colors.white,
+      'apple.com' => const Icon(Icons.apple, size: 16, color: Colors.white),
+      'github.com' => SizedBox(
+        width: 14,
+        height: 14,
+        child: CustomPaint(painter: _GitHubLogoSmallPainter()),
       ),
-      'github.com' => (
-        SizedBox(
-          width: 14,
-          height: 14,
-          child: CustomPaint(painter: _GitHubLogoSmallPainter()),
-        ),
-        'GitHub',
-        Colors.white,
-      ),
-      _ => (
-        const Icon(Icons.link, size: 14, color: AppTheme.textSecondary),
-        providerId.replaceAll('.com', ''),
-        AppTheme.textSecondary,
-      ),
+      _ => Icon(Icons.link, size: 14, color: AppTheme.textSecondary),
     };
   }
 }
