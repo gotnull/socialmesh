@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/map_controls.dart';
@@ -16,6 +15,7 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../services/share_link_service.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
 
@@ -357,18 +357,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   void _shareLocation(LatLng point, {String? label}) {
-    final lat = point.latitude.toStringAsFixed(6);
-    final lng = point.longitude.toStringAsFixed(6);
-    final text = label != null
-        ? '$label\nhttps://maps.google.com/?q=$lat,$lng'
-        : 'https://maps.google.com/?q=$lat,$lng';
-
     // Get share position for iPad support
     final box = context.findRenderObject() as RenderBox?;
     final sharePositionOrigin = box != null
         ? box.localToGlobal(Offset.zero) & box.size
         : const Rect.fromLTWH(0, 0, 100, 100);
-    Share.share(text, sharePositionOrigin: sharePositionOrigin);
+
+    ref.read(shareLinkServiceProvider).shareLocation(
+          latitude: point.latitude,
+          longitude: point.longitude,
+          label: label,
+          sharePositionOrigin: sharePositionOrigin,
+        );
   }
 
   void _copyCoordinates(LatLng point) {

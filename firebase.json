@@ -1,1 +1,93 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"social-mesh-app","appId":"1:571509151050:android:db85cbb852c9098a515db3","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"social-mesh-app","appId":"1:571509151050:ios:34008143a4671f9c515db3","uploadDebugSymbols":true,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"social-mesh-app","configurations":{"android":"1:571509151050:android:db85cbb852c9098a515db3","ios":"1:571509151050:ios:34008143a4671f9c515db3"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "social-mesh-app",
+          "appId": "1:571509151050:android:db85cbb852c9098a515db3",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "social-mesh-app",
+          "appId": "1:571509151050:ios:34008143a4671f9c515db3",
+          "uploadDebugSymbols": true,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "social-mesh-app",
+          "configurations": {
+            "android": "1:571509151050:android:db85cbb852c9098a515db3",
+            "ios": "1:571509151050:ios:34008143a4671f9c515db3"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint",
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ],
+  "hosting": {
+    "public": "web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/share/**",
+        "function": "share"
+      },
+      {
+        "source": "/api/widgets/browse",
+        "function": "widgetsBrowse"
+      },
+      {
+        "source": "/api/widgets/featured",
+        "function": "widgetsFeatured"
+      },
+      {
+        "source": "/api/widgets/categories",
+        "function": "widgetsCategories"
+      },
+      {
+        "source": "/api/widgets/download",
+        "function": "widgetsDownload"
+      },
+      {
+        "source": "/api/widgets/upload",
+        "function": "widgetsUpload"
+      },
+      {
+        "source": "/api/widgets/rate",
+        "function": "widgetsRate"
+      },
+      {
+        "source": "/api/widgets/**",
+        "function": "widgetsGet"
+      }
+    ]
+  }
+}

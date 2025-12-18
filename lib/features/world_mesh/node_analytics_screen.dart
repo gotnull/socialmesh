@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -189,6 +190,91 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
   }
 
   void _shareNode() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.darkCard,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Share Node',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AccentColors.blue.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.link, color: AccentColors.blue),
+              ),
+              title: const Text('Share Link',
+                  style: TextStyle(color: Colors.white)),
+              subtitle: const Text('Rich preview in iMessage, Slack, etc.',
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _shareNodeAsLink();
+              },
+            ),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AccentColors.green.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.text_snippet, color: AccentColors.green),
+              ),
+              title: const Text('Share Details',
+                  style: TextStyle(color: Colors.white)),
+              subtitle: const Text('Full technical info as text',
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _shareNodeAsText();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _shareNodeAsLink() async {
+    final node = _node;
+
+    // Create a shareable record in Firestore
+    final docRef =
+        await FirebaseFirestore.instance.collection('shared_nodes').add({
+      'nodeId': _nodeId,
+      'name': node.displayName,
+      'description':
+          '${node.role} • ${node.hwModel} • ${node.isOnline ? "Online" : "Offline"}',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    final shareUrl = 'https://socialmesh.app/share/node/${docRef.id}';
+
+    Share.share(
+      'Check out ${node.displayName} on Socialmesh!\n$shareUrl',
+      subject: 'Mesh Node: ${node.displayName}',
+    );
+  }
+
+  void _shareNodeAsText() {
     final node = _node;
     final buffer = StringBuffer();
     buffer.writeln('🛰️ Mesh Node: ${node.displayName}');
@@ -213,11 +299,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
 
     buffer.writeln('');
     buffer.writeln(
-      'Status: ${node.isOnline
-          ? "Online"
-          : node.isIdle
-          ? "Idle"
-          : "Offline"}',
+      'Status: ${node.isOnline ? "Online" : node.isIdle ? "Idle" : "Offline"}',
     );
     buffer.writeln('Neighbors: ${node.neighbors?.length ?? 0}');
     buffer.writeln('Gateways: ${node.seenBy.length}');
