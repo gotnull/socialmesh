@@ -391,7 +391,6 @@ class _CloudBackupSection extends ConsumerStatefulWidget {
 
 class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
   bool _isExpanded = false;
-  bool _isSyncing = false;
 
   bool get isSignedIn => widget.user != null;
 
@@ -406,13 +405,37 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     if (!isSignedIn) {
       return 'Not backed up';
     }
-    return 'Synced • ${widget.user!.email ?? 'Connected'}';
+    final syncStatus = ref.watch(syncStatusProvider);
+    return switch (syncStatus) {
+      SyncStatus.syncing => 'Syncing...',
+      SyncStatus.error => 'Sync error • Tap to retry',
+      SyncStatus.synced ||
+      SyncStatus.idle => 'Synced • ${widget.user!.email ?? 'Connected'}',
+    };
+  }
+
+  Color _getStatusColor() {
+    if (!isSignedIn) return AppTheme.textTertiary;
+    final syncStatus = ref.watch(syncStatusProvider);
+    return switch (syncStatus) {
+      SyncStatus.syncing => AppTheme.textTertiary,
+      SyncStatus.error => AppTheme.errorRed,
+      SyncStatus.synced || SyncStatus.idle => AccentColors.green,
+    };
+  }
+
+  IconData _getStatusIcon() {
+    if (!isSignedIn) return Icons.cloud_off_outlined;
+    final syncStatus = ref.watch(syncStatusProvider);
+    return switch (syncStatus) {
+      SyncStatus.syncing => Icons.cloud_sync_outlined,
+      SyncStatus.error => Icons.cloud_off_outlined,
+      SyncStatus.synced || SyncStatus.idle => Icons.cloud_done,
+    };
   }
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = context.accentColor;
-
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.darkCard,
@@ -439,15 +462,23 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: (isSignedIn ? AccentColors.green : accentColor)
-                          .withValues(alpha: 0.15),
+                      color: _getStatusColor().withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
-                      isSignedIn ? Icons.cloud_done : Icons.cloud_off_outlined,
-                      size: 20,
-                      color: isSignedIn ? AccentColors.green : accentColor,
-                    ),
+                    child: ref.watch(syncStatusProvider) == SyncStatus.syncing
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: _getStatusColor(),
+                            ),
+                          )
+                        : Icon(
+                            _getStatusIcon(),
+                            size: 20,
+                            color: _getStatusColor(),
+                          ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -467,9 +498,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
                           _getBackupStatusText(),
                           style: TextStyle(
                             fontSize: 12,
-                            color: isSignedIn
-                                ? AccentColors.green
-                                : AppTheme.textTertiary,
+                            color: _getStatusColor(),
                           ),
                         ),
                       ],
@@ -550,6 +579,9 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
   }
 
   Widget _buildSignedInContent(BuildContext context) {
+    final syncStatus = ref.watch(syncStatusProvider);
+    final syncError = ref.watch(syncErrorProvider);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Column(
@@ -558,24 +590,40 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
           const Divider(color: AppTheme.darkBorder),
           const SizedBox(height: 12),
 
-          // Sync button
-          OutlinedButton.icon(
-            onPressed: _isSyncing ? null : () => _syncNow(context),
-            icon: _isSyncing
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.sync, size: 18),
-            label: Text(_isSyncing ? 'Syncing...' : 'Sync Now'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+          // Sync error with retry option (only shown when there's an error)
+          if (syncStatus == SyncStatus.error) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.errorRed.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppTheme.errorRed.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline, size: 18, color: AppTheme.errorRed),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      syncError ?? 'Sync failed',
+                      style: TextStyle(fontSize: 12, color: AppTheme.errorRed),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => _retrySyncNow(context),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
             ),
-          ),
+            const SizedBox(height: 12),
+          ],
 
           // Sign out
-          const SizedBox(height: 8),
           _AccountOptionTile(
             icon: Icons.logout,
             label: 'Sign Out',
@@ -598,9 +646,11 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
   Future<void> _signInWithGoogle(BuildContext context) async {
     try {
       final authService = ref.read(authServiceProvider);
-      await authService.signInWithGoogle();
-      if (context.mounted) {
+      final credential = await authService.signInWithGoogle();
+      if (context.mounted && credential.user != null) {
         showSuccessSnackBar(context, 'Signed in with Google');
+        // Trigger auto-sync after sign-in
+        await triggerManualSync(ref);
       }
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
@@ -618,9 +668,11 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
   Future<void> _signInWithApple(BuildContext context) async {
     try {
       final authService = ref.read(authServiceProvider);
-      await authService.signInWithApple();
-      if (context.mounted) {
+      final credential = await authService.signInWithApple();
+      if (context.mounted && credential.user != null) {
         showSuccessSnackBar(context, 'Signed in with Apple');
+        // Trigger auto-sync after sign-in
+        await triggerManualSync(ref);
       }
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
@@ -634,23 +686,15 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     }
   }
 
-  Future<void> _syncNow(BuildContext context) async {
-    final uid = widget.user?.uid;
-    if (uid == null) return;
-
-    setState(() => _isSyncing = true);
+  Future<void> _retrySyncNow(BuildContext context) async {
     try {
-      await ref.read(userProfileProvider.notifier).fullSync(uid);
+      await triggerManualSync(ref);
       if (context.mounted) {
         showSuccessSnackBar(context, 'Profile synced!');
       }
     } catch (e) {
       if (context.mounted) {
-        showErrorSnackBar(context, 'Sync failed: $e');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSyncing = false);
+        showErrorSnackBar(context, 'Sync failed');
       }
     }
   }

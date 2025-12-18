@@ -285,3 +285,94 @@ final shareableProfileProvider = FutureProvider<SharedProfileData?>((
   if (profile == null) return null;
   return SharedProfileData.fromProfile(profile);
 });
+
+/// Sync status for UI feedback
+enum SyncStatus { idle, syncing, synced, error }
+
+/// Notifier for sync status
+class SyncStatusNotifier extends Notifier<SyncStatus> {
+  @override
+  SyncStatus build() => SyncStatus.idle;
+
+  void setStatus(SyncStatus status) => state = status;
+}
+
+/// Provider for tracking sync status
+final syncStatusProvider = NotifierProvider<SyncStatusNotifier, SyncStatus>(
+  SyncStatusNotifier.new,
+);
+
+/// Notifier for sync error message
+class SyncErrorNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setError(String? error) => state = error;
+}
+
+/// Provider for the last sync error message
+final syncErrorProvider = NotifierProvider<SyncErrorNotifier, String?>(
+  SyncErrorNotifier.new,
+);
+
+/// Tracks the previous user ID to detect sign-in
+class PreviousUserNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setUserId(String? userId) => state = userId;
+}
+
+final _previousUserProvider = NotifierProvider<PreviousUserNotifier, String?>(
+  PreviousUserNotifier.new,
+);
+
+/// Auto-sync provider that triggers sync when auth state changes
+/// This should be watched by a widget high in the tree (e.g., main_shell)
+final autoSyncProvider = Provider<void>((ref) {
+  final user = ref.watch(currentUserProvider);
+  final previousUser = ref.read(_previousUserProvider);
+
+  // Update previous user tracker
+  ref.read(_previousUserProvider.notifier).setUserId(user?.uid);
+
+  // If user just signed in (was null, now has value)
+  if (previousUser == null && user != null) {
+    debugPrint('[AutoSync] User signed in, triggering sync');
+    _triggerAutoSync(ref, user.uid);
+  }
+});
+
+/// Trigger automatic sync with status tracking
+Future<void> _triggerAutoSync(Ref ref, String uid) async {
+  ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.syncing);
+  ref.read(syncErrorProvider.notifier).setError(null);
+
+  try {
+    await ref.read(userProfileProvider.notifier).fullSync(uid);
+    ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
+    debugPrint('[AutoSync] Sync completed successfully');
+  } catch (e) {
+    debugPrint('[AutoSync] Sync failed: $e');
+    ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.error);
+    ref.read(syncErrorProvider.notifier).setError(e.toString());
+  }
+}
+
+/// Manually trigger sync (for pull-to-refresh or retry)
+Future<void> triggerManualSync(WidgetRef ref) async {
+  final user = ref.read(currentUserProvider);
+  if (user == null) return;
+
+  ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.syncing);
+  ref.read(syncErrorProvider.notifier).setError(null);
+
+  try {
+    await ref.read(userProfileProvider.notifier).fullSync(user.uid);
+    ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
+  } catch (e) {
+    ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.error);
+    ref.read(syncErrorProvider.notifier).setError(e.toString());
+    rethrow;
+  }
+}

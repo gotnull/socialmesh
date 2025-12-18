@@ -1313,7 +1313,7 @@ class _DrawerProfileSection extends ConsumerWidget {
 }
 
 /// Profile tile with avatar for the drawer
-class _ProfileTile extends StatelessWidget {
+class _ProfileTile extends ConsumerWidget {
   final dynamic profile; // UserProfile?
   final bool isSignedIn;
   final VoidCallback onTap;
@@ -1324,10 +1324,21 @@ class _ProfileTile extends StatelessWidget {
     required this.onTap,
   });
 
+  String _getSyncStatusText(SyncStatus syncStatus) {
+    if (!isSignedIn) return 'Not signed in';
+    return switch (syncStatus) {
+      SyncStatus.syncing => 'Syncing...',
+      SyncStatus.error => 'Sync error',
+      SyncStatus.synced => 'Synced',
+      SyncStatus.idle => 'View Profile',
+    };
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final accentColor = theme.colorScheme.primary;
+    final syncStatus = ref.watch(syncStatusProvider);
 
     final displayName = profile?.displayName ?? 'Mesh User';
     final initials = profile?.initials ?? '?';
@@ -1389,14 +1400,52 @@ class _ProfileTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      'View Profile',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.5,
+                    Row(
+                      children: [
+                        if (isSignedIn && syncStatus == SyncStatus.syncing)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: SizedBox(
+                              width: 10,
+                              height: 10,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.5,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                            ),
+                          )
+                        else if (isSignedIn && syncStatus == SyncStatus.synced)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: Icon(
+                              Icons.cloud_done,
+                              size: 12,
+                              color: AccentColors.green,
+                            ),
+                          )
+                        else if (isSignedIn && syncStatus == SyncStatus.error)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: Icon(
+                              Icons.cloud_off,
+                              size: 12,
+                              color: AppTheme.errorRed,
+                            ),
+                          ),
+                        Text(
+                          _getSyncStatusText(syncStatus),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: syncStatus == SyncStatus.error
+                                ? AppTheme.errorRed.withValues(alpha: 0.8)
+                                : theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.5,
+                                  ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),

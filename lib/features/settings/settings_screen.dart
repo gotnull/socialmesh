@@ -379,6 +379,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               const SizedBox(height: 16),
 
+              // Profile Section - right after Premium, before Connection
+              _SectionHeader(title: 'PROFILE'),
+              _ProfileTile(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
               // Connection Section
               _SectionHeader(title: 'CONNECTION'),
               _SettingsTile(
@@ -1019,17 +1030,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const AppLogScreen()),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Account Section
-              _SectionHeader(title: 'PROFILE'),
-              _ProfileTile(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
                 ),
               ),
 
