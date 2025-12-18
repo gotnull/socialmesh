@@ -1,5 +1,13 @@
 import 'package:uuid/uuid.dart';
 
+/// Helper to sanitize double values for JSON encoding
+/// NaN and Infinity cannot be encoded in JSON
+double? _sanitizeDouble(double? value) {
+  if (value == null) return null;
+  if (value.isNaN || value.isInfinite) return null;
+  return value;
+}
+
 /// Base class for telemetry log entries
 abstract class TelemetryLogEntry {
   final String id;
@@ -53,9 +61,9 @@ class DeviceMetricsLog extends TelemetryLogEntry {
     'nodeNum': nodeNum,
     'timestamp': timestamp.millisecondsSinceEpoch,
     'batteryLevel': batteryLevel,
-    'voltage': voltage,
-    'channelUtilization': channelUtilization,
-    'airUtilTx': airUtilTx,
+    'voltage': _sanitizeDouble(voltage),
+    'channelUtilization': _sanitizeDouble(channelUtilization),
+    'airUtilTx': _sanitizeDouble(airUtilTx),
     'uptimeSeconds': uptimeSeconds,
   };
 }
@@ -137,22 +145,22 @@ class EnvironmentMetricsLog extends TelemetryLogEntry {
     'id': id,
     'nodeNum': nodeNum,
     'timestamp': timestamp.millisecondsSinceEpoch,
-    'temperature': temperature,
-    'humidity': humidity,
-    'barometricPressure': barometricPressure,
-    'gasResistance': gasResistance,
+    'temperature': _sanitizeDouble(temperature),
+    'humidity': _sanitizeDouble(humidity),
+    'barometricPressure': _sanitizeDouble(barometricPressure),
+    'gasResistance': _sanitizeDouble(gasResistance),
     'iaq': iaq,
-    'lux': lux,
-    'whiteLux': whiteLux,
-    'uvLux': uvLux,
+    'lux': _sanitizeDouble(lux),
+    'whiteLux': _sanitizeDouble(whiteLux),
+    'uvLux': _sanitizeDouble(uvLux),
     'windDirection': windDirection,
-    'windSpeed': windSpeed,
-    'windGust': windGust,
-    'rainfall': rainfall,
-    'rainfall1h': rainfall1h,
-    'rainfall24h': rainfall24h,
+    'windSpeed': _sanitizeDouble(windSpeed),
+    'windGust': _sanitizeDouble(windGust),
+    'rainfall': _sanitizeDouble(rainfall),
+    'rainfall1h': _sanitizeDouble(rainfall1h),
+    'rainfall24h': _sanitizeDouble(rainfall24h),
     'soilMoisture': soilMoisture,
-    'soilTemperature': soilTemperature,
+    'soilTemperature': _sanitizeDouble(soilTemperature),
   };
 }
 
@@ -198,12 +206,12 @@ class PowerMetricsLog extends TelemetryLogEntry {
     'id': id,
     'nodeNum': nodeNum,
     'timestamp': timestamp.millisecondsSinceEpoch,
-    'ch1Voltage': ch1Voltage,
-    'ch1Current': ch1Current,
-    'ch2Voltage': ch2Voltage,
-    'ch2Current': ch2Current,
-    'ch3Voltage': ch3Voltage,
-    'ch3Current': ch3Current,
+    'ch1Voltage': _sanitizeDouble(ch1Voltage),
+    'ch1Current': _sanitizeDouble(ch1Current),
+    'ch2Voltage': _sanitizeDouble(ch2Voltage),
+    'ch2Current': _sanitizeDouble(ch2Current),
+    'ch3Voltage': _sanitizeDouble(ch3Voltage),
+    'ch3Current': _sanitizeDouble(ch3Current),
   };
 }
 
@@ -331,8 +339,8 @@ class PositionLog extends TelemetryLogEntry {
     'id': id,
     'nodeNum': nodeNum,
     'timestamp': timestamp.millisecondsSinceEpoch,
-    'latitude': latitude,
-    'longitude': longitude,
+    'latitude': _sanitizeDouble(latitude),
+    'longitude': _sanitizeDouble(longitude),
     'altitude': altitude,
     'satsInView': satsInView,
     'speed': speed,
@@ -396,7 +404,7 @@ class TraceRouteLog extends TelemetryLogEntry {
     'hopsTowards': hopsTowards,
     'hopsBack': hopsBack,
     'hops': hops.map((h) => h.toJson()).toList(),
-    'snr': snr,
+    'snr': _sanitizeDouble(snr),
   };
 }
 
@@ -432,10 +440,10 @@ class TraceRouteHop {
   Map<String, dynamic> toJson() => {
     'nodeNum': nodeNum,
     'name': name,
-    'snr': snr,
+    'snr': _sanitizeDouble(snr),
     'back': back,
-    'latitude': latitude,
-    'longitude': longitude,
+    'latitude': _sanitizeDouble(latitude),
+    'longitude': _sanitizeDouble(longitude),
   };
 }
 

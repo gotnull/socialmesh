@@ -388,6 +388,7 @@ class _CloudBackupSection extends ConsumerStatefulWidget {
 
 class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
   bool _isExpanded = false;
+  bool _isSigningIn = false;
 
   bool get isSignedIn => widget.user != null;
 
@@ -574,33 +575,36 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
 
           // Google Sign-In button
           _SocialSignInButton(
-            onPressed: () => _signInWithGoogle(context),
+            onPressed: _isSigningIn ? null : () => _signInWithGoogle(context),
             icon: _GoogleLogo(),
             label: 'Continue with Google',
             backgroundColor: Colors.white,
             textColor: Colors.black87,
+            isLoading: _isSigningIn,
           ),
           const SizedBox(height: 10),
 
           // Apple Sign-In button (iOS/macOS only)
           if (Platform.isIOS || Platform.isMacOS) ...[
             _SocialSignInButton(
-              onPressed: () => _signInWithApple(context),
+              onPressed: _isSigningIn ? null : () => _signInWithApple(context),
               icon: const Icon(Icons.apple, color: Colors.white, size: 22),
               label: 'Continue with Apple',
               backgroundColor: Colors.black,
               textColor: Colors.white,
+              isLoading: _isSigningIn,
             ),
             const SizedBox(height: 10),
           ],
 
           // GitHub Sign-In button
           _SocialSignInButton(
-            onPressed: () => _signInWithGitHub(context),
+            onPressed: _isSigningIn ? null : () => _signInWithGitHub(context),
             icon: _GitHubLogo(),
             label: 'Continue with GitHub',
             backgroundColor: const Color(0xFF24292F),
             textColor: Colors.white,
+            isLoading: _isSigningIn,
           ),
         ],
       ),
@@ -679,6 +683,8 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
   }
 
   Future<void> _signInWithGoogle(BuildContext context) async {
+    if (_isSigningIn) return;
+    setState(() => _isSigningIn = true);
     try {
       final authService = ref.read(authServiceProvider);
       final credential = await authService.signInWithGoogle();
@@ -697,10 +703,14 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       if (context.mounted) {
         showErrorSnackBar(context, 'Sign in failed');
       }
+    } finally {
+      if (mounted) setState(() => _isSigningIn = false);
     }
   }
 
   Future<void> _signInWithApple(BuildContext context) async {
+    if (_isSigningIn) return;
+    setState(() => _isSigningIn = true);
     try {
       final authService = ref.read(authServiceProvider);
       final credential = await authService.signInWithApple();
@@ -718,10 +728,14 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
         // User cancelled
         debugPrint('Apple sign in: $e');
       }
+    } finally {
+      if (mounted) setState(() => _isSigningIn = false);
     }
   }
 
   Future<void> _signInWithGitHub(BuildContext context) async {
+    if (_isSigningIn) return;
+    setState(() => _isSigningIn = true);
     try {
       final authService = ref.read(authServiceProvider);
       final credential = await authService.signInWithGitHub();
@@ -746,6 +760,8 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
         // User cancelled or other error
         debugPrint('GitHub sign in: $e');
       }
+    } finally {
+      if (mounted) setState(() => _isSigningIn = false);
     }
   }
 
@@ -1078,11 +1094,12 @@ class _AccountOptionTile extends StatelessWidget {
 
 /// Social sign-in button with custom styling
 class _SocialSignInButton extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Widget icon;
   final String label;
   final Color backgroundColor;
   final Color textColor;
+  final bool isLoading;
 
   const _SocialSignInButton({
     required this.onPressed,
@@ -1090,32 +1107,48 @@ class _SocialSignInButton extends StatelessWidget {
     required this.label,
     required this.backgroundColor,
     required this.textColor,
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: backgroundColor,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onPressed,
+    final isDisabled = onPressed == null || isLoading;
+    
+    return Opacity(
+      opacity: isDisabled ? 0.6 : 1.0,
+      child: Material(
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              icon,
-              const SizedBox(width: 12),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: textColor,
+        child: InkWell(
+          onTap: isDisabled ? null : onPressed,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (isLoading)
+                  SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: textColor,
+                    ),
+                  )
+                else
+                  icon,
+                const SizedBox(width: 12),
+                Text(
+                  isLoading ? 'Signing in...' : label,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: textColor,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
