@@ -546,42 +546,46 @@ class MarketplaceException implements Exception {
   String toString() => 'MarketplaceException: $message';
 }
 
-/// Widget categories
+/// Widget categories - aligned with Firestore categories collection
 class WidgetCategories {
-  static const status = 'status';
-  static const sensors = 'sensors';
-  static const connectivity = 'connectivity';
-  static const navigation = 'navigation';
-  static const network = 'network';
-  static const messaging = 'messaging';
-  static const general = 'general';
+  static const deviceStatus = 'device-status';
+  static const metrics = 'metrics';
+  static const charts = 'charts';
+  static const mesh = 'mesh';
+  static const location = 'location';
+  static const weather = 'weather';
+  static const utility = 'utility';
+  static const other = 'other';
 
   static const all = [
-    status,
-    sensors,
-    connectivity,
-    navigation,
-    network,
-    messaging,
-    general,
+    deviceStatus,
+    metrics,
+    charts,
+    mesh,
+    location,
+    weather,
+    utility,
+    other,
   ];
 
   static String getDisplayName(String category) {
     switch (category) {
-      case status:
-        return 'Status';
-      case sensors:
-        return 'Sensors';
-      case connectivity:
-        return 'Connectivity';
-      case navigation:
-        return 'Navigation';
-      case network:
-        return 'Network';
-      case messaging:
-        return 'Messaging';
-      case general:
-        return 'General';
+      case deviceStatus:
+        return 'Device Status';
+      case metrics:
+        return 'Metrics';
+      case charts:
+        return 'Charts';
+      case mesh:
+        return 'Mesh Network';
+      case location:
+        return 'Location';
+      case weather:
+        return 'Weather';
+      case utility:
+        return 'Utility';
+      case other:
+        return 'Other';
       default:
         return category;
     }

@@ -5,9 +5,8 @@ import 'models/widget_schema.dart';
 import 'storage/widget_storage_service.dart';
 import 'wizard/widget_wizard_screen.dart';
 import 'marketplace/widget_marketplace_screen.dart';
-import 'renderer/widget_renderer.dart';
 import '../../core/theme.dart';
-import '../../providers/app_providers.dart';
+import '../../core/widgets/widget_preview_card.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../dashboard/models/dashboard_widget_config.dart';
@@ -146,168 +145,107 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
     required bool isTemplate,
     bool isFromMarketplace = false,
   }) {
-    final nodes = ref.watch(nodesProvider);
-    final myNodeNum = ref.watch(myNodeNumProvider);
-    final node = myNodeNum != null ? nodes[myNodeNum] : null;
-
     // Check if this widget is already on the dashboard
     final dashboardWidgets = ref.watch(dashboardWidgetsProvider);
     final isOnDashboard = dashboardWidgets.any(
       (w) => w.schemaId == schema.id && w.isVisible,
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Widget preview - auto-sizes to content
-        WidgetRenderer(
-          schema: schema,
-          node: node,
-          allNodes: nodes,
-          accentColor: context.accentColor,
-          enableActions: false, // Only interactive on dashboard
-        ),
-        const SizedBox(height: 8),
-        // Info section - no horizontal padding to match widget preview width
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          schema.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (isFromMarketplace) ...[
-                        const SizedBox(width: 8),
-                        Icon(Icons.store, size: 14, color: context.accentColor),
-                      ],
-                    ],
-                  ),
-                  if (schema.description != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      schema.description!,
-                      style: TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 12,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            // Actions
-            if (isTemplate)
-              TextButton(
-                onPressed: () => _useTemplate(schema),
-                child: Text(
-                  'Use',
-                  style: TextStyle(
-                    color: context.accentColor,
-                    fontWeight: FontWeight.w600,
-                  ),
+    return WidgetPreviewCard(
+      schema: schema,
+      title: schema.name,
+      subtitle: schema.description,
+      titleLeading: isFromMarketplace
+          ? Icon(Icons.store, size: 14, color: context.accentColor)
+          : null,
+      trailing: isTemplate
+          ? TextButton(
+              onPressed: () => _useTemplate(schema),
+              child: Text(
+                'Use',
+                style: TextStyle(
+                  color: context.accentColor,
+                  fontWeight: FontWeight.w600,
                 ),
-              )
-            else
-              PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: AppTheme.textSecondary),
-                color: AppTheme.darkCard,
-                onSelected: (action) => _handleAction(action, schema),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: isOnDashboard
-                        ? 'remove_from_dashboard'
-                        : 'add_to_dashboard',
-                    child: Row(
-                      children: [
-                        Icon(
-                          isOnDashboard
-                              ? Icons.dashboard_outlined
-                              : Icons.dashboard_customize,
-                          size: 18,
+              ),
+            )
+          : PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert, color: AppTheme.textSecondary),
+              color: AppTheme.darkCard,
+              onSelected: (action) => _handleAction(action, schema),
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: isOnDashboard
+                      ? 'remove_from_dashboard'
+                      : 'add_to_dashboard',
+                  child: Row(
+                    children: [
+                      Icon(
+                        isOnDashboard
+                            ? Icons.dashboard_outlined
+                            : Icons.dashboard_customize,
+                        size: 18,
+                        color: isOnDashboard ? AppTheme.errorRed : Colors.white,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        isOnDashboard
+                            ? 'Remove from Dashboard'
+                            : 'Add to Dashboard',
+                        style: TextStyle(
                           color: isOnDashboard
                               ? AppTheme.errorRed
                               : Colors.white,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          isOnDashboard
-                              ? 'Remove from Dashboard'
-                              : 'Add to Dashboard',
-                          style: TextStyle(
-                            color: isOnDashboard
-                                ? AppTheme.errorRed
-                                : Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit, size: 18, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text('Edit', style: TextStyle(color: Colors.white)),
-                      ],
-                    ),
+                ),
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, size: 18, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text('Edit', style: TextStyle(color: Colors.white)),
+                    ],
                   ),
-                  const PopupMenuItem(
-                    value: 'duplicate',
-                    child: Row(
-                      children: [
-                        Icon(Icons.copy, size: 18, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text(
-                          'Duplicate',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
+                ),
+                const PopupMenuItem(
+                  value: 'duplicate',
+                  child: Row(
+                    children: [
+                      Icon(Icons.copy, size: 18, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text('Duplicate', style: TextStyle(color: Colors.white)),
+                    ],
                   ),
-                  const PopupMenuItem(
-                    value: 'export',
-                    child: Row(
-                      children: [
-                        Icon(Icons.share, size: 18, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text('Export', style: TextStyle(color: Colors.white)),
-                      ],
-                    ),
+                ),
+                const PopupMenuItem(
+                  value: 'export',
+                  child: Row(
+                    children: [
+                      Icon(Icons.share, size: 18, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text('Export', style: TextStyle(color: Colors.white)),
+                    ],
                   ),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete, size: 18, color: AppTheme.errorRed),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Delete',
-                          style: TextStyle(color: AppTheme.errorRed),
-                        ),
-                      ],
-                    ),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, size: 18, color: AppTheme.errorRed),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Delete',
+                        style: TextStyle(color: AppTheme.errorRed),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-          ],
-        ),
-        const SizedBox(height: 16),
-      ],
+                ),
+              ],
+            ),
     );
   }
 

@@ -388,23 +388,25 @@ void main() {
 
   group('WidgetCategories', () {
     test('all categories are defined', () {
-      expect(WidgetCategories.all, contains(WidgetCategories.status));
-      expect(WidgetCategories.all, contains(WidgetCategories.sensors));
-      expect(WidgetCategories.all, contains(WidgetCategories.connectivity));
-      expect(WidgetCategories.all, contains(WidgetCategories.navigation));
-      expect(WidgetCategories.all, contains(WidgetCategories.network));
-      expect(WidgetCategories.all, contains(WidgetCategories.messaging));
-      expect(WidgetCategories.all, contains(WidgetCategories.general));
+      expect(WidgetCategories.all, contains(WidgetCategories.deviceStatus));
+      expect(WidgetCategories.all, contains(WidgetCategories.metrics));
+      expect(WidgetCategories.all, contains(WidgetCategories.charts));
+      expect(WidgetCategories.all, contains(WidgetCategories.mesh));
+      expect(WidgetCategories.all, contains(WidgetCategories.location));
+      expect(WidgetCategories.all, contains(WidgetCategories.weather));
+      expect(WidgetCategories.all, contains(WidgetCategories.utility));
+      expect(WidgetCategories.all, contains(WidgetCategories.other));
     });
 
     test('getDisplayName returns human readable names', () {
-      expect(WidgetCategories.getDisplayName('status'), 'Status');
-      expect(WidgetCategories.getDisplayName('sensors'), 'Sensors');
-      expect(WidgetCategories.getDisplayName('connectivity'), 'Connectivity');
-      expect(WidgetCategories.getDisplayName('navigation'), 'Navigation');
-      expect(WidgetCategories.getDisplayName('network'), 'Network');
-      expect(WidgetCategories.getDisplayName('messaging'), 'Messaging');
-      expect(WidgetCategories.getDisplayName('general'), 'General');
+      expect(WidgetCategories.getDisplayName('device-status'), 'Device Status');
+      expect(WidgetCategories.getDisplayName('metrics'), 'Metrics');
+      expect(WidgetCategories.getDisplayName('charts'), 'Charts');
+      expect(WidgetCategories.getDisplayName('mesh'), 'Mesh Network');
+      expect(WidgetCategories.getDisplayName('location'), 'Location');
+      expect(WidgetCategories.getDisplayName('weather'), 'Weather');
+      expect(WidgetCategories.getDisplayName('utility'), 'Utility');
+      expect(WidgetCategories.getDisplayName('other'), 'Other');
     });
 
     test('getDisplayName returns input for unknown category', () {

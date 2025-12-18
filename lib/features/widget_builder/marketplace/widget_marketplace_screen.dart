@@ -5,6 +5,7 @@ import '../models/widget_schema.dart';
 import '../renderer/widget_renderer.dart';
 import '../storage/widget_storage_service.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/widget_preview_card.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/splash_mesh_provider.dart';
 import '../../../utils/snackbar.dart';
@@ -320,18 +321,22 @@ class _WidgetMarketplaceScreenState
 
   IconData _getCategoryIcon(String category) {
     switch (category) {
-      case WidgetCategories.status:
-        return Icons.battery_std;
-      case WidgetCategories.sensors:
-        return Icons.thermostat;
-      case WidgetCategories.connectivity:
-        return Icons.signal_cellular_alt;
-      case WidgetCategories.navigation:
-        return Icons.navigation;
-      case WidgetCategories.network:
+      case WidgetCategories.deviceStatus:
+        return Icons.phone_android;
+      case WidgetCategories.metrics:
+        return Icons.analytics;
+      case WidgetCategories.charts:
+        return Icons.bar_chart;
+      case WidgetCategories.mesh:
         return Icons.hub;
-      case WidgetCategories.messaging:
-        return Icons.message;
+      case WidgetCategories.location:
+        return Icons.location_on;
+      case WidgetCategories.weather:
+        return Icons.cloud;
+      case WidgetCategories.utility:
+        return Icons.build;
+      case WidgetCategories.other:
+        return Icons.category;
       default:
         return Icons.widgets;
     }
@@ -390,7 +395,7 @@ class _WidgetMarketplaceScreenState
   }
 }
 
-/// Marketplace widget card - renders EXACTLY like widget_builder_screen._buildWidgetCard
+/// Marketplace widget card - uses shared WidgetPreviewCard component
 class _MarketplaceWidgetCard extends ConsumerWidget {
   final MarketplaceWidget widget;
   final VoidCallback onTap;
@@ -400,157 +405,31 @@ class _MarketplaceWidgetCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final service = ref.watch(marketplaceServiceProvider);
-    final nodes = ref.watch(nodesProvider);
-    final myNodeNum = ref.watch(myNodeNumProvider);
-    final node = myNodeNum != null ? nodes[myNodeNum] : null;
 
     return FutureBuilder<WidgetSchema>(
       future: service.downloadWidget(widget.id),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          // Loading placeholder - same structure as loaded card
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: double.infinity,
-                height: 120,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.darkBorder),
-                  ),
-                  child: const Center(
-                    child: SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'by ${widget.author}',
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _buildStats(),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ],
+          // Loading placeholder with metadata visible
+          return WidgetPreviewCardLoading(
+            height: 120,
+            title: widget.name,
+            subtitle: 'by ${widget.author}',
           );
         }
 
-        final schema = snapshot.data!;
-
-        // Widget preview auto-sizes to content (matches My Widgets)
-
-        return GestureDetector(
+        return WidgetPreviewCard(
+          schema: snapshot.data!,
+          title: snapshot.data!.name,
+          subtitle: 'by ${widget.author}',
           onTap: onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Widget preview - auto-sizes to content (matches My Widgets)
-              WidgetRenderer(
-                schema: schema,
-                node: node,
-                allNodes: nodes,
-                accentColor: context.accentColor,
-                enableActions: false, // Only interactive on dashboard
-              ),
-              const SizedBox(height: 8),
-              // Info section
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          schema.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'by ${widget.author}',
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 12,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  _buildStats(),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ],
+          trailing: WidgetMarketplaceStats(
+            rating: widget.rating,
+            downloads: widget.downloads,
           ),
         );
       },
     );
-  }
-
-  Widget _buildStats() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.star, size: 14, color: AppTheme.warningYellow),
-        const SizedBox(width: 4),
-        Text(
-          widget.rating.toStringAsFixed(1),
-          style: TextStyle(
-            color: AppTheme.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Icon(Icons.download, size: 14, color: AppTheme.textTertiary),
-        const SizedBox(width: 4),
-        Text(
-          _formatDownloads(widget.downloads),
-          style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
-        ),
-      ],
-    );
-  }
-
-  String _formatDownloads(int count) {
-    if (count >= 1000) {
-      return '${(count / 1000).toStringAsFixed(1)}k';
-    }
-    return count.toString();
   }
 }
 
