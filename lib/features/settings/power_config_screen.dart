@@ -173,7 +173,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
         ],
       ),
       body: _loading
-          ? Center(child: MeshLoadingIndicator(size: 48))
+          ? const ScreenLoadingIndicator()
           : ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [

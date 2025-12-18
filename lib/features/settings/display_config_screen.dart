@@ -141,7 +141,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: MeshLoadingIndicator(size: 48))
+          ? const ScreenLoadingIndicator()
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [

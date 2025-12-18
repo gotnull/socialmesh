@@ -58,7 +58,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onEditTap: () => _showEditSheet(context),
               )
             : _EmptyProfileView(onEditTap: () => _showEditSheet(context)),
-        loading: () => const Center(child: MeshLoadingIndicator(size: 48)),
+        loading: () => const ScreenLoadingIndicator(),
         error: (e, _) {
           // Try to show cached/previous data with an error banner
           final cachedProfile = profileAsync.value;
@@ -708,7 +708,12 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       }
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
-        if (e.code != 'web-context-cancelled') {
+        if (e.code == 'account-exists-with-different-credential') {
+          showErrorSnackBar(
+            context,
+            'This email is linked to another sign-in method. Please sign in with Google or Apple first, then link GitHub in Settings.',
+          );
+        } else if (e.code != 'web-context-cancelled') {
           showErrorSnackBar(context, 'Error: ${e.message}');
         }
       }

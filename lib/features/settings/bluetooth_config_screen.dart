@@ -193,7 +193,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
           ],
         ),
         body: _loading
-            ? const Center(child: MeshLoadingIndicator(size: 48))
+            ? const ScreenLoadingIndicator()
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [

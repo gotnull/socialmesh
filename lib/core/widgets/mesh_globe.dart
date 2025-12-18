@@ -314,7 +314,7 @@ class MeshGlobeState extends State<MeshGlobe> {
     if (_controller == null || !_isInitialized) {
       return Container(
         color: AppTheme.darkBackground,
-        child: const Center(child: MeshLoadingIndicator(size: 48)),
+        child: const ScreenLoadingIndicator(),
       );
     }
 

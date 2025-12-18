@@ -327,7 +327,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
       body: settingsServiceAsync.when(
-        loading: () => const Center(child: MeshLoadingIndicator(size: 48)),
+        loading: () => const ScreenLoadingIndicator(),
         error: (error, stack) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1874,8 +1874,9 @@ class _ProfileTile extends ConsumerWidget {
                                       fit: BoxFit.cover,
                                       loadingBuilder:
                                           (context, child, loadingProgress) {
-                                            if (loadingProgress == null)
+                                            if (loadingProgress == null) {
                                               return child;
+                                            }
                                             return Center(
                                               child: SizedBox(
                                                 width: 20,
