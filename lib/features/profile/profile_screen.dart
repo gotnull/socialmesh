@@ -1113,7 +1113,7 @@ class _SocialSignInButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDisabled = onPressed == null || isLoading;
-    
+
     return Opacity(
       opacity: isDisabled ? 0.6 : 1.0,
       child: Material(
