@@ -242,11 +242,87 @@ class AuthService {
     await _auth.signOut();
   }
 
-  /// Delete the current user's account
+  /// Re-authenticate the current user with Google
+  Future<void> reauthenticateWithGoogle() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final googleUser = await GoogleSignIn().signIn();
+    if (googleUser == null) {
+      throw FirebaseAuthException(
+        code: 'reauthentication-cancelled',
+        message: 'Google re-authentication was cancelled',
+      );
+    }
+
+    final googleAuth = await googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    await user.reauthenticateWithCredential(credential);
+  }
+
+  /// Re-authenticate the current user with Apple
+  Future<void> reauthenticateWithApple() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final rawNonce = _generateNonce();
+    final nonce = _sha256ofString(rawNonce);
+
+    final appleCredential = await SignInWithApple.getAppleIDCredential(
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+      nonce: nonce,
+    );
+
+    final oauthCredential = OAuthProvider('apple.com').credential(
+      idToken: appleCredential.identityToken,
+      rawNonce: rawNonce,
+      accessToken: appleCredential.authorizationCode,
+    );
+
+    await user.reauthenticateWithCredential(oauthCredential);
+  }
+
+  /// Re-authenticate the current user with their primary provider
+  Future<void> reauthenticate() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final providers = user.providerData.map((info) => info.providerId).toList();
+
+    if (providers.contains('google.com')) {
+      await reauthenticateWithGoogle();
+    } else if (providers.contains('apple.com')) {
+      await reauthenticateWithApple();
+    } else {
+      throw FirebaseAuthException(
+        code: 'no-supported-provider',
+        message: 'No supported provider found for re-authentication',
+      );
+    }
+  }
+
+  /// Delete the current user's account (with automatic re-authentication)
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
     if (user != null) {
-      await user.delete();
+      try {
+        await user.delete();
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'requires-recent-login') {
+          // Re-authenticate and try again
+          await reauthenticate();
+          await user.delete();
+        } else {
+          rethrow;
+        }
+      }
     }
   }
 }
