@@ -25,7 +25,40 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
   @override
   Future<UserProfile?> build() async {
     debugPrint('[UserProfile] build() called - loading profile');
-    return _loadProfile();
+
+    // Initialize and load local profile
+    await profileService.initialize();
+    final localProfile = await profileService.getOrCreateProfile();
+    debugPrint(
+      '[UserProfile] Loaded local profile: ${localProfile.displayName}',
+    );
+
+    // Check if user is already signed in (persisted session)
+    final user = ref.read(currentUserProvider);
+    if (user != null) {
+      debugPrint('[UserProfile] User already signed in, syncing from cloud');
+      // Update sync status
+      ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.syncing);
+
+      try {
+        // Perform full sync with cloud
+        final synced = await profileCloudSyncService.fullSync(user.uid);
+        if (synced != null) {
+          debugPrint(
+            '[UserProfile] Cloud sync complete: ${synced.displayName}',
+          );
+          ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
+          return synced;
+        }
+      } catch (e) {
+        debugPrint('[UserProfile] Cloud sync failed: $e');
+        ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.error);
+        ref.read(syncErrorProvider.notifier).setError(e.toString());
+        // Fall back to local profile on error
+      }
+    }
+
+    return localProfile;
   }
 
   Future<UserProfile?> _loadProfile() async {
