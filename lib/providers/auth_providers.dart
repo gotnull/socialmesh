@@ -8,6 +8,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
+/// Exception thrown when account linking is required
+/// (e.g., GitHub sign-in with an email that's already linked to Google)
+class AccountLinkingRequiredException implements Exception {
+  final String email;
+  final AuthCredential pendingCredential;
+  final List<String> existingProviders;
+
+  AccountLinkingRequiredException({
+    required this.email,
+    required this.pendingCredential,
+    required this.existingProviders,
+  });
+
+  String get message =>
+      'Account exists with different credential. Sign in with ${existingProviders.join(" or ")} to link GitHub.';
+}
+
 /// Provider for the Firebase Auth instance
 final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
   return FirebaseAuth.instance;
@@ -149,17 +166,55 @@ class AuthService {
   }
 
   /// Sign in with GitHub
+  /// Note: GitHub is an "untrusted" provider in Firebase Auth.
+  /// If the user already signed in with a "trusted" provider (Google, Apple)
+  /// using the same email, this will throw 'account-exists-with-different-credential'.
+  /// In that case, we need to link the GitHub credential to the existing account.
   Future<UserCredential> signInWithGitHub() async {
     final githubProvider = GithubAuthProvider();
     githubProvider.addScope('read:user');
     githubProvider.addScope('user:email');
 
-    // Use redirect on web, popup on mobile
-    if (Platform.isIOS || Platform.isAndroid) {
-      return _auth.signInWithProvider(githubProvider);
-    } else {
-      return _auth.signInWithPopup(githubProvider);
+    try {
+      // Use redirect on web, popup on mobile
+      if (Platform.isIOS || Platform.isAndroid) {
+        return await _auth.signInWithProvider(githubProvider);
+      } else {
+        return await _auth.signInWithPopup(githubProvider);
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'account-exists-with-different-credential' &&
+          e.credential != null) {
+        final email = e.email;
+        if (email != null) {
+          // Store credential for linking after user signs in with existing provider
+          // We infer the providers from the error - typically google.com or apple.com
+          throw AccountLinkingRequiredException(
+            email: email,
+            pendingCredential: e.credential!,
+            existingProviders: [
+              'google.com',
+              'apple.com',
+            ], // Most likely providers
+          );
+        }
+      }
+      rethrow;
     }
+  }
+
+  /// Link a pending credential to the current user
+  Future<UserCredential> linkPendingCredential(
+    AuthCredential credential,
+  ) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'no-current-user',
+        message: 'No user is currently signed in',
+      );
+    }
+    return user.linkWithCredential(credential);
   }
 
   /// Check if Apple Sign-In is available (iOS/macOS only)

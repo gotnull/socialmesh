@@ -706,14 +706,14 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
         // Trigger auto-sync after sign-in
         await triggerManualSync(ref);
       }
+    } on AccountLinkingRequiredException catch (e) {
+      if (context.mounted) {
+        // Show dialog to link accounts
+        await _showAccountLinkingDialog(context, e);
+      }
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
-        if (e.code == 'account-exists-with-different-credential') {
-          showErrorSnackBar(
-            context,
-            'This email is linked to another sign-in method. Please sign in with Google or Apple first, then link GitHub in Settings.',
-          );
-        } else if (e.code != 'web-context-cancelled') {
+        if (e.code != 'web-context-cancelled') {
           showErrorSnackBar(context, 'Error: ${e.message}');
         }
       }
@@ -721,6 +721,65 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       if (context.mounted) {
         // User cancelled or other error
         debugPrint('GitHub sign in: $e');
+      }
+    }
+  }
+
+  Future<void> _showAccountLinkingDialog(
+    BuildContext context,
+    AccountLinkingRequiredException e,
+  ) async {
+    final providerName = e.existingProviders.contains('google.com')
+        ? 'Google'
+        : e.existingProviders.contains('apple.com')
+        ? 'Apple'
+        : e.existingProviders.first;
+
+    final shouldLink = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        title: const Text('Link GitHub Account'),
+        content: Text(
+          'An account with ${e.email} already exists using $providerName.\n\n'
+          'Sign in with $providerName to link your GitHub account?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Sign in with $providerName'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLink == true && context.mounted) {
+      try {
+        final authService = ref.read(authServiceProvider);
+
+        // Sign in with the existing provider
+        if (e.existingProviders.contains('google.com')) {
+          await authService.signInWithGoogle();
+        } else if (e.existingProviders.contains('apple.com')) {
+          await authService.signInWithApple();
+        }
+
+        // Now link the GitHub credential
+        await authService.linkPendingCredential(e.pendingCredential);
+
+        if (context.mounted) {
+          showSuccessSnackBar(context, 'GitHub account linked successfully!');
+          await triggerManualSync(ref);
+        }
+      } catch (linkError) {
+        if (context.mounted) {
+          showErrorSnackBar(context, 'Failed to link accounts');
+          debugPrint('Account linking error: $linkError');
+        }
       }
     }
   }
