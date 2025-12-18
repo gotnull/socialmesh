@@ -373,7 +373,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     // Premium features
     const _DrawerMenuItem(
       icon: Icons.widgets_outlined,
-      label: 'Widget Builder',
+      label: 'Widgets',
       screen: WidgetBuilderScreen(),
       premiumFeature: PremiumFeature.homeWidgets,
     ),

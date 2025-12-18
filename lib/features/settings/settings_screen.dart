@@ -40,7 +40,6 @@ import 'ringtone_screen.dart';
 import 'subscription_screen.dart';
 import 'ifttt_config_screen.dart';
 import 'theme_settings_screen.dart';
-import 'home_widgets_screen.dart';
 import '../automations/automations_screen.dart';
 import 'canned_responses_screen.dart';
 import 'canned_message_module_config_screen.dart';
@@ -221,27 +220,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
         _PremiumFeatureTile(
-          icon: Icons.widgets,
-          title: 'Widgets',
-          feature: PremiumFeature.homeWidgets,
-          onTap: () {
-            final hasFeature = purchaseState.hasFeature(
-              PremiumFeature.homeWidgets,
-            );
-            if (hasFeature) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const HomeWidgetsScreen()),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-              );
-            }
-          },
-        ),
-        _PremiumFeatureTile(
           icon: Icons.bolt,
           title: 'Automations',
           feature: PremiumFeature.automations,
@@ -284,8 +262,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
         _PremiumFeatureTile(
-          icon: Icons.dashboard_customize,
-          title: 'Widget Builder',
+          icon: Icons.widgets,
+          title: 'Widgets',
           feature: PremiumFeature.homeWidgets,
           onTap: () {
             final hasFeature = purchaseState.hasFeature(
