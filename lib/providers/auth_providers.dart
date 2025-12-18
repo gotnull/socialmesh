@@ -148,6 +148,20 @@ class AuthService {
     return digest.toString();
   }
 
+  /// Sign in with GitHub
+  Future<UserCredential> signInWithGitHub() async {
+    final githubProvider = GithubAuthProvider();
+    githubProvider.addScope('read:user');
+    githubProvider.addScope('user:email');
+
+    // Use redirect on web, popup on mobile
+    if (Platform.isIOS || Platform.isAndroid) {
+      return _auth.signInWithProvider(githubProvider);
+    } else {
+      return _auth.signInWithPopup(githubProvider);
+    }
+  }
+
   /// Check if Apple Sign-In is available (iOS/macOS only)
   Future<bool> isAppleSignInAvailable() async {
     if (!Platform.isIOS && !Platform.isMacOS) return false;

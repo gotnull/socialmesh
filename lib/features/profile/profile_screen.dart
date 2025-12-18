@@ -565,7 +565,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
           const SizedBox(height: 10),
 
           // Apple Sign-In button (iOS/macOS only)
-          if (Platform.isIOS || Platform.isMacOS)
+          if (Platform.isIOS || Platform.isMacOS) ...[
             _SocialSignInButton(
               onPressed: () => _signInWithApple(context),
               icon: const Icon(Icons.apple, color: Colors.white, size: 22),
@@ -573,6 +573,17 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
               backgroundColor: Colors.black,
               textColor: Colors.white,
             ),
+            const SizedBox(height: 10),
+          ],
+
+          // GitHub Sign-In button
+          _SocialSignInButton(
+            onPressed: () => _signInWithGitHub(context),
+            icon: _GitHubLogo(),
+            label: 'Continue with GitHub',
+            backgroundColor: const Color(0xFF24292F),
+            textColor: Colors.white,
+          ),
         ],
       ),
     );
@@ -682,6 +693,29 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       if (context.mounted) {
         // User cancelled
         debugPrint('Apple sign in: $e');
+      }
+    }
+  }
+
+  Future<void> _signInWithGitHub(BuildContext context) async {
+    try {
+      final authService = ref.read(authServiceProvider);
+      final credential = await authService.signInWithGitHub();
+      if (context.mounted && credential.user != null) {
+        showSuccessSnackBar(context, 'Signed in with GitHub');
+        // Trigger auto-sync after sign-in
+        await triggerManualSync(ref);
+      }
+    } on FirebaseAuthException catch (e) {
+      if (context.mounted) {
+        if (e.code != 'web-context-cancelled') {
+          showErrorSnackBar(context, 'Error: ${e.message}');
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        // User cancelled or other error
+        debugPrint('GitHub sign in: $e');
       }
     }
   }
@@ -993,6 +1027,65 @@ class _GoogleLogoPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+/// Custom GitHub logo widget
+class _GitHubLogo extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 20,
+      height: 20,
+      child: CustomPaint(painter: _GitHubLogoPainter()),
+    );
+  }
+}
+
+class _GitHubLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.width / 24;
+    canvas.scale(scale, scale);
+
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    // GitHub Octocat logo path
+    final path = Path()
+      ..moveTo(12, 0.297)
+      ..cubicTo(5.37, 0.297, 0, 5.67, 0, 12.297)
+      ..cubicTo(0, 17.6, 3.438, 22.097, 8.205, 23.682)
+      ..cubicTo(8.805, 23.795, 9.025, 23.424, 9.025, 23.105)
+      ..cubicTo(9.025, 22.82, 9.015, 22.065, 9.01, 21.065)
+      ..cubicTo(5.672, 21.789, 4.968, 19.455, 4.968, 19.455)
+      ..cubicTo(4.422, 18.07, 3.633, 17.7, 3.633, 17.7)
+      ..cubicTo(2.546, 16.956, 3.717, 16.971, 3.717, 16.971)
+      ..cubicTo(4.922, 17.055, 5.555, 18.207, 5.555, 18.207)
+      ..cubicTo(6.625, 20.042, 8.364, 19.512, 9.05, 19.205)
+      ..cubicTo(9.158, 18.429, 9.467, 17.9, 9.81, 17.6)
+      ..cubicTo(7.145, 17.3, 4.344, 16.268, 4.344, 11.67)
+      ..cubicTo(4.344, 10.36, 4.809, 9.29, 5.579, 8.45)
+      ..cubicTo(5.444, 8.147, 5.039, 6.927, 5.684, 5.274)
+      ..cubicTo(5.684, 5.274, 6.689, 4.952, 8.984, 6.504)
+      ..cubicTo(9.944, 6.237, 10.964, 6.105, 11.984, 6.099)
+      ..cubicTo(13.004, 6.105, 14.024, 6.237, 14.984, 6.504)
+      ..cubicTo(17.264, 4.952, 18.269, 5.274, 18.269, 5.274)
+      ..cubicTo(18.914, 6.927, 18.509, 8.147, 18.389, 8.45)
+      ..cubicTo(19.154, 9.29, 19.619, 10.36, 19.619, 11.67)
+      ..cubicTo(19.619, 16.28, 16.814, 17.295, 14.144, 17.59)
+      ..cubicTo(14.564, 17.95, 14.954, 18.686, 14.954, 19.81)
+      ..cubicTo(14.954, 21.416, 14.939, 22.706, 14.939, 23.096)
+      ..cubicTo(14.939, 23.411, 15.149, 23.786, 15.764, 23.666)
+      ..cubicTo(20.565, 22.092, 24, 17.592, 24, 12.297)
+      ..cubicTo(24, 5.67, 18.627, 0.297, 12, 0.297)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class _AvatarSection extends StatelessWidget {
   final UserProfile profile;
 
@@ -1070,6 +1163,19 @@ class _AvatarSection extends StatelessWidget {
         return Image.network(
           profile.avatarUrl!,
           fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                    : null,
+                color: context.accentColor,
+              ),
+            );
+          },
           errorBuilder: (context, error, stackTrace) => _buildInitials(context),
         );
       } else {
@@ -1495,6 +1601,41 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                               ? Image.network(
                                                   profile.avatarUrl!,
                                                   fit: BoxFit.cover,
+                                                  loadingBuilder:
+                                                      (
+                                                        context,
+                                                        child,
+                                                        loadingProgress,
+                                                      ) {
+                                                        if (loadingProgress ==
+                                                            null) {
+                                                          return child;
+                                                        }
+                                                        return Center(
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                                strokeWidth: 2,
+                                                                color:
+                                                                    accentColor,
+                                                              ),
+                                                        );
+                                                      },
+                                                  errorBuilder:
+                                                      (
+                                                        ctx,
+                                                        err,
+                                                        stack,
+                                                      ) => Center(
+                                                        child: Text(
+                                                          profile.initials,
+                                                          style: TextStyle(
+                                                            fontSize: 32,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: accentColor,
+                                                          ),
+                                                        ),
+                                                      ),
                                                 )
                                               : Image.file(
                                                   File(profile.avatarUrl!),
@@ -1571,6 +1712,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                           label: 'Display Name',
                           hint: 'How you want to be known',
                           icon: Icons.person_outline,
+                          maxLength: 50,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return 'Display name is required';
@@ -1585,16 +1727,11 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                           hint: 'Amateur radio callsign or identifier',
                           icon: Icons.badge_outlined,
                           textCapitalization: TextCapitalization.characters,
+                          maxLength: 10,
                         ),
                         const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: _bioController,
-                          label: 'Bio',
-                          hint: 'Tell us about yourself',
-                          icon: Icons.format_quote,
-                          maxLines: 3,
-                          maxLength: 200,
-                        ),
+                        // Bio field - no prefix icon for multiline
+                        _buildBioField(),
                         const SizedBox(height: 24),
 
                         // Links section
@@ -1606,6 +1743,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                           hint: 'https://example.com',
                           icon: Icons.link,
                           keyboardType: TextInputType.url,
+                          maxLength: 100,
                         ),
                         const SizedBox(height: 24),
 
@@ -1618,6 +1756,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                           hint: 'username',
                           icon: Icons.alternate_email,
                           prefixText: '@',
+                          maxLength: 30,
                         ),
                         const SizedBox(height: 12),
                         _buildTextField(
@@ -1625,6 +1764,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                           label: 'Mastodon',
                           hint: '@user@instance.social',
                           icon: Icons.tag,
+                          maxLength: 100,
                         ),
                         const SizedBox(height: 12),
                         _buildTextField(
@@ -1632,6 +1772,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                           label: 'GitHub',
                           hint: 'username',
                           icon: Icons.code,
+                          maxLength: 39,
                         ),
                         const SizedBox(height: 12),
                         _buildTextField(
@@ -1639,6 +1780,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                           label: 'Discord',
                           hint: 'username#0000',
                           icon: Icons.discord,
+                          maxLength: 37,
                         ),
                         const SizedBox(height: 12),
                         _buildTextField(
@@ -1646,6 +1788,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                           label: 'Telegram',
                           hint: 'username',
                           icon: Icons.send,
+                          maxLength: 32,
                         ),
                         const SizedBox(height: 32),
                       ],
@@ -1669,6 +1812,52 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
         color: context.accentColor,
         letterSpacing: 1,
       ),
+    );
+  }
+
+  /// Build bio field with decorative quote icon outside the input
+  Widget _buildBioField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.format_quote, size: 18, color: AppTheme.textTertiary),
+            const SizedBox(width: 8),
+            Text(
+              'Bio',
+              style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _bioController,
+          decoration: InputDecoration(
+            hintText: 'Tell us about yourself',
+            filled: true,
+            fillColor: AppTheme.darkCard,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: AppTheme.darkBorder.withValues(alpha: 0.3),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: AppTheme.darkBorder.withValues(alpha: 0.3),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: context.accentColor),
+            ),
+          ),
+          maxLines: 3,
+          maxLength: 200,
+        ),
+      ],
     );
   }
 
