@@ -58,6 +58,31 @@ function corsHeaders() {
   };
 }
 
+/**
+ * Serialize Firestore document data, converting Timestamps to ISO strings
+ */
+function serializeDoc(data: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value instanceof admin.firestore.Timestamp) {
+      result[key] = value.toDate().toISOString();
+    } else if (value && typeof value === 'object' && '_seconds' in value) {
+      // Handle already-serialized timestamps
+      const ts = value as { _seconds: number; _nanoseconds: number };
+      result[key] = new Date(ts._seconds * 1000).toISOString();
+    } else if (Array.isArray(value)) {
+      result[key] = value.map(item =>
+        item && typeof item === 'object' ? serializeDoc(item as Record<string, unknown>) : item
+      );
+    } else if (value && typeof value === 'object') {
+      result[key] = serializeDoc(value as Record<string, unknown>);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
 // =============================================================================
 // WIDGET MARKETPLACE API
 // =============================================================================
@@ -96,7 +121,7 @@ export const widgetsBrowse = onRequest({ cors: true }, async (req, res) => {
     query = query.limit(limit).offset((page - 1) * limit);
 
     const snapshot = await query.get();
-    const widgets = snapshot.docs.map(doc => ({
+    const widgets = snapshot.docs.map(doc => serializeDoc({
       id: doc.id,
       ...doc.data(),
     }));
@@ -143,7 +168,7 @@ export const widgetsFeatured = onRequest({ cors: true }, async (_req, res) => {
       .limit(10)
       .get();
 
-    const widgets = snapshot.docs.map(doc => ({
+    const widgets = snapshot.docs.map(doc => serializeDoc({
       id: doc.id,
       ...doc.data(),
     }));
@@ -189,7 +214,7 @@ export const widgetsGet = onRequest({ cors: true }, async (req, res) => {
       return;
     }
 
-    res.json({ id: doc.id, ...doc.data() });
+    res.json(serializeDoc({ id: doc.id, ...doc.data() }));
   } catch (error) {
     console.error('Get widget error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -221,7 +246,7 @@ export const widgetsDownload = onRequest({ cors: true }, async (req, res) => {
     });
 
     const data = doc.data();
-    res.json(data?.schema || {});
+    res.json(serializeDoc(data?.schema || {}));
   } catch (error) {
     console.error('Download error:', error);
     res.status(500).json({ error: 'Internal server error' });

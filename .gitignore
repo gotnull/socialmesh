@@ -56,3 +56,7 @@ app.*.map.json
 
 # Test-generated widget templates
 assets/widget_templates/*.json
+
+# Scripts dependencies
+scripts/node_modules/
+scripts/package-lock.json
