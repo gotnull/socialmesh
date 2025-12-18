@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
@@ -52,9 +51,6 @@ class WidgetMarketplaceService {
         if (attempt > 0) {
           final delay =
               _retryDelay * (1 << (attempt - 1)); // Exponential backoff
-          debugPrint(
-            '[MarketplaceService] Retry attempt $attempt after ${delay.inMilliseconds}ms',
-          );
           await Future<void>.delayed(delay);
         }
 
@@ -71,16 +67,16 @@ class WidgetMarketplaceService {
         return response;
       } on SocketException catch (e) {
         lastException = e;
-        debugPrint('[MarketplaceService] Socket error (attempt $attempt): $e');
+        _logger.w('Socket error (attempt $attempt): $e');
       } on HttpException catch (e) {
         lastException = e;
-        debugPrint('[MarketplaceService] HTTP error (attempt $attempt): $e');
+        _logger.w('HTTP error (attempt $attempt): $e');
       } on http.ClientException catch (e) {
         lastException = e;
-        debugPrint('[MarketplaceService] Client error (attempt $attempt): $e');
+        _logger.w('Client error (attempt $attempt): $e');
       } on TimeoutException catch (e) {
         lastException = e;
-        debugPrint('[MarketplaceService] Timeout (attempt $attempt): $e');
+        _logger.w('Timeout (attempt $attempt): $e');
       }
     }
 
@@ -109,11 +105,7 @@ class WidgetMarketplaceService {
         '$baseUrl/widgetsBrowse',
       ).replace(queryParameters: queryParams);
 
-      debugPrint('[MarketplaceService] Browse request: $uri');
       final response = await _getWithRetry(uri);
-      debugPrint(
-        '[MarketplaceService] Browse response: ${response.statusCode}',
-      );
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -126,7 +118,6 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      debugPrint('[MarketplaceService] Browse error: $e');
       _logger.e('Marketplace browse error: $e');
       throw MarketplaceException('Failed to load widgets: $e');
     }
@@ -134,20 +125,12 @@ class WidgetMarketplaceService {
 
   /// Get featured widgets
   Future<List<MarketplaceWidget>> getFeatured() async {
-    debugPrint('[MarketplaceService] getFeatured called, baseUrl: $baseUrl');
     try {
       final uri = Uri.parse('$baseUrl/widgetsFeatured');
-      debugPrint('[MarketplaceService] Requesting: $uri');
       final response = await _getWithRetry(uri);
-      debugPrint(
-        '[MarketplaceService] Response status: ${response.statusCode}',
-      );
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as List<dynamic>;
-        debugPrint(
-          '[MarketplaceService] Parsed ${json.length} featured widgets',
-        );
         return json
             .map(
               (item) =>
@@ -155,15 +138,10 @@ class WidgetMarketplaceService {
             )
             .toList();
       } else {
-        debugPrint(
-          '[MarketplaceService] Featured request failed: ${response.statusCode} - ${response.body}',
-        );
         throw MarketplaceException('Failed to load featured widgets');
       }
-    } catch (e, st) {
+    } catch (e) {
       if (e is MarketplaceException) rethrow;
-      debugPrint('[MarketplaceService] Featured widgets error: $e');
-      debugPrint('[MarketplaceService] Stack: $st');
       _logger.e('Featured widgets error: $e');
       throw MarketplaceException('Failed to load featured widgets: $e');
     }
