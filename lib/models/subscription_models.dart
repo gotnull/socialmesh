@@ -54,7 +54,7 @@ class OneTimePurchases {
 
   static OneTimePurchase get widgetPack => OneTimePurchase(
     id: 'widget_pack',
-    name: 'Widget Builder',
+    name: 'Widgets',
     description:
         'Create custom widgets with live charts, gauges & data bindings',
     price: 2.99,

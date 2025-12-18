@@ -12,7 +12,7 @@ void main() {
     group('browse', () {
       test('returns widgets on successful response', () async {
         final mockClient = MockClient((request) async {
-          expect(request.url.path, contains('/browse'));
+          expect(request.url.path, contains('/widgetsBrowse'));
           return http.Response(
             jsonEncode({
               'widgets': [
@@ -103,7 +103,7 @@ void main() {
     group('getFeatured', () {
       test('returns featured widgets on success', () async {
         final mockClient = MockClient((request) async {
-          expect(request.url.path, contains('/featured'));
+          expect(request.url.path, contains('/widgetsFeatured'));
           return http.Response(
             jsonEncode([
               {
@@ -158,7 +158,7 @@ void main() {
     group('getWidget', () {
       test('returns widget details on success', () async {
         final mockClient = MockClient((request) async {
-          expect(request.url.path, contains('/widget-123'));
+          expect(request.url.path, contains('/widgetsGet/widget-123'));
           return http.Response(
             jsonEncode({
               'id': 'widget-123',
@@ -211,7 +211,8 @@ void main() {
     group('downloadWidget', () {
       test('returns widget schema on success', () async {
         final mockClient = MockClient((request) async {
-          expect(request.url.path, contains('/widget-123/download'));
+          expect(request.url.path, contains('/widgetsDownload'));
+          expect(request.url.queryParameters['id'], 'widget-123');
           return http.Response(
             jsonEncode({
               'id': 'widget-123',

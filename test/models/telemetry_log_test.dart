@@ -612,4 +612,65 @@ void main() {
       expect(log.name, 'Legacy Sensor');
     });
   });
+
+  group('NaN and Infinity handling', () {
+    test('DeviceMetricsLog sanitizes NaN values in toJson', () {
+      final log = DeviceMetricsLog(
+        nodeNum: 123,
+        voltage: double.nan,
+        channelUtilization: double.infinity,
+        airUtilTx: double.negativeInfinity,
+      );
+
+      final json = log.toJson();
+
+      // NaN and Infinity should be converted to null
+      expect(json['voltage'], isNull);
+      expect(json['channelUtilization'], isNull);
+      expect(json['airUtilTx'], isNull);
+    });
+
+    test('DeviceMetricsLog preserves valid double values', () {
+      final log = DeviceMetricsLog(
+        nodeNum: 123,
+        voltage: 4.2,
+        channelUtilization: 15.5,
+      );
+
+      final json = log.toJson();
+
+      expect(json['voltage'], 4.2);
+      expect(json['channelUtilization'], 15.5);
+    });
+
+    test('EnvironmentMetricsLog sanitizes NaN values in toJson', () {
+      final log = EnvironmentMetricsLog(
+        nodeNum: 123,
+        temperature: double.nan,
+        humidity: double.infinity,
+        barometricPressure: 1013.25,
+      );
+
+      final json = log.toJson();
+
+      expect(json['temperature'], isNull);
+      expect(json['humidity'], isNull);
+      expect(json['barometricPressure'], 1013.25);
+    });
+
+    test('PowerMetricsLog sanitizes NaN values in toJson', () {
+      final log = PowerMetricsLog(
+        nodeNum: 123,
+        ch1Voltage: double.nan,
+        ch1Current: 0.5,
+        ch2Voltage: double.infinity,
+      );
+
+      final json = log.toJson();
+
+      expect(json['ch1Voltage'], isNull);
+      expect(json['ch1Current'], 0.5);
+      expect(json['ch2Voltage'], isNull);
+    });
+  });
 }

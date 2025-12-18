@@ -79,7 +79,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
 
     test('widgetPack has correct properties', () {
       expect(OneTimePurchases.widgetPack.id, 'widget_pack');
-      expect(OneTimePurchases.widgetPack.name, 'Widget Pack');
+      expect(OneTimePurchases.widgetPack.name, 'Widgets');
       expect(OneTimePurchases.widgetPack.price, 2.99);
       expect(
         OneTimePurchases.widgetPack.unlocksFeature,
