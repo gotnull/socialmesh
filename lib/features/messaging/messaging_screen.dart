@@ -15,6 +15,7 @@ import '../../core/transport.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../services/messaging/offline_queue_service.dart';
@@ -413,7 +414,8 @@ class _ConversationTile extends StatelessWidget {
             children: [
               // Avatar
               NodeAvatar(
-                text: conversation.shortName ??
+                text:
+                    conversation.shortName ??
                     (conversation.name.length >= 2
                         ? conversation.name.substring(0, 2)
                         : conversation.name),
@@ -1056,7 +1058,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       color: context.accentColor.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.tag, color: context.accentColor, size: 18),
+                    child: Icon(
+                      Icons.tag,
+                      color: context.accentColor,
+                      size: 18,
+                    ),
                   )
                 else
                   NodeAvatar(
@@ -1070,27 +1076,32 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: constraints.maxWidth,
+                          child: AutoScrollText(
+                            widget.title,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
-                      ),
-                      Text(
-                        widget.type == ConversationType.channel
-                            ? 'Channel'
-                            : 'Direct Message',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textTertiary,
+                        Text(
+                          widget.type == ConversationType.channel
+                              ? 'Channel'
+                              : 'Direct Message',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textTertiary,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],

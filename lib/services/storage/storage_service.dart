@@ -507,7 +507,15 @@ class MessageStorageService {
   Future<void> saveMessage(Message message) async {
     try {
       final messages = await loadMessages();
-      messages.add(message);
+
+      // Check for existing message with same ID to prevent duplicates
+      final existingIndex = messages.indexWhere((m) => m.id == message.id);
+      if (existingIndex >= 0) {
+        // Update existing message instead of adding duplicate
+        messages[existingIndex] = message;
+      } else {
+        messages.add(message);
+      }
 
       // Trim to max messages
       if (messages.length > _maxMessages) {
@@ -530,9 +538,30 @@ class MessageStorageService {
       }
 
       final jsonList = jsonDecode(jsonString) as List;
-      return jsonList
+      final messages = jsonList
           .map((j) => _messageFromJson(j as Map<String, dynamic>))
           .toList();
+
+      // Deduplicate by ID (handles legacy duplicates in storage)
+      final seen = <String>{};
+      final deduped = <Message>[];
+      for (final msg in messages) {
+        if (!seen.contains(msg.id)) {
+          seen.add(msg.id);
+          deduped.add(msg);
+        }
+      }
+
+      // If duplicates were found, save the cleaned list
+      if (deduped.length < messages.length) {
+        _logger.i(
+          'Removed ${messages.length - deduped.length} duplicate messages',
+        );
+        final jsonList = deduped.map((m) => _messageToJson(m)).toList();
+        await _preferences.setString(_messagesKey, jsonEncode(jsonList));
+      }
+
+      return deduped;
     } catch (e) {
       _logger.e('Error loading messages: $e');
       return [];
