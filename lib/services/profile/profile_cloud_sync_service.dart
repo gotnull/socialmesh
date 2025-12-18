@@ -265,6 +265,9 @@ class ProfileCloudSyncService {
 
   /// Create UserProfile from Firestore document
   UserProfile _profileFromFirestore(String uid, Map<String, dynamic> data) {
+    debugPrint(
+      '[ProfileSync] Parsing Firestore data: displayName=${data['displayName']}, avatarUrl=${data['avatarUrl']}',
+    );
     return UserProfile(
       id: uid,
       displayName: data['displayName'] as String? ?? 'Mesh User',
@@ -294,10 +297,14 @@ class ProfileCloudSyncService {
   /// Merge local and cloud profiles with conflict resolution
   /// Strategy: Use cloud values for synced fields, preserve local customizations
   UserProfile _mergeProfiles(UserProfile? local, UserProfile cloud) {
+    debugPrint(
+      '[ProfileSync] Merging profiles - local.isSynced: ${local?.isSynced}, cloud.avatarUrl: ${cloud.avatarUrl}',
+    );
     if (local == null) return cloud;
 
     // If local has never been synced, prefer cloud
     if (!local.isSynced) {
+      debugPrint('[ProfileSync] Local not synced, using cloud profile');
       return cloud.copyWith(
         // Preserve any local customizations that don't exist in cloud
         bio: cloud.bio ?? local.bio,
@@ -310,9 +317,14 @@ class ProfileCloudSyncService {
     }
 
     // Both synced - use most recently updated
+    debugPrint(
+      '[ProfileSync] Both synced - local.updatedAt: ${local.updatedAt}, cloud.updatedAt: ${cloud.updatedAt}',
+    );
     if (local.updatedAt.isAfter(cloud.updatedAt)) {
+      debugPrint('[ProfileSync] Local is newer, using local');
       return local.copyWith(isSynced: true);
     }
+    debugPrint('[ProfileSync] Cloud is newer, using cloud');
     return cloud;
   }
 }

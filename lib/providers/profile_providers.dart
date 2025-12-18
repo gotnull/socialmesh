@@ -26,17 +26,22 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
   Future<UserProfile?> build() async {
     debugPrint('[UserProfile] build() called - loading profile');
 
+    // Watch auth state - this ensures we rebuild when user signs in/out
+    final authState = ref.watch(authStateProvider);
+
     // Initialize and load local profile
     await profileService.initialize();
     final localProfile = await profileService.getOrCreateProfile();
     debugPrint(
-      '[UserProfile] Loaded local profile: ${localProfile.displayName}',
+      '[UserProfile] Loaded local profile: ${localProfile.displayName}, avatarUrl: ${localProfile.avatarUrl}',
     );
 
-    // Check if user is already signed in (persisted session)
-    final user = ref.read(currentUserProvider);
+    // Check if user is signed in
+    final user = authState.value;
     if (user != null) {
-      debugPrint('[UserProfile] User already signed in, syncing from cloud');
+      debugPrint(
+        '[UserProfile] User signed in (${user.uid}), syncing from cloud',
+      );
       // Update sync status
       ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.syncing);
 
@@ -45,7 +50,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         final synced = await profileCloudSyncService.fullSync(user.uid);
         if (synced != null) {
           debugPrint(
-            '[UserProfile] Cloud sync complete: ${synced.displayName}',
+            '[UserProfile] Cloud sync complete: ${synced.displayName}, avatarUrl: ${synced.avatarUrl}',
           );
           ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
           return synced;
@@ -56,6 +61,8 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         ref.read(syncErrorProvider.notifier).setError(e.toString());
         // Fall back to local profile on error
       }
+    } else {
+      debugPrint('[UserProfile] No user signed in');
     }
 
     return localProfile;
@@ -118,23 +125,39 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
 
     try {
       // Save locally first
-      await profileService.saveAvatarFromFile(profile.id, imageFile);
+      final localPath = await profileService.saveAvatarFromFile(
+        profile.id,
+        imageFile,
+      );
+      debugPrint('[UserProfile] Saved avatar locally: $localPath');
+
+      // Update state immediately with local path so UI shows it
+      final localUpdated = profile.copyWith(avatarUrl: localPath);
+      state = AsyncValue.data(localUpdated);
 
       // If user is signed in, also upload to cloud
       final user = ref.read(currentUserProvider);
       if (user != null) {
         debugPrint('[UserProfile] User signed in, uploading avatar to cloud');
-        final cloudUrl = await profileCloudSyncService.uploadAvatar(
-          user.uid,
-          imageFile,
-        );
+        try {
+          final cloudUrl = await profileCloudSyncService.uploadAvatar(
+            user.uid,
+            imageFile,
+          );
 
-        // Update profile with cloud URL
-        final updated = profile.copyWith(avatarUrl: cloudUrl, isSynced: true);
-        await profileService.saveProfile(updated);
-        state = AsyncValue.data(updated);
-      } else {
-        await refresh();
+          // Update profile with cloud URL
+          final cloudUpdated = localUpdated.copyWith(
+            avatarUrl: cloudUrl,
+            isSynced: true,
+          );
+          await profileService.saveProfile(cloudUpdated);
+          state = AsyncValue.data(cloudUpdated);
+          debugPrint('[UserProfile] Avatar uploaded to cloud: $cloudUrl');
+        } catch (e) {
+          // Cloud upload failed, but local save succeeded
+          debugPrint('[UserProfile] Cloud upload failed (local save OK): $e');
+          // Keep using local path - don't throw error
+        }
       }
     } catch (e, st) {
       debugPrint('[UserProfile] Error saving avatar: $e');
