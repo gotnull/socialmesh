@@ -128,7 +128,10 @@ class _WidgetMarketplaceScreenState
                 ? _buildSearchResults(searchState)
                 : marketplaceAsync.when(
                     loading: () => const ScreenLoadingIndicator(),
-                    error: (error, stack) => _buildErrorState(),
+                    error: (error, stack) => _buildErrorState(
+                      'Unable to load marketplace',
+                      onRetry: () => ref.invalidate(marketplaceProvider),
+                    ),
                     data: (state) => TabBarView(
                       controller: _tabController,
                       children: [
@@ -183,21 +186,99 @@ class _WidgetMarketplaceScreenState
   }
 
   Widget _buildPopularTab(MarketplaceState state) {
-    if (state.popular.isEmpty) {
-      // Load is triggered by _onTabChanged, just show loading
+    if (!state.popularLoaded) {
+      // Still loading
       return const ScreenLoadingIndicator();
+    }
+
+    if (state.popularError != null) {
+      return _buildErrorState(
+        'Failed to load popular widgets',
+        onRetry: () {
+          ref.invalidate(marketplaceProvider);
+        },
+      );
+    }
+
+    if (state.popular.isEmpty) {
+      return _buildEmptyState('No popular widgets yet');
     }
 
     return _buildWidgetGrid(state.popular);
   }
 
   Widget _buildNewTab(MarketplaceState state) {
-    if (state.newest.isEmpty) {
-      // Load is triggered by _onTabChanged, just show loading
+    if (!state.newestLoaded) {
+      // Still loading
       return const ScreenLoadingIndicator();
     }
 
+    if (state.newestError != null) {
+      return _buildErrorState(
+        'Failed to load newest widgets',
+        onRetry: () {
+          ref.invalidate(marketplaceProvider);
+        },
+      );
+    }
+
+    if (state.newest.isEmpty) {
+      return _buildEmptyState('No new widgets yet');
+    }
+
     return _buildWidgetGrid(state.newest);
+  }
+
+  Widget _buildErrorState(String message, {VoidCallback? onRetry}) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 48, color: AppTheme.textTertiary),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 16),
+              TextButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.widgets_outlined,
+              size: 48,
+              color: AppTheme.textTertiary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildCategoriesTab() {
@@ -299,48 +380,6 @@ class _WidgetMarketplaceScreenState
     );
   }
 
-  Widget _buildErrorState() {
-    final accentColor = context.accentColor;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.cloud_off,
-            size: 48,
-            color: accentColor.withValues(alpha: 0.7),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Unable to load widgets',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
-          ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: () => ref.read(marketplaceProvider.notifier).refresh(),
-            child: Text('Retry', style: TextStyle(color: accentColor)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(String message) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.widgets_outlined, size: 48, color: AppTheme.textTertiary),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _openWidgetDetails(MarketplaceWidget widget) {
     Navigator.push(
       context,
@@ -427,29 +466,20 @@ class _MarketplaceWidgetCard extends ConsumerWidget {
 
         final schema = snapshot.data!;
 
-        // EXACT same code as widget_builder_screen._buildWidgetCard
-        final previewHeight = switch (schema.size) {
-          CustomWidgetSize.medium => 120.0,
-          CustomWidgetSize.large => 180.0,
-          CustomWidgetSize.custom => schema.customHeight ?? 120.0,
-        };
+        // Widget preview auto-sizes to content (matches My Widgets)
 
         return GestureDetector(
           onTap: onTap,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Widget preview - full width, variable height
-              SizedBox(
-                width: double.infinity,
-                height: previewHeight,
-                child: WidgetRenderer(
-                  schema: schema,
-                  node: node,
-                  allNodes: nodes,
-                  accentColor: context.accentColor,
-                  enableActions: false, // Only interactive on dashboard
-                ),
+              // Widget preview - auto-sizes to content (matches My Widgets)
+              WidgetRenderer(
+                schema: schema,
+                node: node,
+                allNodes: nodes,
+                accentColor: context.accentColor,
+                enableActions: false, // Only interactive on dashboard
               ),
               const SizedBox(height: 8),
               // Info section

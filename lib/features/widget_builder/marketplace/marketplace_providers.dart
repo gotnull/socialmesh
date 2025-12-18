@@ -13,12 +13,20 @@ class MarketplaceState {
   final List<MarketplaceWidget> popular;
   final List<MarketplaceWidget> newest;
   final Map<String, List<MarketplaceWidget>> categoryWidgets;
+  final bool popularLoaded;
+  final bool newestLoaded;
+  final String? popularError;
+  final String? newestError;
 
   const MarketplaceState({
     this.featured = const [],
     this.popular = const [],
     this.newest = const [],
     this.categoryWidgets = const {},
+    this.popularLoaded = false,
+    this.newestLoaded = false,
+    this.popularError,
+    this.newestError,
   });
 
   MarketplaceState copyWith({
@@ -26,12 +34,20 @@ class MarketplaceState {
     List<MarketplaceWidget>? popular,
     List<MarketplaceWidget>? newest,
     Map<String, List<MarketplaceWidget>>? categoryWidgets,
+    bool? popularLoaded,
+    bool? newestLoaded,
+    String? popularError,
+    String? newestError,
   }) {
     return MarketplaceState(
       featured: featured ?? this.featured,
       popular: popular ?? this.popular,
       newest: newest ?? this.newest,
       categoryWidgets: categoryWidgets ?? this.categoryWidgets,
+      popularLoaded: popularLoaded ?? this.popularLoaded,
+      newestLoaded: newestLoaded ?? this.newestLoaded,
+      popularError: popularError,
+      newestError: newestError,
     );
   }
 }
@@ -71,11 +87,11 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
     if (currentState == null) return;
 
     debugPrint(
-      '[Marketplace] loadPopular called, current: ${currentState.popular.length}, loading: $_loadingPopular',
+      '[Marketplace] loadPopular called, current: ${currentState.popular.length}, loading: $_loadingPopular, loaded: ${currentState.popularLoaded}',
     );
-    if (currentState.popular.isNotEmpty || _loadingPopular) {
+    if (currentState.popularLoaded || _loadingPopular) {
       debugPrint(
-        '[Marketplace] Skipping loadPopular - already have data or loading',
+        '[Marketplace] Skipping loadPopular - already loaded or loading',
       );
       return;
     }
@@ -89,10 +105,20 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
       );
       // Re-fetch current state in case it changed during async operation
       final latestState = state.value ?? currentState;
-      state = AsyncValue.data(latestState.copyWith(popular: response.widgets));
+      state = AsyncValue.data(
+        latestState.copyWith(
+          popular: response.widgets,
+          popularLoaded: true,
+          popularError: null,
+        ),
+      );
     } catch (e, st) {
       debugPrint('[Marketplace] Error loading popular: $e');
       debugPrint('[Marketplace] Stack trace: $st');
+      final latestState = state.value ?? currentState;
+      state = AsyncValue.data(
+        latestState.copyWith(popularLoaded: true, popularError: e.toString()),
+      );
     } finally {
       _loadingPopular = false;
     }
@@ -104,11 +130,11 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
     if (currentState == null) return;
 
     debugPrint(
-      '[Marketplace] loadNewest called, current: ${currentState.newest.length}, loading: $_loadingNewest',
+      '[Marketplace] loadNewest called, current: ${currentState.newest.length}, loading: $_loadingNewest, loaded: ${currentState.newestLoaded}',
     );
-    if (currentState.newest.isNotEmpty || _loadingNewest) {
+    if (currentState.newestLoaded || _loadingNewest) {
       debugPrint(
-        '[Marketplace] Skipping loadNewest - already have data or loading',
+        '[Marketplace] Skipping loadNewest - already loaded or loading',
       );
       return;
     }
@@ -120,10 +146,20 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
       debugPrint('[Marketplace] Got ${response.widgets.length} newest widgets');
       // Re-fetch current state in case it changed during async operation
       final latestState = state.value ?? currentState;
-      state = AsyncValue.data(latestState.copyWith(newest: response.widgets));
+      state = AsyncValue.data(
+        latestState.copyWith(
+          newest: response.widgets,
+          newestLoaded: true,
+          newestError: null,
+        ),
+      );
     } catch (e, st) {
       debugPrint('[Marketplace] Error loading newest: $e');
       debugPrint('[Marketplace] Stack trace: $st');
+      final latestState = state.value ?? currentState;
+      state = AsyncValue.data(
+        latestState.copyWith(newestLoaded: true, newestError: e.toString()),
+      );
     } finally {
       _loadingNewest = false;
     }

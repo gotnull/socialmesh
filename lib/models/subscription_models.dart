@@ -54,8 +54,9 @@ class OneTimePurchases {
 
   static OneTimePurchase get widgetPack => OneTimePurchase(
     id: 'widget_pack',
-    name: 'Widget Pack',
-    description: '9 dashboard widgets: signal charts, node maps & more',
+    name: 'Widget Builder',
+    description:
+        'Create custom widgets with live charts, gauges & data bindings',
     price: 2.99,
     productId: RevenueCatConfig.widgetPackProductId,
     unlocksFeature: PremiumFeature.homeWidgets,
