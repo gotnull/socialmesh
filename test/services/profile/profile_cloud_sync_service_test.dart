@@ -321,9 +321,8 @@ void main() {
         github: 'username',
         linkedin: 'profile',
         mastodon: '@user@instance.social',
-        youtube: 'channel',
-        twitch: 'streamer',
         discord: 'user#1234',
+        telegram: '@telegramuser',
       );
 
       final json = links.toJson();
@@ -333,9 +332,8 @@ void main() {
       expect(restored.github, links.github);
       expect(restored.linkedin, links.linkedin);
       expect(restored.mastodon, links.mastodon);
-      expect(restored.youtube, links.youtube);
-      expect(restored.twitch, links.twitch);
       expect(restored.discord, links.discord);
+      expect(restored.telegram, links.telegram);
     });
   });
 }
