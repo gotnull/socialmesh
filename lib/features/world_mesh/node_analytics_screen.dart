@@ -220,10 +220,14 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                 ),
                 child: Icon(Icons.link, color: AccentColors.blue),
               ),
-              title: const Text('Share Link',
-                  style: TextStyle(color: Colors.white)),
-              subtitle: const Text('Rich preview in iMessage, Slack, etc.',
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+              title: const Text(
+                'Share Link',
+                style: TextStyle(color: Colors.white),
+              ),
+              subtitle: const Text(
+                'Rich preview in iMessage, Slack, etc.',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 _shareNodeAsLink();
@@ -238,10 +242,14 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                 ),
                 child: Icon(Icons.text_snippet, color: AccentColors.green),
               ),
-              title: const Text('Share Details',
-                  style: TextStyle(color: Colors.white)),
-              subtitle: const Text('Full technical info as text',
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+              title: const Text(
+                'Share Details',
+                style: TextStyle(color: Colors.white),
+              ),
+              subtitle: const Text(
+                'Full technical info as text',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 _shareNodeAsText();
@@ -257,8 +265,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     final node = _node;
 
     // Create a shareable record in Firestore
-    final docRef =
-        await FirebaseFirestore.instance.collection('shared_nodes').add({
+    final docRef = await FirebaseFirestore.instance.collection('shared_nodes').add({
       'nodeId': _nodeId,
       'name': node.displayName,
       'description':
@@ -299,7 +306,11 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
 
     buffer.writeln('');
     buffer.writeln(
-      'Status: ${node.isOnline ? "Online" : node.isIdle ? "Idle" : "Offline"}',
+      'Status: ${node.isOnline
+          ? "Online"
+          : node.isIdle
+          ? "Idle"
+          : "Offline"}',
     );
     buffer.writeln('Neighbors: ${node.neighbors?.length ?? 0}');
     buffer.writeln('Gateways: ${node.seenBy.length}');

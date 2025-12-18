@@ -12,11 +12,9 @@ class ShareLinkService {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
-  ShareLinkService({
-    FirebaseFirestore? firestore,
-    FirebaseAuth? auth,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  ShareLinkService({FirebaseFirestore? firestore, FirebaseAuth? auth})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   /// Share a mesh node with rich preview
   Future<void> shareNode({

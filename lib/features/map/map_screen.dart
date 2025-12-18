@@ -363,7 +363,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
         ? box.localToGlobal(Offset.zero) & box.size
         : const Rect.fromLTWH(0, 0, 100, 100);
 
-    ref.read(shareLinkServiceProvider).shareLocation(
+    ref
+        .read(shareLinkServiceProvider)
+        .shareLocation(
           latitude: point.latitude,
           longitude: point.longitude,
           label: label,
