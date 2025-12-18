@@ -17,6 +17,17 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
     
+    // User data - owner read/write
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // App config - public read, admin write
+    match /app_config/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
     // Widgets - public read, authenticated write
     match /widgets/{widgetId} {
       allow read: if true;

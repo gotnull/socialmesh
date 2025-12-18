@@ -67,14 +67,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               profile: cachedProfile,
               user: authState.value,
               onEditTap: () => _showEditSheet(context),
-              syncError: e.toString(),
             );
           }
           // No cached data - show empty profile with setup prompt
-          return _EmptyProfileView(
-            onEditTap: () => _showEditSheet(context),
-            syncError: e.toString(),
-          );
+          return _EmptyProfileView(onEditTap: () => _showEditSheet(context));
         },
       ),
     );
@@ -92,15 +88,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 }
 
 /// Empty profile view for new users or when no profile exists
-class _EmptyProfileView extends StatelessWidget {
+class _EmptyProfileView extends ConsumerWidget {
   final VoidCallback onEditTap;
-  final String? syncError;
 
-  const _EmptyProfileView({required this.onEditTap, this.syncError});
+  const _EmptyProfileView({required this.onEditTap});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final accentColor = context.accentColor;
+    // Watch sync error from provider (clears when retry succeeds)
+    final syncError = ref.watch(syncErrorProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -108,7 +105,7 @@ class _EmptyProfileView extends StatelessWidget {
         children: [
           // Sync error banner (if any)
           if (syncError != null) ...[
-            _SyncErrorBanner(error: syncError!),
+            _SyncErrorBanner(error: syncError),
             const SizedBox(height: 16),
           ],
 
@@ -178,13 +175,11 @@ class _ProfileView extends ConsumerWidget {
   final UserProfile profile;
   final User? user;
   final VoidCallback onEditTap;
-  final String? syncError;
 
   const _ProfileView({
     required this.profile,
     required this.user,
     required this.onEditTap,
-    this.syncError,
   });
 
   bool get isSignedIn => user != null;
@@ -192,6 +187,8 @@ class _ProfileView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accentColor = context.accentColor;
+    // Watch sync error from provider (clears when retry succeeds)
+    final syncError = ref.watch(syncErrorProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -199,7 +196,7 @@ class _ProfileView extends ConsumerWidget {
         children: [
           // Sync error banner (if any)
           if (syncError != null) ...[
-            _SyncErrorBanner(error: syncError!),
+            _SyncErrorBanner(error: syncError),
             const SizedBox(height: 16),
           ],
 
