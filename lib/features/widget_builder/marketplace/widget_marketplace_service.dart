@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
@@ -28,20 +28,8 @@ class WidgetMarketplaceService {
       return envUrl;
     }
 
-    const productionUrl = 'https://api.socialmesh.app/widgets';
-
-    // Check .env flag for local API usage
-    final useLocalApi = dotenv.env['USE_LOCAL_API']?.toLowerCase() == 'true';
-    if (useLocalApi) {
-      final localHost = dotenv.env['LOCAL_API_HOST'] ?? '192.168.5.77';
-      if (kIsWeb) {
-        return 'http://localhost:3000/api/widgets';
-      } else {
-        return 'http://$localHost:3000/api/widgets';
-      }
-    }
-
-    return productionUrl;
+    // Default to Firebase Cloud Functions
+    return 'https://us-central1-social-mesh-app.cloudfunctions.net';
   }
 
   WidgetMarketplaceService({
@@ -118,7 +106,7 @@ class WidgetMarketplaceService {
       };
 
       final uri = Uri.parse(
-        '$baseUrl/browse',
+        '$baseUrl/widgetsBrowse',
       ).replace(queryParameters: queryParams);
 
       debugPrint('[MarketplaceService] Browse request: $uri');
@@ -148,7 +136,7 @@ class WidgetMarketplaceService {
   Future<List<MarketplaceWidget>> getFeatured() async {
     debugPrint('[MarketplaceService] getFeatured called, baseUrl: $baseUrl');
     try {
-      final uri = Uri.parse('$baseUrl/featured');
+      final uri = Uri.parse('$baseUrl/widgetsFeatured');
       debugPrint('[MarketplaceService] Requesting: $uri');
       final response = await _getWithRetry(uri);
       debugPrint(
@@ -184,7 +172,7 @@ class WidgetMarketplaceService {
   /// Get widget details
   Future<MarketplaceWidget> getWidget(String id) async {
     try {
-      final uri = Uri.parse('$baseUrl/$id');
+      final uri = Uri.parse('$baseUrl/widgetsGet/$id');
       final response = await _getWithRetry(uri);
 
       if (response.statusCode == 200) {
@@ -205,7 +193,9 @@ class WidgetMarketplaceService {
   /// Download widget schema
   Future<WidgetSchema> downloadWidget(String id) async {
     try {
-      final uri = Uri.parse('$baseUrl/$id/download');
+      final uri = Uri.parse(
+        '$baseUrl/widgetsDownload',
+      ).replace(queryParameters: {'id': id});
       final response = await _getWithRetry(uri);
 
       if (response.statusCode == 200) {
@@ -229,7 +219,7 @@ class WidgetMarketplaceService {
     try {
       final response = await _client
           .post(
-            Uri.parse('$baseUrl/upload'),
+            Uri.parse('$baseUrl/widgetsUpload'),
             headers: {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $authToken',
@@ -258,7 +248,9 @@ class WidgetMarketplaceService {
     try {
       final response = await _client
           .post(
-            Uri.parse('$baseUrl/$id/rate'),
+            Uri.parse(
+              '$baseUrl/widgetsRate',
+            ).replace(queryParameters: {'id': id}),
             headers: {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $authToken',
