@@ -1727,352 +1727,357 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   Widget build(BuildContext context) {
     final profile = ref.watch(userProfileProvider).value;
     final accentColor = context.accentColor;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.9,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      expand: false,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: AppTheme.darkBackground,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, -5),
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) {
+          return Container(
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
               ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // Drag pill
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                decoration: BoxDecoration(
-                  color: AppTheme.textTertiary.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, -5),
                 ),
-              ),
-              // Header
-              Container(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: AppTheme.darkBorder.withValues(alpha: 0.3),
-                    ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Drag pill
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.textTertiary.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                    const Expanded(
-                      child: Text(
-                        'Edit Profile',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.center,
+                // Header
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: AppTheme.darkBorder.withValues(alpha: 0.3),
                       ),
                     ),
-                    FilledButton(
-                      onPressed: _hasChanges && !_isLoading
-                          ? _saveProfile
-                          : null,
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Save'),
-                    ),
-                  ],
+                  ),
+                  child: Row(
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      const Expanded(
+                        child: Text(
+                          'Edit Profile',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      FilledButton(
+                        onPressed: _hasChanges && !_isLoading
+                            ? _saveProfile
+                            : null,
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Save'),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              // Content
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => FocusScope.of(context).unfocus(),
-                  behavior: HitTestBehavior.opaque,
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    padding: EdgeInsets.fromLTRB(
-                      16,
-                      16,
-                      16,
-                      16 + MediaQuery.of(context).viewInsets.bottom,
-                    ),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Avatar edit
-                          Center(
-                            child: GestureDetector(
-                              onTap: _isUploadingAvatar ? null : _pickAvatar,
-                              child: Stack(
-                                children: [
-                                  Container(
-                                    width: 100,
-                                    height: 100,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: AppTheme.darkCard,
-                                      border: Border.all(
-                                        color: accentColor,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: ClipOval(
-                                      child: _isUploadingAvatar
-                                          ? Center(
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: accentColor,
-                                              ),
-                                            )
-                                          : profile?.avatarUrl != null
-                                          ? (profile!.avatarUrl!.startsWith(
-                                                  'http',
-                                                )
-                                                ? Image.network(
-                                                    profile.avatarUrl!,
-                                                    fit: BoxFit.cover,
-                                                    loadingBuilder:
-                                                        (
-                                                          context,
-                                                          child,
-                                                          loadingProgress,
-                                                        ) {
-                                                          if (loadingProgress ==
-                                                              null) {
-                                                            return child;
-                                                          }
-                                                          return Center(
-                                                            child:
-                                                                CircularProgressIndicator(
-                                                                  strokeWidth:
-                                                                      2,
-                                                                  color:
-                                                                      accentColor,
-                                                                ),
-                                                          );
-                                                        },
-                                                    errorBuilder:
-                                                        (
-                                                          ctx,
-                                                          err,
-                                                          stack,
-                                                        ) => Center(
-                                                          child: Text(
-                                                            profile.initials,
-                                                            style: TextStyle(
-                                                              fontSize: 32,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color:
-                                                                  accentColor,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                  )
-                                                : Image.file(
-                                                    File(profile.avatarUrl!),
-                                                    fit: BoxFit.cover,
-                                                  ))
-                                          : Center(
-                                              child: Text(
-                                                profile?.initials ?? '?',
-                                                style: TextStyle(
-                                                  fontSize: 32,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: accentColor,
-                                                ),
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right: 0,
-                                    bottom: 0,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6),
+                // Content
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => FocusScope.of(context).unfocus(),
+                    behavior: HitTestBehavior.opaque,
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        16,
+                        16,
+                        16 + MediaQuery.of(context).viewInsets.bottom,
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Avatar edit
+                            Center(
+                              child: GestureDetector(
+                                onTap: _isUploadingAvatar ? null : _pickAvatar,
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      width: 100,
+                                      height: 100,
                                       decoration: BoxDecoration(
-                                        color: accentColor,
                                         shape: BoxShape.circle,
+                                        color: AppTheme.darkCard,
                                         border: Border.all(
-                                          color: AppTheme.darkBackground,
+                                          color: accentColor,
                                           width: 2,
                                         ),
                                       ),
-                                      child: const Icon(
-                                        Icons.camera_alt,
-                                        size: 16,
-                                        color: Colors.white,
+                                      child: ClipOval(
+                                        child: _isUploadingAvatar
+                                            ? Center(
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                      color: accentColor,
+                                                    ),
+                                              )
+                                            : profile?.avatarUrl != null
+                                            ? (profile!.avatarUrl!.startsWith(
+                                                    'http',
+                                                  )
+                                                  ? Image.network(
+                                                      profile.avatarUrl!,
+                                                      fit: BoxFit.cover,
+                                                      loadingBuilder:
+                                                          (
+                                                            context,
+                                                            child,
+                                                            loadingProgress,
+                                                          ) {
+                                                            if (loadingProgress ==
+                                                                null) {
+                                                              return child;
+                                                            }
+                                                            return Center(
+                                                              child: CircularProgressIndicator(
+                                                                strokeWidth: 2,
+                                                                color:
+                                                                    accentColor,
+                                                              ),
+                                                            );
+                                                          },
+                                                      errorBuilder:
+                                                          (
+                                                            ctx,
+                                                            err,
+                                                            stack,
+                                                          ) => Center(
+                                                            child: Text(
+                                                              profile.initials,
+                                                              style: TextStyle(
+                                                                fontSize: 32,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color:
+                                                                    accentColor,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                    )
+                                                  : Image.file(
+                                                      File(profile.avatarUrl!),
+                                                      fit: BoxFit.cover,
+                                                    ))
+                                            : Center(
+                                                child: Text(
+                                                  profile?.initials ?? '?',
+                                                  style: TextStyle(
+                                                    fontSize: 32,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: accentColor,
+                                                  ),
+                                                ),
+                                              ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          if (profile?.avatarUrl != null) ...[
-                            const SizedBox(height: 8),
-                            Center(
-                              child: TextButton(
-                                onPressed: _isUploadingAvatar
-                                    ? null
-                                    : _removeAvatar,
-                                child: _isUploadingAvatar
-                                    ? SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: AppTheme.errorRed,
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: accentColor,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: AppTheme.darkBackground,
+                                            width: 2,
+                                          ),
                                         ),
-                                      )
-                                    : const Text(
-                                        'Remove Avatar',
-                                        style: TextStyle(
-                                          color: AppTheme.errorRed,
+                                        child: const Icon(
+                                          Icons.camera_alt,
+                                          size: 16,
+                                          color: Colors.white,
                                         ),
                                       ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
+                            if (profile?.avatarUrl != null) ...[
+                              const SizedBox(height: 8),
+                              Center(
+                                child: TextButton(
+                                  onPressed: _isUploadingAvatar
+                                      ? null
+                                      : _removeAvatar,
+                                  child: _isUploadingAvatar
+                                      ? SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppTheme.errorRed,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Remove Avatar',
+                                          style: TextStyle(
+                                            color: AppTheme.errorRed,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 24),
+
+                            // Basic info section
+                            _buildSectionHeader('Basic Info'),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              controller: _displayNameController,
+                              label: 'Display Name',
+                              hint: 'How you want to be known',
+                              icon: Icons.person_outline,
+                              maxLength: 50,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Display name is required';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              controller: _callsignController,
+                              label: 'Callsign',
+                              hint: 'Amateur radio callsign or identifier',
+                              icon: Icons.badge_outlined,
+                              textCapitalization: TextCapitalization.characters,
+                              maxLength: 10,
+                            ),
+                            const SizedBox(height: 12),
+                            // Bio field - no prefix icon for multiline
+                            _buildBioField(),
+                            const SizedBox(height: 24),
+
+                            // Links section
+                            _buildSectionHeader('Links'),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              controller: _websiteController,
+                              label: 'Website',
+                              hint: 'https://example.com',
+                              icon: Icons.link,
+                              keyboardType: TextInputType.url,
+                              maxLength: 100,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) return null;
+                                final url = value.trim().toLowerCase();
+                                if (!url.startsWith('http://') &&
+                                    !url.startsWith('https://')) {
+                                  return 'URL must start with http:// or https://';
+                                }
+                                final urlPattern = RegExp(
+                                  r'^https?:\/\/[a-zA-Z0-9][a-zA-Z0-9-]*(\.[a-zA-Z0-9][a-zA-Z0-9-]*)+([\/\?#].*)?$',
+                                );
+                                if (!urlPattern.hasMatch(url)) {
+                                  return 'Please enter a valid URL';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Social links section
+                            _buildSectionHeader('Social'),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              controller: _twitterController,
+                              label: 'Twitter / X',
+                              hint: 'username',
+                              icon: Icons.alternate_email,
+                              prefixText: '@',
+                              maxLength: 30,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              controller: _mastodonController,
+                              label: 'Mastodon',
+                              hint: '@user@instance.social',
+                              icon: Icons.tag,
+                              maxLength: 100,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              controller: _githubController,
+                              label: 'GitHub',
+                              hint: 'username',
+                              icon: Icons.code,
+                              maxLength: 39,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              controller: _discordController,
+                              label: 'Discord',
+                              hint: 'username#0000',
+                              icon: Icons.discord,
+                              maxLength: 37,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              controller: _telegramController,
+                              label: 'Telegram',
+                              hint: 'username',
+                              icon: Icons.send,
+                              maxLength: 32,
+                            ),
+                            const SizedBox(height: 32),
                           ],
-                          const SizedBox(height: 24),
-
-                          // Basic info section
-                          _buildSectionHeader('Basic Info'),
-                          const SizedBox(height: 12),
-                          _buildTextField(
-                            controller: _displayNameController,
-                            label: 'Display Name',
-                            hint: 'How you want to be known',
-                            icon: Icons.person_outline,
-                            maxLength: 50,
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Display name is required';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          _buildTextField(
-                            controller: _callsignController,
-                            label: 'Callsign',
-                            hint: 'Amateur radio callsign or identifier',
-                            icon: Icons.badge_outlined,
-                            textCapitalization: TextCapitalization.characters,
-                            maxLength: 10,
-                          ),
-                          const SizedBox(height: 12),
-                          // Bio field - no prefix icon for multiline
-                          _buildBioField(),
-                          const SizedBox(height: 24),
-
-                          // Links section
-                          _buildSectionHeader('Links'),
-                          const SizedBox(height: 12),
-                          _buildTextField(
-                            controller: _websiteController,
-                            label: 'Website',
-                            hint: 'https://example.com',
-                            icon: Icons.link,
-                            keyboardType: TextInputType.url,
-                            maxLength: 100,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) return null;
-                              final url = value.trim().toLowerCase();
-                              if (!url.startsWith('http://') &&
-                                  !url.startsWith('https://')) {
-                                return 'URL must start with http:// or https://';
-                              }
-                              final urlPattern = RegExp(
-                                r'^https?:\/\/[a-zA-Z0-9][a-zA-Z0-9-]*(\.[a-zA-Z0-9][a-zA-Z0-9-]*)+([\/\?#].*)?$',
-                              );
-                              if (!urlPattern.hasMatch(url)) {
-                                return 'Please enter a valid URL';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Social links section
-                          _buildSectionHeader('Social'),
-                          const SizedBox(height: 12),
-                          _buildTextField(
-                            controller: _twitterController,
-                            label: 'Twitter / X',
-                            hint: 'username',
-                            icon: Icons.alternate_email,
-                            prefixText: '@',
-                            maxLength: 30,
-                          ),
-                          const SizedBox(height: 12),
-                          _buildTextField(
-                            controller: _mastodonController,
-                            label: 'Mastodon',
-                            hint: '@user@instance.social',
-                            icon: Icons.tag,
-                            maxLength: 100,
-                          ),
-                          const SizedBox(height: 12),
-                          _buildTextField(
-                            controller: _githubController,
-                            label: 'GitHub',
-                            hint: 'username',
-                            icon: Icons.code,
-                            maxLength: 39,
-                          ),
-                          const SizedBox(height: 12),
-                          _buildTextField(
-                            controller: _discordController,
-                            label: 'Discord',
-                            hint: 'username#0000',
-                            icon: Icons.discord,
-                            maxLength: 37,
-                          ),
-                          const SizedBox(height: 12),
-                          _buildTextField(
-                            controller: _telegramController,
-                            label: 'Telegram',
-                            hint: 'username',
-                            icon: Icons.send,
-                            maxLength: 32,
-                          ),
-                          const SizedBox(height: 32),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
