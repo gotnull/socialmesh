@@ -291,6 +291,16 @@ final nodeStorageProvider = FutureProvider<NodeStorageService>((ref) async {
   return service;
 });
 
+// Device favorites service - persists favorite/ignored node numbers
+final deviceFavoritesProvider = FutureProvider<DeviceFavoritesService>((
+  ref,
+) async {
+  final logger = ref.watch(loggerProvider);
+  final service = DeviceFavoritesService(logger: logger);
+  await service.init();
+  return service;
+});
+
 // Transport
 class TransportTypeNotifier extends Notifier<TransportType> {
   @override
@@ -1441,6 +1451,7 @@ final messagesProvider = NotifierProvider<MessagesNotifier, List<Message>>(
 class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   Timer? _stalenessTimer;
   NodeStorageService? _storage;
+  DeviceFavoritesService? _deviceFavorites;
 
   /// Timeout after which a node is considered offline (15 minutes)
   /// The iOS Meshtastic app uses 120 minutes, but we use 15 minutes as a
@@ -1452,7 +1463,9 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   Map<int, MeshNode> build() {
     final protocol = ref.watch(protocolServiceProvider);
     final storageAsync = ref.watch(nodeStorageProvider);
+    final deviceFavoritesAsync = ref.watch(deviceFavoritesProvider);
     _storage = storageAsync.value;
+    _deviceFavorites = deviceFavoritesAsync.value;
 
     // Set up disposal
     ref.onDispose(() {
@@ -1466,13 +1479,22 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   }
 
   Future<void> _init(ProtocolService protocol) async {
+    // Get persisted favorites/ignored from DeviceFavoritesService
+    final favoritesSet = _deviceFavorites?.favorites ?? <int>{};
+    final ignoredSet = _deviceFavorites?.ignored ?? <int>{};
+
     // Load persisted nodes (with their positions) first
     if (_storage != null) {
       final savedNodes = await _storage!.loadNodes();
       if (savedNodes.isNotEmpty) {
         AppLogging.nodes('Loaded ${savedNodes.length} nodes from storage');
         final nodeMap = <int, MeshNode>{};
-        for (final node in savedNodes) {
+        for (var node in savedNodes) {
+          // Apply persisted favorites/ignored status from DeviceFavoritesService
+          node = node.copyWith(
+            isFavorite: favoritesSet.contains(node.nodeNum),
+            isIgnored: ignoredSet.contains(node.nodeNum),
+          );
           nodeMap[node.nodeNum] = node;
           if (node.hasPosition) {
             AppLogging.debug(
@@ -1497,9 +1519,15 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           latitude: node.hasPosition ? node.latitude : existing.latitude,
           longitude: node.hasPosition ? node.longitude : existing.longitude,
           altitude: node.hasPosition ? node.altitude : existing.altitude,
-          // Always preserve user preferences from storage
-          isFavorite: existing.isFavorite,
-          isIgnored: existing.isIgnored,
+          // Always preserve user preferences from DeviceFavoritesService
+          isFavorite: favoritesSet.contains(node.nodeNum),
+          isIgnored: ignoredSet.contains(node.nodeNum),
+        );
+      } else {
+        // New node - apply favorites/ignored from service
+        node = node.copyWith(
+          isFavorite: favoritesSet.contains(node.nodeNum),
+          isIgnored: ignoredSet.contains(node.nodeNum),
         );
       }
       state = {...state, entry.key: node};
@@ -1516,6 +1544,10 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       final isNewNode = !state.containsKey(node.nodeNum);
       final existing = state[node.nodeNum];
 
+      // Get latest favorites/ignored status
+      final currentFavorites = _deviceFavorites?.favorites ?? <int>{};
+      final currentIgnored = _deviceFavorites?.ignored ?? <int>{};
+
       if (existing != null) {
         // Preserve stored properties that don't come from protocol
         node = node.copyWith(
@@ -1523,9 +1555,15 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           latitude: node.hasPosition ? node.latitude : existing.latitude,
           longitude: node.hasPosition ? node.longitude : existing.longitude,
           altitude: node.hasPosition ? node.altitude : existing.altitude,
-          // Always preserve user preferences from storage
-          isFavorite: existing.isFavorite,
-          isIgnored: existing.isIgnored,
+          // Always preserve user preferences from DeviceFavoritesService
+          isFavorite: currentFavorites.contains(node.nodeNum),
+          isIgnored: currentIgnored.contains(node.nodeNum),
+        );
+      } else {
+        // New node - apply favorites/ignored from service
+        node = node.copyWith(
+          isFavorite: currentFavorites.contains(node.nodeNum),
+          isIgnored: currentIgnored.contains(node.nodeNum),
         );
       }
 

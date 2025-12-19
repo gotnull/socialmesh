@@ -548,6 +548,97 @@ class SettingsService {
   }
 }
 
+/// Device favorites storage service - persists favorite node numbers
+/// independently of node data so favorites survive device reconnects/clears
+class DeviceFavoritesService {
+  final Logger _logger;
+  SharedPreferences? _prefs;
+  static const String _favoritesKey = 'device_favorites';
+  static const String _ignoredKey = 'device_ignored';
+
+  DeviceFavoritesService({Logger? logger}) : _logger = logger ?? Logger();
+
+  Future<void> init() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  SharedPreferences get _preferences {
+    if (_prefs == null) {
+      throw Exception('DeviceFavoritesService not initialized');
+    }
+    return _prefs!;
+  }
+
+  /// Get all favorite node numbers
+  Set<int> get favorites {
+    final list = _preferences.getStringList(_favoritesKey) ?? [];
+    return list.map((s) => int.parse(s)).toSet();
+  }
+
+  /// Check if a node is favorite
+  bool isFavorite(int nodeNum) => favorites.contains(nodeNum);
+
+  /// Add a node to favorites
+  Future<void> addFavorite(int nodeNum) async {
+    final set = favorites;
+    set.add(nodeNum);
+    await _preferences.setStringList(
+      _favoritesKey,
+      set.map((n) => n.toString()).toList(),
+    );
+    _logger.d('Added node $nodeNum to favorites');
+  }
+
+  /// Remove a node from favorites
+  Future<void> removeFavorite(int nodeNum) async {
+    final set = favorites;
+    set.remove(nodeNum);
+    await _preferences.setStringList(
+      _favoritesKey,
+      set.map((n) => n.toString()).toList(),
+    );
+    _logger.d('Removed node $nodeNum from favorites');
+  }
+
+  /// Get all ignored node numbers
+  Set<int> get ignored {
+    final list = _preferences.getStringList(_ignoredKey) ?? [];
+    return list.map((s) => int.parse(s)).toSet();
+  }
+
+  /// Check if a node is ignored
+  bool isIgnored(int nodeNum) => ignored.contains(nodeNum);
+
+  /// Add a node to ignored list
+  Future<void> addIgnored(int nodeNum) async {
+    final set = ignored;
+    set.add(nodeNum);
+    await _preferences.setStringList(
+      _ignoredKey,
+      set.map((n) => n.toString()).toList(),
+    );
+    _logger.d('Added node $nodeNum to ignored');
+  }
+
+  /// Remove a node from ignored list
+  Future<void> removeIgnored(int nodeNum) async {
+    final set = ignored;
+    set.remove(nodeNum);
+    await _preferences.setStringList(
+      _ignoredKey,
+      set.map((n) => n.toString()).toList(),
+    );
+    _logger.d('Removed node $nodeNum from ignored');
+  }
+
+  /// Clear all favorites (used when switching devices)
+  Future<void> clearAll() async {
+    await _preferences.remove(_favoritesKey);
+    await _preferences.remove(_ignoredKey);
+    _logger.i('Cleared all device favorites and ignored');
+  }
+}
+
 /// Message storage service - persists messages locally
 class MessageStorageService {
   final Logger _logger;

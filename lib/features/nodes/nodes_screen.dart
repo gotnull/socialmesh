@@ -1612,10 +1612,13 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
 
     final protocol = ref.read(protocolServiceProvider);
     final nodesNotifier = ref.read(nodesProvider.notifier);
+    final deviceFavorites = ref.read(deviceFavoritesProvider).value;
 
     try {
       if (node.isFavorite) {
         await protocol.removeFavoriteNode(node.nodeNum);
+        // Persist to DeviceFavoritesService
+        await deviceFavorites?.removeFavorite(node.nodeNum);
         // Update local state
         nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: false));
         if (context.mounted) {
@@ -1626,6 +1629,8 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
         }
       } else {
         await protocol.setFavoriteNode(node.nodeNum);
+        // Persist to DeviceFavoritesService
+        await deviceFavorites?.addFavorite(node.nodeNum);
         // Update local state
         nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: true));
         if (context.mounted) {
@@ -1668,10 +1673,13 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
 
     final protocol = ref.read(protocolServiceProvider);
     final nodesNotifier = ref.read(nodesProvider.notifier);
+    final deviceFavorites = ref.read(deviceFavoritesProvider).value;
 
     try {
       if (node.isIgnored) {
         await protocol.removeIgnoredNode(node.nodeNum);
+        // Persist to DeviceFavoritesService
+        await deviceFavorites?.removeIgnored(node.nodeNum);
         // Update local state
         nodesNotifier.addOrUpdateNode(node.copyWith(isIgnored: false));
         if (context.mounted) {
@@ -1679,6 +1687,8 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
         }
       } else {
         await protocol.setIgnoredNode(node.nodeNum);
+        // Persist to DeviceFavoritesService
+        await deviceFavorites?.addIgnored(node.nodeNum);
         // Update local state
         nodesNotifier.addOrUpdateNode(node.copyWith(isIgnored: true));
         if (context.mounted) {

@@ -9,6 +9,7 @@ class AutoScrollText extends StatefulWidget {
   final Duration pauseBetween;
   final int? maxLines;
   final double velocity;
+  final double fadeWidth;
 
   const AutoScrollText(
     this.text, {
@@ -18,6 +19,7 @@ class AutoScrollText extends StatefulWidget {
     this.pauseBetween = const Duration(seconds: 2),
     this.maxLines = 1,
     this.velocity = 35.0,
+    this.fadeWidth = 20.0,
   });
 
   @override
@@ -30,15 +32,26 @@ class _AutoScrollTextState extends State<AutoScrollText> {
   double _textWidth = 0;
   double _availableWidth = 0;
   bool _isScrolling = false;
+  double _scrollPosition = 0;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (mounted) {
+      setState(() {
+        _scrollPosition = _scrollController.offset;
+      });
+    }
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -141,9 +154,30 @@ class _AutoScrollTextState extends State<AutoScrollText> {
           }
         });
 
-        // Simple clipped scrolling text - no ShaderMask, just proper clipping
-        // Add a tiny bit of padding at the end to ensure last character isn't clipped
-        return ClipRect(
+        // Calculate fade opacities based on scroll position
+        final maxScroll = _scrollController.hasClients
+            ? _scrollController.position.maxScrollExtent
+            : (_textWidth - _availableWidth);
+        final fadeStop = widget.fadeWidth / _availableWidth;
+
+        // Show leading fade when scrolled (not at start)
+        final showLeadingFade = _scrollPosition > 0;
+        // Show trailing fade when not fully scrolled (not at end)
+        final showTrailingFade = _scrollPosition < maxScroll - 1;
+
+        // Build gradient stops
+        final List<double> stops = [0.0, fadeStop, 1.0 - fadeStop, 1.0];
+        final List<Color> colors = [
+          showLeadingFade ? Colors.transparent : Colors.white,
+          Colors.white,
+          Colors.white,
+          showTrailingFade ? Colors.transparent : Colors.white,
+        ];
+
+        return ShaderMask(
+          shaderCallback: (bounds) =>
+              LinearGradient(colors: colors, stops: stops).createShader(bounds),
+          blendMode: BlendMode.dstIn,
           child: SingleChildScrollView(
             controller: _scrollController,
             scrollDirection: Axis.horizontal,
