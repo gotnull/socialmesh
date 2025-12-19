@@ -284,7 +284,8 @@ class ProfileCloudSyncService {
           : null,
       primaryNodeId: data['primaryNodeId'] as int?,
       accentColorIndex: data['accentColorIndex'] as int?,
-      installedWidgetIds: (data['installedWidgetIds'] as List<dynamic>?)
+      installedWidgetIds:
+          (data['installedWidgetIds'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
@@ -334,7 +335,10 @@ class ProfileCloudSyncService {
     );
     if (local.updatedAt.isAfter(cloud.updatedAt)) {
       debugPrint('[ProfileSync] Local is newer, using local');
-      return local.copyWith(isSynced: true, installedWidgetIds: mergedWidgetIds);
+      return local.copyWith(
+        isSynced: true,
+        installedWidgetIds: mergedWidgetIds,
+      );
     }
     debugPrint('[ProfileSync] Cloud is newer, using cloud');
     return cloud.copyWith(installedWidgetIds: mergedWidgetIds);

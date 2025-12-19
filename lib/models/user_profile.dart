@@ -118,7 +118,8 @@ class UserProfile {
           : null,
       primaryNodeId: json['primaryNodeId'] as int?,
       accentColorIndex: json['accentColorIndex'] as int?,
-      installedWidgetIds: (json['installedWidgetIds'] as List<dynamic>?)
+      installedWidgetIds:
+          (json['installedWidgetIds'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],

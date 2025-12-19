@@ -59,8 +59,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
           await _restoreMissingWidgets(missingIds);
           // Reload after restoration
           final updatedWidgets = await _storageService.getWidgets();
-          final updatedInstalledIds =
-              await _storageService.getInstalledMarketplaceIds();
+          final updatedInstalledIds = await _storageService
+              .getInstalledMarketplaceIds();
           setState(() {
             _myWidgets = updatedWidgets;
             _marketplaceIds = updatedInstalledIds.toSet();
