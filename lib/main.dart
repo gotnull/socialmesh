@@ -15,8 +15,10 @@ import 'core/logging.dart';
 import 'core/widgets/animated_tagline.dart';
 import 'models/canned_response.dart';
 import 'models/tapback.dart';
+import 'models/user_profile.dart';
 import 'providers/splash_mesh_provider.dart';
 import 'providers/app_providers.dart';
+import 'providers/auth_providers.dart';
 import 'providers/profile_providers.dart';
 import 'providers/telemetry_providers.dart';
 import 'providers/subscription_providers.dart';
@@ -271,162 +273,171 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   Future<void> _loadAccentColor() async {
     final settings = await ref.read(settingsServiceProvider.future);
 
-    // First, try to load from cloud profile (survives reinstall)
+    // IMMEDIATELY load from local settings first (instant UI update)
+    final localColorValue = settings.accentColor;
+    ref.read(accentColorProvider.notifier).setColor(Color(localColorValue));
+
+    final localThemeModeIndex = settings.themeMode;
+    final localThemeMode = ThemeMode.values[localThemeModeIndex];
+    ref.read(themeModeProvider.notifier).setThemeMode(localThemeMode);
+
+    // Then sync from cloud in background (may override local)
     try {
-      final profile = await ref.read(userProfileProvider.future);
-      final prefs = profile?.preferences;
+      // Wait for auth state to be ready
+      final authState = await ref.read(authStateProvider.future);
 
-      // Load accent color
-      final colorIndex = profile?.accentColorIndex;
-      if (colorIndex != null &&
-          colorIndex >= 0 &&
-          colorIndex < AccentColors.all.length) {
-        final cloudColor = AccentColors.all[colorIndex];
-        ref.read(accentColorProvider.notifier).setColor(cloudColor);
-        await settings.setAccentColor(cloudColor.toARGB32());
-        AppLogging.debug(
-          '🎨 Loaded accent color from cloud: ${AccentColors.names[colorIndex]}',
-        );
-      } else {
-        final colorValue = settings.accentColor;
-        ref.read(accentColorProvider.notifier).setColor(Color(colorValue));
-      }
+      // If user is signed in, sync from cloud
+      if (authState != null) {
+        // Invalidate profile to trigger fresh cloud sync
+        ref.invalidate(userProfileProvider);
 
-      // Load theme mode from cloud preferences
-      if (prefs?.themeModeIndex != null) {
-        final themeMode = ThemeMode.values[prefs!.themeModeIndex!];
-        ref.read(themeModeProvider.notifier).setThemeMode(themeMode);
-        await settings.setThemeMode(prefs.themeModeIndex!);
-        AppLogging.debug('🎨 Loaded theme mode from cloud: ${themeMode.name}');
-      } else {
-        final themeModeIndex = settings.themeMode;
-        final themeMode = ThemeMode.values[themeModeIndex];
-        ref.read(themeModeProvider.notifier).setThemeMode(themeMode);
-      }
+        final profile = await ref.read(userProfileProvider.future);
+        final prefs = profile?.preferences;
 
-      // Load notification settings from cloud
-      if (prefs?.notificationsEnabled != null) {
-        await settings.setNotificationsEnabled(prefs!.notificationsEnabled!);
-      }
-      if (prefs?.newNodeNotificationsEnabled != null) {
-        await settings.setNewNodeNotificationsEnabled(
-          prefs!.newNodeNotificationsEnabled!,
-        );
-      }
-      if (prefs?.directMessageNotificationsEnabled != null) {
-        await settings.setDirectMessageNotificationsEnabled(
-          prefs!.directMessageNotificationsEnabled!,
-        );
-      }
-      if (prefs?.channelMessageNotificationsEnabled != null) {
-        await settings.setChannelMessageNotificationsEnabled(
-          prefs!.channelMessageNotificationsEnabled!,
-        );
-      }
-      if (prefs?.notificationSoundEnabled != null) {
-        await settings.setNotificationSoundEnabled(
-          prefs!.notificationSoundEnabled!,
-        );
-      }
-      if (prefs?.notificationVibrationEnabled != null) {
-        await settings.setNotificationVibrationEnabled(
-          prefs!.notificationVibrationEnabled!,
-        );
-      }
-
-      // Load haptic settings from cloud
-      if (prefs?.hapticFeedbackEnabled != null) {
-        await settings.setHapticFeedbackEnabled(prefs!.hapticFeedbackEnabled!);
-      }
-      if (prefs?.hapticIntensity != null) {
-        await settings.setHapticIntensity(prefs!.hapticIntensity!);
-      }
-
-      // Load animation settings from cloud
-      if (prefs?.animationsEnabled != null) {
-        await settings.setAnimationsEnabled(prefs!.animationsEnabled!);
-      }
-      if (prefs?.animations3DEnabled != null) {
-        await settings.setAnimations3DEnabled(prefs!.animations3DEnabled!);
-      }
-
-      // Load canned responses from cloud
-      if (prefs?.cannedResponsesJson != null) {
-        try {
-          final jsonList = jsonDecode(prefs!.cannedResponsesJson!) as List;
-          final responses = jsonList
-              .map((j) => CannedResponse.fromJson(j))
-              .toList();
-          await settings.setCannedResponses(responses);
+        // Update accent color from cloud if available
+        final colorIndex = profile?.accentColorIndex;
+        if (colorIndex != null &&
+            colorIndex >= 0 &&
+            colorIndex < AccentColors.all.length) {
+          final cloudColor = AccentColors.all[colorIndex];
+          ref.read(accentColorProvider.notifier).setColor(cloudColor);
+          await settings.setAccentColor(cloudColor.toARGB32());
           AppLogging.debug(
-            '📝 Loaded ${responses.length} canned responses from cloud',
+            '🎨 Updated accent color from cloud: ${AccentColors.names[colorIndex]}',
           );
-        } catch (e) {
-          AppLogging.debug('Failed to parse canned responses: $e');
         }
-      }
 
-      // Load tapback configs from cloud
-      if (prefs?.tapbackConfigsJson != null) {
-        try {
-          final jsonList = jsonDecode(prefs!.tapbackConfigsJson!) as List;
-          final configs = jsonList
-              .map((j) => TapbackConfig.fromJson(j))
-              .toList();
-          await settings.setTapbackConfigs(configs);
+        // Update theme mode from cloud preferences
+        if (prefs?.themeModeIndex != null) {
+          final themeMode = ThemeMode.values[prefs!.themeModeIndex!];
+          ref.read(themeModeProvider.notifier).setThemeMode(themeMode);
+          await settings.setThemeMode(prefs.themeModeIndex!);
           AppLogging.debug(
-            '👍 Loaded ${configs.length} tapback configs from cloud',
+            '🎨 Updated theme mode from cloud: ${themeMode.name}',
           );
-        } catch (e) {
-          AppLogging.debug('Failed to parse tapback configs: $e');
         }
-      }
 
-      // Load ringtone from cloud
-      if (prefs?.ringtoneRtttl != null && prefs?.ringtoneName != null) {
-        await settings.setSelectedRingtone(
-          rtttl: prefs!.ringtoneRtttl!,
-          name: prefs.ringtoneName!,
-        );
-        AppLogging.debug(
-          '🔔 Loaded ringtone from cloud: ${prefs.ringtoneName}',
-        );
+        // Load remaining cloud preferences
+        await _loadRemainingCloudPreferences(settings, prefs);
       }
-
-      // Load splash mesh config from cloud
-      if (prefs?.splashMeshSize != null) {
-        await settings.setSplashMeshConfig(
-          size: prefs!.splashMeshSize!,
-          animationType: prefs.splashMeshAnimationType ?? 'tumble',
-          glowIntensity: prefs.splashMeshGlowIntensity ?? 0.5,
-          lineThickness: prefs.splashMeshLineThickness ?? 0.5,
-          nodeSize: prefs.splashMeshNodeSize ?? 0.8,
-          colorPreset: prefs.splashMeshColorPreset ?? 0,
-          useAccelerometer: prefs.splashMeshUseAccelerometer ?? true,
-          accelerometerSensitivity: prefs.splashMeshAccelSensitivity ?? 0.5,
-          accelerometerFriction: prefs.splashMeshAccelFriction ?? 0.97,
-          physicsMode: prefs.splashMeshPhysicsMode ?? 'momentum',
-          enableTouch: prefs.splashMeshEnableTouch ?? true,
-          enablePullToStretch: prefs.splashMeshEnablePullToStretch ?? false,
-          touchIntensity: prefs.splashMeshTouchIntensity ?? 0.5,
-          stretchIntensity: prefs.splashMeshStretchIntensity ?? 0.3,
-        );
-        AppLogging.debug('✨ Loaded splash mesh config from cloud');
-      }
-
-      AppLogging.debug('☁️ Loaded user preferences from cloud profile');
     } catch (e) {
-      // Profile not available, fall back to local settings
-      AppLogging.debug(
-        '☁️ Cloud profile unavailable, using local settings: $e',
-      );
-      final colorValue = settings.accentColor;
-      ref.read(accentColorProvider.notifier).setColor(Color(colorValue));
-
-      final themeModeIndex = settings.themeMode;
-      final themeMode = ThemeMode.values[themeModeIndex];
-      ref.read(themeModeProvider.notifier).setThemeMode(themeMode);
+      AppLogging.debug('☁️ Cloud sync failed, using local settings: $e');
     }
+  }
+
+  Future<void> _loadRemainingCloudPreferences(
+    dynamic settings,
+    UserPreferences? prefs,
+  ) async {
+    if (prefs == null) return;
+
+    // Load notification settings from cloud
+    if (prefs.notificationsEnabled != null) {
+      await settings.setNotificationsEnabled(prefs.notificationsEnabled!);
+    }
+    if (prefs.newNodeNotificationsEnabled != null) {
+      await settings.setNewNodeNotificationsEnabled(
+        prefs.newNodeNotificationsEnabled!,
+      );
+    }
+    if (prefs.directMessageNotificationsEnabled != null) {
+      await settings.setDirectMessageNotificationsEnabled(
+        prefs.directMessageNotificationsEnabled!,
+      );
+    }
+    if (prefs.channelMessageNotificationsEnabled != null) {
+      await settings.setChannelMessageNotificationsEnabled(
+        prefs.channelMessageNotificationsEnabled!,
+      );
+    }
+    if (prefs.notificationSoundEnabled != null) {
+      await settings.setNotificationSoundEnabled(
+        prefs.notificationSoundEnabled!,
+      );
+    }
+    if (prefs.notificationVibrationEnabled != null) {
+      await settings.setNotificationVibrationEnabled(
+        prefs.notificationVibrationEnabled!,
+      );
+    }
+
+    // Load haptic settings from cloud
+    if (prefs.hapticFeedbackEnabled != null) {
+      await settings.setHapticFeedbackEnabled(prefs.hapticFeedbackEnabled!);
+    }
+    if (prefs.hapticIntensity != null) {
+      await settings.setHapticIntensity(prefs.hapticIntensity!);
+    }
+
+    // Load animation settings from cloud
+    if (prefs.animationsEnabled != null) {
+      await settings.setAnimationsEnabled(prefs.animationsEnabled!);
+    }
+    if (prefs.animations3DEnabled != null) {
+      await settings.setAnimations3DEnabled(prefs.animations3DEnabled!);
+    }
+
+    // Load canned responses from cloud
+    if (prefs.cannedResponsesJson != null) {
+      try {
+        final jsonList = jsonDecode(prefs.cannedResponsesJson!) as List;
+        final responses = jsonList
+            .map((j) => CannedResponse.fromJson(j))
+            .toList();
+        await settings.setCannedResponses(responses);
+        AppLogging.debug(
+          '📝 Loaded ${responses.length} canned responses from cloud',
+        );
+      } catch (e) {
+        AppLogging.debug('Failed to parse canned responses: $e');
+      }
+    }
+
+    // Load tapback configs from cloud
+    if (prefs.tapbackConfigsJson != null) {
+      try {
+        final jsonList = jsonDecode(prefs.tapbackConfigsJson!) as List;
+        final configs = jsonList.map((j) => TapbackConfig.fromJson(j)).toList();
+        await settings.setTapbackConfigs(configs);
+        AppLogging.debug(
+          '👍 Loaded ${configs.length} tapback configs from cloud',
+        );
+      } catch (e) {
+        AppLogging.debug('Failed to parse tapback configs: $e');
+      }
+    }
+
+    // Load ringtone from cloud
+    if (prefs.ringtoneRtttl != null && prefs.ringtoneName != null) {
+      await settings.setSelectedRingtone(
+        rtttl: prefs.ringtoneRtttl!,
+        name: prefs.ringtoneName!,
+      );
+      AppLogging.debug('🔔 Loaded ringtone from cloud: ${prefs.ringtoneName}');
+    }
+
+    // Load splash mesh config from cloud
+    if (prefs.splashMeshSize != null) {
+      await settings.setSplashMeshConfig(
+        size: prefs.splashMeshSize!,
+        animationType: prefs.splashMeshAnimationType ?? 'tumble',
+        glowIntensity: prefs.splashMeshGlowIntensity ?? 0.5,
+        lineThickness: prefs.splashMeshLineThickness ?? 0.5,
+        nodeSize: prefs.splashMeshNodeSize ?? 0.8,
+        colorPreset: prefs.splashMeshColorPreset ?? 0,
+        useAccelerometer: prefs.splashMeshUseAccelerometer ?? true,
+        accelerometerSensitivity: prefs.splashMeshAccelSensitivity ?? 0.5,
+        accelerometerFriction: prefs.splashMeshAccelFriction ?? 0.97,
+        physicsMode: prefs.splashMeshPhysicsMode ?? 'momentum',
+        enableTouch: prefs.splashMeshEnableTouch ?? true,
+        enablePullToStretch: prefs.splashMeshEnablePullToStretch ?? false,
+        touchIntensity: prefs.splashMeshTouchIntensity ?? 0.5,
+        stretchIntensity: prefs.splashMeshStretchIntensity ?? 0.3,
+      );
+      AppLogging.debug('✨ Loaded splash mesh config from cloud');
+    }
+
+    AppLogging.debug('☁️ Loaded user preferences from cloud profile');
   }
 
   @override
