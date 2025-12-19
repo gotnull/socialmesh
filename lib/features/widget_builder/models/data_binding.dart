@@ -111,11 +111,35 @@ class BindingRegistry {
       maxValue: 15,
       defaultFormat: '{value} dB',
     ),
+    // Alias for node.snr (used by some marketplace widgets)
+    BindingDefinition(
+      path: 'device.snr',
+      label: 'SNR',
+      description: 'Signal-to-noise ratio',
+      category: BindingCategory.device,
+      valueType: int,
+      unit: 'dB',
+      minValue: -20,
+      maxValue: 15,
+      defaultFormat: '{value} dB',
+    ),
     BindingDefinition(
       path: 'node.rssi',
       label: 'RSSI',
       description: 'Received signal strength indicator',
       category: BindingCategory.node,
+      valueType: int,
+      unit: 'dBm',
+      minValue: -120,
+      maxValue: 0,
+      defaultFormat: '{value} dBm',
+    ),
+    // Alias for node.rssi (used by some marketplace widgets)
+    BindingDefinition(
+      path: 'device.rssi',
+      label: 'RSSI',
+      description: 'Received signal strength indicator',
+      category: BindingCategory.device,
       valueType: int,
       unit: 'dBm',
       minValue: -120,
@@ -156,6 +180,29 @@ class BindingRegistry {
     BindingDefinition(
       path: 'node.channelUtilization',
       label: 'Channel Utilization',
+      description: 'Current channel utilization percentage',
+      category: BindingCategory.device,
+      valueType: double,
+      unit: '%',
+      minValue: 0,
+      maxValue: 100,
+      defaultFormat: '{value}%',
+    ),
+    // Aliases for node.channelUtilization
+    BindingDefinition(
+      path: 'device.channelUtilization',
+      label: 'Channel Utilization',
+      description: 'Current channel utilization percentage',
+      category: BindingCategory.device,
+      valueType: double,
+      unit: '%',
+      minValue: 0,
+      maxValue: 100,
+      defaultFormat: '{value}%',
+    ),
+    BindingDefinition(
+      path: 'device.channelUtil',
+      label: 'Channel Util',
       description: 'Current channel utilization percentage',
       category: BindingCategory.device,
       valueType: double,
@@ -207,6 +254,16 @@ class BindingRegistry {
     ),
     BindingDefinition(
       path: 'node.barometricPressure',
+      label: 'Pressure',
+      description: 'Barometric pressure',
+      category: BindingCategory.environment,
+      valueType: double,
+      unit: 'hPa',
+      defaultFormat: '{value} hPa',
+    ),
+    // Alias for node.barometricPressure (used by some marketplace widgets)
+    BindingDefinition(
+      path: 'node.pressure',
       label: 'Pressure',
       description: 'Barometric pressure',
       category: BindingCategory.environment,
@@ -695,6 +752,18 @@ class DataBindingEngine {
         return 3.85;
       case 'node.isCharging':
         return false;
+      case 'node.ch1Voltage':
+        return 12.6;
+      case 'node.ch1Current':
+        return 0.85;
+      case 'node.ch2Voltage':
+        return 5.1;
+      case 'node.ch2Current':
+        return 0.42;
+      case 'node.ch3Voltage':
+        return 3.3;
+      case 'node.ch3Current':
+        return 0.15;
 
       // Signal
       case 'node.snr':
@@ -713,7 +782,37 @@ class DataBindingEngine {
       case 'node.humidity':
         return 45.0;
       case 'node.pressure':
+      case 'node.barometricPressure':
         return 1013.25;
+      case 'node.lightLevel':
+      case 'node.lux':
+        return 500;
+      case 'node.iaq':
+      case 'node.iaqIndex':
+        return 75;
+      case 'node.windSpeed':
+        return 12.5;
+      case 'node.windDirection':
+        return 225;
+      case 'node.windGust':
+        return 18.0;
+      case 'node.rainfall1h':
+        return 2.5;
+      case 'node.rainfall24h':
+        return 15.0;
+      case 'node.soilMoisture':
+        return 35;
+      case 'node.soilTemperature':
+        return 18.5;
+      case 'node.pm25':
+      case 'node.pm2_5':
+        return 12.0;
+      case 'node.pm10':
+        return 25.0;
+      case 'node.pm1_0':
+        return 8.0;
+      case 'node.co2':
+        return 420;
 
       // GPS
       case 'node.latitude':
@@ -758,12 +857,15 @@ class DataBindingEngine {
   dynamic _resolveDevicePath(String field) {
     switch (field) {
       case 'rssi':
-        return _deviceRssi;
+        // Prefer real-time device data, fall back to node data
+        return _deviceRssi ?? _currentNode?.rssi;
       case 'snr':
-        return _deviceSnr;
+        // Prefer real-time device data, fall back to node data
+        return _deviceSnr ?? _currentNode?.snr;
       case 'channelUtil':
       case 'channelUtilization':
-        return _deviceChannelUtil;
+        // Prefer real-time device data, fall back to node data
+        return _deviceChannelUtil ?? _currentNode?.channelUtilization;
       default:
         return null;
     }
@@ -832,6 +934,7 @@ class DataBindingEngine {
       case 'voltage':
         return node.voltage;
       case 'channelUtilization':
+      case 'channelUtil': // Alias
         // Prefer real-time device data when available
         return _deviceChannelUtil ?? node.channelUtilization;
       case 'airUtilTx':
@@ -845,6 +948,7 @@ class DataBindingEngine {
       case 'humidity':
         return node.humidity;
       case 'barometricPressure':
+      case 'pressure': // Alias
         return node.barometricPressure;
       case 'lux':
         return node.lux;

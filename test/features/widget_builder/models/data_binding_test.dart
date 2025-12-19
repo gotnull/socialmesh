@@ -398,4 +398,161 @@ void main() {
       expect(BindingCategory.values.length, 8);
     });
   });
+
+  group('BindingRegistry', () {
+    test('all bindings have non-empty labels', () {
+      for (final binding in BindingRegistry.bindings) {
+        expect(
+          binding.label.isNotEmpty,
+          isTrue,
+          reason: 'Binding ${binding.path} should have a non-empty label',
+        );
+        // Label should not be the raw path
+        expect(
+          binding.label,
+          isNot(equals(binding.path)),
+          reason: 'Binding ${binding.path} label should not be the raw path',
+        );
+      }
+    });
+
+    test('all bindings have valid categories', () {
+      for (final binding in BindingRegistry.bindings) {
+        expect(
+          BindingCategory.values.contains(binding.category),
+          isTrue,
+          reason: 'Binding ${binding.path} has invalid category',
+        );
+      }
+    });
+
+    test('no duplicate binding paths', () {
+      final paths = BindingRegistry.bindings.map((b) => b.path).toList();
+      final uniquePaths = paths.toSet();
+      expect(
+        paths.length,
+        equals(uniquePaths.length),
+        reason: 'Duplicate binding paths found',
+      );
+    });
+
+    group('marketplace widget binding aliases', () {
+      // These are binding paths used by marketplace widgets that need proper labels
+      final marketplaceBindingPaths = [
+        'node.pressure',
+        'device.snr',
+        'device.rssi',
+        'device.channelUtilization',
+        'device.channelUtil',
+        'node.temperature',
+        'node.humidity',
+        'messaging.recentCount',
+        'network.onlineNodes',
+        'network.totalNodes',
+        'node.displayName',
+        'node.firmwareVersion',
+        'node.hardwareModel',
+        'node.role',
+      ];
+
+      for (final path in marketplaceBindingPaths) {
+        test('$path exists in registry with proper label', () {
+          final binding = BindingRegistry.bindings.firstWhere(
+            (b) => b.path == path,
+            orElse: () => throw StateError('Binding $path not found'),
+          );
+          expect(binding.label.isNotEmpty, isTrue);
+          expect(binding.label, isNot(equals(path)));
+        });
+      }
+    });
+
+    group('binding value resolution for aliases', () {
+      late DataBindingEngine engine;
+      late MeshNode testNode;
+
+      setUp(() {
+        engine = DataBindingEngine();
+        testNode = MeshNode(
+          nodeNum: 12345,
+          longName: 'Test Node',
+          shortName: 'TST',
+          snr: 8,
+          rssi: -95,
+          temperature: 25.5,
+          humidity: 65.0,
+          barometricPressure: 1013.25,
+          channelUtilization: 15.0,
+        );
+        engine.setCurrentNode(testNode);
+      });
+
+      test('node.pressure resolves to barometricPressure', () {
+        final binding = BindingSchema(path: 'node.pressure');
+        final value = engine.resolveBinding(binding);
+        expect(value, 1013.25);
+      });
+
+      test('device.snr resolves to snr', () {
+        final binding = BindingSchema(path: 'device.snr');
+        final value = engine.resolveBinding(binding);
+        expect(value, 8);
+      });
+
+      test('device.rssi resolves to rssi', () {
+        final binding = BindingSchema(path: 'device.rssi');
+        final value = engine.resolveBinding(binding);
+        expect(value, -95);
+      });
+
+      test('device.channelUtilization resolves to channelUtilization', () {
+        final binding = BindingSchema(path: 'device.channelUtilization');
+        final value = engine.resolveBinding(binding);
+        expect(value, 15.0);
+      });
+
+      test('device.channelUtil resolves to channelUtilization', () {
+        final binding = BindingSchema(path: 'device.channelUtil');
+        final value = engine.resolveBinding(binding);
+        expect(value, 15.0);
+      });
+    });
+
+    group('preview mode for marketplace bindings', () {
+      late DataBindingEngine engine;
+
+      setUp(() {
+        engine = DataBindingEngine();
+        engine.setUsePlaceholderData(true);
+      });
+
+      test('node.pressure returns placeholder in preview mode', () {
+        final binding = BindingSchema(path: 'node.pressure');
+        final value = engine.resolveBinding(binding);
+        expect(value, isNotNull);
+        expect(value, isA<num>());
+      });
+
+      test('device.snr returns placeholder in preview mode', () {
+        final binding = BindingSchema(path: 'device.snr');
+        final value = engine.resolveBinding(binding);
+        expect(value, isNotNull);
+        expect(value, isA<num>());
+      });
+
+      test('device.rssi returns placeholder in preview mode', () {
+        final binding = BindingSchema(path: 'device.rssi');
+        final value = engine.resolveBinding(binding);
+        expect(value, isNotNull);
+        expect(value, isA<num>());
+      });
+
+      test('device.channelUtil returns placeholder in preview mode', () {
+        final binding = BindingSchema(path: 'device.channelUtil');
+        final value = engine.resolveBinding(binding);
+        expect(value, isNotNull);
+        expect(value, isA<num>());
+      });
+    });
+  });
 }

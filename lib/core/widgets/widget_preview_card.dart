@@ -63,6 +63,8 @@ class WidgetPreviewCard extends ConsumerWidget {
             allNodes: nodes,
             accentColor: context.accentColor,
             enableActions: false, // Only interactive on dashboard
+            isPreview: true,
+            usePlaceholderData: node == null,
           ),
           const SizedBox(height: 8),
           // Info section

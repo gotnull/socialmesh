@@ -20,6 +20,14 @@
 - Use `debugPrint()` instead of `print()` for debug logging.
 - Ensure every feature is fully wired and functional end to end.
 
+## Complexity (CRITICAL)
+- NEVER opt for simplicity over functionality.
+- Implement the FULL solution regardless of complexity.
+- Do not simplify, shortcut, or reduce scope - complete the entire task as specified.
+- If a feature requires complex logic, implement all of it without compromise.
+- Never suggest "simpler alternatives" unless explicitly asked.
+- Complexity is acceptable; incomplete functionality is not.
+
 ## Code Reuse (CRITICAL)
 - BEFORE implementing any new widget, utility, or logic, SEARCH the codebase for existing implementations.
 - Look for existing widgets/cards in related screens (e.g., edit screens have widgets that creation screens should reuse).

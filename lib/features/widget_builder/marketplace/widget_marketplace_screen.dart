@@ -539,6 +539,11 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
     final myNodeNum = ref.watch(myNodeNumProvider);
     final node = myNodeNum != null ? nodes[myNodeNum] : null;
 
+    // Check against Firebase-backed user profile (reactive)
+    final profile = ref.watch(userProfileProvider).value;
+    final isAlreadyInstalled =
+        profile?.installedWidgetIds.contains(mWidget.id) ?? false;
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
@@ -602,6 +607,8 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
                       allNodes: nodes,
                       accentColor: context.accentColor,
                       enableActions: false, // Only interactive on dashboard
+                      isPreview: true,
+                      usePlaceholderData: node == null,
                     ),
                   );
                 },
@@ -700,9 +707,13 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isInstalling ? null : _installWidget,
+                onPressed: _isInstalling || isAlreadyInstalled
+                    ? null
+                    : _installWidget,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: context.accentColor,
+                  backgroundColor: isAlreadyInstalled
+                      ? AppTheme.textSecondary.withValues(alpha: 0.3)
+                      : context.accentColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -717,13 +728,29 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text(
-                        'Install Widget',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (isAlreadyInstalled)
+                            const Icon(
+                              Icons.check_circle,
+                              color: Colors.white70,
+                              size: 20,
+                            ),
+                          if (isAlreadyInstalled) const SizedBox(width: 8),
+                          Text(
+                            isAlreadyInstalled
+                                ? 'Already Installed'
+                                : 'Install Widget',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: isAlreadyInstalled
+                                  ? Colors.white70
+                                  : Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
               ),
             ),

@@ -548,13 +548,36 @@ class _ChartRendererState extends State<ChartRenderer> {
         _multiHistory[path] = [];
       }
     }
-    // Add initial data point
-    _addDataPoint();
-    // Start timer to collect history (every 2 seconds like signal strength)
-    if (!widget.isPreview) {
+
+    // For preview mode, generate sample data so the chart isn't empty
+    if (widget.isPreview) {
+      _initPreviewData();
+    } else {
+      // Add initial data point
+      _addDataPoint();
+      // Start timer to collect history (every 2 seconds like signal strength)
       _updateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
         if (mounted) _addDataPoint();
       });
+    }
+  }
+
+  /// Initialize sample data for preview mode
+  void _initPreviewData() {
+    if (_isMultiLine) {
+      // Generate sample data for each series
+      final random = DateTime.now().millisecondsSinceEpoch;
+      for (int i = 0; i < widget.element.chartBindingPaths!.length; i++) {
+        final path = widget.element.chartBindingPaths![i];
+        final baseValue = (i + 1) * 20.0 + (random % 10);
+        _multiHistory[path] = List.generate(
+          20,
+          (index) => baseValue + (index % 5) * 3 - 6 + (index * 0.5),
+        );
+      }
+    } else {
+      // Use existing sample data generator for single series
+      _history.addAll(_generateSampleData());
     }
   }
 

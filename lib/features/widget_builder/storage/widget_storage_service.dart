@@ -117,6 +117,15 @@ class WidgetStorageService {
       final widgets = await getWidgets();
       widgets.removeWhere((w) => w.id == id);
       await _saveWidgetsList(widgets);
+
+      // Also remove from marketplace installed list if present
+      final installed = _preferences.getStringList(_installedKey) ?? [];
+      if (installed.contains(id)) {
+        installed.remove(id);
+        await _preferences.setStringList(_installedKey, installed);
+        _logger.d('Removed from marketplace installed list: $id');
+      }
+
       _logger.d('Deleted widget: $id');
     } catch (e) {
       _logger.e('Error deleting widget: $e');
