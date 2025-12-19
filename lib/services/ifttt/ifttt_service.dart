@@ -187,6 +187,23 @@ class IftttService {
     AppLogging.ifttt('IFTTT: Config saved');
   }
 
+  /// Export config as JSON string for cloud sync
+  String toJsonString() {
+    return jsonEncode(_config.toJson());
+  }
+
+  /// Load config from JSON string (for cloud sync restore)
+  Future<void> loadFromJson(String jsonString) async {
+    try {
+      final json = jsonDecode(jsonString) as Map<String, dynamic>;
+      _config = IftttConfig.fromJson(json);
+      await _prefs?.setString(_configKey, jsonString);
+      AppLogging.ifttt('IFTTT: Loaded config from cloud');
+    } catch (e) {
+      AppLogging.ifttt('IFTTT: Error loading from JSON: $e');
+    }
+  }
+
   /// Check if IFTTT is properly configured and enabled
   bool get isActive => _config.enabled && _config.webhookKey.isNotEmpty;
 

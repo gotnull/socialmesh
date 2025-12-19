@@ -220,6 +220,10 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         splashMeshStretchIntensity:
             newPreferences.splashMeshStretchIntensity ??
             existingPrefs.splashMeshStretchIntensity,
+        automationsJson:
+            newPreferences.automationsJson ?? existingPrefs.automationsJson,
+        iftttConfigJson:
+            newPreferences.iftttConfigJson ?? existingPrefs.iftttConfigJson,
       );
 
       final updated = profile.copyWith(preferences: mergedPrefs);

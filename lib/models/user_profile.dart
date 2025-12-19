@@ -47,6 +47,12 @@ class UserPreferences {
   final double? splashMeshTouchIntensity;
   final double? splashMeshStretchIntensity;
 
+  /// Automations (JSON-encoded list)
+  final String? automationsJson;
+
+  /// IFTTT config (JSON-encoded)
+  final String? iftttConfigJson;
+
   const UserPreferences({
     this.themeModeIndex,
     this.notificationsEnabled,
@@ -77,6 +83,8 @@ class UserPreferences {
     this.splashMeshEnablePullToStretch,
     this.splashMeshTouchIntensity,
     this.splashMeshStretchIntensity,
+    this.automationsJson,
+    this.iftttConfigJson,
   });
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) {
@@ -120,6 +128,8 @@ class UserPreferences {
           ?.toDouble(),
       splashMeshStretchIntensity: (json['splashMeshStretchIntensity'] as num?)
           ?.toDouble(),
+      automationsJson: json['automationsJson'] as String?,
+      iftttConfigJson: json['iftttConfigJson'] as String?,
     );
   }
 
@@ -176,6 +186,8 @@ class UserPreferences {
         'splashMeshTouchIntensity': splashMeshTouchIntensity,
       if (splashMeshStretchIntensity != null)
         'splashMeshStretchIntensity': splashMeshStretchIntensity,
+      if (automationsJson != null) 'automationsJson': automationsJson,
+      if (iftttConfigJson != null) 'iftttConfigJson': iftttConfigJson,
     };
   }
 
@@ -209,6 +221,8 @@ class UserPreferences {
     bool? splashMeshEnablePullToStretch,
     double? splashMeshTouchIntensity,
     double? splashMeshStretchIntensity,
+    String? automationsJson,
+    String? iftttConfigJson,
   }) {
     return UserPreferences(
       themeModeIndex: themeModeIndex ?? this.themeModeIndex,
@@ -260,6 +274,8 @@ class UserPreferences {
           splashMeshTouchIntensity ?? this.splashMeshTouchIntensity,
       splashMeshStretchIntensity:
           splashMeshStretchIntensity ?? this.splashMeshStretchIntensity,
+      automationsJson: automationsJson ?? this.automationsJson,
+      iftttConfigJson: iftttConfigJson ?? this.iftttConfigJson,
     );
   }
 

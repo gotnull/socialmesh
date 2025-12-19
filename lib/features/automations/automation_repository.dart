@@ -37,7 +37,9 @@ class AutomationRepository extends ChangeNotifier {
           'AutomationRepository: Loaded ${_automations.length} automations',
         );
       } catch (e) {
-        AppLogging.automations('AutomationRepository: Error loading automations: $e');
+        AppLogging.automations(
+          'AutomationRepository: Error loading automations: $e',
+        );
         _automations = [];
       }
     }
@@ -71,11 +73,37 @@ class AutomationRepository extends ChangeNotifier {
     await _prefs?.setString(_logKey, jsonString);
   }
 
+  /// Export automations as JSON string for cloud sync
+  String toJsonString() {
+    return jsonEncode(_automations.map((a) => a.toJson()).toList());
+  }
+
+  /// Load automations from JSON string (for cloud sync restore)
+  Future<void> loadFromJson(String jsonString) async {
+    try {
+      final list = jsonDecode(jsonString) as List;
+      _automations = list
+          .map((item) => Automation.fromJson(item as Map<String, dynamic>))
+          .toList();
+      await _saveAutomations();
+      notifyListeners();
+      AppLogging.automations(
+        'AutomationRepository: Loaded ${_automations.length} automations from cloud',
+      );
+    } catch (e) {
+      AppLogging.automations(
+        'AutomationRepository: Error loading from JSON: $e',
+      );
+    }
+  }
+
   /// Add a new automation
   Future<void> addAutomation(Automation automation) async {
     _automations.add(automation);
     await _saveAutomations();
-    AppLogging.automations('AutomationRepository: Added automation "${automation.name}"');
+    AppLogging.automations(
+      'AutomationRepository: Added automation "${automation.name}"',
+    );
   }
 
   /// Update an existing automation

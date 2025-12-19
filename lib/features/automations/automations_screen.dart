@@ -294,6 +294,10 @@ class AutomationsScreen extends ConsumerWidget {
           Navigator.pop(context);
           _addFromTemplate(context, ref, templateId);
         },
+        onSelectTrigger: (triggerType) {
+          Navigator.pop(context);
+          _createWithTrigger(context, ref, triggerType);
+        },
       ),
     );
   }
@@ -302,6 +306,29 @@ class AutomationsScreen extends ConsumerWidget {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const AutomationEditorScreen()),
+    );
+  }
+
+  void _createWithTrigger(
+    BuildContext context,
+    WidgetRef ref,
+    TriggerType triggerType,
+  ) {
+    // Create a new automation with pre-filled trigger type
+    final automation = Automation(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: '${triggerType.displayName} Alert',
+      description: triggerType.defaultDescription,
+      trigger: AutomationTrigger(type: triggerType),
+      actions: [const AutomationAction(type: ActionType.pushNotification)],
+      enabled: true,
+      createdAt: DateTime.now(),
+    );
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AutomationEditorScreen(automation: automation),
+      ),
     );
   }
 
@@ -623,18 +650,41 @@ class _AutomationDebugSheet extends StatelessWidget {
 class _AddAutomationSheet extends StatelessWidget {
   final VoidCallback onCreateNew;
   final void Function(String templateId) onSelectTemplate;
+  final void Function(TriggerType triggerType) onSelectTrigger;
 
   const _AddAutomationSheet({
     required this.onCreateNew,
     required this.onSelectTemplate,
+    required this.onSelectTrigger,
   });
+
+  /// Get trigger types grouped by category
+  Map<String, List<TriggerType>> get _triggersByCategory {
+    final grouped = <String, List<TriggerType>>{};
+    for (final type in TriggerType.values) {
+      final category = type.category;
+      grouped.putIfAbsent(category, () => []).add(type);
+    }
+    return grouped;
+  }
+
+  /// Category order for display
+  static const _categoryOrder = [
+    'Node Status',
+    'Battery',
+    'Messages',
+    'Location',
+    'Time',
+    'Signal',
+    'Manual',
+  ];
 
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.7,
+      initialChildSize: 0.85,
       minChildSize: 0.4,
-      maxChildSize: 0.9,
+      maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) => Column(
         children: [
@@ -677,9 +727,22 @@ class _AddAutomationSheet extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkCard,
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.15),
+                          Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.05),
+                        ],
+                      ),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.darkBorder),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -708,7 +771,7 @@ class _AddAutomationSheet extends StatelessWidget {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                'Build a custom automation',
+                                'Build a custom automation with full control',
                                 style: TextStyle(
                                   color: Colors.grey,
                                   fontSize: 13,
@@ -723,64 +786,78 @@ class _AddAutomationSheet extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
+
+                // Templates section
                 Text(
-                  'Templates',
+                  'Quick Start Templates',
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(color: Colors.grey),
                 ),
                 const SizedBox(height: 12),
 
-                // Templates
-                ...AutomationRepository.templates.map(
-                  (template) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: BouncyTap(
-                      onTap: () => onSelectTemplate(template.id),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppTheme.darkCard,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppTheme.darkBorder),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(template.icon, size: 24),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    template.name,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  Text(
-                                    template.description,
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
+                // Templates in horizontal scroll
+                SizedBox(
+                  height: 100,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: AutomationRepository.templates.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final template = AutomationRepository.templates[index];
+                      return BouncyTap(
+                        onTap: () => onSelectTemplate(template.id),
+                        child: Container(
+                          width: 140,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkCard,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppTheme.darkBorder),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(template.icon, size: 24),
+                              const Spacer(),
+                              Text(
+                                template.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 13,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            const Icon(
-                              Icons.add_circle_outline,
-                              color: Colors.grey,
-                              size: 20,
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ),
+
+                const SizedBox(height: 24),
+
+                // Trigger types by category
+                Text(
+                  'Start with Trigger',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Choose a trigger type to get started quickly',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 16),
+
+                // Build trigger categories
+                ..._buildTriggerCategories(context),
 
                 SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
               ],
@@ -789,5 +866,117 @@ class _AddAutomationSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  List<Widget> _buildTriggerCategories(BuildContext context) {
+    final widgets = <Widget>[];
+    final grouped = _triggersByCategory;
+
+    for (final category in _categoryOrder) {
+      final triggers = grouped[category];
+      if (triggers == null || triggers.isEmpty) continue;
+
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 8, bottom: 8),
+          child: Row(
+            children: [
+              Icon(
+                _categoryIcon(category),
+                size: 16,
+                color: _categoryColor(context, category),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                category,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: _categoryColor(context, category),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      widgets.add(
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: triggers
+              .map((type) => _buildTriggerChip(context, type))
+              .toList(),
+        ),
+      );
+
+      widgets.add(const SizedBox(height: 8));
+    }
+
+    return widgets;
+  }
+
+  Widget _buildTriggerChip(BuildContext context, TriggerType type) {
+    return BouncyTap(
+      onTap: () => onSelectTrigger(type),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppTheme.darkCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.darkBorder),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(type.icon, size: 16),
+            const SizedBox(width: 6),
+            Text(type.displayName, style: const TextStyle(fontSize: 13)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _categoryIcon(String category) {
+    switch (category) {
+      case 'Node Status':
+        return Icons.router;
+      case 'Battery':
+        return Icons.battery_std;
+      case 'Messages':
+        return Icons.chat;
+      case 'Location':
+        return Icons.location_on;
+      case 'Time':
+        return Icons.schedule;
+      case 'Signal':
+        return Icons.signal_cellular_alt;
+      case 'Manual':
+        return Icons.touch_app;
+      default:
+        return Icons.bolt;
+    }
+  }
+
+  Color _categoryColor(BuildContext context, String category) {
+    switch (category) {
+      case 'Node Status':
+        return Colors.blue;
+      case 'Battery':
+        return Colors.amber;
+      case 'Messages':
+        return Colors.green;
+      case 'Location':
+        return Colors.purple;
+      case 'Time':
+        return Colors.cyan;
+      case 'Signal':
+        return Colors.orange;
+      case 'Manual':
+        return Theme.of(context).colorScheme.primary;
+      default:
+        return Colors.grey;
+    }
   }
 }

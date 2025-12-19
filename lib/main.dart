@@ -22,6 +22,7 @@ import 'providers/auth_providers.dart';
 import 'providers/profile_providers.dart';
 import 'providers/telemetry_providers.dart';
 import 'providers/subscription_providers.dart';
+import 'features/automations/automation_providers.dart';
 import 'models/mesh_models.dart';
 import 'services/app_intents/app_intents_service.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
@@ -435,6 +436,30 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         stretchIntensity: prefs.splashMeshStretchIntensity ?? 0.3,
       );
       AppLogging.debug('✨ Loaded splash mesh config from cloud');
+    }
+
+    // Load automations from cloud
+    if (prefs.automationsJson != null) {
+      try {
+        final automationRepo = ref.read(automationRepositoryProvider);
+        await automationRepo.loadFromJson(prefs.automationsJson!);
+        AppLogging.debug(
+          '⚡ Loaded ${automationRepo.automations.length} automations from cloud',
+        );
+      } catch (e) {
+        AppLogging.debug('Failed to parse automations: $e');
+      }
+    }
+
+    // Load IFTTT config from cloud
+    if (prefs.iftttConfigJson != null) {
+      try {
+        final iftttService = ref.read(iftttServiceProvider);
+        await iftttService.loadFromJson(prefs.iftttConfigJson!);
+        AppLogging.debug('🔗 Loaded IFTTT config from cloud');
+      } catch (e) {
+        AppLogging.debug('Failed to parse IFTTT config: $e');
+      }
     }
 
     AppLogging.debug('☁️ Loaded user preferences from cloud profile');

@@ -7,7 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/mesh_map_widget.dart';
+import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/auth_providers.dart';
+import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../services/ifttt/ifttt_service.dart';
@@ -100,6 +103,16 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
     );
 
     await iftttService.saveConfig(config);
+
+    // Sync to cloud if signed in
+    final user = ref.read(currentUserProvider);
+    if (user != null) {
+      ref
+          .read(userProfileProvider.notifier)
+          .updatePreferences(
+            UserPreferences(iftttConfigJson: iftttService.toJsonString()),
+          );
+    }
 
     if (mounted) {
       showSuccessSnackBar(context, 'IFTTT settings saved');

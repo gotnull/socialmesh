@@ -3,7 +3,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:socialmesh/core/logging.dart';
 
 import '../../models/mesh_models.dart';
+import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/auth_providers.dart';
+import '../../providers/profile_providers.dart';
 import 'automation_debug_service.dart';
 import 'automation_engine.dart';
 import 'automation_repository.dart';
@@ -133,24 +136,45 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
     await _loadAutomations();
   }
 
+  /// Sync automations to cloud
+  Future<void> _syncToCloud() async {
+    final user = ref.read(currentUserProvider);
+    if (user != null) {
+      try {
+        await ref
+            .read(userProfileProvider.notifier)
+            .updatePreferences(
+              UserPreferences(automationsJson: _repository.toJsonString()),
+            );
+        AppLogging.automations('Synced automations to cloud');
+      } catch (e) {
+        AppLogging.automations('Failed to sync automations to cloud: $e');
+      }
+    }
+  }
+
   Future<void> addAutomation(Automation automation) async {
     await _repository.addAutomation(automation);
     state = AsyncValue.data(_repository.automations);
+    await _syncToCloud();
   }
 
   Future<void> updateAutomation(Automation automation) async {
     await _repository.updateAutomation(automation);
     state = AsyncValue.data(_repository.automations);
+    await _syncToCloud();
   }
 
   Future<void> deleteAutomation(String id) async {
     await _repository.deleteAutomation(id);
     state = AsyncValue.data(_repository.automations);
+    await _syncToCloud();
   }
 
   Future<void> toggleAutomation(String id, bool enabled) async {
     await _repository.toggleAutomation(id, enabled);
     state = AsyncValue.data(_repository.automations);
+    await _syncToCloud();
   }
 
   Future<void> addFromTemplate(String templateId) async {
