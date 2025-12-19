@@ -5,8 +5,10 @@ import 'models/widget_schema.dart';
 import 'storage/widget_storage_service.dart';
 import 'wizard/widget_wizard_screen.dart';
 import 'marketplace/widget_marketplace_screen.dart';
+import 'marketplace/marketplace_providers.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/widget_preview_card.dart';
+import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../dashboard/models/dashboard_widget_config.dart';
@@ -41,15 +43,60 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       final widgets = await _storageService.getWidgets();
       final installedIds = await _storageService.getInstalledMarketplaceIds();
 
+      // Check profile for installed widgets that might need restoration
+      final profile = ref.read(userProfileProvider).value;
+      if (profile != null && profile.installedWidgetIds.isNotEmpty) {
+        final localWidgetIds = widgets.map((w) => w.id).toSet();
+        final missingIds = profile.installedWidgetIds
+            .where((id) => !localWidgetIds.contains(id))
+            .toList();
+
+        if (missingIds.isNotEmpty) {
+          debugPrint(
+            '[WidgetBuilder] Found ${missingIds.length} widgets to restore from cloud',
+          );
+          // Restore missing widgets from marketplace
+          await _restoreMissingWidgets(missingIds);
+          // Reload after restoration
+          final updatedWidgets = await _storageService.getWidgets();
+          final updatedInstalledIds =
+              await _storageService.getInstalledMarketplaceIds();
+          setState(() {
+            _myWidgets = updatedWidgets;
+            _marketplaceIds = updatedInstalledIds.toSet();
+            _isLoading = false;
+          });
+          return;
+        }
+      }
+
       setState(() {
         _myWidgets = widgets;
         _marketplaceIds = installedIds.toSet();
         _isLoading = false;
       });
     } catch (e) {
+      debugPrint('[WidgetBuilder] Error loading widgets: $e');
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  /// Restore widgets from marketplace that are in profile but not local storage
+  Future<void> _restoreMissingWidgets(List<String> widgetIds) async {
+    final service = ref.read(marketplaceServiceProvider);
+
+    for (final id in widgetIds) {
+      try {
+        debugPrint('[WidgetBuilder] Restoring widget: $id');
+        final schema = await service.downloadWidget(id);
+        await _storageService.installMarketplaceWidget(schema);
+        debugPrint('[WidgetBuilder] Restored widget: ${schema.name}');
+      } catch (e) {
+        debugPrint('[WidgetBuilder] Failed to restore widget $id: $e');
+        // Continue with other widgets even if one fails
+      }
     }
   }
 

@@ -257,6 +257,7 @@ class ProfileCloudSyncService {
       'socialLinks': profile.socialLinks?.toJson(),
       'primaryNodeId': profile.primaryNodeId,
       'accentColorIndex': profile.accentColorIndex,
+      'installedWidgetIds': profile.installedWidgetIds,
       'isVerified': profile.isVerified,
       'createdAt': profile.createdAt.toIso8601String(),
       'updatedAt': FieldValue.serverTimestamp(),
@@ -283,6 +284,10 @@ class ProfileCloudSyncService {
           : null,
       primaryNodeId: data['primaryNodeId'] as int?,
       accentColorIndex: data['accentColorIndex'] as int?,
+      installedWidgetIds: (data['installedWidgetIds'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       isVerified: data['isVerified'] as bool? ?? false,
       isSynced: true,
       createdAt: data['createdAt'] != null
@@ -302,6 +307,12 @@ class ProfileCloudSyncService {
     );
     if (local == null) return cloud;
 
+    // Merge installed widget IDs (union of both)
+    final mergedWidgetIds = <String>{
+      ...local.installedWidgetIds,
+      ...cloud.installedWidgetIds,
+    }.toList();
+
     // If local has never been synced, prefer cloud
     if (!local.isSynced) {
       debugPrint('[ProfileSync] Local not synced, using cloud profile');
@@ -313,6 +324,7 @@ class ProfileCloudSyncService {
         socialLinks: cloud.socialLinks ?? local.socialLinks,
         primaryNodeId: cloud.primaryNodeId ?? local.primaryNodeId,
         accentColorIndex: cloud.accentColorIndex ?? local.accentColorIndex,
+        installedWidgetIds: mergedWidgetIds,
       );
     }
 
@@ -322,10 +334,10 @@ class ProfileCloudSyncService {
     );
     if (local.updatedAt.isAfter(cloud.updatedAt)) {
       debugPrint('[ProfileSync] Local is newer, using local');
-      return local.copyWith(isSynced: true);
+      return local.copyWith(isSynced: true, installedWidgetIds: mergedWidgetIds);
     }
     debugPrint('[ProfileSync] Cloud is newer, using cloud');
-    return cloud;
+    return cloud.copyWith(installedWidgetIds: mergedWidgetIds);
   }
 }
 

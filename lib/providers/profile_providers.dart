@@ -297,6 +297,61 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       state = AsyncValue.error(e, st);
     }
   }
+
+  /// Add an installed widget ID to profile
+  Future<void> addInstalledWidget(String widgetId) async {
+    final profile = state.value;
+    if (profile == null) return;
+
+    try {
+      final ids = List<String>.from(profile.installedWidgetIds);
+      if (!ids.contains(widgetId)) {
+        ids.add(widgetId);
+        final updated = profile.copyWith(installedWidgetIds: ids);
+        await profileService.saveProfile(updated);
+        state = AsyncValue.data(updated);
+
+        // Sync to cloud if signed in
+        final user = ref.read(currentUserProvider);
+        if (user != null) {
+          await profileCloudSyncService.syncToCloud(user.uid);
+        }
+      }
+    } catch (e, st) {
+      debugPrint('[UserProfile] Error adding installed widget: $e');
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  /// Remove an installed widget ID from profile
+  Future<void> removeInstalledWidget(String widgetId) async {
+    final profile = state.value;
+    if (profile == null) return;
+
+    try {
+      final ids = List<String>.from(profile.installedWidgetIds);
+      if (ids.remove(widgetId)) {
+        final updated = profile.copyWith(installedWidgetIds: ids);
+        await profileService.saveProfile(updated);
+        state = AsyncValue.data(updated);
+
+        // Sync to cloud if signed in
+        final user = ref.read(currentUserProvider);
+        if (user != null) {
+          await profileCloudSyncService.syncToCloud(user.uid);
+        }
+      }
+    } catch (e, st) {
+      debugPrint('[UserProfile] Error removing installed widget: $e');
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  /// Restore installed widgets from profile (call after app reinstall/login)
+  Future<List<String>> getInstalledWidgetIds() async {
+    final profile = state.value;
+    return profile?.installedWidgetIds ?? [];
+  }
 }
 
 /// Provider for the current user profile

@@ -38,6 +38,9 @@ class UserProfile {
   /// User's preferred accent color index
   final int? accentColorIndex;
 
+  /// IDs of marketplace widgets installed by the user
+  final List<String> installedWidgetIds;
+
   /// When the profile was created
   final DateTime createdAt;
 
@@ -61,6 +64,7 @@ class UserProfile {
     this.socialLinks,
     this.primaryNodeId,
     this.accentColorIndex,
+    this.installedWidgetIds = const [],
     required this.createdAt,
     required this.updatedAt,
     this.isSynced = false,
@@ -114,6 +118,10 @@ class UserProfile {
           : null,
       primaryNodeId: json['primaryNodeId'] as int?,
       accentColorIndex: json['accentColorIndex'] as int?,
+      installedWidgetIds: (json['installedWidgetIds'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
       isSynced: json['isSynced'] as bool? ?? false,
@@ -134,6 +142,7 @@ class UserProfile {
       'socialLinks': socialLinks?.toJson(),
       'primaryNodeId': primaryNodeId,
       'accentColorIndex': accentColorIndex,
+      'installedWidgetIds': installedWidgetIds,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'isSynced': isSynced,
@@ -161,6 +170,7 @@ class UserProfile {
     ProfileSocialLinks? socialLinks,
     int? primaryNodeId,
     int? accentColorIndex,
+    List<String>? installedWidgetIds,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isSynced,
@@ -185,6 +195,7 @@ class UserProfile {
           ? null
           : (primaryNodeId ?? this.primaryNodeId),
       accentColorIndex: accentColorIndex ?? this.accentColorIndex,
+      installedWidgetIds: installedWidgetIds ?? this.installedWidgetIds,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
       isSynced: isSynced ?? this.isSynced,

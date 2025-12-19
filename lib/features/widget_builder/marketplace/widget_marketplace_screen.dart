@@ -7,6 +7,7 @@ import '../storage/widget_storage_service.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/widget_preview_card.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/profile_providers.dart';
 import '../../../providers/splash_mesh_provider.dart';
 import '../../../utils/snackbar.dart';
 import 'marketplace_providers.dart';
@@ -697,6 +698,11 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
       final storage = WidgetStorageService();
       await storage.init();
       await storage.installMarketplaceWidget(schema);
+
+      // Add to user profile for cloud sync (survives reinstall)
+      await ref
+          .read(userProfileProvider.notifier)
+          .addInstalledWidget(widget.marketplaceWidget.id);
 
       if (mounted) {
         showSuccessSnackBar(
