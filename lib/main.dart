@@ -14,6 +14,7 @@ import 'core/logging.dart';
 import 'core/widgets/animated_tagline.dart';
 import 'providers/splash_mesh_provider.dart';
 import 'providers/app_providers.dart';
+import 'providers/profile_providers.dart';
 import 'providers/telemetry_providers.dart';
 import 'providers/subscription_providers.dart';
 import 'models/mesh_models.dart';
@@ -266,8 +267,31 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
 
   Future<void> _loadAccentColor() async {
     final settings = await ref.read(settingsServiceProvider.future);
-    final colorValue = settings.accentColor;
-    ref.read(accentColorProvider.notifier).setColor(Color(colorValue));
+
+    // First, try to load from cloud profile (survives reinstall)
+    try {
+      final profile = await ref.read(userProfileProvider.future);
+      final colorIndex = profile?.accentColorIndex;
+      if (colorIndex != null &&
+          colorIndex >= 0 &&
+          colorIndex < AccentColors.all.length) {
+        final cloudColor = AccentColors.all[colorIndex];
+        ref.read(accentColorProvider.notifier).setColor(cloudColor);
+        // Update local settings to match cloud
+        await settings.setAccentColor(cloudColor.toARGB32());
+        AppLogging.debug(
+          '🎨 Loaded accent color from cloud profile: ${AccentColors.names[colorIndex]}',
+        );
+      } else {
+        // No cloud color, use local settings
+        final colorValue = settings.accentColor;
+        ref.read(accentColorProvider.notifier).setColor(Color(colorValue));
+      }
+    } catch (e) {
+      // Profile not available, fall back to local settings
+      final colorValue = settings.accentColor;
+      ref.read(accentColorProvider.notifier).setColor(Color(colorValue));
+    }
 
     // Also load theme mode
     final themeModeIndex = settings.themeMode;

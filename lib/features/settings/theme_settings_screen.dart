@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../services/storage/storage_service.dart';
 
@@ -286,6 +287,10 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
               HapticFeedback.selectionClick();
               ref.read(accentColorProvider.notifier).setColor(color);
               await settingsService.setAccentColor(color.toARGB32());
+              // Also sync to cloud profile for cross-device persistence
+              ref
+                  .read(userProfileProvider.notifier)
+                  .updateProfile(accentColorIndex: index);
             },
             scaleFactor: 0.9,
             child: Tooltip(
