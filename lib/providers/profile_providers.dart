@@ -114,13 +114,16 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       );
       state = AsyncValue.data(updated);
 
-      // Sync to cloud if signed in (fire-and-forget, don't block UI)
+      // Sync to cloud if signed in - await to ensure sync completes
       final user = ref.read(currentUserProvider);
       if (user != null) {
-        // ignore: unawaited_futures
-        profileCloudSyncService.syncToCloud(user.uid).catchError((e) {
-          debugPrint('[UserProfile] Cloud sync failed (will retry later): $e');
-        });
+        try {
+          await profileCloudSyncService.syncToCloud(user.uid);
+          debugPrint('[UserProfile] Cloud sync completed successfully');
+        } catch (syncError) {
+          // Cloud sync failed but local save succeeded - don't crash UI
+          debugPrint('[UserProfile] Cloud sync failed: $syncError');
+        }
       }
     } catch (e, st) {
       debugPrint('[UserProfile] Error updating profile: $e');
@@ -223,15 +226,16 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       await profileService.saveProfile(updated);
       state = AsyncValue.data(updated);
 
-      // Sync to cloud if signed in (fire-and-forget, don't block UI)
+      // Sync to cloud if signed in - await to ensure sync completes
       final user = ref.read(currentUserProvider);
       if (user != null) {
-        // ignore: unawaited_futures
-        profileCloudSyncService.syncToCloud(user.uid).catchError((e) {
-          debugPrint(
-            '[UserProfile] Cloud sync failed for preferences (will retry later): $e',
-          );
-        });
+        try {
+          await profileCloudSyncService.syncToCloud(user.uid);
+          debugPrint('[UserProfile] Preferences cloud sync completed');
+        } catch (syncError) {
+          // Cloud sync failed but local save succeeded - don't crash UI
+          debugPrint('[UserProfile] Preferences cloud sync failed: $syncError');
+        }
       }
     } catch (e, st) {
       debugPrint('[UserProfile] Error updating preferences: $e');
