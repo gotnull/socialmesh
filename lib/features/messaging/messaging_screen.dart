@@ -280,88 +280,219 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
     final myNodeNum = ref.read(myNodeNumProvider);
 
     // Filter out self from potential recipients
-    final otherNodes = nodes.values
-        .where((n) => n.nodeNum != myNodeNum)
-        .toList();
+    final otherNodes =
+        nodes.values.where((n) => n.nodeNum != myNodeNum).toList()
+          ..sort((a, b) {
+            // Online nodes first, then by name
+            if (a.isOnline != b.isOnline) return a.isOnline ? -1 : 1;
+            final aName = a.longName ?? a.shortName ?? '';
+            final bName = b.longName ?? b.shortName ?? '';
+            return aName.compareTo(bName);
+          });
+
+    var searchQuery = '';
 
     AppBottomSheet.show(
       context: context,
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(24, 0, 24, 16),
-            child: Text(
-              'New Message',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          Container(
-            height: 1,
-            color: AppTheme.darkBorder.withValues(alpha: 0.3),
-          ),
+      child: StatefulBuilder(
+        builder: (context, setSheetState) {
+          final filteredNodes = searchQuery.isEmpty
+              ? otherNodes
+              : otherNodes.where((n) {
+                  final query = searchQuery.toLowerCase();
+                  final name = (n.longName ?? n.shortName ?? '').toLowerCase();
+                  final shortName = (n.shortName ?? '').toLowerCase();
+                  return name.contains(query) || shortName.contains(query);
+                }).toList();
 
-          // Nodes section
-          if (otherNodes.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(24),
-              child: Center(
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(24, 0, 24, 16),
                 child: Text(
-                  'No other nodes in range',
-                  style: TextStyle(fontSize: 14, color: AppTheme.textTertiary),
+                  'New Message',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-            )
-          else ...[
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(
-                'NEARBY NODES',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textTertiary,
 
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-            for (final node in otherNodes.take(10))
-              ListTile(
-                leading: NodeAvatar(
-                  text: node.avatarName,
-                  color: node.avatarColor != null
-                      ? Color(node.avatarColor!)
-                      : AppTheme.graphPurple,
-                  size: 40,
-                ),
-                title: Text(
-                  node.displayName,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        type: ConversationType.directMessage,
-                        nodeNum: node.nodeNum,
-                        title: node.displayName,
-                        avatarColor: node.avatarColor,
-                      ),
+              // Search bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: TextField(
+                  autofocus: false,
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: 'Search nodes...',
+                    hintStyle: const TextStyle(
+                      color: AppTheme.textTertiary,
+                      fontSize: 14,
                     ),
-                  );
-                },
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: AppTheme.textTertiary,
+                      size: 20,
+                    ),
+                    filled: true,
+                    fillColor: AppTheme.darkBackground,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    isDense: true,
+                  ),
+                  onChanged: (value) =>
+                      setSheetState(() => searchQuery = value),
+                ),
               ),
-          ],
-        ],
+
+              Container(
+                height: 1,
+                color: AppTheme.darkBorder.withValues(alpha: 0.3),
+              ),
+
+              // Nodes section
+              if (filteredNodes.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          searchQuery.isEmpty
+                              ? Icons.people_outline
+                              : Icons.search_off,
+                          size: 48,
+                          color: AppTheme.textTertiary,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          searchQuery.isEmpty
+                              ? 'No other nodes in range'
+                              : 'No nodes match "$searchQuery"',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'NEARBY NODES',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textTertiary,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${filteredNodes.length} ${filteredNodes.length == 1 ? 'node' : 'nodes'}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.4,
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: filteredNodes.length,
+                    itemBuilder: (context, index) {
+                      final node = filteredNodes[index];
+                      return ListTile(
+                        leading: Stack(
+                          children: [
+                            NodeAvatar(
+                              text: node.avatarName,
+                              color: node.avatarColor != null
+                                  ? Color(node.avatarColor!)
+                                  : AppTheme.graphPurple,
+                              size: 40,
+                            ),
+                            if (node.isOnline)
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.successGreen,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: AppTheme.darkCard,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        title: Text(
+                          node.displayName,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        subtitle: node.isOnline
+                            ? const Text(
+                                'Online',
+                                style: TextStyle(
+                                  color: AppTheme.successGreen,
+                                  fontSize: 12,
+                                ),
+                              )
+                            : Text(
+                                node.shortName ?? 'Offline',
+                                style: const TextStyle(
+                                  color: AppTheme.textTertiary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ChatScreen(
+                                type: ConversationType.directMessage,
+                                nodeNum: node.nodeNum,
+                                title: node.displayName,
+                                avatarColor: node.avatarColor,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
       ),
     );
   }

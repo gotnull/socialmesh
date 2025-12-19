@@ -77,11 +77,872 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  String _searchQuery = '';
+  bool _isSearching = false;
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  /// Get all searchable settings items
+  List<_SearchableSettingItem> _getSearchableSettings(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
+    final settingsServiceAsync = ref.read(settingsServiceProvider);
+    final purchaseState = ref.watch(purchaseStateProvider);
+
+    return settingsServiceAsync.maybeWhen(
+      data: (settingsService) => [
+        // Upgrades
+        _SearchableSettingItem(
+          icon: Icons.rocket_launch_rounded,
+          title: 'Unlock Premium Features',
+          subtitle: 'Ringtones, themes, automations, IFTTT, widgets',
+          keywords: ['premium', 'upgrade', 'purchase', 'buy', 'subscription'],
+          section: 'UPGRADES',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.music_note,
+          title: 'Ringtones',
+          subtitle: 'Custom notification sounds',
+          keywords: ['sound', 'audio', 'tone', 'music', 'alert'],
+          section: 'UPGRADES',
+          onTap: () {
+            if (purchaseState.hasFeature(PremiumFeature.customRingtones)) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RingtoneScreen()),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
+            }
+          },
+        ),
+        _SearchableSettingItem(
+          icon: Icons.palette,
+          title: 'Themes',
+          subtitle: 'Accent colors and visual customization',
+          keywords: ['color', 'accent', 'visual', 'appearance', 'dark'],
+          section: 'UPGRADES',
+          onTap: () {
+            if (purchaseState.hasFeature(PremiumFeature.premiumThemes)) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ThemeSettingsScreen()),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
+            }
+          },
+        ),
+        _SearchableSettingItem(
+          icon: Icons.bolt,
+          title: 'Automations',
+          subtitle: 'Automated actions and triggers',
+          keywords: ['auto', 'trigger', 'action', 'rule', 'automatic'],
+          section: 'UPGRADES',
+          onTap: () {
+            if (purchaseState.hasFeature(PremiumFeature.automations)) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AutomationsScreen()),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
+            }
+          },
+        ),
+        _SearchableSettingItem(
+          icon: Icons.webhook,
+          title: 'IFTTT',
+          subtitle: 'Integration with external services',
+          keywords: ['integration', 'webhook', 'external', 'connect'],
+          section: 'UPGRADES',
+          onTap: () {
+            if (purchaseState.hasFeature(PremiumFeature.iftttIntegration)) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const IftttConfigScreen()),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
+            }
+          },
+        ),
+        _SearchableSettingItem(
+          icon: Icons.widgets,
+          title: 'Widgets',
+          subtitle: 'Home screen widgets',
+          keywords: ['home', 'widget', 'screen', 'launcher'],
+          section: 'UPGRADES',
+          onTap: () {
+            if (purchaseState.hasFeature(PremiumFeature.homeWidgets)) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const WidgetBuilderScreen()),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
+            }
+          },
+        ),
+
+        // Profile
+        _SearchableSettingItem(
+          icon: Icons.person_outline,
+          title: 'Profile',
+          subtitle: 'Your display name, avatar, and bio',
+          keywords: ['user', 'name', 'avatar', 'account', 'bio'],
+          section: 'PROFILE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          ),
+        ),
+
+        // Connection
+        _SearchableSettingItem(
+          icon: Icons.bluetooth,
+          title: 'Auto-reconnect',
+          subtitle: 'Automatically reconnect to last device',
+          keywords: ['bluetooth', 'connect', 'device', 'auto'],
+          section: 'CONNECTION',
+          hasSwitch: true,
+        ),
+
+        // Haptic Feedback
+        _SearchableSettingItem(
+          icon: Icons.vibration,
+          title: 'Haptic feedback',
+          subtitle: 'Vibration feedback for interactions',
+          keywords: ['vibration', 'haptic', 'touch', 'feedback'],
+          section: 'HAPTIC FEEDBACK',
+          hasSwitch: true,
+        ),
+        _SearchableSettingItem(
+          icon: Icons.tune,
+          title: 'Haptic Intensity',
+          subtitle: 'Light, medium, or heavy feedback',
+          keywords: ['vibration', 'strength', 'intensity'],
+          section: 'HAPTIC FEEDBACK',
+        ),
+
+        // Animations
+        _SearchableSettingItem(
+          icon: Icons.animation,
+          title: 'List animations',
+          subtitle: 'Slide and bounce effects on lists',
+          keywords: ['animation', 'motion', 'effect', 'slide', 'bounce'],
+          section: 'ANIMATIONS',
+          hasSwitch: true,
+        ),
+        _SearchableSettingItem(
+          icon: Icons.view_in_ar,
+          title: '3D effects',
+          subtitle: 'Perspective transforms and depth effects',
+          keywords: ['3d', 'depth', 'perspective', 'transform'],
+          section: 'ANIMATIONS',
+          hasSwitch: true,
+        ),
+
+        // Notifications
+        _SearchableSettingItem(
+          icon: Icons.notifications_outlined,
+          title: 'Push notifications',
+          subtitle: 'Master toggle for all notifications',
+          keywords: ['notification', 'alert', 'push', 'notify'],
+          section: 'NOTIFICATIONS',
+          hasSwitch: true,
+        ),
+        _SearchableSettingItem(
+          icon: Icons.person_add_outlined,
+          title: 'New nodes notifications',
+          subtitle: 'Notify when new nodes join the mesh',
+          keywords: ['notification', 'node', 'join', 'new'],
+          section: 'NOTIFICATIONS',
+          hasSwitch: true,
+        ),
+        _SearchableSettingItem(
+          icon: Icons.chat_bubble_outline,
+          title: 'Direct message notifications',
+          subtitle: 'Notify for private messages',
+          keywords: ['notification', 'dm', 'direct', 'message', 'private'],
+          section: 'NOTIFICATIONS',
+          hasSwitch: true,
+        ),
+        _SearchableSettingItem(
+          icon: Icons.forum_outlined,
+          title: 'Channel message notifications',
+          subtitle: 'Notify for channel broadcasts',
+          keywords: ['notification', 'channel', 'broadcast', 'group'],
+          section: 'NOTIFICATIONS',
+          hasSwitch: true,
+        ),
+        _SearchableSettingItem(
+          icon: Icons.volume_up_outlined,
+          title: 'Notification sound',
+          subtitle: 'Play sound for notifications',
+          keywords: ['sound', 'audio', 'alert', 'ring'],
+          section: 'NOTIFICATIONS',
+          hasSwitch: true,
+        ),
+        _SearchableSettingItem(
+          icon: Icons.vibration,
+          title: 'Notification vibration',
+          subtitle: 'Vibrate for notifications',
+          keywords: ['vibrate', 'haptic', 'buzz'],
+          section: 'NOTIFICATIONS',
+          hasSwitch: true,
+        ),
+
+        // Messaging
+        _SearchableSettingItem(
+          icon: Icons.flash_on_outlined,
+          title: 'Quick responses',
+          subtitle: 'Show quick response bar',
+          keywords: ['quick', 'response', 'reply', 'fast'],
+          section: 'MESSAGING',
+          hasSwitch: true,
+        ),
+        _SearchableSettingItem(
+          icon: Icons.message_outlined,
+          title: 'Canned Messages',
+          subtitle: 'Pre-configured device messages',
+          keywords: ['canned', 'preset', 'template', 'message'],
+          section: 'MESSAGING',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const CannedMessageModuleConfigScreen(),
+            ),
+          ),
+        ),
+
+        // Data & Storage
+        _SearchableSettingItem(
+          icon: Icons.history,
+          title: 'Message history limit',
+          subtitle: 'Maximum messages to keep',
+          keywords: ['history', 'limit', 'storage', 'message', 'keep'],
+          section: 'DATA & STORAGE',
+        ),
+        _SearchableSettingItem(
+          icon: Icons.cloud_upload_outlined,
+          title: 'Cloud backup',
+          subtitle: 'Sync data to Firebase cloud',
+          keywords: ['cloud', 'backup', 'sync', 'firebase', 'storage'],
+          section: 'DATA & STORAGE',
+          hasSwitch: true,
+        ),
+        _SearchableSettingItem(
+          icon: Icons.map_outlined,
+          title: 'Offline maps',
+          subtitle: 'Download maps for offline use',
+          keywords: ['map', 'offline', 'download', 'cache'],
+          section: 'DATA & STORAGE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const OfflineMapsScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.ios_share,
+          title: 'Export data',
+          subtitle: 'Export messages and settings',
+          keywords: ['export', 'backup', 'download', 'save'],
+          section: 'DATA & STORAGE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DataExportScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.delete_outline,
+          title: 'Clear all messages',
+          subtitle: 'Delete all stored messages',
+          keywords: ['clear', 'delete', 'remove', 'message', 'clean'],
+          section: 'DATA & STORAGE',
+        ),
+        _SearchableSettingItem(
+          icon: Icons.refresh,
+          title: 'Reset local data',
+          subtitle: 'Clear all local app data',
+          keywords: ['reset', 'clear', 'local', 'data', 'factory'],
+          section: 'DATA & STORAGE',
+        ),
+
+        // Device
+        _SearchableSettingItem(
+          icon: Icons.sync,
+          title: 'Force sync',
+          subtitle: 'Force configuration sync',
+          keywords: ['sync', 'force', 'refresh', 'update'],
+          section: 'DEVICE',
+        ),
+        _SearchableSettingItem(
+          icon: Icons.qr_code_scanner,
+          title: 'Scan for device',
+          subtitle: 'Scan QR code for easy setup',
+          keywords: ['scan', 'qr', 'device', 'setup', 'connect'],
+          section: 'DEVICE',
+        ),
+        _SearchableSettingItem(
+          icon: Icons.public,
+          title: 'Region',
+          subtitle: 'Device radio frequency region',
+          keywords: ['region', 'frequency', 'country', 'radio'],
+          section: 'DEVICE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const RegionSelectionScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.settings,
+          title: 'Device config',
+          subtitle: 'Device name, role, and behavior',
+          keywords: ['device', 'config', 'name', 'role', 'settings'],
+          section: 'DEVICE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DeviceConfigScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.radio,
+          title: 'Radio config',
+          subtitle: 'LoRa, modem, channel settings',
+          keywords: ['radio', 'lora', 'modem', 'channel', 'frequency'],
+          section: 'DEVICE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const RadioConfigScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.my_location,
+          title: 'Position config',
+          subtitle: 'GPS and position sharing',
+          keywords: ['gps', 'position', 'location', 'share'],
+          section: 'DEVICE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PositionConfigScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.display_settings_outlined,
+          title: 'Display config',
+          subtitle: 'Screen brightness and timeout',
+          keywords: ['display', 'screen', 'brightness', 'oled', 'timeout'],
+          section: 'DEVICE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DisplayConfigScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.bluetooth_searching,
+          title: 'Bluetooth config',
+          subtitle: 'Bluetooth settings and PIN',
+          keywords: ['bluetooth', 'ble', 'pin', 'pairing'],
+          section: 'DEVICE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const BluetoothConfigScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.wifi,
+          title: 'Network config',
+          subtitle: 'WiFi and network settings',
+          keywords: ['wifi', 'network', 'internet', 'ip', 'dhcp'],
+          section: 'DEVICE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const NetworkConfigScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.battery_saver,
+          title: 'Power config',
+          subtitle: 'Power saving and sleep settings',
+          keywords: ['power', 'battery', 'sleep', 'save', 'energy'],
+          section: 'DEVICE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PowerConfigScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.security,
+          title: 'Security',
+          subtitle: 'Access controls, managed mode',
+          keywords: ['security', 'access', 'lock', 'admin', 'managed'],
+          section: 'DEVICE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SecurityConfigScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.power_settings_new,
+          title: 'Device Management',
+          subtitle: 'Reboot, shutdown, factory reset',
+          keywords: ['reboot', 'shutdown', 'reset', 'restart', 'factory'],
+          section: 'DEVICE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DeviceManagementScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.info_outline,
+          title: 'Device info',
+          subtitle: 'View connected device details',
+          keywords: ['info', 'details', 'hardware', 'version'],
+          section: 'DEVICE',
+        ),
+        _SearchableSettingItem(
+          icon: Icons.qr_code_scanner,
+          title: 'Import channel via QR',
+          subtitle: 'Scan a Meshtastic channel QR code',
+          keywords: ['qr', 'channel', 'import', 'scan'],
+          section: 'DEVICE',
+          onTap: () => Navigator.pushNamed(context, '/qr-import'),
+        ),
+
+        // Modules
+        _SearchableSettingItem(
+          icon: Icons.cloud,
+          title: 'MQTT',
+          subtitle: 'Configure mesh-to-internet bridge',
+          keywords: ['mqtt', 'internet', 'bridge', 'server', 'broker'],
+          section: 'MODULES',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const MqttConfigScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.radar,
+          title: 'Range Test',
+          subtitle: 'Test signal range with other nodes',
+          keywords: ['range', 'test', 'signal', 'distance'],
+          section: 'MODULES',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const RangeTestScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.storage,
+          title: 'Store & Forward',
+          subtitle: 'Store and relay messages for offline nodes',
+          keywords: ['store', 'forward', 'relay', 'offline', 'cache'],
+          section: 'MODULES',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const StoreForwardConfigScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.sensors,
+          title: 'Detection Sensor',
+          subtitle: 'Configure GPIO-based motion/door sensors',
+          keywords: ['sensor', 'motion', 'door', 'gpio', 'detection'],
+          section: 'MODULES',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const DetectionSensorConfigScreen(),
+            ),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.notifications_active,
+          title: 'External Notification',
+          subtitle: 'Configure buzzers, LEDs, and vibration alerts',
+          keywords: ['buzzer', 'led', 'vibration', 'external', 'alert'],
+          section: 'MODULES',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ExternalNotificationConfigScreen(),
+            ),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.lightbulb_outline,
+          title: 'Ambient Lighting',
+          subtitle: 'Configure LED and RGB settings',
+          keywords: ['led', 'rgb', 'light', 'ambient', 'neopixel'],
+          section: 'MODULES',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const AmbientLightingConfigScreen(),
+            ),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.people_outline,
+          title: 'PAX Counter',
+          subtitle: 'WiFi/BLE device detection settings',
+          keywords: ['pax', 'counter', 'wifi', 'ble', 'detection', 'people'],
+          section: 'MODULES',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PaxCounterConfigScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.analytics_outlined,
+          title: 'Telemetry Intervals',
+          subtitle: 'Configure telemetry update frequency',
+          keywords: ['telemetry', 'interval', 'frequency', 'update'],
+          section: 'MODULES',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const TelemetryConfigScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.usb_rounded,
+          title: 'Serial',
+          subtitle: 'Serial port configuration',
+          keywords: ['serial', 'usb', 'port', 'uart'],
+          section: 'MODULES',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SerialConfigScreen()),
+          ),
+        ),
+
+        // Telemetry Logs
+        _SearchableSettingItem(
+          icon: Icons.battery_charging_full,
+          title: 'Device Metrics',
+          subtitle: 'Battery, voltage, utilization history',
+          keywords: ['battery', 'voltage', 'metrics', 'device', 'history'],
+          section: 'TELEMETRY LOGS',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DeviceMetricsLogScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.thermostat,
+          title: 'Environment Metrics',
+          subtitle: 'Temperature, humidity, pressure logs',
+          keywords: [
+            'temperature',
+            'humidity',
+            'pressure',
+            'environment',
+            'weather',
+          ],
+          section: 'TELEMETRY LOGS',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const EnvironmentMetricsLogScreen(),
+            ),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.air,
+          title: 'Air Quality',
+          subtitle: 'PM2.5, PM10, CO2 readings',
+          keywords: ['air', 'quality', 'pm25', 'pm10', 'co2', 'pollution'],
+          section: 'TELEMETRY LOGS',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AirQualityLogScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.location_on_outlined,
+          title: 'Position History',
+          subtitle: 'GPS position logs',
+          keywords: ['position', 'gps', 'location', 'history', 'track'],
+          section: 'TELEMETRY LOGS',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PositionLogScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.timeline,
+          title: 'Traceroute History',
+          subtitle: 'Network path analysis logs',
+          keywords: ['traceroute', 'path', 'network', 'hop', 'route'],
+          section: 'TELEMETRY LOGS',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const TraceRouteLogScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.people_alt_outlined,
+          title: 'PAX Counter Logs',
+          subtitle: 'Device detection history',
+          keywords: ['pax', 'counter', 'log', 'detection', 'history'],
+          section: 'TELEMETRY LOGS',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PaxCounterLogScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.sensors,
+          title: 'Detection Sensor Logs',
+          subtitle: 'Sensor event history',
+          keywords: ['sensor', 'detection', 'log', 'event', 'history'],
+          section: 'TELEMETRY LOGS',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DetectionSensorLogScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.route,
+          title: 'Routes',
+          subtitle: 'Record and manage GPS routes',
+          keywords: ['route', 'gps', 'track', 'record', 'path'],
+          section: 'TELEMETRY LOGS',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const RoutesScreen()),
+          ),
+        ),
+
+        // Tools
+        _SearchableSettingItem(
+          icon: Icons.gps_fixed,
+          title: 'GPS Status',
+          subtitle: 'View detailed GPS information',
+          keywords: ['gps', 'status', 'satellite', 'location', 'fix'],
+          section: 'TOOLS',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const GpsStatusScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.system_update,
+          title: 'Firmware Update',
+          subtitle: 'Check for device firmware updates',
+          keywords: ['firmware', 'update', 'ota', 'upgrade', 'version'],
+          section: 'TOOLS',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const FirmwareUpdateScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.ios_share,
+          title: 'Export Data',
+          subtitle: 'Export messages, telemetry, routes',
+          keywords: ['export', 'data', 'backup', 'messages', 'telemetry'],
+          section: 'TOOLS',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DataExportScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.article_outlined,
+          title: 'App Log',
+          subtitle: 'View application debug logs',
+          keywords: ['log', 'debug', 'app', 'error', 'console'],
+          section: 'TOOLS',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AppLogScreen()),
+          ),
+        ),
+
+        // About
+        _SearchableSettingItem(
+          icon: Icons.info,
+          title: 'Socialmesh',
+          subtitle: 'Meshtastic companion app',
+          keywords: ['about', 'version', 'app', 'info'],
+          section: 'ABOUT',
+        ),
+        _SearchableSettingItem(
+          icon: Icons.help_outline,
+          title: 'Help & Support',
+          subtitle: 'FAQ, troubleshooting, and contact info',
+          keywords: ['help', 'support', 'faq', 'contact', 'troubleshoot'],
+          section: 'ABOUT',
+          onTap: () => LegalDocumentSheet.showSupport(context),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.description_outlined,
+          title: 'Terms of Service',
+          subtitle: 'Legal terms and conditions',
+          keywords: ['terms', 'service', 'legal', 'tos'],
+          section: 'ABOUT',
+          onTap: () => LegalDocumentSheet.showTerms(context),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.privacy_tip_outlined,
+          title: 'Privacy Policy',
+          subtitle: 'How we handle your data',
+          keywords: ['privacy', 'policy', 'data', 'gdpr'],
+          section: 'ABOUT',
+          onTap: () => LegalDocumentSheet.showPrivacy(context),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.source_outlined,
+          title: 'Open Source Licenses',
+          subtitle: 'Third-party libraries and attributions',
+          keywords: ['license', 'open', 'source', 'library', 'attribution'],
+          section: 'ABOUT',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const _OpenSourceLicensesScreen(),
+            ),
+          ),
+        ),
+      ],
+      orElse: () => <_SearchableSettingItem>[],
+    );
+  }
+
+  /// Filter settings based on search query
+  List<_SearchableSettingItem> _filterSettings(
+    List<_SearchableSettingItem> settings,
+    String query,
+  ) {
+    if (query.isEmpty) return settings;
+
+    final lowerQuery = query.toLowerCase();
+    return settings.where((item) {
+      // Check title
+      if (item.title.toLowerCase().contains(lowerQuery)) return true;
+      // Check subtitle
+      if (item.subtitle?.toLowerCase().contains(lowerQuery) ?? false) {
+        return true;
+      }
+      // Check section
+      if (item.section.toLowerCase().contains(lowerQuery)) return true;
+      // Check keywords
+      if (item.keywords.any((k) => k.toLowerCase().contains(lowerQuery))) {
+        return true;
+      }
+      return false;
+    }).toList();
+  }
+
+  Widget _buildSearchResults(
+    BuildContext context,
+    List<_SearchableSettingItem> results,
+  ) {
+    if (results.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off_rounded,
+              size: 64,
+              color: AppTheme.textTertiary.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No settings found',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try a different search term',
+              style: TextStyle(fontSize: 14, color: AppTheme.textTertiary),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Group results by section
+    final grouped = <String, List<_SearchableSettingItem>>{};
+    for (final item in results) {
+      grouped.putIfAbsent(item.section, () => []).add(item);
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: grouped.length,
+      itemBuilder: (context, index) {
+        final section = grouped.keys.elementAt(index);
+        final items = grouped[section]!;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _SectionHeader(title: section),
+            ...items.map(
+              (item) => _SettingsTile(
+                icon: item.icon,
+                title: item.title,
+                subtitle: item.subtitle,
+                trailing: item.hasSwitch
+                    ? Icon(
+                        Icons.toggle_on_outlined,
+                        color: AppTheme.textTertiary,
+                        size: 24,
+                      )
+                    : null,
+                onTap:
+                    item.onTap ??
+                    () {
+                      // Close search and scroll to section
+                      setState(() {
+                        _isSearching = false;
+                        _searchQuery = '';
+                        _searchController.clear();
+                      });
+                    },
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildUpgradesSection(BuildContext context) {
@@ -296,898 +1157,1014 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
         centerTitle: true,
-        title: const Text(
-          'Settings',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-      ),
-      body: settingsServiceAsync.when(
-        loading: () => const ScreenLoadingIndicator(),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
-              const SizedBox(height: 16),
-              Text(
-                'Error loading settings: $error',
-                style: const TextStyle(color: AppTheme.textSecondary),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => ref.invalidate(settingsServiceProvider),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-        data: (settingsService) {
-          // Watch accent color for dynamic updates (triggers rebuild when changed)
-          ref.watch(accentColorProvider);
-
-          // Get current region for display
-          final regionAsync = ref.watch(deviceRegionProvider);
-          final regionSubtitle = regionAsync.when(
-            data: (region) {
-              if (region == pbenum.RegionCode.UNSET_REGION) {
-                return 'Not configured';
-              }
-              // Find the region info for display
-              final regionInfo = availableRegions
-                  .where((r) => r.code == region)
-                  .firstOrNull;
-              if (regionInfo != null) {
-                return '${regionInfo.name} (${regionInfo.frequency})';
-              }
-              return region.name;
-            },
-            loading: () => 'Loading...',
-            error: (e, _) => 'Configure device radio frequency',
-          );
-
-          return ListView(
-            controller: _scrollController,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            children: [
-              // Subscription Section
-              _buildUpgradesSection(context),
-
-              const SizedBox(height: 16),
-
-              // Profile Section - right after Premium, before Connection
-              _SectionHeader(title: 'PROFILE'),
-              _ProfileTile(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Connection Section
-              _SectionHeader(title: 'CONNECTION'),
-              _SettingsTile(
-                icon: Icons.bluetooth,
-                title: 'Auto-reconnect',
-                subtitle: 'Automatically reconnect to last device',
-                trailing: ThemedSwitch(
-                  value: settingsService.autoReconnect,
-                  onChanged: (value) async {
-                    HapticFeedback.selectionClick();
-                    await settingsService.setAutoReconnect(value);
-                    setState(() {});
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Haptic Feedback Section
-              const _SectionHeader(title: 'HAPTIC FEEDBACK'),
-              _SettingsTile(
-                icon: Icons.vibration,
-                title: 'Haptic feedback',
-                subtitle: 'Vibration feedback for interactions',
-                trailing: ThemedSwitch(
-                  value: settingsService.hapticFeedbackEnabled,
-                  onChanged: (value) async {
-                    if (value) {
-                      ref.haptics.toggle();
-                    }
-                    await settingsService.setHapticFeedbackEnabled(value);
-                    ref
-                        .read(userProfileProvider.notifier)
-                        .updatePreferences(
-                          UserPreferences(hapticFeedbackEnabled: value),
-                        );
-                    setState(() {});
-                  },
-                ),
-              ),
-              if (settingsService.hapticFeedbackEnabled)
-                _SettingsTile(
-                  icon: Icons.tune,
-                  title: 'Intensity',
-                  subtitle: HapticIntensity.fromValue(
-                    settingsService.hapticIntensity,
-                  ).label,
-                  onTap: () =>
-                      _showHapticIntensityPicker(context, ref, settingsService),
-                ),
-
-              const SizedBox(height: 16),
-
-              // Animations Section
-              const _SectionHeader(title: 'ANIMATIONS'),
-              _SettingsTile(
-                icon: Icons.animation,
-                title: 'List animations',
-                subtitle: 'Slide and bounce effects on lists',
-                trailing: ThemedSwitch(
-                  value: settingsService.animationsEnabled,
-                  onChanged: (value) async {
-                    HapticFeedback.selectionClick();
-                    await settingsService.setAnimationsEnabled(value);
-                    ref
-                        .read(userProfileProvider.notifier)
-                        .updatePreferences(
-                          UserPreferences(animationsEnabled: value),
-                        );
-                    ref.read(settingsRefreshProvider.notifier).refresh();
-                    setState(() {});
-                  },
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.view_in_ar,
-                title: '3D effects',
-                subtitle: 'Perspective transforms and depth effects',
-                trailing: ThemedSwitch(
-                  value: settingsService.animations3DEnabled,
-                  onChanged: (value) async {
-                    HapticFeedback.selectionClick();
-                    await settingsService.setAnimations3DEnabled(value);
-                    ref
-                        .read(userProfileProvider.notifier)
-                        .updatePreferences(
-                          UserPreferences(animations3DEnabled: value),
-                        );
-                    ref.read(settingsRefreshProvider.notifier).refresh();
-                    setState(() {});
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Notifications Section
-              _SectionHeader(title: 'NOTIFICATIONS'),
-              _SettingsTile(
-                icon: Icons.notifications_outlined,
-                title: 'Push notifications',
-                subtitle: 'Master toggle for all notifications',
-                trailing: ThemedSwitch(
-                  value: settingsService.notificationsEnabled,
-                  onChanged: (value) async {
-                    HapticFeedback.selectionClick();
-                    await settingsService.setNotificationsEnabled(value);
-                    ref
-                        .read(userProfileProvider.notifier)
-                        .updatePreferences(
-                          UserPreferences(notificationsEnabled: value),
-                        );
-                    setState(() {});
-                  },
-                ),
-              ),
-              if (settingsService.notificationsEnabled) ...[
-                _SettingsTile(
-                  icon: Icons.person_add_outlined,
-                  title: 'New nodes',
-                  subtitle: 'Notify when new nodes join the mesh',
-                  trailing: ThemedSwitch(
-                    value: settingsService.newNodeNotificationsEnabled,
-                    onChanged: (value) async {
-                      HapticFeedback.selectionClick();
-                      await settingsService.setNewNodeNotificationsEnabled(
-                        value,
-                      );
-                      ref
-                          .read(userProfileProvider.notifier)
-                          .updatePreferences(
-                            UserPreferences(newNodeNotificationsEnabled: value),
-                          );
-                      setState(() {});
-                    },
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+                decoration: InputDecoration(
+                  hintText: 'Search settings...',
+                  hintStyle: TextStyle(
+                    color: AppTheme.textTertiary,
+                    fontSize: 16,
                   ),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
                 ),
-                _SettingsTile(
-                  icon: Icons.chat_bubble_outline,
-                  title: 'Direct messages',
-                  subtitle: 'Notify for private messages',
-                  trailing: ThemedSwitch(
-                    value: settingsService.directMessageNotificationsEnabled,
-                    onChanged: (value) async {
-                      HapticFeedback.selectionClick();
-                      await settingsService
-                          .setDirectMessageNotificationsEnabled(value);
-                      ref
-                          .read(userProfileProvider.notifier)
-                          .updatePreferences(
-                            UserPreferences(
-                              directMessageNotificationsEnabled: value,
-                            ),
-                          );
-                      setState(() {});
-                    },
-                  ),
-                ),
-                _SettingsTile(
-                  icon: Icons.forum_outlined,
-                  title: 'Channel messages',
-                  subtitle: 'Notify for channel broadcasts',
-                  trailing: ThemedSwitch(
-                    value: settingsService.channelMessageNotificationsEnabled,
-                    onChanged: (value) async {
-                      HapticFeedback.selectionClick();
-                      await settingsService
-                          .setChannelMessageNotificationsEnabled(value);
-                      ref
-                          .read(userProfileProvider.notifier)
-                          .updatePreferences(
-                            UserPreferences(
-                              channelMessageNotificationsEnabled: value,
-                            ),
-                          );
-                      setState(() {});
-                    },
-                  ),
-                ),
-                _SettingsTile(
-                  icon: Icons.volume_up_outlined,
-                  title: 'Sound',
-                  subtitle: 'Play sound with notifications',
-                  trailing: ThemedSwitch(
-                    value: settingsService.notificationSoundEnabled,
-                    onChanged: (value) async {
-                      HapticFeedback.selectionClick();
-                      await settingsService.setNotificationSoundEnabled(value);
-                      ref
-                          .read(userProfileProvider.notifier)
-                          .updatePreferences(
-                            UserPreferences(notificationSoundEnabled: value),
-                          );
-                      setState(() {});
-                    },
-                  ),
-                ),
-                _SettingsTile(
-                  icon: Icons.vibration,
-                  title: 'Vibration',
-                  subtitle: 'Vibrate with notifications',
-                  trailing: ThemedSwitch(
-                    value: settingsService.notificationVibrationEnabled,
-                    onChanged: (value) async {
-                      HapticFeedback.selectionClick();
-                      await settingsService.setNotificationVibrationEnabled(
-                        value,
-                      );
-                      ref
-                          .read(userProfileProvider.notifier)
-                          .updatePreferences(
-                            UserPreferences(
-                              notificationVibrationEnabled: value,
-                            ),
-                          );
-                      setState(() {});
-                    },
-                  ),
-                ),
-                _SettingsTile(
-                  icon: Icons.bug_report_outlined,
-                  title: 'Test notification',
-                  subtitle: 'Send a test notification',
-                  onTap: () => _testNotification(context),
-                ),
-              ],
-
-              const SizedBox(height: 16),
-
-              // Messaging Section
-              _SectionHeader(title: 'MESSAGING'),
-              _SettingsTile(
-                icon: Icons.bolt,
-                title: 'Quick responses',
-                subtitle: 'Manage canned responses for fast messaging',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const CannedResponsesScreen(),
-                  ),
+                onChanged: (value) => setState(() => _searchQuery = value),
+              )
+            : const Text(
+                'Settings',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
                 ),
               ),
-              _SettingsTile(
-                icon: Icons.message,
-                title: 'Canned Messages Module',
-                subtitle: 'Device-side canned message settings',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const CannedMessageModuleConfigScreen(),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Data Section
-              _SectionHeader(title: 'DATA & STORAGE'),
-              _SettingsTile(
-                icon: Icons.history,
-                title: 'Message history',
-                subtitle:
-                    '${settingsService.messageHistoryLimit} messages stored',
-                onTap: () => _showHistoryLimitDialog(context, settingsService),
-              ),
-              // Cloud Backup
-              _SettingsTile(
-                icon: Icons.cloud_upload,
-                title: 'Cloud Backup',
-                subtitle: 'Backup messages and settings to cloud',
-              ),
-              // Offline Maps
-              _SettingsTile(
-                icon: Icons.map,
-                title: 'Offline Maps',
-                subtitle: 'Download map regions for offline use',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const OfflineMapsScreen()),
-                ),
-              ),
-              // Message Export
-              _SettingsTile(
-                icon: Icons.download,
-                title: 'Export Messages',
-                subtitle: 'Export messages to PDF or CSV',
-              ),
-              _SettingsTile(
-                icon: Icons.delete_sweep_outlined,
-                title: 'Clear message history',
-                subtitle: 'Delete all stored messages',
-                onTap: () => _confirmClearMessages(context, ref),
-              ),
-              _SettingsTile(
-                icon: Icons.refresh,
-                iconColor: Colors.orange,
-                title: 'Reset local data',
-                titleColor: Colors.orange,
-                subtitle: 'Clear messages and nodes, keep settings',
-                onTap: () => _confirmResetLocalData(context, ref),
-              ),
-              _SettingsTile(
-                icon: Icons.delete_forever,
-                iconColor: AppTheme.errorRed,
-                title: 'Clear all data',
-                titleColor: AppTheme.errorRed,
-                subtitle: 'Delete messages, settings, and keys',
-                onTap: () => _confirmClearData(context, ref),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Device Section
-              _SectionHeader(title: 'DEVICE'),
-              _SettingsTile(
-                icon: Icons.sync,
-                title: 'Force Sync',
-                subtitle: 'Re-sync all data from connected device',
-                onTap: () => _forceSync(context, ref),
-              ),
-              _SettingsTile(
-                icon: Icons.bluetooth_searching,
-                title: 'Scan for Devices',
-                subtitle: 'Find and connect to Meshtastic devices',
-                onTap: () => Navigator.pushNamed(context, '/scanner'),
-              ),
-              _SettingsTile(
-                icon:
-                    regionAsync.whenOrNull(
-                          data: (r) => r == pbenum.RegionCode.UNSET_REGION,
-                        ) ==
-                        true
-                    ? Icons.warning_amber_rounded
-                    : Icons.language,
-                iconColor:
-                    regionAsync.whenOrNull(
-                          data: (r) => r == pbenum.RegionCode.UNSET_REGION,
-                        ) ==
-                        true
-                    ? Colors.orange
-                    : null,
-                title: 'Region / Frequency',
-                subtitle: regionSubtitle,
-                subtitleColor:
-                    regionAsync.whenOrNull(
-                          data: (r) => r == pbenum.RegionCode.UNSET_REGION,
-                        ) ==
-                        true
-                    ? Colors.orange
-                    : null,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        const RegionSelectionScreen(isInitialSetup: false),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.settings,
-                title: 'Device Role & Settings',
-                subtitle: 'Configure device behavior and role',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const DeviceConfigScreen()),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.radio,
-                title: 'Radio Configuration',
-                subtitle: 'LoRa settings, modem preset, power',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const RadioConfigScreen()),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.gps_fixed,
-                title: 'Position & GPS',
-                subtitle: 'GPS mode, broadcast intervals, fixed position',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const PositionConfigScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.display_settings,
-                title: 'Display Settings',
-                subtitle: 'Screen timeout, units, display mode',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const DisplayConfigScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.bluetooth,
-                title: 'Bluetooth',
-                subtitle: 'Pairing mode, PIN settings',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const BluetoothConfigScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.wifi,
-                title: 'Network',
-                subtitle: 'WiFi, Ethernet, NTP settings',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const NetworkConfigScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.battery_full,
-                title: 'Power Management',
-                subtitle: 'Power saving, sleep settings',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const PowerConfigScreen()),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.security,
-                title: 'Security',
-                subtitle: 'Access controls, managed mode',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const SecurityConfigScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.power_settings_new,
-                title: 'Device Management',
-                subtitle: 'Reboot, shutdown, factory reset',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const DeviceManagementScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.info_outline,
-                title: 'Device info',
-                subtitle: 'View connected device details',
-                onTap: () => _showDeviceInfo(context, ref),
-              ),
-              _SettingsTile(
-                icon: Icons.qr_code_scanner,
-                title: 'Import channel via QR',
-                subtitle: 'Scan a Meshtastic channel QR code',
-                onTap: () => Navigator.pushNamed(context, '/qr-import'),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Modules Section
-              _SectionHeader(title: 'MODULES'),
-              _SettingsTile(
-                icon: Icons.cloud,
-                title: 'MQTT',
-                subtitle: 'Configure mesh-to-internet bridge',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const MqttConfigScreen()),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.radar,
-                title: 'Range Test',
-                subtitle: 'Test signal range with other nodes',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const RangeTestScreen()),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.storage,
-                title: 'Store & Forward',
-                subtitle: 'Store and relay messages for offline nodes',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const StoreForwardConfigScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.sensors,
-                title: 'Detection Sensor',
-                subtitle: 'Configure GPIO-based motion/door sensors',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const DetectionSensorConfigScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.notifications_active,
-                title: 'External Notification',
-                subtitle: 'Configure buzzers, LEDs, and vibration alerts',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const ExternalNotificationConfigScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.lightbulb_outline,
-                title: 'Ambient Lighting',
-                subtitle: 'Configure LED and RGB settings',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const AmbientLightingConfigScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.people_outline,
-                title: 'PAX Counter',
-                subtitle: 'WiFi/BLE device detection settings',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const PaxCounterConfigScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.analytics_outlined,
-                title: 'Telemetry Intervals',
-                subtitle: 'Configure telemetry update frequency',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const TelemetryConfigScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.usb_rounded,
-                title: 'Serial',
-                subtitle: 'Serial port configuration',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SerialConfigScreen()),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Telemetry Section
-              _SectionHeader(title: 'TELEMETRY LOGS'),
-              _SettingsTile(
-                icon: Icons.battery_charging_full,
-                title: 'Device Metrics',
-                subtitle: 'Battery, voltage, utilization history',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const DeviceMetricsLogScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.thermostat,
-                title: 'Environment Metrics',
-                subtitle: 'Temperature, humidity, pressure logs',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const EnvironmentMetricsLogScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.air,
-                title: 'Air Quality',
-                subtitle: 'PM2.5, PM10, CO2 readings',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const AirQualityLogScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.location_on_outlined,
-                title: 'Position History',
-                subtitle: 'GPS position logs',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const PositionLogScreen()),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.timeline,
-                title: 'Traceroute History',
-                subtitle: 'Network path analysis logs',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const TraceRouteLogScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.people_alt_outlined,
-                title: 'PAX Counter Logs',
-                subtitle: 'Device detection history',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const PaxCounterLogScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.sensors,
-                title: 'Detection Sensor Logs',
-                subtitle: 'Sensor event history',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const DetectionSensorLogScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.route,
-                title: 'Routes',
-                subtitle: 'Record and manage GPS routes',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const RoutesScreen()),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Tools Section
-              _SectionHeader(title: 'TOOLS'),
-              _SettingsTile(
-                icon: Icons.gps_fixed,
-                title: 'GPS Status',
-                subtitle: 'View detailed GPS information',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const GpsStatusScreen()),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.system_update,
-                title: 'Firmware Update',
-                subtitle: 'Check for device firmware updates',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const FirmwareUpdateScreen(),
-                  ),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.ios_share,
-                title: 'Export Data',
-                subtitle: 'Export messages, telemetry, routes',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const DataExportScreen()),
-                ),
-              ),
-              _SettingsTile(
-                icon: Icons.article_outlined,
-                title: 'App Log',
-                subtitle: 'View application debug logs',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AppLogScreen()),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // About Section
-              _SectionHeader(title: 'ABOUT'),
-              // Secret gesture to unlock debug settings - configurable!
-              Consumer(
-                builder: (context, ref, child) {
-                  final gestureConfig = ref.watch(secretGestureConfigProvider);
-                  return gestureConfig.when(
-                    data: (config) => SecretGestureDetector(
-                      pattern: config.pattern,
-                      timeWindow: config.timeWindow,
-                      showFeedback: config.showFeedback,
-                      enableHaptics: config.enableHaptics,
-                      onSecretUnlocked: () {
-                        HapticFeedback.heavyImpact();
-                        showSuccessSnackBar(context, '🔓 Debug mode unlocked!');
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const DebugSettingsScreen(),
-                          ),
-                        );
-                      },
-                      child: _SettingsTile(
-                        icon: Icons.info,
-                        title: 'Socialmesh',
-                        subtitle: 'Meshtastic companion app • Version 1.0.0',
-                      ),
-                    ),
-                    loading: () => SecretGestureDetector(
-                      pattern: SecretGesturePattern.sevenTaps,
-                      onSecretUnlocked: () {
-                        HapticFeedback.heavyImpact();
-                        showSuccessSnackBar(context, '🔓 Debug mode unlocked!');
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const DebugSettingsScreen(),
-                          ),
-                        );
-                      },
-                      child: _SettingsTile(
-                        icon: Icons.info,
-                        title: 'Socialmesh',
-                        subtitle: 'Meshtastic companion app • Version 1.0.0',
-                      ),
-                    ),
-                    error: (_, _) => SecretGestureDetector(
-                      pattern: SecretGesturePattern.sevenTaps,
-                      onSecretUnlocked: () {
-                        HapticFeedback.heavyImpact();
-                        showSuccessSnackBar(context, '🔓 Debug mode unlocked!');
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const DebugSettingsScreen(),
-                          ),
-                        );
-                      },
-                      child: _SettingsTile(
-                        icon: Icons.info,
-                        title: 'Socialmesh',
-                        subtitle: 'Meshtastic companion app • Version 1.0.0',
-                      ),
-                    ),
-                  );
+        leading: _isSearching
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  setState(() {
+                    _isSearching = false;
+                    _searchQuery = '';
+                    _searchController.clear();
+                  });
                 },
-              ),
-              _SettingsTile(
-                icon: Icons.help_outline,
-                title: 'Help & Support',
-                subtitle: 'FAQ, troubleshooting, and contact info',
-                onTap: () => LegalDocumentSheet.showSupport(context),
-              ),
-              _SettingsTile(
-                icon: Icons.description_outlined,
-                title: 'Terms of Service',
-                onTap: () => LegalDocumentSheet.showTerms(context),
-              ),
-              _SettingsTile(
-                icon: Icons.privacy_tip_outlined,
-                title: 'Privacy Policy',
-                onTap: () => LegalDocumentSheet.showPrivacy(context),
-              ),
-              _SettingsTile(
-                icon: Icons.source_outlined,
-                title: 'Open Source Licenses',
-                subtitle: 'Third-party libraries and attributions',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const _OpenSourceLicensesScreen(),
-                  ),
-                ),
-              ),
-
-              // Debug Section (Admin only)
-              if (AdminConfig.isEnabled) ...[
-                const SizedBox(height: 16),
-                _SectionHeader(title: 'DEBUG'),
-                _SettingsTile(
-                  icon: Icons.bug_report,
-                  iconColor: AppTheme.warningYellow,
-                  title: 'Debug Settings',
-                  subtitle: 'Mesh node playground, test notifications',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const DebugSettingsScreen(),
-                    ),
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 24),
-
-              // Meshtastic Powered footer
-              _MeshtasticPoweredFooter(),
-
-              const SizedBox(height: 32),
-            ],
-          );
-        },
+              )
+            : null,
+        actions: [
+          if (!_isSearching)
+            IconButton(
+              icon: const Icon(Icons.search),
+              tooltip: 'Search settings',
+              onPressed: () {
+                setState(() => _isSearching = true);
+              },
+            ),
+          if (_isSearching && _searchQuery.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: () {
+                setState(() {
+                  _searchQuery = '';
+                  _searchController.clear();
+                });
+              },
+            ),
+        ],
       ),
+      body: _isSearching
+          ? Builder(
+              builder: (context) {
+                final allSettings = _getSearchableSettings(context, ref);
+                final filteredSettings = _filterSettings(
+                  allSettings,
+                  _searchQuery,
+                );
+                return _buildSearchResults(context, filteredSettings);
+              },
+            )
+          : settingsServiceAsync.when(
+              loading: () => const ScreenLoadingIndicator(),
+              error: (error, stack) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading settings: $error',
+                      style: const TextStyle(color: AppTheme.textSecondary),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => ref.invalidate(settingsServiceProvider),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+              data: (settingsService) {
+                // Watch accent color for dynamic updates (triggers rebuild when changed)
+                ref.watch(accentColorProvider);
+
+                // Get current region for display
+                final regionAsync = ref.watch(deviceRegionProvider);
+                final regionSubtitle = regionAsync.when(
+                  data: (region) {
+                    if (region == pbenum.RegionCode.UNSET_REGION) {
+                      return 'Not configured';
+                    }
+                    // Find the region info for display
+                    final regionInfo = availableRegions
+                        .where((r) => r.code == region)
+                        .firstOrNull;
+                    if (regionInfo != null) {
+                      return '${regionInfo.name} (${regionInfo.frequency})';
+                    }
+                    return region.name;
+                  },
+                  loading: () => 'Loading...',
+                  error: (e, _) => 'Configure device radio frequency',
+                );
+
+                return ListView(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  children: [
+                    // Subscription Section
+                    _buildUpgradesSection(context),
+
+                    const SizedBox(height: 16),
+
+                    // Profile Section - right after Premium, before Connection
+                    _SectionHeader(title: 'PROFILE'),
+                    _ProfileTile(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ProfileScreen(),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Connection Section
+                    _SectionHeader(title: 'CONNECTION'),
+                    _SettingsTile(
+                      icon: Icons.bluetooth,
+                      title: 'Auto-reconnect',
+                      subtitle: 'Automatically reconnect to last device',
+                      trailing: ThemedSwitch(
+                        value: settingsService.autoReconnect,
+                        onChanged: (value) async {
+                          HapticFeedback.selectionClick();
+                          await settingsService.setAutoReconnect(value);
+                          setState(() {});
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Haptic Feedback Section
+                    const _SectionHeader(title: 'HAPTIC FEEDBACK'),
+                    _SettingsTile(
+                      icon: Icons.vibration,
+                      title: 'Haptic feedback',
+                      subtitle: 'Vibration feedback for interactions',
+                      trailing: ThemedSwitch(
+                        value: settingsService.hapticFeedbackEnabled,
+                        onChanged: (value) async {
+                          if (value) {
+                            ref.haptics.toggle();
+                          }
+                          await settingsService.setHapticFeedbackEnabled(value);
+                          ref
+                              .read(userProfileProvider.notifier)
+                              .updatePreferences(
+                                UserPreferences(hapticFeedbackEnabled: value),
+                              );
+                          setState(() {});
+                        },
+                      ),
+                    ),
+                    if (settingsService.hapticFeedbackEnabled)
+                      _SettingsTile(
+                        icon: Icons.tune,
+                        title: 'Intensity',
+                        subtitle: HapticIntensity.fromValue(
+                          settingsService.hapticIntensity,
+                        ).label,
+                        onTap: () => _showHapticIntensityPicker(
+                          context,
+                          ref,
+                          settingsService,
+                        ),
+                      ),
+
+                    const SizedBox(height: 16),
+
+                    // Animations Section
+                    const _SectionHeader(title: 'ANIMATIONS'),
+                    _SettingsTile(
+                      icon: Icons.animation,
+                      title: 'List animations',
+                      subtitle: 'Slide and bounce effects on lists',
+                      trailing: ThemedSwitch(
+                        value: settingsService.animationsEnabled,
+                        onChanged: (value) async {
+                          HapticFeedback.selectionClick();
+                          await settingsService.setAnimationsEnabled(value);
+                          ref
+                              .read(userProfileProvider.notifier)
+                              .updatePreferences(
+                                UserPreferences(animationsEnabled: value),
+                              );
+                          ref.read(settingsRefreshProvider.notifier).refresh();
+                          setState(() {});
+                        },
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.view_in_ar,
+                      title: '3D effects',
+                      subtitle: 'Perspective transforms and depth effects',
+                      trailing: ThemedSwitch(
+                        value: settingsService.animations3DEnabled,
+                        onChanged: (value) async {
+                          HapticFeedback.selectionClick();
+                          await settingsService.setAnimations3DEnabled(value);
+                          ref
+                              .read(userProfileProvider.notifier)
+                              .updatePreferences(
+                                UserPreferences(animations3DEnabled: value),
+                              );
+                          ref.read(settingsRefreshProvider.notifier).refresh();
+                          setState(() {});
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Notifications Section
+                    _SectionHeader(title: 'NOTIFICATIONS'),
+                    _SettingsTile(
+                      icon: Icons.notifications_outlined,
+                      title: 'Push notifications',
+                      subtitle: 'Master toggle for all notifications',
+                      trailing: ThemedSwitch(
+                        value: settingsService.notificationsEnabled,
+                        onChanged: (value) async {
+                          HapticFeedback.selectionClick();
+                          await settingsService.setNotificationsEnabled(value);
+                          ref
+                              .read(userProfileProvider.notifier)
+                              .updatePreferences(
+                                UserPreferences(notificationsEnabled: value),
+                              );
+                          setState(() {});
+                        },
+                      ),
+                    ),
+                    if (settingsService.notificationsEnabled) ...[
+                      _SettingsTile(
+                        icon: Icons.person_add_outlined,
+                        title: 'New nodes',
+                        subtitle: 'Notify when new nodes join the mesh',
+                        trailing: ThemedSwitch(
+                          value: settingsService.newNodeNotificationsEnabled,
+                          onChanged: (value) async {
+                            HapticFeedback.selectionClick();
+                            await settingsService
+                                .setNewNodeNotificationsEnabled(value);
+                            ref
+                                .read(userProfileProvider.notifier)
+                                .updatePreferences(
+                                  UserPreferences(
+                                    newNodeNotificationsEnabled: value,
+                                  ),
+                                );
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                      _SettingsTile(
+                        icon: Icons.chat_bubble_outline,
+                        title: 'Direct messages',
+                        subtitle: 'Notify for private messages',
+                        trailing: ThemedSwitch(
+                          value:
+                              settingsService.directMessageNotificationsEnabled,
+                          onChanged: (value) async {
+                            HapticFeedback.selectionClick();
+                            await settingsService
+                                .setDirectMessageNotificationsEnabled(value);
+                            ref
+                                .read(userProfileProvider.notifier)
+                                .updatePreferences(
+                                  UserPreferences(
+                                    directMessageNotificationsEnabled: value,
+                                  ),
+                                );
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                      _SettingsTile(
+                        icon: Icons.forum_outlined,
+                        title: 'Channel messages',
+                        subtitle: 'Notify for channel broadcasts',
+                        trailing: ThemedSwitch(
+                          value: settingsService
+                              .channelMessageNotificationsEnabled,
+                          onChanged: (value) async {
+                            HapticFeedback.selectionClick();
+                            await settingsService
+                                .setChannelMessageNotificationsEnabled(value);
+                            ref
+                                .read(userProfileProvider.notifier)
+                                .updatePreferences(
+                                  UserPreferences(
+                                    channelMessageNotificationsEnabled: value,
+                                  ),
+                                );
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                      _SettingsTile(
+                        icon: Icons.volume_up_outlined,
+                        title: 'Sound',
+                        subtitle: 'Play sound with notifications',
+                        trailing: ThemedSwitch(
+                          value: settingsService.notificationSoundEnabled,
+                          onChanged: (value) async {
+                            HapticFeedback.selectionClick();
+                            await settingsService.setNotificationSoundEnabled(
+                              value,
+                            );
+                            ref
+                                .read(userProfileProvider.notifier)
+                                .updatePreferences(
+                                  UserPreferences(
+                                    notificationSoundEnabled: value,
+                                  ),
+                                );
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                      _SettingsTile(
+                        icon: Icons.vibration,
+                        title: 'Vibration',
+                        subtitle: 'Vibrate with notifications',
+                        trailing: ThemedSwitch(
+                          value: settingsService.notificationVibrationEnabled,
+                          onChanged: (value) async {
+                            HapticFeedback.selectionClick();
+                            await settingsService
+                                .setNotificationVibrationEnabled(value);
+                            ref
+                                .read(userProfileProvider.notifier)
+                                .updatePreferences(
+                                  UserPreferences(
+                                    notificationVibrationEnabled: value,
+                                  ),
+                                );
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                      _SettingsTile(
+                        icon: Icons.bug_report_outlined,
+                        title: 'Test notification',
+                        subtitle: 'Send a test notification',
+                        onTap: () => _testNotification(context),
+                      ),
+                    ],
+
+                    const SizedBox(height: 16),
+
+                    // Messaging Section
+                    _SectionHeader(title: 'MESSAGING'),
+                    _SettingsTile(
+                      icon: Icons.bolt,
+                      title: 'Quick responses',
+                      subtitle: 'Manage canned responses for fast messaging',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CannedResponsesScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.message,
+                      title: 'Canned Messages Module',
+                      subtitle: 'Device-side canned message settings',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const CannedMessageModuleConfigScreen(),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Data Section
+                    _SectionHeader(title: 'DATA & STORAGE'),
+                    _SettingsTile(
+                      icon: Icons.history,
+                      title: 'Message history',
+                      subtitle:
+                          '${settingsService.messageHistoryLimit} messages stored',
+                      onTap: () =>
+                          _showHistoryLimitDialog(context, settingsService),
+                    ),
+                    // Cloud Backup
+                    _SettingsTile(
+                      icon: Icons.cloud_upload,
+                      title: 'Cloud Backup',
+                      subtitle: 'Backup messages and settings to cloud',
+                    ),
+                    // Offline Maps
+                    _SettingsTile(
+                      icon: Icons.map,
+                      title: 'Offline Maps',
+                      subtitle: 'Download map regions for offline use',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const OfflineMapsScreen(),
+                        ),
+                      ),
+                    ),
+                    // Message Export
+                    _SettingsTile(
+                      icon: Icons.download,
+                      title: 'Export Messages',
+                      subtitle: 'Export messages to PDF or CSV',
+                    ),
+                    _SettingsTile(
+                      icon: Icons.delete_sweep_outlined,
+                      title: 'Clear message history',
+                      subtitle: 'Delete all stored messages',
+                      onTap: () => _confirmClearMessages(context, ref),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.refresh,
+                      iconColor: Colors.orange,
+                      title: 'Reset local data',
+                      titleColor: Colors.orange,
+                      subtitle: 'Clear messages and nodes, keep settings',
+                      onTap: () => _confirmResetLocalData(context, ref),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.delete_forever,
+                      iconColor: AppTheme.errorRed,
+                      title: 'Clear all data',
+                      titleColor: AppTheme.errorRed,
+                      subtitle: 'Delete messages, settings, and keys',
+                      onTap: () => _confirmClearData(context, ref),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Device Section
+                    _SectionHeader(title: 'DEVICE'),
+                    _SettingsTile(
+                      icon: Icons.sync,
+                      title: 'Force Sync',
+                      subtitle: 'Re-sync all data from connected device',
+                      onTap: () => _forceSync(context, ref),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.bluetooth_searching,
+                      title: 'Scan for Devices',
+                      subtitle: 'Find and connect to Meshtastic devices',
+                      onTap: () => Navigator.pushNamed(context, '/scanner'),
+                    ),
+                    _SettingsTile(
+                      icon:
+                          regionAsync.whenOrNull(
+                                data: (r) =>
+                                    r == pbenum.RegionCode.UNSET_REGION,
+                              ) ==
+                              true
+                          ? Icons.warning_amber_rounded
+                          : Icons.language,
+                      iconColor:
+                          regionAsync.whenOrNull(
+                                data: (r) =>
+                                    r == pbenum.RegionCode.UNSET_REGION,
+                              ) ==
+                              true
+                          ? Colors.orange
+                          : null,
+                      title: 'Region / Frequency',
+                      subtitle: regionSubtitle,
+                      subtitleColor:
+                          regionAsync.whenOrNull(
+                                data: (r) =>
+                                    r == pbenum.RegionCode.UNSET_REGION,
+                              ) ==
+                              true
+                          ? Colors.orange
+                          : null,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RegionSelectionScreen(
+                            isInitialSetup: false,
+                          ),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.settings,
+                      title: 'Device Role & Settings',
+                      subtitle: 'Configure device behavior and role',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DeviceConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.radio,
+                      title: 'Radio Configuration',
+                      subtitle: 'LoRa settings, modem preset, power',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RadioConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.gps_fixed,
+                      title: 'Position & GPS',
+                      subtitle: 'GPS mode, broadcast intervals, fixed position',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PositionConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.display_settings,
+                      title: 'Display Settings',
+                      subtitle: 'Screen timeout, units, display mode',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DisplayConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.bluetooth,
+                      title: 'Bluetooth',
+                      subtitle: 'Pairing mode, PIN settings',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BluetoothConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.wifi,
+                      title: 'Network',
+                      subtitle: 'WiFi, Ethernet, NTP settings',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NetworkConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.battery_full,
+                      title: 'Power Management',
+                      subtitle: 'Power saving, sleep settings',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PowerConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.security,
+                      title: 'Security',
+                      subtitle: 'Access controls, managed mode',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SecurityConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.power_settings_new,
+                      title: 'Device Management',
+                      subtitle: 'Reboot, shutdown, factory reset',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DeviceManagementScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.info_outline,
+                      title: 'Device info',
+                      subtitle: 'View connected device details',
+                      onTap: () => _showDeviceInfo(context, ref),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.qr_code_scanner,
+                      title: 'Import channel via QR',
+                      subtitle: 'Scan a Meshtastic channel QR code',
+                      onTap: () => Navigator.pushNamed(context, '/qr-import'),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Modules Section
+                    _SectionHeader(title: 'MODULES'),
+                    _SettingsTile(
+                      icon: Icons.cloud,
+                      title: 'MQTT',
+                      subtitle: 'Configure mesh-to-internet bridge',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MqttConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.radar,
+                      title: 'Range Test',
+                      subtitle: 'Test signal range with other nodes',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RangeTestScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.storage,
+                      title: 'Store & Forward',
+                      subtitle: 'Store and relay messages for offline nodes',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const StoreForwardConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.sensors,
+                      title: 'Detection Sensor',
+                      subtitle: 'Configure GPIO-based motion/door sensors',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DetectionSensorConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.notifications_active,
+                      title: 'External Notification',
+                      subtitle: 'Configure buzzers, LEDs, and vibration alerts',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const ExternalNotificationConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.lightbulb_outline,
+                      title: 'Ambient Lighting',
+                      subtitle: 'Configure LED and RGB settings',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AmbientLightingConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.people_outline,
+                      title: 'PAX Counter',
+                      subtitle: 'WiFi/BLE device detection settings',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PaxCounterConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.analytics_outlined,
+                      title: 'Telemetry Intervals',
+                      subtitle: 'Configure telemetry update frequency',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const TelemetryConfigScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.usb_rounded,
+                      title: 'Serial',
+                      subtitle: 'Serial port configuration',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SerialConfigScreen(),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Telemetry Section
+                    _SectionHeader(title: 'TELEMETRY LOGS'),
+                    _SettingsTile(
+                      icon: Icons.battery_charging_full,
+                      title: 'Device Metrics',
+                      subtitle: 'Battery, voltage, utilization history',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DeviceMetricsLogScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.thermostat,
+                      title: 'Environment Metrics',
+                      subtitle: 'Temperature, humidity, pressure logs',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const EnvironmentMetricsLogScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.air,
+                      title: 'Air Quality',
+                      subtitle: 'PM2.5, PM10, CO2 readings',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AirQualityLogScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.location_on_outlined,
+                      title: 'Position History',
+                      subtitle: 'GPS position logs',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PositionLogScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.timeline,
+                      title: 'Traceroute History',
+                      subtitle: 'Network path analysis logs',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const TraceRouteLogScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.people_alt_outlined,
+                      title: 'PAX Counter Logs',
+                      subtitle: 'Device detection history',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PaxCounterLogScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.sensors,
+                      title: 'Detection Sensor Logs',
+                      subtitle: 'Sensor event history',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DetectionSensorLogScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.route,
+                      title: 'Routes',
+                      subtitle: 'Record and manage GPS routes',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const RoutesScreen()),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Tools Section
+                    _SectionHeader(title: 'TOOLS'),
+                    _SettingsTile(
+                      icon: Icons.gps_fixed,
+                      title: 'GPS Status',
+                      subtitle: 'View detailed GPS information',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const GpsStatusScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.system_update,
+                      title: 'Firmware Update',
+                      subtitle: 'Check for device firmware updates',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const FirmwareUpdateScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.ios_share,
+                      title: 'Export Data',
+                      subtitle: 'Export messages, telemetry, routes',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DataExportScreen(),
+                        ),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.article_outlined,
+                      title: 'App Log',
+                      subtitle: 'View application debug logs',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AppLogScreen()),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // About Section
+                    _SectionHeader(title: 'ABOUT'),
+                    // Secret gesture to unlock debug settings - configurable!
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final gestureConfig = ref.watch(
+                          secretGestureConfigProvider,
+                        );
+                        return gestureConfig.when(
+                          data: (config) => SecretGestureDetector(
+                            pattern: config.pattern,
+                            timeWindow: config.timeWindow,
+                            showFeedback: config.showFeedback,
+                            enableHaptics: config.enableHaptics,
+                            onSecretUnlocked: () {
+                              HapticFeedback.heavyImpact();
+                              showSuccessSnackBar(
+                                context,
+                                '🔓 Debug mode unlocked!',
+                              );
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const DebugSettingsScreen(),
+                                ),
+                              );
+                            },
+                            child: _SettingsTile(
+                              icon: Icons.info,
+                              title: 'Socialmesh',
+                              subtitle:
+                                  'Meshtastic companion app • Version 1.0.0',
+                            ),
+                          ),
+                          loading: () => SecretGestureDetector(
+                            pattern: SecretGesturePattern.sevenTaps,
+                            onSecretUnlocked: () {
+                              HapticFeedback.heavyImpact();
+                              showSuccessSnackBar(
+                                context,
+                                '🔓 Debug mode unlocked!',
+                              );
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const DebugSettingsScreen(),
+                                ),
+                              );
+                            },
+                            child: _SettingsTile(
+                              icon: Icons.info,
+                              title: 'Socialmesh',
+                              subtitle:
+                                  'Meshtastic companion app • Version 1.0.0',
+                            ),
+                          ),
+                          error: (_, _) => SecretGestureDetector(
+                            pattern: SecretGesturePattern.sevenTaps,
+                            onSecretUnlocked: () {
+                              HapticFeedback.heavyImpact();
+                              showSuccessSnackBar(
+                                context,
+                                '🔓 Debug mode unlocked!',
+                              );
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const DebugSettingsScreen(),
+                                ),
+                              );
+                            },
+                            child: _SettingsTile(
+                              icon: Icons.info,
+                              title: 'Socialmesh',
+                              subtitle:
+                                  'Meshtastic companion app • Version 1.0.0',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    _SettingsTile(
+                      icon: Icons.help_outline,
+                      title: 'Help & Support',
+                      subtitle: 'FAQ, troubleshooting, and contact info',
+                      onTap: () => LegalDocumentSheet.showSupport(context),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.description_outlined,
+                      title: 'Terms of Service',
+                      onTap: () => LegalDocumentSheet.showTerms(context),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.privacy_tip_outlined,
+                      title: 'Privacy Policy',
+                      onTap: () => LegalDocumentSheet.showPrivacy(context),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.source_outlined,
+                      title: 'Open Source Licenses',
+                      subtitle: 'Third-party libraries and attributions',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const _OpenSourceLicensesScreen(),
+                        ),
+                      ),
+                    ),
+
+                    // Debug Section (Admin only)
+                    if (AdminConfig.isEnabled) ...[
+                      const SizedBox(height: 16),
+                      _SectionHeader(title: 'DEBUG'),
+                      _SettingsTile(
+                        icon: Icons.bug_report,
+                        iconColor: AppTheme.warningYellow,
+                        title: 'Debug Settings',
+                        subtitle: 'Mesh node playground, test notifications',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const DebugSettingsScreen(),
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 24),
+
+                    // Meshtastic Powered footer
+                    _MeshtasticPoweredFooter(),
+
+                    const SizedBox(height: 32),
+                  ],
+                );
+              },
+            ),
     );
   }
 
@@ -2270,4 +3247,25 @@ class _OpenSourceLicensesScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Model for searchable settings item
+class _SearchableSettingItem {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final List<String> keywords;
+  final String section;
+  final VoidCallback? onTap;
+  final bool hasSwitch;
+
+  const _SearchableSettingItem({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.keywords = const [],
+    required this.section,
+    this.onTap,
+    this.hasSwitch = false,
+  });
 }
