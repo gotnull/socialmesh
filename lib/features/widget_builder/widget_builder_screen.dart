@@ -595,12 +595,17 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                     .read(dashboardWidgetsProvider.notifier)
                     .removeWidget(widgetToRemove.id);
               }
-              await _storageService.deleteWidget(schema.id);
-              // Also remove from user profile to prevent re-download
+              // Remove from user profile FIRST to prevent re-download
               await ref
                   .read(userProfileProvider.notifier)
                   .removeInstalledWidget(schema.id);
-              await _loadWidgets();
+              // Then delete from local storage
+              await _storageService.deleteWidget(schema.id);
+              // Update state directly without reload (avoids restore logic)
+              setState(() {
+                _myWidgets.removeWhere((w) => w.id == schema.id);
+                _marketplaceIds.remove(schema.id);
+              });
             },
             child: Text('Delete', style: TextStyle(color: AppTheme.errorRed)),
           ),
