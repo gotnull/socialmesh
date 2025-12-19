@@ -16,6 +16,7 @@ import '../../services/config/mesh_firestore_config_service.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../services/storage/storage_service.dart';
 import '../../utils/snackbar.dart';
+import '../widget_builder/marketplace/widget_approval_screen.dart';
 
 /// Debug settings screen with developer tools and the mesh node playground.
 /// Accessible via secret 7-tap gesture on the Socialmesh tile in About section.
@@ -33,6 +34,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   bool _notificationExpanded = false;
   bool _quickTestsExpanded = false;
   bool _secretGestureExpanded = false;
+  bool _adminToolsExpanded = false;
 
   // Mesh node playground state - defaults match user requirements
   MeshNodeAnimationType _animationType = MeshNodeAnimationType.tumble;
@@ -687,6 +689,18 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     () => _secretGestureExpanded = !_secretGestureExpanded,
                   ),
                   child: _buildSecretGestureContent(),
+                ),
+                const SizedBox(height: 12),
+                _buildCollapsibleSection(
+                  title: 'Admin Tools',
+                  subtitle: 'Marketplace moderation',
+                  icon: Icons.admin_panel_settings_rounded,
+                  iconColor: AppTheme.accentOrange,
+                  isExpanded: _adminToolsExpanded,
+                  onToggle: () => setState(
+                    () => _adminToolsExpanded = !_adminToolsExpanded,
+                  ),
+                  child: _buildAdminToolsContent(),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -1818,6 +1832,88 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     fontWeight: FontWeight.w600,
                     color: AppTheme.primaryPurple,
                   ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdminToolsContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Divider
+        Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          height: 1,
+          color: AppTheme.darkBorder.withAlpha(60),
+        ),
+
+        // Widget Approval
+        _buildSectionLabel('MARKETPLACE MODERATION'),
+        const SizedBox(height: 12),
+
+        BouncyTap(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const WidgetApprovalScreen(),
+              ),
+            );
+          },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.accentOrange.withAlpha(60)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentOrange.withAlpha(20),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.widgets_rounded,
+                    color: AppTheme.accentOrange,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Widget Approvals',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Review pending marketplace submissions',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppTheme.textSecondary,
                 ),
               ],
             ),

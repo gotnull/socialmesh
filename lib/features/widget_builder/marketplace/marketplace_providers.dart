@@ -1,10 +1,92 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'widget_marketplace_service.dart';
 
 /// Provider for the marketplace service instance
 final marketplaceServiceProvider = Provider<WidgetMarketplaceService>((ref) {
   return WidgetMarketplaceService();
+});
+
+// ============ Favorites ============
+
+/// Key for storing favorites in SharedPreferences
+const _favoritesKey = 'widget_marketplace_favorites';
+
+/// Provider for favorite widget IDs
+final widgetFavoritesProvider =
+    NotifierProvider<WidgetFavoritesNotifier, Set<String>>(
+      WidgetFavoritesNotifier.new,
+    );
+
+/// Notifier for managing favorite widgets
+class WidgetFavoritesNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() {
+    _loadFavorites();
+    return {};
+  }
+
+  Future<void> _loadFavorites() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favorites = prefs.getStringList(_favoritesKey) ?? [];
+      state = favorites.toSet();
+      debugPrint('[Favorites] Loaded ${state.length} favorites');
+    } catch (e) {
+      debugPrint('[Favorites] Error loading favorites: $e');
+    }
+  }
+
+  Future<void> toggleFavorite(String widgetId) async {
+    final newState = Set<String>.from(state);
+    if (newState.contains(widgetId)) {
+      newState.remove(widgetId);
+      debugPrint('[Favorites] Removed $widgetId');
+    } else {
+      newState.add(widgetId);
+      debugPrint('[Favorites] Added $widgetId');
+    }
+    state = newState;
+    await _saveFavorites();
+  }
+
+  Future<void> addFavorite(String widgetId) async {
+    if (!state.contains(widgetId)) {
+      state = {...state, widgetId};
+      await _saveFavorites();
+    }
+  }
+
+  Future<void> removeFavorite(String widgetId) async {
+    if (state.contains(widgetId)) {
+      state = Set<String>.from(state)..remove(widgetId);
+      await _saveFavorites();
+    }
+  }
+
+  bool isFavorite(String widgetId) => state.contains(widgetId);
+
+  Future<void> _saveFavorites() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(_favoritesKey, state.toList());
+      debugPrint('[Favorites] Saved ${state.length} favorites');
+    } catch (e) {
+      debugPrint('[Favorites] Error saving favorites: $e');
+    }
+  }
+}
+
+/// Provider to check if a specific widget is favorited
+final isWidgetFavoritedProvider = Provider.family<bool, String>((ref, id) {
+  final favorites = ref.watch(widgetFavoritesProvider);
+  return favorites.contains(id);
+});
+
+/// Provider for favorite widgets count
+final widgetFavoritesCountProvider = Provider<int>((ref) {
+  return ref.watch(widgetFavoritesProvider).length;
 });
 
 /// State for marketplace data
@@ -77,7 +159,8 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
     } catch (e, st) {
       debugPrint('[Marketplace] Error loading featured: $e');
       debugPrint('[Marketplace] Stack trace: $st');
-      rethrow;
+      // Return empty list instead of crashing - featured is optional
+      return [];
     }
   }
 

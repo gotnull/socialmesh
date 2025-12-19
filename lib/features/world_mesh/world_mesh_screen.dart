@@ -117,138 +117,147 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     );
   }
 
+  void _dismissKeyboard() {
+    _searchFocusNode.unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final meshMapState = ref.watch(worldMeshMapProvider);
     final accentColor = theme.colorScheme.primary;
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: const HamburgerMenuButton(),
-        titleSpacing: 0,
-        title: const Text('World Map'),
-        actions: [
-          // Search toggle (only show when search is NOT active)
-          if (!_showSearch)
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: Scaffold(
+        appBar: AppBar(
+          leading: const HamburgerMenuButton(),
+          titleSpacing: 0,
+          title: const Text('World Map'),
+          actions: [
+            // Search toggle (only show when search is NOT active)
+            if (!_showSearch)
+              IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
+                  setState(() {
+                    _showSearch = true;
+                    _showSearchResults = false;
+                  });
+                  // Auto-focus when opening search
+                  Future.delayed(const Duration(milliseconds: 100), () {
+                    _searchFocusNode.requestFocus();
+                  });
+                },
+              ),
+            // Filter button with badge
+            _buildFilterButton(accentColor),
+            // Favorites
             IconButton(
-              icon: const Icon(Icons.search),
+              icon: ref.watch(favoritesCountProvider) > 0
+                  ? Badge.count(
+                      count: ref.watch(favoritesCountProvider),
+                      child: const Icon(Icons.star),
+                    )
+                  : const Icon(Icons.star_border),
+              tooltip: 'Favorites',
+              onPressed: () => _openFavorites(context),
+            ),
+            // Map style
+            PopupMenuButton<MapTileStyle>(
+              icon: const Icon(Icons.layers),
+              tooltip: 'Map style',
+              onSelected: (style) => setState(() => _mapStyle = style),
+              itemBuilder: (context) => MapTileStyle.values
+                  .map(
+                    (style) => PopupMenuItem(
+                      value: style,
+                      child: Row(
+                        children: [
+                          Icon(
+                            _mapStyle == style
+                                ? Icons.check_circle
+                                : Icons.circle_outlined,
+                            color: _mapStyle == style ? accentColor : null,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(style.label),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+            // Refresh
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Refresh',
               onPressed: () {
-                setState(() {
-                  _showSearch = true;
-                  _showSearchResults = false;
-                });
-                // Auto-focus when opening search
-                Future.delayed(const Duration(milliseconds: 100), () {
-                  _searchFocusNode.requestFocus();
-                });
+                HapticFeedback.lightImpact();
+                ref.read(worldMeshMapProvider.notifier).forceRefresh();
               },
             ),
-          // Filter button with badge
-          _buildFilterButton(accentColor),
-          // Favorites
-          IconButton(
-            icon: ref.watch(favoritesCountProvider) > 0
-                ? Badge.count(
-                    count: ref.watch(favoritesCountProvider),
-                    child: const Icon(Icons.star),
-                  )
-                : const Icon(Icons.star_border),
-            tooltip: 'Favorites',
-            onPressed: () => _openFavorites(context),
-          ),
-          // Map style
-          PopupMenuButton<MapTileStyle>(
-            icon: const Icon(Icons.layers),
-            tooltip: 'Map style',
-            onSelected: (style) => setState(() => _mapStyle = style),
-            itemBuilder: (context) => MapTileStyle.values
-                .map(
-                  (style) => PopupMenuItem(
-                    value: style,
-                    child: Row(
-                      children: [
-                        Icon(
-                          _mapStyle == style
-                              ? Icons.check_circle
-                              : Icons.circle_outlined,
-                          color: _mapStyle == style ? accentColor : null,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(style.label),
-                      ],
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-          // Refresh
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              ref.read(worldMeshMapProvider.notifier).forceRefresh();
-            },
-          ),
-        ],
-      ),
-      body: meshMapState.when(
-        loading: () => Center(
-          child: MeshLoadingIndicator(
-            size: 100,
-            colors: [
-              context.accentColor,
-              context.accentColor.withValues(alpha: 0.6),
-              context.accentColor.withValues(alpha: 0.3),
-            ],
-          ),
+          ],
         ),
-        error: (error, _) => _buildErrorState(theme, error.toString()),
-        data: (state) {
-          if (state.isLoading && state.nodes.isEmpty) {
-            return Center(
-              child: MeshLoadingIndicator(
-                size: 100,
-                colors: [
-                  context.accentColor,
-                  context.accentColor.withValues(alpha: 0.6),
-                  context.accentColor.withValues(alpha: 0.3),
-                ],
-              ),
-            );
-          }
-          if (state.error != null && state.nodes.isEmpty) {
-            return _buildErrorState(theme, state.error!);
-          }
-          return Column(
-            children: [
-              // Search bar (same design as Direct Messages)
-              if (_showSearch) _buildSearchBar(),
-              // Divider when searching
-              if (_showSearch)
-                Container(
-                  height: 1,
-                  color: AppTheme.darkBorder.withValues(alpha: 0.3),
-                ),
-              // Map content (wrapping in Expanded with Stack for dropdown)
-              Expanded(
-                child: Stack(
-                  children: [
-                    _buildMap(context, theme, state),
-                    // Search results dropdown overlay
-                    if (_showSearch && _showSearchResults)
-                      _buildSearchResultsOverlay(
-                        theme,
-                        ref.watch(worldMeshFilteredNodesProvider(_searchQuery)),
-                      ),
+        body: meshMapState.when(
+          loading: () => Center(
+            child: MeshLoadingIndicator(
+              size: 100,
+              colors: [
+                context.accentColor,
+                context.accentColor.withValues(alpha: 0.6),
+                context.accentColor.withValues(alpha: 0.3),
+              ],
+            ),
+          ),
+          error: (error, _) => _buildErrorState(theme, error.toString()),
+          data: (state) {
+            if (state.isLoading && state.nodes.isEmpty) {
+              return Center(
+                child: MeshLoadingIndicator(
+                  size: 100,
+                  colors: [
+                    context.accentColor,
+                    context.accentColor.withValues(alpha: 0.6),
+                    context.accentColor.withValues(alpha: 0.3),
                   ],
                 ),
-              ),
-            ],
-          );
-        },
+              );
+            }
+            if (state.error != null && state.nodes.isEmpty) {
+              return _buildErrorState(theme, state.error!);
+            }
+            return Column(
+              children: [
+                // Search bar (same design as Direct Messages)
+                if (_showSearch) _buildSearchBar(),
+                // Divider when searching
+                if (_showSearch)
+                  Container(
+                    height: 1,
+                    color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                  ),
+                // Map content (wrapping in Expanded with Stack for dropdown)
+                Expanded(
+                  child: Stack(
+                    children: [
+                      _buildMap(context, theme, state),
+                      // Search results dropdown overlay
+                      if (_showSearch && _showSearchResults)
+                        _buildSearchResultsOverlay(
+                          theme,
+                          ref.watch(
+                            worldMeshFilteredNodesProvider(_searchQuery),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

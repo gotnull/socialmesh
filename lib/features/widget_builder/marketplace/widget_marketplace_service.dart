@@ -189,6 +189,27 @@ class WidgetMarketplaceService {
     }
   }
 
+  /// Preview widget schema (does NOT increment install count)
+  Future<WidgetSchema> previewWidget(String id) async {
+    try {
+      final uri = Uri.parse(
+        '$baseUrl/widgetsPreview',
+      ).replace(queryParameters: {'id': id});
+      final response = await _getWithRetry(uri);
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        return WidgetSchema.fromJson(json);
+      } else {
+        throw MarketplaceException('Failed to preview widget');
+      }
+    } catch (e) {
+      if (e is MarketplaceException) rethrow;
+      _logger.e('Preview widget error: $e');
+      throw MarketplaceException('Failed to preview widget: $e');
+    }
+  }
+
   /// Upload widget to marketplace
   Future<MarketplaceWidget> uploadWidget(
     WidgetSchema widget,
@@ -301,20 +322,11 @@ class WidgetMarketplaceService {
 
   // ============ Admin Methods ============
 
-  /// Get the base URL for admin endpoints (without /widgets suffix)
-  String get _adminBaseUrl {
-    // Remove /widgets suffix to get base API URL
-    if (baseUrl.endsWith('/widgets')) {
-      return '${baseUrl.substring(0, baseUrl.length - 8)}/admin';
-    }
-    return '$baseUrl/admin';
-  }
-
   /// Get pending widgets for review (admin only)
   Future<List<MarketplaceWidget>> getPendingWidgets(String authToken) async {
     try {
       final response = await _client.get(
-        Uri.parse('$_adminBaseUrl/pending'),
+        Uri.parse('$baseUrl/widgetsAdminPending'),
         headers: {'Authorization': 'Bearer $authToken'},
       );
 
@@ -344,7 +356,7 @@ class WidgetMarketplaceService {
   Future<void> approveWidget(String id, String authToken) async {
     try {
       final response = await _client.post(
-        Uri.parse('$_adminBaseUrl/widgets/$id/approve'),
+        Uri.parse('$baseUrl/widgetsApprove?id=$id'),
         headers: {'Authorization': 'Bearer $authToken'},
       );
 
@@ -368,7 +380,7 @@ class WidgetMarketplaceService {
   Future<void> rejectWidget(String id, String reason, String authToken) async {
     try {
       final response = await _client.post(
-        Uri.parse('$_adminBaseUrl/widgets/$id/reject'),
+        Uri.parse('$baseUrl/widgetsReject?id=$id'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $authToken',
@@ -396,7 +408,7 @@ class WidgetMarketplaceService {
   Future<List<MarketplaceWidget>> getMyWidgets(String authToken) async {
     try {
       final response = await _client.get(
-        Uri.parse('$baseUrl/user/mine'),
+        Uri.parse('$baseUrl/widgetsUserMine'),
         headers: {'Authorization': 'Bearer $authToken'},
       );
 
@@ -419,6 +431,140 @@ class WidgetMarketplaceService {
       rethrow;
     }
   }
+
+  /// Submit widget for approval (promotes to marketplace)
+  Future<MarketplaceWidget> submitWidget(
+    WidgetSchema widget,
+    String authToken,
+  ) async {
+    try {
+      final response = await _client
+          .post(
+            Uri.parse('$baseUrl/widgetsSubmit'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $authToken',
+            },
+            body: jsonEncode(widget.toJson()),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        return MarketplaceWidget.fromJson(json);
+      } else if (response.statusCode == 401) {
+        throw MarketplaceException('Authentication required');
+      } else if (response.statusCode == 409) {
+        // Duplicate detected
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        final duplicateName = json['duplicateName'] as String?;
+        throw MarketplaceDuplicateException(
+          'A similar widget already exists${duplicateName != null ? ': $duplicateName' : ''}',
+          duplicateName: duplicateName,
+        );
+      } else {
+        final body = response.body;
+        _logger.e('Submit widget failed: ${response.statusCode} - $body');
+        throw MarketplaceException('Failed to submit widget');
+      }
+    } catch (e) {
+      if (e is MarketplaceException) rethrow;
+      _logger.e('Submit widget error: $e');
+      rethrow;
+    }
+  }
+
+  /// Check for duplicate widget before submission
+  Future<DuplicateCheckResult> checkDuplicate(
+    WidgetSchema widget,
+    String authToken,
+  ) async {
+    try {
+      final response = await _client
+          .post(
+            Uri.parse('$baseUrl/widgetsCheckDuplicate'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $authToken',
+            },
+            body: jsonEncode({'name': widget.name, 'schema': widget.toJson()}),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        return DuplicateCheckResult.fromJson(json);
+      } else {
+        throw MarketplaceException('Failed to check for duplicates');
+      }
+    } catch (e) {
+      if (e is MarketplaceException) rethrow;
+      _logger.e('Check duplicate error: $e');
+      // Return no duplicate on error to allow submission
+      return DuplicateCheckResult(isDuplicate: false);
+    }
+  }
+
+  /// Get pending widgets for admin review
+  Future<List<MarketplaceWidget>> getPendingForAdmin(String authToken) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/widgetsAdminPending'),
+        headers: {'Authorization': 'Bearer $authToken'},
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as List<dynamic>;
+        return json
+            .map(
+              (item) =>
+                  MarketplaceWidget.fromJson(item as Map<String, dynamic>),
+            )
+            .toList();
+      } else if (response.statusCode == 401) {
+        throw MarketplaceException('Authentication required');
+      } else if (response.statusCode == 403) {
+        throw MarketplaceException('Admin access required');
+      } else {
+        throw MarketplaceException('Failed to get pending widgets');
+      }
+    } catch (e) {
+      if (e is MarketplaceException) rethrow;
+      _logger.e('Get pending for admin error: $e');
+      rethrow;
+    }
+  }
+}
+
+/// Result of duplicate check
+class DuplicateCheckResult {
+  final bool isDuplicate;
+  final String? duplicateId;
+  final String? duplicateName;
+  final double? similarityScore;
+
+  DuplicateCheckResult({
+    required this.isDuplicate,
+    this.duplicateId,
+    this.duplicateName,
+    this.similarityScore,
+  });
+
+  factory DuplicateCheckResult.fromJson(Map<String, dynamic> json) {
+    return DuplicateCheckResult(
+      isDuplicate: json['isDuplicate'] as bool? ?? false,
+      duplicateId: json['duplicateId'] as String?,
+      duplicateName: json['duplicateName'] as String?,
+      similarityScore: (json['similarityScore'] as num?)?.toDouble(),
+    );
+  }
+}
+
+/// Exception for duplicate widget detection
+class MarketplaceDuplicateException extends MarketplaceException {
+  final String? duplicateName;
+
+  MarketplaceDuplicateException(super.message, {this.duplicateName});
 }
 
 /// Response from marketplace browse/search
@@ -456,9 +602,8 @@ class MarketplaceWidget {
   final String description;
   final String author;
   final String authorId;
-  final String version;
   final String? thumbnailUrl;
-  final int downloads;
+  final int installs;
   final double rating;
   final int ratingCount;
   final List<String> tags;
@@ -474,9 +619,8 @@ class MarketplaceWidget {
     required this.description,
     required this.author,
     required this.authorId,
-    required this.version,
     this.thumbnailUrl,
-    required this.downloads,
+    required this.installs,
     required this.rating,
     required this.ratingCount,
     required this.tags,
@@ -494,9 +638,9 @@ class MarketplaceWidget {
       description: json['description'] as String? ?? '',
       author: json['author'] as String,
       authorId: json['authorId'] as String,
-      version: json['version'] as String? ?? '1.0.0',
       thumbnailUrl: json['thumbnailUrl'] as String?,
-      downloads: json['downloads'] as int? ?? 0,
+      // Support both 'installs' and legacy 'downloads' field
+      installs: json['installs'] as int? ?? json['downloads'] as int? ?? 0,
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       ratingCount: json['ratingCount'] as int? ?? 0,
       tags:
@@ -512,6 +656,26 @@ class MarketplaceWidget {
           ? DateTime.parse(json['updatedAt'] as String)
           : DateTime.now(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'author': author,
+      'authorId': authorId,
+      'thumbnailUrl': thumbnailUrl,
+      'installs': installs,
+      'rating': rating,
+      'ratingCount': ratingCount,
+      'tags': tags,
+      'category': category,
+      'status': status,
+      'isFeatured': isFeatured,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
   }
 }
 

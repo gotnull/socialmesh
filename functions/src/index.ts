@@ -24,10 +24,23 @@ const db = admin.firestore();
 const WidgetUploadSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
-  version: z.string().default('1.0.0'),
   tags: z.array(z.string()).max(10).optional(),
   category: z.string().optional(),
   root: z.record(z.unknown()),
+});
+
+const WidgetSubmitSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
+  size: z.string().optional(),
+  tags: z.array(z.string()).max(10).optional(),
+  root: z.record(z.unknown()),
+});
+
+const DuplicateCheckSchema = z.object({
+  name: z.string().min(1),
+  schema: z.record(z.unknown()),
 });
 
 const RatingSchema = z.object({
@@ -100,7 +113,7 @@ export const widgetsBrowse = onRequest({ cors: true }, async (req, res) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
     const category = req.query.category as string | undefined;
-    const sort = (req.query.sort as string) || 'downloads';
+    const sort = (req.query.sort as string) || 'installs';
     const search = req.query.q as string | undefined;
 
     let query: admin.firestore.Query = db.collection('widgets')
@@ -113,7 +126,7 @@ export const widgetsBrowse = onRequest({ cors: true }, async (req, res) => {
     // Sort
     const sortField = sort === 'newest' ? 'createdAt' :
       sort === 'rating' ? 'averageRating' :
-        sort === 'name' ? 'name' : 'downloads';
+        sort === 'name' ? 'name' : 'installs';
     const sortDir = sort === 'name' ? 'asc' : 'desc';
     query = query.orderBy(sortField, sortDir);
 
@@ -164,7 +177,7 @@ export const widgetsFeatured = onRequest({ cors: true }, async (_req, res) => {
     const snapshot = await db.collection('widgets')
       .where('status', '==', 'published')
       .where('featured', '==', true)
-      .orderBy('downloads', 'desc')
+      .orderBy('installs', 'desc')
       .limit(10)
       .get();
 
@@ -222,7 +235,34 @@ export const widgetsGet = onRequest({ cors: true }, async (req, res) => {
 });
 
 /**
- * Download widget (increments download count)
+ * Get widget schema for preview (does NOT increment install count)
+ */
+export const widgetsPreview = onRequest({ cors: true }, async (req, res) => {
+  try {
+    const id = req.query.id as string;
+    if (!id) {
+      res.status(400).json({ error: 'Widget ID required' });
+      return;
+    }
+
+    const docRef = db.collection('widgets').doc(id);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      res.status(404).json({ error: 'Widget not found' });
+      return;
+    }
+
+    const data = doc.data();
+    res.json(serializeDoc(data?.schema || {}));
+  } catch (error) {
+    console.error('Preview error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Download/install widget (increments install count)
  */
 export const widgetsDownload = onRequest({ cors: true }, async (req, res) => {
   try {
@@ -240,9 +280,9 @@ export const widgetsDownload = onRequest({ cors: true }, async (req, res) => {
       return;
     }
 
-    // Increment downloads
+    // Increment installs
     await docRef.update({
-      downloads: admin.firestore.FieldValue.increment(1),
+      installs: admin.firestore.FieldValue.increment(1),
     });
 
     const data = doc.data();
@@ -276,19 +316,17 @@ export const widgetsUpload = onRequest({ cors: true }, async (req, res) => {
       description: body.description || '',
       author: user.name || user.email || 'Anonymous',
       authorId: user.uid,
-      version: body.version,
       tags: body.tags || [],
       category: body.category || 'other',
       schema: {
         name: body.name,
         description: body.description,
-        version: body.version,
         tags: body.tags,
         root: body.root,
       },
       status: 'published',
       featured: false,
-      downloads: 0,
+      installs: 0,
       ratingSum: 0,
       ratingCount: 0,
       averageRating: 0,
@@ -373,6 +411,342 @@ export const widgetsRate = onRequest({ cors: true }, async (req, res) => {
       console.error('Rate error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
+  }
+});
+
+// =============================================================================
+// WIDGET SUBMISSION & APPROVAL FLOW
+// =============================================================================
+
+// Admin UIDs - store in environment or Firestore in production
+const ADMIN_UIDS = ['fulvio_admin_uid']; // Replace with actual admin UIDs
+
+/**
+ * Check if user is admin
+ */
+async function isAdmin(uid: string): Promise<boolean> {
+  // Check hardcoded list first
+  if (ADMIN_UIDS.includes(uid)) return true;
+
+  // Check Firestore admins collection
+  try {
+    const adminDoc = await db.collection('admins').doc(uid).get();
+    return adminDoc.exists;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Submit widget for marketplace approval
+ */
+export const widgetsSubmit = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders()).status(204).send('');
+    return;
+  }
+
+  try {
+    const user = await verifyAuth(req.headers.authorization);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    const body = WidgetSubmitSchema.parse(req.body);
+
+    // Check for existing widget with similar name
+    const existingSnapshot = await db.collection('widgets')
+      .where('name', '==', body.name)
+      .limit(1)
+      .get();
+
+    if (!existingSnapshot.empty) {
+      const existing = existingSnapshot.docs[0];
+      res.status(409).json({
+        error: 'A widget with this name already exists',
+        duplicateName: existing.data().name,
+        duplicateId: existing.id,
+      });
+      return;
+    }
+
+    // Create widget with pending status
+    const widget = {
+      name: body.name,
+      description: body.description || '',
+      author: user.name || user.email || 'Anonymous',
+      authorId: user.uid,
+      tags: body.tags || [],
+      category: 'general',
+      schema: {
+        id: body.id,
+        name: body.name,
+        description: body.description,
+        size: body.size || 'medium',
+        tags: body.tags,
+        root: body.root,
+      },
+      status: 'pending', // Requires admin approval
+      featured: false,
+      installs: 0,
+      ratingSum: 0,
+      ratingCount: 0,
+      averageRating: 0,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    const docRef = await db.collection('widgets').add(widget);
+
+    res.status(201).json(serializeDoc({
+      id: docRef.id,
+      ...widget,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid widget data', details: error.errors });
+    } else {
+      console.error('Submit error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+});
+
+/**
+ * Check for duplicate/similar widgets before submission
+ */
+export const widgetsCheckDuplicate = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders()).status(204).send('');
+    return;
+  }
+
+  try {
+    const user = await verifyAuth(req.headers.authorization);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    const body = DuplicateCheckSchema.parse(req.body);
+    const nameLower = body.name.toLowerCase().trim();
+
+    // Check for exact name match
+    const exactSnapshot = await db.collection('widgets')
+      .where('status', 'in', ['published', 'pending'])
+      .get();
+
+    let bestMatch: { id: string; name: string; score: number } | null = null;
+
+    for (const doc of exactSnapshot.docs) {
+      const data = doc.data();
+      const existingName = (data.name as string || '').toLowerCase().trim();
+
+      // Calculate simple similarity score
+      let score = 0;
+
+      // Exact match
+      if (existingName === nameLower) {
+        score = 1.0;
+      } else {
+        // Check for partial match (contains)
+        if (existingName.includes(nameLower) || nameLower.includes(existingName)) {
+          score = 0.8;
+        } else {
+          // Levenshtein-like similarity for short names
+          const maxLen = Math.max(existingName.length, nameLower.length);
+          const minLen = Math.min(existingName.length, nameLower.length);
+          if (maxLen > 0 && minLen / maxLen > 0.7) {
+            // Similar length, check character overlap
+            const chars1 = new Set(existingName.split(''));
+            const chars2 = new Set(nameLower.split(''));
+            const intersection = [...chars1].filter(c => chars2.has(c)).length;
+            score = intersection / Math.max(chars1.size, chars2.size);
+          }
+        }
+      }
+
+      if (score >= 0.7 && (!bestMatch || score > bestMatch.score)) {
+        bestMatch = {
+          id: doc.id,
+          name: data.name,
+          score,
+        };
+      }
+    }
+
+    if (bestMatch) {
+      res.json({
+        isDuplicate: true,
+        duplicateId: bestMatch.id,
+        duplicateName: bestMatch.name,
+        similarityScore: bestMatch.score,
+      });
+    } else {
+      res.json({
+        isDuplicate: false,
+      });
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid request', details: error.errors });
+    } else {
+      console.error('Duplicate check error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+});
+
+/**
+ * Get pending widgets for admin review
+ */
+export const widgetsAdminPending = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders()).status(204).send('');
+    return;
+  }
+
+  try {
+    const user = await verifyAuth(req.headers.authorization);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    if (!await isAdmin(user.uid)) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const snapshot = await db.collection('widgets')
+      .where('status', '==', 'pending')
+      .orderBy('createdAt', 'desc')
+      .limit(50)
+      .get();
+
+    const widgets = snapshot.docs.map(doc => serializeDoc({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.json(widgets);
+  } catch (error) {
+    console.error('Admin pending error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Approve a pending widget
+ */
+export const widgetsApprove = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders()).status(204).send('');
+    return;
+  }
+
+  try {
+    const user = await verifyAuth(req.headers.authorization);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    if (!await isAdmin(user.uid)) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const widgetId = req.query.id as string;
+    if (!widgetId) {
+      res.status(400).json({ error: 'Widget ID required' });
+      return;
+    }
+
+    const widgetRef = db.collection('widgets').doc(widgetId);
+    const widget = await widgetRef.get();
+
+    if (!widget.exists) {
+      res.status(404).json({ error: 'Widget not found' });
+      return;
+    }
+
+    if (widget.data()?.status !== 'pending') {
+      res.status(400).json({ error: 'Widget is not pending approval' });
+      return;
+    }
+
+    await widgetRef.update({
+      status: 'published',
+      approvedBy: user.uid,
+      approvedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    res.json({ success: true, message: 'Widget approved' });
+  } catch (error) {
+    console.error('Approve error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Reject a pending widget
+ */
+export const widgetsReject = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders()).status(204).send('');
+    return;
+  }
+
+  try {
+    const user = await verifyAuth(req.headers.authorization);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    if (!await isAdmin(user.uid)) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const widgetId = req.query.id as string;
+    if (!widgetId) {
+      res.status(400).json({ error: 'Widget ID required' });
+      return;
+    }
+
+    const reason = req.body?.reason as string;
+
+    const widgetRef = db.collection('widgets').doc(widgetId);
+    const widget = await widgetRef.get();
+
+    if (!widget.exists) {
+      res.status(404).json({ error: 'Widget not found' });
+      return;
+    }
+
+    if (widget.data()?.status !== 'pending') {
+      res.status(400).json({ error: 'Widget is not pending approval' });
+      return;
+    }
+
+    await widgetRef.update({
+      status: 'rejected',
+      rejectedBy: user.uid,
+      rejectedAt: admin.firestore.FieldValue.serverTimestamp(),
+      rejectionReason: reason || 'No reason provided',
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    res.json({ success: true, message: 'Widget rejected' });
+  } catch (error) {
+    console.error('Reject error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

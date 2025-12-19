@@ -5,9 +5,11 @@ import 'models/widget_schema.dart';
 import 'storage/widget_storage_service.dart';
 import 'wizard/widget_wizard_screen.dart';
 import 'marketplace/widget_marketplace_screen.dart';
+import 'marketplace/widget_marketplace_service.dart';
 import 'marketplace/marketplace_providers.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/widget_preview_card.dart';
+import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -278,6 +280,24 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                     ],
                   ),
                 ),
+                if (!isFromMarketplace)
+                  PopupMenuItem(
+                    value: 'submit_marketplace',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.upload_rounded,
+                          size: 18,
+                          color: context.accentColor,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Submit to Marketplace',
+                          style: TextStyle(color: context.accentColor),
+                        ),
+                      ],
+                    ),
+                  ),
                 PopupMenuItem(
                   value: 'delete',
                   child: Row(
@@ -489,6 +509,9 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         final json = await _storageService.exportWidget(schema.id);
         await Share.share(json, subject: '${schema.name} Widget');
         break;
+      case 'submit_marketplace':
+        _submitToMarketplace(schema);
+        break;
       case 'delete':
         _confirmDelete(schema);
         break;
@@ -573,6 +596,10 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                     .removeWidget(widgetToRemove.id);
               }
               await _storageService.deleteWidget(schema.id);
+              // Also remove from user profile to prevent re-download
+              await ref
+                  .read(userProfileProvider.notifier)
+                  .removeInstalledWidget(schema.id);
               await _loadWidgets();
             },
             child: Text('Delete', style: TextStyle(color: AppTheme.errorRed)),
@@ -588,5 +615,222 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       MaterialPageRoute(builder: (context) => const WidgetMarketplaceScreen()),
     );
     await _loadWidgets();
+  }
+
+  void _submitToMarketplace(WidgetSchema schema) async {
+    // Show confirmation dialog with submission requirements
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        title: const Text(
+          'Submit to Marketplace',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Submit "${schema.name}" for marketplace approval?',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.darkBackground,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.darkBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: context.accentColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Review Guidelines',
+                        style: TextStyle(
+                          color: context.accentColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '• Widget will be reviewed for quality\n'
+                    '• Similar widgets may be rejected\n'
+                    '• You\'ll be credited as the author',
+                    style: TextStyle(
+                      color: AppTheme.textTertiary,
+                      fontSize: 12,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.accentColor,
+            ),
+            child: const Text('Submit', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final service = ref.read(marketplaceServiceProvider);
+      final authService = ref.read(authServiceProvider);
+      final token = await authService.getIdToken();
+
+      if (token == null) {
+        if (mounted) Navigator.pop(context);
+        if (mounted) {
+          showErrorSnackBar(context, 'Please sign in to submit widgets');
+        }
+        return;
+      }
+
+      // Check for duplicates first
+      final duplicateCheck = await service.checkDuplicate(schema, token);
+
+      if (mounted) Navigator.pop(context); // Close loading
+
+      if (duplicateCheck.isDuplicate) {
+        // Show duplicate warning
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              backgroundColor: AppTheme.darkCard,
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: AppTheme.warningYellow,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Similar Widget Found',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'A similar widget already exists in the marketplace:',
+                    style: TextStyle(color: AppTheme.textSecondary),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkBackground,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          duplicateCheck.duplicateName ?? 'Unknown',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (duplicateCheck.similarityScore != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Similarity: ${(duplicateCheck.similarityScore! * 100).toInt()}%',
+                            style: TextStyle(
+                              color: AppTheme.textTertiary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Consider making your widget more unique before submitting.',
+                    style: TextStyle(
+                      color: AppTheme.textTertiary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      }
+
+      // Submit to marketplace
+      await service.submitWidget(schema, token);
+
+      if (mounted) {
+        showSuccessSnackBar(context, '${schema.name} submitted for review');
+      }
+    } on MarketplaceDuplicateException catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          'Similar widget already exists: ${e.duplicateName}',
+        );
+      }
+    } on MarketplaceException catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, e.message);
+      }
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to submit: $e');
+      }
+    }
   }
 }

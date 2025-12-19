@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../marketplace/widget_marketplace_service.dart';
 import '../models/widget_schema.dart';
@@ -30,7 +31,7 @@ class _WidgetMarketplaceScreenState
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(_onTabChanged);
     // No manual load needed - AsyncNotifier auto-loads in build()
   }
@@ -61,91 +62,114 @@ class _WidgetMarketplaceScreenState
     ref.read(marketplaceSearchProvider.notifier).search(query);
   }
 
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final marketplaceAsync = ref.watch(marketplaceProvider);
     final searchState = ref.watch(marketplaceSearchProvider);
+    final favoritesCount = ref.watch(widgetFavoritesCountProvider);
 
-    return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: Scaffold(
         backgroundColor: AppTheme.darkBackground,
-        title: const Text(
-          'Widget Marketplace',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkBackground,
+          title: const Text(
+            'Widget Marketplace',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          bottom: TabBar(
+            controller: _tabController,
+            indicatorColor: context.accentColor,
+            labelColor: context.accentColor,
+            unselectedLabelColor: AppTheme.textSecondary,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            tabs: [
+              const Tab(text: 'Featured'),
+              const Tab(text: 'Popular'),
+              const Tab(text: 'New'),
+              Tab(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.favorite, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Favorites${favoritesCount > 0 ? ' ($favoritesCount)' : ''}',
+                    ),
+                  ],
+                ),
+              ),
+              const Tab(text: 'Categories'),
+            ],
           ),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: context.accentColor,
-          labelColor: context.accentColor,
-          unselectedLabelColor: AppTheme.textSecondary,
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
-          tabs: const [
-            Tab(text: 'Featured'),
-            Tab(text: 'Popular'),
-            Tab(text: 'New'),
-            Tab(text: 'Categories'),
-          ],
-        ),
-      ),
-      body: Column(
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) => _search(value),
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Search widgets...',
-                hintStyle: TextStyle(color: AppTheme.textTertiary),
-                prefixIcon: Icon(Icons.search, color: AppTheme.textTertiary),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(Icons.clear, color: AppTheme.textTertiary),
-                        onPressed: () {
-                          _searchController.clear();
-                          ref.read(marketplaceSearchProvider.notifier).clear();
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: AppTheme.darkCard,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+        body: Column(
+          children: [
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) => _search(value),
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Search widgets...',
+                  hintStyle: TextStyle(color: AppTheme.textTertiary),
+                  prefixIcon: Icon(Icons.search, color: AppTheme.textTertiary),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear, color: AppTheme.textTertiary),
+                          onPressed: () {
+                            _searchController.clear();
+                            ref
+                                .read(marketplaceSearchProvider.notifier)
+                                .clear();
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: AppTheme.darkCard,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ),
-          ),
-          // Content
-          Expanded(
-            child: searchState.query.isNotEmpty
-                ? _buildSearchResults(searchState)
-                : marketplaceAsync.when(
-                    loading: () => const ScreenLoadingIndicator(),
-                    error: (error, stack) => _buildErrorState(
-                      'Unable to load marketplace',
-                      onRetry: () => ref.invalidate(marketplaceProvider),
+            // Content
+            Expanded(
+              child: searchState.query.isNotEmpty
+                  ? _buildSearchResults(searchState)
+                  : marketplaceAsync.when(
+                      loading: () => const ScreenLoadingIndicator(),
+                      error: (error, stack) => _buildErrorState(
+                        'Unable to load marketplace',
+                        onRetry: () => ref.invalidate(marketplaceProvider),
+                      ),
+                      data: (state) => TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildFeaturedTab(state),
+                          _buildPopularTab(state),
+                          _buildNewTab(state),
+                          _buildFavoritesTab(state),
+                          _buildCategoriesTab(),
+                        ],
+                      ),
                     ),
-                    data: (state) => TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildFeaturedTab(state),
-                        _buildPopularTab(state),
-                        _buildNewTab(state),
-                        _buildCategoriesTab(),
-                      ],
-                    ),
-                  ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -229,6 +253,57 @@ class _WidgetMarketplaceScreenState
     }
 
     return _buildWidgetGrid(state.newest);
+  }
+
+  Widget _buildFavoritesTab(MarketplaceState state) {
+    final favoriteIds = ref.watch(widgetFavoritesProvider);
+
+    // Get all widgets from state and filter to favorites
+    final allWidgets = <MarketplaceWidget>[
+      ...state.featured,
+      ...state.popular,
+      ...state.newest,
+    ];
+
+    // Remove duplicates by ID and filter to favorites only
+    final seenIds = <String>{};
+    final favoriteWidgets = allWidgets.where((widget) {
+      if (seenIds.contains(widget.id)) return false;
+      seenIds.add(widget.id);
+      return favoriteIds.contains(widget.id);
+    }).toList();
+
+    if (favoriteWidgets.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.favorite_border,
+                size: 48,
+                color: AppTheme.textTertiary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No favorite widgets yet',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Tap the heart icon on any widget to add it here',
+                style: TextStyle(color: AppTheme.textTertiary, fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return _buildWidgetGrid(favoriteWidgets);
   }
 
   Widget _buildErrorState(String message, {VoidCallback? onRetry}) {
@@ -406,9 +481,10 @@ class _MarketplaceWidgetCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final service = ref.watch(marketplaceServiceProvider);
+    final isFavorited = ref.watch(isWidgetFavoritedProvider(widget.id));
 
     return FutureBuilder<WidgetSchema>(
-      future: service.downloadWidget(widget.id),
+      future: service.previewWidget(widget.id),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           // Loading placeholder with metadata visible
@@ -426,7 +502,14 @@ class _MarketplaceWidgetCard extends ConsumerWidget {
           onTap: onTap,
           trailing: WidgetMarketplaceStats(
             rating: widget.rating,
-            downloads: widget.downloads,
+            installs: widget.installs,
+            isFavorited: isFavorited,
+            onFavoriteToggle: () {
+              ref
+                  .read(widgetFavoritesProvider.notifier)
+                  .toggleFavorite(widget.id);
+              HapticFeedback.lightImpact();
+            },
           ),
         );
       },
@@ -482,7 +565,7 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
               ),
               clipBehavior: Clip.antiAlias,
               child: FutureBuilder<WidgetSchema>(
-                future: service.downloadWidget(mWidget.id),
+                future: service.previewWidget(mWidget.id),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return AspectRatio(
@@ -525,37 +608,14 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            // Title and version
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    mWidget.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    'v${mWidget.version}',
-                    style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
+            // Title and author
+            Text(
+              mWidget.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8),
             // Author
@@ -574,8 +634,8 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
                 ),
                 const SizedBox(width: 24),
                 _buildStatItem(
-                  Icons.download,
-                  '${mWidget.downloads} downloads',
+                  Icons.download_done,
+                  '${mWidget.installs} installs',
                   AppTheme.textSecondary,
                 ),
               ],

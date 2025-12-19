@@ -200,15 +200,19 @@ class WidgetPreviewCardLoading extends StatelessWidget {
   }
 }
 
-/// Stats widget for marketplace items (rating + downloads)
+/// Stats widget for marketplace items (rating + installs + favorite)
 class WidgetMarketplaceStats extends StatelessWidget {
   final double rating;
-  final int downloads;
+  final int installs;
+  final bool isFavorited;
+  final VoidCallback? onFavoriteToggle;
 
   const WidgetMarketplaceStats({
     super.key,
     required this.rating,
-    required this.downloads,
+    required this.installs,
+    this.isFavorited = false,
+    this.onFavoriteToggle,
   });
 
   @override
@@ -227,17 +231,28 @@ class WidgetMarketplaceStats extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Icon(Icons.download, size: 14, color: AppTheme.textTertiary),
+        Icon(Icons.download_done, size: 14, color: AppTheme.textTertiary),
         const SizedBox(width: 4),
         Text(
-          _formatDownloads(downloads),
+          _formatInstalls(installs),
           style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
         ),
+        if (onFavoriteToggle != null) ...[
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: onFavoriteToggle,
+            child: Icon(
+              isFavorited ? Icons.favorite : Icons.favorite_border,
+              size: 18,
+              color: isFavorited ? Colors.redAccent : AppTheme.textTertiary,
+            ),
+          ),
+        ],
       ],
     );
   }
 
-  String _formatDownloads(int count) {
+  String _formatInstalls(int count) {
     if (count >= 1000000) {
       return '${(count / 1000000).toStringAsFixed(1)}M';
     } else if (count >= 1000) {

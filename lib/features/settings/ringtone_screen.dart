@@ -2196,7 +2196,9 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
     final hasSearch = _searchController.text.trim().isNotEmpty;
     final displayList = hasSearch ? _results : _suggestions;
 
-    return Column(
+    return GestureDetector(
+      onTap: () => _searchFocus.unfocus(),
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header
@@ -2470,6 +2472,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
         // Bottom safe area
         const SizedBox(height: 16),
       ],
+      ),
     );
   }
 }

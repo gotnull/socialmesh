@@ -198,7 +198,6 @@ void main() {
 
         expect(widget.id, 'widget-123');
         expect(widget.name, 'Detailed Widget');
-        expect(widget.version, '1.5.0');
       });
 
       test('throws on 404', () async {
@@ -337,7 +336,7 @@ void main() {
         'authorId': 'user-123',
         'version': '2.1.0',
         'thumbnailUrl': 'https://example.com/thumb.png',
-        'downloads': 1234,
+        'installs': 1234,
         'rating': 4.75,
         'ratingCount': 89,
         'tags': ['one', 'two', 'three'],
@@ -353,9 +352,8 @@ void main() {
       expect(widget.description, 'A test description');
       expect(widget.author, 'TestAuthor');
       expect(widget.authorId, 'user-123');
-      expect(widget.version, '2.1.0');
       expect(widget.thumbnailUrl, 'https://example.com/thumb.png');
-      expect(widget.downloads, 1234);
+      expect(widget.installs, 1234);
       expect(widget.rating, 4.75);
       expect(widget.ratingCount, 89);
       expect(widget.tags, ['one', 'two', 'three']);
@@ -376,9 +374,8 @@ void main() {
 
       expect(widget.id, 'minimal-id');
       expect(widget.description, '');
-      expect(widget.version, '1.0.0');
       expect(widget.thumbnailUrl, isNull);
-      expect(widget.downloads, 0);
+      expect(widget.installs, 0);
       expect(widget.rating, 0.0);
       expect(widget.ratingCount, 0);
       expect(widget.tags, isEmpty);

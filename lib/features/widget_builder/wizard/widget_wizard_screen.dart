@@ -144,13 +144,31 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   void _initFromSchema() {
     final schema = widget.initialSchema;
+    debugPrint(
+      'Wizard: _initFromSchema called, schema is ${schema == null ? "NULL" : "present"}',
+    );
     if (schema == null) return;
+
+    debugPrint('Wizard: Schema id=${schema.id}, name=${schema.name}');
+    debugPrint('Wizard: Schema root type=${schema.root.type}');
+    debugPrint(
+      'Wizard: Schema root has ${schema.root.children.length} children',
+    );
 
     _existingId = schema.id;
     _nameController.text = schema.name;
 
-    // Try to detect template from tags
+    // Extract bindings FIRST (needed for template detection)
+    _extractBindingsFromElement(schema.root);
+    debugPrint('Wizard: Extracted bindings: $_selectedBindings');
+
+    // Extract actions from schema
+    _extractActionsFromElement(schema.root);
+    debugPrint('Wizard: Extracted actions: $_selectedActions');
+
+    // Try to detect template from tags first
     final tags = schema.tags;
+    debugPrint('Wizard: Schema tags: $tags');
     if (tags.contains('status')) {
       _selectedTemplate = _getTemplates().firstWhere((t) => t.id == 'status');
     } else if (tags.contains('info')) {
@@ -169,17 +187,275 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       _selectedTemplate = _getTemplates().firstWhere((t) => t.id == 'graph');
     }
 
-    // Extract bindings from schema
-    _extractBindingsFromElement(schema.root);
+    // If no template detected from tags, detect from element structure
+    _selectedTemplate ??= _detectTemplateFromStructure(schema.root);
+    debugPrint('Wizard: Detected template: ${_selectedTemplate?.id}');
 
-    // Extract actions from schema
-    _extractActionsFromElement(schema.root);
+    // Extract appearance settings from schema
+    _extractAppearanceFromElement(schema.root);
+    debugPrint(
+      'Wizard: Accent color: $_accentColor, Chart type: $_chartType, Merge: $_mergeCharts',
+    );
+
+    // Detect layout style from root element structure
+    _detectLayoutStyle(schema.root);
+    debugPrint('Wizard: Layout style: $_layoutStyle');
+  }
+
+  /// Detect template type from element structure
+  _WidgetTemplate? _detectTemplateFromStructure(ElementSchema root) {
+    final templates = _getTemplates();
+    bool hasChart = false;
+    bool hasGauge = false;
+    bool hasAction = false;
+    bool hasMap = false;
+
+    void scanElement(ElementSchema element) {
+      if (element.type == ElementType.chart) hasChart = true;
+      if (element.type == ElementType.gauge) hasGauge = true;
+      if (element.type == ElementType.map) hasMap = true;
+      if (element.action != null && element.action!.type != ActionType.none) {
+        hasAction = true;
+      }
+      for (final child in element.children) {
+        scanElement(child);
+      }
+    }
+
+    scanElement(root);
+
+    // Determine template based on detected elements
+    if (hasChart) {
+      return templates.firstWhere((t) => t.id == 'graph');
+    } else if (hasGauge) {
+      return templates.firstWhere((t) => t.id == 'gauge');
+    } else if (hasMap) {
+      return templates.firstWhere((t) => t.id == 'location');
+    } else if (hasAction && _selectedBindings.isEmpty) {
+      return templates.firstWhere((t) => t.id == 'actions');
+    } else if (_selectedBindings.isNotEmpty) {
+      // Default to status for widgets with data bindings
+      return templates.firstWhere((t) => t.id == 'status');
+    }
+
+    return null;
+  }
+
+  /// Parse hex color string to Color
+  Color? _hexToColor(String? hex) {
+    if (hex == null || hex.isEmpty) return null;
+    try {
+      String cleanHex = hex.replaceFirst('#', '');
+      if (cleanHex.length == 6) {
+        cleanHex = 'FF$cleanHex'; // Add alpha
+      }
+      return Color(int.parse(cleanHex, radix: 16));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Check if a color is a likely accent color (not secondary text)
+  bool _isAccentColor(Color color) {
+    // Secondary text colors are typically gray/low saturation
+    final hsl = HSLColor.fromColor(color);
+    return hsl.saturation > 0.3 && hsl.lightness > 0.2 && hsl.lightness < 0.9;
+  }
+
+  void _extractAppearanceFromElement(ElementSchema element) {
+    // Extract accent color from styled elements (text, gauge, icons)
+    if (element.type == ElementType.text && element.style.textColor != null) {
+      final color = _hexToColor(element.style.textColor);
+      if (color != null && _isAccentColor(color)) {
+        _accentColor = color;
+      }
+    }
+
+    if (element.type == ElementType.gauge && element.gaugeColor != null) {
+      final color = _hexToColor(element.gaugeColor);
+      if (color != null) {
+        _accentColor = color;
+      }
+    }
+
+    // Extract chart settings
+    if (element.type == ElementType.chart) {
+      // Chart type
+      if (element.chartType != null) {
+        _chartType = element.chartType!;
+      }
+
+      // Grid and dots
+      if (element.chartShowGrid != null) {
+        _showGrid = element.chartShowGrid!;
+      }
+      if (element.chartShowDots != null) {
+        _showDots = element.chartShowDots!;
+      }
+
+      // Curved (smooth) lines
+      if (element.chartCurved != null) {
+        _smoothCurve = element.chartCurved!;
+      }
+
+      // Fill area (check if area or sparkline type)
+      _fillArea =
+          element.chartType == ChartType.area ||
+          element.chartType == ChartType.sparkline;
+
+      // Data points
+      if (element.chartMaxPoints != null) {
+        _dataPoints = element.chartMaxPoints!;
+      }
+
+      // Advanced chart options
+      if (element.chartMergeMode != null) {
+        _mergeMode = element.chartMergeMode!;
+      }
+      if (element.chartNormalization != null) {
+        _normalization = element.chartNormalization!;
+      }
+      if (element.chartBaseline != null) {
+        _baseline = element.chartBaseline!;
+      }
+      if (element.chartShowMinMax != null) {
+        _showMinMax = element.chartShowMinMax!;
+      }
+
+      // Check if merged chart (multiple binding paths)
+      if (element.chartBindingPaths != null &&
+          element.chartBindingPaths!.length > 1) {
+        _mergeCharts = true;
+
+        // Extract merge colors
+        final paths = element.chartBindingPaths!;
+        final colors = element.chartLegendColors ?? [];
+        for (int i = 0; i < paths.length && i < colors.length; i++) {
+          final color = _hexToColor(colors[i]);
+          if (color != null) {
+            _mergeColors[paths[i]] = color;
+          }
+        }
+      }
+
+      // Extract gradient settings
+      if (element.chartGradientFill == true) {
+        final bindingPath =
+            element.chartBindingPath ?? element.chartBindingPaths?.first ?? '';
+        final key = _mergeCharts ? '_merged' : bindingPath;
+
+        final lowColor =
+            _hexToColor(element.chartGradientLowColor) ?? Colors.green;
+        final highColor =
+            _hexToColor(element.chartGradientHighColor) ?? Colors.red;
+
+        final config = _GradientConfig()
+          ..enabled = true
+          ..lowColor = lowColor
+          ..highColor = highColor;
+        _seriesGradients[key] = config;
+      }
+
+      // Extract threshold settings
+      if (element.chartThresholds != null &&
+          element.chartThresholds!.isNotEmpty) {
+        final bindingPath =
+            element.chartBindingPath ?? element.chartBindingPaths?.first ?? '';
+        final key = _mergeCharts ? '_merged' : bindingPath;
+
+        final thresholds = element.chartThresholds!;
+        final colors = element.chartThresholdColors ?? [];
+        final labels = element.chartThresholdLabels ?? [];
+
+        final thresholdLines = <_ThresholdLine>[];
+        for (int i = 0; i < thresholds.length; i++) {
+          thresholdLines.add(
+            _ThresholdLine(
+              value: thresholds[i],
+              color: i < colors.length
+                  ? _hexToColor(colors[i]) ?? Colors.red
+                  : Colors.red,
+              label: i < labels.length ? labels[i] : '',
+            ),
+          );
+        }
+        _seriesThresholds[key] = thresholdLines;
+      }
+
+      // Extract per-binding chart types if they exist
+      if (element.chartBindingPath != null) {
+        _bindingChartTypes[element.chartBindingPath!] =
+            element.chartType ?? ChartType.area;
+      }
+    }
+
+    // Detect if labels are shown (look for label text elements)
+    if (element.type == ElementType.text && element.text != null) {
+      // If there are label-style text elements, labels are shown
+      _showLabels = true;
+    }
+
+    // Recurse into children
+    for (final child in element.children) {
+      _extractAppearanceFromElement(child);
+    }
+  }
+
+  void _detectLayoutStyle(ElementSchema root) {
+    // Detect layout based on root element type
+    if (root.type == ElementType.row) {
+      _layoutStyle = _LayoutStyle.horizontal;
+    } else if (root.type == ElementType.column) {
+      _layoutStyle = _LayoutStyle.vertical;
+    } else if (root.type == ElementType.stack) {
+      _layoutStyle = _LayoutStyle.grid;
+    }
+
+    // Check first level children for more specific layout detection
+    if (root.children.isNotEmpty) {
+      final firstChild = root.children.first;
+      if (firstChild.type == ElementType.row) {
+        _layoutStyle = _LayoutStyle.horizontal;
+      } else if (firstChild.type == ElementType.column) {
+        _layoutStyle = _LayoutStyle.vertical;
+      }
+    }
   }
 
   void _extractBindingsFromElement(ElementSchema element) {
+    debugPrint(
+      'Wizard: Scanning element type=${element.type}, binding=${element.binding?.path}, chartBindingPath=${element.chartBindingPath}, chartBindingPaths=${element.chartBindingPaths}',
+    );
+
+    // Regular binding
     if (element.binding != null) {
+      debugPrint('Wizard: Found regular binding: ${element.binding!.path}');
       _selectedBindings.add(element.binding!.path);
     }
+
+    // Chart-specific bindings
+    if (element.type == ElementType.chart) {
+      debugPrint('Wizard: Found chart element');
+      if (element.chartBindingPath != null) {
+        debugPrint(
+          'Wizard: Found chartBindingPath: ${element.chartBindingPath}',
+        );
+        _selectedBindings.add(element.chartBindingPath!);
+      }
+      if (element.chartBindingPaths != null) {
+        debugPrint(
+          'Wizard: Found chartBindingPaths: ${element.chartBindingPaths}',
+        );
+        for (final path in element.chartBindingPaths!) {
+          _selectedBindings.add(path);
+        }
+        // If multiple paths, it's a merged chart
+        if (element.chartBindingPaths!.length > 1) {
+          _mergeCharts = true;
+        }
+      }
+    }
+
     for (final child in element.children) {
       _extractBindingsFromElement(child);
     }
