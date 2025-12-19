@@ -57,7 +57,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
 
       String base64Data;
       if (code.startsWith('socialmesh://channel/')) {
-        // SocialMesh native format
+        // Socialmesh native format
         base64Data = code.substring('socialmesh://channel/'.length);
       } else if (code.contains('meshtastic.org/e/#')) {
         // Legacy Meshtastic format - extract the fragment after #

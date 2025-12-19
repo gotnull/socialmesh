@@ -1,10 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/canned_response.dart';
+import '../../models/user_profile.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../providers/profile_providers.dart';
 import '../../services/storage/storage_service.dart';
 import '../../providers/app_providers.dart';
 
@@ -42,12 +46,22 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
     }
   }
 
+  /// Sync canned responses to cloud profile
+  void _syncToCloud() {
+    final jsonList = _responses.map((r) => r.toJson()).toList();
+    final jsonStr = jsonEncode(jsonList);
+    ref
+        .read(userProfileProvider.notifier)
+        .updatePreferences(UserPreferences(cannedResponsesJson: jsonStr));
+  }
+
   Future<void> _addResponse() async {
     if (_settingsService == null) return;
     final result = await _showEditSheet(null);
     if (result != null) {
       await _settingsService!.addCannedResponse(result);
       setState(_loadResponses);
+      _syncToCloud();
     }
   }
 
@@ -57,6 +71,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
     if (result != null) {
       await _settingsService!.updateCannedResponse(result);
       setState(_loadResponses);
+      _syncToCloud();
     }
   }
 
@@ -71,6 +86,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
     if (confirmed == true) {
       await _settingsService!.deleteCannedResponse(response.id);
       setState(_loadResponses);
+      _syncToCloud();
     }
   }
 
@@ -86,6 +102,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
     if (confirmed == true) {
       await _settingsService!.resetCannedResponsesToDefaults();
       setState(_loadResponses);
+      _syncToCloud();
     }
   }
 
@@ -188,6 +205,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
                         newIndex,
                       );
                       setState(_loadResponses);
+                      _syncToCloud();
                     },
                     itemBuilder: (context, index) => _ResponseTile(
                       key: ValueKey(_responses[index].id),

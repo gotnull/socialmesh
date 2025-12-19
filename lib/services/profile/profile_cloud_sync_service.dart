@@ -258,6 +258,7 @@ class ProfileCloudSyncService {
       'primaryNodeId': profile.primaryNodeId,
       'accentColorIndex': profile.accentColorIndex,
       'installedWidgetIds': profile.installedWidgetIds,
+      'preferences': profile.preferences?.toJson(),
       'isVerified': profile.isVerified,
       'createdAt': profile.createdAt.toIso8601String(),
       'updatedAt': FieldValue.serverTimestamp(),
@@ -289,6 +290,11 @@ class ProfileCloudSyncService {
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      preferences: data['preferences'] != null
+          ? UserPreferences.fromJson(
+              data['preferences'] as Map<String, dynamic>,
+            )
+          : null,
       isVerified: data['isVerified'] as bool? ?? false,
       isSynced: true,
       createdAt: data['createdAt'] != null
@@ -326,6 +332,7 @@ class ProfileCloudSyncService {
         primaryNodeId: cloud.primaryNodeId ?? local.primaryNodeId,
         accentColorIndex: cloud.accentColorIndex ?? local.accentColorIndex,
         installedWidgetIds: mergedWidgetIds,
+        preferences: cloud.preferences ?? local.preferences,
       );
     }
 

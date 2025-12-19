@@ -9,6 +9,8 @@ import '../../core/theme.dart';
 import '../../core/widgets/animated_mesh_node.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/secret_gesture_detector.dart';
+import '../../models/user_profile.dart';
+import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../services/config/mesh_firestore_config_service.dart';
 import '../../services/notifications/notification_service.dart';
@@ -164,6 +166,28 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       touchIntensity: _touchIntensity,
       stretchIntensity: _stretchIntensity,
     );
+
+    // Sync splash mesh config to cloud profile
+    ref
+        .read(userProfileProvider.notifier)
+        .updatePreferences(
+          UserPreferences(
+            splashMeshSize: _size,
+            splashMeshAnimationType: _animationType.name,
+            splashMeshGlowIntensity: _glowIntensity,
+            splashMeshLineThickness: _lineThickness,
+            splashMeshNodeSize: _nodeSize,
+            splashMeshColorPreset: _selectedColorPreset,
+            splashMeshUseAccelerometer: _useAccelerometer,
+            splashMeshAccelSensitivity: _accelerometerSensitivity,
+            splashMeshAccelFriction: _accelerometerFriction,
+            splashMeshPhysicsMode: _physicsMode.name,
+            splashMeshEnableTouch: _enableTouch,
+            splashMeshEnablePullToStretch: _enablePullToStretch,
+            splashMeshTouchIntensity: _touchIntensity,
+            splashMeshStretchIntensity: _stretchIntensity,
+          ),
+        );
 
     // Also save secret gesture config to local
     await _settingsService!.setSecretGestureConfig(

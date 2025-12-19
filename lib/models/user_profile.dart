@@ -1,5 +1,278 @@
 import 'dart:convert';
 
+/// Settings that should persist across app reinstalls
+class UserPreferences {
+  /// Theme mode: 0 = system, 1 = light, 2 = dark
+  final int? themeModeIndex;
+
+  /// Notification settings
+  final bool? notificationsEnabled;
+  final bool? newNodeNotificationsEnabled;
+  final bool? directMessageNotificationsEnabled;
+  final bool? channelMessageNotificationsEnabled;
+  final bool? notificationSoundEnabled;
+  final bool? notificationVibrationEnabled;
+
+  /// Haptic feedback settings
+  final bool? hapticFeedbackEnabled;
+  final int? hapticIntensity;
+
+  /// Animation settings
+  final bool? animationsEnabled;
+  final bool? animations3DEnabled;
+
+  /// Canned responses (JSON-encoded list)
+  final String? cannedResponsesJson;
+
+  /// Tapback configs (JSON-encoded list)
+  final String? tapbackConfigsJson;
+
+  /// Selected ringtone
+  final String? ringtoneRtttl;
+  final String? ringtoneName;
+
+  /// Splash mesh config
+  final double? splashMeshSize;
+  final String? splashMeshAnimationType;
+  final double? splashMeshGlowIntensity;
+  final double? splashMeshLineThickness;
+  final double? splashMeshNodeSize;
+  final int? splashMeshColorPreset;
+  final bool? splashMeshUseAccelerometer;
+  final double? splashMeshAccelSensitivity;
+  final double? splashMeshAccelFriction;
+  final String? splashMeshPhysicsMode;
+  final bool? splashMeshEnableTouch;
+  final bool? splashMeshEnablePullToStretch;
+  final double? splashMeshTouchIntensity;
+  final double? splashMeshStretchIntensity;
+
+  const UserPreferences({
+    this.themeModeIndex,
+    this.notificationsEnabled,
+    this.newNodeNotificationsEnabled,
+    this.directMessageNotificationsEnabled,
+    this.channelMessageNotificationsEnabled,
+    this.notificationSoundEnabled,
+    this.notificationVibrationEnabled,
+    this.hapticFeedbackEnabled,
+    this.hapticIntensity,
+    this.animationsEnabled,
+    this.animations3DEnabled,
+    this.cannedResponsesJson,
+    this.tapbackConfigsJson,
+    this.ringtoneRtttl,
+    this.ringtoneName,
+    this.splashMeshSize,
+    this.splashMeshAnimationType,
+    this.splashMeshGlowIntensity,
+    this.splashMeshLineThickness,
+    this.splashMeshNodeSize,
+    this.splashMeshColorPreset,
+    this.splashMeshUseAccelerometer,
+    this.splashMeshAccelSensitivity,
+    this.splashMeshAccelFriction,
+    this.splashMeshPhysicsMode,
+    this.splashMeshEnableTouch,
+    this.splashMeshEnablePullToStretch,
+    this.splashMeshTouchIntensity,
+    this.splashMeshStretchIntensity,
+  });
+
+  factory UserPreferences.fromJson(Map<String, dynamic> json) {
+    return UserPreferences(
+      themeModeIndex: json['themeModeIndex'] as int?,
+      notificationsEnabled: json['notificationsEnabled'] as bool?,
+      newNodeNotificationsEnabled: json['newNodeNotificationsEnabled'] as bool?,
+      directMessageNotificationsEnabled:
+          json['directMessageNotificationsEnabled'] as bool?,
+      channelMessageNotificationsEnabled:
+          json['channelMessageNotificationsEnabled'] as bool?,
+      notificationSoundEnabled: json['notificationSoundEnabled'] as bool?,
+      notificationVibrationEnabled:
+          json['notificationVibrationEnabled'] as bool?,
+      hapticFeedbackEnabled: json['hapticFeedbackEnabled'] as bool?,
+      hapticIntensity: json['hapticIntensity'] as int?,
+      animationsEnabled: json['animationsEnabled'] as bool?,
+      animations3DEnabled: json['animations3DEnabled'] as bool?,
+      cannedResponsesJson: json['cannedResponsesJson'] as String?,
+      tapbackConfigsJson: json['tapbackConfigsJson'] as String?,
+      ringtoneRtttl: json['ringtoneRtttl'] as String?,
+      ringtoneName: json['ringtoneName'] as String?,
+      splashMeshSize: (json['splashMeshSize'] as num?)?.toDouble(),
+      splashMeshAnimationType: json['splashMeshAnimationType'] as String?,
+      splashMeshGlowIntensity: (json['splashMeshGlowIntensity'] as num?)
+          ?.toDouble(),
+      splashMeshLineThickness: (json['splashMeshLineThickness'] as num?)
+          ?.toDouble(),
+      splashMeshNodeSize: (json['splashMeshNodeSize'] as num?)?.toDouble(),
+      splashMeshColorPreset: json['splashMeshColorPreset'] as int?,
+      splashMeshUseAccelerometer: json['splashMeshUseAccelerometer'] as bool?,
+      splashMeshAccelSensitivity: (json['splashMeshAccelSensitivity'] as num?)
+          ?.toDouble(),
+      splashMeshAccelFriction: (json['splashMeshAccelFriction'] as num?)
+          ?.toDouble(),
+      splashMeshPhysicsMode: json['splashMeshPhysicsMode'] as String?,
+      splashMeshEnableTouch: json['splashMeshEnableTouch'] as bool?,
+      splashMeshEnablePullToStretch:
+          json['splashMeshEnablePullToStretch'] as bool?,
+      splashMeshTouchIntensity: (json['splashMeshTouchIntensity'] as num?)
+          ?.toDouble(),
+      splashMeshStretchIntensity: (json['splashMeshStretchIntensity'] as num?)
+          ?.toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (themeModeIndex != null) 'themeModeIndex': themeModeIndex,
+      if (notificationsEnabled != null)
+        'notificationsEnabled': notificationsEnabled,
+      if (newNodeNotificationsEnabled != null)
+        'newNodeNotificationsEnabled': newNodeNotificationsEnabled,
+      if (directMessageNotificationsEnabled != null)
+        'directMessageNotificationsEnabled': directMessageNotificationsEnabled,
+      if (channelMessageNotificationsEnabled != null)
+        'channelMessageNotificationsEnabled':
+            channelMessageNotificationsEnabled,
+      if (notificationSoundEnabled != null)
+        'notificationSoundEnabled': notificationSoundEnabled,
+      if (notificationVibrationEnabled != null)
+        'notificationVibrationEnabled': notificationVibrationEnabled,
+      if (hapticFeedbackEnabled != null)
+        'hapticFeedbackEnabled': hapticFeedbackEnabled,
+      if (hapticIntensity != null) 'hapticIntensity': hapticIntensity,
+      if (animationsEnabled != null) 'animationsEnabled': animationsEnabled,
+      if (animations3DEnabled != null)
+        'animations3DEnabled': animations3DEnabled,
+      if (cannedResponsesJson != null)
+        'cannedResponsesJson': cannedResponsesJson,
+      if (tapbackConfigsJson != null) 'tapbackConfigsJson': tapbackConfigsJson,
+      if (ringtoneRtttl != null) 'ringtoneRtttl': ringtoneRtttl,
+      if (ringtoneName != null) 'ringtoneName': ringtoneName,
+      if (splashMeshSize != null) 'splashMeshSize': splashMeshSize,
+      if (splashMeshAnimationType != null)
+        'splashMeshAnimationType': splashMeshAnimationType,
+      if (splashMeshGlowIntensity != null)
+        'splashMeshGlowIntensity': splashMeshGlowIntensity,
+      if (splashMeshLineThickness != null)
+        'splashMeshLineThickness': splashMeshLineThickness,
+      if (splashMeshNodeSize != null) 'splashMeshNodeSize': splashMeshNodeSize,
+      if (splashMeshColorPreset != null)
+        'splashMeshColorPreset': splashMeshColorPreset,
+      if (splashMeshUseAccelerometer != null)
+        'splashMeshUseAccelerometer': splashMeshUseAccelerometer,
+      if (splashMeshAccelSensitivity != null)
+        'splashMeshAccelSensitivity': splashMeshAccelSensitivity,
+      if (splashMeshAccelFriction != null)
+        'splashMeshAccelFriction': splashMeshAccelFriction,
+      if (splashMeshPhysicsMode != null)
+        'splashMeshPhysicsMode': splashMeshPhysicsMode,
+      if (splashMeshEnableTouch != null)
+        'splashMeshEnableTouch': splashMeshEnableTouch,
+      if (splashMeshEnablePullToStretch != null)
+        'splashMeshEnablePullToStretch': splashMeshEnablePullToStretch,
+      if (splashMeshTouchIntensity != null)
+        'splashMeshTouchIntensity': splashMeshTouchIntensity,
+      if (splashMeshStretchIntensity != null)
+        'splashMeshStretchIntensity': splashMeshStretchIntensity,
+    };
+  }
+
+  UserPreferences copyWith({
+    int? themeModeIndex,
+    bool? notificationsEnabled,
+    bool? newNodeNotificationsEnabled,
+    bool? directMessageNotificationsEnabled,
+    bool? channelMessageNotificationsEnabled,
+    bool? notificationSoundEnabled,
+    bool? notificationVibrationEnabled,
+    bool? hapticFeedbackEnabled,
+    int? hapticIntensity,
+    bool? animationsEnabled,
+    bool? animations3DEnabled,
+    String? cannedResponsesJson,
+    String? tapbackConfigsJson,
+    String? ringtoneRtttl,
+    String? ringtoneName,
+    double? splashMeshSize,
+    String? splashMeshAnimationType,
+    double? splashMeshGlowIntensity,
+    double? splashMeshLineThickness,
+    double? splashMeshNodeSize,
+    int? splashMeshColorPreset,
+    bool? splashMeshUseAccelerometer,
+    double? splashMeshAccelSensitivity,
+    double? splashMeshAccelFriction,
+    String? splashMeshPhysicsMode,
+    bool? splashMeshEnableTouch,
+    bool? splashMeshEnablePullToStretch,
+    double? splashMeshTouchIntensity,
+    double? splashMeshStretchIntensity,
+  }) {
+    return UserPreferences(
+      themeModeIndex: themeModeIndex ?? this.themeModeIndex,
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      newNodeNotificationsEnabled:
+          newNodeNotificationsEnabled ?? this.newNodeNotificationsEnabled,
+      directMessageNotificationsEnabled:
+          directMessageNotificationsEnabled ??
+          this.directMessageNotificationsEnabled,
+      channelMessageNotificationsEnabled:
+          channelMessageNotificationsEnabled ??
+          this.channelMessageNotificationsEnabled,
+      notificationSoundEnabled:
+          notificationSoundEnabled ?? this.notificationSoundEnabled,
+      notificationVibrationEnabled:
+          notificationVibrationEnabled ?? this.notificationVibrationEnabled,
+      hapticFeedbackEnabled:
+          hapticFeedbackEnabled ?? this.hapticFeedbackEnabled,
+      hapticIntensity: hapticIntensity ?? this.hapticIntensity,
+      animationsEnabled: animationsEnabled ?? this.animationsEnabled,
+      animations3DEnabled: animations3DEnabled ?? this.animations3DEnabled,
+      cannedResponsesJson: cannedResponsesJson ?? this.cannedResponsesJson,
+      tapbackConfigsJson: tapbackConfigsJson ?? this.tapbackConfigsJson,
+      ringtoneRtttl: ringtoneRtttl ?? this.ringtoneRtttl,
+      ringtoneName: ringtoneName ?? this.ringtoneName,
+      splashMeshSize: splashMeshSize ?? this.splashMeshSize,
+      splashMeshAnimationType:
+          splashMeshAnimationType ?? this.splashMeshAnimationType,
+      splashMeshGlowIntensity:
+          splashMeshGlowIntensity ?? this.splashMeshGlowIntensity,
+      splashMeshLineThickness:
+          splashMeshLineThickness ?? this.splashMeshLineThickness,
+      splashMeshNodeSize: splashMeshNodeSize ?? this.splashMeshNodeSize,
+      splashMeshColorPreset:
+          splashMeshColorPreset ?? this.splashMeshColorPreset,
+      splashMeshUseAccelerometer:
+          splashMeshUseAccelerometer ?? this.splashMeshUseAccelerometer,
+      splashMeshAccelSensitivity:
+          splashMeshAccelSensitivity ?? this.splashMeshAccelSensitivity,
+      splashMeshAccelFriction:
+          splashMeshAccelFriction ?? this.splashMeshAccelFriction,
+      splashMeshPhysicsMode:
+          splashMeshPhysicsMode ?? this.splashMeshPhysicsMode,
+      splashMeshEnableTouch:
+          splashMeshEnableTouch ?? this.splashMeshEnableTouch,
+      splashMeshEnablePullToStretch:
+          splashMeshEnablePullToStretch ?? this.splashMeshEnablePullToStretch,
+      splashMeshTouchIntensity:
+          splashMeshTouchIntensity ?? this.splashMeshTouchIntensity,
+      splashMeshStretchIntensity:
+          splashMeshStretchIntensity ?? this.splashMeshStretchIntensity,
+    );
+  }
+
+  /// Check if any preferences are set
+  bool get isEmpty =>
+      themeModeIndex == null &&
+      notificationsEnabled == null &&
+      cannedResponsesJson == null &&
+      tapbackConfigsJson == null &&
+      ringtoneRtttl == null &&
+      splashMeshSize == null;
+}
+
 /// User profile model for the Socialmesh ecosystem.
 ///
 /// This represents a user's identity across the app, enabling:
@@ -41,6 +314,9 @@ class UserProfile {
   /// IDs of marketplace widgets installed by the user
   final List<String> installedWidgetIds;
 
+  /// User preferences that sync to cloud
+  final UserPreferences? preferences;
+
   /// When the profile was created
   final DateTime createdAt;
 
@@ -65,6 +341,7 @@ class UserProfile {
     this.primaryNodeId,
     this.accentColorIndex,
     this.installedWidgetIds = const [],
+    this.preferences,
     required this.createdAt,
     required this.updatedAt,
     this.isSynced = false,
@@ -123,6 +400,11 @@ class UserProfile {
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      preferences: json['preferences'] != null
+          ? UserPreferences.fromJson(
+              json['preferences'] as Map<String, dynamic>,
+            )
+          : null,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
       isSynced: json['isSynced'] as bool? ?? false,
@@ -144,6 +426,7 @@ class UserProfile {
       'primaryNodeId': primaryNodeId,
       'accentColorIndex': accentColorIndex,
       'installedWidgetIds': installedWidgetIds,
+      'preferences': preferences?.toJson(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'isSynced': isSynced,
@@ -172,6 +455,7 @@ class UserProfile {
     int? primaryNodeId,
     int? accentColorIndex,
     List<String>? installedWidgetIds,
+    UserPreferences? preferences,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isSynced,
@@ -197,6 +481,7 @@ class UserProfile {
           : (primaryNodeId ?? this.primaryNodeId),
       accentColorIndex: accentColorIndex ?? this.accentColorIndex,
       installedWidgetIds: installedWidgetIds ?? this.installedWidgetIds,
+      preferences: preferences ?? this.preferences,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
       isSynced: isSynced ?? this.isSynced,

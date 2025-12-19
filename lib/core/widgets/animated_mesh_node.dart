@@ -60,7 +60,7 @@ enum MeshNodeSize {
 }
 
 /// A fully animatable 3D icosahedron mesh widget with the brand gradient.
-/// Replicates the SocialMesh app icon - a spherical wireframe with gradient nodes.
+/// Replicates the Socialmesh app icon - a spherical wireframe with gradient nodes.
 /// Can be used as a loading indicator, decorative element, or icon.
 class AnimatedMeshNode extends StatefulWidget {
   /// The size of the mesh node

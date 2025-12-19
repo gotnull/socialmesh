@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -143,6 +144,10 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           HapticFeedback.selectionClick();
           ref.read(themeModeProvider.notifier).setThemeMode(mode);
           await settingsService.setThemeMode(mode.index);
+          // Sync to cloud profile
+          ref
+              .read(userProfileProvider.notifier)
+              .updatePreferences(UserPreferences(themeModeIndex: mode.index));
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),

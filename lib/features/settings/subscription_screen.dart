@@ -775,7 +775,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'You now have access to everything SocialMesh has to offer. Thank you for your support!',
+                'You now have access to everything Socialmesh has to offer. Thank you for your support!',
                 style: TextStyle(
                   fontSize: 15,
                   color: AppTheme.textSecondary,

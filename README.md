@@ -1,4 +1,4 @@
-# SocialMesh
+# Socialmesh
 
 A powerful Meshtastic companion app for iOS and Android. Connect to your mesh radio, send messages, track nodes, and configure your device — all without internet.
 
@@ -94,7 +94,7 @@ lib/
 
 ## URL Scheme
 
-SocialMesh registers the `socialmesh://` URL scheme:
+Socialmesh registers the `socialmesh://` URL scheme:
 
 - `socialmesh://channel/<base64>` — Import channel configuration
 - `socialmesh://node/<base64>` — Import node information

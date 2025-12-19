@@ -7,6 +7,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/admin_config.dart';
 import '../../core/transport.dart' show DeviceConnectionState;
+import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
@@ -399,6 +400,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ref.haptics.toggle();
                     }
                     await settingsService.setHapticFeedbackEnabled(value);
+                    ref
+                        .read(userProfileProvider.notifier)
+                        .updatePreferences(
+                          UserPreferences(hapticFeedbackEnabled: value),
+                        );
                     setState(() {});
                   },
                 ),
@@ -427,6 +433,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onChanged: (value) async {
                     HapticFeedback.selectionClick();
                     await settingsService.setAnimationsEnabled(value);
+                    ref
+                        .read(userProfileProvider.notifier)
+                        .updatePreferences(
+                          UserPreferences(animationsEnabled: value),
+                        );
                     ref.read(settingsRefreshProvider.notifier).refresh();
                     setState(() {});
                   },
@@ -441,6 +452,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onChanged: (value) async {
                     HapticFeedback.selectionClick();
                     await settingsService.setAnimations3DEnabled(value);
+                    ref
+                        .read(userProfileProvider.notifier)
+                        .updatePreferences(
+                          UserPreferences(animations3DEnabled: value),
+                        );
                     ref.read(settingsRefreshProvider.notifier).refresh();
                     setState(() {});
                   },
@@ -460,6 +476,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onChanged: (value) async {
                     HapticFeedback.selectionClick();
                     await settingsService.setNotificationsEnabled(value);
+                    ref
+                        .read(userProfileProvider.notifier)
+                        .updatePreferences(
+                          UserPreferences(notificationsEnabled: value),
+                        );
                     setState(() {});
                   },
                 ),
@@ -476,6 +497,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       await settingsService.setNewNodeNotificationsEnabled(
                         value,
                       );
+                      ref
+                          .read(userProfileProvider.notifier)
+                          .updatePreferences(
+                            UserPreferences(newNodeNotificationsEnabled: value),
+                          );
                       setState(() {});
                     },
                   ),
@@ -490,6 +516,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       HapticFeedback.selectionClick();
                       await settingsService
                           .setDirectMessageNotificationsEnabled(value);
+                      ref
+                          .read(userProfileProvider.notifier)
+                          .updatePreferences(
+                            UserPreferences(
+                              directMessageNotificationsEnabled: value,
+                            ),
+                          );
                       setState(() {});
                     },
                   ),
@@ -504,6 +537,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       HapticFeedback.selectionClick();
                       await settingsService
                           .setChannelMessageNotificationsEnabled(value);
+                      ref
+                          .read(userProfileProvider.notifier)
+                          .updatePreferences(
+                            UserPreferences(
+                              channelMessageNotificationsEnabled: value,
+                            ),
+                          );
                       setState(() {});
                     },
                   ),
@@ -517,6 +557,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     onChanged: (value) async {
                       HapticFeedback.selectionClick();
                       await settingsService.setNotificationSoundEnabled(value);
+                      ref
+                          .read(userProfileProvider.notifier)
+                          .updatePreferences(
+                            UserPreferences(notificationSoundEnabled: value),
+                          );
                       setState(() {});
                     },
                   ),
@@ -532,6 +577,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       await settingsService.setNotificationVibrationEnabled(
                         value,
                       );
+                      ref
+                          .read(userProfileProvider.notifier)
+                          .updatePreferences(
+                            UserPreferences(
+                              notificationVibrationEnabled: value,
+                            ),
+                          );
                       setState(() {});
                     },
                   ),
@@ -1237,6 +1289,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 onTap: () async {
                   await settingsService.setHapticIntensity(intensity.value);
+                  ref
+                      .read(userProfileProvider.notifier)
+                      .updatePreferences(
+                        UserPreferences(hapticIntensity: intensity.value),
+                      );
                   ref.haptics.toggle();
                   setState(() {});
                   if (context.mounted) Navigator.pop(context);

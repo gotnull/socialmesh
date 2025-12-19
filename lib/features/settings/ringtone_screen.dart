@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../services/audio/rtttl_library_service.dart';
 import '../../services/audio/rtttl_player.dart';
@@ -728,6 +730,15 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
         description: _selectedDescription,
         source: _selectedSource,
       );
+      // Sync to cloud profile
+      ref
+          .read(userProfileProvider.notifier)
+          .updatePreferences(
+            UserPreferences(
+              ringtoneRtttl: _rtttlController.text.trim(),
+              ringtoneName: _selectedName,
+            ),
+          );
     } catch (e) {
       // Ignore save errors
     }

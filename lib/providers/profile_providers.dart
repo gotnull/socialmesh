@@ -113,7 +113,128 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         clearPrimaryNodeId: clearPrimaryNodeId,
       );
       state = AsyncValue.data(updated);
+
+      // Sync to cloud if signed in (fire-and-forget, don't block UI)
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        // ignore: unawaited_futures
+        profileCloudSyncService.syncToCloud(user.uid).catchError((e) {
+          debugPrint('[UserProfile] Cloud sync failed (will retry later): $e');
+        });
+      }
     } catch (e, st) {
+      debugPrint('[UserProfile] Error updating profile: $e');
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  /// Update user preferences (settings that sync to cloud)
+  Future<void> updatePreferences(UserPreferences newPreferences) async {
+    final profile = state.value;
+    if (profile == null) return;
+
+    try {
+      // Merge with existing preferences
+      final existingPrefs = profile.preferences ?? const UserPreferences();
+      final mergedPrefs = existingPrefs.copyWith(
+        themeModeIndex:
+            newPreferences.themeModeIndex ?? existingPrefs.themeModeIndex,
+        notificationsEnabled:
+            newPreferences.notificationsEnabled ??
+            existingPrefs.notificationsEnabled,
+        newNodeNotificationsEnabled:
+            newPreferences.newNodeNotificationsEnabled ??
+            existingPrefs.newNodeNotificationsEnabled,
+        directMessageNotificationsEnabled:
+            newPreferences.directMessageNotificationsEnabled ??
+            existingPrefs.directMessageNotificationsEnabled,
+        channelMessageNotificationsEnabled:
+            newPreferences.channelMessageNotificationsEnabled ??
+            existingPrefs.channelMessageNotificationsEnabled,
+        notificationSoundEnabled:
+            newPreferences.notificationSoundEnabled ??
+            existingPrefs.notificationSoundEnabled,
+        notificationVibrationEnabled:
+            newPreferences.notificationVibrationEnabled ??
+            existingPrefs.notificationVibrationEnabled,
+        hapticFeedbackEnabled:
+            newPreferences.hapticFeedbackEnabled ??
+            existingPrefs.hapticFeedbackEnabled,
+        hapticIntensity:
+            newPreferences.hapticIntensity ?? existingPrefs.hapticIntensity,
+        animationsEnabled:
+            newPreferences.animationsEnabled ?? existingPrefs.animationsEnabled,
+        animations3DEnabled:
+            newPreferences.animations3DEnabled ??
+            existingPrefs.animations3DEnabled,
+        cannedResponsesJson:
+            newPreferences.cannedResponsesJson ??
+            existingPrefs.cannedResponsesJson,
+        tapbackConfigsJson:
+            newPreferences.tapbackConfigsJson ??
+            existingPrefs.tapbackConfigsJson,
+        ringtoneRtttl:
+            newPreferences.ringtoneRtttl ?? existingPrefs.ringtoneRtttl,
+        ringtoneName: newPreferences.ringtoneName ?? existingPrefs.ringtoneName,
+        splashMeshSize:
+            newPreferences.splashMeshSize ?? existingPrefs.splashMeshSize,
+        splashMeshAnimationType:
+            newPreferences.splashMeshAnimationType ??
+            existingPrefs.splashMeshAnimationType,
+        splashMeshGlowIntensity:
+            newPreferences.splashMeshGlowIntensity ??
+            existingPrefs.splashMeshGlowIntensity,
+        splashMeshLineThickness:
+            newPreferences.splashMeshLineThickness ??
+            existingPrefs.splashMeshLineThickness,
+        splashMeshNodeSize:
+            newPreferences.splashMeshNodeSize ??
+            existingPrefs.splashMeshNodeSize,
+        splashMeshColorPreset:
+            newPreferences.splashMeshColorPreset ??
+            existingPrefs.splashMeshColorPreset,
+        splashMeshUseAccelerometer:
+            newPreferences.splashMeshUseAccelerometer ??
+            existingPrefs.splashMeshUseAccelerometer,
+        splashMeshAccelSensitivity:
+            newPreferences.splashMeshAccelSensitivity ??
+            existingPrefs.splashMeshAccelSensitivity,
+        splashMeshAccelFriction:
+            newPreferences.splashMeshAccelFriction ??
+            existingPrefs.splashMeshAccelFriction,
+        splashMeshPhysicsMode:
+            newPreferences.splashMeshPhysicsMode ??
+            existingPrefs.splashMeshPhysicsMode,
+        splashMeshEnableTouch:
+            newPreferences.splashMeshEnableTouch ??
+            existingPrefs.splashMeshEnableTouch,
+        splashMeshEnablePullToStretch:
+            newPreferences.splashMeshEnablePullToStretch ??
+            existingPrefs.splashMeshEnablePullToStretch,
+        splashMeshTouchIntensity:
+            newPreferences.splashMeshTouchIntensity ??
+            existingPrefs.splashMeshTouchIntensity,
+        splashMeshStretchIntensity:
+            newPreferences.splashMeshStretchIntensity ??
+            existingPrefs.splashMeshStretchIntensity,
+      );
+
+      final updated = profile.copyWith(preferences: mergedPrefs);
+      await profileService.saveProfile(updated);
+      state = AsyncValue.data(updated);
+
+      // Sync to cloud if signed in (fire-and-forget, don't block UI)
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        // ignore: unawaited_futures
+        profileCloudSyncService.syncToCloud(user.uid).catchError((e) {
+          debugPrint(
+            '[UserProfile] Cloud sync failed for preferences (will retry later): $e',
+          );
+        });
+      }
+    } catch (e, st) {
+      debugPrint('[UserProfile] Error updating preferences: $e');
       state = AsyncValue.error(e, st);
     }
   }
