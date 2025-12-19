@@ -211,6 +211,9 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         await transport.connect(foundDevice);
 
         if (transport.state == DeviceConnectionState.connected) {
+          // Clear all previous device data before starting new connection
+          await clearDeviceDataBeforeConnect(ref);
+
           final protocol = ref.read(protocolServiceProvider);
 
           // Set device info for hardware model inference

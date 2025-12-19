@@ -24,6 +24,7 @@ import '../channels/channel_form_screen.dart';
 import '../settings/canned_responses_screen.dart';
 import '../nodes/nodes_screen.dart';
 import '../navigation/main_shell.dart';
+import 'widgets/message_context_menu.dart';
 
 /// Conversation type enum
 enum ConversationType { channel, directMessage }
@@ -804,6 +805,43 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  void _deleteMessage(Message message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkCard,
+        title: const Text(
+          'Delete Message',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Are you sure you want to delete this message? This only removes it locally.',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              ref.read(messagesProvider.notifier).deleteMessage(message.id);
+              Navigator.pop(context);
+              showSuccessSnackBar(this.context, 'Message deleted');
+            },
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppTheme.errorRed),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showChannelSettings(BuildContext context) {
     final channels = ref.read(channelsProvider);
     final channel = channels.firstWhere(
@@ -1032,6 +1070,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         backgroundColor: AppTheme.darkBackground,
         appBar: AppBar(
           backgroundColor: AppTheme.darkBackground,
+          titleSpacing: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () {
@@ -1075,33 +1114,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     size: 36,
                   ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: constraints.maxWidth,
-                          child: AutoScrollText(
-                            widget.title,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AutoScrollText(
+                        widget.title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
-                        Text(
-                          widget.type == ConversationType.channel
-                              ? 'Channel'
-                              : 'Direct Message',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.textTertiary,
-                          ),
+                      ),
+                      Text(
+                        widget.type == ConversationType.channel
+                            ? 'Channel'
+                            : 'Direct Message',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textTertiary,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -1255,9 +1290,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               !isFromMe,
                           isEncrypted: isEncrypted,
                           isQueued: queuedMessageIds.contains(message.id),
+                          channelIndex: widget.type == ConversationType.channel
+                              ? widget.channelIndex
+                              : null,
                           onRetry: message.isFailed
                               ? () => _retryMessage(message)
                               : null,
+                          onDelete: () => _deleteMessage(message),
                         );
                       },
                     ),
@@ -1360,7 +1399,9 @@ class _MessageBubble extends StatelessWidget {
   final bool showSender;
   final bool isEncrypted;
   final bool isQueued;
+  final int? channelIndex;
   final VoidCallback? onRetry;
+  final VoidCallback? onDelete;
 
   const _MessageBubble({
     required this.message,
@@ -1371,7 +1412,9 @@ class _MessageBubble extends StatelessWidget {
     this.showSender = true,
     this.isEncrypted = true,
     this.isQueued = false,
+    this.channelIndex,
     this.onRetry,
+    this.onDelete,
   });
 
   Color _getAvatarColor() {
@@ -1516,77 +1559,80 @@ class _MessageBubble extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Flexible(
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 64),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isFailed
-                          ? AppTheme.errorRed.withValues(alpha: 0.8)
-                          : isPending
-                          ? context.accentColor.withValues(alpha: 0.6)
-                          : context.accentColor,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          message.text,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Encryption indicator
-                            if (isEncrypted) ...[
-                              Icon(
-                                Icons.lock,
-                                size: 11,
-                                color: Colors.white.withValues(alpha: 0.7),
-                              ),
-                              const SizedBox(width: 3),
-                            ],
-                            // Queued indicator
-                            if (isQueued) ...[
-                              Icon(
-                                Icons.schedule,
-                                size: 12,
-                                color: Colors.white.withValues(alpha: 0.7),
-                              ),
-                              const SizedBox(width: 4),
-                            ] else if (isPending) ...[
-                              SizedBox(
-                                width: 12,
-                                height: 12,
-                                child: MeshLoadingIndicator(size: 12),
-                              ),
-                              const SizedBox(width: 4),
-                            ],
-                            Text(
-                              timeFormat.format(message.timestamp),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.white.withValues(alpha: 0.7),
-                              ),
+                  child: GestureDetector(
+                    onLongPress: () => _showContextMenu(context),
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 64),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isFailed
+                            ? AppTheme.errorRed.withValues(alpha: 0.8)
+                            : isPending
+                            ? context.accentColor.withValues(alpha: 0.6)
+                            : context.accentColor,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            message.text,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.white,
                             ),
-                            if (!isPending && !isFailed && !isQueued) ...[
-                              const SizedBox(width: 4),
-                              Icon(
-                                isDelivered ? Icons.done_all : Icons.done,
-                                size: 14,
-                                color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Encryption indicator
+                              if (isEncrypted) ...[
+                                Icon(
+                                  Icons.lock,
+                                  size: 11,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                ),
+                                const SizedBox(width: 3),
+                              ],
+                              // Queued indicator
+                              if (isQueued) ...[
+                                Icon(
+                                  Icons.schedule,
+                                  size: 12,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                ),
+                                const SizedBox(width: 4),
+                              ] else if (isPending) ...[
+                                SizedBox(
+                                  width: 12,
+                                  height: 12,
+                                  child: MeshLoadingIndicator(size: 12),
+                                ),
+                                const SizedBox(width: 4),
+                              ],
+                              Text(
+                                timeFormat.format(message.timestamp),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                ),
                               ),
+                              if (!isPending && !isFailed && !isQueued) ...[
+                                const SizedBox(width: 4),
+                                Icon(
+                                  isDelivered ? Icons.done_all : Icons.done,
+                                  size: 14,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                ),
+                              ],
                             ],
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1675,58 +1721,75 @@ class _MessageBubble extends StatelessWidget {
               ),
             ),
           Flexible(
-            child: Container(
-              margin: const EdgeInsets.only(right: 64),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppTheme.darkCard,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (showSender) ...[
-                    Text(
-                      senderName,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: _getAvatarColor(),
+            child: GestureDetector(
+              onLongPress: () => _showContextMenu(context),
+              child: Container(
+                margin: const EdgeInsets.only(right: 64),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkCard,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (showSender) ...[
+                      Text(
+                        senderName,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _getAvatarColor(),
+                        ),
                       ),
+                      const SizedBox(height: 2),
+                    ],
+                    Text(
+                      message.text,
+                      style: const TextStyle(fontSize: 15, color: Colors.white),
                     ),
                     const SizedBox(height: 2),
-                  ],
-                  Text(
-                    message.text,
-                    style: const TextStyle(fontSize: 15, color: Colors.white),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isEncrypted) ...[
-                        const Icon(
-                          Icons.lock,
-                          size: 10,
-                          color: AppTheme.textTertiary,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isEncrypted) ...[
+                          const Icon(
+                            Icons.lock,
+                            size: 10,
+                            color: AppTheme.textTertiary,
+                          ),
+                          const SizedBox(width: 3),
+                        ],
+                        Text(
+                          timeFormat.format(message.timestamp),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppTheme.textTertiary,
+                          ),
                         ),
-                        const SizedBox(width: 3),
                       ],
-                      Text(
-                        timeFormat.format(message.timestamp),
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppTheme.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showContextMenu(BuildContext context) {
+    showMessageContextMenu(
+      context,
+      message: message,
+      isFromMe: isFromMe,
+      senderName: senderName,
+      channelIndex: channelIndex,
+      onDelete: onDelete,
     );
   }
 }

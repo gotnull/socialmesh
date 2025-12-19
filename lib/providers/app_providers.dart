@@ -18,6 +18,7 @@ import '../features/automations/automation_providers.dart';
 import '../features/automations/automation_engine.dart';
 import '../models/mesh_models.dart';
 import '../generated/meshtastic/mesh.pbenum.dart' as pbenum;
+import 'telemetry_providers.dart';
 
 // Logger
 final loggerProvider = Provider<Logger>((ref) {
@@ -128,6 +129,10 @@ class AppInitNotifier extends Notifier<AppInitState> {
             if (transport.state != DeviceConnectionState.connected) {
               throw Exception('Connection failed');
             }
+
+            // Clear all previous device data before starting new connection
+            // This follows the Meshtastic iOS approach of always fetching fresh data
+            await clearDeviceDataBeforeConnectRef(ref);
 
             // Start protocol service
             final protocol = ref.read(protocolServiceProvider);
@@ -354,6 +359,62 @@ final autoReconnectStateProvider =
     NotifierProvider<AutoReconnectStateNotifier, AutoReconnectState>(
       AutoReconnectStateNotifier.new,
     );
+
+/// Helper function to clear all device-specific data before connecting to a (potentially different) device.
+/// This follows the Meshtastic iOS approach of always fetching fresh data from the device.
+/// Should be called BEFORE protocol.start() in all connection paths.
+Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
+  AppLogging.app('🧹 Clearing device data before new connection...');
+
+  // Clear in-memory state
+  ref.read(messagesProvider.notifier).clearMessages();
+  ref.read(nodesProvider.notifier).clearNodes();
+  ref.read(channelsProvider.notifier).clearChannels();
+
+  // Clear persistent message and node storage
+  final messageStorage = await ref.read(messageStorageProvider.future);
+  await messageStorage.clearMessages();
+
+  final nodeStorage = await ref.read(nodeStorageProvider.future);
+  await nodeStorage.clearNodes();
+
+  // Clear telemetry data (device metrics, environment metrics, positions, etc.)
+  final telemetryStorage = await ref.read(telemetryStorageProvider.future);
+  await telemetryStorage.clearAllData();
+
+  // Clear routes
+  final routeStorage = await ref.read(routeStorageProvider.future);
+  await routeStorage.clearAllRoutes();
+
+  AppLogging.app('✅ Device data cleared - ready for fresh data from device');
+}
+
+/// Ref-based version for use in providers (non-widget contexts)
+Future<void> clearDeviceDataBeforeConnectRef(Ref ref) async {
+  AppLogging.app('🧹 Clearing device data before new connection...');
+
+  // Clear in-memory state
+  ref.read(messagesProvider.notifier).clearMessages();
+  ref.read(nodesProvider.notifier).clearNodes();
+  ref.read(channelsProvider.notifier).clearChannels();
+
+  // Clear persistent message and node storage
+  final messageStorage = await ref.read(messageStorageProvider.future);
+  await messageStorage.clearMessages();
+
+  final nodeStorage = await ref.read(nodeStorageProvider.future);
+  await nodeStorage.clearNodes();
+
+  // Clear telemetry data (device metrics, environment metrics, positions, etc.)
+  final telemetryStorage = await ref.read(telemetryStorageProvider.future);
+  await telemetryStorage.clearAllData();
+
+  // Clear routes
+  final routeStorage = await ref.read(routeStorageProvider.future);
+  await routeStorage.clearAllRoutes();
+
+  AppLogging.app('✅ Device data cleared - ready for fresh data from device');
+}
 
 // Store the last known device ID for reconnection attempts
 class LastConnectedDeviceIdNotifier extends Notifier<String?> {
@@ -627,6 +688,10 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 
           // Restart protocol service
           AppLogging.connection('Starting protocol service...');
+
+          // Clear all previous device data before starting new connection
+          await clearDeviceDataBeforeConnectRef(ref);
+
           final protocol = ref.read(protocolServiceProvider);
 
           // Set device info for hardware model inference
@@ -1353,6 +1418,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
     _storage?.saveMessage(updatedMessage);
   }
 
+  void deleteMessage(String messageId) {
+    state = state.where((m) => m.id != messageId).toList();
+    _storage?.deleteMessage(messageId);
+  }
+
   void clearMessages() {
     state = [];
     _storage?.clearMessages();
@@ -1628,12 +1698,25 @@ class MyNodeNumNotifier extends Notifier<int?> {
     // Initialize with existing myNodeNum from protocol service
     final initial = protocol.myNodeNum;
 
-    // Listen for updates
-    protocol.myNodeNumStream.listen((nodeNum) {
-      state = nodeNum;
+    // Listen for updates and persist the myNodeNum
+    // Note: Data clearing now happens proactively in clearDeviceDataBeforeConnect()
+    // before each connection, so this is mainly for persistence and edge cases
+    protocol.myNodeNumStream.listen((newNodeNum) async {
+      // Persist the current myNodeNum so we can track device identity
+      await _saveMyNodeNum(newNodeNum);
+      state = newNodeNum;
     });
 
     return initial;
+  }
+
+  /// Persist the current myNodeNum
+  Future<void> _saveMyNodeNum(int nodeNum) async {
+    final settingsAsync = ref.read(settingsServiceProvider);
+    final settings = settingsAsync.value;
+    if (settings != null) {
+      await settings.setLastMyNodeNum(nodeNum);
+    }
   }
 }
 

@@ -1967,6 +1967,8 @@ class ProtocolService {
     bool wantAck = true,
     String? messageId,
     MessageSource source = MessageSource.unknown,
+    int? replyId,
+    bool isEmoji = false,
   }) async {
     // Validate we're ready to send
     if (_myNodeNum == null) {
@@ -1986,7 +1988,12 @@ class ProtocolService {
       final data = pb.Data()
         ..portnum = pb.PortNum.TEXT_MESSAGE_APP
         ..payload = utf8.encode(text)
-        ..wantResponse = wantAck;
+        ..wantResponse = wantAck
+        ..emoji = isEmoji ? 1 : 0;
+
+      if (replyId != null) {
+        data.replyId = replyId;
+      }
 
       final packet = pb.MeshPacket()
         ..from = _myNodeNum!
@@ -2038,6 +2045,8 @@ class ProtocolService {
     String? messageId,
     required void Function(int packetId) onPacketIdGenerated,
     MessageSource source = MessageSource.unknown,
+    int? replyId,
+    bool isEmoji = false,
   }) async {
     // Validate we're ready to send
     if (_myNodeNum == null) {
@@ -2063,7 +2072,12 @@ class ProtocolService {
       final data = pb.Data()
         ..portnum = pb.PortNum.TEXT_MESSAGE_APP
         ..payload = utf8.encode(text)
-        ..wantResponse = wantAck;
+        ..wantResponse = wantAck
+        ..emoji = isEmoji ? 1 : 0;
+
+      if (replyId != null) {
+        data.replyId = replyId;
+      }
 
       final packet = pb.MeshPacket()
         ..from = _myNodeNum!

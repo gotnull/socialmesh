@@ -22,6 +22,128 @@ enum TapbackType {
   }
 }
 
+/// A configurable tapback option
+class TapbackConfig {
+  final String id;
+  final TapbackType type;
+  final String emoji;
+  final String label;
+  final int sortOrder;
+  final bool enabled;
+
+  TapbackConfig({
+    String? id,
+    required this.type,
+    required this.emoji,
+    required this.label,
+    this.sortOrder = 0,
+    this.enabled = true,
+  }) : id = id ?? const Uuid().v4();
+
+  TapbackConfig copyWith({
+    String? id,
+    TapbackType? type,
+    String? emoji,
+    String? label,
+    int? sortOrder,
+    bool? enabled,
+  }) {
+    return TapbackConfig(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      emoji: emoji ?? this.emoji,
+      label: label ?? this.label,
+      sortOrder: sortOrder ?? this.sortOrder,
+      enabled: enabled ?? this.enabled,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'type': type.name,
+    'emoji': emoji,
+    'label': label,
+    'sortOrder': sortOrder,
+    'enabled': enabled,
+  };
+
+  factory TapbackConfig.fromJson(Map<String, dynamic> json) {
+    return TapbackConfig(
+      id: json['id'] as String?,
+      type: TapbackType.values.firstWhere(
+        (t) => t.name == json['type'],
+        orElse: () => TapbackType.like,
+      ),
+      emoji: json['emoji'] as String,
+      label: json['label'] as String,
+      sortOrder: json['sortOrder'] as int? ?? 0,
+      enabled: json['enabled'] as bool? ?? true,
+    );
+  }
+}
+
+/// Default tapback configurations matching Meshtastic iOS
+class DefaultTapbacks {
+  static List<TapbackConfig> get all => [
+    TapbackConfig(
+      id: 'default_wave',
+      type: TapbackType.wave,
+      emoji: '👋',
+      label: 'Wave',
+      sortOrder: 0,
+    ),
+    TapbackConfig(
+      id: 'default_heart',
+      type: TapbackType.heart,
+      emoji: '❤️',
+      label: 'Heart',
+      sortOrder: 1,
+    ),
+    TapbackConfig(
+      id: 'default_like',
+      type: TapbackType.like,
+      emoji: '👍',
+      label: 'Thumbs Up',
+      sortOrder: 2,
+    ),
+    TapbackConfig(
+      id: 'default_dislike',
+      type: TapbackType.dislike,
+      emoji: '👎',
+      label: 'Thumbs Down',
+      sortOrder: 3,
+    ),
+    TapbackConfig(
+      id: 'default_laugh',
+      type: TapbackType.laugh,
+      emoji: '🤣',
+      label: 'HaHa',
+      sortOrder: 4,
+    ),
+    TapbackConfig(
+      id: 'default_exclamation',
+      type: TapbackType.exclamation,
+      emoji: '‼️',
+      label: 'Exclamation',
+      sortOrder: 5,
+    ),
+    TapbackConfig(
+      id: 'default_question',
+      type: TapbackType.question,
+      emoji: '❓',
+      label: 'Question',
+      sortOrder: 6,
+    ),
+    TapbackConfig(
+      id: 'default_poop',
+      type: TapbackType.poop,
+      emoji: '💩',
+      label: 'Poop',
+      sortOrder: 7,
+    ),
+  ];
+}
+
 /// Tapback reaction to a message
 class MessageTapback {
   final String id;

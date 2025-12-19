@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Auto-scrolling text widget with edge fade effect for long text.
+/// Auto-scrolling text widget for long text.
 /// Only scrolls if the text overflows the available width.
 class AutoScrollText extends StatefulWidget {
   final String text;
@@ -8,8 +8,6 @@ class AutoScrollText extends StatefulWidget {
   final Duration delayBefore;
   final Duration pauseBetween;
   final int? maxLines;
-  final double fadeWidth;
-  final bool fadedBorder;
   final double velocity;
 
   const AutoScrollText(
@@ -19,8 +17,6 @@ class AutoScrollText extends StatefulWidget {
     this.delayBefore = const Duration(seconds: 1),
     this.pauseBetween = const Duration(seconds: 2),
     this.maxLines = 1,
-    this.fadeWidth = 12.0,
-    this.fadedBorder = true,
     this.velocity = 35.0,
   });
 
@@ -28,8 +24,7 @@ class AutoScrollText extends StatefulWidget {
   State<AutoScrollText> createState() => _AutoScrollTextState();
 }
 
-class _AutoScrollTextState extends State<AutoScrollText>
-    with SingleTickerProviderStateMixin {
+class _AutoScrollTextState extends State<AutoScrollText> {
   late ScrollController _scrollController;
   bool _needsScroll = false;
   double _textWidth = 0;
@@ -56,16 +51,22 @@ class _AutoScrollTextState extends State<AutoScrollText>
     await Future.delayed(widget.delayBefore);
     if (!mounted) return;
 
+    // Wait for scroll controller to be attached
+    while (mounted && !_scrollController.hasClients) {
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
+    if (!mounted) return;
+
     while (mounted && _needsScroll) {
-      // Calculate scroll duration based on velocity
-      final scrollDistance = _textWidth - _availableWidth + widget.fadeWidth;
+      // Scroll distance: use the actual scrollable extent
+      final scrollDistance = _scrollController.position.maxScrollExtent;
       if (scrollDistance <= 0) break;
 
       final duration = Duration(
         milliseconds: (scrollDistance / widget.velocity * 1000).round(),
       );
 
-      // Scroll forward
+      // Scroll forward to show the end
       if (_scrollController.hasClients) {
         await _scrollController.animateTo(
           scrollDistance,
@@ -79,7 +80,7 @@ class _AutoScrollTextState extends State<AutoScrollText>
       await Future.delayed(widget.pauseBetween);
       if (!mounted) return;
 
-      // Scroll back at same speed
+      // Scroll back to start
       if (_scrollController.hasClients) {
         await _scrollController.animateTo(
           0,
@@ -100,7 +101,7 @@ class _AutoScrollTextState extends State<AutoScrollText>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // If constraints are unbounded, fall back to static text
+        // If constraints are unbounded, fall back to static text with ellipsis
         if (!constraints.hasBoundedWidth ||
             constraints.maxWidth <= 0 ||
             constraints.maxWidth.isInfinite) {
@@ -140,41 +141,24 @@ class _AutoScrollTextState extends State<AutoScrollText>
           }
         });
 
-        // Build scrollable text with fade edges
-        Widget scrollView = SingleChildScrollView(
-          controller: _scrollController,
-          scrollDirection: Axis.horizontal,
-          physics: const NeverScrollableScrollPhysics(),
-          child: Text(
-            widget.text,
-            style: widget.style,
-            maxLines: widget.maxLines,
-            softWrap: false,
+        // Simple clipped scrolling text - no ShaderMask, just proper clipping
+        // Add a tiny bit of padding at the end to ensure last character isn't clipped
+        return ClipRect(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            physics: const NeverScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.only(right: 2),
+              child: Text(
+                widget.text,
+                style: widget.style,
+                maxLines: widget.maxLines,
+                softWrap: false,
+              ),
+            ),
           ),
         );
-
-        // Add subtle fade effect if enabled
-        if (widget.fadedBorder && widget.fadeWidth > 0) {
-          final fadeRatio = (widget.fadeWidth / constraints.maxWidth).clamp(
-            0.0,
-            0.15,
-          );
-          scrollView = ShaderMask(
-            shaderCallback: (bounds) => LinearGradient(
-              colors: const [
-                Colors.transparent,
-                Colors.white,
-                Colors.white,
-                Colors.transparent,
-              ],
-              stops: [0.0, fadeRatio, 1 - fadeRatio, 1.0],
-            ).createShader(bounds),
-            blendMode: BlendMode.dstIn,
-            child: scrollView,
-          );
-        }
-
-        return scrollView;
       },
     );
   }

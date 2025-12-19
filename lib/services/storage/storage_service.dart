@@ -4,6 +4,7 @@ import 'package:logger/logger.dart';
 import 'dart:convert';
 import '../../models/mesh_models.dart';
 import '../../models/canned_response.dart';
+import '../../models/tapback.dart';
 
 /// Secure storage service for sensitive data
 class SecureStorageService {
@@ -117,6 +118,17 @@ class SettingsService {
   String? get lastDeviceId => _preferences.getString('last_device_id');
   String? get lastDeviceType => _preferences.getString('last_device_type');
   String? get lastDeviceName => _preferences.getString('last_device_name');
+
+  // Last connected myNodeNum - used to detect device changes and clear stale data
+  Future<void> setLastMyNodeNum(int? nodeNum) async {
+    if (nodeNum != null) {
+      await _preferences.setInt('last_my_node_num', nodeNum);
+    } else {
+      await _preferences.remove('last_my_node_num');
+    }
+  }
+
+  int? get lastMyNodeNum => _preferences.getInt('last_my_node_num');
 
   // Auto-reconnect
   Future<void> setAutoReconnect(bool enabled) async {
@@ -322,6 +334,59 @@ class SettingsService {
 
   Future<void> resetCannedResponsesToDefaults() async {
     await _preferences.remove('canned_responses');
+  }
+
+  // Tapback configuration
+  Future<void> setTapbackConfigs(List<TapbackConfig> configs) async {
+    final jsonList = configs.map((c) => c.toJson()).toList();
+    await _preferences.setString('tapback_configs', jsonEncode(jsonList));
+  }
+
+  List<TapbackConfig> get tapbackConfigs {
+    final jsonString = _preferences.getString('tapback_configs');
+    if (jsonString == null) {
+      return DefaultTapbacks.all;
+    }
+    try {
+      final jsonList = jsonDecode(jsonString) as List;
+      final configs = jsonList.map((j) => TapbackConfig.fromJson(j)).toList();
+      configs.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      return configs;
+    } catch (e) {
+      _logger.e('Error parsing tapback configs: $e');
+      return DefaultTapbacks.all;
+    }
+  }
+
+  /// Get only enabled tapbacks
+  List<TapbackConfig> get enabledTapbacks =>
+      tapbackConfigs.where((c) => c.enabled).toList();
+
+  Future<void> updateTapbackConfig(TapbackConfig config) async {
+    final configs = tapbackConfigs;
+    final index = configs.indexWhere((c) => c.id == config.id);
+    if (index >= 0) {
+      configs[index] = config;
+      await setTapbackConfigs(configs);
+    }
+  }
+
+  Future<void> reorderTapbacks(int oldIndex, int newIndex) async {
+    final configs = tapbackConfigs;
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    final item = configs.removeAt(oldIndex);
+    configs.insert(newIndex, item);
+    // Update sort orders
+    for (int i = 0; i < configs.length; i++) {
+      configs[i] = configs[i].copyWith(sortOrder: i);
+    }
+    await setTapbackConfigs(configs);
+  }
+
+  Future<void> resetTapbacksToDefaults() async {
+    await _preferences.remove('tapback_configs');
   }
 
   // Ringtone settings
@@ -565,6 +630,19 @@ class MessageStorageService {
     } catch (e) {
       _logger.e('Error loading messages: $e');
       return [];
+    }
+  }
+
+  /// Delete a specific message by ID
+  Future<void> deleteMessage(String messageId) async {
+    try {
+      final messages = await loadMessages();
+      messages.removeWhere((m) => m.id == messageId);
+      final jsonList = messages.map((m) => _messageToJson(m)).toList();
+      await _preferences.setString(_messagesKey, jsonEncode(jsonList));
+      _logger.i('Deleted message: $messageId');
+    } catch (e) {
+      _logger.e('Error deleting message: $e');
     }
   }
 

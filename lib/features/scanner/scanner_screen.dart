@@ -237,6 +237,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         );
       }
 
+      // Clear all previous device data before starting new connection
+      // This follows the Meshtastic iOS approach of always fetching fresh data from the device
+      await clearDeviceDataBeforeConnect(ref);
+
       // Start protocol service and wait for configuration
       final protocol = ref.read(protocolServiceProvider);
       AppLogging.debug(
