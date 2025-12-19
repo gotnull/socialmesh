@@ -327,7 +327,8 @@ class AutomationsScreen extends ConsumerWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AutomationEditorScreen(automation: automation),
+        builder: (context) =>
+            AutomationEditorScreen(automation: automation, isNew: true),
       ),
     );
   }

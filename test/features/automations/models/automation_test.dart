@@ -248,6 +248,112 @@ void main() {
       expect(modified.batteryThreshold, 10);
       expect(modified.nodeNum, 999);
     });
+
+    group('validate', () {
+      test('returns null for triggers without required config', () {
+        // These triggers don't require specific config
+        const triggers = [
+          AutomationTrigger(type: TriggerType.nodeOnline),
+          AutomationTrigger(type: TriggerType.nodeOffline),
+          AutomationTrigger(type: TriggerType.batteryLow),
+          AutomationTrigger(type: TriggerType.batteryFull),
+          AutomationTrigger(type: TriggerType.messageReceived),
+          AutomationTrigger(type: TriggerType.positionChanged),
+          AutomationTrigger(type: TriggerType.nodeSilent),
+          AutomationTrigger(type: TriggerType.signalWeak),
+          AutomationTrigger(type: TriggerType.channelActivity),
+          AutomationTrigger(type: TriggerType.manual),
+        ];
+
+        for (final trigger in triggers) {
+          expect(
+            trigger.validate(),
+            isNull,
+            reason: '${trigger.type} should not require validation',
+          );
+        }
+      });
+
+      test('messageContains requires keyword', () {
+        const emptyKeyword = AutomationTrigger(
+          type: TriggerType.messageContains,
+          config: {},
+        );
+        expect(emptyKeyword.validate(), isNotNull);
+
+        const blankKeyword = AutomationTrigger(
+          type: TriggerType.messageContains,
+          config: {'keyword': '   '},
+        );
+        expect(blankKeyword.validate(), isNotNull);
+
+        const validKeyword = AutomationTrigger(
+          type: TriggerType.messageContains,
+          config: {'keyword': 'SOS'},
+        );
+        expect(validKeyword.validate(), isNull);
+      });
+
+      test('geofenceEnter requires lat/lon', () {
+        const noCoords = AutomationTrigger(
+          type: TriggerType.geofenceEnter,
+          config: {},
+        );
+        expect(noCoords.validate(), isNotNull);
+
+        const onlyLat = AutomationTrigger(
+          type: TriggerType.geofenceEnter,
+          config: {'geofenceLat': 37.0},
+        );
+        expect(onlyLat.validate(), isNotNull);
+
+        const onlyLon = AutomationTrigger(
+          type: TriggerType.geofenceEnter,
+          config: {'geofenceLon': -122.0},
+        );
+        expect(onlyLon.validate(), isNotNull);
+
+        const validCoords = AutomationTrigger(
+          type: TriggerType.geofenceEnter,
+          config: {'geofenceLat': 37.0, 'geofenceLon': -122.0},
+        );
+        expect(validCoords.validate(), isNull);
+      });
+
+      test('geofenceExit requires lat/lon', () {
+        const noCoords = AutomationTrigger(
+          type: TriggerType.geofenceExit,
+          config: {},
+        );
+        expect(noCoords.validate(), isNotNull);
+
+        const validCoords = AutomationTrigger(
+          type: TriggerType.geofenceExit,
+          config: {'geofenceLat': 37.0, 'geofenceLon': -122.0},
+        );
+        expect(validCoords.validate(), isNull);
+      });
+
+      test('scheduled requires schedule', () {
+        const noSchedule = AutomationTrigger(
+          type: TriggerType.scheduled,
+          config: {},
+        );
+        expect(noSchedule.validate(), isNotNull);
+
+        const blankSchedule = AutomationTrigger(
+          type: TriggerType.scheduled,
+          config: {'schedule': '   '},
+        );
+        expect(blankSchedule.validate(), isNotNull);
+
+        const validSchedule = AutomationTrigger(
+          type: TriggerType.scheduled,
+          config: {'schedule': '0 9 * * *'},
+        );
+        expect(validSchedule.validate(), isNull);
+      });
+    });
   });
 
   group('AutomationAction', () {
@@ -355,6 +461,119 @@ void main() {
       expect(modified.type, ActionType.sendMessage);
       expect(modified.messageText, 'Modified');
       expect(modified.targetNodeNum, 123);
+    });
+
+    group('validate', () {
+      test('returns null for actions without required config', () {
+        // These actions don't require specific config
+        const actions = [
+          AutomationAction(type: ActionType.playSound),
+          AutomationAction(type: ActionType.vibrate),
+          AutomationAction(type: ActionType.pushNotification),
+          AutomationAction(type: ActionType.logEvent),
+          AutomationAction(type: ActionType.updateWidget),
+        ];
+
+        for (final action in actions) {
+          expect(
+            action.validate(),
+            isNull,
+            reason: '${action.type} should not require validation',
+          );
+        }
+      });
+
+      test('sendMessage requires messageText and targetNodeNum', () {
+        const noConfig = AutomationAction(
+          type: ActionType.sendMessage,
+          config: {},
+        );
+        expect(noConfig.validate(), isNotNull);
+
+        const onlyMessage = AutomationAction(
+          type: ActionType.sendMessage,
+          config: {'messageText': 'Hello'},
+        );
+        expect(onlyMessage.validate(), isNotNull);
+
+        const onlyTarget = AutomationAction(
+          type: ActionType.sendMessage,
+          config: {'targetNodeNum': 123},
+        );
+        expect(onlyTarget.validate(), isNotNull);
+
+        const blankMessage = AutomationAction(
+          type: ActionType.sendMessage,
+          config: {'messageText': '   ', 'targetNodeNum': 123},
+        );
+        expect(blankMessage.validate(), isNotNull);
+
+        const valid = AutomationAction(
+          type: ActionType.sendMessage,
+          config: {'messageText': 'Hello', 'targetNodeNum': 123},
+        );
+        expect(valid.validate(), isNull);
+      });
+
+      test('sendToChannel requires messageText', () {
+        const noMessage = AutomationAction(
+          type: ActionType.sendToChannel,
+          config: {},
+        );
+        expect(noMessage.validate(), isNotNull);
+
+        const blankMessage = AutomationAction(
+          type: ActionType.sendToChannel,
+          config: {'messageText': '   '},
+        );
+        expect(blankMessage.validate(), isNotNull);
+
+        const valid = AutomationAction(
+          type: ActionType.sendToChannel,
+          config: {'messageText': 'Broadcast message'},
+        );
+        expect(valid.validate(), isNull);
+      });
+
+      test('triggerWebhook requires webhookEventName', () {
+        const noEventName = AutomationAction(
+          type: ActionType.triggerWebhook,
+          config: {},
+        );
+        expect(noEventName.validate(), isNotNull);
+
+        const blankEventName = AutomationAction(
+          type: ActionType.triggerWebhook,
+          config: {'webhookEventName': '   '},
+        );
+        expect(blankEventName.validate(), isNotNull);
+
+        const valid = AutomationAction(
+          type: ActionType.triggerWebhook,
+          config: {'webhookEventName': 'battery_low'},
+        );
+        expect(valid.validate(), isNull);
+      });
+
+      test('triggerShortcut requires shortcutName', () {
+        const noName = AutomationAction(
+          type: ActionType.triggerShortcut,
+          config: {},
+        );
+        expect(noName.validate(), isNotNull);
+
+        const blankName = AutomationAction(
+          type: ActionType.triggerShortcut,
+          config: {'shortcutName': '   '},
+        );
+        expect(blankName.validate(), isNotNull);
+
+        const valid = AutomationAction(
+          type: ActionType.triggerShortcut,
+          config: {'shortcutName': 'Alert Shortcut'},
+        );
+        expect(valid.validate(), isNull);
+      });
     });
   });
 

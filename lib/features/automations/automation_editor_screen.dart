@@ -15,7 +15,14 @@ import 'widgets/variable_text_field.dart';
 class AutomationEditorScreen extends ConsumerStatefulWidget {
   final Automation? automation;
 
-  const AutomationEditorScreen({super.key, this.automation});
+  /// Whether this is creating a new automation (even if automation is provided for pre-filling)
+  final bool isNew;
+
+  const AutomationEditorScreen({
+    super.key,
+    this.automation,
+    this.isNew = false,
+  });
 
   @override
   ConsumerState<AutomationEditorScreen> createState() =>
@@ -30,7 +37,7 @@ class _AutomationEditorScreenState
   late List<AutomationAction> _actions;
   late bool _enabled;
 
-  bool get _isEditing => widget.automation != null;
+  bool get _isEditing => widget.automation != null && !widget.isNew;
 
   @override
   void initState() {
@@ -513,8 +520,30 @@ class _AutomationEditorScreenState
       return;
     }
 
-    // Validate all actions for invalid variables
-    for (final action in _actions) {
+    // Validate trigger configuration
+    final triggerError = _trigger.validate();
+    if (triggerError != null) {
+      showWarningSnackBar(context, triggerError);
+      return;
+    }
+
+    // Validate actions
+    if (_actions.isEmpty) {
+      showWarningSnackBar(context, 'Please add at least one action');
+      return;
+    }
+
+    for (int i = 0; i < _actions.length; i++) {
+      final action = _actions[i];
+
+      // Validate action configuration
+      final actionError = action.validate();
+      if (actionError != null) {
+        showWarningSnackBar(context, 'Action ${i + 1}: $actionError');
+        return;
+      }
+
+      // Validate variables in text fields
       final fieldsToValidate = <String>[
         action.messageText ?? '',
         action.notificationTitle ?? '',

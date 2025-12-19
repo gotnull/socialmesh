@@ -324,6 +324,33 @@ class AutomationTrigger {
   /// Signal threshold (SNR) for signalWeak trigger
   int get signalThreshold => config['signalThreshold'] as int? ?? -10;
 
+  /// Validate trigger configuration and return error message if invalid
+  String? validate() {
+    switch (type) {
+      case TriggerType.messageContains:
+        final kw = keyword;
+        if (kw == null || kw.trim().isEmpty) {
+          return 'Please enter a keyword to match';
+        }
+        break;
+      case TriggerType.geofenceEnter:
+      case TriggerType.geofenceExit:
+        if (geofenceLat == null || geofenceLon == null) {
+          return 'Please select a geofence location';
+        }
+        break;
+      case TriggerType.scheduled:
+        if (schedule == null || schedule!.trim().isEmpty) {
+          return 'Please set a schedule time';
+        }
+        break;
+      default:
+        // No validation required for other trigger types
+        break;
+    }
+    return null;
+  }
+
   Map<String, dynamic> toJson() => {'type': type.name, 'config': config};
 
   factory AutomationTrigger.fromJson(Map<String, dynamic> json) {
@@ -456,6 +483,44 @@ class AutomationAction {
 
   /// iOS Shortcut name
   String? get shortcutName => config['shortcutName'] as String?;
+
+  /// Validate action configuration and return error message if invalid
+  String? validate() {
+    switch (type) {
+      case ActionType.sendMessage:
+        final msg = messageText;
+        if (msg == null || msg.trim().isEmpty) {
+          return 'Please enter a message to send';
+        }
+        if (targetNodeNum == null) {
+          return 'Please select a target node';
+        }
+        break;
+      case ActionType.sendToChannel:
+        final msg = messageText;
+        if (msg == null || msg.trim().isEmpty) {
+          return 'Please enter a message to send';
+        }
+        break;
+      case ActionType.triggerWebhook:
+        final eventName = webhookEventName;
+        if (eventName == null || eventName.trim().isEmpty) {
+          return 'Please enter a webhook event name';
+        }
+        break;
+      case ActionType.triggerShortcut:
+        final name = shortcutName;
+        if (name == null || name.trim().isEmpty) {
+          return 'Please enter a Shortcut name';
+        }
+        break;
+      default:
+        // playSound, vibrate, pushNotification, logEvent, updateWidget
+        // These don't require specific configuration
+        break;
+    }
+    return null;
+  }
 
   Map<String, dynamic> toJson() => {'type': type.name, 'config': config};
 

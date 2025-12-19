@@ -490,4 +490,154 @@ void main() {
       }
     });
   });
+
+  group('AutomationRepository - Cloud Sync', () {
+    test('toJsonString exports all automations', () async {
+      final automation1 = Automation(
+        id: 'auto-1',
+        name: 'First',
+        trigger: const AutomationTrigger(type: TriggerType.nodeOnline),
+        actions: const [AutomationAction(type: ActionType.pushNotification)],
+      );
+      final automation2 = Automation(
+        id: 'auto-2',
+        name: 'Second',
+        trigger: const AutomationTrigger(
+          type: TriggerType.batteryLow,
+          config: {'batteryThreshold': 15},
+        ),
+        actions: const [AutomationAction(type: ActionType.vibrate)],
+      );
+      await repository.addAutomation(automation1);
+      await repository.addAutomation(automation2);
+
+      final jsonString = repository.toJsonString();
+
+      expect(jsonString, contains('auto-1'));
+      expect(jsonString, contains('auto-2'));
+      expect(jsonString, contains('First'));
+      expect(jsonString, contains('Second'));
+      expect(jsonString, contains('batteryThreshold'));
+    });
+
+    test('toJsonString returns empty array when no automations', () {
+      final jsonString = repository.toJsonString();
+
+      expect(jsonString, '[]');
+    });
+
+    test('loadFromJson restores automations from JSON', () async {
+      // First add some automations
+      final automation1 = Automation(
+        id: 'restore-1',
+        name: 'Restore Test 1',
+        trigger: const AutomationTrigger(type: TriggerType.nodeOffline),
+        actions: const [AutomationAction(type: ActionType.logEvent)],
+      );
+      final automation2 = Automation(
+        id: 'restore-2',
+        name: 'Restore Test 2',
+        trigger: const AutomationTrigger(
+          type: TriggerType.geofenceExit,
+          config: {'geofenceLat': 37.0, 'geofenceLon': -122.0},
+        ),
+        actions: const [
+          AutomationAction(
+            type: ActionType.pushNotification,
+            config: {'notificationTitle': 'Alert'},
+          ),
+        ],
+      );
+      await repository.addAutomation(automation1);
+      await repository.addAutomation(automation2);
+
+      // Export to JSON
+      final jsonString = repository.toJsonString();
+
+      // Clear and verify empty
+      await repository.deleteAutomation('restore-1');
+      await repository.deleteAutomation('restore-2');
+      expect(repository.automations, isEmpty);
+
+      // Restore from JSON
+      await repository.loadFromJson(jsonString);
+
+      // Verify restored
+      expect(repository.automations.length, 2);
+      final restored1 = repository.getAutomation('restore-1');
+      final restored2 = repository.getAutomation('restore-2');
+      expect(restored1, isNotNull);
+      expect(restored1!.name, 'Restore Test 1');
+      expect(restored2, isNotNull);
+      expect(restored2!.trigger.geofenceLat, 37.0);
+      expect(restored2.actions.first.notificationTitle, 'Alert');
+    });
+
+    test('loadFromJson handles empty JSON array', () async {
+      await repository.loadFromJson('[]');
+
+      expect(repository.automations, isEmpty);
+    });
+
+    test('loadFromJson handles invalid JSON gracefully', () async {
+      // Add an automation first
+      final automation = Automation(
+        id: 'keep-me',
+        name: 'Should Remain',
+        trigger: const AutomationTrigger(type: TriggerType.manual),
+        actions: const [],
+      );
+      await repository.addAutomation(automation);
+
+      // Try to load invalid JSON - should not crash
+      await repository.loadFromJson('not valid json');
+
+      // Existing automation should remain (loadFromJson should fail gracefully)
+      expect(repository.automations.length, 1);
+    });
+
+    test(
+      'toJsonString and loadFromJson round-trip preserves all data',
+      () async {
+        final original = Automation(
+          id: 'roundtrip-test',
+          name: 'Round Trip Test',
+          description: 'Testing full data preservation',
+          enabled: false,
+          trigger: const AutomationTrigger(
+            type: TriggerType.messageContains,
+            config: {'keyword': 'HELP', 'nodeNum': 12345},
+          ),
+          actions: const [
+            AutomationAction(
+              type: ActionType.sendMessage,
+              config: {'messageText': 'Response message', 'targetNodeNum': 999},
+            ),
+            AutomationAction(type: ActionType.vibrate),
+          ],
+        );
+        await repository.addAutomation(original);
+
+        // Round trip
+        final jsonString = repository.toJsonString();
+        await repository.deleteAutomation('roundtrip-test');
+        await repository.loadFromJson(jsonString);
+
+        // Verify all data preserved
+        final restored = repository.getAutomation('roundtrip-test');
+        expect(restored, isNotNull);
+        expect(restored!.name, original.name);
+        expect(restored.description, original.description);
+        expect(restored.enabled, original.enabled);
+        expect(restored.trigger.type, original.trigger.type);
+        expect(restored.trigger.keyword, 'HELP');
+        expect(restored.trigger.nodeNum, 12345);
+        expect(restored.actions.length, 2);
+        expect(restored.actions[0].type, ActionType.sendMessage);
+        expect(restored.actions[0].messageText, 'Response message');
+        expect(restored.actions[0].targetNodeNum, 999);
+        expect(restored.actions[1].type, ActionType.vibrate);
+      },
+    );
+  });
 }

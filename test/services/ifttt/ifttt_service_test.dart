@@ -561,4 +561,134 @@ void main() {
       // In production, this would make an HTTP call
     });
   });
+
+  group('IftttService - Cloud Sync', () {
+    test('toJsonString exports full config', () async {
+      await service.saveConfig(
+        const IftttConfig(
+          enabled: true,
+          webhookKey: 'cloud-test-key',
+          messageReceived: false,
+          batteryLow: true,
+          batteryThreshold: 15,
+          geofenceLat: 37.0,
+          geofenceLon: -122.0,
+          geofenceNodeName: 'Tracked Device',
+        ),
+      );
+
+      final jsonString = service.toJsonString();
+
+      expect(jsonString, contains('cloud-test-key'));
+      expect(jsonString, contains('15'));
+      expect(jsonString, contains('Tracked Device'));
+      expect(jsonString, contains('"enabled":true'));
+    });
+
+    test('toJsonString exports default config when nothing saved', () async {
+      final jsonString = service.toJsonString();
+
+      expect(jsonString, contains('"enabled":false'));
+      expect(jsonString, contains('"webhookKey":""'));
+    });
+
+    test('loadFromJson restores config', () async {
+      // First save a config
+      await service.saveConfig(
+        const IftttConfig(
+          enabled: true,
+          webhookKey: 'restore-key',
+          batteryThreshold: 25,
+          temperatureThreshold: 45.0,
+          geofenceNodeNum: 12345,
+        ),
+      );
+
+      // Export to JSON
+      final jsonString = service.toJsonString();
+
+      // Reset to default
+      await service.saveConfig(const IftttConfig());
+      expect(service.config.enabled, false);
+      expect(service.config.webhookKey, '');
+
+      // Restore from JSON
+      await service.loadFromJson(jsonString);
+
+      // Verify restored
+      expect(service.config.enabled, true);
+      expect(service.config.webhookKey, 'restore-key');
+      expect(service.config.batteryThreshold, 25);
+      expect(service.config.temperatureThreshold, 45.0);
+      expect(service.config.geofenceNodeNum, 12345);
+    });
+
+    test('loadFromJson handles invalid JSON gracefully', () async {
+      // Set up initial config
+      await service.saveConfig(
+        const IftttConfig(enabled: true, webhookKey: 'keep-me'),
+      );
+
+      // Try to load invalid JSON
+      await service.loadFromJson('not valid json');
+
+      // Original config should remain
+      expect(service.config.enabled, true);
+      expect(service.config.webhookKey, 'keep-me');
+    });
+
+    test(
+      'toJsonString and loadFromJson round-trip preserves all data',
+      () async {
+        const original = IftttConfig(
+          enabled: true,
+          webhookKey: 'roundtrip-key',
+          messageReceived: false,
+          nodeOnline: false,
+          nodeOffline: true,
+          positionUpdate: true,
+          batteryLow: false,
+          temperatureAlert: true,
+          sosEmergency: false,
+          batteryThreshold: 5,
+          temperatureThreshold: 50.0,
+          geofenceRadius: 250.0,
+          geofenceLat: 40.7128,
+          geofenceLon: -74.0060,
+          geofenceNodeNum: 99999,
+          geofenceNodeName: 'NYC Node',
+          geofenceThrottleMinutes: 120,
+        );
+        await service.saveConfig(original);
+
+        // Round trip
+        final jsonString = service.toJsonString();
+        await service.saveConfig(const IftttConfig()); // Reset
+        await service.loadFromJson(jsonString);
+
+        // Verify all data preserved
+        final restored = service.config;
+        expect(restored.enabled, original.enabled);
+        expect(restored.webhookKey, original.webhookKey);
+        expect(restored.messageReceived, original.messageReceived);
+        expect(restored.nodeOnline, original.nodeOnline);
+        expect(restored.nodeOffline, original.nodeOffline);
+        expect(restored.positionUpdate, original.positionUpdate);
+        expect(restored.batteryLow, original.batteryLow);
+        expect(restored.temperatureAlert, original.temperatureAlert);
+        expect(restored.sosEmergency, original.sosEmergency);
+        expect(restored.batteryThreshold, original.batteryThreshold);
+        expect(restored.temperatureThreshold, original.temperatureThreshold);
+        expect(restored.geofenceRadius, original.geofenceRadius);
+        expect(restored.geofenceLat, original.geofenceLat);
+        expect(restored.geofenceLon, original.geofenceLon);
+        expect(restored.geofenceNodeNum, original.geofenceNodeNum);
+        expect(restored.geofenceNodeName, original.geofenceNodeName);
+        expect(
+          restored.geofenceThrottleMinutes,
+          original.geofenceThrottleMinutes,
+        );
+      },
+    );
+  });
 }
