@@ -894,8 +894,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   /// Live preview panel - shows current widget progress
   Widget _buildLivePreviewPanel() {
-    // Always rebuild from current selections so changes are reflected immediately
-    final previewSchema = _buildFinalSchema();
+    // CRITICAL: Always rebuild from current state for live preview
+    // This ensures layout, colors, labels, gauge count all update reactively
+    final previewSchema = _buildPreviewSchema();
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
     final node = myNodeNum != null ? nodes[myNodeNum] : null;
@@ -4110,10 +4111,35 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   // ============================================================
   // Schema Building
   // ============================================================
+
+  /// Build schema for LIVE PREVIEW - always rebuilds from current state
+  /// This ensures all changes (layout, colors, labels, gauge count) are reflected
+  WidgetSchema _buildPreviewSchema() {
+    final name = _nameController.text.trim().isEmpty
+        ? 'My Widget'
+        : _nameController.text.trim();
+
+    // ALWAYS build from current state for preview - no caching or preservation
+    // This uses the exact same render pipeline as new widget creation
+    return _buildSchemaFromCurrentState(name);
+  }
+
+  /// Build schema for FINAL SAVE - may preserve original structure for edits
   WidgetSchema _buildFinalSchema() {
     final name = _nameController.text.trim().isEmpty
         ? 'My Widget'
         : _nameController.text.trim();
+
+    // For final save, just use current state (same as preview)
+    // This ensures what you see in preview is what you get when saved
+    return _buildSchemaFromCurrentState(name);
+  }
+
+  /// Core schema building from current wizard state
+  /// Used by both preview and final save for consistent behavior
+  WidgetSchema _buildSchemaFromCurrentState(String name) {
+    // ALWAYS build from current wizard state - same logic for new and edit
+    // This ensures preview matches final output and all changes are reflected
 
     // Build children based on template type
     final children = <ElementSchema>[];

@@ -461,13 +461,18 @@ class _WidgetMarketplaceScreenState
     );
   }
 
-  void _openWidgetDetails(MarketplaceWidget widget) {
-    Navigator.push(
+  void _openWidgetDetails(MarketplaceWidget widget) async {
+    final installed = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => _WidgetDetailsScreen(marketplaceWidget: widget),
       ),
     );
+
+    // Refresh data if a widget was installed (install count changed)
+    if (installed == true && mounted) {
+      ref.read(marketplaceProvider.notifier).refresh();
+    }
   }
 }
 
@@ -796,9 +801,8 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
           context,
           '${widget.marketplaceWidget.name} installed!',
         );
-        // Pop back to marketplace, then pop marketplace with result=true
-        Navigator.pop(context); // Pop details screen
-        Navigator.pop(context, true); // Pop marketplace with installed=true
+        // Pop back with result=true so caller knows to refresh
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -901,13 +905,20 @@ class _CategoryScreenState extends ConsumerState<_CategoryScreen> {
             itemBuilder: (context, index) {
               return _MarketplaceWidgetCard(
                 widget: widgets[index],
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        _WidgetDetailsScreen(marketplaceWidget: widgets[index]),
-                  ),
-                ),
+                onTap: () async {
+                  final installed = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => _WidgetDetailsScreen(
+                        marketplaceWidget: widgets[index],
+                      ),
+                    ),
+                  );
+                  // Refresh if widget was installed
+                  if (installed == true && mounted) {
+                    ref.read(marketplaceProvider.notifier).refresh();
+                  }
+                },
               );
             },
           );

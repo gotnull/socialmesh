@@ -92,7 +92,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
     for (final id in widgetIds) {
       try {
         debugPrint('[WidgetBuilder] Restoring widget: $id');
-        final schema = await service.downloadWidget(id);
+        // Use previewWidget to NOT increment install count (user already owns this)
+        final schema = await service.previewWidget(id);
         await _storageService.installMarketplaceWidget(schema);
         debugPrint('[WidgetBuilder] Restored widget: ${schema.name}');
       } catch (e) {
