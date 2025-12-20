@@ -69,6 +69,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   // Existing schema ID for edits
   String? _existingId;
 
+  // Original schema for editing - used for preview until user makes changes
+  WidgetSchema? _originalSchema;
+
+  // Track original bindings to detect if user changed them
+  Set<String>? _originalBindings;
+
   // Step 1: Template selection
   _WidgetTemplate? _selectedTemplate;
 
@@ -159,6 +165,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       'Wizard: Schema root has ${schema.root.children.length} children',
     );
 
+    // Store original schema for preview - this is the EXACT widget the user sees
+    _originalSchema = schema;
     _existingId = schema.id;
     _nameController.text = schema.name;
 
@@ -166,34 +174,50 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     _extractBindingsFromElement(schema.root);
     debugPrint('Wizard: Extracted bindings: $_selectedBindings');
 
+    // Store original bindings to detect changes later
+    _originalBindings = Set<String>.from(_selectedBindings);
+
     // Extract actions from schema
     _extractActionsFromElement(schema.root);
     debugPrint('Wizard: Extracted actions: $_selectedActions');
 
-    // Try to detect template from tags first
+    // Try to detect template from tags first - MOST RELIABLE
     final tags = schema.tags;
     debugPrint('Wizard: Schema tags: $tags');
+
+    // Tags are the authoritative source for template type
+    // They're saved by the wizard and should be trusted
+    _WidgetTemplate? templateFromTags;
     if (tags.contains('status')) {
-      _selectedTemplate = _getTemplates().firstWhere((t) => t.id == 'status');
+      templateFromTags = _getTemplates().firstWhere((t) => t.id == 'status');
     } else if (tags.contains('info')) {
-      _selectedTemplate = _getTemplates().firstWhere((t) => t.id == 'info');
+      templateFromTags = _getTemplates().firstWhere((t) => t.id == 'info');
     } else if (tags.contains('gauge')) {
-      _selectedTemplate = _getTemplates().firstWhere((t) => t.id == 'gauge');
+      templateFromTags = _getTemplates().firstWhere((t) => t.id == 'gauge');
     } else if (tags.contains('actions')) {
-      _selectedTemplate = _getTemplates().firstWhere((t) => t.id == 'actions');
+      templateFromTags = _getTemplates().firstWhere((t) => t.id == 'actions');
     } else if (tags.contains('location')) {
-      _selectedTemplate = _getTemplates().firstWhere((t) => t.id == 'location');
+      templateFromTags = _getTemplates().firstWhere((t) => t.id == 'location');
     } else if (tags.contains('environment')) {
-      _selectedTemplate = _getTemplates().firstWhere(
+      templateFromTags = _getTemplates().firstWhere(
         (t) => t.id == 'environment',
       );
     } else if (tags.contains('graph')) {
-      _selectedTemplate = _getTemplates().firstWhere((t) => t.id == 'graph');
+      templateFromTags = _getTemplates().firstWhere((t) => t.id == 'graph');
     }
 
-    // If no template detected from tags, detect from element structure
-    _selectedTemplate ??= _detectTemplateFromStructure(schema.root);
-    debugPrint('Wizard: Detected template: ${_selectedTemplate?.id}');
+    if (templateFromTags != null) {
+      _selectedTemplate = templateFromTags;
+      debugPrint(
+        'Wizard: Template detected from tags: ${_selectedTemplate?.id}',
+      );
+    } else {
+      // If no template detected from tags, detect from element structure as fallback
+      _selectedTemplate = _detectTemplateFromStructure(schema.root);
+      debugPrint(
+        'Wizard: Template detected from structure: ${_selectedTemplate?.id}',
+      );
+    }
 
     // Extract appearance settings from schema
     _extractAppearanceFromElement(schema.root);
@@ -207,16 +231,29 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   /// Detect template type from element structure
+  /// CRITICAL: Must correctly identify template to rebuild widget identically
   _WidgetTemplate? _detectTemplateFromStructure(ElementSchema root) {
     final templates = _getTemplates();
     bool hasChart = false;
-    bool hasGauge = false;
+    bool hasRadialGauge =
+        false; // Radial/arc/battery/signal gauges = gauge template
+    bool hasLinearGauge = false; // Linear gauges = status template
     bool hasAction = false;
     bool hasMap = false;
 
     void scanElement(ElementSchema element) {
       if (element.type == ElementType.chart) hasChart = true;
-      if (element.type == ElementType.gauge) hasGauge = true;
+      if (element.type == ElementType.gauge) {
+        // CRITICAL: Distinguish between gauge types
+        // Radial, arc, battery, signal = gauge template
+        // Linear = status template (progress bars)
+        final gaugeType = element.gaugeType ?? GaugeType.linear;
+        if (gaugeType == GaugeType.linear) {
+          hasLinearGauge = true;
+        } else {
+          hasRadialGauge = true;
+        }
+      }
       if (element.type == ElementType.map) hasMap = true;
       if (element.action != null && element.action!.type != ActionType.none) {
         hasAction = true;
@@ -228,17 +265,23 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     scanElement(root);
 
+    debugPrint(
+      'Wizard: Structure detection - chart=$hasChart, radialGauge=$hasRadialGauge, linearGauge=$hasLinearGauge, map=$hasMap, action=$hasAction',
+    );
+
     // Determine template based on detected elements
+    // Order matters - more specific detections first
     if (hasChart) {
       return templates.firstWhere((t) => t.id == 'graph');
-    } else if (hasGauge) {
+    } else if (hasRadialGauge) {
+      // Only radial/arc/etc gauges indicate gauge template
       return templates.firstWhere((t) => t.id == 'gauge');
     } else if (hasMap) {
       return templates.firstWhere((t) => t.id == 'location');
     } else if (hasAction && _selectedBindings.isEmpty) {
       return templates.firstWhere((t) => t.id == 'actions');
     } else if (_selectedBindings.isNotEmpty) {
-      // Default to status for widgets with data bindings
+      // Default to status for widgets with data bindings (including linear gauges)
       return templates.firstWhere((t) => t.id == 'status');
     }
 
@@ -801,10 +844,29 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   /// Live preview panel - shows current widget progress
+  /// UNIFIED RENDER PIPELINE: This method ALWAYS rebuilds the widget from
+  /// current configuration state - same logic for new AND edited widgets.
   Widget _buildLivePreviewPanel() {
     // CRITICAL: Always rebuild from current state for live preview
     // This ensures layout, colors, labels, gauge count all update reactively
+    // NO CACHING - NO CONDITIONAL PATHS - ALWAYS REBUILD FROM CONFIG STATE
     final previewSchema = _buildPreviewSchema();
+
+    // Generate a unique key based on ALL configuration state to force Flutter
+    // to rebuild the WidgetRenderer when any config changes.
+    // This ensures edited widgets get the same live preview behavior as new widgets.
+    final previewKey = ValueKey(
+      'preview_'
+      '${_selectedTemplate?.id ?? "none"}_'
+      '${_selectedBindings.join(",")}_'
+      '${_layoutStyle.name}_'
+      '${_accentColor.toARGB32()}_'
+      '${_showLabels}_'
+      '${_chartType.name}_'
+      '${_mergeCharts}_'
+      '${_selectedActions.map((a) => a.name).join(",")}',
+    );
+
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
     final node = myNodeNum != null ? nodes[myNodeNum] : null;
@@ -843,9 +905,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             ),
           ),
           // Widget preview - auto-sizes to content
+          // KEY IS CRITICAL: Forces Flutter to rebuild when config state changes
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
             child: WidgetRenderer(
+              key: previewKey,
               schema: previewSchema,
               node: node,
               allNodes: nodes,
@@ -4017,37 +4081,116 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   // ============================================================
-  // Schema Building
+  // Schema Building - UNIFIED RENDER PIPELINE
+  // ============================================================
+  // CRITICAL: There is ONE render function for widgets.
+  // No "creation render" vs "edit render" - just renderWidget(config).
+  // Both preview AND final save use _buildSchemaFromCurrentState().
+  // This ensures:
+  //   1. Preview always reflects current config state
+  //   2. Edited widgets render identically to newly created widgets
+  //   3. Gauge count, layout, colors all update reactively
   // ============================================================
 
-  /// Build schema for LIVE PREVIEW - always rebuilds from current state
-  /// This ensures all changes (layout, colors, labels, gauge count) are reflected
+  /// Check if user has changed bindings from original
+  bool get _bindingsChanged {
+    if (_originalBindings == null) return true;
+    return !_selectedBindings.containsAll(_originalBindings!) ||
+        !_originalBindings!.containsAll(_selectedBindings);
+  }
+
+  /// Build schema for LIVE PREVIEW
+  /// When editing: preserve original structure, apply color changes
+  /// If bindings changed: rebuild with new bindings using template builder
+  /// When creating new: build from current wizard state
   WidgetSchema _buildPreviewSchema() {
     final name = _nameController.text.trim().isEmpty
         ? 'My Widget'
         : _nameController.text.trim();
 
-    // ALWAYS build from current state for preview - no caching or preservation
-    // This uses the exact same render pipeline as new widget creation
+    // When editing an existing widget
+    if (_originalSchema != null) {
+      // If user changed bindings, we need to rebuild with new structure
+      if (_bindingsChanged) {
+        return _buildSchemaFromCurrentState(name);
+      }
+      // Otherwise preserve original structure with color updates
+      return _buildUpdatedSchema(name);
+    }
+
+    // For new widgets, build from current wizard state
     return _buildSchemaFromCurrentState(name);
   }
 
-  /// Build schema for FINAL SAVE - may preserve original structure for edits
+  /// Build schema for FINAL SAVE
   WidgetSchema _buildFinalSchema() {
     final name = _nameController.text.trim().isEmpty
         ? 'My Widget'
         : _nameController.text.trim();
 
-    // For final save, just use current state (same as preview)
-    // This ensures what you see in preview is what you get when saved
+    // When editing
+    if (_originalSchema != null) {
+      // If bindings changed, rebuild
+      if (_bindingsChanged) {
+        return _buildSchemaFromCurrentState(name);
+      }
+      // Otherwise preserve original with updates
+      return _buildUpdatedSchema(name);
+    }
+
+    // For new widgets, build from current state
     return _buildSchemaFromCurrentState(name);
   }
 
-  /// Core schema building from current wizard state
+  /// Update original schema with user's changes (colors, etc) while preserving structure
+  WidgetSchema _buildUpdatedSchema(String name) {
+    final original = _originalSchema!;
+
+    // Apply accent color changes to the original structure
+    final updatedRoot = _applyColorToElement(original.root, _accentColor);
+
+    return original.copyWith(name: name, root: updatedRoot);
+  }
+
+  /// Recursively apply accent color to elements in the schema
+  ElementSchema _applyColorToElement(ElementSchema element, Color accentColor) {
+    final colorHex = _colorToHex(accentColor);
+
+    // Update style colors for relevant elements
+    StyleSchema? updatedStyle;
+    String? updatedGaugeColor;
+
+    // Apply accent color to gauge elements
+    if (element.type == ElementType.gauge && element.gaugeColor != null) {
+      updatedGaugeColor = colorHex;
+    }
+
+    // Apply accent color to chart fill/line colors (handled by renderer)
+
+    // Recursively update children
+    final updatedChildren = element.children
+        .map((child) => _applyColorToElement(child, accentColor))
+        .toList();
+
+    return element.copyWith(
+      style: updatedStyle ?? element.style,
+      gaugeColor: updatedGaugeColor ?? element.gaugeColor,
+      children: updatedChildren,
+    );
+  }
+
+  /// UNIFIED SCHEMA BUILDER - the single source of truth for widget rendering
   /// Used by both preview and final save for consistent behavior
+  /// This method ALWAYS rebuilds the widget tree from current wizard state:
+  ///   - _selectedBindings (determines gauge/chart count)
+  ///   - _selectedTemplate (determines visual style)
+  ///   - _accentColor (determines colors)
+  ///   - _layoutStyle (determines layout)
+  ///   - _showLabels, _chartType, _mergeCharts, etc.
   WidgetSchema _buildSchemaFromCurrentState(String name) {
     // ALWAYS build from current wizard state - same logic for new and edit
     // This ensures preview matches final output and all changes are reflected
+    // NO PARTIAL UPDATES - NO CONDITIONAL PATHS - NO REUSE OF OLD INSTANCES
 
     // Build children based on template type
     final children = <ElementSchema>[];

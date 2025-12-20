@@ -241,7 +241,7 @@ class WidgetTemplates {
     return WidgetSchema(
       name: 'Battery Status',
       description: 'Display battery level with gauge',
-      tags: ['battery', 'power', 'status'],
+      tags: ['status', 'battery', 'power'],
       root: ElementSchema(
         type: ElementType.column,
         style: const StyleSchema(padding: 12, spacing: 8),
@@ -304,7 +304,7 @@ class WidgetTemplates {
     return WidgetSchema(
       name: 'Signal Strength',
       description: 'Display SNR and RSSI',
-      tags: ['signal', 'snr', 'rssi', 'connectivity'],
+      tags: ['info', 'signal', 'snr', 'rssi', 'connectivity'],
       size: CustomWidgetSize.medium,
       root: ElementSchema(
         type: ElementType.row,
@@ -515,7 +515,7 @@ class WidgetTemplates {
     return WidgetSchema(
       name: 'Node Info',
       description: 'Basic node information card',
-      tags: ['node', 'info', 'status'],
+      tags: ['info', 'node'],
       root: ElementSchema(
         type: ElementType.column,
         style: const StyleSchema(padding: 12, spacing: 10),
@@ -620,7 +620,7 @@ class WidgetTemplates {
     return WidgetSchema(
       name: 'GPS Position',
       description: 'Show GPS coordinates and satellites',
-      tags: ['gps', 'position', 'location', 'coordinates'],
+      tags: ['location', 'gps', 'position', 'coordinates'],
       size: CustomWidgetSize.medium,
       root: ElementSchema(
         type: ElementType.row,
@@ -756,7 +756,7 @@ class WidgetTemplates {
     return WidgetSchema(
       name: 'Network Overview',
       description: 'Mesh network status at a glance',
-      tags: ['network', 'mesh', 'nodes', 'status'],
+      tags: ['status', 'network', 'mesh', 'nodes'],
       size: CustomWidgetSize.medium,
       root: ElementSchema(
         type: ElementType.row,
