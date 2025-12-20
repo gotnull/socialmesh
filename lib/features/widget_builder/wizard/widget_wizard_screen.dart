@@ -231,21 +231,29 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     bool hasMap = false;
 
     void scanElement(ElementSchema element) {
-      if (element.type == ElementType.chart) hasChart = true;
+      if (element.type == ElementType.chart) {
+        hasChart = true;
+        debugPrint('Wizard: Found chart element');
+      }
       if (element.type == ElementType.gauge) {
         // CRITICAL: Distinguish between gauge types
         // Radial, arc, battery, signal = gauge template
         // Linear = status template (progress bars)
         final gaugeType = element.gaugeType ?? GaugeType.linear;
+        debugPrint('Wizard: Found gauge with type: ${gaugeType.name}');
         if (gaugeType == GaugeType.linear) {
           hasLinearGauge = true;
         } else {
           hasRadialGauge = true;
         }
       }
-      if (element.type == ElementType.map) hasMap = true;
+      if (element.type == ElementType.map) {
+        hasMap = true;
+        debugPrint('Wizard: Found map element');
+      }
       if (element.action != null && element.action!.type != ActionType.none) {
         hasAction = true;
+        debugPrint('Wizard: Found action: ${element.action!.type}');
       }
       for (final child in element.children) {
         scanElement(child);
@@ -255,25 +263,39 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     scanElement(root);
 
     debugPrint(
-      'Wizard: Structure detection - chart=$hasChart, radialGauge=$hasRadialGauge, linearGauge=$hasLinearGauge, map=$hasMap, action=$hasAction',
+      'Wizard: Structure detection - chart=$hasChart, radialGauge=$hasRadialGauge, '
+      'linearGauge=$hasLinearGauge, map=$hasMap, action=$hasAction, '
+      'bindings=${_selectedBindings.length}',
     );
 
     // Determine template based on detected elements
     // Order matters - more specific detections first
     if (hasChart) {
+      debugPrint('Wizard: Detected as GRAPH template (has chart)');
       return templates.firstWhere((t) => t.id == 'graph');
     } else if (hasRadialGauge) {
       // Only radial/arc/etc gauges indicate gauge template
+      debugPrint('Wizard: Detected as GAUGE template (has radial gauge)');
       return templates.firstWhere((t) => t.id == 'gauge');
+    } else if (hasLinearGauge) {
+      // Linear gauges indicate status template (progress bars)
+      debugPrint('Wizard: Detected as STATUS template (has linear gauge)');
+      return templates.firstWhere((t) => t.id == 'status');
     } else if (hasMap) {
+      debugPrint('Wizard: Detected as LOCATION template (has map)');
       return templates.firstWhere((t) => t.id == 'location');
     } else if (hasAction && _selectedBindings.isEmpty) {
+      debugPrint(
+        'Wizard: Detected as ACTIONS template (has action, no bindings)',
+      );
       return templates.firstWhere((t) => t.id == 'actions');
     } else if (_selectedBindings.isNotEmpty) {
-      // Default to status for widgets with data bindings (including linear gauges)
-      return templates.firstWhere((t) => t.id == 'status');
+      // Default to info for widgets with data bindings but no gauges
+      debugPrint('Wizard: Detected as INFO template (has bindings, no gauges)');
+      return templates.firstWhere((t) => t.id == 'info');
     }
 
+    debugPrint('Wizard: No template detected');
     return null;
   }
 
