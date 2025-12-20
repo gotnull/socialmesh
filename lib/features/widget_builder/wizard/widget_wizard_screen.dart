@@ -78,6 +78,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   // Step 3: Data selection (or Actions for Quick Actions template)
   final Set<String> _selectedBindings = {};
   final Set<ActionType> _selectedActions = {};
+  // Track original actions for edited widgets to detect changes
+  Set<ActionType>? _originalActions;
+  // Track original merge state for edited graph widgets to detect changes
+  bool? _originalMergeCharts;
 
   // Step 4: Appearance
   Color _accentColor = const Color(0xFF4F6AF6);
@@ -168,6 +172,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     // Extract actions from schema
     _extractActionsFromElement(schema.root);
+    // Store original actions to detect changes later
+    _originalActions = Set<ActionType>.from(_selectedActions);
     debugPrint('Wizard: Extracted actions: $_selectedActions');
 
     // Try to detect template from tags first - MOST RELIABLE
@@ -211,6 +217,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     // Extract appearance settings from schema
     _extractAppearanceFromElement(schema.root);
+    // Store original merge state to detect changes later
+    _originalMergeCharts = _mergeCharts;
     debugPrint(
       'Wizard: Accent color: $_accentColor, Chart type: $_chartType, Merge: $_mergeCharts',
     );
@@ -4340,6 +4348,20 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return !originalTags.contains(currentTemplateId);
   }
 
+  /// Check if the actions have been changed from the original (for actions template)
+  bool _haveActionsChanged() {
+    if (_originalActions == null) return false;
+    // Check if sets are different (different size or different contents)
+    if (_selectedActions.length != _originalActions!.length) return true;
+    return !_selectedActions.containsAll(_originalActions!);
+  }
+
+  /// Check if the merge setting has been changed from the original (for graph template)
+  bool _hasMergeChanged() {
+    if (_originalMergeCharts == null) return false;
+    return _mergeCharts != _originalMergeCharts;
+  }
+
   /// Build schema for LIVE PREVIEW
   /// For template changes: ALWAYS rebuild to use new template structure
   /// For new graph/actions widgets: rebuild from current state
@@ -4364,20 +4386,29 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       return _buildSchemaFromCurrentState(name);
     }
 
-    // GRAPH/ACTIONS WIDGETS (NEW only): Rebuild from current state to properly handle
-    // structural changes like merge/unmerge or action selection changes
-    // For EDITED graph/actions widgets: preserve original structure (marketplace/installed widgets)
+    // GRAPH/ACTIONS WIDGETS: Rebuild from current state for NEW widgets
+    // or when structural changes are made (actions changed, merge/unmerge)
     final isGraphTemplate = _selectedTemplate?.id == 'graph';
     final isActionsTemplate = _selectedTemplate?.id == 'actions';
     final isNewWidget = widget.initialSchema == null;
-    if ((isGraphTemplate || isActionsTemplate) && isNewWidget) {
+
+    // For actions template: rebuild if new OR if actions have changed
+    if (isActionsTemplate && (isNewWidget || _haveActionsChanged())) {
       debugPrint(
-        '[SCHEMA] NEW Graph/Actions template - rebuilding from current state',
+        '[SCHEMA] Actions template - rebuilding (new=$isNewWidget, actionsChanged=${_haveActionsChanged()})',
       );
       return _buildSchemaFromCurrentState(name);
     }
 
-    // EDITED WIDGETS (non-graph, non-actions, same template): Preserve structure but apply appearance changes
+    // For graph template: rebuild if new OR if merge setting has changed
+    if (isGraphTemplate && (isNewWidget || _hasMergeChanged())) {
+      debugPrint(
+        '[SCHEMA] Graph template - rebuilding (new=$isNewWidget, mergeChanged=${_hasMergeChanged()})',
+      );
+      return _buildSchemaFromCurrentState(name);
+    }
+
+    // EDITED WIDGETS (same template, no structural changes): Preserve structure but apply appearance changes
     if (widget.initialSchema != null) {
       debugPrint(
         '[SCHEMA] Using EDITED path - preserving structure with appearance updates',
@@ -4422,20 +4453,29 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       return _buildSchemaFromCurrentState(name);
     }
 
-    // GRAPH/ACTIONS WIDGETS (NEW only): Rebuild from current state to properly handle
-    // structural changes like merge/unmerge or action selection changes
-    // For EDITED graph/actions widgets: preserve original structure (marketplace/installed widgets)
+    // GRAPH/ACTIONS WIDGETS: Rebuild from current state for NEW widgets
+    // or when structural changes are made (actions changed, merge/unmerge)
     final isGraphTemplate = _selectedTemplate?.id == 'graph';
     final isActionsTemplate = _selectedTemplate?.id == 'actions';
     final isNewWidget = widget.initialSchema == null;
-    if ((isGraphTemplate || isActionsTemplate) && isNewWidget) {
+
+    // For actions template: rebuild if new OR if actions have changed
+    if (isActionsTemplate && (isNewWidget || _haveActionsChanged())) {
       debugPrint(
-        '[SCHEMA] NEW Graph/Actions template - rebuilding from current state for save',
+        '[SCHEMA] Actions template for save - rebuilding (new=$isNewWidget, actionsChanged=${_haveActionsChanged()})',
       );
       return _buildSchemaFromCurrentState(name);
     }
 
-    // EDITED WIDGETS (same template): Preserve structure but apply appearance changes
+    // For graph template: rebuild if new OR if merge setting has changed
+    if (isGraphTemplate && (isNewWidget || _hasMergeChanged())) {
+      debugPrint(
+        '[SCHEMA] Graph template for save - rebuilding (new=$isNewWidget, mergeChanged=${_hasMergeChanged()})',
+      );
+      return _buildSchemaFromCurrentState(name);
+    }
+
+    // EDITED WIDGETS (same template, no structural changes): Preserve structure but apply appearance changes
     if (widget.initialSchema != null) {
       // Apply current appearance settings to the original structure
       final modifiedRoot = _applyAppearanceToElement(
