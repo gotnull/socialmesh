@@ -783,18 +783,23 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
 
     try {
       final service = ref.read(marketplaceServiceProvider);
-      // Download widget schema
-      final schema = await service.downloadWidget(widget.marketplaceWidget.id);
+      final marketplaceId = widget.marketplaceWidget.id;
 
-      // Save to local storage
+      // Download widget schema
+      final schema = await service.downloadWidget(marketplaceId);
+
+      // Save to local storage with marketplace ID for proper tracking
       final storage = WidgetStorageService();
       await storage.init();
-      await storage.installMarketplaceWidget(schema);
+      await storage.installMarketplaceWidget(
+        schema,
+        marketplaceId: marketplaceId,
+      );
 
       // Add to user profile for cloud sync (survives reinstall)
       await ref
           .read(userProfileProvider.notifier)
-          .addInstalledWidget(widget.marketplaceWidget.id);
+          .addInstalledWidget(marketplaceId);
 
       if (mounted) {
         showSuccessSnackBar(

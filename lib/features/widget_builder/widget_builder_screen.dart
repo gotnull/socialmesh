@@ -60,9 +60,10 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       );
 
       if (profile != null && profile.installedWidgetIds.isNotEmpty) {
-        final localWidgetIds = widgets.map((w) => w.id).toSet();
+        // Compare against marketplace IDs (not schema IDs) since profile stores marketplace IDs
+        final installedMarketplaceIds = installedIds.toSet();
         final missingIds = profile.installedWidgetIds
-            .where((id) => !localWidgetIds.contains(id))
+            .where((id) => !installedMarketplaceIds.contains(id))
             .toList();
 
         debugPrint(
@@ -107,17 +108,44 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   /// Restore widgets from marketplace that are in profile but not local storage
   Future<void> _restoreMissingWidgets(List<String> widgetIds) async {
     final service = ref.read(marketplaceServiceProvider);
+    final failedIds = <String>[];
 
-    for (final id in widgetIds) {
+    for (final marketplaceId in widgetIds) {
       try {
-        debugPrint('[WidgetBuilder] Restoring widget: $id');
+        debugPrint(
+          '[WidgetBuilder] Restoring widget with marketplace ID: $marketplaceId',
+        );
         // Use previewWidget to NOT increment install count (user already owns this)
-        final schema = await service.previewWidget(id);
-        await _storageService.installMarketplaceWidget(schema);
-        debugPrint('[WidgetBuilder] Restored widget: ${schema.name}');
+        final schema = await service.previewWidget(marketplaceId);
+        // Pass the marketplace ID so it's tracked correctly
+        await _storageService.installMarketplaceWidget(
+          schema,
+          marketplaceId: marketplaceId,
+        );
+        debugPrint(
+          '[WidgetBuilder] Restored widget: ${schema.name} (marketplace ID: $marketplaceId)',
+        );
       } catch (e) {
-        debugPrint('[WidgetBuilder] Failed to restore widget $id: $e');
-        // Continue with other widgets even if one fails
+        debugPrint(
+          '[WidgetBuilder] Failed to restore widget $marketplaceId: $e - removing from profile',
+        );
+        failedIds.add(marketplaceId);
+      }
+    }
+
+    // Clean up any widgets that couldn't be restored (deleted from marketplace, etc.)
+    for (final failedId in failedIds) {
+      try {
+        await ref
+            .read(userProfileProvider.notifier)
+            .removeInstalledWidget(failedId);
+        debugPrint(
+          '[WidgetBuilder] Removed unrestorable widget $failedId from profile',
+        );
+      } catch (e) {
+        debugPrint(
+          '[WidgetBuilder] Failed to remove $failedId from profile: $e',
+        );
       }
     }
   }
@@ -615,16 +643,25 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                     .read(dashboardWidgetsProvider.notifier)
                     .removeWidget(widgetToRemove.id);
               }
-              // Remove from user profile FIRST to prevent re-download
+              // Delete from local storage and get marketplace ID
+              final marketplaceId = await _storageService.deleteWidget(
+                schema.id,
+              );
+              debugPrint(
+                '[WidgetBuilder] Deleted widget ${schema.id}, marketplaceId=$marketplaceId',
+              );
+              // Remove from user profile using marketplace ID (or schema ID as fallback)
+              final idToRemoveFromProfile = marketplaceId ?? schema.id;
               await ref
                   .read(userProfileProvider.notifier)
-                  .removeInstalledWidget(schema.id);
-              // Then delete from local storage
-              await _storageService.deleteWidget(schema.id);
+                  .removeInstalledWidget(idToRemoveFromProfile);
+              debugPrint(
+                '[WidgetBuilder] Removed $idToRemoveFromProfile from profile',
+              );
               // Update state directly without reload (avoids restore logic)
               setState(() {
                 _myWidgets.removeWhere((w) => w.id == schema.id);
-                _marketplaceIds.remove(schema.id);
+                _marketplaceIds.remove(marketplaceId ?? schema.id);
               });
             },
             child: Text('Delete', style: TextStyle(color: AppTheme.errorRed)),
