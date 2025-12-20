@@ -914,17 +914,39 @@ class _ChartRendererState extends State<ChartRenderer> {
         LineChartBarData(
           spots: spots,
           isCurved: _isCurved,
-          color: lineColor,
+          // Support gradient fill for merged charts
+          color: _gradientFill ? null : lineColor,
+          gradient: _gradientFill
+              ? LinearGradient(
+                  colors: [_gradientLowColor, _gradientHighColor],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                )
+              : null,
           barWidth: 2,
           isStrokeCapRound: true,
           dotData: FlDotData(
             show: _showDots,
-            getDotPainter: (spot, percent, bar, index) =>
-                FlDotCirclePainter(radius: 2, color: lineColor),
+            getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+              radius: 2,
+              color: _gradientFill
+                  ? _gradientHighColor // Use high color for dots when gradient
+                  : lineColor,
+            ),
           ),
           belowBarData: BarAreaData(
             show: true,
-            color: lineColor.withValues(alpha: 0.15),
+            gradient: _gradientFill
+                ? LinearGradient(
+                    colors: [
+                      _gradientLowColor.withValues(alpha: 0.3),
+                      _gradientHighColor.withValues(alpha: 0.1),
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  )
+                : null,
+            color: _gradientFill ? null : lineColor.withValues(alpha: 0.15),
           ),
         ),
       );
@@ -1030,13 +1052,30 @@ class _ChartRendererState extends State<ChartRenderer> {
         LineChartBarData(
           spots: spots,
           isCurved: _isCurved,
-          color: lineColor,
+          color: _gradientFill ? null : lineColor,
+          gradient: _gradientFill
+              ? LinearGradient(
+                  colors: [_gradientLowColor, _gradientHighColor],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                )
+              : null,
           barWidth: 1.5,
           isStrokeCapRound: true,
-          dotData: const FlDotData(show: false),
+          dotData: FlDotData(show: _showDots),
           belowBarData: BarAreaData(
             show: true,
-            color: lineColor.withValues(alpha: 0.6),
+            gradient: _gradientFill
+                ? LinearGradient(
+                    colors: [
+                      _gradientLowColor.withValues(alpha: 0.4),
+                      _gradientHighColor.withValues(alpha: 0.4),
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  )
+                : null,
+            color: _gradientFill ? null : lineColor.withValues(alpha: 0.6),
             cutOffY: 0,
             applyCutOffY: true,
           ),
@@ -1164,6 +1203,9 @@ class _ChartRendererState extends State<ChartRenderer> {
         .map((e) => FlSpot(e.key.toDouble(), e.value))
         .toList();
 
+    final minY = data.reduce((a, b) => a < b ? a : b);
+    final maxY = data.reduce((a, b) => a > b ? a : b);
+
     return LineChart(
       LineChartData(
         gridData: const FlGridData(show: false),
@@ -1174,19 +1216,42 @@ class _ChartRendererState extends State<ChartRenderer> {
           LineChartBarData(
             spots: spots,
             isCurved: _isCurved,
-            color: color,
+            color: _gradientFill ? null : color,
+            gradient: _gradientFill
+                ? LinearGradient(
+                    colors: [_gradientLowColor, _gradientHighColor],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  )
+                : null,
             barWidth: 2,
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: _showDots,
-              getDotPainter: (spot, percent, bar, index) =>
-                  FlDotCirclePainter(radius: 3, color: color),
+              getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+                radius: 3,
+                color: _gradientFill
+                    ? _getGradientColor(spot.y, minY, maxY)
+                    : color,
+              ),
             ),
-            belowBarData: BarAreaData(show: false),
+            belowBarData: _gradientFill
+                ? BarAreaData(
+                    show: true,
+                    gradient: LinearGradient(
+                      colors: [
+                        _gradientLowColor.withValues(alpha: 0.3),
+                        _gradientHighColor.withValues(alpha: 0.1),
+                      ],
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                    ),
+                  )
+                : BarAreaData(show: false),
           ),
         ],
-        minY: data.reduce((a, b) => a < b ? a : b) - 5,
-        maxY: data.reduce((a, b) => a > b ? a : b) + 5,
+        minY: minY - 5,
+        maxY: maxY + 5,
       ),
     );
   }

@@ -4183,18 +4183,26 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       // Update gauge color
       modified = element.copyWith(gaugeColor: colorHex);
     } else if (element.type == ElementType.chart) {
-      // Determine the gradient key based on chart binding
-      // Charts can use: chartBindingPath, chartBindingPaths (merged), or binding.path
-      String gradientKey = '_merged';
-      if (element.chartBindingPath != null) {
-        gradientKey = element.chartBindingPath!;
-      } else if (element.binding?.path != null) {
-        // Non-merged charts use the binding path
-        gradientKey = element.binding!.path;
-      } else if (element.chartBindingPaths != null &&
-          element.chartBindingPaths!.isNotEmpty) {
-        // Merged charts with multiple paths
+      // CRITICAL: Determine gradient key based on WIZARD STATE (_mergeCharts),
+      // not the element's existing properties. This ensures the UI state
+      // (which uses _mergeCharts to determine keys) matches what we look up.
+      String gradientKey;
+      if (_mergeCharts) {
+        // Merged mode: always use '_merged' key
         gradientKey = '_merged';
+      } else {
+        // Non-merged mode: use the binding path from the element
+        if (element.chartBindingPath != null) {
+          gradientKey = element.chartBindingPath!;
+        } else if (element.binding?.path != null) {
+          gradientKey = element.binding!.path;
+        } else if (element.chartBindingPaths != null &&
+            element.chartBindingPaths!.isNotEmpty) {
+          // Fallback to first path if available
+          gradientKey = element.chartBindingPaths!.first;
+        } else {
+          gradientKey = '';
+        }
       }
       debugPrint('[APPLY] Chart: gradientKey=$gradientKey');
       debugPrint('[APPLY] Chart: chartBindingPath=${element.chartBindingPath}');
@@ -4306,19 +4314,31 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   /// Build schema for LIVE PREVIEW
-  /// For edited widgets: preserves structure but applies appearance changes
+  /// For graph widgets: ALWAYS rebuild from current state to handle merge/unmerge
+  /// For other edited widgets: preserves structure but applies appearance changes
   /// For new widgets: builds from current wizard state
   WidgetSchema _buildPreviewSchema() {
     debugPrint('[SCHEMA] _buildPreviewSchema called');
     debugPrint(
       '[SCHEMA] widget.initialSchema is ${widget.initialSchema == null ? "NULL (new widget)" : "PRESENT (editing)"}',
     );
+    debugPrint('[SCHEMA] _selectedTemplate=${_selectedTemplate?.id}');
 
     final name = _nameController.text.trim().isEmpty
         ? 'My Widget'
         : _nameController.text.trim();
 
-    // EDITED WIDGETS: Preserve structure but apply appearance changes
+    // GRAPH WIDGETS: Always rebuild from current state to properly handle
+    // merge/unmerge, chart type changes, and other structural modifications
+    final isGraphTemplate = _selectedTemplate?.id == 'graph';
+    if (isGraphTemplate) {
+      debugPrint(
+        '[SCHEMA] Graph template detected - ALWAYS rebuilding from current state',
+      );
+      return _buildSchemaFromCurrentState(name);
+    }
+
+    // EDITED WIDGETS (non-graph): Preserve structure but apply appearance changes
     if (widget.initialSchema != null) {
       debugPrint(
         '[SCHEMA] Using EDITED path - preserving structure with appearance updates',
@@ -4344,14 +4364,25 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   /// Build schema for FINAL SAVE
-  /// For edited widgets: preserves structure but applies appearance changes
+  /// For graph widgets: ALWAYS rebuild from current state to handle merge/unmerge
+  /// For other edited widgets: preserves structure but applies appearance changes
   /// For new widgets: builds from current wizard state
   WidgetSchema _buildFinalSchema() {
     final name = _nameController.text.trim().isEmpty
         ? 'My Widget'
         : _nameController.text.trim();
 
-    // EDITED WIDGETS: Preserve structure but apply appearance changes
+    // GRAPH WIDGETS: Always rebuild from current state to properly handle
+    // merge/unmerge, chart type changes, and other structural modifications
+    final isGraphTemplate = _selectedTemplate?.id == 'graph';
+    if (isGraphTemplate) {
+      debugPrint(
+        '[SCHEMA] Graph template - ALWAYS rebuilding from current state for save',
+      );
+      return _buildSchemaFromCurrentState(name);
+    }
+
+    // EDITED WIDGETS (non-graph): Preserve structure but apply appearance changes
     if (widget.initialSchema != null) {
       // Apply current appearance settings to the original structure
       final modifiedRoot = _applyAppearanceToElement(
