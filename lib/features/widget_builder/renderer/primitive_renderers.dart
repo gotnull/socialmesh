@@ -517,8 +517,22 @@ class _ChartRendererState extends State<ChartRenderer> {
       widget.element.chartNormalization ?? ChartNormalization.raw;
   ChartBaseline get _baseline =>
       widget.element.chartBaseline ?? ChartBaseline.none;
-  bool get _showMinMax => widget.element.chartShowMinMax ?? false;
-  bool get _gradientFill => widget.element.chartGradientFill ?? false;
+  bool get _showMinMax {
+    final value = widget.element.chartShowMinMax ?? false;
+    debugPrint(
+      '[RENDERER] _showMinMax getter: raw=${widget.element.chartShowMinMax}, result=$value',
+    );
+    return value;
+  }
+
+  bool get _gradientFill {
+    final value = widget.element.chartGradientFill ?? false;
+    debugPrint(
+      '[RENDERER] _gradientFill getter: raw=${widget.element.chartGradientFill}, result=$value',
+    );
+    return value;
+  }
+
   Color get _gradientLowColor => widget.element.chartGradientLowColor != null
       ? StyleSchema.parseColor(widget.element.chartGradientLowColor!)
       : const Color(0xFF4CAF50);
@@ -534,14 +548,31 @@ class _ChartRendererState extends State<ChartRenderer> {
       widget.element.chartThresholdLabels ?? [];
 
   // Check if this is a multi-line chart
-  bool get _isMultiLine =>
-      widget.element.chartType == ChartType.multiLine &&
-      widget.element.chartBindingPaths != null &&
-      widget.element.chartBindingPaths!.isNotEmpty;
+  bool get _isMultiLine {
+    final value =
+        widget.element.chartType == ChartType.multiLine &&
+        widget.element.chartBindingPaths != null &&
+        widget.element.chartBindingPaths!.isNotEmpty;
+    debugPrint(
+      '[RENDERER] _isMultiLine: chartType=${widget.element.chartType}, paths=${widget.element.chartBindingPaths}, result=$value',
+    );
+    return value;
+  }
 
   @override
   void initState() {
     super.initState();
+    debugPrint('[RENDERER] initState: chartType=${widget.element.chartType}');
+    debugPrint(
+      '[RENDERER] initState: chartLegendColors=${widget.element.chartLegendColors}',
+    );
+    debugPrint(
+      '[RENDERER] initState: chartShowMinMax=${widget.element.chartShowMinMax}',
+    );
+    debugPrint(
+      '[RENDERER] initState: chartGradientFill=${widget.element.chartGradientFill}',
+    );
+
     // Initialize multi-line histories
     if (_isMultiLine) {
       for (final path in widget.element.chartBindingPaths!) {
@@ -803,6 +834,8 @@ class _ChartRendererState extends State<ChartRenderer> {
   Widget _buildMultiLineChart() {
     final paths = widget.element.chartBindingPaths!;
     final colors = widget.element.chartLegendColors ?? [];
+    debugPrint('[RENDERER] _buildMultiLineChart: paths=$paths');
+    debugPrint('[RENDERER] _buildMultiLineChart: colors=$colors');
 
     // Collect raw data for each series
     final seriesData = <String, List<double>>{};
@@ -848,6 +881,9 @@ class _ChartRendererState extends State<ChartRenderer> {
       Color lineColor;
       if (i < colors.length) {
         lineColor = StyleSchema.parseColor(colors[i]);
+        debugPrint(
+          '[RENDERER] Series $i ($path): using provided color ${colors[i]} -> $lineColor',
+        );
       } else {
         final defaultColors = [
           widget.accentColor,

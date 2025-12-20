@@ -862,6 +862,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // CRITICAL: Always rebuild from current state for live preview
     // This ensures layout, colors, labels, gauge count all update reactively
     // NO CACHING - NO CONDITIONAL PATHS - ALWAYS REBUILD FROM CONFIG STATE
+    debugPrint('[PREVIEW] === Building Live Preview ===');
+    debugPrint('[PREVIEW] _mergeCharts=$_mergeCharts');
+    debugPrint('[PREVIEW] _showMinMax=$_showMinMax');
+    debugPrint('[PREVIEW] _mergeColors=$_mergeColors');
+    debugPrint('[PREVIEW] _seriesGradients=$_seriesGradients');
+    debugPrint('[PREVIEW] _selectedBindings=$_selectedBindings');
+
     final previewSchema = _buildPreviewSchema();
 
     // Generate a unique key based on ALL configuration state to force Flutter
@@ -880,6 +887,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               '${e.key}:${e.value.map((t) => '${t.value}:${t.color.toARGB32()}').join(";")}',
         )
         .join('|');
+    // Include merge colors in the key!
+    final mergeColorsKey = _mergeColors.entries
+        .map((e) => '${e.key}:${e.value.toARGB32()}')
+        .join('|');
     final previewKey = ValueKey(
       'preview_'
       '${_selectedTemplate?.id ?? "none"}_'
@@ -895,8 +906,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       // Advanced chart options
       '${_mergeMode.name}_${_normalization.name}_${_baseline.name}_${_showMinMax}_'
       // Per-series gradients and thresholds
-      '${gradientKey}_$thresholdKey',
+      '${gradientKey}_$thresholdKey'
+      // Series colors
+      '_$mergeColorsKey',
     );
+    debugPrint('[PREVIEW] previewKey=$previewKey');
 
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
@@ -2315,10 +2329,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   void _toggleMergeCharts() {
+    debugPrint(
+      '[MERGE] _toggleMergeCharts called, current _mergeCharts=$_mergeCharts',
+    );
     _setMergeCharts(!_mergeCharts);
   }
 
   void _setMergeCharts(bool value) {
+    debugPrint(
+      '[MERGE] _setMergeCharts($value), current _mergeCharts=$_mergeCharts',
+    );
     if (value && !_mergeCharts) {
       // Check if there are different chart types selected
       final chartTypes = _bindingChartTypes.values.toSet();
@@ -2332,10 +2352,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       // Migrate thresholds and gradients from merged to per-series
       _migrateFromMerged();
     }
+    debugPrint('[MERGE] Setting _mergeCharts to $value');
     setState(() => _mergeCharts = value);
+    debugPrint('[MERGE] After setState, _mergeCharts=$_mergeCharts');
   }
 
   void _migrateToMerged() {
+    debugPrint('[MERGE] _migrateToMerged called');
     // Migrate thresholds: collect all thresholds into _merged key
     final allThresholds = <_ThresholdLine>[];
     for (final bindingPath in _selectedBindings) {
@@ -2361,9 +2384,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     if (firstEnabled != null) {
       _seriesGradients['_merged'] = firstEnabled;
     }
+    debugPrint('[MERGE] After migration: _seriesGradients=$_seriesGradients');
   }
 
   void _migrateFromMerged() {
+    debugPrint('[MERGE] _migrateFromMerged called');
     // Migrate thresholds: move _merged thresholds to first series
     final mergedThresholds = _seriesThresholds['_merged'] ?? [];
     _seriesThresholds.remove('_merged');
@@ -2379,6 +2404,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         _selectedBindings.isNotEmpty) {
       _seriesGradients[_selectedBindings.first] = mergedGradient;
     }
+    debugPrint('[MERGE] After migration: _seriesGradients=$_seriesGradients');
   }
 
   void _showMergeConfirmationDialog() {
@@ -2505,9 +2531,17 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                       final isSelected =
                           currentColor.toARGB32() == color.toARGB32();
                       return GestureDetector(
-                        onTap: () => setState(() {
-                          _mergeColors[bindingPath] = color;
-                        }),
+                        onTap: () {
+                          debugPrint(
+                            '[COLOR] Setting color for $bindingPath to ${color.toARGB32().toRadixString(16)}',
+                          );
+                          setState(() {
+                            _mergeColors[bindingPath] = color;
+                          });
+                          debugPrint(
+                            '[COLOR] _mergeColors after update: $_mergeColors',
+                          );
+                        },
                         child: Container(
                           width: 24,
                           height: 24,
@@ -2769,7 +2803,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             'Show Min/Max',
             'Display markers at highest and lowest points',
             _showMinMax,
-            (value) => setState(() => _showMinMax = value),
+            (value) {
+              debugPrint(
+                '[MINMAX] Toggle Show Min/Max: current=$_showMinMax, new=$value',
+              );
+              setState(() => _showMinMax = value);
+              debugPrint('[MINMAX] After setState: _showMinMax=$_showMinMax');
+            },
           ),
         ],
 
@@ -4131,6 +4171,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   /// Apply wizard appearance settings to an existing element tree
   /// This preserves the structure but updates colors, chart settings, etc.
   ElementSchema _applyAppearanceToElement(ElementSchema element) {
+    debugPrint('[APPLY] _applyAppearanceToElement type=${element.type}');
     final colorHex =
         '#${_accentColor.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
 
@@ -4138,6 +4179,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     ElementSchema modified = element;
 
     if (element.type == ElementType.gauge) {
+      debugPrint('[APPLY] Gauge: setting color=$colorHex');
       // Update gauge color
       modified = element.copyWith(gaugeColor: colorHex);
     } else if (element.type == ElementType.chart) {
@@ -4154,20 +4196,53 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         // Merged charts with multiple paths
         gradientKey = '_merged';
       }
+      debugPrint('[APPLY] Chart: gradientKey=$gradientKey');
+      debugPrint('[APPLY] Chart: chartBindingPath=${element.chartBindingPath}');
+      debugPrint('[APPLY] Chart: binding.path=${element.binding?.path}');
+      debugPrint(
+        '[APPLY] Chart: chartBindingPaths=${element.chartBindingPaths}',
+      );
+      debugPrint('[APPLY] Chart: _showMinMax=$_showMinMax');
+      debugPrint('[APPLY] Chart: _mergeCharts=$_mergeCharts');
 
       // Get gradient settings for this chart
       final gradient = _seriesGradients[gradientKey] ?? _GradientConfig();
+      debugPrint('[APPLY] Chart: gradient.enabled=${gradient.enabled}');
 
       // Get threshold settings for this chart
       final thresholds = _seriesThresholds[gradientKey] ?? [];
 
       // Update ALL chart settings including gradient and advanced options
+      // CRITICAL: Update chartBindingPaths with user's current selections
+      final selectedBindingsList = _selectedBindings.toList();
+      final newChartType = selectedBindingsList.length > 1 && _mergeCharts
+          ? ChartType.multiLine
+          : _chartType;
+      debugPrint('[APPLY] Chart: Setting chartType=$newChartType');
+      debugPrint('[APPLY] Chart: Setting chartShowMinMax=$_showMinMax');
+      debugPrint(
+        '[APPLY] Chart: Setting chartGradientFill=${gradient.enabled}',
+      );
+      debugPrint(
+        '[APPLY] Chart: Setting chartBindingPaths=$selectedBindingsList',
+      );
+
+      // CRITICAL: Build chartLegendColors from _mergeColors for series colors
+      final legendColors = <String>[];
+      for (final path in selectedBindingsList) {
+        final color = _mergeColors[path];
+        if (color != null) {
+          legendColors.add(_colorToHex(color));
+        } else {
+          // Use default color based on index
+          final index = selectedBindingsList.indexOf(path);
+          legendColors.add(_colorToHex(_getDefaultColorForIndex(index)));
+        }
+      }
+      debugPrint('[APPLY] Chart: Setting chartLegendColors=$legendColors');
+
       modified = element.copyWith(
-        chartType:
-            element.chartBindingPaths != null &&
-                element.chartBindingPaths!.length > 1
-            ? ChartType.multiLine
-            : _chartType,
+        chartType: newChartType,
         chartShowGrid: _showGrid,
         chartShowDots: _showDots,
         chartCurved: _smoothCurve,
@@ -4184,6 +4259,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             .map((t) => _colorToHex(t.color))
             .toList(),
         chartThresholdLabels: thresholds.map((t) => t.label).toList(),
+        // CRITICAL: Update bindings and colors with user selections
+        chartBindingPaths: selectedBindingsList,
+        chartLegendColors: legendColors,
+      );
+      debugPrint(
+        '[APPLY] Chart: modified.chartShowMinMax=${modified.chartShowMinMax}',
       );
     } else if (element.type == ElementType.text &&
         element.style.textColor != null) {
@@ -4196,9 +4277,26 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       }
     }
 
-    // Recursively apply to children
+    // Recursively apply to children, filtering out label elements if needed
     if (element.children.isNotEmpty) {
-      final updatedChildren = element.children
+      List<ElementSchema> filteredChildren = element.children;
+
+      // If _showLabels is false, filter out label-style text elements
+      // Labels are text elements with static text (no binding) - they're descriptors
+      if (!_showLabels) {
+        filteredChildren = element.children.where((child) {
+          // Keep the element unless it's a label text element
+          if (child.type == ElementType.text &&
+              child.text != null &&
+              child.binding == null) {
+            // This is a static label text element - filter it out
+            return false;
+          }
+          return true;
+        }).toList();
+      }
+
+      final updatedChildren = filteredChildren
           .map(_applyAppearanceToElement)
           .toList();
       modified = modified.copyWith(children: updatedChildren);
@@ -4211,12 +4309,20 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   /// For edited widgets: preserves structure but applies appearance changes
   /// For new widgets: builds from current wizard state
   WidgetSchema _buildPreviewSchema() {
+    debugPrint('[SCHEMA] _buildPreviewSchema called');
+    debugPrint(
+      '[SCHEMA] widget.initialSchema is ${widget.initialSchema == null ? "NULL (new widget)" : "PRESENT (editing)"}',
+    );
+
     final name = _nameController.text.trim().isEmpty
         ? 'My Widget'
         : _nameController.text.trim();
 
     // EDITED WIDGETS: Preserve structure but apply appearance changes
     if (widget.initialSchema != null) {
+      debugPrint(
+        '[SCHEMA] Using EDITED path - preserving structure with appearance updates',
+      );
       // Apply current appearance settings to the original structure
       final modifiedRoot = _applyAppearanceToElement(
         widget.initialSchema!.root,
@@ -4233,6 +4339,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     }
 
     // NEW WIDGETS: Build from current state
+    debugPrint('[SCHEMA] Using NEW WIDGET path - building from current state');
     return _buildSchemaFromCurrentState(name);
   }
 
@@ -4519,6 +4626,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   /// Graph: Line, area, bar, or sparkline charts
   List<ElementSchema> _buildGraphElements(String name) {
+    debugPrint('[GRAPH] === _buildGraphElements ===');
+    debugPrint('[GRAPH] _mergeCharts=$_mergeCharts');
+    debugPrint('[GRAPH] _showMinMax=$_showMinMax');
+    debugPrint('[GRAPH] _selectedBindings=$_selectedBindings');
+    debugPrint('[GRAPH] _mergeColors=$_mergeColors');
+    debugPrint('[GRAPH] _seriesGradients=$_seriesGradients');
+
     if (_selectedBindings.isEmpty) {
       return [
         ElementSchema(
@@ -4548,6 +4662,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     // Merge mode: single chart with multiple data series
     if (_mergeCharts && _selectedBindings.length > 1) {
+      debugPrint('[GRAPH] Building MERGED chart');
       // Collect labels and colors for legend
       final legendLabels = <String>[];
       final legendColors = <String>[];
@@ -4570,8 +4685,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         final color =
             _mergeColors[bindingPath] ??
             defaultChartColors[i % defaultChartColors.length];
+        debugPrint(
+          '[GRAPH] Merged binding $bindingPath color=${color.toARGB32().toRadixString(16)}',
+        );
         legendColors.add(_colorToHex(color));
       }
+      debugPrint('[GRAPH] legendColors=$legendColors');
 
       // Legend row at top
       if (_showLabels) {
@@ -4627,6 +4746,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       // For merged charts, use the "_merged" key for thresholds and gradient
       final mergedThresholds = _seriesThresholds['_merged'] ?? [];
       final mergedGradient = _seriesGradients['_merged'] ?? _GradientConfig();
+      debugPrint('[GRAPH] Creating merged chart element');
+      debugPrint('[GRAPH] chartShowMinMax=$_showMinMax');
+      debugPrint('[GRAPH] chartLegendColors=$legendColors');
+      debugPrint('[GRAPH] mergedGradient.enabled=${mergedGradient.enabled}');
       children.add(
         ElementSchema(
           type: ElementType.chart,
@@ -4658,8 +4781,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         ),
       );
     } else {
+      debugPrint('[GRAPH] Building NON-MERGED charts (separate per binding)');
       // Non-merged mode: separate chart per binding
       for (final bindingPath in _selectedBindings) {
+        debugPrint('[GRAPH] Building chart for binding: $bindingPath');
         final binding = BindingRegistry.bindings.firstWhere(
           (b) => b.path == bindingPath,
           orElse: () => BindingDefinition(
@@ -4678,6 +4803,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         if (bindingChartType == ChartType.line && _fillArea) {
           bindingChartType = ChartType.area;
         }
+        debugPrint('[GRAPH] bindingChartType=$bindingChartType');
 
         // Get color for this specific binding (series colors)
         final bindingIndex = _selectedBindings.toList().indexOf(bindingPath);
@@ -4749,6 +4875,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         final bindingThresholds = _seriesThresholds[bindingPath] ?? [];
         final bindingGradient =
             _seriesGradients[bindingPath] ?? _GradientConfig();
+        debugPrint('[GRAPH] Non-merged chart for $bindingPath:');
+        debugPrint('[GRAPH]   chartShowMinMax=$_showMinMax');
+        debugPrint(
+          '[GRAPH]   bindingGradient.enabled=${bindingGradient.enabled}',
+        );
+        debugPrint(
+          '[GRAPH]   bindingColor=${bindingColor.toARGB32().toRadixString(16)}',
+        );
         children.add(
           ElementSchema(
             type: ElementType.chart,
