@@ -69,9 +69,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   // Existing schema ID for edits
   String? _existingId;
 
-  // Original schema elements indexed by binding path (for preserving custom styling when editing)
-  final Map<String, ElementSchema> _originalElements = {};
-
   // Step 1: Template selection
   _WidgetTemplate? _selectedTemplate;
 
@@ -165,10 +162,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     _existingId = schema.id;
     _nameController.text = schema.name;
 
-    // Store original elements indexed by binding path for preserving custom styling
-    _indexOriginalElements(schema.root);
-    debugPrint('Wizard: Indexed ${_originalElements.length} original elements');
-
     // Extract bindings FIRST (needed for template detection)
     _extractBindingsFromElement(schema.root);
     debugPrint('Wizard: Extracted bindings: $_selectedBindings');
@@ -211,91 +204,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // Detect layout style from root element structure
     _detectLayoutStyle(schema.root);
     debugPrint('Wizard: Layout style: $_layoutStyle');
-  }
-
-  /// Index original elements by binding path for preserving custom styling
-  /// We want to store the CONTAINER element (column/row) that wraps a bound element,
-  /// not the leaf element itself. This preserves labels and styling.
-  void _indexOriginalElements(ElementSchema element) {
-    // FIRST: Recurse into children (process bottom-up so parents can override)
-    for (final child in element.children) {
-      _indexOriginalElements(child);
-    }
-
-    // Handle multiLine charts with multiple binding paths (merged charts)
-    if (element.type == ElementType.chart &&
-        element.chartBindingPaths != null &&
-        element.chartBindingPaths!.length > 1) {
-      // Store under a special key combining all paths
-      final mergedKey = '_merged:${element.chartBindingPaths!.join(',')}';
-      _originalElements[mergedKey] = element;
-      // Also store under each individual path for fallback
-      for (final path in element.chartBindingPaths!) {
-        _originalElements[path] = element;
-      }
-    }
-
-    // Handle columns containing gauge/chart (the column includes label + element)
-    if (element.type == ElementType.column && element.children.length >= 2) {
-      for (final child in element.children) {
-        final childPath =
-            child.binding?.path ??
-            child.chartBindingPath ??
-            (child.chartBindingPaths?.isNotEmpty == true
-                ? child.chartBindingPaths!.first
-                : null);
-        if (childPath != null &&
-            (child.type == ElementType.gauge ||
-                child.type == ElementType.chart)) {
-          // Store the whole column (includes label) keyed by the binding path
-          // This OVERWRITES any leaf element stored earlier
-          _originalElements[childPath] = element;
-        }
-      }
-    }
-
-    // Handle rows containing label + value (info card pattern)
-    if (element.type == ElementType.row && element.children.length >= 2) {
-      // Check if any child has a binding (could be first or last)
-      for (final child in element.children) {
-        final childPath = child.binding?.path;
-        if (childPath != null && child.type == ElementType.text) {
-          // Store the whole row (includes label) keyed by the binding path
-          _originalElements[childPath] = element;
-        }
-      }
-    }
-
-    // Handle rows containing environment/location style (icon + label + value)
-    if (element.type == ElementType.row) {
-      // Look for nested rows or text with bindings
-      for (final child in element.children) {
-        if (child.type == ElementType.text && child.binding != null) {
-          _originalElements[child.binding!.path] = element;
-        }
-      }
-    }
-
-    // Single chart elements (not in a column) - store directly
-    if (element.type == ElementType.chart) {
-      final chartPath =
-          element.chartBindingPath ??
-          (element.chartBindingPaths?.isNotEmpty == true
-              ? element.chartBindingPaths!.first
-              : null) ??
-          element.binding?.path;
-      if (chartPath != null && !_originalElements.containsKey(chartPath)) {
-        _originalElements[chartPath] = element;
-      }
-    }
-
-    // Single gauge elements (not in a column) - store directly
-    if (element.type == ElementType.gauge && element.binding != null) {
-      final gaugePath = element.binding!.path;
-      if (!_originalElements.containsKey(gaugePath)) {
-        _originalElements[gaugePath] = element;
-      }
-    }
   }
 
   /// Detect template type from element structure
@@ -4290,15 +4198,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     final gaugeColumns = <ElementSchema>[];
 
     for (final bindingPath in _selectedBindings) {
-      // Check if we have an original element for this binding (editing mode)
-      final originalElement = _originalElements[bindingPath];
-      if (originalElement != null) {
-        // Use the original element's styling (preserves custom labels, colors, etc.)
-        gaugeColumns.add(originalElement);
-        continue;
-      }
-
-      // Otherwise, build a new element from registry
+      // Build element from registry
       final binding = BindingRegistry.bindings.firstWhere(
         (b) => b.path == bindingPath,
         orElse: () => BindingDefinition(
@@ -4686,13 +4586,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     // Info rows with subtle styling
     for (final bindingPath in _selectedBindings) {
-      // Check if we have an original element for this binding (editing mode)
-      final originalElement = _originalElements[bindingPath];
-      if (originalElement != null) {
-        children.add(originalElement);
-        continue;
-      }
-
       final binding = _getBinding(bindingPath);
       children.add(
         ElementSchema(
@@ -4751,13 +4644,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     // Coordinate-style display
     for (final bindingPath in _selectedBindings) {
-      // Check if we have an original element for this binding (editing mode)
-      final originalElement = _originalElements[bindingPath];
-      if (originalElement != null) {
-        children.add(originalElement);
-        continue;
-      }
-
       final binding = _getBinding(bindingPath);
       final isCoord =
           bindingPath.contains('latitude') || bindingPath.contains('longitude');
@@ -4833,13 +4719,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     // Environment readings with appropriate icons
     for (final bindingPath in _selectedBindings) {
-      // Check if we have an original element for this binding (editing mode)
-      final originalElement = _originalElements[bindingPath];
-      if (originalElement != null) {
-        children.add(originalElement);
-        continue;
-      }
-
       final binding = _getBinding(bindingPath);
       final iconName = _getEnvironmentIcon(bindingPath);
       final valueColor = _getEnvironmentColor(bindingPath);
@@ -4916,13 +4795,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     // Status rows with progress bars for numeric values
     for (final bindingPath in _selectedBindings) {
-      // Check if we have an original element for this binding (editing mode)
-      final originalElement = _originalElements[bindingPath];
-      if (originalElement != null) {
-        children.add(originalElement);
-        continue;
-      }
-
       final binding = _getBinding(bindingPath);
       final isNumeric = binding.valueType == int || binding.valueType == double;
 
@@ -5000,13 +4872,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     }
 
     for (final bindingPath in _selectedBindings) {
-      // Check if we have an original element for this binding (editing mode)
-      final originalElement = _originalElements[bindingPath];
-      if (originalElement != null) {
-        children.add(originalElement);
-        continue;
-      }
-
       final binding = _getBinding(bindingPath);
 
       if (isCompactLayout) {
