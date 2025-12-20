@@ -613,6 +613,56 @@ class _ChartRendererState extends State<ChartRenderer> {
   }
 
   @override
+  void didUpdateWidget(ChartRenderer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Check if chart configuration changed significantly
+    final oldPaths = oldWidget.element.chartBindingPaths;
+    final newPaths = widget.element.chartBindingPaths;
+    final oldType = oldWidget.element.chartType;
+    final newType = widget.element.chartType;
+
+    // Detect if we switched to/from multiLine or paths changed
+    final pathsChanged = !_listEquals(oldPaths, newPaths);
+    final typeChanged = oldType != newType;
+
+    if (pathsChanged || typeChanged) {
+      debugPrint(
+        '[RENDERER] didUpdateWidget: paths or type changed, reinitializing',
+      );
+      debugPrint('[RENDERER] oldPaths=$oldPaths, newPaths=$newPaths');
+      debugPrint('[RENDERER] oldType=$oldType, newType=$newType');
+
+      // Clear old data
+      _multiHistory.clear();
+      _history.clear();
+
+      // Re-initialize for new configuration
+      if (_isMultiLine) {
+        for (final path in widget.element.chartBindingPaths!) {
+          _multiHistory[path] = [];
+        }
+      }
+
+      // Re-generate preview data if in preview mode
+      if (widget.isPreview) {
+        _initPreviewData();
+      }
+    }
+  }
+
+  /// Helper to compare two lists for equality
+  bool _listEquals<T>(List<T>? a, List<T>? b) {
+    if (a == null && b == null) return true;
+    if (a == null || b == null) return false;
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  @override
   void dispose() {
     _updateTimer?.cancel();
     super.dispose();
