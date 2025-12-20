@@ -867,6 +867,19 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // Generate a unique key based on ALL configuration state to force Flutter
     // to rebuild the WidgetRenderer when any config changes.
     // This ensures edited widgets get the same live preview behavior as new widgets.
+    // CRITICAL: Include ALL appearance settings that affect the chart!
+    final gradientKey = _seriesGradients.entries
+        .map(
+          (e) =>
+              '${e.key}:${e.value.enabled}:${e.value.lowColor.toARGB32()}:${e.value.highColor.toARGB32()}',
+        )
+        .join('|');
+    final thresholdKey = _seriesThresholds.entries
+        .map(
+          (e) =>
+              '${e.key}:${e.value.map((t) => '${t.value}:${t.color.toARGB32()}').join(";")}',
+        )
+        .join('|');
     final previewKey = ValueKey(
       'preview_'
       '${_selectedTemplate?.id ?? "none"}_'
@@ -876,7 +889,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       '${_showLabels}_'
       '${_chartType.name}_'
       '${_mergeCharts}_'
-      '${_selectedActions.map((a) => a.name).join(",")}',
+      '${_selectedActions.map((a) => a.name).join(",")}_'
+      // Chart appearance settings
+      '${_showGrid}_${_showDots}_${_smoothCurve}_${_fillArea}_${_dataPoints}_'
+      // Advanced chart options
+      '${_mergeMode.name}_${_normalization.name}_${_baseline.name}_${_showMinMax}_'
+      // Per-series gradients and thresholds
+      '${gradientKey}_$thresholdKey',
     );
 
     final nodes = ref.watch(nodesProvider);
@@ -4122,13 +4141,49 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       // Update gauge color
       modified = element.copyWith(gaugeColor: colorHex);
     } else if (element.type == ElementType.chart) {
-      // Update chart settings
+      // Determine the gradient key based on chart binding
+      // Charts can use: chartBindingPath, chartBindingPaths (merged), or binding.path
+      String gradientKey = '_merged';
+      if (element.chartBindingPath != null) {
+        gradientKey = element.chartBindingPath!;
+      } else if (element.binding?.path != null) {
+        // Non-merged charts use the binding path
+        gradientKey = element.binding!.path;
+      } else if (element.chartBindingPaths != null &&
+          element.chartBindingPaths!.isNotEmpty) {
+        // Merged charts with multiple paths
+        gradientKey = '_merged';
+      }
+
+      // Get gradient settings for this chart
+      final gradient = _seriesGradients[gradientKey] ?? _GradientConfig();
+
+      // Get threshold settings for this chart
+      final thresholds = _seriesThresholds[gradientKey] ?? [];
+
+      // Update ALL chart settings including gradient and advanced options
       modified = element.copyWith(
-        chartType: _chartType,
+        chartType:
+            element.chartBindingPaths != null &&
+                element.chartBindingPaths!.length > 1
+            ? ChartType.multiLine
+            : _chartType,
         chartShowGrid: _showGrid,
         chartShowDots: _showDots,
         chartCurved: _smoothCurve,
         chartMaxPoints: _dataPoints,
+        chartMergeMode: _mergeMode,
+        chartNormalization: _normalization,
+        chartBaseline: _baseline,
+        chartShowMinMax: _showMinMax,
+        chartGradientFill: gradient.enabled,
+        chartGradientLowColor: _colorToHex(gradient.lowColor),
+        chartGradientHighColor: _colorToHex(gradient.highColor),
+        chartThresholds: thresholds.map((t) => t.value).toList(),
+        chartThresholdColors: thresholds
+            .map((t) => _colorToHex(t.color))
+            .toList(),
+        chartThresholdLabels: thresholds.map((t) => t.label).toList(),
       );
     } else if (element.type == ElementType.text &&
         element.style.textColor != null) {
