@@ -1678,11 +1678,21 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     final validationError = _getValidationError();
     final isActionsTemplate = _selectedTemplate?.id == 'actions';
     final isGraphTemplate = _selectedTemplate?.id == 'graph';
-    // Hide accent color for graphs with multiple series - they have individual colors
-    // Also hide for merged graphs
+    final isGaugeTemplate = _selectedTemplate?.id == 'gauge';
+    final isEnvironmentTemplate = _selectedTemplate?.id == 'environment';
+    final isLocationTemplate = _selectedTemplate?.id == 'location';
+    // Hide accent color for:
+    // - Actions (they use their own colors)
+    // - Graphs with multiple series (they have individual colors)
+    // - Environment (uses semantic colors per reading type)
+    // - Location (uses its own fixed color scheme)
     final hasSeriesColors =
         isGraphTemplate && (_mergeCharts || _selectedBindings.length > 1);
-    final showAccentColor = !isActionsTemplate && !hasSeriesColors;
+    final showAccentColor =
+        !isActionsTemplate &&
+        !hasSeriesColors &&
+        !isEnvironmentTemplate &&
+        !isLocationTemplate;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -1711,8 +1721,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           _buildGraphStyleOptions(),
           const SizedBox(height: 24),
         ],
-        // Layout style (only for data widgets, not actions or graphs)
-        if (!isActionsTemplate && !isGraphTemplate) ...[
+        // Layout style (only for data widgets, not actions, graphs, or gauges)
+        // Gauge widgets don't need layout options as they have a fixed layout
+        if (!isActionsTemplate && !isGraphTemplate && !isGaugeTemplate) ...[
           Text(
             'Layout',
             style: TextStyle(
@@ -1728,6 +1739,15 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           _buildToggleOption(
             'Show Labels',
             'Display names next to values',
+            _showLabels,
+            (value) => setState(() => _showLabels = value),
+          ),
+        ],
+        // Show labels toggle for gauge widgets (separate from layout)
+        if (isGaugeTemplate) ...[
+          _buildToggleOption(
+            'Show Labels',
+            'Display value labels on gauges',
             _showLabels,
             (value) => setState(() => _showLabels = value),
           ),
@@ -2225,13 +2245,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           } else {
             // Global chart type (single binding or merged)
             _chartType = type.$1;
-            // Auto-adjust fill area based on chart type
-            if (type.$1 == ChartType.area) {
-              _fillArea = true;
-            } else if (type.$1 == ChartType.line) {
-              _fillArea = false;
-            }
           }
+          // Note: _fillArea is NOT used anymore - the chart type directly
+          // determines whether to show fill (Area) or not (Line).
+          // The conversion logic in _buildGraphElements was removed.
         }),
         borderRadius: BorderRadius.circular(12),
         child: Container(
@@ -4313,8 +4330,20 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return modified;
   }
 
+  /// Check if the template has been changed from the original
+  bool _hasTemplateChanged() {
+    if (widget.initialSchema == null) return false;
+    final originalTags = widget.initialSchema!.tags;
+    final currentTemplateId = _selectedTemplate?.id;
+    if (currentTemplateId == null) return false;
+    // Template changed if the current template id is not in original tags
+    return !originalTags.contains(currentTemplateId);
+  }
+
   /// Build schema for LIVE PREVIEW
-  /// For graph widgets: ALWAYS rebuild from current state to handle merge/unmerge
+  /// For template changes: ALWAYS rebuild to use new template structure
+  /// For new graph/actions widgets: rebuild from current state
+  /// For edited graph/actions widgets: preserve structure (marketplace/installed widgets)
   /// For other edited widgets: preserves structure but applies appearance changes
   /// For new widgets: builds from current wizard state
   WidgetSchema _buildPreviewSchema() {
@@ -4328,17 +4357,27 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         ? 'My Widget'
         : _nameController.text.trim();
 
-    // GRAPH WIDGETS: Always rebuild from current state to properly handle
-    // merge/unmerge, chart type changes, and other structural modifications
+    // TEMPLATE CHANGED: Rebuild from new template structure
+    // This must be checked FIRST as it applies to all templates
+    if (_hasTemplateChanged()) {
+      debugPrint('[SCHEMA] Template changed - rebuilding from new template');
+      return _buildSchemaFromCurrentState(name);
+    }
+
+    // GRAPH/ACTIONS WIDGETS (NEW only): Rebuild from current state to properly handle
+    // structural changes like merge/unmerge or action selection changes
+    // For EDITED graph/actions widgets: preserve original structure (marketplace/installed widgets)
     final isGraphTemplate = _selectedTemplate?.id == 'graph';
-    if (isGraphTemplate) {
+    final isActionsTemplate = _selectedTemplate?.id == 'actions';
+    final isNewWidget = widget.initialSchema == null;
+    if ((isGraphTemplate || isActionsTemplate) && isNewWidget) {
       debugPrint(
-        '[SCHEMA] Graph template detected - ALWAYS rebuilding from current state',
+        '[SCHEMA] NEW Graph/Actions template - rebuilding from current state',
       );
       return _buildSchemaFromCurrentState(name);
     }
 
-    // EDITED WIDGETS (non-graph): Preserve structure but apply appearance changes
+    // EDITED WIDGETS (non-graph, non-actions, same template): Preserve structure but apply appearance changes
     if (widget.initialSchema != null) {
       debugPrint(
         '[SCHEMA] Using EDITED path - preserving structure with appearance updates',
@@ -4364,7 +4403,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   /// Build schema for FINAL SAVE
-  /// For graph widgets: ALWAYS rebuild from current state to handle merge/unmerge
+  /// For template changes: ALWAYS rebuild to use new template structure
+  /// For new graph/actions widgets: rebuild from current state
+  /// For edited graph/actions widgets: preserve structure (marketplace/installed widgets)
   /// For other edited widgets: preserves structure but applies appearance changes
   /// For new widgets: builds from current wizard state
   WidgetSchema _buildFinalSchema() {
@@ -4372,17 +4413,29 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         ? 'My Widget'
         : _nameController.text.trim();
 
-    // GRAPH WIDGETS: Always rebuild from current state to properly handle
-    // merge/unmerge, chart type changes, and other structural modifications
-    final isGraphTemplate = _selectedTemplate?.id == 'graph';
-    if (isGraphTemplate) {
+    // TEMPLATE CHANGED: Rebuild from new template structure
+    // This must be checked FIRST as it applies to all templates
+    if (_hasTemplateChanged()) {
       debugPrint(
-        '[SCHEMA] Graph template - ALWAYS rebuilding from current state for save',
+        '[SCHEMA] Template changed - rebuilding from new template for save',
       );
       return _buildSchemaFromCurrentState(name);
     }
 
-    // EDITED WIDGETS (non-graph): Preserve structure but apply appearance changes
+    // GRAPH/ACTIONS WIDGETS (NEW only): Rebuild from current state to properly handle
+    // structural changes like merge/unmerge or action selection changes
+    // For EDITED graph/actions widgets: preserve original structure (marketplace/installed widgets)
+    final isGraphTemplate = _selectedTemplate?.id == 'graph';
+    final isActionsTemplate = _selectedTemplate?.id == 'actions';
+    final isNewWidget = widget.initialSchema == null;
+    if ((isGraphTemplate || isActionsTemplate) && isNewWidget) {
+      debugPrint(
+        '[SCHEMA] NEW Graph/Actions template - rebuilding from current state for save',
+      );
+      return _buildSchemaFromCurrentState(name);
+    }
+
+    // EDITED WIDGETS (same template): Preserve structure but apply appearance changes
     if (widget.initialSchema != null) {
       // Apply current appearance settings to the original structure
       final modifiedRoot = _applyAppearanceToElement(
@@ -4591,24 +4644,26 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             crossAxisAlignment: CrossAxisAlignmentOption.center,
           ),
           children: [
-            // Value text above gauge
-            ElementSchema(
-              type: ElementType.text,
-              binding: BindingSchema(
-                path: bindingPath,
-                format: binding.defaultFormat ?? '{value}',
-                defaultValue: '--',
+            // Value text above gauge (controlled by _showLabels)
+            if (_showLabels) ...[
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: binding.defaultFormat ?? '{value}',
+                  defaultValue: '--',
+                ),
+                style: StyleSchema(
+                  textColor: _colorToHex(_accentColor),
+                  fontSize: valueFontSize,
+                  fontWeight: 'w700',
+                ),
               ),
-              style: StyleSchema(
-                textColor: _colorToHex(_accentColor),
-                fontSize: valueFontSize,
-                fontWeight: 'w700',
+              ElementSchema(
+                type: ElementType.spacer,
+                style: const StyleSchema(height: 8),
               ),
-            ),
-            ElementSchema(
-              type: ElementType.spacer,
-              style: const StyleSchema(height: 8),
-            ),
+            ],
             // Radial gauge
             ElementSchema(
               type: ElementType.gauge,
@@ -4619,20 +4674,22 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               binding: BindingSchema(path: bindingPath),
               style: StyleSchema(width: gaugeSize, height: gaugeSize),
             ),
-            ElementSchema(
-              type: ElementType.spacer,
-              style: const StyleSchema(height: 8),
-            ),
-            // Label below gauge
-            ElementSchema(
-              type: ElementType.text,
-              text: binding.label,
-              style: StyleSchema(
-                textColor: _colorToHex(AppTheme.textSecondary),
-                fontSize: labelFontSize,
-                fontWeight: 'w500',
+            // Label below gauge (controlled by _showLabels)
+            if (_showLabels) ...[
+              ElementSchema(
+                type: ElementType.spacer,
+                style: const StyleSchema(height: 8),
               ),
-            ),
+              ElementSchema(
+                type: ElementType.text,
+                text: binding.label,
+                style: StyleSchema(
+                  textColor: _colorToHex(AppTheme.textSecondary),
+                  fontSize: labelFontSize,
+                  fontWeight: 'w500',
+                ),
+              ),
+            ],
           ],
         ),
       );
@@ -4828,12 +4885,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         );
 
         // Get chart type for this specific binding (or use global default)
-        ChartType bindingChartType =
+        final ChartType bindingChartType =
             _bindingChartTypes[bindingPath] ?? _chartType;
-        // Apply fill area logic for line charts
-        if (bindingChartType == ChartType.line && _fillArea) {
-          bindingChartType = ChartType.area;
-        }
+        // Note: Chart type is used directly - Area shows fill, Line does not
         debugPrint('[GRAPH] bindingChartType=$bindingChartType');
 
         // Get color for this specific binding (series colors)
@@ -5004,8 +5058,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 format: binding.defaultFormat,
                 defaultValue: '--',
               ),
-              style: const StyleSchema(
-                textColor: '#FFFFFF',
+              style: StyleSchema(
+                textColor: _colorToHex(_accentColor),
                 fontSize: 13,
                 fontWeight: 'w500',
               ),
