@@ -69,12 +69,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   // Existing schema ID for edits
   String? _existingId;
 
-  // Original schema for editing - used for preview until user makes changes
-  WidgetSchema? _originalSchema;
-
-  // Track original bindings to detect if user changed them
-  Set<String>? _originalBindings;
-
   // Step 1: Template selection
   _WidgetTemplate? _selectedTemplate;
 
@@ -165,17 +159,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       'Wizard: Schema root has ${schema.root.children.length} children',
     );
 
-    // Store original schema for preview - this is the EXACT widget the user sees
-    _originalSchema = schema;
     _existingId = schema.id;
     _nameController.text = schema.name;
 
     // Extract bindings FIRST (needed for template detection)
     _extractBindingsFromElement(schema.root);
     debugPrint('Wizard: Extracted bindings: $_selectedBindings');
-
-    // Store original bindings to detect changes later
-    _originalBindings = Set<String>.from(_selectedBindings);
 
     // Extract actions from schema
     _extractActionsFromElement(schema.root);
@@ -4092,33 +4081,20 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   //   3. Gauge count, layout, colors all update reactively
   // ============================================================
 
-  /// Check if user has changed bindings from original
-  bool get _bindingsChanged {
-    if (_originalBindings == null) return true;
-    return !_selectedBindings.containsAll(_originalBindings!) ||
-        !_originalBindings!.containsAll(_selectedBindings);
-  }
-
   /// Build schema for LIVE PREVIEW
-  /// When editing: preserve original structure, apply color changes
-  /// If bindings changed: rebuild with new bindings using template builder
-  /// When creating new: build from current wizard state
+  /// ALWAYS rebuilds from current wizard state to reflect all changes
+  /// Template detection from tags ensures correct visual style is maintained
   WidgetSchema _buildPreviewSchema() {
     final name = _nameController.text.trim().isEmpty
         ? 'My Widget'
         : _nameController.text.trim();
 
-    // When editing an existing widget
-    if (_originalSchema != null) {
-      // If user changed bindings, we need to rebuild with new structure
-      if (_bindingsChanged) {
-        return _buildSchemaFromCurrentState(name);
-      }
-      // Otherwise preserve original structure with color updates
-      return _buildUpdatedSchema(name);
-    }
-
-    // For new widgets, build from current wizard state
+    // ALWAYS build from current state - this ensures:
+    // - Color changes update immediately
+    // - Layout changes update immediately
+    // - Label visibility updates immediately
+    // - All appearance settings are reflected
+    // Template is detected from tags, so wizard-created widgets maintain their style
     return _buildSchemaFromCurrentState(name);
   }
 
@@ -4128,55 +4104,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         ? 'My Widget'
         : _nameController.text.trim();
 
-    // When editing
-    if (_originalSchema != null) {
-      // If bindings changed, rebuild
-      if (_bindingsChanged) {
-        return _buildSchemaFromCurrentState(name);
-      }
-      // Otherwise preserve original with updates
-      return _buildUpdatedSchema(name);
-    }
-
-    // For new widgets, build from current state
     return _buildSchemaFromCurrentState(name);
-  }
-
-  /// Update original schema with user's changes (colors, etc) while preserving structure
-  WidgetSchema _buildUpdatedSchema(String name) {
-    final original = _originalSchema!;
-
-    // Apply accent color changes to the original structure
-    final updatedRoot = _applyColorToElement(original.root, _accentColor);
-
-    return original.copyWith(name: name, root: updatedRoot);
-  }
-
-  /// Recursively apply accent color to elements in the schema
-  ElementSchema _applyColorToElement(ElementSchema element, Color accentColor) {
-    final colorHex = _colorToHex(accentColor);
-
-    // Update style colors for relevant elements
-    StyleSchema? updatedStyle;
-    String? updatedGaugeColor;
-
-    // Apply accent color to gauge elements
-    if (element.type == ElementType.gauge && element.gaugeColor != null) {
-      updatedGaugeColor = colorHex;
-    }
-
-    // Apply accent color to chart fill/line colors (handled by renderer)
-
-    // Recursively update children
-    final updatedChildren = element.children
-        .map((child) => _applyColorToElement(child, accentColor))
-        .toList();
-
-    return element.copyWith(
-      style: updatedStyle ?? element.style,
-      gaugeColor: updatedGaugeColor ?? element.gaugeColor,
-      children: updatedChildren,
-    );
   }
 
   /// UNIFIED SCHEMA BUILDER - the single source of truth for widget rendering
