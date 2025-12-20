@@ -201,7 +201,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         'Wizard: Template detected from tags: ${_selectedTemplate?.id}',
       );
     } else {
-      // If no template detected from tags, detect from element structure as fallback
+      // No template tag - try to detect from structure (for UI purposes only)
+      // Note: We DON'T rebuild edited widgets - we preserve the original structure
       _selectedTemplate = _detectTemplateFromStructure(schema.root);
       debugPrint(
         'Wizard: Template detected from structure: ${_selectedTemplate?.id}',
@@ -4096,36 +4097,116 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   // ============================================================
   // CRITICAL: There is ONE render function for widgets.
   // No "creation render" vs "edit render" - just renderWidget(config).
-  // Both preview AND final save use _buildSchemaFromCurrentState().
-  // This ensures:
-  //   1. Preview always reflects current config state
-  //   2. Edited widgets render identically to newly created widgets
-  //   3. Gauge count, layout, colors all update reactively
+  //
+  // FOR NEW WIDGETS (no initialSchema):
+  //   Both preview AND final save use _buildSchemaFromCurrentState().
+  //   This builds a fresh widget from the wizard's template system.
+  //
+  // FOR EDITED WIDGETS (has initialSchema):
+  //   Preview uses the ORIGINAL root structure from initialSchema.
+  //   The wizard's template builders don't match how widgets were
+  //   originally structured, so rebuilding would break them.
+  //   Only metadata (name) is updated on save.
   // ============================================================
 
+  /// Apply wizard appearance settings to an existing element tree
+  /// This preserves the structure but updates colors, chart settings, etc.
+  ElementSchema _applyAppearanceToElement(ElementSchema element) {
+    final colorHex =
+        '#${_accentColor.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
+
+    // Apply changes based on element type
+    ElementSchema modified = element;
+
+    if (element.type == ElementType.gauge) {
+      // Update gauge color
+      modified = element.copyWith(gaugeColor: colorHex);
+    } else if (element.type == ElementType.chart) {
+      // Update chart settings
+      modified = element.copyWith(
+        chartType: _chartType,
+        chartShowGrid: _showGrid,
+        chartShowDots: _showDots,
+        chartCurved: _smoothCurve,
+        chartMaxPoints: _dataPoints,
+      );
+    } else if (element.type == ElementType.text &&
+        element.style.textColor != null) {
+      // Update accent-colored text (but not all text - preserve labels)
+      final originalColor = _hexToColor(element.style.textColor);
+      if (originalColor != null && _isAccentColor(originalColor)) {
+        modified = element.copyWith(
+          style: element.style.copyWith(textColor: colorHex),
+        );
+      }
+    }
+
+    // Recursively apply to children
+    if (element.children.isNotEmpty) {
+      final updatedChildren = element.children
+          .map(_applyAppearanceToElement)
+          .toList();
+      modified = modified.copyWith(children: updatedChildren);
+    }
+
+    return modified;
+  }
+
   /// Build schema for LIVE PREVIEW
-  /// ALWAYS rebuilds from current wizard state to reflect all changes
-  /// Template detection from tags ensures correct visual style is maintained
+  /// For edited widgets: preserves structure but applies appearance changes
+  /// For new widgets: builds from current wizard state
   WidgetSchema _buildPreviewSchema() {
     final name = _nameController.text.trim().isEmpty
         ? 'My Widget'
         : _nameController.text.trim();
 
-    // ALWAYS build from current state - this ensures:
-    // - Color changes update immediately
-    // - Layout changes update immediately
-    // - Label visibility updates immediately
-    // - All appearance settings are reflected
-    // Template is detected from tags, so wizard-created widgets maintain their style
+    // EDITED WIDGETS: Preserve structure but apply appearance changes
+    if (widget.initialSchema != null) {
+      // Apply current appearance settings to the original structure
+      final modifiedRoot = _applyAppearanceToElement(
+        widget.initialSchema!.root,
+      );
+
+      return WidgetSchema(
+        id: _existingId ?? widget.initialSchema!.id,
+        name: name,
+        description: widget.initialSchema!.description,
+        size: widget.initialSchema!.size,
+        root: modifiedRoot, // Original structure with updated appearance
+        tags: widget.initialSchema!.tags,
+      );
+    }
+
+    // NEW WIDGETS: Build from current state
     return _buildSchemaFromCurrentState(name);
   }
 
   /// Build schema for FINAL SAVE
+  /// For edited widgets: preserves structure but applies appearance changes
+  /// For new widgets: builds from current wizard state
   WidgetSchema _buildFinalSchema() {
     final name = _nameController.text.trim().isEmpty
         ? 'My Widget'
         : _nameController.text.trim();
 
+    // EDITED WIDGETS: Preserve structure but apply appearance changes
+    if (widget.initialSchema != null) {
+      // Apply current appearance settings to the original structure
+      final modifiedRoot = _applyAppearanceToElement(
+        widget.initialSchema!.root,
+      );
+
+      return WidgetSchema(
+        id: _existingId ?? widget.initialSchema!.id,
+        name: name,
+        description: widget.initialSchema!.description,
+        size: widget.initialSchema!.size,
+        root: modifiedRoot, // Original structure with updated appearance
+        tags: widget.initialSchema!.tags,
+      );
+    }
+
+    // NEW WIDGETS: Build from current state
     return _buildSchemaFromCurrentState(name);
   }
 
