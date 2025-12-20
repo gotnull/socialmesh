@@ -308,21 +308,25 @@ class ProfileCloudSyncService {
 
   /// Merge local and cloud profiles with conflict resolution
   /// Strategy: Use cloud values for synced fields, preserve local customizations
+  /// For installedWidgetIds: use the newer profile's list (NOT union) to respect deletions
   UserProfile _mergeProfiles(UserProfile? local, UserProfile cloud) {
     debugPrint(
       '[ProfileSync] Merging profiles - local.isSynced: ${local?.isSynced}, cloud.avatarUrl: ${cloud.avatarUrl}',
     );
     if (local == null) return cloud;
 
-    // Merge installed widget IDs (union of both)
-    final mergedWidgetIds = <String>{
-      ...local.installedWidgetIds,
-      ...cloud.installedWidgetIds,
-    }.toList();
-
-    // If local has never been synced, prefer cloud
+    // If local has never been synced, prefer cloud but merge widget IDs (union)
+    // This preserves any local installations made before first sync
     if (!local.isSynced) {
       debugPrint('[ProfileSync] Local not synced, using cloud profile');
+      // Only use union for first-time sync to preserve local installations
+      final mergedWidgetIds = <String>{
+        ...local.installedWidgetIds,
+        ...cloud.installedWidgetIds,
+      }.toList();
+      debugPrint(
+        '[ProfileSync] First sync - merging widget IDs: local=${local.installedWidgetIds}, cloud=${cloud.installedWidgetIds}, merged=$mergedWidgetIds',
+      );
       return cloud.copyWith(
         // Preserve any local customizations that don't exist in cloud
         bio: cloud.bio ?? local.bio,
@@ -337,18 +341,20 @@ class ProfileCloudSyncService {
     }
 
     // Both synced - use most recently updated
+    // IMPORTANT: Use the newer profile's installedWidgetIds (NOT union) to respect deletions
     debugPrint(
       '[ProfileSync] Both synced - local.updatedAt: ${local.updatedAt}, cloud.updatedAt: ${cloud.updatedAt}',
     );
     if (local.updatedAt.isAfter(cloud.updatedAt)) {
-      debugPrint('[ProfileSync] Local is newer, using local');
-      return local.copyWith(
-        isSynced: true,
-        installedWidgetIds: mergedWidgetIds,
+      debugPrint(
+        '[ProfileSync] Local is newer, using local installedWidgetIds: ${local.installedWidgetIds}',
       );
+      return local.copyWith(isSynced: true);
     }
-    debugPrint('[ProfileSync] Cloud is newer, using cloud');
-    return cloud.copyWith(installedWidgetIds: mergedWidgetIds);
+    debugPrint(
+      '[ProfileSync] Cloud is newer, using cloud installedWidgetIds: ${cloud.installedWidgetIds}',
+    );
+    return cloud;
   }
 }
 

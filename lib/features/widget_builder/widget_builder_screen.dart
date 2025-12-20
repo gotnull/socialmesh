@@ -45,13 +45,29 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       final widgets = await _storageService.getWidgets();
       final installedIds = await _storageService.getInstalledMarketplaceIds();
 
+      debugPrint(
+        '[WidgetBuilder] Loaded ${widgets.length} widgets from local storage',
+      );
+      debugPrint(
+        '[WidgetBuilder] Local widget IDs: ${widgets.map((w) => w.id).toList()}',
+      );
+      debugPrint('[WidgetBuilder] Installed marketplace IDs: $installedIds');
+
       // Check profile for installed widgets that might need restoration
       final profile = ref.read(userProfileProvider).value;
+      debugPrint(
+        '[WidgetBuilder] Profile installedWidgetIds: ${profile?.installedWidgetIds ?? []}',
+      );
+
       if (profile != null && profile.installedWidgetIds.isNotEmpty) {
         final localWidgetIds = widgets.map((w) => w.id).toSet();
         final missingIds = profile.installedWidgetIds
             .where((id) => !localWidgetIds.contains(id))
             .toList();
+
+        debugPrint(
+          '[WidgetBuilder] Missing IDs (in profile but not local): $missingIds',
+        );
 
         if (missingIds.isNotEmpty) {
           debugPrint(
@@ -63,6 +79,9 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
           final updatedWidgets = await _storageService.getWidgets();
           final updatedInstalledIds = await _storageService
               .getInstalledMarketplaceIds();
+          debugPrint(
+            '[WidgetBuilder] After restore: ${updatedWidgets.length} widgets',
+          );
           setState(() {
             _myWidgets = updatedWidgets;
             _marketplaceIds = updatedInstalledIds.toSet();
