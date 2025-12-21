@@ -831,12 +831,17 @@ class _ChartRendererState extends State<ChartRenderer> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('[RENDERER] build() called');
+    debugPrint('[RENDERER] === ChartRenderer.build() START ===');
     debugPrint('[RENDERER] chartType=${widget.element.chartType}');
     debugPrint(
       '[RENDERER] chartBindingPaths=${widget.element.chartBindingPaths}',
     );
+    debugPrint(
+      '[RENDERER] chartLegendColors=${widget.element.chartLegendColors}',
+    );
     debugPrint('[RENDERER] isPreview=${widget.isPreview}');
+    debugPrint('[RENDERER] style.height=${widget.element.style.height}');
+    debugPrint('[RENDERER] style.width=${widget.element.style.width}');
 
     // Handle multi-line chart separately
     if (_isMultiLine) {
@@ -845,15 +850,21 @@ class _ChartRendererState extends State<ChartRenderer> {
     }
 
     debugPrint('[RENDERER] Taking single-line path');
+    debugPrint('[RENDERER] _history.length=${_history.length}');
+    debugPrint('[RENDERER] widget.historyData=${widget.historyData}');
     // Use provided history, built-up history, or sample data for preview
     List<double> rawData;
     if (widget.historyData != null) {
       rawData = widget.historyData!;
+      debugPrint('[RENDERER] Using widget.historyData');
     } else if (_history.isNotEmpty) {
       rawData = _history;
+      debugPrint('[RENDERER] Using _history');
     } else {
       rawData = _generateSampleData();
+      debugPrint('[RENDERER] Using _generateSampleData');
     }
+    debugPrint('[RENDERER] rawData.length=${rawData.length}');
 
     // Apply normalization
     final data = _normalizeData(rawData);
@@ -861,25 +872,33 @@ class _ChartRendererState extends State<ChartRenderer> {
     final chartColor =
         widget.element.style.textColorValue ?? widget.accentColor;
 
+    // Get chart dimensions from style
+    final chartHeight = widget.element.style.height ?? 120.0;
+    final chartWidth = widget.element.style.width;
+
+    Widget chartWidget;
     switch (widget.element.chartType ?? ChartType.sparkline) {
       case ChartType.sparkline:
-        return _buildSparkline(data, chartColor);
+        chartWidget = _buildSparkline(data, chartColor);
       case ChartType.bar:
-        return _buildBarChart(data, chartColor);
+        chartWidget = _buildBarChart(data, chartColor);
       case ChartType.line:
-        return _buildLineChart(data, chartColor);
+        chartWidget = _buildLineChart(data, chartColor);
       case ChartType.area:
-        return _buildAreaChart(data, chartColor);
+        chartWidget = _buildAreaChart(data, chartColor);
       case ChartType.stepped:
-        return _buildSteppedChart(data, chartColor);
+        chartWidget = _buildSteppedChart(data, chartColor);
       case ChartType.scatter:
-        return _buildScatterChart(data, chartColor);
+        chartWidget = _buildScatterChart(data, chartColor);
       case ChartType.multiLine:
       case ChartType.stackedArea:
       case ChartType.stackedBar:
         // These are handled by _buildMultiLineChart above
-        return _buildLineChart(data, chartColor);
+        chartWidget = _buildLineChart(data, chartColor);
     }
+
+    // Wrap in SizedBox to ensure chart has bounded constraints
+    return SizedBox(height: chartHeight, width: chartWidth, child: chartWidget);
   }
 
   List<double> _generateSampleData() {
@@ -987,6 +1006,9 @@ class _ChartRendererState extends State<ChartRenderer> {
         'last=${spots.isNotEmpty ? spots.last : "N/A"}',
       );
       debugPrint('[RENDERER] Line $i: minY=$minVal, maxY=$maxVal');
+      debugPrint(
+        '[RENDERER] Line $i: gradientFill=$_gradientFill, color=$lineColor',
+      );
 
       lineBarsData.add(
         LineChartBarData(
@@ -1036,6 +1058,13 @@ class _ChartRendererState extends State<ChartRenderer> {
       return const SizedBox.shrink();
     }
 
+    // Log each line's spot count for debugging
+    for (int i = 0; i < lineBarsData.length; i++) {
+      debugPrint(
+        '[RENDERER] lineBarsData[$i].spots.length=${lineBarsData[i].spots.length}',
+      );
+    }
+
     debugPrint(
       '[RENDERER] Building LineChart with ${lineBarsData.length} lines',
     );
@@ -1044,6 +1073,9 @@ class _ChartRendererState extends State<ChartRenderer> {
     if (globalMaxY == double.negativeInfinity) globalMaxY = 100;
     final range = globalMaxY - globalMinY;
     final padding = range * 0.1;
+    debugPrint(
+      '[RENDERER] Y range before padding: min=$globalMinY, max=$globalMaxY, range=$range',
+    );
     globalMinY -= padding;
     globalMaxY += padding;
 
@@ -1392,7 +1424,15 @@ class _ChartRendererState extends State<ChartRenderer> {
   }
 
   Widget _buildLineChart(List<double> data, Color color) {
-    if (data.isEmpty) return const SizedBox.shrink();
+    debugPrint(
+      '[RENDERER] _buildLineChart: data.length=${data.length}, color=$color',
+    );
+    if (data.isEmpty) {
+      debugPrint(
+        '[RENDERER] _buildLineChart: data is empty, returning SizedBox.shrink',
+      );
+      return const SizedBox.shrink();
+    }
 
     final minY = data.reduce((a, b) => a < b ? a : b);
     final maxY = data.reduce((a, b) => a > b ? a : b);

@@ -4966,8 +4966,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         );
 
         // Get chart type for this specific binding (or use global default)
-        final ChartType bindingChartType =
+        // CRITICAL: multiLine is only valid for merged charts - convert to line for single-series
+        ChartType bindingChartType =
             _bindingChartTypes[bindingPath] ?? _chartType;
+        if (bindingChartType == ChartType.multiLine ||
+            bindingChartType == ChartType.stackedArea ||
+            bindingChartType == ChartType.stackedBar) {
+          bindingChartType = ChartType.line; // Fallback for multi-series types
+        }
         // Note: Chart type is used directly - Area shows fill, Line does not
         debugPrint('[GRAPH] bindingChartType=$bindingChartType');
 
