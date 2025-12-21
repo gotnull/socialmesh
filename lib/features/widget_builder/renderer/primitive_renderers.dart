@@ -563,7 +563,9 @@ class _ChartRendererState extends State<ChartRenderer> {
 
     // Initialize multi-line histories
     if (_isMultiLine) {
-      debugPrint('[RENDERER] initState: initializing _multiHistory for multiLine');
+      debugPrint(
+        '[RENDERER] initState: initializing _multiHistory for multiLine',
+      );
       for (final path in widget.element.chartBindingPaths!) {
         _multiHistory[path] = [];
       }
@@ -573,9 +575,13 @@ class _ChartRendererState extends State<ChartRenderer> {
     debugPrint('[RENDERER] initState: isPreview=${widget.isPreview}');
     if (widget.isPreview) {
       _initPreviewData();
-      debugPrint('[RENDERER] initState: after _initPreviewData, _multiHistory.keys=${_multiHistory.keys}');
+      debugPrint(
+        '[RENDERER] initState: after _initPreviewData, _multiHistory.keys=${_multiHistory.keys}',
+      );
       for (final path in _multiHistory.keys) {
-        debugPrint('[RENDERER] initState: _multiHistory[$path].length=${_multiHistory[path]?.length}');
+        debugPrint(
+          '[RENDERER] initState: _multiHistory[$path].length=${_multiHistory[path]?.length}',
+        );
       }
     } else {
       // Add initial data point
