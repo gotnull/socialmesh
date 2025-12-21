@@ -1,0 +1,81 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid));
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 10 * 1024 * 1024; // 10MB max
+    }
+    
+    function isValidProductImage() {
+      return request.resource.contentType.matches('image/(jpeg|png|webp)') &&
+             request.resource.size < 5 * 1024 * 1024; // 5MB max for products
+    }
+    
+    // =============================================================================
+    // PROFILE AVATARS
+    // =============================================================================
+    match /profile_avatars/{fileName} {
+      allow read: if true;
+      // Extract userId from filename (e.g., "abc123.jpg" -> check if user is "abc123")
+      allow write: if isAuthenticated() && isValidImage();
+    }
+    
+    // =============================================================================
+    // DEVICE SHOP IMAGES
+    // =============================================================================
+    
+    // Product images - public read, admin write
+    match /shop_products/{productId}/{imageId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidProductImage();
+      allow delete: if isAdmin();
+    }
+    
+    // Seller logos - public read, admin write
+    match /shop_sellers/{sellerId}/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidProductImage();
+      allow delete: if isAdmin();
+    }
+    
+    // Review images - public read, authenticated user write (own reviews)
+    match /review_images/{reviewId}/{imageId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isValidImage();
+      allow delete: if isAuthenticated();
+    }
+    
+    // =============================================================================
+    // WIDGET ASSETS
+    // =============================================================================
+    match /widget_assets/{widgetId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isValidImage();
+    }
+    
+    // =============================================================================
+    // TEMP UPLOADS (for processing)
+    // =============================================================================
+    match /temp_uploads/{userId}/{fileName} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) && isValidImage();
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+  }
+}

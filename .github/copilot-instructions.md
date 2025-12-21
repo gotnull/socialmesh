@@ -19,6 +19,18 @@
 - Code must pass `flutter analyze` with zero issues of any severity.
 - Use `debugPrint()` instead of `print()` for debug logging.
 - Ensure every feature is fully wired and functional end to end.
+- NEVER use `// ignore:` comments to suppress warnings or errors.
+- NEVER use `// noinspection` or any other suppression mechanism.
+- Fix the root cause of issues rather than hiding them.
+
+## Riverpod (CRITICAL)
+- ALWAYS use Riverpod 3.x patterns with `Notifier`, `AsyncNotifier`, `FamilyNotifier`.
+- NEVER use old Riverpod 2.x `StateNotifier` or `StateNotifierProvider`.
+- Providers must use `build()` method, NOT constructor initialization.
+- Use `NotifierProvider<MyNotifier, MyState>` pattern.
+- Use `AsyncNotifierProvider` for async state management.
+- For family providers, extend `FamilyNotifier` or `FamilyAsyncNotifier`.
+- State updates use `state = newState`, NOT `state = state.copyWith()` patterns from StateNotifier.
 
 ## Complexity (CRITICAL)
 - NEVER opt for simplicity over functionality.

@@ -1007,3 +1007,654 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+// =============================================================================
+// DEVICE SHOP API
+// =============================================================================
+
+const ProductSchema = z.object({
+  name: z.string().min(1).max(200),
+  description: z.string().min(1).max(5000),
+  shortDescription: z.string().max(500).optional(),
+  category: z.enum(['node', 'antenna', 'enclosure', 'accessory', 'solar', 'module', 'kit']),
+  price: z.number().positive(),
+  compareAtPrice: z.number().optional(),
+  currency: z.string().default('USD'),
+  sellerId: z.string().min(1),
+  sellerName: z.string().min(1),
+  imageUrls: z.array(z.string().url()).min(1),
+  frequencyBands: z.array(z.string()).optional(),
+  chipset: z.string().optional(),
+  loraChip: z.string().optional(),
+  hasGps: z.boolean().optional(),
+  hasWifi: z.boolean().optional(),
+  hasBluetooth: z.boolean().optional(),
+  hasDisplay: z.boolean().optional(),
+  batteryMah: z.number().optional(),
+  antennaConnector: z.string().optional(),
+  externalUrl: z.string().url(),
+  tags: z.array(z.string()).optional(),
+  isFeatured: z.boolean().default(false),
+  isInStock: z.boolean().default(true),
+  stockQuantity: z.number().optional(),
+  weight: z.number().optional(),
+  dimensions: z.string().optional(),
+});
+
+const SellerSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().max(1000).optional(),
+  logoUrl: z.string().url().optional(),
+  websiteUrl: z.string().url(),
+  contactEmail: z.string().email().optional(),
+  isVerified: z.boolean().default(false),
+  isOfficialPartner: z.boolean().default(false),
+  countries: z.array(z.string()).optional(),
+});
+
+/**
+ * Browse shop products with pagination and filtering
+ */
+export const shopBrowse = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders()).status(204).send('');
+    return;
+  }
+
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+    const category = req.query.category as string | undefined;
+    const sellerId = req.query.seller as string | undefined;
+    const sort = (req.query.sort as string) || 'newest';
+    const search = req.query.q as string | undefined;
+    const featured = req.query.featured === 'true';
+    const onSale = req.query.sale === 'true';
+
+    let query: admin.firestore.Query = db.collection('shopProducts')
+      .where('isActive', '==', true);
+
+    if (category) {
+      query = query.where('category', '==', category);
+    }
+
+    if (sellerId) {
+      query = query.where('sellerId', '==', sellerId);
+    }
+
+    if (featured) {
+      query = query.where('isFeatured', '==', true);
+    }
+
+    // Sort
+    const sortField = sort === 'newest' ? 'createdAt' :
+      sort === 'price-low' ? 'price' :
+        sort === 'price-high' ? 'price' :
+          sort === 'rating' ? 'rating' :
+            sort === 'popular' ? 'salesCount' : 'createdAt';
+    const sortDir = sort === 'price-low' ? 'asc' : 'desc';
+    query = query.orderBy(sortField, sortDir);
+
+    // Pagination
+    query = query.limit(limit).offset((page - 1) * limit);
+
+    const snapshot = await query.get();
+    let products = snapshot.docs.map(doc => serializeDoc({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    // Client-side filters
+    if (search) {
+      const searchLower = search.toLowerCase();
+      products = products.filter((p: Record<string, unknown>) =>
+        (p.name as string)?.toLowerCase().includes(searchLower) ||
+        (p.description as string)?.toLowerCase().includes(searchLower) ||
+        (p.sellerName as string)?.toLowerCase().includes(searchLower) ||
+        (p.tags as string[])?.some(t => t.toLowerCase().includes(searchLower))
+      );
+    }
+
+    if (onSale) {
+      products = products.filter((p: Record<string, unknown>) =>
+        p.compareAtPrice && (p.compareAtPrice as number) > (p.price as number)
+      );
+    }
+
+    // Get total count for pagination
+    const countQuery = db.collection('shopProducts').where('isActive', '==', true);
+    const countSnapshot = await countQuery.count().get();
+
+    res.json({
+      products,
+      page,
+      limit,
+      total: countSnapshot.data().count,
+      hasMore: page * limit < countSnapshot.data().count,
+    });
+  } catch (error) {
+    console.error('Shop browse error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Get featured products
+ */
+export const shopFeatured = onRequest({ cors: true }, async (_req, res) => {
+  try {
+    const snapshot = await db.collection('shopProducts')
+      .where('isActive', '==', true)
+      .where('isFeatured', '==', true)
+      .orderBy('salesCount', 'desc')
+      .limit(10)
+      .get();
+
+    const products = snapshot.docs.map(doc => serializeDoc({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.json(products);
+  } catch (error) {
+    console.error('Featured products error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Get product details
+ */
+export const shopProduct = onRequest({ cors: true }, async (req, res) => {
+  try {
+    const id = req.query.id as string;
+    if (!id) {
+      res.status(400).json({ error: 'Product ID required' });
+      return;
+    }
+
+    const doc = await db.collection('shopProducts').doc(id).get();
+    if (!doc.exists) {
+      res.status(404).json({ error: 'Product not found' });
+      return;
+    }
+
+    // Increment view count
+    await doc.ref.update({
+      viewCount: admin.firestore.FieldValue.increment(1),
+    });
+
+    res.json(serializeDoc({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error('Get product error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Get all sellers
+ */
+export const shopSellers = onRequest({ cors: true }, async (_req, res) => {
+  try {
+    const snapshot = await db.collection('shopSellers')
+      .where('isActive', '==', true)
+      .orderBy('isOfficialPartner', 'desc')
+      .orderBy('rating', 'desc')
+      .get();
+
+    const sellers = snapshot.docs.map(doc => serializeDoc({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.json(sellers);
+  } catch (error) {
+    console.error('Get sellers error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Get seller details with their products
+ */
+export const shopSeller = onRequest({ cors: true }, async (req, res) => {
+  try {
+    const id = req.query.id as string;
+    if (!id) {
+      res.status(400).json({ error: 'Seller ID required' });
+      return;
+    }
+
+    const sellerDoc = await db.collection('shopSellers').doc(id).get();
+    if (!sellerDoc.exists) {
+      res.status(404).json({ error: 'Seller not found' });
+      return;
+    }
+
+    const productsSnapshot = await db.collection('shopProducts')
+      .where('sellerId', '==', id)
+      .where('isActive', '==', true)
+      .orderBy('salesCount', 'desc')
+      .limit(50)
+      .get();
+
+    const products = productsSnapshot.docs.map(doc => serializeDoc({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.json({
+      seller: serializeDoc({ id: sellerDoc.id, ...sellerDoc.data() }),
+      products,
+    });
+  } catch (error) {
+    console.error('Get seller error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Admin: Create a new product
+ */
+export const shopAdminCreateProduct = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders()).status(204).send('');
+    return;
+  }
+
+  try {
+    const user = await verifyAuth(req.headers.authorization);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    if (!await isAdmin(user.uid)) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const body = ProductSchema.parse(req.body);
+
+    const product = {
+      ...body,
+      isActive: true,
+      viewCount: 0,
+      salesCount: 0,
+      favoriteCount: 0,
+      rating: 0,
+      reviewCount: 0,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdBy: user.uid,
+    };
+
+    const docRef = await db.collection('shopProducts').add(product);
+
+    // Update seller's product count
+    await db.collection('shopSellers').doc(body.sellerId).update({
+      productCount: admin.firestore.FieldValue.increment(1),
+    });
+
+    res.status(201).json({ id: docRef.id, ...product });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid product data', details: error.errors });
+    } else {
+      console.error('Create product error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+});
+
+/**
+ * Admin: Update a product
+ */
+export const shopAdminUpdateProduct = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders()).status(204).send('');
+    return;
+  }
+
+  try {
+    const user = await verifyAuth(req.headers.authorization);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    if (!await isAdmin(user.uid)) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const productId = req.query.id as string;
+    if (!productId) {
+      res.status(400).json({ error: 'Product ID required' });
+      return;
+    }
+
+    const productRef = db.collection('shopProducts').doc(productId);
+    const existingProduct = await productRef.get();
+
+    if (!existingProduct.exists) {
+      res.status(404).json({ error: 'Product not found' });
+      return;
+    }
+
+    const body = ProductSchema.partial().parse(req.body);
+
+    await productRef.update({
+      ...body,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedBy: user.uid,
+    });
+
+    res.json({ success: true, id: productId });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid product data', details: error.errors });
+    } else {
+      console.error('Update product error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+});
+
+/**
+ * Admin: Delete a product
+ */
+export const shopAdminDeleteProduct = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders()).status(204).send('');
+    return;
+  }
+
+  try {
+    const user = await verifyAuth(req.headers.authorization);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    if (!await isAdmin(user.uid)) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const productId = req.query.id as string;
+    if (!productId) {
+      res.status(400).json({ error: 'Product ID required' });
+      return;
+    }
+
+    const productRef = db.collection('shopProducts').doc(productId);
+    const product = await productRef.get();
+
+    if (!product.exists) {
+      res.status(404).json({ error: 'Product not found' });
+      return;
+    }
+
+    const sellerId = product.data()?.sellerId;
+
+    // Soft delete
+    await productRef.update({
+      isActive: false,
+      deletedAt: admin.firestore.FieldValue.serverTimestamp(),
+      deletedBy: user.uid,
+    });
+
+    // Update seller's product count
+    if (sellerId) {
+      await db.collection('shopSellers').doc(sellerId).update({
+        productCount: admin.firestore.FieldValue.increment(-1),
+      });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete product error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Admin: Create a new seller
+ */
+export const shopAdminCreateSeller = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders()).status(204).send('');
+    return;
+  }
+
+  try {
+    const user = await verifyAuth(req.headers.authorization);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    if (!await isAdmin(user.uid)) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const body = SellerSchema.parse(req.body);
+
+    const seller = {
+      ...body,
+      isActive: true,
+      rating: 0,
+      reviewCount: 0,
+      productCount: 0,
+      salesCount: 0,
+      joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdBy: user.uid,
+    };
+
+    const docRef = await db.collection('shopSellers').add(seller);
+
+    res.status(201).json({ id: docRef.id, ...seller });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid seller data', details: error.errors });
+    } else {
+      console.error('Create seller error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+});
+
+/**
+ * Admin: Update a seller
+ */
+export const shopAdminUpdateSeller = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders()).status(204).send('');
+    return;
+  }
+
+  try {
+    const user = await verifyAuth(req.headers.authorization);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    if (!await isAdmin(user.uid)) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const sellerId = req.query.id as string;
+    if (!sellerId) {
+      res.status(400).json({ error: 'Seller ID required' });
+      return;
+    }
+
+    const sellerRef = db.collection('shopSellers').doc(sellerId);
+    const existingSeller = await sellerRef.get();
+
+    if (!existingSeller.exists) {
+      res.status(404).json({ error: 'Seller not found' });
+      return;
+    }
+
+    const body = SellerSchema.partial().parse(req.body);
+
+    await sellerRef.update({
+      ...body,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedBy: user.uid,
+    });
+
+    res.json({ success: true, id: sellerId });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid seller data', details: error.errors });
+    } else {
+      console.error('Update seller error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+});
+
+/**
+ * Admin: Get shop statistics
+ */
+export const shopAdminStats = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders()).status(204).send('');
+    return;
+  }
+
+  try {
+    const user = await verifyAuth(req.headers.authorization);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    if (!await isAdmin(user.uid)) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const [productsCount, sellersCount, reviewsCount] = await Promise.all([
+      db.collection('shopProducts').where('isActive', '==', true).count().get(),
+      db.collection('shopSellers').where('isActive', '==', true).count().get(),
+      db.collection('productReviews').count().get(),
+    ]);
+
+    // Get products for sales calculation
+    const productsSnapshot = await db.collection('shopProducts')
+      .where('isActive', '==', true)
+      .select('salesCount', 'viewCount')
+      .get();
+
+    let totalSales = 0;
+    let totalViews = 0;
+    for (const doc of productsSnapshot.docs) {
+      totalSales += doc.data().salesCount || 0;
+      totalViews += doc.data().viewCount || 0;
+    }
+
+    res.json({
+      totalProducts: productsCount.data().count,
+      totalSellers: sellersCount.data().count,
+      totalReviews: reviewsCount.data().count,
+      totalSales,
+      totalViews,
+    });
+  } catch (error) {
+    console.error('Shop stats error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Firestore trigger: Update product rating when review is added
+ */
+export const onShopReviewCreated = onDocumentCreated('productReviews/{reviewId}', async (event) => {
+  const review = event.data?.data();
+  if (!review) return;
+
+  const productId = review.productId;
+  if (!productId) return;
+
+  try {
+    // Get all reviews for this product
+    const reviewsSnapshot = await db.collection('productReviews')
+      .where('productId', '==', productId)
+      .get();
+
+    if (reviewsSnapshot.empty) return;
+
+    let totalRating = 0;
+    for (const doc of reviewsSnapshot.docs) {
+      totalRating += doc.data().rating || 0;
+    }
+
+    const avgRating = totalRating / reviewsSnapshot.size;
+
+    await db.collection('shopProducts').doc(productId).update({
+      rating: avgRating,
+      reviewCount: reviewsSnapshot.size,
+    });
+  } catch (error) {
+    console.error('Error updating product rating:', error);
+  }
+});
+
+/**
+ * Generate signed URL for image upload (admin only)
+ */
+export const shopGetUploadUrl = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders()).status(204).send('');
+    return;
+  }
+
+  try {
+    const user = await verifyAuth(req.headers.authorization);
+    if (!user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    if (!await isAdmin(user.uid)) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+
+    const { type, id, filename } = req.body as { type: string; id: string; filename: string };
+    if (!type || !id || !filename) {
+      res.status(400).json({ error: 'type, id, and filename are required' });
+      return;
+    }
+
+    const bucket = admin.storage().bucket();
+    const path = type === 'product'
+      ? `shop_products/${id}/${filename}`
+      : `shop_sellers/${id}/${filename}`;
+
+    const file = bucket.file(path);
+    const [signedUrl] = await file.getSignedUrl({
+      version: 'v4',
+      action: 'write',
+      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+      contentType: 'image/jpeg',
+    });
+
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${path}`;
+
+    res.json({ uploadUrl: signedUrl, publicUrl });
+  } catch (error) {
+    console.error('Get upload URL error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+

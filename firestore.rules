@@ -69,5 +69,51 @@ service cloud.firestore {
       allow read: if isAdmin() || isOwner(adminId);
       allow write: if false; // Managed via Firebase Console
     }
+    
+    // =============================================================================
+    // DEVICE SHOP COLLECTIONS
+    // =============================================================================
+    
+    // Shop Products - public read, admin write
+    match /shopProducts/{productId} {
+      allow read: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Shop Sellers - public read, admin write
+    match /shopSellers/{sellerId} {
+      allow read: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Product Reviews - public read, authenticated create, owner/admin manage
+    match /productReviews/{reviewId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isAdmin());
+    }
+    
+    // Product Favorites - owner only
+    match /productFavorites/{favoriteId} {
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Shop Analytics - admin only
+    match /shopAnalytics/{docId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
   }
 }

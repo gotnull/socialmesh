@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/features/widget_builder/storage/widget_storage_service.dart';
 
@@ -26,8 +27,7 @@ void main() {
     for (final (filename, widget) in templates) {
       final file = File('${outputDir.path}/$filename');
       file.writeAsStringSync(widget.toJsonString());
-      // ignore: avoid_print
-      print('Exported: $filename');
+      debugPrint('Exported: $filename');
     }
 
     // Verify files were created
@@ -35,7 +35,6 @@ void main() {
       expect(File('${outputDir.path}/$filename').existsSync(), isTrue);
     }
 
-    // ignore: avoid_print
-    print('\n✅ All widget templates exported to assets/widget_templates/');
+    debugPrint('\n✅ All widget templates exported to assets/widget_templates/');
   });
 }

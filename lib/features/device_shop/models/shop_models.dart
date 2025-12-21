@@ -138,6 +138,44 @@ class ShopSeller {
       'isActive': isActive,
     };
   }
+
+  ShopSeller copyWith({
+    String? id,
+    String? name,
+    String? description,
+    String? logoUrl,
+    String? websiteUrl,
+    String? contactEmail,
+    bool? isVerified,
+    bool? isOfficialPartner,
+    double? rating,
+    int? reviewCount,
+    int? productCount,
+    int? salesCount,
+    DateTime? joinedAt,
+    List<String>? countries,
+    String? stripeAccountId,
+    bool? isActive,
+  }) {
+    return ShopSeller(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      logoUrl: logoUrl ?? this.logoUrl,
+      websiteUrl: websiteUrl ?? this.websiteUrl,
+      contactEmail: contactEmail ?? this.contactEmail,
+      isVerified: isVerified ?? this.isVerified,
+      isOfficialPartner: isOfficialPartner ?? this.isOfficialPartner,
+      rating: rating ?? this.rating,
+      reviewCount: reviewCount ?? this.reviewCount,
+      productCount: productCount ?? this.productCount,
+      salesCount: salesCount ?? this.salesCount,
+      joinedAt: joinedAt ?? this.joinedAt,
+      countries: countries ?? this.countries,
+      stripeAccountId: stripeAccountId ?? this.stripeAccountId,
+      isActive: isActive ?? this.isActive,
+    );
+  }
 }
 
 /// Product listing

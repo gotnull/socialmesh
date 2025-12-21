@@ -34,6 +34,8 @@ import '../reachability/mesh_reachability_screen.dart';
 import '../profile/profile_screen.dart';
 import '../sky_tracker/screens/sky_tracker_screen.dart';
 import '../device_shop/screens/device_shop_screen.dart';
+import '../device_shop/screens/shop_admin_dashboard.dart';
+import '../device_shop/providers/admin_shop_providers.dart';
 
 /// Notifier to expose the main shell's scaffold key for drawer access
 class MainShellScaffoldKeyNotifier extends Notifier<GlobalKey<ScaffoldState>?> {
@@ -532,6 +534,16 @@ class _MainShellState extends ConsumerState<MainShell> {
 
                   // Profile & Account section
                   const _DrawerProfileSection(),
+
+                  // Admin section (only visible to shop admins)
+                  _DrawerAdminSection(
+                    onNavigate: (screen) {
+                      Navigator.of(context).pop();
+                      Navigator.of(
+                        context,
+                      ).push(MaterialPageRoute(builder: (_) => screen));
+                    },
+                  ),
 
                   // Divider before Settings/Help
                   Padding(
@@ -1541,6 +1553,83 @@ class _ThemeToggleButton extends ConsumerWidget {
           color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
         ),
       ),
+    );
+  }
+}
+
+/// Admin section in the drawer - only visible to shop admins
+class _DrawerAdminSection extends ConsumerWidget {
+  final void Function(Widget screen) onNavigate;
+
+  const _DrawerAdminSection({required this.onNavigate});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isAdminAsync = ref.watch(isShopAdminProvider);
+
+    return isAdminAsync.when(
+      data: (isAdmin) {
+        if (!isAdmin) return const SizedBox.shrink();
+
+        final theme = Theme.of(context);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Divider before admin section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
+            ),
+
+            // Admin section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Section header
+                  Padding(
+                    padding: const EdgeInsets.only(left: 12, bottom: 8),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.admin_panel_settings,
+                          size: 14,
+                          color: Colors.orange.withValues(alpha: 0.7),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'ADMIN',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.2,
+                            color: Colors.orange.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Shop Admin Dashboard
+                  _DrawerMenuTile(
+                    icon: Icons.dashboard_customize,
+                    label: 'Shop Admin',
+                    isSelected: false,
+                    onTap: () {
+                      ref.haptics.tabChange();
+                      onNavigate(const ShopAdminDashboard());
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (error, stackTrace) => const SizedBox.shrink(),
     );
   }
 }

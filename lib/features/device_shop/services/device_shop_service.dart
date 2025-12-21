@@ -1,11 +1,19 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as path;
+import 'package:uuid/uuid.dart';
 
 import '../models/shop_models.dart';
 
 /// Service for device shop operations
 class DeviceShopService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final Uuid _uuid = const Uuid();
 
   CollectionReference<Map<String, dynamic>> get _productsCollection =>
       _firestore.collection('shopProducts');
@@ -18,6 +26,109 @@ class DeviceShopService {
 
   CollectionReference<Map<String, dynamic>> get _favoritesCollection =>
       _firestore.collection('productFavorites');
+
+  CollectionReference<Map<String, dynamic>> get _adminsCollection =>
+      _firestore.collection('admins');
+
+  // ============ ADMIN VERIFICATION ============
+
+  /// Check if user is an admin
+  Future<bool> isAdmin(String userId) async {
+    try {
+      final doc = await _adminsCollection.doc(userId).get();
+      return doc.exists;
+    } catch (e) {
+      debugPrint('[DeviceShop] Error checking admin status: $e');
+      return false;
+    }
+  }
+
+  // ============ IMAGE UPLOAD ============
+
+  /// Pick an image from gallery
+  Future<File?> pickImage() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+    );
+    if (result != null &&
+        result.files.isNotEmpty &&
+        result.files.first.path != null) {
+      return File(result.files.first.path!);
+    }
+    return null;
+  }
+
+  /// Pick multiple images from gallery
+  Future<List<File>> pickMultipleImages({int maxImages = 10}) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: true,
+    );
+    if (result != null && result.files.isNotEmpty) {
+      return result.files
+          .where((f) => f.path != null)
+          .take(maxImages)
+          .map((f) => File(f.path!))
+          .toList();
+    }
+    return [];
+  }
+
+  /// Upload a product image and return the download URL
+  Future<String> uploadProductImage({
+    required String productId,
+    required File imageFile,
+  }) async {
+    final ext = path.extension(imageFile.path).toLowerCase();
+    final fileName = '${_uuid.v4()}$ext';
+    final ref = _storage.ref().child('shop_products/$productId/$fileName');
+
+    final metadata = SettableMetadata(
+      contentType: 'image/${ext.replaceFirst('.', '')}',
+      customMetadata: {'uploadedAt': DateTime.now().toIso8601String()},
+    );
+
+    final uploadTask = ref.putFile(imageFile, metadata);
+
+    uploadTask.snapshotEvents.listen((event) {
+      final progress = event.bytesTransferred / event.totalBytes;
+      debugPrint(
+        '[DeviceShop] Upload progress: ${(progress * 100).toStringAsFixed(1)}%',
+      );
+    });
+
+    await uploadTask;
+    return ref.getDownloadURL();
+  }
+
+  /// Upload a seller logo and return the download URL
+  Future<String> uploadSellerLogo({
+    required String sellerId,
+    required File imageFile,
+  }) async {
+    final ext = path.extension(imageFile.path).toLowerCase();
+    final fileName = 'logo$ext';
+    final ref = _storage.ref().child('shop_sellers/$sellerId/$fileName');
+
+    final metadata = SettableMetadata(
+      contentType: 'image/${ext.replaceFirst('.', '')}',
+      customMetadata: {'uploadedAt': DateTime.now().toIso8601String()},
+    );
+
+    await ref.putFile(imageFile, metadata);
+    return ref.getDownloadURL();
+  }
+
+  /// Delete a product image from storage
+  Future<void> deleteProductImage(String imageUrl) async {
+    try {
+      final ref = _storage.refFromURL(imageUrl);
+      await ref.delete();
+    } catch (e) {
+      debugPrint('[DeviceShop] Error deleting image: $e');
+    }
+  }
 
   // ============ PRODUCT OPERATIONS ============
 
@@ -394,9 +505,13 @@ class DeviceShopService {
         .set(seller.toFirestore(), SetOptions(merge: true));
   }
 
-  /// Create a product listing (for sellers)
-  Future<String> createProduct(ShopProduct product) async {
-    final docRef = await _productsCollection.add(product.toFirestore());
+  /// Create a product listing (for admins)
+  Future<String> createProduct(ShopProduct product, {String? adminId}) async {
+    final data = product.toFirestore();
+    if (adminId != null) {
+      data['createdBy'] = adminId;
+    }
+    final docRef = await _productsCollection.add(data);
 
     // Update seller's product count
     await _sellersCollection.doc(product.sellerId).update({
@@ -409,33 +524,155 @@ class DeviceShopService {
   /// Update a product listing
   Future<void> updateProduct(
     String productId,
-    Map<String, dynamic> updates,
-  ) async {
+    Map<String, dynamic> updates, {
+    String? adminId,
+  }) async {
     updates['updatedAt'] = Timestamp.now();
+    if (adminId != null) {
+      updates['updatedBy'] = adminId;
+    }
     await _productsCollection.doc(productId).update(updates);
   }
 
+  /// Update full product
+  Future<void> updateFullProduct(ShopProduct product, {String? adminId}) async {
+    final data = product.toFirestore();
+    data['updatedAt'] = Timestamp.now();
+    if (adminId != null) {
+      data['updatedBy'] = adminId;
+    }
+    await _productsCollection.doc(product.id).update(data);
+  }
+
   /// Deactivate a product
-  Future<void> deactivateProduct(String productId) async {
-    await _productsCollection.doc(productId).update({
+  Future<void> deactivateProduct(String productId, {String? adminId}) async {
+    final updates = <String, dynamic>{
       'isActive': false,
       'updatedAt': Timestamp.now(),
+    };
+    if (adminId != null) {
+      updates['deletedBy'] = adminId;
+      updates['deletedAt'] = Timestamp.now();
+    }
+    await _productsCollection.doc(productId).update(updates);
+  }
+
+  /// Reactivate a product
+  Future<void> reactivateProduct(String productId, {String? adminId}) async {
+    final updates = <String, dynamic>{
+      'isActive': true,
+      'updatedAt': Timestamp.now(),
+      'deletedBy': FieldValue.delete(),
+      'deletedAt': FieldValue.delete(),
+    };
+    if (adminId != null) {
+      updates['updatedBy'] = adminId;
+    }
+    await _productsCollection.doc(productId).update(updates);
+  }
+
+  /// Delete a product permanently (admin only)
+  Future<void> deleteProductPermanently(String productId) async {
+    final product = await getProduct(productId);
+    if (product == null) return;
+
+    // Delete all product images from storage
+    for (final imageUrl in product.imageUrls) {
+      await deleteProductImage(imageUrl);
+    }
+
+    await _productsCollection.doc(productId).delete();
+
+    // Update seller's product count
+    await _sellersCollection.doc(product.sellerId).update({
+      'productCount': FieldValue.increment(-1),
     });
   }
 
-  /// Delete a product
-  Future<void> deleteProduct(String productId, String oderId) async {
+  /// Delete a product (soft delete by default)
+  Future<void> deleteProduct(String productId, String sellerId) async {
     final product = await getProduct(productId);
-    if (product?.sellerId != oderId) {
+    if (product?.sellerId != sellerId) {
       throw Exception('Not authorized to delete this product');
     }
 
     await _productsCollection.doc(productId).delete();
 
     // Update seller's product count
-    await _sellersCollection.doc(oderId).update({
+    await _sellersCollection.doc(sellerId).update({
       'productCount': FieldValue.increment(-1),
     });
+  }
+
+  // ============ ADMIN SELLER OPERATIONS ============
+
+  /// Create a new seller
+  Future<String> createSeller(ShopSeller seller, {String? adminId}) async {
+    final data = seller.toFirestore();
+    if (adminId != null) {
+      data['createdBy'] = adminId;
+    }
+    final docRef = await _sellersCollection.add(data);
+    return docRef.id;
+  }
+
+  /// Update a seller
+  Future<void> updateSeller(
+    String sellerId,
+    Map<String, dynamic> updates, {
+    String? adminId,
+  }) async {
+    updates['updatedAt'] = Timestamp.now();
+    if (adminId != null) {
+      updates['updatedBy'] = adminId;
+    }
+    await _sellersCollection.doc(sellerId).update(updates);
+  }
+
+  /// Update full seller
+  Future<void> updateFullSeller(ShopSeller seller, {String? adminId}) async {
+    final data = seller.toFirestore();
+    data['updatedAt'] = Timestamp.now();
+    if (adminId != null) {
+      data['updatedBy'] = adminId;
+    }
+    await _sellersCollection.doc(seller.id).update(data);
+  }
+
+  /// Deactivate a seller
+  Future<void> deactivateSeller(String sellerId, {String? adminId}) async {
+    final updates = <String, dynamic>{
+      'isActive': false,
+      'updatedAt': Timestamp.now(),
+    };
+    if (adminId != null) {
+      updates['deactivatedBy'] = adminId;
+    }
+    await _sellersCollection.doc(sellerId).update(updates);
+  }
+
+  /// Watch all sellers (including inactive) for admin
+  Stream<List<ShopSeller>> watchAllSellersAdmin() {
+    return _sellersCollection
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ShopSeller.fromFirestore(doc))
+              .toList(),
+        );
+  }
+
+  /// Watch all products (including inactive) for admin
+  Stream<List<ShopProduct>> watchAllProductsAdmin() {
+    return _productsCollection
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ShopProduct.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   // ============ ANALYTICS ============
@@ -453,10 +690,12 @@ class DeviceShopService {
       int totalProducts = productsSnapshot.docs.length;
       int totalSellers = sellersSnapshot.docs.length;
       int totalSales = 0;
+      int totalViews = 0;
       int officialPartners = 0;
 
       for (final doc in productsSnapshot.docs) {
         totalSales += (doc.data()['salesCount'] as int?) ?? 0;
+        totalViews += (doc.data()['viewCount'] as int?) ?? 0;
       }
 
       for (final doc in sellersSnapshot.docs) {
@@ -469,11 +708,56 @@ class DeviceShopService {
         totalProducts: totalProducts,
         totalSellers: totalSellers,
         totalSales: totalSales,
+        totalViews: totalViews,
         officialPartners: officialPartners,
       );
     } catch (e) {
       debugPrint('[DeviceShop] Error getting statistics: $e');
       return const ShopStatistics();
+    }
+  }
+
+  /// Get extended admin statistics
+  Future<AdminShopStatistics> getAdminStatistics() async {
+    try {
+      final allProductsSnapshot = await _productsCollection.get();
+      final activeProductsSnapshot = await _productsCollection
+          .where('isActive', isEqualTo: true)
+          .get();
+      final sellersSnapshot = await _sellersCollection.get();
+      final reviewsSnapshot = await _reviewsCollection.get();
+
+      int totalSales = 0;
+      int totalViews = 0;
+      double totalRevenue = 0;
+      int outOfStock = 0;
+
+      for (final doc in allProductsSnapshot.docs) {
+        final data = doc.data();
+        final sales = (data['salesCount'] as int?) ?? 0;
+        final price = (data['price'] as num?)?.toDouble() ?? 0;
+        totalSales += sales;
+        totalViews += (data['viewCount'] as int?) ?? 0;
+        totalRevenue += sales * price;
+        if (data['isInStock'] == false) outOfStock++;
+      }
+
+      return AdminShopStatistics(
+        totalProducts: allProductsSnapshot.docs.length,
+        activeProducts: activeProductsSnapshot.docs.length,
+        inactiveProducts:
+            allProductsSnapshot.docs.length -
+            activeProductsSnapshot.docs.length,
+        totalSellers: sellersSnapshot.docs.length,
+        totalReviews: reviewsSnapshot.docs.length,
+        totalSales: totalSales,
+        totalViews: totalViews,
+        estimatedRevenue: totalRevenue,
+        outOfStockProducts: outOfStock,
+      );
+    } catch (e) {
+      debugPrint('[DeviceShop] Error getting admin statistics: $e');
+      return const AdminShopStatistics();
     }
   }
 }
@@ -483,12 +767,39 @@ class ShopStatistics {
   final int totalProducts;
   final int totalSellers;
   final int totalSales;
+  final int totalViews;
   final int officialPartners;
 
   const ShopStatistics({
     this.totalProducts = 0,
     this.totalSellers = 0,
     this.totalSales = 0,
+    this.totalViews = 0,
     this.officialPartners = 0,
+  });
+}
+
+/// Extended admin statistics
+class AdminShopStatistics {
+  final int totalProducts;
+  final int activeProducts;
+  final int inactiveProducts;
+  final int totalSellers;
+  final int totalReviews;
+  final int totalSales;
+  final int totalViews;
+  final double estimatedRevenue;
+  final int outOfStockProducts;
+
+  const AdminShopStatistics({
+    this.totalProducts = 0,
+    this.activeProducts = 0,
+    this.inactiveProducts = 0,
+    this.totalSellers = 0,
+    this.totalReviews = 0,
+    this.totalSales = 0,
+    this.totalViews = 0,
+    this.estimatedRevenue = 0,
+    this.outOfStockProducts = 0,
   });
 }
