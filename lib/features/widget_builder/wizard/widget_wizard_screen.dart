@@ -100,6 +100,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       {}; // Individual colors for merged charts
   final Map<String, ChartType> _bindingChartTypes =
       {}; // Individual chart types per binding
+  final Map<String, String> _bindingLabels =
+      {}; // Custom labels extracted from original schema
 
   // Advanced chart options
   ChartMergeMode _mergeMode = ChartMergeMode.overlay;
@@ -508,13 +510,27 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           'Wizard: Found chartBindingPath: ${element.chartBindingPath}',
         );
         _selectedBindings.add(element.chartBindingPath!);
+
+        // Extract custom label if there's a chartLegendLabels with one entry
+        if (element.chartLegendLabels != null &&
+            element.chartLegendLabels!.isNotEmpty) {
+          _bindingLabels[element.chartBindingPath!] =
+              element.chartLegendLabels!.first;
+        }
       }
       if (element.chartBindingPaths != null) {
         debugPrint(
           'Wizard: Found chartBindingPaths: ${element.chartBindingPaths}',
         );
-        for (final path in element.chartBindingPaths!) {
+        for (int i = 0; i < element.chartBindingPaths!.length; i++) {
+          final path = element.chartBindingPaths![i];
           _selectedBindings.add(path);
+
+          // Extract custom labels for each path
+          if (element.chartLegendLabels != null &&
+              i < element.chartLegendLabels!.length) {
+            _bindingLabels[path] = element.chartLegendLabels![i];
+          }
         }
         // If multiple paths, it's a merged chart
         if (element.chartBindingPaths!.length > 1) {
@@ -2509,16 +2525,24 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ...bindingsList.asMap().entries.map((entry) {
             final index = entry.key;
             final bindingPath = entry.value;
-            final binding = BindingRegistry.bindings.firstWhere(
-              (b) => b.path == bindingPath,
-              orElse: () => BindingDefinition(
-                path: bindingPath,
-                label: bindingPath,
-                description: '',
-                category: BindingCategory.node,
-                valueType: double,
-              ),
-            );
+
+            // Use custom label if extracted from original schema, otherwise lookup from registry
+            String bindingLabel;
+            if (_bindingLabels.containsKey(bindingPath)) {
+              bindingLabel = _bindingLabels[bindingPath]!;
+            } else {
+              final binding = BindingRegistry.bindings.firstWhere(
+                (b) => b.path == bindingPath,
+                orElse: () => BindingDefinition(
+                  path: bindingPath,
+                  label: bindingPath,
+                  description: '',
+                  category: BindingCategory.node,
+                  valueType: double,
+                ),
+              );
+              bindingLabel = binding.label;
+            }
 
             // Get current color or use default
             final currentColor =
@@ -2544,7 +2568,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   // Binding label
                   Expanded(
                     child: Text(
-                      binding.label,
+                      bindingLabel,
                       style: const TextStyle(color: Colors.white, fontSize: 13),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -2638,16 +2662,24 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ...bindingsList.asMap().entries.map((entry) {
             final index = entry.key;
             final bindingPath = entry.value;
-            final binding = BindingRegistry.bindings.firstWhere(
-              (b) => b.path == bindingPath,
-              orElse: () => BindingDefinition(
-                path: bindingPath,
-                label: bindingPath,
-                description: '',
-                category: BindingCategory.node,
-                valueType: double,
-              ),
-            );
+
+            // Use custom label if extracted from original schema, otherwise lookup from registry
+            String bindingLabel;
+            if (_bindingLabels.containsKey(bindingPath)) {
+              bindingLabel = _bindingLabels[bindingPath]!;
+            } else {
+              final binding = BindingRegistry.bindings.firstWhere(
+                (b) => b.path == bindingPath,
+                orElse: () => BindingDefinition(
+                  path: bindingPath,
+                  label: bindingPath,
+                  description: '',
+                  category: BindingCategory.node,
+                  valueType: double,
+                ),
+              );
+              bindingLabel = binding.label;
+            }
 
             final currentColor =
                 _mergeColors[bindingPath] ??
@@ -2670,7 +2702,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      binding.label,
+                      bindingLabel,
                       style: const TextStyle(color: Colors.white, fontSize: 13),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -4798,17 +4830,26 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
       for (int i = 0; i < bindingsList.length; i++) {
         final bindingPath = bindingsList[i];
-        final binding = BindingRegistry.bindings.firstWhere(
-          (b) => b.path == bindingPath,
-          orElse: () => BindingDefinition(
-            path: bindingPath,
-            label: bindingPath,
-            description: '',
-            category: BindingCategory.node,
-            valueType: double,
-          ),
-        );
-        legendLabels.add(binding.label);
+
+        // Use custom label if extracted from original schema, otherwise lookup from registry
+        String label;
+        if (_bindingLabels.containsKey(bindingPath)) {
+          label = _bindingLabels[bindingPath]!;
+        } else {
+          final binding = BindingRegistry.bindings.firstWhere(
+            (b) => b.path == bindingPath,
+            orElse: () => BindingDefinition(
+              path: bindingPath,
+              label: bindingPath,
+              description: '',
+              category: BindingCategory.node,
+              valueType: double,
+            ),
+          );
+          label = binding.label;
+        }
+        legendLabels.add(label);
+
         // Use user-selected color or fall back to default
         final color =
             _mergeColors[bindingPath] ??

@@ -517,21 +517,9 @@ class _ChartRendererState extends State<ChartRenderer> {
       widget.element.chartNormalization ?? ChartNormalization.raw;
   ChartBaseline get _baseline =>
       widget.element.chartBaseline ?? ChartBaseline.none;
-  bool get _showMinMax {
-    final value = widget.element.chartShowMinMax ?? false;
-    debugPrint(
-      '[RENDERER] _showMinMax getter: raw=${widget.element.chartShowMinMax}, result=$value',
-    );
-    return value;
-  }
+  bool get _showMinMax => widget.element.chartShowMinMax ?? false;
 
-  bool get _gradientFill {
-    final value = widget.element.chartGradientFill ?? false;
-    debugPrint(
-      '[RENDERER] _gradientFill getter: raw=${widget.element.chartGradientFill}, result=$value',
-    );
-    return value;
-  }
+  bool get _gradientFill => widget.element.chartGradientFill ?? false;
 
   Color get _gradientLowColor => widget.element.chartGradientLowColor != null
       ? StyleSchema.parseColor(widget.element.chartGradientLowColor!)
@@ -575,14 +563,20 @@ class _ChartRendererState extends State<ChartRenderer> {
 
     // Initialize multi-line histories
     if (_isMultiLine) {
+      debugPrint('[RENDERER] initState: initializing _multiHistory for multiLine');
       for (final path in widget.element.chartBindingPaths!) {
         _multiHistory[path] = [];
       }
     }
 
     // For preview mode, generate sample data so the chart isn't empty
+    debugPrint('[RENDERER] initState: isPreview=${widget.isPreview}');
     if (widget.isPreview) {
       _initPreviewData();
+      debugPrint('[RENDERER] initState: after _initPreviewData, _multiHistory.keys=${_multiHistory.keys}');
+      for (final path in _multiHistory.keys) {
+        debugPrint('[RENDERER] initState: _multiHistory[$path].length=${_multiHistory[path]?.length}');
+      }
     } else {
       // Add initial data point
       _addDataPoint();
@@ -831,11 +825,20 @@ class _ChartRendererState extends State<ChartRenderer> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[RENDERER] build() called');
+    debugPrint('[RENDERER] chartType=${widget.element.chartType}');
+    debugPrint(
+      '[RENDERER] chartBindingPaths=${widget.element.chartBindingPaths}',
+    );
+    debugPrint('[RENDERER] isPreview=${widget.isPreview}');
+
     // Handle multi-line chart separately
     if (_isMultiLine) {
+      debugPrint('[RENDERER] Taking multiLine path');
       return _buildMultiLineChart();
     }
 
+    debugPrint('[RENDERER] Taking single-line path');
     // Use provided history, built-up history, or sample data for preview
     List<double> rawData;
     if (widget.historyData != null) {
@@ -882,22 +885,26 @@ class _ChartRendererState extends State<ChartRenderer> {
   }
 
   Widget _buildMultiLineChart() {
+    debugPrint('[RENDERER] _buildMultiLineChart() called');
     final paths = widget.element.chartBindingPaths!;
     final colors = widget.element.chartLegendColors ?? [];
-    debugPrint('[RENDERER] _buildMultiLineChart: paths=$paths');
-    debugPrint('[RENDERER] _buildMultiLineChart: colors=$colors');
+    debugPrint('[RENDERER] paths=$paths, colors=$colors');
+    debugPrint('[RENDERER] _multiHistory.keys=${_multiHistory.keys}');
+    debugPrint('[RENDERER] _mergeMode=$_mergeMode');
 
     // Collect raw data for each series
     final seriesData = <String, List<double>>{};
     for (int i = 0; i < paths.length; i++) {
       final path = paths[i];
       final history = _multiHistory[path] ?? [];
+      debugPrint('[RENDERER] path=$path, history.length=${history.length}');
 
       List<double> data;
       if (history.isNotEmpty) {
         data = _normalizeData(history);
       } else {
         // Generate slightly different sample data for each line
+        debugPrint('[RENDERER] Generating sample data for $path');
         data = _normalizeData(
           List.generate(
             _maxPoints,
@@ -910,14 +917,19 @@ class _ChartRendererState extends State<ChartRenderer> {
         );
       }
       seriesData[path] = data;
+      debugPrint('[RENDERER] seriesData[$path].length=${data.length}');
     }
+
+    debugPrint('[RENDERER] seriesData complete, keys=${seriesData.keys}');
 
     // Handle stacked modes
     if (_mergeMode == ChartMergeMode.stackedArea ||
         _mergeMode == ChartMergeMode.stackedBar) {
+      debugPrint('[RENDERER] Using stacked mode: $_mergeMode');
       return _buildStackedChart(paths, seriesData, colors);
     }
 
+    debugPrint('[RENDERER] Using overlay mode');
     // Default overlay mode - build line data for each series
     final lineBarsData = <LineChartBarData>[];
     double globalMinY = double.infinity;
@@ -926,6 +938,9 @@ class _ChartRendererState extends State<ChartRenderer> {
     for (int i = 0; i < paths.length; i++) {
       final path = paths[i];
       final data = seriesData[path] ?? [];
+      debugPrint(
+        '[RENDERER] Building line for $path, data.length=${data.length}',
+      );
 
       // Use provided color or default
       Color lineColor;
@@ -959,6 +974,13 @@ class _ChartRendererState extends State<ChartRenderer> {
           .entries
           .map((e) => FlSpot(e.key.toDouble(), e.value))
           .toList();
+
+      debugPrint(
+        '[RENDERER] Line $i: spots.length=${spots.length}, '
+        'first=${spots.isNotEmpty ? spots.first : "N/A"}, '
+        'last=${spots.isNotEmpty ? spots.last : "N/A"}',
+      );
+      debugPrint('[RENDERER] Line $i: minY=$minVal, maxY=$maxVal');
 
       lineBarsData.add(
         LineChartBarData(
@@ -1002,8 +1024,15 @@ class _ChartRendererState extends State<ChartRenderer> {
       );
     }
 
-    if (lineBarsData.isEmpty) return const SizedBox.shrink();
+    debugPrint('[RENDERER] lineBarsData.length=${lineBarsData.length}');
+    if (lineBarsData.isEmpty) {
+      debugPrint('[RENDERER] WARNING: lineBarsData is EMPTY!');
+      return const SizedBox.shrink();
+    }
 
+    debugPrint(
+      '[RENDERER] Building LineChart with ${lineBarsData.length} lines',
+    );
     // Add padding to min/max
     if (globalMinY == double.infinity) globalMinY = 0;
     if (globalMaxY == double.negativeInfinity) globalMaxY = 100;
@@ -1012,12 +1041,14 @@ class _ChartRendererState extends State<ChartRenderer> {
     globalMinY -= padding;
     globalMaxY += padding;
 
+    debugPrint('[RENDERER] Chart Y range: minY=$globalMinY, maxY=$globalMaxY');
+
     final interval = (globalMaxY - globalMinY) / 4;
 
     // Build extra horizontal lines (thresholds)
     final extraLines = _buildThresholdLines();
 
-    return LineChart(
+    final chart = LineChart(
       LineChartData(
         gridData: FlGridData(
           show: _showGrid,
@@ -1034,6 +1065,16 @@ class _ChartRendererState extends State<ChartRenderer> {
         minY: globalMinY,
         maxY: globalMaxY,
       ),
+    );
+
+    // Debug wrapper to see actual size constraints
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        debugPrint(
+          '[RENDERER] LineChart constraints: w=${constraints.maxWidth}, h=${constraints.maxHeight}',
+        );
+        return chart;
+      },
     );
   }
 
