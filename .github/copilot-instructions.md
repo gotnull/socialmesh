@@ -1,84 +1,74 @@
 # copilot-instructions.md
 
-## Communication
-- Keep responses concise and focused on the task.
-- Avoid referencing internal tools or implementation details.
-- Only create additional files when explicitly requested.
-- Provide a short confirmation when a task is finished.
+## Project Overview
+Socialmesh is a Flutter Meshtastic companion app (iOS/Android) for mesh radio communication via BLE and USB. It works fully offline - Firebase is optional for cloud sync.
 
-## Code Changes
-- Apply changes directly to the codebase.
-- Create only files that contribute to functional app behavior.
-- Do not modify documentation unless requested.
+## Architecture
 
-## Code Quality
-- Do not leave placeholders or temporary comments.
-- Fully implement features or remove incomplete ones.
-- Resolve ALL issues from `flutter analyze` including info, warning, and error levels.
-- Replace deprecated APIs without suppression flags.
-- Code must pass `flutter analyze` with zero issues of any severity.
-- Use `debugPrint()` instead of `print()` for debug logging.
-- Ensure every feature is fully wired and functional end to end.
-- NEVER use `// ignore:` comments to suppress warnings or errors.
-- NEVER use `// noinspection` or any other suppression mechanism.
-- Fix the root cause of issues rather than hiding them.
+### Key Layers
+- **Transport** (`lib/core/transport.dart`): Abstract `DeviceTransport` interface for BLE/USB with `requiresFraming` property (USB needs framing, BLE doesn't)
+- **Protocol** (`lib/services/protocol/protocol_service.dart`): 4000+ line service handling Meshtastic protobufs, config streams, message delivery tracking
+- **Providers** (`lib/providers/app_providers.dart`): Central Riverpod providers (~2000 lines) - `MessagesNotifier`, `NodesNotifier`, `ChannelsNotifier`, connection state
+- **Features** (`lib/features/`): Feature modules (messaging, nodes, map, automations, settings, device config screens)
 
-## Riverpod (CRITICAL)
-- ALWAYS use Riverpod 3.x patterns with `Notifier`, `AsyncNotifier`, `FamilyNotifier`.
-- NEVER use old Riverpod 2.x `StateNotifier` or `StateNotifierProvider`.
-- Providers must use `build()` method, NOT constructor initialization.
-- Use `NotifierProvider<MyNotifier, MyState>` pattern.
-- Use `AsyncNotifierProvider` for async state management.
-- For family providers, extend `FamilyNotifier` or `FamilyAsyncNotifier`.
-- State updates use `state = newState`, NOT `state = state.copyWith()` patterns from StateNotifier.
+### Data Flow
+1. `BleTransport`/`UsbTransport` → raw bytes
+2. `PacketFramer` (USB only) → `ProtocolService` → parsed protobufs
+3. Stream controllers broadcast to Riverpod providers
+4. UI watches providers via `ref.watch()`
 
-## Complexity (CRITICAL)
-- NEVER opt for simplicity over functionality.
-- Implement the FULL solution regardless of complexity.
-- Do not simplify, shortcut, or reduce scope - complete the entire task as specified.
-- If a feature requires complex logic, implement all of it without compromise.
-- Never suggest "simpler alternatives" unless explicitly asked.
-- Complexity is acceptable; incomplete functionality is not.
+### Generated Code
+Protobufs in `lib/generated/` - regenerate with `./scripts/generate_protos.sh` after changing `protos/meshtastic/*.proto`
 
-## Code Reuse (CRITICAL)
-- BEFORE implementing any new widget, utility, or logic, SEARCH the codebase for existing implementations.
-- Look for existing widgets/cards in related screens (e.g., edit screens have widgets that creation screens should reuse).
-- Extract and refactor shared functionality into reusable components rather than duplicating code.
-- Check `lib/core/widgets/`, `lib/utils/`, and feature-specific files for existing utilities.
-- If similar logic exists, refactor to create a shared component instead of reimplementing.
-- Proven, tested code is always preferable to new implementations.
-- When adding features to wizards/creation flows, first check the corresponding edit/form screens for reusable widgets.
+## Riverpod 3.x Patterns (CRITICAL)
+```dart
+// ✅ Correct: Notifier with build()
+class MyNotifier extends Notifier<MyState> {
+  @override
+  MyState build() => MyState.initial();
+  void update(MyState s) => state = s;
+}
+final myProvider = NotifierProvider<MyNotifier, MyState>(MyNotifier.new);
 
-## Systematic Verification (CRITICAL)
-- NEVER assume you have found all instances of a pattern. Always search exhaustively.
-- When fixing a bug pattern, FIRST run a comprehensive search to find ALL affected files before making any changes.
-- Use grep/find commands to discover the full scope BEFORE claiming completeness.
-- After making changes, run verification commands to PROVE all instances are fixed.
-- When asked "are you sure?" or similar, re-run discovery commands to verify - do not rely on memory.
-- For config screens or similar patterns: search for `_loadCurrentConfig`, `_isLoading`, empty stubs, etc. across the ENTIRE codebase.
-- Always provide evidence (command output) when claiming completeness, not just assertions.
+// ❌ Wrong: StateNotifier (Riverpod 2.x)
+class MyNotifier extends StateNotifier<MyState> { ... }  // NEVER
+```
+- Use `AsyncNotifier`/`AsyncNotifierProvider` for async loading
+- Access in widgets: `ref.watch()` for reactive, `ref.read()` for one-time
 
-## UI and UX
-- Maintain consistent styling and sizing.
-- Avoid duplicating actions across multiple UI elements.
-- Prefer shallow navigation and inline actions when appropriate.
-- Apply clear hierarchy: primary actions use filled buttons, secondary use outlined or text.
-- Provide visible state feedback such as badges or indicators.
-- Use an 8dp spacing grid.
-- Button padding: 16 vertical, 24 horizontal.
-- Dialogs place the primary action on the right with equal button sizes.
-- Display existing data and allow inline editing.
-- Ensure interactions are polished, intuitive, and responsive.
+## Code Quality Rules
+- Zero `flutter analyze` issues (info, warning, error)
+- Use `debugPrint()` not `print()`
+- NEVER use `// ignore:` or `// noinspection`
+- Cancel all `StreamSubscription` in `dispose()`
+- Dispose all `TextEditingController`s
+- Config screens: implement `_loadCurrentConfig()` with `_isLoading` state
 
-## Visual Design Philosophy
-- ALWAYS choose the most visually impressive and engaging implementation.
-- Never default to "simple" when "incredible" is achievable.
-- Prioritize sci-fi aesthetics: glowing effects, dynamic animations, futuristic shapes.
-- Use custom geometry over basic primitives (diamonds/octahedrons over cubes, etc.).
-- Add visual flair: pulsing animations, gradient effects, particle-like details.
-- Every visual element should feel premium and cutting-edge.
-- If something can glow, animate, or look more futuristic - make it so.
+## Code Reuse
+Search before implementing:
+- `lib/core/widgets/` - shared widgets (`NodeAvatar`, `InfoTable`, `AppBottomSheet`)
+- `lib/utils/` - utilities (encoding, permissions, snackbar, validation)
+- Feature `widgets/` folders - check edit screens for reusable widgets
+
+## Logging
+Use `AppLogging` from `lib/core/logging.dart`:
+```dart
+AppLogging.ble('BLE message');
+AppLogging.protocol('Protocol message');
+AppLogging.automations('Automation message');
+```
+Controlled via `.env` flags like `BLE_LOGGING_ENABLED=false`
+
+## Testing
+Run codebase audits: `flutter test test/codebase_audit_test.dart`
+Checks: empty stubs, resource cleanup, config screen patterns
+
+## UI Guidelines
+- 8dp spacing grid, button padding: 16v × 24h
+- Primary actions: filled buttons (right side in dialogs)
+- Theme colors: `lib/core/theme.dart` - use `AccentColors` for app accent
+- Visual style: sci-fi aesthetics, glowing effects, animations
 
 ## Restrictions
-- Never run the Flutter app.
-- Never commit or push to git.
+- Never run the Flutter app
+- Never commit or push to git
