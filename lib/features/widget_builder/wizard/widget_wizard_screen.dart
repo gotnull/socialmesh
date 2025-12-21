@@ -4561,6 +4561,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         style: const StyleSchema(padding: 8, spacing: 8),
         children: children,
       );
+    } else if (_selectedTemplate?.id == 'graph') {
+      // Graph template: ALWAYS use column layout for chart stacking
+      // Graph elements include headers, spacers, and charts that must be vertical
+      root = ElementSchema(
+        type: ElementType.column,
+        style: const StyleSchema(padding: 12, spacing: 4),
+        children: children,
+      );
     } else if (_layoutStyle == _LayoutStyle.horizontal) {
       // Horizontal layout - stack rows of 3 items each for better wrapping
       if (children.length <= 3) {
