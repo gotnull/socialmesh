@@ -1,0 +1,545 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../../core/theme.dart';
+import '../models/shop_models.dart';
+import '../providers/device_shop_providers.dart';
+import 'device_shop_screen.dart';
+
+/// Seller profile screen showing seller info and their products
+class SellerProfileScreen extends ConsumerWidget {
+  final String sellerId;
+
+  const SellerProfileScreen({super.key, required this.sellerId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sellerAsync = ref.watch(singleSellerProvider(sellerId));
+    final productsAsync = ref.watch(sellerProductsProvider(sellerId));
+
+    return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      body: sellerAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                'Error loading seller',
+                style: TextStyle(color: Colors.white),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Go Back'),
+              ),
+            ],
+          ),
+        ),
+        data: (seller) {
+          if (seller == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.store_outlined,
+                    color: AppTheme.textTertiary,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Seller not found',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('Go Back'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return CustomScrollView(
+            slivers: [
+              // App Bar with seller header
+              _buildHeader(context, seller),
+
+              // Seller stats
+              SliverToBoxAdapter(child: _SellerStats(seller: seller)),
+
+              // Seller description
+              if (seller.description != null)
+                SliverToBoxAdapter(
+                  child: _SellerDescription(description: seller.description!),
+                ),
+
+              // Contact section
+              SliverToBoxAdapter(child: _ContactSection(seller: seller)),
+
+              // Products section header
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                  child: Text(
+                    'Products (${seller.productCount})',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Products grid
+              productsAsync.when(
+                loading: () => const SliverToBoxAdapter(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                ),
+                error: (error, stack) => SliverToBoxAdapter(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Text(
+                        'Unable to load products',
+                        style: TextStyle(color: AppTheme.textSecondary),
+                      ),
+                    ),
+                  ),
+                ),
+                data: (products) {
+                  if (products.isEmpty) {
+                    return SliverToBoxAdapter(
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.inventory_2_outlined,
+                                color: AppTheme.textTertiary,
+                                size: 48,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No products listed yet',
+                                style: TextStyle(color: AppTheme.textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return SliverPadding(
+                    padding: const EdgeInsets.all(12),
+                    sliver: SliverGrid(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.7,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        return ProductCard(product: products[index]);
+                      }, childCount: products.length),
+                    ),
+                  );
+                },
+              ),
+
+              // Bottom padding
+              const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  SliverAppBar _buildHeader(BuildContext context, ShopSeller seller) {
+    return SliverAppBar(
+      backgroundColor: AppTheme.darkCard,
+      expandedHeight: 200,
+      pinned: true,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                context.accentColor.withValues(alpha: 0.3),
+                AppTheme.darkCard,
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 40),
+                // Logo
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.darkBackground,
+                    border: Border.all(color: context.accentColor, width: 2),
+                  ),
+                  child: ClipOval(
+                    child: seller.logoUrl != null
+                        ? Image.network(
+                            seller.logoUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Icon(
+                              Icons.store,
+                              color: context.accentColor,
+                              size: 40,
+                            ),
+                          )
+                        : Icon(
+                            Icons.store,
+                            color: context.accentColor,
+                            size: 40,
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Name with badges
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      seller.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (seller.isVerified) ...[
+                      const SizedBox(width: 8),
+                      Icon(Icons.verified, color: Colors.blue, size: 20),
+                    ],
+                    if (seller.isOfficialPartner) ...[
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'Official Partner',
+                          style: TextStyle(
+                            color: Colors.amber,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SellerStats extends StatelessWidget {
+  final ShopSeller seller;
+
+  const _SellerStats({required this.seller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _StatItem(
+            icon: Icons.star,
+            iconColor: Colors.amber,
+            value: seller.rating.toStringAsFixed(1),
+            label: '${seller.reviewCount} reviews',
+          ),
+          _StatDivider(),
+          _StatItem(
+            icon: Icons.inventory_2,
+            iconColor: context.accentColor,
+            value: '${seller.productCount}',
+            label: 'Products',
+          ),
+          _StatDivider(),
+          _StatItem(
+            icon: Icons.shopping_bag,
+            iconColor: Colors.green,
+            value: '${seller.salesCount}',
+            label: 'Sales',
+          ),
+          _StatDivider(),
+          _StatItem(
+            icon: Icons.calendar_today,
+            iconColor: AppTheme.textSecondary,
+            value: _formatJoinDate(seller.joinedAt),
+            label: 'Joined',
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatJoinDate(DateTime date) {
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return "${months[date.month - 1]} '${date.year % 100}";
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String value;
+  final String label;
+
+  const _StatItem({
+    required this.icon,
+    required this.iconColor,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: iconColor, size: 20),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(color: AppTheme.textTertiary, fontSize: 11),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(width: 1, height: 40, color: AppTheme.darkBorder);
+  }
+}
+
+class _SellerDescription extends StatelessWidget {
+  final String description;
+
+  const _SellerDescription({required this.description});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'About',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: TextStyle(color: AppTheme.textSecondary, height: 1.5),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContactSection extends StatelessWidget {
+  final ShopSeller seller;
+
+  const _ContactSection({required this.seller});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasWebsite = seller.websiteUrl != null;
+    final hasEmail = seller.contactEmail != null;
+    final hasShipping = seller.countries.isNotEmpty;
+
+    if (!hasWebsite && !hasEmail && !hasShipping) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.darkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Contact & Shipping',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          if (hasWebsite)
+            _ContactRow(
+              icon: Icons.language,
+              label: 'Website',
+              value: _formatUrl(seller.websiteUrl!),
+              onTap: () => _launchUrl(seller.websiteUrl!),
+            ),
+
+          if (hasEmail)
+            _ContactRow(
+              icon: Icons.email_outlined,
+              label: 'Email',
+              value: seller.contactEmail!,
+              onTap: () => _launchUrl('mailto:${seller.contactEmail}'),
+            ),
+
+          if (hasShipping)
+            _ContactRow(
+              icon: Icons.local_shipping_outlined,
+              label: 'Ships to',
+              value: seller.countries.length > 3
+                  ? '${seller.countries.take(3).join(", ")} +${seller.countries.length - 3} more'
+                  : seller.countries.join(', '),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _formatUrl(String url) {
+    return url
+        .replaceAll('https://', '')
+        .replaceAll('http://', '')
+        .replaceAll('www.', '');
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+}
+
+class _ContactRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final VoidCallback? onTap;
+
+  const _ContactRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Row(
+          children: [
+            Icon(icon, color: context.accentColor, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: AppTheme.textTertiary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      color: onTap != null ? context.accentColor : Colors.white,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (onTap != null)
+              Icon(Icons.open_in_new, color: AppTheme.textTertiary, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}

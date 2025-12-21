@@ -32,6 +32,8 @@ import '../settings/subscription_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import '../reachability/mesh_reachability_screen.dart';
 import '../profile/profile_screen.dart';
+import '../sky_tracker/screens/sky_tracker_screen.dart';
+import '../device_shop/screens/device_shop_screen.dart';
 
 /// Notifier to expose the main shell's scaffold key for drawer access
 class MainShellScaffoldKeyNotifier extends Notifier<GlobalKey<ScaffoldState>?> {
@@ -369,6 +371,16 @@ class _MainShellState extends ConsumerState<MainShell> {
       icon: Icons.wifi_find,
       label: 'Reachability',
       screen: MeshReachabilityScreen(),
+    ),
+    const _DrawerMenuItem(
+      icon: Icons.flight,
+      label: 'Sky Tracker',
+      screen: SkyTrackerScreen(),
+    ),
+    const _DrawerMenuItem(
+      icon: Icons.store,
+      label: 'Device Shop',
+      screen: DeviceShopScreen(),
     ),
     // Premium features
     const _DrawerMenuItem(
