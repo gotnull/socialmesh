@@ -78,10 +78,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   // Step 3: Data selection (or Actions for Quick Actions template)
   final Set<String> _selectedBindings = {};
   final Set<ActionType> _selectedActions = {};
-  // Track original actions for edited widgets to detect changes
-  Set<ActionType>? _originalActions;
-  // Track original merge state for edited graph widgets to detect changes
-  bool? _originalMergeCharts;
+  // Track original state for edited widgets to detect structural changes
+  Set<String>? _originalBindings; // Bindings at load time
+  Set<ActionType>?
+  _originalActions; // Actions at load time (for actions template)
+  bool? _originalMergeCharts; // Merge state at load time (for graph template)
 
   // Step 4: Appearance
   Color _accentColor = const Color(0xFF4F6AF6);
@@ -170,6 +171,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     // Extract bindings FIRST (needed for template detection)
     _extractBindingsFromElement(schema.root);
+    // Store original bindings to detect structural changes later
+    _originalBindings = Set<String>.from(_selectedBindings);
     debugPrint('Wizard: Extracted bindings: $_selectedBindings');
 
     // Extract actions from schema
@@ -4394,6 +4397,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return _mergeCharts != _originalMergeCharts;
   }
 
+  /// Check if bindings have been changed from the original (adding/removing data fields)
+  bool _haveBindingsChanged() {
+    if (_originalBindings == null) return false;
+    // Check if sets are different (different size or different contents)
+    if (_selectedBindings.length != _originalBindings!.length) return true;
+    return !_selectedBindings.containsAll(_originalBindings!);
+  }
+
   /// Build schema for LIVE PREVIEW
   /// For template changes: ALWAYS rebuild to use new template structure
   /// For new graph/actions widgets: rebuild from current state
@@ -4436,6 +4447,15 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     if (isGraphTemplate && (isNewWidget || _hasMergeChanged())) {
       debugPrint(
         '[SCHEMA] Graph template - rebuilding (new=$isNewWidget, mergeChanged=${_hasMergeChanged()})',
+      );
+      return _buildSchemaFromCurrentState(name);
+    }
+
+    // ALL TEMPLATES: Rebuild if bindings have changed (added/removed data fields)
+    // This ensures the widget structure updates to match the new binding set
+    if (_haveBindingsChanged()) {
+      debugPrint(
+        '[SCHEMA] Bindings changed - rebuilding structure (template=${_selectedTemplate?.id})',
       );
       return _buildSchemaFromCurrentState(name);
     }
@@ -4504,6 +4524,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       debugPrint(
         '[SCHEMA] Graph template for save - rebuilding (new=$isNewWidget, mergeChanged=${_hasMergeChanged()})',
       );
+      return _buildSchemaFromCurrentState(name);
+    }
+
+    // For ALL templates: rebuild if bindings have been added or removed
+    // This ensures new data fields are shown and removed fields disappear
+    if (_haveBindingsChanged()) {
+      debugPrint('[SCHEMA] Bindings changed for save - rebuilding structure');
       return _buildSchemaFromCurrentState(name);
     }
 
