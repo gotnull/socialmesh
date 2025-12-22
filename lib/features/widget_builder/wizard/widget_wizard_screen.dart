@@ -399,14 +399,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           element.chartBindingPaths!.length > 1) {
         _mergeCharts = true;
 
-        // Extract merge colors
+        // Extract merge colors - ensure all paths have colors (use defaults for missing)
         final paths = element.chartBindingPaths!;
         final colors = element.chartLegendColors ?? [];
-        for (int i = 0; i < paths.length && i < colors.length; i++) {
-          final color = _hexToColor(colors[i]);
-          if (color != null) {
-            _mergeColors[paths[i]] = color;
+        for (int i = 0; i < paths.length; i++) {
+          Color? color;
+          if (i < colors.length) {
+            color = _hexToColor(colors[i]);
           }
+          // Use stored color or fall back to default for this index
+          _mergeColors[paths[i]] = color ?? ChartColors.forIndex(i);
         }
       }
 
