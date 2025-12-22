@@ -5,6 +5,7 @@ import '../marketplace/widget_marketplace_service.dart';
 import '../models/widget_schema.dart';
 import '../renderer/widget_renderer.dart';
 import '../storage/widget_storage_service.dart';
+import '../widget_builder_screen.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/widget_preview_card.dart';
 import '../../../providers/app_providers.dart';
@@ -806,8 +807,11 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
           context,
           '${widget.marketplaceWidget.name} installed!',
         );
-        // Pop back with result=true so caller knows to refresh
-        Navigator.pop(context, true);
+        // Navigate to My Widgets screen, replacing the entire marketplace stack
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const WidgetBuilderScreen()),
+          (route) => route.isFirst,
+        );
       }
     } catch (e) {
       if (mounted) {

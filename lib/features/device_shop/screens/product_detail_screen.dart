@@ -795,7 +795,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
   void _shareProduct(ShopProduct product) {
     final text =
-        '''Check out ${product.name} on Protofluff!
+        '''Check out ${product.name} on Socialmesh!
 
 ${product.shortDescription ?? product.description}
 

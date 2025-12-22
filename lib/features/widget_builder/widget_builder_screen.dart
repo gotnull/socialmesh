@@ -15,6 +15,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../dashboard/models/dashboard_widget_config.dart';
 import '../dashboard/providers/dashboard_providers.dart';
+import '../dashboard/widget_dashboard_screen.dart';
 
 /// Main widget builder screen - list and manage custom widgets
 class WidgetBuilderScreen extends ConsumerStatefulWidget {
@@ -166,9 +167,20 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add_box),
             onPressed: _createNewWidget,
             tooltip: 'Create Widget',
+          ),
+          IconButton(
+            icon: const Icon(Icons.dashboard),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const WidgetDashboardScreen(),
+                ),
+              );
+            },
+            tooltip: 'Dashboard',
           ),
           IconButton(
             icon: Icon(Icons.store, color: context.accentColor),

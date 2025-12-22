@@ -2863,13 +2863,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             'Show Min/Max',
             'Display markers at highest and lowest points',
             _showMinMax,
-            (value) {
-              debugPrint(
-                '[MINMAX] Toggle Show Min/Max: current=$_showMinMax, new=$value',
-              );
-              setState(() => _showMinMax = value);
-              debugPrint('[MINMAX] After setState: _showMinMax=$_showMinMax');
-            },
+            (value) => setState(() => _showMinMax = value),
           ),
         ],
 

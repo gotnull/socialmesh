@@ -594,20 +594,26 @@ class _ChartRendererState extends State<ChartRenderer> {
   }
 
   /// Initialize sample data for preview mode
+  /// Uses deterministic data so toggling visual options doesn't change the chart shape
   void _initPreviewData() {
     if (_isMultiLine) {
-      // Generate sample data for each series
-      final random = DateTime.now().millisecondsSinceEpoch;
+      // Generate deterministic sample data for each series using _maxPoints
+      // Each series gets a different but consistent pattern based on its index
       for (int i = 0; i < widget.element.chartBindingPaths!.length; i++) {
         final path = widget.element.chartBindingPaths![i];
-        final baseValue = (i + 1) * 20.0 + (random % 10);
+        // Deterministic base value and pattern for each series
+        final baseValue = (i + 1) * 25.0;
+        final phaseOffset = i * 2; // Different phase for visual separation
         _multiHistory[path] = List.generate(
-          20,
-          (index) => baseValue + (index % 5) * 3 - 6 + (index * 0.5),
+          _maxPoints,
+          (index) =>
+              baseValue +
+              15 * ((index + phaseOffset) % 5 - 2) / 2 +
+              8 * ((index + phaseOffset) % 3 - 1),
         );
       }
     } else {
-      // Use existing sample data generator for single series
+      // Use existing deterministic sample data generator for single series
       _history.addAll(_generateSampleData());
     }
   }
@@ -621,17 +627,21 @@ class _ChartRendererState extends State<ChartRenderer> {
     final newPaths = widget.element.chartBindingPaths;
     final oldType = oldWidget.element.chartType;
     final newType = widget.element.chartType;
+    final oldMaxPoints = oldWidget.element.chartMaxPoints;
+    final newMaxPoints = widget.element.chartMaxPoints;
 
     // Detect if we switched to/from multiLine or paths changed
     final pathsChanged = !_listEquals(oldPaths, newPaths);
     final typeChanged = oldType != newType;
+    final maxPointsChanged = oldMaxPoints != newMaxPoints;
 
-    if (pathsChanged || typeChanged) {
-      debugPrint(
-        '[RENDERER] didUpdateWidget: paths or type changed, reinitializing',
-      );
+    if (pathsChanged || typeChanged || maxPointsChanged) {
+      debugPrint('[RENDERER] didUpdateWidget: config changed, reinitializing');
       debugPrint('[RENDERER] oldPaths=$oldPaths, newPaths=$newPaths');
       debugPrint('[RENDERER] oldType=$oldType, newType=$newType');
+      debugPrint(
+        '[RENDERER] oldMaxPoints=$oldMaxPoints, newMaxPoints=$newMaxPoints',
+      );
 
       // Clear old data
       _multiHistory.clear();
