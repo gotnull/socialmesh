@@ -52,6 +52,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _showFilters = false;
   bool _measureMode = false;
   bool _showRangeCircles = false;
+  bool _showConnectionLines = false;
+  double _connectionMaxDistance =
+      15.0; // km - max distance for connection lines
   String _searchQuery = '';
 
   // Map style
@@ -499,6 +502,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 case 'heatmap':
                   setState(() => _showHeatmap = !_showHeatmap);
                   break;
+                case 'connections':
+                  setState(() => _showConnectionLines = !_showConnectionLines);
+                  break;
+                case 'distance_1':
+                  setState(() => _connectionMaxDistance = 1.0);
+                  break;
+                case 'distance_5':
+                  setState(() => _connectionMaxDistance = 5.0);
+                  break;
+                case 'distance_10':
+                  setState(() => _connectionMaxDistance = 10.0);
+                  break;
+                case 'distance_25':
+                  setState(() => _connectionMaxDistance = 25.0);
+                  break;
+                case 'distance_all':
+                  setState(() => _connectionMaxDistance = 100.0);
+                  break;
                 case 'range':
                   setState(() => _showRangeCircles = !_showRangeCircles);
                   break;
@@ -550,6 +571,132 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   ],
                 ),
               ),
+              PopupMenuItem(
+                value: 'connections',
+                child: Row(
+                  children: [
+                    Icon(
+                      _showConnectionLines ? Icons.share : Icons.share_outlined,
+                      size: 18,
+                      color: _showConnectionLines
+                          ? context.accentColor
+                          : AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _showConnectionLines
+                          ? 'Hide connection lines'
+                          : 'Show connection lines',
+                    ),
+                  ],
+                ),
+              ),
+              // Distance filter options (only shown when connections are enabled)
+              if (_showConnectionLines) ...[
+                PopupMenuItem(
+                  enabled: false,
+                  height: 32,
+                  child: Text(
+                    'Max Distance',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textTertiary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'distance_1',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _connectionMaxDistance == 1.0
+                            ? Icons.check_circle
+                            : Icons.circle_outlined,
+                        size: 16,
+                        color: _connectionMaxDistance == 1.0
+                            ? context.accentColor
+                            : AppTheme.textTertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('1 km'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'distance_5',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _connectionMaxDistance == 5.0
+                            ? Icons.check_circle
+                            : Icons.circle_outlined,
+                        size: 16,
+                        color: _connectionMaxDistance == 5.0
+                            ? context.accentColor
+                            : AppTheme.textTertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('5 km'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'distance_10',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _connectionMaxDistance == 10.0
+                            ? Icons.check_circle
+                            : Icons.circle_outlined,
+                        size: 16,
+                        color: _connectionMaxDistance == 10.0
+                            ? context.accentColor
+                            : AppTheme.textTertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('10 km'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'distance_25',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _connectionMaxDistance == 25.0
+                            ? Icons.check_circle
+                            : Icons.circle_outlined,
+                        size: 16,
+                        color: _connectionMaxDistance == 25.0
+                            ? context.accentColor
+                            : AppTheme.textTertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('25 km'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'distance_all',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _connectionMaxDistance >= 100.0
+                            ? Icons.check_circle
+                            : Icons.circle_outlined,
+                        size: 16,
+                        color: _connectionMaxDistance >= 100.0
+                            ? context.accentColor
+                            : AppTheme.textTertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('All'),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+              ],
               PopupMenuItem(
                 value: 'range',
                 child: Row(
@@ -717,13 +864,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     PolylineLayer(
                       polylines: _buildNodeTrails(nodesWithPosition, myNodeNum),
                     ),
-                    // Connection lines
-                    PolylineLayer(
-                      polylines: _buildConnectionLines(
-                        nodesWithPosition,
-                        myNodeNum,
+                    // Connection lines (optional)
+                    if (_showConnectionLines)
+                      PolylineLayer(
+                        polylines: _buildConnectionLines(
+                          nodesWithPosition,
+                          myNodeNum,
+                        ),
                       ),
-                    ),
                     // Measurement line
                     if (_measureStart != null && _measureEnd != null)
                       PolylineLayer(
@@ -1426,7 +1574,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     int? myNodeNum,
   ) {
     final lines = <Polyline>[];
-    const maxDistanceKm = 15.0;
+    final maxDistanceKm = _connectionMaxDistance;
 
     for (int i = 0; i < nodes.length; i++) {
       for (int j = i + 1; j < nodes.length; j++) {
@@ -1446,9 +1594,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
               node2.node.nodeNum == myNodeNum;
           final hasStaleNode = node1.isStale || node2.isStale;
 
+          // Always use dotted pattern, with different spacing for stale nodes
           final pattern = hasStaleNode
-              ? const StrokePattern.dotted(spacingFactor: 2.5)
-              : const StrokePattern.solid();
+              ? const StrokePattern.dotted(spacingFactor: 3.0)
+              : const StrokePattern.dotted(spacingFactor: 1.5);
 
           lines.add(
             Polyline(
