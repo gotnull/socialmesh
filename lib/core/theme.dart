@@ -58,6 +58,78 @@ class AccentColors {
   }
 }
 
+/// Colors used for chart series, widget builder, and data visualization
+class ChartColors {
+  // Primary series colors - used for data series in charts
+  static const blue = Color(0xFF4F6AF6);
+  static const green = Color(0xFF4ADE80);
+  static const yellow = Color(0xFFFBBF24);
+  static const pink = Color(0xFFF472B6);
+  static const purple = Color(0xFFA78BFA);
+  static const cyan = Color(0xFF22D3EE);
+  static const red = Color(0xFFFF6B6B);
+  static const orange = Color(0xFFFF9F43);
+
+  // Gradient colors for value-based coloring
+  static const gradientGreen = Color(0xFF4CAF50);
+  static const gradientRed = Color(0xFFFF5252);
+  static const gradientOrange = Color(0xFFFF9800);
+  static const gradientPurple = Color(0xFF9C27B0);
+
+  // Threshold colors
+  static const thresholdRed = Color(0xFFFF5252);
+  static const thresholdYellow = Color(0xFFFBBF24);
+  static const thresholdGreen = Color(0xFF4CAF50);
+  static const thresholdBlue = Color(0xFF4F6AF6);
+  static const thresholdPink = Color(0xFFE91E63);
+  static const thresholdPurple = Color(0xFF9C27B0);
+
+  // Category colors for binding categories
+  static const categoryNode = Color(0xFF60A5FA);
+  static const categoryDevice = Color(0xFFA78BFA);
+  static const categoryNetwork = Color(0xFF4ADE80);
+  static const categoryEnvironment = Color(0xFF22D3EE);
+  static const categoryPower = Color(0xFFFBBF24);
+  static const categoryAirQuality = Color(0xFF34D399);
+  static const categoryGps = Color(0xFFF472B6);
+  static const categoryMessaging = Color(0xFFFF6B6B);
+
+  /// Default series colors for charts (ordered for visual distinction)
+  static const List<Color> seriesColors = [
+    blue,
+    green,
+    yellow,
+    pink,
+    purple,
+    cyan,
+    red,
+    orange,
+  ];
+
+  /// Colors available in gradient picker
+  static const List<Color> gradientPickerColors = [
+    gradientGreen,
+    yellow,
+    gradientOrange,
+    gradientRed,
+    blue,
+    gradientPurple,
+  ];
+
+  /// Colors available in threshold picker
+  static const List<Color> thresholdPickerColors = [
+    thresholdRed,
+    thresholdYellow,
+    thresholdGreen,
+    thresholdBlue,
+    thresholdPink,
+    thresholdPurple,
+  ];
+
+  /// Get color for a series index (cycles through available colors)
+  static Color forIndex(int index) => seriesColors[index % seriesColors.length];
+}
+
 /// App taglines shown on splash/connecting screens
 const appTaglines = [
   'Off-grid communication.',

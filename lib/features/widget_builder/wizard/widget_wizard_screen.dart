@@ -34,8 +34,8 @@ class _GradientConfig {
 
   factory _GradientConfig() => _GradientConfig._(
     enabled: false,
-    lowColor: const Color(0xFF4CAF50),
-    highColor: const Color(0xFFFF5252),
+    lowColor: ChartColors.gradientGreen,
+    highColor: ChartColors.gradientRed,
   );
 }
 
@@ -85,7 +85,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   bool? _originalMergeCharts; // Merge state at load time (for graph template)
 
   // Step 4: Appearance
-  Color _accentColor = const Color(0xFF4F6AF6);
+  Color _accentColor = ChartColors.blue;
   bool _showLabels = true;
   bool _addToDashboard = true;
   _LayoutStyle _layoutStyle = _LayoutStyle.vertical;
@@ -1079,7 +1079,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         name: 'Status Display',
         description: 'Show values with labels and optional progress bars',
         icon: Icons.speed,
-        color: const Color(0xFF4ADE80),
+        color: ChartColors.green,
         suggestedBindings: [
           'node.batteryLevel',
           'node.snr',
@@ -1091,7 +1091,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         name: 'Info Card',
         description: 'Display text information in a clean layout',
         icon: Icons.info_outline,
-        color: const Color(0xFF60A5FA),
+        color: ChartColors.categoryNode,
         suggestedBindings: [
           'node.longName',
           'node.firmwareVersion',
@@ -1103,7 +1103,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         name: 'Gauge Widget',
         description: 'Big visual gauge with a single value',
         icon: Icons.data_usage,
-        color: const Color(0xFFFBBF24),
+        color: ChartColors.yellow,
         suggestedBindings: ['node.batteryLevel'],
       ),
       _WidgetTemplate(
@@ -1111,7 +1111,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         name: 'Quick Actions',
         description: 'Tap buttons to send messages, share location, etc.',
         icon: Icons.flash_on,
-        color: const Color(0xFFF472B6),
+        color: ChartColors.pink,
         suggestedBindings: [],
       ),
       _WidgetTemplate(
@@ -1119,7 +1119,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         name: 'Location Info',
         description: 'Show GPS coordinates and distance',
         icon: Icons.location_on,
-        color: const Color(0xFFA78BFA),
+        color: ChartColors.purple,
         suggestedBindings: ['node.latitude', 'node.longitude', 'node.distance'],
       ),
       _WidgetTemplate(
@@ -1127,7 +1127,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         name: 'Weather & Environment',
         description: 'Temperature, humidity, and sensor readings',
         icon: Icons.thermostat,
-        color: const Color(0xFF22D3EE),
+        color: ChartColors.cyan,
         suggestedBindings: [
           'node.temperature',
           'node.humidity',
@@ -1139,7 +1139,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         name: 'Graph Widget',
         description: 'Line, area, or bar charts for tracking data over time',
         icon: Icons.show_chart,
-        color: const Color(0xFFFF9F43),
+        color: ChartColors.orange,
         suggestedBindings: ['node.rssi', 'node.snr'],
       ),
       _WidgetTemplate(
@@ -1352,7 +1352,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           _buildDataCategory(
             'Suggested for ${_selectedTemplate!.name}',
             Icons.star,
-            const Color(0xFFFBBF24),
+            ChartColors.yellow,
             BindingRegistry.bindings
                 .where((b) => suggestedBindings.contains(b.path))
                 .toList(),
@@ -1554,14 +1554,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   Color _getCategoryColor(BindingCategory category) {
     return switch (category) {
-      BindingCategory.node => const Color(0xFF60A5FA),
-      BindingCategory.device => const Color(0xFFA78BFA),
-      BindingCategory.network => const Color(0xFF4ADE80),
-      BindingCategory.environment => const Color(0xFF22D3EE),
-      BindingCategory.power => const Color(0xFFFBBF24),
-      BindingCategory.airQuality => const Color(0xFF34D399),
-      BindingCategory.gps => const Color(0xFFF472B6),
-      BindingCategory.messaging => const Color(0xFFFF6B6B),
+      BindingCategory.node => ChartColors.categoryNode,
+      BindingCategory.device => ChartColors.categoryDevice,
+      BindingCategory.network => ChartColors.categoryNetwork,
+      BindingCategory.environment => ChartColors.categoryEnvironment,
+      BindingCategory.power => ChartColors.categoryPower,
+      BindingCategory.airQuality => ChartColors.categoryAirQuality,
+      BindingCategory.gps => ChartColors.categoryGps,
+      BindingCategory.messaging => ChartColors.categoryMessaging,
     };
   }
 
@@ -1665,35 +1665,35 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         label: 'Send Message',
         description: 'Quickly send a message to a node',
         icon: Icons.send,
-        color: const Color(0xFF4F6AF6),
+        color: ChartColors.blue,
       ),
       _ActionOption(
         type: ActionType.shareLocation,
         label: 'Share Location',
         description: 'Send your current GPS position',
         icon: Icons.location_on,
-        color: const Color(0xFF4ADE80),
+        color: ChartColors.green,
       ),
       _ActionOption(
         type: ActionType.requestPositions,
         label: 'Request Positions',
         description: 'Ask all nodes to share their location',
         icon: Icons.radar,
-        color: const Color(0xFFA78BFA),
+        color: ChartColors.purple,
       ),
       _ActionOption(
         type: ActionType.traceroute,
         label: 'Traceroute',
         description: 'See the path to a node',
         icon: Icons.route,
-        color: const Color(0xFF22D3EE),
+        color: ChartColors.cyan,
       ),
       _ActionOption(
         type: ActionType.sos,
         label: 'SOS Emergency',
         description: 'Send an emergency alert',
         icon: Icons.emergency,
-        color: const Color(0xFFFF6B6B),
+        color: ChartColors.red,
       ),
     ];
   }
@@ -1868,16 +1868,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   Widget _buildColorPicker() {
-    final colors = [
-      const Color(0xFF4F6AF6), // Blue
-      const Color(0xFF4ADE80), // Green
-      const Color(0xFFFBBF24), // Yellow
-      const Color(0xFFF472B6), // Pink
-      const Color(0xFFA78BFA), // Purple
-      const Color(0xFF22D3EE), // Cyan
-      const Color(0xFFFF6B6B), // Red
-      const Color(0xFFFF9F43), // Orange
-    ];
+    // Use centralized chart series colors
+    final colors = ChartColors.seriesColors;
 
     return Wrap(
       spacing: 12,
@@ -2246,15 +2238,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   Color _getDefaultColorForIndex(int index) {
-    final colors = [
-      const Color(0xFF4F6AF6), // Blue
-      const Color(0xFF00BCD4), // Cyan
-      const Color(0xFFFF9800), // Orange
-      const Color(0xFF4CAF50), // Green
-      const Color(0xFFE91E63), // Pink
-      const Color(0xFF9C27B0), // Purple
-    ];
-    return colors[index % colors.length];
+    // Use centralized chart series colors
+    return ChartColors.forIndex(index);
   }
 
   Widget _buildChartTypeButton(
@@ -2489,19 +2474,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   Widget _buildMergeColorPickers() {
-    final availableColors = [
-      const Color(0xFF4F6AF6), // Blue
-      const Color(0xFF4ADE80), // Green
-      const Color(0xFFFBBF24), // Yellow
-      const Color(0xFFF472B6), // Pink
-      const Color(0xFFA78BFA), // Purple
-      const Color(0xFF22D3EE), // Cyan
-      const Color(0xFFFF6B6B), // Red
-      const Color(0xFFFF9F43), // Orange
-    ];
-
-    // Default colors use the first N colors from available colors
-    // so they always match for the checkmark indicator
+    // Use centralized chart series colors
+    final availableColors = ChartColors.seriesColors;
     final defaultColors = availableColors;
 
     final bindingsList = _selectedBindings.toList();
@@ -2626,19 +2600,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   /// Series color pickers for non-merged multi-series charts
   Widget _buildSeriesColorPickers() {
-    final availableColors = [
-      const Color(0xFF4F6AF6), // Blue
-      const Color(0xFF4ADE80), // Green
-      const Color(0xFFFBBF24), // Yellow
-      const Color(0xFFF472B6), // Pink
-      const Color(0xFFA78BFA), // Purple
-      const Color(0xFF22D3EE), // Cyan
-      const Color(0xFFFF6B6B), // Red
-      const Color(0xFFFF9F43), // Orange
-    ];
-
-    // Default colors use the first N colors from available colors
-    // so they always match for the checkmark indicator
+    // Use centralized chart series colors
+    final availableColors = ChartColors.seriesColors;
     final defaultColors = availableColors;
 
     final bindingsList = _selectedBindings.toList();
@@ -2977,14 +2940,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   Widget _buildGradientFillOption() {
-    final gradientColors = [
-      const Color(0xFF4CAF50), // Green
-      const Color(0xFFFBBF24), // Yellow
-      const Color(0xFFFF9800), // Orange
-      const Color(0xFFFF5252), // Red
-      const Color(0xFF4F6AF6), // Blue
-      const Color(0xFF9C27B0), // Purple
-    ];
+    // Use centralized gradient picker colors
+    final gradientColors = ChartColors.gradientPickerColors;
 
     // Get the binding paths to show gradients for
     List<String> bindingsToShow;
@@ -3016,20 +2973,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     Color getBindingColor(String bindingPath) {
       if (bindingPath == '_merged') return context.accentColor;
       final index = _selectedBindings.toList().indexOf(bindingPath);
-      final defaultColors = [
-        const Color(0xFF4F6AF6),
-        const Color(0xFF4ADE80),
-        const Color(0xFFFBBF24),
-        const Color(0xFFF472B6),
-        const Color(0xFFA78BFA),
-        const Color(0xFF22D3EE),
-        const Color(0xFFFF6B6B),
-        const Color(0xFFFF9F43),
-      ];
       return _mergeColors[bindingPath] ??
-          (index >= 0
-              ? defaultColors[index % defaultColors.length]
-              : context.accentColor);
+          (index >= 0 ? ChartColors.forIndex(index) : context.accentColor);
     }
 
     // Check if any gradient is enabled
@@ -3405,14 +3350,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     final labelController = TextEditingController(text: threshold.label);
     Color selectedColor = threshold.color;
 
-    final thresholdColors = [
-      const Color(0xFFFF5252), // Red
-      const Color(0xFFFBBF24), // Yellow
-      const Color(0xFF4CAF50), // Green
-      const Color(0xFF4F6AF6), // Blue
-      const Color(0xFFE91E63), // Pink
-      const Color(0xFF9C27B0), // Purple
-    ];
+    // Use centralized threshold picker colors
+    final thresholdColors = ChartColors.thresholdPickerColors;
 
     showModalBottomSheet(
       context: context,
@@ -3694,20 +3633,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     Color getBindingColor(String bindingPath) {
       if (bindingPath == '_merged') return context.accentColor;
       final index = _selectedBindings.toList().indexOf(bindingPath);
-      final defaultColors = [
-        const Color(0xFF4F6AF6),
-        const Color(0xFF4ADE80),
-        const Color(0xFFFBBF24),
-        const Color(0xFFF472B6),
-        const Color(0xFFA78BFA),
-        const Color(0xFF22D3EE),
-        const Color(0xFFFF6B6B),
-        const Color(0xFFFF9F43),
-      ];
       return _mergeColors[bindingPath] ??
-          (index >= 0
-              ? defaultColors[index % defaultColors.length]
-              : context.accentColor);
+          (index >= 0 ? ChartColors.forIndex(index) : context.accentColor);
     }
 
     return Container(
@@ -3781,7 +3708,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                               current.add(
                                 _ThresholdLine(
                                   value: 50,
-                                  color: const Color(0xFFFF5252),
+                                  color: ChartColors.thresholdRed,
                                   label: '',
                                 ),
                               );
@@ -4303,6 +4230,23 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       }
       debugPrint('[APPLY] Chart: Setting chartLegendColors=$legendColors');
 
+      // For non-merged single-binding charts, also set the style.textColor
+      // because the renderer uses style.textColor for single-series charts
+      String? chartTextColor;
+      if (!_mergeCharts && element.binding?.path != null) {
+        final bindingPath = element.binding!.path;
+        final bindingIndex = selectedBindingsList.indexOf(bindingPath);
+        final chartColor =
+            _mergeColors[bindingPath] ??
+            (bindingIndex >= 0
+                ? _getDefaultColorForIndex(bindingIndex)
+                : _accentColor);
+        chartTextColor = _colorToHex(chartColor);
+        debugPrint(
+          '[APPLY] Chart: Non-merged chart for $bindingPath, setting textColor=$chartTextColor',
+        );
+      }
+
       modified = element.copyWith(
         chartType: newChartType,
         chartShowGrid: _showGrid,
@@ -4324,6 +4268,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         // CRITICAL: Update bindings and colors with user selections
         chartBindingPaths: selectedBindingsList,
         chartLegendColors: legendColors,
+        // For non-merged charts, also update style.textColor
+        style: chartTextColor != null
+            ? element.style.copyWith(textColor: chartTextColor)
+            : element.style,
       );
       debugPrint(
         '[APPLY] Chart: modified.chartShowMinMax=${modified.chartShowMinMax}',
@@ -4837,17 +4785,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     final children = <ElementSchema>[];
 
-    // Default colors for merged charts - must match availableColors in UI pickers
-    final defaultChartColors = <Color>[
-      const Color(0xFF4F6AF6), // Blue
-      const Color(0xFF4ADE80), // Green
-      const Color(0xFFFBBF24), // Yellow
-      const Color(0xFFF472B6), // Pink
-      const Color(0xFFA78BFA), // Purple
-      const Color(0xFF22D3EE), // Cyan
-      const Color(0xFFFF6B6B), // Red
-      const Color(0xFFFF9F43), // Orange
-    ];
+    // Use centralized chart series colors
+    final defaultChartColors = ChartColors.seriesColors;
 
     // Merge mode: single chart with multiple data series
     if (_mergeCharts && _selectedBindings.length > 1) {
@@ -5008,22 +4947,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
         // Get color for this specific binding (series colors)
         final bindingIndex = _selectedBindings.toList().indexOf(bindingPath);
-        // Default colors must match availableColors in UI pickers
-        final defaultChartColorsList = [
-          const Color(0xFF4F6AF6), // Blue
-          const Color(0xFF4ADE80), // Green
-          const Color(0xFFFBBF24), // Yellow
-          const Color(0xFFF472B6), // Pink
-          const Color(0xFFA78BFA), // Purple
-          const Color(0xFF22D3EE), // Cyan
-          const Color(0xFFFF6B6B), // Red
-          const Color(0xFFFF9F43), // Orange
-        ];
+        // Use centralized chart series colors
         final bindingColor =
             _mergeColors[bindingPath] ??
             (bindingIndex >= 0
-                ? defaultChartColorsList[bindingIndex %
-                      defaultChartColorsList.length]
+                ? ChartColors.forIndex(bindingIndex)
                 : _accentColor);
 
         // Header row with label and current value

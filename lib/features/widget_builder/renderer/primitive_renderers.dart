@@ -523,10 +523,10 @@ class _ChartRendererState extends State<ChartRenderer> {
 
   Color get _gradientLowColor => widget.element.chartGradientLowColor != null
       ? StyleSchema.parseColor(widget.element.chartGradientLowColor!)
-      : const Color(0xFF4CAF50);
+      : ChartColors.gradientGreen;
   Color get _gradientHighColor => widget.element.chartGradientHighColor != null
       ? StyleSchema.parseColor(widget.element.chartGradientHighColor!)
-      : const Color(0xFFFF5252);
+      : ChartColors.gradientRed;
   List<double> get _thresholds => widget.element.chartThresholds ?? [];
   List<Color> get _thresholdColors =>
       (widget.element.chartThresholdColors ?? [])
@@ -807,7 +807,7 @@ class _ChartRendererState extends State<ChartRenderer> {
     for (int i = 0; i < _thresholds.length; i++) {
       final color = i < _thresholdColors.length
           ? _thresholdColors[i]
-          : const Color(0xFFFF5252);
+          : ChartColors.thresholdRed;
       final label = i < _thresholdLabels.length ? _thresholdLabels[i] : '';
 
       lines.add(
@@ -985,15 +985,8 @@ class _ChartRendererState extends State<ChartRenderer> {
           '[RENDERER] Series $i ($path): using provided color ${colors[i]} -> $lineColor',
         );
       } else {
-        final defaultColors = [
-          widget.accentColor,
-          const Color(0xFF00BCD4),
-          const Color(0xFFFF9800),
-          const Color(0xFF4CAF50),
-          const Color(0xFFE91E63),
-          const Color(0xFF9C27B0),
-        ];
-        lineColor = defaultColors[i % defaultColors.length];
+        // Fallback colors - use centralized ChartColors for consistency
+        lineColor = ChartColors.forIndex(i);
       }
 
       if (data.isEmpty) continue;
@@ -1170,15 +1163,8 @@ class _ChartRendererState extends State<ChartRenderer> {
       if (i < colors.length) {
         lineColor = StyleSchema.parseColor(colors[i]);
       } else {
-        final defaultColors = [
-          widget.accentColor,
-          const Color(0xFF00BCD4),
-          const Color(0xFFFF9800),
-          const Color(0xFF4CAF50),
-          const Color(0xFFE91E63),
-          const Color(0xFF9C27B0),
-        ];
-        lineColor = defaultColors[i % defaultColors.length];
+        // Fallback colors - use centralized ChartColors for consistency
+        lineColor = ChartColors.forIndex(i);
       }
 
       final spots = cumulativeData[i]
@@ -1281,15 +1267,8 @@ class _ChartRendererState extends State<ChartRenderer> {
         if (i < colors.length) {
           barColor = StyleSchema.parseColor(colors[i]);
         } else {
-          final defaultColors = [
-            widget.accentColor,
-            const Color(0xFF00BCD4),
-            const Color(0xFFFF9800),
-            const Color(0xFF4CAF50),
-            const Color(0xFFE91E63),
-            const Color(0xFF9C27B0),
-          ];
-          barColor = defaultColors[i % defaultColors.length];
+          // Fallback colors - use centralized ChartColors for consistency
+          barColor = ChartColors.forIndex(i);
         }
 
         rods.add(BarChartRodStackItem(fromY, fromY + value, barColor));
