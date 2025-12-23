@@ -1762,6 +1762,85 @@ final myNodeNumProvider = NotifierProvider<MyNodeNumNotifier, int?>(
   MyNodeNumNotifier.new,
 );
 
+// ============================================================================
+// REMOTE ADMINISTRATION
+// ============================================================================
+
+/// State for remote administration - tracks which node is being configured
+class RemoteAdminState {
+  final int? targetNodeNum;
+  final String? targetNodeName;
+  final bool isConfiguring;
+
+  const RemoteAdminState({
+    this.targetNodeNum,
+    this.targetNodeName,
+    this.isConfiguring = false,
+  });
+
+  /// Whether we're configuring a remote node (not our connected device)
+  bool get isRemote => targetNodeNum != null;
+
+  RemoteAdminState copyWith({
+    int? targetNodeNum,
+    String? targetNodeName,
+    bool? isConfiguring,
+    bool clearTarget = false,
+  }) {
+    return RemoteAdminState(
+      targetNodeNum: clearTarget ? null : (targetNodeNum ?? this.targetNodeNum),
+      targetNodeName: clearTarget
+          ? null
+          : (targetNodeName ?? this.targetNodeName),
+      isConfiguring: isConfiguring ?? this.isConfiguring,
+    );
+  }
+
+  @override
+  String toString() =>
+      'RemoteAdminState(target: ${targetNodeNum != null ? '0x${targetNodeNum!.toRadixString(16)} ($targetNodeName)' : 'local'}, isConfiguring: $isConfiguring)';
+}
+
+/// Notifier for managing remote administration target
+class RemoteAdminNotifier extends Notifier<RemoteAdminState> {
+  @override
+  RemoteAdminState build() => const RemoteAdminState();
+
+  /// Set the target node for remote configuration
+  void setTarget(int nodeNum, String? nodeName) {
+    state = RemoteAdminState(
+      targetNodeNum: nodeNum,
+      targetNodeName: nodeName,
+      isConfiguring: false,
+    );
+  }
+
+  /// Clear the target (configure local device)
+  void clearTarget() {
+    state = const RemoteAdminState();
+  }
+
+  /// Set the configuring state
+  void setConfiguring(bool isConfiguring) {
+    state = state.copyWith(isConfiguring: isConfiguring);
+  }
+
+  /// Get the target node number (null = local device)
+  int? get targetNodeNum => state.targetNodeNum;
+}
+
+final remoteAdminProvider =
+    NotifierProvider<RemoteAdminNotifier, RemoteAdminState>(
+      RemoteAdminNotifier.new,
+    );
+
+/// Provider that returns the target node number for admin operations
+/// Returns null if configuring local device, or the remote node number otherwise
+final remoteAdminTargetProvider = Provider<int?>((ref) {
+  final remoteState = ref.watch(remoteAdminProvider);
+  return remoteState.targetNodeNum;
+});
+
 /// Unread messages count provider
 /// Returns the count of messages that were received from other nodes
 /// and not yet read (messages where received=true and from != myNodeNum)

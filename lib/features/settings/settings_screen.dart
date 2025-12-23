@@ -22,6 +22,7 @@ import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/legal_document_sheet.dart';
+import '../../core/widgets/remote_admin_selector_sheet.dart';
 import '../../core/widgets/secret_gesture_detector.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
@@ -1146,6 +1147,168 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  /// Build the Remote Administration selector widget
+  /// Shows a tappable tile that opens a bottom sheet to select target node
+  Widget _buildRemoteAdminSelector(BuildContext context, WidgetRef ref) {
+    final remoteState = ref.watch(remoteAdminProvider);
+    final nodes = ref.watch(nodesProvider);
+    final myNodeNum = ref.watch(myNodeNumProvider);
+    final connectedDevice = ref.watch(connectedDeviceProvider);
+    final accentColor = context.accentColor;
+
+    // Only show if we have other nodes to configure
+    // Filter to nodes with public keys (can accept admin messages via PKI)
+    final adminableNodes = nodes.values.where((node) {
+      // Exclude our own node
+      if (node.nodeNum == myNodeNum) return false;
+      // Node must have a public key for PKI admin messages
+      return node.hasPublicKey;
+    }).toList();
+
+    // If no other nodes, don't show the selector
+    if (adminableNodes.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeader(title: 'REMOTE ADMINISTRATION'),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          decoration: BoxDecoration(
+            color: remoteState.isRemote
+                ? accentColor.withValues(alpha: 0.1)
+                : AppTheme.darkCard,
+            borderRadius: BorderRadius.circular(12),
+            border: remoteState.isRemote
+                ? Border.all(color: accentColor.withValues(alpha: 0.5))
+                : null,
+          ),
+          child: Column(
+            children: [
+              ListTile(
+                onTap: () async {
+                  final selection = await RemoteAdminSelectorSheet.show(
+                    context,
+                    currentTarget: remoteState.targetNodeNum,
+                  );
+                  if (selection != null) {
+                    if (selection.isLocal) {
+                      ref.read(remoteAdminProvider.notifier).clearTarget();
+                    } else {
+                      ref
+                          .read(remoteAdminProvider.notifier)
+                          .setTarget(selection.nodeNum!, selection.nodeName);
+                    }
+                  }
+                },
+                leading: Icon(
+                  remoteState.isRemote
+                      ? Icons.admin_panel_settings
+                      : Icons.settings_remote,
+                  color: remoteState.isRemote
+                      ? accentColor
+                      : AppTheme.textSecondary,
+                ),
+                title: Text(
+                  remoteState.isRemote
+                      ? 'Configuring Remote Node'
+                      : 'Configure Device',
+                  style: TextStyle(
+                    color: remoteState.isRemote ? accentColor : Colors.white,
+                    fontWeight: remoteState.isRemote
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                subtitle: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        remoteState.isRemote
+                            ? remoteState.targetNodeName ??
+                                  '0x${remoteState.targetNodeNum!.toRadixString(16)}'
+                            : connectedDevice?.name ?? 'Connected Device',
+                        style: TextStyle(
+                          color: remoteState.isRemote
+                              ? accentColor.withValues(alpha: 0.8)
+                              : AppTheme.textSecondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (remoteState.isRemote) ...[
+                      const SizedBox(width: 6),
+                      Icon(
+                        Icons.lock,
+                        size: 12,
+                        color: accentColor.withValues(alpha: 0.7),
+                      ),
+                    ],
+                  ],
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${adminableNodes.length} nodes',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textTertiary,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right,
+                      color: remoteState.isRemote
+                          ? accentColor
+                          : AppTheme.textSecondary,
+                    ),
+                  ],
+                ),
+              ),
+              if (remoteState.isRemote)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.orange.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.info_outline,
+                          color: Colors.orange,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Remote admin requires the target node to have your public key in its Admin Keys list.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange.shade200,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
   void _dismissKeyboard() {
     _searchFocusNode.unfocus();
   }
@@ -1950,6 +2113,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
 
                             const SizedBox(height: 16),
+
+                            // Remote Admin Selector
+                            _buildRemoteAdminSelector(context, ref),
 
                             // Device Section
                             _SectionHeader(title: 'DEVICE'),

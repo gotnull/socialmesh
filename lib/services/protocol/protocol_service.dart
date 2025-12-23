@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import '../../core/logging.dart';
@@ -2743,9 +2742,12 @@ class ProtocolService {
   }
 
   /// Request the current LoRa configuration (for region)
-  Future<void> getLoRaConfig() async {
+  Future<void> getLoRaConfig({int? targetNodeNum}) async {
     try {
-      _logger.i('Requesting LoRa config');
+      final target = targetNodeNum ?? _myNodeNum ?? 0;
+      _logger.i(
+        'Requesting LoRa config${targetNodeNum != null ? ' from node $targetNodeNum' : ''}',
+      );
 
       // Use ConfigType enum for LoRa config
       final adminMsg = pb.AdminMessage()
@@ -2758,7 +2760,7 @@ class ProtocolService {
 
       final packet = pb.MeshPacket()
         ..from = _myNodeNum ?? 0
-        ..to = _myNodeNum ?? 0
+        ..to = target
         ..decoded = data
         ..id = _generatePacketId();
 
@@ -2772,9 +2774,12 @@ class ProtocolService {
   }
 
   /// Request the current Position configuration (GPS settings)
-  Future<void> getPositionConfig() async {
+  Future<void> getPositionConfig({int? targetNodeNum}) async {
     try {
-      _logger.i('Requesting Position config');
+      final target = targetNodeNum ?? _myNodeNum ?? 0;
+      _logger.i(
+        'Requesting Position config${targetNodeNum != null ? ' from node $targetNodeNum' : ''}',
+      );
 
       final adminMsg = pb.AdminMessage()
         ..getConfigRequest = pb.AdminMessage_ConfigType.POSITION_CONFIG;
@@ -2786,7 +2791,7 @@ class ProtocolService {
 
       final packet = pb.MeshPacket()
         ..from = _myNodeNum ?? 0
-        ..to = _myNodeNum ?? 0
+        ..to = target
         ..decoded = data
         ..id = _generatePacketId();
 
@@ -3315,7 +3320,12 @@ class ProtocolService {
   // ============================================================================
 
   /// Get device configuration by type
-  Future<void> getConfig(pb.AdminMessage_ConfigType configType) async {
+  /// If [targetNodeNum] is provided, requests config from that remote node
+  /// (requires remote admin authorization on the target node)
+  Future<void> getConfig(
+    pb.AdminMessage_ConfigType configType, {
+    int? targetNodeNum,
+  }) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot get config: device not ready');
     }
@@ -3323,7 +3333,17 @@ class ProtocolService {
       throw StateError('Cannot get config: not connected');
     }
 
-    _logger.i('Requesting config: ${configType.name}');
+    final target = targetNodeNum ?? _myNodeNum!;
+    final isRemote = target != _myNodeNum;
+
+    _logger.i(
+      'Requesting config: ${configType.name}${isRemote ? ' from remote node $target' : ''}',
+    );
+    if (isRemote) {
+      debugPrint(
+        '🔧 Remote Admin: Requesting ${configType.name} from ${target.toRadixString(16)}',
+      );
+    }
 
     final adminMsg = pb.AdminMessage()..getConfigRequest = configType;
 
@@ -3334,7 +3354,7 @@ class ProtocolService {
 
     final packet = pb.MeshPacket()
       ..from = _myNodeNum!
-      ..to = _myNodeNum!
+      ..to = target
       ..decoded = data
       ..id = _generatePacketId();
 
@@ -3343,7 +3363,9 @@ class ProtocolService {
   }
 
   /// Set device configuration
-  Future<void> setConfig(pb.Config config) async {
+  /// If [targetNodeNum] is provided, sends config to that remote node
+  /// (requires remote admin authorization on the target node)
+  Future<void> setConfig(pb.Config config, {int? targetNodeNum}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot set config: device not ready');
     }
@@ -3351,7 +3373,15 @@ class ProtocolService {
       throw StateError('Cannot set config: not connected');
     }
 
-    _logger.i('Setting config');
+    final target = targetNodeNum ?? _myNodeNum!;
+    final isRemote = target != _myNodeNum;
+
+    _logger.i('Setting config${isRemote ? ' on remote node $target' : ''}');
+    if (isRemote) {
+      debugPrint(
+        '🔧 Remote Admin: Setting config on ${target.toRadixString(16)}',
+      );
+    }
 
     final adminMsg = pb.AdminMessage()..setConfig = config;
 
@@ -3362,7 +3392,7 @@ class ProtocolService {
 
     final packet = pb.MeshPacket()
       ..from = _myNodeNum!
-      ..to = _myNodeNum!
+      ..to = target
       ..decoded = data
       ..id = _generatePacketId()
       ..priority = 70;
@@ -3388,6 +3418,7 @@ class ProtocolService {
     double overrideFrequency = 0.0,
     bool ignoreMqtt = false,
     bool configOkToMqtt = false,
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting LoRa config');
 
@@ -3409,7 +3440,7 @@ class ProtocolService {
       ..configOkToMqtt = configOkToMqtt;
 
     final config = pb.Config()..lora = loraConfig;
-    await setConfig(config);
+    await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
   /// Set device configuration (role, serial, etc.)
@@ -3424,6 +3455,7 @@ class ProtocolService {
     int buzzerGpio = 0,
     bool disableTripleClick = false,
     String tzdef = '',
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting device config');
 
@@ -3440,7 +3472,7 @@ class ProtocolService {
       ..tzdef = tzdef;
 
     final config = pb.Config()..device = deviceConfig;
-    await setConfig(config);
+    await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
   /// Set position configuration
@@ -3454,6 +3486,7 @@ class ProtocolService {
     int broadcastSmartMinimumDistance = 100,
     int broadcastSmartMinimumIntervalSecs = 30,
     int positionFlags = 811,
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting position config: gpsMode=$gpsMode');
 
@@ -3470,7 +3503,7 @@ class ProtocolService {
       ..positionFlags = positionFlags;
 
     final config = pb.Config()..position = posConfig;
-    await setConfig(config);
+    await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
   /// Set power configuration
@@ -3482,6 +3515,7 @@ class ProtocolService {
     required int minWakeSecs,
     int onBatteryShutdownAfterSecs = 0,
     double adcMultiplierOverride = 0.0,
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting power config');
 
@@ -3495,7 +3529,7 @@ class ProtocolService {
       ..minWakeSecs = minWakeSecs;
 
     final config = pb.Config()..power = powerConfig;
-    await setConfig(config);
+    await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
   /// Set display configuration
@@ -3513,6 +3547,7 @@ class ProtocolService {
     pb.Config_DisplayConfig_CompassOrientation compassOrientation =
         pb.Config_DisplayConfig_CompassOrientation.DEGREES_0,
     int gpsFormat = 0,
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting display config');
 
@@ -3530,7 +3565,7 @@ class ProtocolService {
       ..compassOrientation = compassOrientation;
 
     final config = pb.Config()..display = displayConfig;
-    await setConfig(config);
+    await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
   /// Set Bluetooth configuration
@@ -3538,6 +3573,7 @@ class ProtocolService {
     required bool enabled,
     required pb.Config_BluetoothConfig_PairingMode mode,
     required int fixedPin,
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting Bluetooth config');
 
@@ -3547,7 +3583,7 @@ class ProtocolService {
       ..fixedPin = fixedPin;
 
     final config = pb.Config()..bluetooth = btConfig;
-    await setConfig(config);
+    await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
   /// Set network configuration
@@ -3557,6 +3593,7 @@ class ProtocolService {
     required String wifiPsk,
     required bool ethEnabled,
     required String ntpServer,
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting network config');
 
@@ -3568,7 +3605,7 @@ class ProtocolService {
       ..ntpServer = ntpServer;
 
     final config = pb.Config()..network = networkConfig;
-    await setConfig(config);
+    await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
   /// Set security configuration
@@ -3579,6 +3616,7 @@ class ProtocolService {
     required bool adminChannelEnabled,
     List<int> privateKey = const [],
     List<List<int>> adminKeys = const [],
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting security config');
 
@@ -3599,7 +3637,7 @@ class ProtocolService {
     }
 
     final config = pb.Config()..security = secConfig;
-    await setConfig(config);
+    await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
   // ============================================================================
@@ -3607,9 +3645,11 @@ class ProtocolService {
   // ============================================================================
 
   /// Get module configuration by type
+  /// If [targetNodeNum] is provided, requests config from that remote node
   Future<void> getModuleConfig(
-    pb.AdminMessage_ModuleConfigType moduleType,
-  ) async {
+    pb.AdminMessage_ModuleConfigType moduleType, {
+    int? targetNodeNum,
+  }) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot get module config: device not ready');
     }
@@ -3617,7 +3657,17 @@ class ProtocolService {
       throw StateError('Cannot get module config: not connected');
     }
 
-    _logger.i('Requesting module config: ${moduleType.name}');
+    final target = targetNodeNum ?? _myNodeNum!;
+    final isRemote = target != _myNodeNum;
+
+    _logger.i(
+      'Requesting module config: ${moduleType.name}${isRemote ? ' from remote node $target' : ''}',
+    );
+    if (isRemote) {
+      debugPrint(
+        '🔧 Remote Admin: Requesting ${moduleType.name} from ${target.toRadixString(16)}',
+      );
+    }
 
     final adminMsg = pb.AdminMessage()..getModuleConfigRequest = moduleType;
 
@@ -3628,7 +3678,7 @@ class ProtocolService {
 
     final packet = pb.MeshPacket()
       ..from = _myNodeNum!
-      ..to = _myNodeNum!
+      ..to = target
       ..decoded = data
       ..id = _generatePacketId();
 
@@ -3637,7 +3687,11 @@ class ProtocolService {
   }
 
   /// Set module configuration
-  Future<void> setModuleConfig(pb.ModuleConfig moduleConfig) async {
+  /// If [targetNodeNum] is provided, sends config to that remote node
+  Future<void> setModuleConfig(
+    pb.ModuleConfig moduleConfig, {
+    int? targetNodeNum,
+  }) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot set module config: device not ready');
     }
@@ -3645,7 +3699,17 @@ class ProtocolService {
       throw StateError('Cannot set module config: not connected');
     }
 
-    _logger.i('Setting module config');
+    final target = targetNodeNum ?? _myNodeNum!;
+    final isRemote = target != _myNodeNum;
+
+    _logger.i(
+      'Setting module config${isRemote ? ' on remote node $target' : ''}',
+    );
+    if (isRemote) {
+      debugPrint(
+        '🔧 Remote Admin: Setting module config on ${target.toRadixString(16)}',
+      );
+    }
 
     final adminMsg = pb.AdminMessage()..setModuleConfig = moduleConfig;
 
@@ -3656,7 +3720,7 @@ class ProtocolService {
 
     final packet = pb.MeshPacket()
       ..from = _myNodeNum!
-      ..to = _myNodeNum!
+      ..to = target
       ..decoded = data
       ..id = _generatePacketId()
       ..priority = 70;
@@ -3679,8 +3743,12 @@ class ProtocolService {
     required bool mapReportingEnabled,
     int mapPublishIntervalSecs = 3600,
     int mapPositionPrecision = 14,
+    int? targetNodeNum,
   }) async {
-    _logger.i('Setting MQTT config');
+    final isRemote = targetNodeNum != null && targetNodeNum != _myNodeNum;
+    _logger.i(
+      'Setting MQTT config${isRemote ? ' on remote node $targetNodeNum' : ''}',
+    );
 
     final mapReportSettings = pb.ModuleConfig_MapReportSettings()
       ..publishIntervalSecs = mapPublishIntervalSecs
@@ -3700,7 +3768,7 @@ class ProtocolService {
       ..mapReportSettings = mapReportSettings;
 
     final moduleConfig = pb.ModuleConfig()..mqtt = mqttConfig;
-    await setModuleConfig(moduleConfig);
+    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   /// Set canned message module configuration
@@ -3719,6 +3787,7 @@ class ProtocolService {
     inputbrokerEventCcw,
     required pb.ModuleConfig_CannedMessageConfig_InputEventChar
     inputbrokerEventPress,
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting canned message config');
 
@@ -3736,7 +3805,7 @@ class ProtocolService {
       ..inputbrokerEventPress = inputbrokerEventPress;
 
     final moduleConfig = pb.ModuleConfig()..cannedMessage = cannedConfig;
-    await setModuleConfig(moduleConfig);
+    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   /// Get Telemetry module configuration
@@ -3777,6 +3846,7 @@ class ProtocolService {
     bool? powerMeasurementEnabled,
     int? powerUpdateInterval,
     bool? powerScreenEnabled,
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting telemetry config');
 
@@ -3818,7 +3888,7 @@ class ProtocolService {
     }
 
     final moduleConfig = pb.ModuleConfig()..telemetry = telemetryConfig;
-    await setModuleConfig(moduleConfig);
+    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   /// Get External Notification module configuration
@@ -3865,6 +3935,7 @@ class ProtocolService {
     bool? usePwm,
     bool? useI2sAsBuzzer,
     int? nagTimeout,
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting external notification config');
 
@@ -3897,7 +3968,7 @@ class ProtocolService {
 
     final moduleConfig = pb.ModuleConfig()
       ..externalNotification = extNotifConfig;
-    await setModuleConfig(moduleConfig);
+    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   /// Set Store & Forward module configuration
@@ -3907,6 +3978,7 @@ class ProtocolService {
     int? records,
     int? historyReturnMax,
     int? historyReturnWindow,
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting store & forward config');
 
@@ -3920,7 +3992,7 @@ class ProtocolService {
     }
 
     final moduleConfig = pb.ModuleConfig()..storeForward = sfConfig;
-    await setModuleConfig(moduleConfig);
+    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   /// Get Store & Forward module configuration
@@ -4006,6 +4078,7 @@ class ProtocolService {
     bool? enabled,
     int? sender,
     bool? save,
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting range test config');
 
@@ -4015,7 +4088,7 @@ class ProtocolService {
     if (save != null) rtConfig.save = save;
 
     final moduleConfig = pb.ModuleConfig()..rangeTest = rtConfig;
-    await setModuleConfig(moduleConfig);
+    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   /// Get Ambient Lighting module configuration
@@ -4054,6 +4127,7 @@ class ProtocolService {
     required int green,
     required int blue,
     int? current,
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting ambient lighting config');
 
@@ -4065,7 +4139,7 @@ class ProtocolService {
     if (current != null) alConfig.current = current;
 
     final moduleConfig = pb.ModuleConfig()..ambientLighting = alConfig;
-    await setModuleConfig(moduleConfig);
+    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   /// Get PAX Counter module configuration
@@ -4098,6 +4172,7 @@ class ProtocolService {
     int? updateInterval,
     bool? wifiEnabled,
     bool? bleEnabled,
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting PAX counter config');
 
@@ -4108,7 +4183,7 @@ class ProtocolService {
     }
 
     final moduleConfig = pb.ModuleConfig()..paxcounter = paxConfig;
-    await setModuleConfig(moduleConfig);
+    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   /// Get Serial module configuration
@@ -4145,6 +4220,7 @@ class ProtocolService {
     int? timeout,
     int? mode,
     bool? overrideConsoleSerialPort,
+    int? targetNodeNum,
   }) async {
     _logger.i('Setting serial config');
 
@@ -4169,7 +4245,7 @@ class ProtocolService {
     }
 
     final moduleConfig = pb.ModuleConfig()..serial = serialConfig;
-    await setModuleConfig(moduleConfig);
+    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   // ============================================================================

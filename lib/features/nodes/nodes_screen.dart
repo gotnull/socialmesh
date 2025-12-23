@@ -1978,6 +1978,24 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
     }
   }
 
+  void _configureRemotely(BuildContext context, MeshNode node) {
+    Navigator.pop(context);
+
+    // Set the remote admin target
+    ref
+        .read(remoteAdminProvider.notifier)
+        .setTarget(node.nodeNum, node.displayName);
+
+    // Navigate to settings
+    Navigator.pushNamed(context, '/settings');
+
+    // Show info about remote admin
+    showInfoSnackBar(
+      context,
+      'Remote admin enabled for ${node.displayName}. Device settings will now configure this node.',
+    );
+  }
+
   void _exchangePositions(BuildContext context, MeshNode node) async {
     Navigator.pop(context);
 
@@ -2303,12 +2321,43 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                       label: 'Last Heard',
                       value: dateFormat.format(node.lastHeard!),
                     ),
+                  // PKI / Encryption status
+                  InfoTableRow(
+                    icon: node.hasPublicKey ? Icons.lock : Icons.lock_open,
+                    iconColor: node.hasPublicKey
+                        ? context.accentColor
+                        : AppTheme.textTertiary,
+                    label: 'Encryption',
+                    value: node.hasPublicKey ? 'PKI Enabled' : 'No Public Key',
+                  ),
                 ],
               ),
             ),
           ),
 
           const SizedBox(height: 20),
+
+          // Remote Administration button (only for nodes with PKI)
+          if (!isMyNode && node.hasPublicKey)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _configureRemotely(context, node),
+                  icon: const Icon(Icons.admin_panel_settings, size: 20),
+                  label: const Text('Configure Remotely'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.accentColor,
+                    side: BorderSide(color: context.accentColor),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
           // Action buttons
           if (!isMyNode)

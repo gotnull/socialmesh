@@ -67,11 +67,15 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     setState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final targetNodeNum = ref.read(remoteAdminTargetProvider);
+      final isRemote = targetNodeNum != null;
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentDeviceConfig;
-      if (cached != null) {
-        _applyConfig(cached);
+      // For local config, apply cached config immediately if available
+      if (!isRemote) {
+        final cached = protocol.currentDeviceConfig;
+        if (cached != null) {
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -81,8 +85,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           if (mounted) _applyConfig(config);
         });
 
-        // Request fresh config from device
-        await protocol.getConfig(pb.AdminMessage_ConfigType.DEVICE_CONFIG);
+        // Request fresh config from device (or remote node)
+        await protocol.getConfig(
+          pb.AdminMessage_ConfigType.DEVICE_CONFIG,
+          targetNodeNum: targetNodeNum,
+        );
       }
     } finally {
       setState(() => _isLoading = false);
@@ -93,6 +100,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     setState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final targetNodeNum = ref.read(remoteAdminTargetProvider);
+
       await protocol.setDeviceConfig(
         role: _selectedRole ?? pb.Config_DeviceConfig_Role_.CLIENT,
         rebroadcastMode:
@@ -105,10 +114,17 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         buzzerGpio: _buzzerGpio,
         disableTripleClick: !_tripleClickEnabled,
         tzdef: _tzdef,
+        targetNodeNum: targetNodeNum,
       );
 
       if (mounted) {
-        showSuccessSnackBar(context, 'Device configuration saved');
+        final isRemote = targetNodeNum != null;
+        showSuccessSnackBar(
+          context,
+          isRemote
+              ? 'Configuration sent to remote node'
+              : 'Device configuration saved',
+        );
         Navigator.pop(context);
       }
     } catch (e) {
@@ -122,13 +138,16 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final remoteState = ref.watch(remoteAdminProvider);
+    final isRemote = remoteState.isRemote;
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
-        title: const Text(
-          'Device',
-          style: TextStyle(
+        title: Text(
+          isRemote ? 'Device (Remote)' : 'Device',
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -168,6 +187,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           : ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
+                // Remote admin banner
+                if (isRemote) _buildRemoteAdminBanner(context, remoteState),
                 const _SectionHeader(title: 'DEVICE ROLE'),
                 _buildRoleSelector(),
                 SizedBox(height: 16),
@@ -320,6 +341,58 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 const SizedBox(height: 32),
               ],
             ),
+    );
+  }
+
+  Widget _buildRemoteAdminBanner(
+    BuildContext context,
+    RemoteAdminState remoteState,
+  ) {
+    final accentColor = context.accentColor;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accentColor.withValues(alpha: 0.15),
+            accentColor.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accentColor.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.admin_panel_settings, color: accentColor, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Remote Administration',
+                  style: TextStyle(
+                    color: accentColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Configuring: ${remoteState.targetNodeName ?? '0x${remoteState.targetNodeNum!.toRadixString(16)}'}',
+                  style: TextStyle(
+                    color: accentColor.withValues(alpha: 0.8),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
