@@ -622,7 +622,12 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const ConfiguredSplashMeshNode(showNodeNames: false),
+                      CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          context.accentColor,
+                        ),
+                        strokeWidth: 3,
+                      ),
                       const SizedBox(height: 32),
                       const Text(
                         'Socialmesh',
