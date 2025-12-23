@@ -16,6 +16,7 @@ import '../../services/config/mesh_firestore_config_service.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../services/storage/storage_service.dart';
 import '../../utils/snackbar.dart';
+import '../intro/intro_animation_preview_screen.dart';
 import '../widget_builder/marketplace/widget_approval_screen.dart';
 
 /// Debug settings screen with developer tools and the mesh node playground.
@@ -31,6 +32,7 @@ class DebugSettingsScreen extends ConsumerStatefulWidget {
 class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   // Section expansion states
   bool _meshNodeExpanded = true;
+  bool _introAnimationsExpanded = false;
   bool _notificationExpanded = false;
   bool _quickTestsExpanded = false;
   bool _secretGestureExpanded = false;
@@ -614,11 +616,13 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             onPressed: () {
               final allExpanded =
                   _meshNodeExpanded &&
+                  _introAnimationsExpanded &&
                   _notificationExpanded &&
                   _quickTestsExpanded &&
                   _secretGestureExpanded;
               setState(() {
                 _meshNodeExpanded = !allExpanded;
+                _introAnimationsExpanded = !allExpanded;
                 _notificationExpanded = !allExpanded;
                 _quickTestsExpanded = !allExpanded;
                 _secretGestureExpanded = !allExpanded;
@@ -626,6 +630,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             },
             icon: Icon(
               _meshNodeExpanded &&
+                      _introAnimationsExpanded &&
                       _notificationExpanded &&
                       _quickTestsExpanded &&
                       _secretGestureExpanded
@@ -653,6 +658,18 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                   onToggle: () =>
                       setState(() => _meshNodeExpanded = !_meshNodeExpanded),
                   child: _buildMeshNodeContent(),
+                ),
+                const SizedBox(height: 12),
+                _buildCollapsibleSection(
+                  title: 'Intro Animations',
+                  subtitle: 'Preview splash screen animations',
+                  icon: Icons.movie_filter_rounded,
+                  iconColor: const Color(0xFF00E5FF),
+                  isExpanded: _introAnimationsExpanded,
+                  onToggle: () => setState(
+                    () => _introAnimationsExpanded = !_introAnimationsExpanded,
+                  ),
+                  child: _buildIntroAnimationsContent(),
                 ),
                 const SizedBox(height: 12),
                 _buildCollapsibleSection(
@@ -1037,6 +1054,78 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildIntroAnimationsContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          height: 1,
+          color: AppTheme.darkBorder.withAlpha(60),
+        ),
+        // Description
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Text(
+            'Browse through all splash screen intro animations including '
+            'classic demoscene and cracktro effects.',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          ),
+        ),
+        // Launch preview button
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const IntroAnimationPreviewScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.play_circle_filled_rounded),
+            label: const Text('Preview All Animations'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00E5FF).withAlpha(30),
+              foregroundColor: const Color(0xFF00E5FF),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Color(0xFF00E5FF), width: 1),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Info chip
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppTheme.darkSurface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppTheme.darkBorder.withAlpha(60)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.lightbulb_outline_rounded,
+                size: 16,
+                color: AppTheme.textSecondary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Swipe left/right or tap arrows to browse. Tap screen to toggle controls.',
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

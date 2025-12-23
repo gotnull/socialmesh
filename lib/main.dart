@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:socialmesh/features/scanner/widgets/connecting_animation.dart';
 import 'firebase_options.dart';
 import 'core/theme.dart';
 import 'core/transport.dart';
@@ -27,7 +28,6 @@ import 'models/mesh_models.dart';
 import 'services/app_intents/app_intents_service.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
 import 'features/scanner/scanner_screen.dart';
-import 'features/scanner/widgets/connecting_animation.dart';
 import 'features/messaging/messaging_screen.dart';
 import 'features/channels/channels_screen.dart';
 import 'features/nodes/nodes_screen.dart';
@@ -46,6 +46,7 @@ import 'features/discovery/node_discovery_overlay.dart';
 import 'features/routes/route_detail_screen.dart';
 import 'features/globe/globe_screen.dart';
 import 'features/reachability/mesh_reachability_screen.dart';
+import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
 
 Future<void> main() async {
@@ -561,6 +562,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  late IntroAnimationType _selectedAnimation;
 
   @override
   void initState() {
@@ -573,6 +575,11 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
     _pulseAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    // Pick a random animation type for this session
+    _selectedAnimation =
+        IntroAnimationType.values[DateTime.now().millisecondsSinceEpoch %
+            IntroAnimationType.values.length];
   }
 
   @override
@@ -602,6 +609,8 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
+          // Random intro animation as background - replaces floating icons
+          // Positioned.fill(child: _buildRandomBackground()),
           // Beautiful parallax floating icons background - full screen
           const Positioned.fill(child: ConnectingAnimationBackground()),
           // Content with SafeArea
@@ -658,6 +667,10 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildRandomBackground() {
+    return buildIntroAnimation(_selectedAnimation);
   }
 
   _StatusInfo _getStatusInfo(
