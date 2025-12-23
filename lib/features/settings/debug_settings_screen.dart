@@ -244,15 +244,15 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
 
     setState(() => _hasUnsavedChanges = false);
 
+    // Invalidate the splash mesh provider so changes take effect immediately
+    ref.invalidate(splashMeshConfigProvider);
+
     final locationText = _saveLocation == MeshConfigSaveLocation.localDevice
         ? 'this device'
         : 'all devices (Firestore)';
 
     if (mounted) {
-      showSuccessSnackBar(
-        context,
-        'Mesh config saved to $locationText! Restart app to apply.',
-      );
+      showSuccessSnackBar(context, 'Mesh config saved to $locationText!');
     }
   }
 
@@ -590,6 +590,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
 
     await _settingsService!.resetSplashMeshConfig();
     await _loadSavedConfig();
+
+    // Invalidate the splash mesh provider so changes take effect immediately
+    ref.invalidate(splashMeshConfigProvider);
 
     if (mounted) {
       showInfoSnackBar(context, 'Splash mesh config reset to defaults');
