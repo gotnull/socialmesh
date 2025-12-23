@@ -225,8 +225,8 @@ class DeepLinkService {
 
   /// Parse node deep link
   /// Supports two formats:
-  /// 1. Base64 encoded JSON (from QR codes): socialmesh://node/<base64>
-  /// 2. Firestore doc ID (from web shares): socialmesh://node/<docId>
+  /// 1. Base64 encoded JSON (from QR codes): `socialmesh://node/<base64>`
+  /// 2. Firestore doc ID (from web shares): `socialmesh://node/<docId>`
   Future<NodeDeepLink?> _parseNodeLink(
     String? data,
     Map<String, String> queryParams,

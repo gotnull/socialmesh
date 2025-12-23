@@ -383,13 +383,21 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   }
 
   void _handleProfileDeepLink(ProfileDeepLink link) {
-    // TODO: Navigate to profile view
     AppLogging.debug('🔗 Profile deep link: ${link.profileId}');
+    if (mounted) {
+      Navigator.of(
+        context,
+      ).pushNamed('/profile', arguments: {'userId': link.profileId});
+    }
   }
 
   void _handleWidgetDeepLink(WidgetDeepLink link) {
-    // TODO: Navigate to widget marketplace detail
     AppLogging.debug('🔗 Widget deep link: ${link.widgetId}');
+    if (mounted) {
+      Navigator.of(
+        context,
+      ).pushNamed('/widget-detail', arguments: {'widgetId': link.widgetId});
+    }
   }
 
   void _handleLocationDeepLink(LocationDeepLink link) {

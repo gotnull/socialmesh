@@ -114,7 +114,9 @@ class PurchaseService {
     if (!_isInitialized) return PurchaseResult.error;
 
     try {
-      final products = await Purchases.getProducts([productId]);
+      final products = await Purchases.getProducts([
+        productId,
+      ], productCategory: ProductCategory.nonSubscription);
       if (products.isEmpty) {
         AppLogging.subscriptions('💳 Product not found: $productId');
         return PurchaseResult.error;
@@ -224,6 +226,7 @@ class PurchaseService {
       AppLogging.subscriptions('💰 Fetching products from RevenueCat');
       final products = await Purchases.getProducts(
         RevenueCatConfig.allProductIds,
+        productCategory: ProductCategory.nonSubscription,
       );
       for (final product in products) {
         AppLogging.subscriptions(

@@ -76,6 +76,26 @@
     ],
     "rewrites": [
       {
+        "source": "/privacy",
+        "destination": "/privacy-policy.html"
+      },
+      {
+        "source": "/terms",
+        "destination": "/terms-of-service.html"
+      },
+      {
+        "source": "/support",
+        "destination": "/support.html"
+      },
+      {
+        "source": "/docs",
+        "destination": "/docs.html"
+      },
+      {
+        "source": "/faq",
+        "destination": "/faq.html"
+      },
+      {
         "source": "/share/**",
         "function": "share"
       },
