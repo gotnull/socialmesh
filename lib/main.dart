@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:socialmesh/features/scanner/widgets/connecting_animation.dart';
 import 'firebase_options.dart';
 import 'core/theme.dart';
@@ -23,6 +24,7 @@ import 'providers/auth_providers.dart';
 import 'providers/profile_providers.dart';
 import 'providers/telemetry_providers.dart';
 import 'providers/subscription_providers.dart';
+import 'providers/analytics_providers.dart';
 import 'features/automations/automation_providers.dart';
 import 'models/mesh_models.dart';
 import 'services/app_intents/app_intents_service.dart';
@@ -89,6 +91,9 @@ Future<void> _initializeFirebaseInBackground() async {
 
     // Configure Crashlytics only if Firebase initialized successfully
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+    // Initialize Firebase Analytics
+    await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
 
     // Initialize profile cloud sync service (requires Firebase)
     initProfileCloudSyncService();
@@ -371,10 +376,9 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   void _handleChannelDeepLink(ChannelDeepLink link) {
     // Navigate to channel QR import screen with the data
     if (mounted) {
-      Navigator.of(context).pushNamed(
-        '/qr-import',
-        arguments: {'base64Data': link.base64Data},
-      );
+      Navigator.of(
+        context,
+      ).pushNamed('/qr-import', arguments: {'base64Data': link.base64Data});
     }
   }
 
@@ -649,6 +653,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       theme: AppTheme.lightTheme(accentColor),
       darkTheme: AppTheme.darkTheme(accentColor),
       themeMode: themeMode,
+      navigatorObservers: [ref.watch(analyticsObserverProvider)],
       home: const _AppRouter(),
       routes: {
         '/scanner': (context) => const ScannerScreen(),
