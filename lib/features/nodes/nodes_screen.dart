@@ -14,6 +14,7 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/edge_fade.dart';
+import '../../services/share_link_service.dart';
 import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
 import '../navigation/main_shell.dart';
@@ -1585,9 +1586,51 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
               ),
             ),
           ),
+          const SizedBox(height: 12),
+          // Share via link button (web-compatible)
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _shareNodeViaLink(context, node);
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: context.accentColor,
+                side: BorderSide(
+                  color: context.accentColor.withValues(alpha: 0.5),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.share, size: 20),
+              label: const Text(
+                'Share via Link',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  /// Share a node via a web link (works for both Android and iOS recipients)
+  Future<void> _shareNodeViaLink(BuildContext context, MeshNode node) async {
+    try {
+      final shareLinkService = ref.read(shareLinkServiceProvider);
+      await shareLinkService.shareNode(
+        node: node,
+        description:
+            '${node.role ?? 'Mesh Node'} • ${node.hardwareModel ?? 'Unknown Hardware'}',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(context, 'Failed to share node: $e');
+      }
+    }
   }
 
   void _sendDirectMessage(BuildContext context, MeshNode node) {

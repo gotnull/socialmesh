@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../models/mesh_models.dart';
+
 /// Service for sharing content with rich Open Graph link previews
 class ShareLinkService {
   static const String baseUrl = 'https://socialmesh.app';
@@ -17,7 +19,45 @@ class ShareLinkService {
       _auth = auth ?? FirebaseAuth.instance;
 
   /// Share a mesh node with rich preview
+  /// Stores complete node data in Firestore for proper deep link handling
   Future<void> shareNode({
+    required MeshNode node,
+    String? description,
+    Rect? sharePositionOrigin,
+  }) async {
+    // Create a shareable record in Firestore with complete node data
+    final docRef = await _firestore.collection('shared_nodes').add({
+      'nodeNum': node.nodeNum,
+      'nodeId': '!${node.nodeNum.toRadixString(16)}',
+      'name': node.displayName,
+      'longName': node.longName,
+      'shortName': node.shortName,
+      'userId': node.userId,
+      'description': description ?? 'A mesh node on Socialmesh',
+      // Include position if available
+      if (node.hasPosition) 'latitude': node.latitude,
+      if (node.hasPosition) 'longitude': node.longitude,
+      if (node.altitude != null) 'altitude': node.altitude,
+      // Include hardware info
+      if (node.hardwareModel != null) 'hardwareModel': node.hardwareModel,
+      if (node.role != null) 'role': node.role,
+      // Metadata
+      'createdBy': _auth.currentUser?.uid,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    final shareUrl = '$baseUrl/share/node/${docRef.id}';
+
+    await Share.share(
+      'Check out ${node.displayName} on Socialmesh!\n$shareUrl',
+      subject: '${node.displayName} - Socialmesh Node',
+      sharePositionOrigin: sharePositionOrigin,
+    );
+  }
+
+  /// Share a mesh node with basic info only (legacy method)
+  /// Prefer using shareNode with MeshNode for complete data
+  Future<void> shareNodeBasic({
     required String nodeId,
     required String nodeName,
     String? description,

@@ -1,0 +1,26 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": [
+          "U336GVDWCE.com.gotnull.socialmesh"
+        ],
+        "paths": [
+          "/share/*"
+        ],
+        "components": [
+          {
+            "/": "/share/*",
+            "comment": "Share links for nodes, profiles, widgets, and locations"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "U336GVDWCE.com.gotnull.socialmesh"
+    ]
+  }
+}

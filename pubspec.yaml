@@ -84,6 +84,9 @@ dependencies:
   ditredi: ^2.0.2
   vector_math: ^2.2.0
   cryptography: ^2.9.0
+  
+  # Deep linking
+  app_links: ^6.3.3
 
 dev_dependencies:
   flutter_test:

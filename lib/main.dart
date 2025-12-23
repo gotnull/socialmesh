@@ -26,6 +26,7 @@ import 'providers/subscription_providers.dart';
 import 'features/automations/automation_providers.dart';
 import 'models/mesh_models.dart';
 import 'services/app_intents/app_intents_service.dart';
+import 'services/deep_link_service.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
 import 'features/scanner/scanner_screen.dart';
 import 'features/messaging/messaging_screen.dart';
@@ -130,6 +131,8 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       ref.read(appIntentsServiceProvider).setup();
       // Initialize RevenueCat for purchases
       _initializePurchases();
+      // Initialize deep link handling
+      _initializeDeepLinks();
     });
   }
 
@@ -281,6 +284,121 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       AppLogging.debug('💰 RevenueCat initialized');
     } catch (e) {
       AppLogging.debug('💰 RevenueCat init failed: $e');
+    }
+  }
+
+  Future<void> _initializeDeepLinks() async {
+    try {
+      final deepLinkService = ref.read(deepLinkServiceProvider);
+      await deepLinkService.initialize();
+
+      // Listen for deep links and handle them
+      deepLinkService.linkStream.listen((link) {
+        _handleDeepLink(link);
+      });
+
+      AppLogging.debug('🔗 Deep link service initialized');
+    } catch (e) {
+      AppLogging.debug('🔗 Deep link init failed: $e');
+    }
+  }
+
+  Future<void> _handleDeepLink(DeepLinkData link) async {
+    AppLogging.debug('🔗 Handling deep link: ${link.runtimeType}');
+
+    switch (link) {
+      case NodeDeepLink():
+        await _handleNodeDeepLink(link);
+      case ChannelDeepLink():
+        _handleChannelDeepLink(link);
+      case ProfileDeepLink():
+        _handleProfileDeepLink(link);
+      case WidgetDeepLink():
+        _handleWidgetDeepLink(link);
+      case LocationDeepLink():
+        _handleLocationDeepLink(link);
+    }
+  }
+
+  Future<void> _handleNodeDeepLink(NodeDeepLink link) async {
+    final deepLinkService = ref.read(deepLinkServiceProvider);
+    final success = await deepLinkService.handleNodeLink(link);
+
+    if (success && mounted) {
+      // Navigate to nodes screen and show success
+      final navigator = Navigator.of(context);
+      if (navigator.canPop()) {
+        navigator.popUntil((route) => route.isFirst);
+      }
+
+      // Show notification
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Node "${link.longName ?? 'Unknown'}" added',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: context.accentColor,
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'View',
+            textColor: Colors.white,
+            onPressed: () {
+              Navigator.of(context).pushNamed('/nodes');
+            },
+          ),
+        ),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to add node from link'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _handleChannelDeepLink(ChannelDeepLink link) {
+    // Navigate to channel QR import screen with the data
+    if (mounted) {
+      Navigator.of(context).pushNamed(
+        '/qr-import',
+        arguments: {'base64Data': link.base64Data},
+      );
+    }
+  }
+
+  void _handleProfileDeepLink(ProfileDeepLink link) {
+    // TODO: Navigate to profile view
+    AppLogging.debug('🔗 Profile deep link: ${link.profileId}');
+  }
+
+  void _handleWidgetDeepLink(WidgetDeepLink link) {
+    // TODO: Navigate to widget marketplace detail
+    AppLogging.debug('🔗 Widget deep link: ${link.widgetId}');
+  }
+
+  void _handleLocationDeepLink(LocationDeepLink link) {
+    // Navigate to map screen centered on location
+    if (mounted) {
+      Navigator.of(context).pushNamed(
+        '/map',
+        arguments: {
+          'latitude': link.latitude,
+          'longitude': link.longitude,
+          'label': link.label,
+        },
+      );
     }
   }
 

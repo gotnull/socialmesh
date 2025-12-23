@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.gotnull.socialmesh",
+      "sha256_cert_fingerprints": [
+        "6B:EE:61:6D:3A:53:E3:48:57:7F:6F:FD:21:30:95:D3:21:38:F4:F6:E2:3F:B9:C7:53:47:49:3A:F2:29:54:9C",
+        "EE:63:F0:75:10:B2:6B:F8:46:D9:E7:B4:E5:3A:9C:72:FC:35:6A:00:03:4A:20:CA:42:A3:2E:C9:5C:02:23:DD"
+      ]
+    }
+  }
+]
