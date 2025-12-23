@@ -23,7 +23,8 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentColor = ref.watch(accentColorProvider);
+    final accentColorAsync = ref.watch(accentColorProvider);
+    final currentColor = accentColorAsync.asData?.value ?? AccentColors.magenta;
     final settingsAsync = ref.watch(settingsServiceProvider);
 
     return Scaffold(
@@ -290,8 +291,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           return BouncyTap(
             onTap: () async {
               HapticFeedback.selectionClick();
-              ref.read(accentColorProvider.notifier).setColor(color);
-              await settingsService.setAccentColor(color.toARGB32());
+              await ref.read(accentColorProvider.notifier).setColor(color);
               // Also sync to cloud profile for cross-device persistence
               ref
                   .read(userProfileProvider.notifier)
@@ -544,7 +544,8 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
 
   Widget _buildAppIconSection(BuildContext context) {
     final theme = Theme.of(context);
-    final accentColor = ref.watch(accentColorProvider);
+    final accentColorAsync = ref.watch(accentColorProvider);
+    final accentColor = accentColorAsync.asData?.value ?? AccentColors.magenta;
 
     return Container(
       padding: const EdgeInsets.all(16),

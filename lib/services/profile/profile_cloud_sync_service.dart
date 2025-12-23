@@ -268,7 +268,7 @@ class ProfileCloudSyncService {
   /// Create UserProfile from Firestore document
   UserProfile _profileFromFirestore(String uid, Map<String, dynamic> data) {
     debugPrint(
-      '[ProfileSync] Parsing Firestore data: displayName=${data['displayName']}, avatarUrl=${data['avatarUrl']}',
+      '[ProfileSync] Parsing Firestore data: displayName=${data['displayName']}, avatarUrl=${data['avatarUrl']}, accentColorIndex=${data['accentColorIndex']}',
     );
     return UserProfile(
       id: uid,
@@ -353,6 +353,9 @@ class ProfileCloudSyncService {
     }
     debugPrint(
       '[ProfileSync] Cloud is newer, using cloud installedWidgetIds: ${cloud.installedWidgetIds}',
+    );
+    debugPrint(
+      '[ProfileSync] Cloud accentColorIndex: ${cloud.accentColorIndex}',
     );
     return cloud;
   }

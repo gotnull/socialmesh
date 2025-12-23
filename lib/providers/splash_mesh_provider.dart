@@ -7,6 +7,7 @@ import '../core/widgets/animated_mesh_node.dart';
 import '../core/widgets/node_names_mesh.dart';
 import '../core/widgets/secret_gesture_detector.dart';
 import '../features/onboarding/widgets/mesh_node_brain.dart';
+import '../main.dart' show firebaseReady;
 import '../services/config/mesh_firestore_config_service.dart';
 
 /// Configuration for the splash/connecting screen mesh node
@@ -27,23 +28,23 @@ class SplashMeshConfig {
   final double stretchIntensity;
 
   const SplashMeshConfig({
-    this.size = 600,
+    this.size = 372,
     this.animationType = MeshNodeAnimationType.tumble,
-    this.glowIntensity = 0.5,
-    this.lineThickness = 0.5,
+    this.glowIntensity = 0.7145593869731794,
+    this.lineThickness = 0.7,
     this.nodeSize = 0.8,
     this.gradientColors = const [
       Color(0xFFFF6B4A),
       Color(0xFFE91E8C),
       Color(0xFF4F6AF6),
     ],
-    this.useAccelerometer = true,
-    this.accelerometerSensitivity = 0.5,
-    this.accelerometerFriction = 0.97,
-    this.physicsMode = MeshPhysicsMode.momentum,
+    this.useAccelerometer = false,
+    this.accelerometerSensitivity = 0.1,
+    this.accelerometerFriction = 0.9,
+    this.physicsMode = MeshPhysicsMode.touchOnly,
     this.enableTouch = true,
     this.enablePullToStretch = false,
-    this.touchIntensity = 0.5,
+    this.touchIntensity = 0.1,
     this.stretchIntensity = 0.3,
   });
 
@@ -63,48 +64,123 @@ const List<List<Color>> splashMeshColorPresets = [
   [Color(0xFFFFFFFF), Color(0xFFAAAAAA), Color(0xFF666666)], // Mono
 ];
 
-/// Provider that loads splash mesh config
-/// Priority: Firestore (with timeout) -> Local SharedPreferences -> Defaults
+/// Provider that loads splash mesh config.
+/// Priority:
+/// 1. Global Firestore config (app_config/splash_mesh) - always checked first
+/// 2. Local SharedPreferences (user's saved config, synced from cloud profile)
+/// 3. Defaults
 final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
   final prefs = await SharedPreferences.getInstance();
 
-  // Try to fetch from Firestore first (with 3 second timeout)
-  MeshConfigData? remoteConfig;
-  try {
-    await MeshFirestoreConfigService.instance.initialize();
-    remoteConfig = await MeshFirestoreConfigService.instance
-        .getRemoteConfig()
-        .timeout(
-          const Duration(seconds: 3),
-          onTimeout: () {
-            AppLogging.settings(
-              '⏱️ Firestore config fetch timed out, using local',
-            );
-            return null;
-          },
-        );
+  // Wait for Firebase to be ready (with timeout)
+  final isFirebaseReady = await firebaseReady.timeout(
+    const Duration(seconds: 5),
+    onTimeout: () {
+      AppLogging.settings('⏱️ Firebase ready timeout, using local config');
+      return false;
+    },
+  );
 
-    if (remoteConfig != null) {
-      AppLogging.settings('✅ Loaded mesh config from Firestore');
-      // Save to local for offline use
-      await _saveConfigToPrefs(prefs, remoteConfig);
+  // Always check global Firestore config first - this is the admin-controlled default
+  if (isFirebaseReady) {
+    try {
+      await MeshFirestoreConfigService.instance.initialize();
+      final remoteConfig = await MeshFirestoreConfigService.instance
+          .getRemoteConfig()
+          .timeout(
+            const Duration(seconds: 3),
+            onTimeout: () {
+              AppLogging.settings(
+                '⏱️ Global config fetch timed out, using local/defaults',
+              );
+              return null;
+            },
+          );
+
+      if (remoteConfig != null) {
+        AppLogging.settings('🌐 Loaded global mesh config from Firestore');
+        // Save to local for offline use
+        await _saveGlobalConfigToPrefs(prefs, remoteConfig);
+        return _configFromMeshConfigData(remoteConfig);
+      }
+    } catch (e) {
+      AppLogging.settings('⚠️ Global config fetch failed: $e');
     }
-  } catch (e) {
-    AppLogging.settings('⚠️ Firestore config fetch failed: $e');
+  } else {
+    AppLogging.settings('📱 Firebase not ready, using local config');
   }
 
-  // If we got remote config, use it
-  if (remoteConfig != null) {
-    return _configFromMeshConfigData(remoteConfig);
+  // No global config available - check local SharedPreferences
+  final hasLocalConfig = prefs.containsKey('splash_mesh_size');
+
+  if (hasLocalConfig) {
+    // User has local config - use it (offline fallback)
+    AppLogging.settings('📱 Loading mesh config from SharedPreferences');
+    return _loadConfigFromPrefs(prefs);
   }
 
-  // Fall back to local SharedPreferences
-  AppLogging.settings('📱 Using local mesh config');
+  // Fall back to defaults
+  AppLogging.settings('📱 Using default mesh config');
   return _loadConfigFromPrefs(prefs);
 });
 
-/// Save MeshConfigData to SharedPreferences for offline use
-Future<void> _saveConfigToPrefs(
+/// Load config from SharedPreferences
+SplashMeshConfig _loadConfigFromPrefs(SharedPreferences prefs) {
+  final size = prefs.getDouble('splash_mesh_size') ?? 372;
+  final animationTypeName =
+      prefs.getString('splash_mesh_animation_type') ?? 'tumble';
+  final glowIntensity =
+      prefs.getDouble('splash_mesh_glow_intensity') ?? 0.7145593869731794;
+  final lineThickness = prefs.getDouble('splash_mesh_line_thickness') ?? 0.7;
+  final nodeSize = prefs.getDouble('splash_mesh_node_size') ?? 0.8;
+  final colorPreset = (prefs.getInt('splash_mesh_color_preset') ?? 0).clamp(
+    0,
+    splashMeshColorPresets.length - 1,
+  );
+  final useAccelerometer =
+      prefs.getBool('splash_mesh_use_accelerometer') ?? false;
+  final accelSensitivity =
+      prefs.getDouble('splash_mesh_accel_sensitivity') ?? 0.1;
+  final accelFriction = prefs.getDouble('splash_mesh_accel_friction') ?? 0.9;
+  final physicsModeName =
+      prefs.getString('splash_mesh_physics_mode') ?? 'touchOnly';
+  final enableTouch = prefs.getBool('splash_mesh_enable_touch') ?? true;
+  final enablePullToStretch =
+      prefs.getBool('splash_mesh_enable_pull_to_stretch') ?? false;
+  final touchIntensity = prefs.getDouble('splash_mesh_touch_intensity') ?? 0.1;
+  final stretchIntensity =
+      prefs.getDouble('splash_mesh_stretch_intensity') ?? 0.3;
+
+  final animationType = MeshNodeAnimationType.values.firstWhere(
+    (t) => t.name == animationTypeName,
+    orElse: () => MeshNodeAnimationType.tumble,
+  );
+
+  final physicsMode = MeshPhysicsMode.values.firstWhere(
+    (m) => m.name == physicsModeName,
+    orElse: () => MeshPhysicsMode.touchOnly,
+  );
+
+  return SplashMeshConfig(
+    size: size,
+    animationType: animationType,
+    glowIntensity: glowIntensity,
+    lineThickness: lineThickness,
+    nodeSize: nodeSize,
+    gradientColors: splashMeshColorPresets[colorPreset],
+    useAccelerometer: useAccelerometer,
+    accelerometerSensitivity: accelSensitivity,
+    accelerometerFriction: accelFriction,
+    physicsMode: physicsMode,
+    enableTouch: enableTouch,
+    enablePullToStretch: enablePullToStretch,
+    touchIntensity: touchIntensity,
+    stretchIntensity: stretchIntensity,
+  );
+}
+
+/// Save global MeshConfigData to SharedPreferences for offline use
+Future<void> _saveGlobalConfigToPrefs(
   SharedPreferences prefs,
   MeshConfigData config,
 ) async {
@@ -134,20 +210,6 @@ Future<void> _saveConfigToPrefs(
     'splash_mesh_stretch_intensity',
     config.stretchIntensity,
   );
-  // Also save secret gesture config
-  await prefs.setString('secret_gesture_pattern', config.secretGesturePattern);
-  await prefs.setInt(
-    'secret_gesture_time_window',
-    config.secretGestureTimeWindowMs,
-  );
-  await prefs.setBool(
-    'secret_gesture_show_feedback',
-    config.secretGestureShowFeedback,
-  );
-  await prefs.setBool(
-    'secret_gesture_enable_haptics',
-    config.secretGestureEnableHaptics,
-  );
 }
 
 /// Convert MeshConfigData to SplashMeshConfig
@@ -172,60 +234,6 @@ SplashMeshConfig _configFromMeshConfigData(MeshConfigData data) {
     enablePullToStretch: data.enablePullToStretch,
     touchIntensity: data.touchIntensity,
     stretchIntensity: data.stretchIntensity,
-  );
-}
-
-/// Load config from SharedPreferences
-SplashMeshConfig _loadConfigFromPrefs(SharedPreferences prefs) {
-  final size = prefs.getDouble('splash_mesh_size') ?? 600;
-  final animationTypeName =
-      prefs.getString('splash_mesh_animation_type') ?? 'none';
-  final glowIntensity = prefs.getDouble('splash_mesh_glow_intensity') ?? 0.5;
-  final lineThickness = prefs.getDouble('splash_mesh_line_thickness') ?? 0.5;
-  final nodeSize = prefs.getDouble('splash_mesh_node_size') ?? 0.8;
-  final colorPreset = (prefs.getInt('splash_mesh_color_preset') ?? 0).clamp(
-    0,
-    splashMeshColorPresets.length - 1,
-  );
-  final useAccelerometer =
-      prefs.getBool('splash_mesh_use_accelerometer') ?? true;
-  final accelSensitivity =
-      prefs.getDouble('splash_mesh_accel_sensitivity') ?? 0.5;
-  final accelFriction = prefs.getDouble('splash_mesh_accel_friction') ?? 0.97;
-  final physicsModeName =
-      prefs.getString('splash_mesh_physics_mode') ?? 'momentum';
-  final enableTouch = prefs.getBool('splash_mesh_enable_touch') ?? true;
-  final enablePullToStretch =
-      prefs.getBool('splash_mesh_enable_pull_to_stretch') ?? false;
-  final touchIntensity = prefs.getDouble('splash_mesh_touch_intensity') ?? 0.5;
-  final stretchIntensity =
-      prefs.getDouble('splash_mesh_stretch_intensity') ?? 0.3;
-
-  final animationType = MeshNodeAnimationType.values.firstWhere(
-    (t) => t.name == animationTypeName,
-    orElse: () => MeshNodeAnimationType.none,
-  );
-
-  final physicsMode = MeshPhysicsMode.values.firstWhere(
-    (m) => m.name == physicsModeName,
-    orElse: () => MeshPhysicsMode.momentum,
-  );
-
-  return SplashMeshConfig(
-    size: size,
-    animationType: animationType,
-    glowIntensity: glowIntensity,
-    lineThickness: lineThickness,
-    nodeSize: nodeSize,
-    gradientColors: splashMeshColorPresets[colorPreset],
-    useAccelerometer: useAccelerometer,
-    accelerometerSensitivity: accelSensitivity,
-    accelerometerFriction: accelFriction,
-    physicsMode: physicsMode,
-    enableTouch: enableTouch,
-    enablePullToStretch: enablePullToStretch,
-    touchIntensity: touchIntensity,
-    stretchIntensity: stretchIntensity,
   );
 }
 
@@ -396,55 +404,14 @@ class SecretGestureConfig {
 
 /// Provider that loads secret gesture config
 /// Priority: Firestore (with timeout) -> Local SharedPreferences -> Defaults
+/// Provider that loads secret gesture config from local SharedPreferences.
+/// The SharedPreferences are synced from user's cloud profile on app startup.
 final secretGestureConfigProvider = FutureProvider<SecretGestureConfig>((
   ref,
 ) async {
   final prefs = await SharedPreferences.getInstance();
 
-  // Try to fetch from Firestore first (with 3 second timeout)
-  MeshConfigData? remoteConfig;
-  try {
-    await MeshFirestoreConfigService.instance.initialize();
-    remoteConfig = await MeshFirestoreConfigService.instance
-        .getRemoteConfig()
-        .timeout(const Duration(seconds: 3), onTimeout: () => null);
-
-    if (remoteConfig != null) {
-      // Save to local for offline use
-      await prefs.setString(
-        'secret_gesture_pattern',
-        remoteConfig.secretGesturePattern,
-      );
-      await prefs.setInt(
-        'secret_gesture_time_window',
-        remoteConfig.secretGestureTimeWindowMs,
-      );
-      await prefs.setBool(
-        'secret_gesture_show_feedback',
-        remoteConfig.secretGestureShowFeedback,
-      );
-      await prefs.setBool(
-        'secret_gesture_enable_haptics',
-        remoteConfig.secretGestureEnableHaptics,
-      );
-
-      return SecretGestureConfig(
-        pattern: SecretGesturePattern.values.firstWhere(
-          (p) => p.name == remoteConfig!.secretGesturePattern,
-          orElse: () => SecretGesturePattern.sevenTaps,
-        ),
-        timeWindow: Duration(
-          milliseconds: remoteConfig.secretGestureTimeWindowMs,
-        ),
-        showFeedback: remoteConfig.secretGestureShowFeedback,
-        enableHaptics: remoteConfig.secretGestureEnableHaptics,
-      );
-    }
-  } catch (e) {
-    AppLogging.settings('⚠️ Secret gesture config fetch failed: $e');
-  }
-
-  // Fall back to local SharedPreferences
+  // Load from SharedPreferences (synced from user cloud profile on startup)
   final patternName = prefs.getString('secret_gesture_pattern') ?? 'sevenTaps';
   final timeWindowMs = prefs.getInt('secret_gesture_time_window') ?? 3000;
   final showFeedback = prefs.getBool('secret_gesture_show_feedback') ?? true;

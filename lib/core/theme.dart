@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Available accent colors for the app
 class AccentColors {
@@ -140,16 +141,31 @@ const appTaglines = [
   'Build infrastructure together.',
 ];
 
-/// Notifier for accent color
-class AccentColorNotifier extends Notifier<Color> {
+/// Notifier for accent color - loads from SharedPreferences on startup
+class AccentColorNotifier extends AsyncNotifier<Color> {
   @override
-  Color build() => AccentColors.magenta;
+  Future<Color> build() async {
+    // Load saved accent color from SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final savedColorValue = prefs.getInt('accent_color');
+    if (savedColorValue != null) {
+      return Color(savedColorValue);
+    }
+    return AccentColors.magenta;
+  }
 
-  void setColor(Color color) => state = color;
+  /// Set accent color and persist to SharedPreferences
+  /// This ensures cloud-synced colors persist locally for next app start
+  Future<void> setColor(Color color) async {
+    state = AsyncData(color);
+    // Save to SharedPreferences so it persists on restart
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('accent_color', color.toARGB32());
+  }
 }
 
 /// Provider for the current accent color
-final accentColorProvider = NotifierProvider<AccentColorNotifier, Color>(
+final accentColorProvider = AsyncNotifierProvider<AccentColorNotifier, Color>(
   AccentColorNotifier.new,
 );
 

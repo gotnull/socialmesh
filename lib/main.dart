@@ -46,8 +46,15 @@ import 'features/discovery/node_discovery_overlay.dart';
 import 'features/routes/route_detail_screen.dart';
 import 'features/globe/globe_screen.dart';
 import 'features/reachability/mesh_reachability_screen.dart';
-import 'features/intro/intro_screen.dart';
+// import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
+
+/// Global completer to signal when Firebase is ready
+/// Used by providers that need Firestore
+final Completer<bool> firebaseReadyCompleter = Completer<bool>();
+
+/// Future that completes when Firebase is initialized (or fails)
+Future<bool> get firebaseReady => firebaseReadyCompleter.future;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -90,10 +97,15 @@ Future<void> _initializeFirebaseInBackground() async {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
+
+    // Signal that Firebase is ready
+    AppLogging.debug('🔥 Firebase initialized successfully');
+    firebaseReadyCompleter.complete(true);
   } catch (e) {
     // Firebase failed to initialize (no internet, timeout, etc.)
     // App continues working fully offline - this is expected behavior
     AppLogging.debug('Firebase unavailable: $e - app running in offline mode');
+    firebaseReadyCompleter.complete(false);
   }
 }
 
@@ -275,37 +287,66 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   Future<void> _loadAccentColor() async {
     final settings = await ref.read(settingsServiceProvider.future);
 
-    // IMMEDIATELY load from local settings first (instant UI update)
-    final localColorValue = settings.accentColor;
-    ref.read(accentColorProvider.notifier).setColor(Color(localColorValue));
-
+    // Local accent color is now loaded automatically by AccentColorNotifier.build()
+    // Just load the theme mode from local settings
     final localThemeModeIndex = settings.themeMode;
     final localThemeMode = ThemeMode.values[localThemeModeIndex];
     ref.read(themeModeProvider.notifier).setThemeMode(localThemeMode);
+
+    // Wait for Firebase to be ready before syncing from cloud
+    final isFirebaseReady = await firebaseReady.timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        AppLogging.debug('⏱️ Firebase ready timeout, using local accent color');
+        return false;
+      },
+    );
+
+    if (!isFirebaseReady) {
+      AppLogging.debug('📱 Firebase not ready, using local accent color');
+      return;
+    }
 
     // Then sync from cloud in background (may override local)
     try {
       // Wait for auth state to be ready
       final authState = await ref.read(authStateProvider.future);
+      AppLogging.debug('🎨 Auth state: ${authState?.email ?? "not signed in"}');
 
       // If user is signed in, sync from cloud
       if (authState != null) {
+        AppLogging.debug('🎨 User signed in, invalidating profile provider');
         // Invalidate profile to trigger fresh cloud sync
         ref.invalidate(userProfileProvider);
 
+        AppLogging.debug('🎨 Waiting for profile future...');
         final profile = await ref.read(userProfileProvider.future);
         final prefs = profile?.preferences;
 
+        AppLogging.debug('🎨 Profile loaded: ${profile?.displayName}');
+        AppLogging.debug(
+          '🎨 Profile accentColorIndex: ${profile?.accentColorIndex}',
+        );
+        AppLogging.debug('🎨 Profile updatedAt: ${profile?.updatedAt}');
+        AppLogging.debug('🎨 Profile isSynced: ${profile?.isSynced}');
+
         // Update accent color from cloud if available
         final colorIndex = profile?.accentColorIndex;
+        AppLogging.debug('🎨 Cloud profile accentColorIndex: $colorIndex');
         if (colorIndex != null &&
             colorIndex >= 0 &&
             colorIndex < AccentColors.all.length) {
           final cloudColor = AccentColors.all[colorIndex];
-          ref.read(accentColorProvider.notifier).setColor(cloudColor);
-          await settings.setAccentColor(cloudColor.toARGB32());
+          AppLogging.debug(
+            '🎨 Setting color to: ${AccentColors.names[colorIndex]}',
+          );
+          await ref.read(accentColorProvider.notifier).setColor(cloudColor);
           AppLogging.debug(
             '🎨 Updated accent color from cloud: ${AccentColors.names[colorIndex]}',
+          );
+        } else {
+          AppLogging.debug(
+            '🎨 No valid accentColorIndex in profile, colorIndex=$colorIndex',
           );
         }
 
@@ -436,6 +477,8 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         touchIntensity: prefs.splashMeshTouchIntensity ?? 0.5,
         stretchIntensity: prefs.splashMeshStretchIntensity ?? 0.3,
       );
+      // Invalidate the provider so it reloads with new config
+      ref.invalidate(splashMeshConfigProvider);
       AppLogging.debug('✨ Loaded splash mesh config from cloud');
     }
 
@@ -476,8 +519,9 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     // Watch telemetry logger to automatically save telemetry data
     ref.watch(telemetryLoggerProvider);
 
-    // Watch accent color for dynamic theme
-    final accentColor = ref.watch(accentColorProvider);
+    // Watch accent color for dynamic theme (with default fallback)
+    final accentColorAsync = ref.watch(accentColorProvider);
+    final accentColor = accentColorAsync.asData?.value ?? AccentColors.magenta;
 
     // Watch theme mode for dark/light switching
     final themeMode = ref.watch(themeModeProvider);
@@ -562,7 +606,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
-  late IntroAnimationType _selectedAnimation;
+  // late IntroAnimationType _selectedAnimation;
 
   @override
   void initState() {
@@ -577,9 +621,9 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
     );
 
     // Pick a random animation type for this session
-    _selectedAnimation =
-        IntroAnimationType.values[DateTime.now().millisecondsSinceEpoch %
-            IntroAnimationType.values.length];
+    // _selectedAnimation =
+    //     IntroAnimationType.values[DateTime.now().millisecondsSinceEpoch %
+    //         IntroAnimationType.values.length];
   }
 
   @override
@@ -669,9 +713,9 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
     );
   }
 
-  Widget _buildRandomBackground() {
-    return buildIntroAnimation(_selectedAnimation);
-  }
+  // Widget _buildRandomBackground() {
+  //   return buildIntroAnimation(_selectedAnimation);
+  // }
 
   _StatusInfo _getStatusInfo(
     AutoReconnectState autoState,
@@ -682,14 +726,14 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
         return _StatusInfo(
           text: 'Initializing',
           icon: Icons.hourglass_empty_rounded,
-          color: AppTheme.textSecondary,
+          color: context.accentColor,
           showSpinner: true,
         );
       case AutoReconnectState.scanning:
         return _StatusInfo(
           text: 'Scanning for device',
           icon: Icons.bluetooth_searching_rounded,
-          color: AppTheme.primaryBlue,
+          color: context.accentColor,
           showSpinner: true,
         );
       case AutoReconnectState.connecting:
@@ -716,14 +760,14 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
         return _StatusInfo(
           text: 'Connected',
           icon: Icons.check_circle_rounded,
-          color: context.accentColor,
+          color: AppTheme.successGreen,
           showSpinner: false,
         );
       case AutoReconnectState.failed:
         return _StatusInfo(
           text: 'Connection failed',
           icon: Icons.error_outline_rounded,
-          color: Colors.redAccent,
+          color: AppTheme.errorRed,
           showSpinner: false,
         );
     }
@@ -736,38 +780,24 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Icon with optional spinner ring
+            // Spinner or icon
             SizedBox(
               width: 48,
               height: 48,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Mesh spinner behind icon
-                  if (info.showSpinner)
-                    MeshLoadingIndicator(
-                      size: 48,
-                      colors: [
-                        info.color,
-                        info.color.withValues(alpha: 0.6),
-                        info.color.withValues(alpha: 0.3),
-                      ],
-                    ),
-                  // Pulsing icon (only show when not spinning)
-                  if (!info.showSpinner)
-                    Transform.scale(
-                      scale: _pulseAnimation.value,
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: Icon(
-                          info.icon,
-                          key: ValueKey(info.icon),
+              child: Center(
+                child: info.showSpinner
+                    ? SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
                           color: info.color,
-                          size: 24,
                         ),
+                      )
+                    : Transform.scale(
+                        scale: _pulseAnimation.value,
+                        child: Icon(info.icon, color: info.color, size: 24),
                       ),
-                    ),
-                ],
               ),
             ),
             const SizedBox(height: 16),

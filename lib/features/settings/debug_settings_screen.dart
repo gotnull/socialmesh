@@ -63,8 +63,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
 
   // Save location preference
   MeshConfigSaveLocation _saveLocation = MeshConfigSaveLocation.localDevice;
-  bool _globalPinVerified = false;
-  static const String _globalSavePin = '4511932';
 
   SettingsService? _settingsService;
   bool _hasUnsavedChanges = false;
@@ -111,6 +109,57 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
     _settingsService = SettingsService();
     await _settingsService!.init();
 
+    // Try to load from global Firestore first (this is what users see)
+    try {
+      await MeshFirestoreConfigService.instance.initialize();
+      final remoteConfig = await MeshFirestoreConfigService.instance
+          .getRemoteConfig();
+
+      if (remoteConfig != null) {
+        AppLogging.settings(
+          '📡 Debug settings: Loaded global config from Firestore',
+        );
+        setState(() {
+          _size = remoteConfig.size;
+          _animationType = remoteConfig.animationTypeEnum;
+          _animate = remoteConfig.animate;
+          _glowIntensity = remoteConfig.glowIntensity;
+          _lineThickness = remoteConfig.lineThickness;
+          _nodeSize = remoteConfig.nodeSize;
+          _selectedColorPreset = remoteConfig.colorPreset.clamp(
+            0,
+            _colorPresets.length - 1,
+          );
+          _useAccelerometer = remoteConfig.useAccelerometer;
+          _accelerometerSensitivity = remoteConfig.accelerometerSensitivity;
+          _accelerometerFriction = remoteConfig.accelerometerFriction;
+          _physicsMode = remoteConfig.physicsModeEnum;
+          _enableTouch = remoteConfig.enableTouch;
+          _enablePullToStretch = remoteConfig.enablePullToStretch;
+          _touchIntensity = remoteConfig.touchIntensity;
+          _stretchIntensity = remoteConfig.stretchIntensity;
+          // Load secret gesture config
+          _secretPattern = SecretGesturePattern.values.firstWhere(
+            (p) => p.name == remoteConfig.secretGesturePattern,
+            orElse: () => SecretGesturePattern.sevenTaps,
+          );
+          _secretTimeWindow = Duration(
+            milliseconds: remoteConfig.secretGestureTimeWindowMs,
+          );
+          _secretShowFeedback = remoteConfig.secretGestureShowFeedback;
+          _secretEnableHaptics = remoteConfig.secretGestureEnableHaptics;
+          _hasUnsavedChanges = false;
+          _saveLocation = MeshConfigSaveLocation.global;
+        });
+        return;
+      }
+    } catch (e) {
+      AppLogging.settings(
+        '⚠️ Debug settings: Failed to load global config: $e',
+      );
+    }
+
+    // Fallback to local settings
     setState(() {
       _size = _settingsService!.splashMeshSize;
       _animationType = MeshNodeAnimationType.values.firstWhere(
@@ -151,13 +200,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
 
   Future<void> _saveConfig() async {
     if (_settingsService == null) return;
-
-    // Require PIN for global saves
-    if (_saveLocation == MeshConfigSaveLocation.global && !_globalPinVerified) {
-      final verified = await _showPinDialog();
-      if (!verified) return;
-      setState(() => _globalPinVerified = true);
-    }
 
     // Always save to local storage
     await _settingsService!.setSplashMeshConfig(
@@ -313,276 +355,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
     } finally {
       setState(() => _isLoadingRemote = false);
     }
-  }
-
-  Future<bool> _showPinDialog() async {
-    var enteredPin = '';
-    var attempts = 0;
-    const maxAttempts = 3;
-    var showError = false;
-
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          void onKeyPress(String key) {
-            HapticFeedback.lightImpact();
-
-            if (key == 'backspace') {
-              if (enteredPin.isNotEmpty) {
-                setDialogState(() {
-                  enteredPin = enteredPin.substring(0, enteredPin.length - 1);
-                  showError = false;
-                });
-              }
-            } else if (enteredPin.length < 10) {
-              setDialogState(() {
-                enteredPin += key;
-                showError = false;
-              });
-
-              // Auto-submit when PIN length matches
-              if (enteredPin.length == _globalSavePin.length) {
-                Future.delayed(const Duration(milliseconds: 100), () {
-                  if (!dialogContext.mounted) return;
-                  if (enteredPin == _globalSavePin) {
-                    Navigator.of(dialogContext).pop(true);
-                  } else {
-                    attempts++;
-                    if (attempts >= maxAttempts) {
-                      Navigator.of(dialogContext).pop(false);
-                      if (mounted) {
-                        showErrorSnackBar(
-                          this.context,
-                          'Too many incorrect attempts',
-                        );
-                      }
-                    } else {
-                      HapticFeedback.heavyImpact();
-                      setDialogState(() {
-                        enteredPin = '';
-                        showError = true;
-                      });
-                    }
-                  }
-                });
-              }
-            }
-          }
-
-          Widget buildPinDot(int index) {
-            final isFilled = index < enteredPin.length;
-            final isError = showError;
-
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              width: 14,
-              height: 14,
-              margin: const EdgeInsets.symmetric(horizontal: 6),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isFilled
-                    ? (isError ? AppTheme.errorRed : Colors.white)
-                    : Colors.transparent,
-                border: Border.all(
-                  color: isError
-                      ? AppTheme.errorRed
-                      : (isFilled ? Colors.white : Colors.white.withAlpha(100)),
-                  width: 2,
-                ),
-              ),
-            );
-          }
-
-          Widget buildNumberKey(String number) {
-            return Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(6),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => onKeyPress(number),
-                    borderRadius: BorderRadius.circular(40),
-                    splashColor: Colors.white.withAlpha(30),
-                    highlightColor: Colors.white.withAlpha(15),
-                    child: Container(
-                      height: 64,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withAlpha(10),
-                        border: Border.all(
-                          color: Colors.white.withAlpha(30),
-                          width: 1,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          number,
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w300,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }
-
-          Widget buildActionKey({
-            required IconData icon,
-            required VoidCallback onTap,
-            Color? iconColor,
-          }) {
-            return Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(6),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: onTap,
-                    borderRadius: BorderRadius.circular(40),
-                    splashColor: Colors.white.withAlpha(30),
-                    highlightColor: Colors.white.withAlpha(15),
-                    child: SizedBox(
-                      height: 64,
-                      child: Center(
-                        child: Icon(
-                          icon,
-                          size: 28,
-                          color: iconColor ?? Colors.white.withAlpha(180),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }
-
-          return Dialog(
-            backgroundColor: Colors.transparent,
-            child: Container(
-              width: 300,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1C1C1E),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Lock icon
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withAlpha(10),
-                    ),
-                    child: Icon(
-                      Icons.lock_outline_rounded,
-                      color: Colors.white.withAlpha(200),
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Title
-                  const Text(
-                    'Enter PIN',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Required for global save',
-                    style: TextStyle(
-                      color: Colors.white.withAlpha(130),
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // PIN dots
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      _globalSavePin.length,
-                      (index) => buildPinDot(index),
-                    ),
-                  ),
-
-                  // Error message
-                  SizedBox(
-                    height: 32,
-                    child: Center(
-                      child: showError
-                          ? Text(
-                              'Wrong PIN · ${maxAttempts - attempts} attempts left',
-                              style: TextStyle(
-                                color: AppTheme.errorRed,
-                                fontSize: 13,
-                              ),
-                            )
-                          : null,
-                    ),
-                  ),
-
-                  // Number pad
-                  Row(
-                    children: [
-                      buildNumberKey('1'),
-                      buildNumberKey('2'),
-                      buildNumberKey('3'),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      buildNumberKey('4'),
-                      buildNumberKey('5'),
-                      buildNumberKey('6'),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      buildNumberKey('7'),
-                      buildNumberKey('8'),
-                      buildNumberKey('9'),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      // Cancel button
-                      buildActionKey(
-                        icon: Icons.close_rounded,
-                        onTap: () => Navigator.of(dialogContext).pop(false),
-                        iconColor: Colors.white.withAlpha(100),
-                      ),
-                      buildNumberKey('0'),
-                      // Backspace button
-                      buildActionKey(
-                        icon: Icons.backspace_outlined,
-                        onTap: () => onKeyPress('backspace'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-
-    return result ?? false;
   }
 
   Future<void> _resetConfig() async {

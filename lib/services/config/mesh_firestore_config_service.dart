@@ -44,16 +44,29 @@ class MeshFirestoreConfigService {
   }
 
   /// Get the remote mesh config (if available)
+  /// Always fetches from server to ensure latest config
   Future<MeshConfigData?> getRemoteConfig() async {
     if (_firestore == null) return null;
 
     try {
-      final doc = await _configDoc.get();
+      // Force fetch from server, not cache
+      final doc = await _configDoc.get(const GetOptions(source: Source.server));
       if (!doc.exists || doc.data() == null) return null;
 
+      AppLogging.settings('📡 Fetched mesh config from Firestore server');
       return MeshConfigData.fromJson(doc.data()!);
     } catch (e) {
       AppLogging.settings('⚠️ Failed to fetch mesh config from Firestore: $e');
+      // Try cache as fallback
+      try {
+        final cachedDoc = await _configDoc.get(
+          const GetOptions(source: Source.cache),
+        );
+        if (cachedDoc.exists && cachedDoc.data() != null) {
+          AppLogging.settings('📦 Using cached mesh config');
+          return MeshConfigData.fromJson(cachedDoc.data()!);
+        }
+      } catch (_) {}
       return null;
     }
   }
