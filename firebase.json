@@ -96,6 +96,10 @@
         "destination": "/faq.html"
       },
       {
+        "source": "/delete-account",
+        "destination": "/delete-account.html"
+      },
+      {
         "source": "/share/**",
         "function": "share"
       },

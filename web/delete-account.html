@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delete Account — Socialmesh</title>
+  <meta name="description" content="Request deletion of your Socialmesh account and associated data.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="landing.css">
+  <style>
+    .legal-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 120px 24px 80px;
+    }
+
+    .legal-content h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .legal-content .intro {
+      color: var(--text-muted);
+      margin-bottom: 3rem;
+    }
+
+    .legal-content h2 {
+      font-size: 1.5rem;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .legal-content h3 {
+      font-size: 1.1rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .legal-content p,
+    .legal-content li {
+      color: var(--text-secondary);
+      line-height: 1.8;
+      margin-bottom: 1rem;
+    }
+
+    .legal-content ul,
+    .legal-content ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .legal-content a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .legal-content a.btn {
+      color: white;
+    }
+
+    .legal-content a:hover {
+      text-decoration: underline;
+    }
+
+    .legal-content a.btn:hover {
+      text-decoration: none;
+    }
+
+    .warning-box {
+      background: rgba(255, 193, 7, 0.1);
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 2rem 0;
+    }
+
+    .warning-box strong {
+      color: #ffc107;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .info-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 2rem 0;
+    }
+
+    .info-box h3 {
+      color: var(--text-primary);
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
+
+    .steps-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 2rem 0;
+    }
+
+    .steps-box h3 {
+      color: var(--accent);
+      margin-top: 0;
+    }
+
+    .steps-box ol {
+      margin-bottom: 0;
+    }
+
+    .steps-box li {
+      margin-bottom: 0.75rem;
+    }
+
+    .contact-box {
+      background: linear-gradient(135deg, rgba(0, 209, 255, 0.1), rgba(138, 43, 226, 0.1));
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 2rem 0;
+      text-align: center;
+    }
+
+    .contact-box h3 {
+      color: var(--text-primary);
+      margin-top: 0;
+    }
+
+    .contact-box a.btn {
+      display: inline-block;
+      margin-top: 1rem;
+      color: white !important;
+    }
+
+    .contact-box p {
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mesh-bg"></div>
+  <div class="grid-overlay"></div>
+
+  <nav>
+    <div class="container">
+      <a href="/" class="logo">
+        <img src="images/app-icon.png" alt="Socialmesh" class="logo-img">
+        <span class="logo-text">Socialmesh</span>
+      </a>
+      <div class="nav-cta">
+        <a href="/" class="btn btn-secondary">← Back to Home</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="legal-content">
+    <h1>Delete Your Account</h1>
+    <p class="intro">Request deletion of your Socialmesh account and all associated data.</p>
+
+    <div class="warning-box">
+      <strong>This action is permanent</strong>
+      <p style="margin-bottom: 0;">Once your account is deleted, all your data will be permanently removed and cannot be
+        recovered. Please make sure you want to proceed before requesting deletion.</p>
+    </div>
+
+    <h2>How to Delete Your Account</h2>
+
+    <div class="steps-box">
+      <h3>Option 1: Delete from the App</h3>
+      <ol>
+        <li>Open the <strong>Socialmesh</strong> app on your device</li>
+        <li>Go to <strong>Settings</strong> (gear icon)</li>
+        <li>Scroll down to <strong>Account</strong> section</li>
+        <li>Tap <strong>Delete Account</strong></li>
+        <li>Confirm your decision when prompted</li>
+      </ol>
+    </div>
+
+    <div class="contact-box">
+      <h3>Option 2: Request Deletion via Email</h3>
+      <p>If you cannot access the app, you can request account deletion by email. Please include the email address
+        associated with your account.</p>
+      <a href="mailto:support@socialmesh.app?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20Socialmesh%20account.%0A%0AAccount%20email%3A%20%5Byour%20email%20here%5D%0A%0AI%20understand%20this%20action%20is%20permanent%20and%20all%20my%20data%20will%20be%20deleted."
+        class="btn btn-primary">Request Account Deletion</a>
+    </div>
+
+    <h2>What Data Will Be Deleted</h2>
+    <p>When you delete your account, the following data will be permanently removed:</p>
+    <ul>
+      <li><strong>Account information</strong> — Your profile, display name, and authentication data</li>
+      <li><strong>User preferences</strong> — App settings and customizations synced to the cloud</li>
+      <li><strong>Shared content</strong> — Widget submissions, shared node links, and profile data</li>
+      <li><strong>Purchase records</strong> — Transaction history (purchases remain valid if you reinstall)</li>
+    </ul>
+
+    <div class="info-box">
+      <h3>Data Stored Locally</h3>
+      <p>The following data is stored only on your device and is not affected by account deletion:</p>
+      <ul style="margin-bottom: 0;">
+        <li>Message history (stored locally on device)</li>
+        <li>Node information received over the mesh</li>
+        <li>Device connection settings</li>
+        <li>Channel configurations</li>
+      </ul>
+      <p style="margin-top: 1rem; margin-bottom: 0;">To remove local data, uninstall the app from your device.</p>
+    </div>
+
+    <h2>Data Retention</h2>
+    <p>Account deletion requests are processed within <strong>30 days</strong>. During this period:</p>
+    <ul>
+      <li>Your account will be immediately deactivated</li>
+      <li>Your data will be queued for permanent deletion</li>
+      <li>After 30 days, all data is permanently and irreversibly deleted</li>
+    </ul>
+    <p>We may retain certain data if required by law or for legitimate business purposes (e.g., financial records for
+      tax compliance), but this data will not be associated with your identity.</p>
+
+    <h2>Questions?</h2>
+    <p>If you have questions about account deletion or data privacy, please contact us:</p>
+    <ul>
+      <li>Email: <a href="mailto:support@socialmesh.app">support@socialmesh.app</a></li>
+      <li>Visit our <a href="/privacy">Privacy Policy</a> for more details</li>
+    </ul>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-links">
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
+        <a href="/support">Support</a>
+        <a href="/docs">Documentation</a>
+        <a href="/faq">FAQ</a>
+      </div>
+      <p class="copyright">© 2025 Socialmesh. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+
+</html>

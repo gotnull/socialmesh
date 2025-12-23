@@ -69,8 +69,16 @@
       text-decoration: none;
     }
 
+    .docs-content a.btn {
+      color: white;
+    }
+
     .docs-content a:hover {
       text-decoration: underline;
+    }
+
+    .docs-content a.btn:hover {
+      text-decoration: none;
     }
 
     .docs-content code {
@@ -150,12 +158,16 @@
 </head>
 
 <body>
-  <nav class="navbar">
-    <div class="nav-container">
+  <div class="mesh-bg"></div>
+  <div class="grid-overlay"></div>
+
+  <nav>
+    <div class="container">
       <a href="/" class="logo">
-        <span class="logo-icon">📡</span> Socialmesh
+        <img src="images/app-icon.png" alt="Socialmesh" class="logo-img">
+        <span class="logo-text">Socialmesh</span>
       </a>
-      <div class="nav-links">
+      <div class="nav-cta">
         <a href="/" class="btn btn-secondary">← Back to Home</a>
       </div>
     </div>
@@ -166,7 +178,7 @@
     <p class="intro">Everything you need to know about using Socialmesh with your Meshtastic devices.</p>
 
     <div class="toc">
-      <h3>📑 Table of Contents</h3>
+      <h3>Table of Contents</h3>
       <ul>
         <li><a href="#getting-started">Getting Started</a></li>
         <li><a href="#connecting">Connecting Your Device</a></li>
@@ -186,7 +198,7 @@
       mesh network, track nodes, and configure your devices.</p>
 
     <div class="feature-card">
-      <h3>📋 Requirements</h3>
+      <h3>Requirements</h3>
       <ul>
         <li><strong>Meshtastic Device</strong> — Any Meshtastic-compatible hardware (T-Beam, Heltec, RAK, etc.)</li>
         <li><strong>Firmware</strong> — Meshtastic firmware 2.0 or later recommended</li>
@@ -217,7 +229,7 @@
     </ol>
 
     <div class="info-box">
-      <strong>💡 Tip:</strong> If your device doesn't appear, try power cycling it or check that Bluetooth is enabled in
+      <strong>Tip:</strong> If your device doesn't appear, try power cycling it or check that Bluetooth is enabled in
       the device's Meshtastic configuration.
     </div>
 
@@ -266,7 +278,7 @@
     </ul>
 
     <div class="warning-box">
-      <strong>⚠️ Security Note:</strong> Never share your channel QR codes or PSKs publicly. Anyone with the PSK can
+      <strong>Security Note:</strong> Never share your channel QR codes or PSKs publicly. Anyone with the PSK can
       read messages on that channel.
     </div>
 
@@ -305,7 +317,7 @@
     <p>Create automated actions triggered by mesh events.</p>
 
     <div class="feature-card">
-      <h3>🤖 Available Triggers</h3>
+      <h3>Available Triggers</h3>
       <ul>
         <li><strong>Node Online/Offline</strong> — When a specific node appears or disappears</li>
         <li><strong>Message Received</strong> — When a message matches a pattern</li>
@@ -316,7 +328,7 @@
     </div>
 
     <div class="feature-card">
-      <h3>⚡ Available Actions</h3>
+      <h3>Available Actions</h3>
       <ul>
         <li><strong>Send Message</strong> — Automatically reply or alert</li>
         <li><strong>Play Sound</strong> — Audio notification</li>
@@ -396,8 +408,8 @@
     </ul>
 
     <div class="info-box">
-      <strong>📧 Need More Help?</strong> Visit our <a href="/support">Support page</a> or check the <a
-        href="/faq">FAQ</a> for common questions.
+      <strong>Need More Help?</strong> Visit our <a href="/support">Support page</a> or check the <a href="/faq">FAQ</a>
+      for common questions.
     </div>
   </main>
 

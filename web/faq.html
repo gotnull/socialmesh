@@ -56,8 +56,16 @@
       text-decoration: none;
     }
 
+    .faq-content a.btn {
+      color: white;
+    }
+
     .faq-content a:hover {
       text-decoration: underline;
+    }
+
+    .faq-content a.btn:hover {
+      text-decoration: none;
     }
 
     .faq-item {
@@ -75,6 +83,7 @@
       justify-content: space-between;
       align-items: center;
       transition: background 0.2s;
+      gap: 16px;
     }
 
     .faq-question:hover {
@@ -86,12 +95,16 @@
       font-size: 1.1rem;
       color: var(--text-primary);
       font-weight: 500;
+      flex: 1;
     }
 
     .faq-toggle {
       font-size: 1.5rem;
       color: var(--accent);
       transition: transform 0.3s;
+      flex-shrink: 0;
+      min-width: 24px;
+      text-align: center;
     }
 
     .faq-item.open .faq-toggle {
@@ -118,19 +131,58 @@
       margin-bottom: 0;
     }
 
-    .category-icon {
-      margin-right: 8px;
+    .faq-answer-inner ul,
+    .faq-answer-inner ol {
+      margin-left: 1.25rem;
+      padding-left: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .faq-answer-inner li {
+      margin-bottom: 0.5rem;
+      padding-left: 0.25rem;
+    }
+
+    .cta-box {
+      text-align: center;
+      margin-top: 3rem;
+      padding: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+    }
+
+    .cta-box h3 {
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      margin-top: 0;
+    }
+
+    .cta-box p {
+      margin-bottom: 1.5rem;
+      color: var(--text-secondary);
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
     }
   </style>
 </head>
 
 <body>
-  <nav class="navbar">
-    <div class="nav-container">
+  <div class="mesh-bg"></div>
+  <div class="grid-overlay"></div>
+
+  <nav>
+    <div class="container">
       <a href="/" class="logo">
-        <span class="logo-icon">📡</span> Socialmesh
+        <img src="images/app-icon.png" alt="Socialmesh" class="logo-img">
+        <span class="logo-text">Socialmesh</span>
       </a>
-      <div class="nav-links">
+      <div class="nav-cta">
         <a href="/" class="btn btn-secondary">← Back to Home</a>
       </div>
     </div>
@@ -140,7 +192,7 @@
     <h1>Frequently Asked Questions</h1>
     <p class="intro">Find answers to the most common questions about Socialmesh and Meshtastic.</p>
 
-    <h2><span class="category-icon">📱</span>General</h2>
+    <h2>General</h2>
 
     <div class="faq-item">
       <div class="faq-question" onclick="toggleFaq(this)">
@@ -197,7 +249,7 @@
       </div>
     </div>
 
-    <h2><span class="category-icon">📻</span>Hardware & Compatibility</h2>
+    <h2>Hardware & Compatibility</h2>
 
     <div class="faq-item">
       <div class="faq-question" onclick="toggleFaq(this)">
@@ -247,7 +299,7 @@
       </div>
     </div>
 
-    <h2><span class="category-icon">🔗</span>Connection Issues</h2>
+    <h2>Connection Issues</h2>
 
     <div class="faq-item">
       <div class="faq-question" onclick="toggleFaq(this)">
@@ -288,7 +340,7 @@
       </div>
     </div>
 
-    <h2><span class="category-icon">💬</span>Messaging</h2>
+    <h2>Messaging</h2>
 
     <div class="faq-item">
       <div class="faq-question" onclick="toggleFaq(this)">
@@ -342,7 +394,7 @@
       </div>
     </div>
 
-    <h2><span class="category-icon">🗺️</span>Location & Maps</h2>
+    <h2>Location & Maps</h2>
 
     <div class="faq-item">
       <div class="faq-question" onclick="toggleFaq(this)">
@@ -373,7 +425,7 @@
       </div>
     </div>
 
-    <h2><span class="category-icon">⚙️</span>Configuration</h2>
+    <h2>Configuration</h2>
 
     <div class="faq-item">
       <div class="faq-question" onclick="toggleFaq(this)">
@@ -414,7 +466,7 @@
       </div>
     </div>
 
-    <h2><span class="category-icon">💰</span>Premium Features</h2>
+    <h2>Premium Features</h2>
 
     <div class="faq-item">
       <div class="faq-question" onclick="toggleFaq(this)">
@@ -450,12 +502,13 @@
       </div>
     </div>
 
-    <div
-      style="text-align: center; margin-top: 3rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;">
-      <h3 style="color: var(--text-primary); margin-bottom: 1rem;">Still have questions?</h3>
-      <p style="margin-bottom: 1.5rem;">Check out our documentation or reach out to support.</p>
-      <a href="/docs" class="btn btn-secondary" style="margin-right: 1rem;">📖 Documentation</a>
-      <a href="/support" class="btn btn-primary">📧 Contact Support</a>
+    <div class="cta-box">
+      <h3>Still have questions?</h3>
+      <p>Check out our documentation or reach out to support.</p>
+      <div class="cta-buttons">
+        <a href="/docs" class="btn btn-secondary">Documentation</a>
+        <a href="/support" class="btn btn-primary">Contact Support</a>
+      </div>
     </div>
   </main>
 
