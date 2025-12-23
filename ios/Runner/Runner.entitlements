@@ -12,5 +12,12 @@
 		<array>
 			<string>group.com.gotnull.socialmesh</string>
 		</array>
+		<key>com.apple.developer.associated-domains</key>
+		<array>
+			<string>applinks:socialmesh.app</string>
+			<string>applinks:socialmesh.net</string>
+			<string>applinks:www.socialmesh.app</string>
+			<string>applinks:www.socialmesh.net</string>
+		</array>
 	</dict>
 </plist>
