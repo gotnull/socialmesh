@@ -647,13 +647,16 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     // Watch theme mode for dark/light switching
     final themeMode = ref.watch(themeModeProvider);
 
+    // Analytics observer (nullable until Firebase initializes)
+    final analyticsObserver = ref.watch(analyticsObserverProvider);
+
     return MaterialApp(
       title: 'Socialmesh',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme(accentColor),
       darkTheme: AppTheme.darkTheme(accentColor),
       themeMode: themeMode,
-      navigatorObservers: [ref.watch(analyticsObserverProvider)],
+      navigatorObservers: [if (analyticsObserver != null) analyticsObserver],
       home: const _AppRouter(),
       routes: {
         '/scanner': (context) => const ScannerScreen(),
