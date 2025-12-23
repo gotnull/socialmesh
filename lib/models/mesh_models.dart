@@ -46,6 +46,32 @@ enum RoutingError {
       this == RoutingError.maxRetransmit ||
       this == RoutingError.noRoute ||
       this == RoutingError.dutyCycleLimit;
+
+  /// Returns true if this error is related to PKI/encryption key issues
+  /// These errors can often be fixed by requesting fresh user info
+  bool get isPkiRelated =>
+      this == RoutingError.pkiFailed ||
+      this == RoutingError.pkiUnknownPubkey ||
+      this == RoutingError.noChannel;
+
+  /// Returns a helpful suggestion for fixing this error
+  String? get fixSuggestion {
+    switch (this) {
+      case RoutingError.pkiFailed:
+      case RoutingError.pkiUnknownPubkey:
+      case RoutingError.noChannel:
+        return 'Try "Request User Info" to refresh encryption keys';
+      case RoutingError.noRoute:
+        return 'Node may be out of range or offline';
+      case RoutingError.timeout:
+      case RoutingError.maxRetransmit:
+        return 'Network congestion, try again later';
+      case RoutingError.dutyCycleLimit:
+        return 'Radio duty cycle limit reached, wait a moment';
+      default:
+        return null;
+    }
+  }
 }
 
 /// Source of where a message originated

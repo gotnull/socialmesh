@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import '../../core/logging.dart';
 import '../../core/transport.dart';
@@ -889,6 +890,79 @@ class ProtocolService {
           _nodeController.add(updatedNode);
           _logger.i('Updated node $_myNodeNum with device metadata');
         }
+      } else if (adminMsg.hasGetOwnerResponse()) {
+        // Handle response to getOwnerRequest - contains remote node's User info
+        final user = adminMsg.getOwnerResponse;
+        debugPrint(
+          '🔑 📥 Received getOwnerResponse from ${packet.from.toRadixString(16)}: ${user.longName} (${user.shortName})',
+        );
+        debugPrint(
+          '🔑 📥 Public key present: ${user.publicKey.isNotEmpty} (${user.publicKey.length} bytes)',
+        );
+        _logger.i('Received owner info from ${packet.from}: ${user.longName}');
+
+        // Update the node with the received user info
+        final existingNode = _nodes[packet.from];
+        if (existingNode != null) {
+          String? hwModel;
+          if (user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET) {
+            hwModel = _formatHardwareModel(user.hwModel);
+          }
+
+          final updatedNode = existingNode.copyWith(
+            longName: user.longName.isNotEmpty
+                ? user.longName
+                : existingNode.longName,
+            shortName: user.shortName.isNotEmpty
+                ? user.shortName
+                : existingNode.shortName,
+            userId: user.hasId() ? user.id : existingNode.userId,
+            hardwareModel: hwModel ?? existingNode.hardwareModel,
+            role: user.hasRole() ? user.role.name : existingNode.role,
+            hasPublicKey: user.publicKey.isNotEmpty,
+            lastHeard: DateTime.now(),
+          );
+          _nodes[packet.from] = updatedNode;
+          _nodeController.add(updatedNode);
+          debugPrint(
+            '🔑 ✅ Updated node ${packet.from.toRadixString(16)} with fresh user info',
+          );
+        } else {
+          // Create new node entry
+          final colors = [
+            0xFF1976D2,
+            0xFFD32F2F,
+            0xFF388E3C,
+            0xFFF57C00,
+            0xFF7B1FA2,
+            0xFF00796B,
+            0xFFC2185B,
+          ];
+          final avatarColor = colors[packet.from % colors.length];
+
+          String? hwModel;
+          if (user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET) {
+            hwModel = _formatHardwareModel(user.hwModel);
+          }
+
+          final newNode = MeshNode(
+            nodeNum: packet.from,
+            longName: user.longName.isNotEmpty ? user.longName : null,
+            shortName: user.shortName.isNotEmpty ? user.shortName : null,
+            userId: user.hasId() ? user.id : null,
+            hardwareModel: hwModel,
+            role: user.hasRole() ? user.role.name : 'CLIENT',
+            hasPublicKey: user.publicKey.isNotEmpty,
+            lastHeard: DateTime.now(),
+            avatarColor: avatarColor,
+            isFavorite: false,
+          );
+          _nodes[packet.from] = newNode;
+          _nodeController.add(newNode);
+          debugPrint(
+            '🔑 ✅ Created new node ${packet.from.toRadixString(16)} from owner response',
+          );
+        }
       }
     } catch (e) {
       _logger.e('Error handling admin message: $e');
@@ -1573,6 +1647,12 @@ class ProtocolService {
   void _handleNodeInfoUpdate(pb.MeshPacket packet, pb.Data data) {
     try {
       final user = pb.User.fromBuffer(data.payload);
+      debugPrint(
+        '🔑 📥 Received node info from ${packet.from.toRadixString(16)}: ${user.longName} (${user.shortName})',
+      );
+      debugPrint(
+        '🔑 📥 Public key present: ${user.publicKey.isNotEmpty} (${user.publicKey.length} bytes)',
+      );
       _logger.i('Node info from ${packet.from}: ${user.longName}');
 
       final colors = [
@@ -2186,18 +2266,43 @@ class ProtocolService {
     }
   }
 
-  /// Request node info
+  /// Request node info/PKI key exchange by broadcasting our own User info
+  ///
+  /// This triggers the Meshtastic key exchange mechanism:
+  /// 1. We broadcast our User info (including our public key)
+  /// 2. Other nodes receive it and update their NodeDB with our info
+  /// 3. This prompts them to broadcast their User info in response
+  /// 4. We receive their info and update our NodeDB
+  ///
+  /// Note: Admin messages (getOwnerRequest) require authorization and won't
+  /// work for arbitrary remote nodes. Broadcasting NODEINFO is the standard
+  /// way to trigger key exchange.
   Future<void> requestNodeInfo(int nodeNum) async {
     try {
-      _logger.i('Requesting node info for $nodeNum');
+      debugPrint(
+        '🔑 Broadcasting our User info to trigger key exchange with ${nodeNum.toRadixString(16)}',
+      );
+      _logger.i('Broadcasting User info to trigger key exchange');
+
+      // Build our User info to broadcast
+      final myNode = _nodes[_myNodeNum];
+      final user = pb.User()
+        ..id = myNode?.userId ?? '!${(_myNodeNum ?? 0).toRadixString(16)}'
+        ..longName = myNode?.longName ?? 'Unknown'
+        ..shortName = myNode?.shortName ?? '????';
+
+      debugPrint('🔑 Broadcasting: ${user.longName} (${user.shortName})');
 
       final data = pb.Data()
         ..portnum = pb.PortNum.NODEINFO_APP
-        ..wantResponse = true;
+        ..payload = user.writeToBuffer()
+        ..wantResponse = true; // Request a response with their info
 
+      // Send directly to the target node (not broadcast) with wantResponse
       final packet = pb.MeshPacket()
         ..from = _myNodeNum ?? 0
-        ..to = nodeNum
+        ..to =
+            nodeNum // Direct to target node
         ..decoded = data
         ..id = _generatePacketId()
         ..wantAck = true;
@@ -2206,8 +2311,47 @@ class ProtocolService {
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
+      debugPrint(
+        '🔑 ✅ Sent NODEINFO with wantResponse to ${nodeNum.toRadixString(16)}',
+      );
+      _logger.i('Sent NODEINFO request to $nodeNum');
     } catch (e) {
+      debugPrint('🔑 ❌ Error requesting node info: $e');
       _logger.e('Error requesting node info: $e');
+      rethrow;
+    }
+  }
+
+  /// Broadcast our User info to all nodes (triggers mesh-wide key exchange)
+  Future<void> broadcastUserInfo() async {
+    try {
+      debugPrint('🔑 Broadcasting our User info to mesh');
+
+      final myNode = _nodes[_myNodeNum];
+      final user = pb.User()
+        ..id = myNode?.userId ?? '!${(_myNodeNum ?? 0).toRadixString(16)}'
+        ..longName = myNode?.longName ?? 'Unknown'
+        ..shortName = myNode?.shortName ?? '????';
+
+      final data = pb.Data()
+        ..portnum = pb.PortNum.NODEINFO_APP
+        ..payload = user.writeToBuffer();
+
+      final packet = pb.MeshPacket()
+        ..from = _myNodeNum ?? 0
+        ..to =
+            0xFFFFFFFF // Broadcast
+        ..decoded = data
+        ..id = _generatePacketId();
+
+      final toRadio = pn.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+      debugPrint('🔑 ✅ Broadcast User info to mesh');
+    } catch (e) {
+      debugPrint('🔑 ❌ Error broadcasting user info: $e');
+      _logger.e('Error broadcasting user info: $e');
     }
   }
 

@@ -1956,6 +1956,28 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
     }
   }
 
+  void _requestUserInfo(BuildContext context, MeshNode node) async {
+    Navigator.pop(context);
+
+    final protocol = ref.read(protocolServiceProvider);
+
+    try {
+      // Request node info to refresh PKI keys and user data
+      await protocol.requestNodeInfo(node.nodeNum);
+
+      if (context.mounted) {
+        showInfoSnackBar(
+          context,
+          'User info requested from ${node.displayName}',
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(context, 'Failed to request user info: $e');
+      }
+    }
+  }
+
   void _exchangePositions(BuildContext context, MeshNode node) async {
     Navigator.pop(context);
 
@@ -1985,6 +2007,24 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          ListTile(
+            leading: Icon(Icons.refresh, color: context.accentColor),
+            title: const Text(
+              'Request User Info',
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'JetBrainsMono',
+              ),
+            ),
+            subtitle: const Text(
+              'Refresh node info and encryption keys',
+              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              _requestUserInfo(context, node);
+            },
+          ),
           ListTile(
             leading: Icon(Icons.swap_horiz, color: context.accentColor),
             title: const Text(

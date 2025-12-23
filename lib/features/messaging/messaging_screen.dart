@@ -22,6 +22,7 @@ import '../../services/messaging/offline_queue_service.dart';
 import '../../services/haptic_service.dart';
 import '../channels/channel_form_screen.dart';
 import '../settings/canned_responses_screen.dart';
+import '../settings/device_management_screen.dart';
 import '../nodes/nodes_screen.dart';
 import '../navigation/main_shell.dart';
 import 'widgets/message_context_menu.dart';
@@ -936,6 +937,135 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  void _showPkiFixSheet(Message message) {
+    final nodes = ref.read(nodesProvider);
+    final targetNode = nodes[message.to];
+    final targetName = targetNode?.displayName ?? 'Unknown Node';
+
+    AppBottomSheet.show(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          BottomSheetHeader(
+            icon: Icons.key_off,
+            title: 'Encryption Key Issue',
+            subtitle: 'Direct message to $targetName failed',
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.warningYellow.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppTheme.warningYellow.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.info_outline,
+                  color: AppTheme.warningYellow,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message.routingError?.fixSuggestion ??
+                        'The encryption keys may be out of sync. This can happen when a node has been reset or rolled out of the mesh database.',
+                    style: const TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Request User Info button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.pop(context);
+                final protocol = ref.read(protocolServiceProvider);
+                try {
+                  await protocol.requestNodeInfo(message.to);
+                  if (mounted) {
+                    showInfoSnackBar(
+                      context,
+                      'Requested fresh info from $targetName',
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    showErrorSnackBar(context, 'Failed to request info: $e');
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.accentColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.refresh, size: 20),
+              label: const Text(
+                'Request User Info',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Retry message button
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _retryMessage(message);
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.textSecondary,
+                side: BorderSide(color: AppTheme.darkBorder),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.send, size: 20),
+              label: const Text(
+                'Retry Message',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Advanced options link
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DeviceManagementScreen(),
+                ),
+              );
+            },
+            child: const Text(
+              'Advanced: Reset Node Database',
+              style: TextStyle(color: AppTheme.textTertiary, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _deleteMessage(Message message) {
     showDialog(
       context: context,
@@ -1427,6 +1557,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           onRetry: message.isFailed
                               ? () => _retryMessage(message)
                               : null,
+                          onPkiFix: message.routingError?.isPkiRelated == true
+                              ? () => _showPkiFixSheet(message)
+                              : null,
                           onDelete: () => _deleteMessage(message),
                         );
                       },
@@ -1532,6 +1665,7 @@ class _MessageBubble extends StatelessWidget {
   final bool isQueued;
   final int? channelIndex;
   final VoidCallback? onRetry;
+  final VoidCallback? onPkiFix;
   final VoidCallback? onDelete;
 
   const _MessageBubble({
@@ -1545,6 +1679,7 @@ class _MessageBubble extends StatelessWidget {
     this.isQueued = false,
     this.channelIndex,
     this.onRetry,
+    this.onPkiFix,
     this.onDelete,
   });
 
@@ -1773,53 +1908,102 @@ class _MessageBubble extends StatelessWidget {
               const SizedBox(height: 4),
               Padding(
                 padding: const EdgeInsets.only(right: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 14,
-                      color: AppTheme.errorRed,
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        message.errorMessage ?? 'Failed to send',
-                        style: const TextStyle(
-                          fontSize: 11,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 14,
                           color: AppTheme.errorRed,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            message.errorMessage ?? 'Failed to send',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.errorRed,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (onRetry != null) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: onRetry,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.darkCard,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.refresh,
+                                    size: 12,
+                                    color: context.accentColor,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Retry',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: context.accentColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                    if (onRetry != null) ...[
-                      const SizedBox(width: 8),
+                    // Show fix suggestion for PKI-related errors
+                    if (message.routingError?.isPkiRelated == true &&
+                        onPkiFix != null) ...[
+                      const SizedBox(height: 4),
                       GestureDetector(
-                        onTap: onRetry,
+                        onTap: onPkiFix,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.darkCard,
+                            color: AppTheme.warningYellow.withValues(
+                              alpha: 0.2,
+                            ),
                             borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: AppTheme.warningYellow.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: [
+                            children: const [
                               Icon(
-                                Icons.refresh,
+                                Icons.lightbulb_outline,
                                 size: 12,
-                                color: context.accentColor,
+                                color: AppTheme.warningYellow,
                               ),
                               SizedBox(width: 4),
                               Text(
-                                'Retry',
+                                'Fix: Refresh Keys',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: context.accentColor,
+                                  color: AppTheme.warningYellow,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
