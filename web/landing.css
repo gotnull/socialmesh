@@ -1656,3 +1656,58 @@ footer::before {
     gap: 16px;
   }
 }
+
+/* App Store Badges - Official */
+.store-badges {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 32px 0;
+}
+
+.store-badge {
+  display: inline-flex !important;
+  align-items: center;
+  text-decoration: none !important;
+  border: none !important;
+  border-bottom: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.store-badge:hover,
+.store-badge:focus,
+.store-badge:active,
+.store-badge:visited {
+  text-decoration: none !important;
+  border: none !important;
+  border-bottom: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.store-badge:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.1);
+}
+
+.store-badge img {
+  height: 44px;
+  width: auto;
+  display: block;
+  border: none !important;
+}
+
+@media (max-width: 480px) {
+  .store-badges {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .store-badge img {
+    height: 40px;
+  }
+}
