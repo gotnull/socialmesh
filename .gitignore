@@ -60,3 +60,4 @@ assets/widget_templates/*.json
 # Scripts dependencies
 scripts/node_modules/
 scripts/package-lock.json
+android/key.properties
