@@ -13,11 +13,11 @@ import 'firebase_options.dart';
 import 'core/theme.dart';
 import 'core/transport.dart';
 import 'core/logging.dart';
-import 'core/widgets/animated_tagline.dart';
+import 'core/widgets/connecting_content.dart';
+import 'providers/splash_mesh_provider.dart';
 import 'models/canned_response.dart';
 import 'models/tapback.dart';
 import 'models/user_profile.dart';
-import 'providers/splash_mesh_provider.dart';
 import 'providers/app_providers.dart';
 import 'providers/auth_providers.dart';
 import 'providers/profile_providers.dart';
@@ -467,7 +467,6 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         glowIntensity: prefs.splashMeshGlowIntensity ?? 0.5,
         lineThickness: prefs.splashMeshLineThickness ?? 0.5,
         nodeSize: prefs.splashMeshNodeSize ?? 0.8,
-        colorPreset: prefs.splashMeshColorPreset ?? 0,
         useAccelerometer: prefs.splashMeshUseAccelerometer ?? true,
         accelerometerSensitivity: prefs.splashMeshAccelSensitivity ?? 0.5,
         accelerometerFriction: prefs.splashMeshAccelFriction ?? 0.97,
@@ -663,25 +662,10 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
               children: [
                 // Main centered content - unaffected by node cards
                 Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const ConfiguredSplashMeshNode(showNodeNames: false),
-                      const SizedBox(height: 32),
-                      const Text(
-                        'Socialmesh',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const AnimatedTagline(taglines: appTaglines),
-                      const SizedBox(height: 48),
-                      // Animated status indicator
-                      _buildStatusIndicator(statusInfo),
-                    ],
+                  child: ConnectingContent(
+                    statusInfo: statusInfo,
+                    showMeshNode: true, // Show mesh node on splash
+                    pulseAnimation: _pulseAnimation,
                   ),
                 ),
                 // Node discovery cards - absolutely positioned at bottom
@@ -717,25 +701,15 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
   //   return buildIntroAnimation(_selectedAnimation);
   // }
 
-  _StatusInfo _getStatusInfo(
+  ConnectionStatusInfo _getStatusInfo(
     AutoReconnectState autoState,
     AsyncValue<DeviceConnectionState> connState,
   ) {
     switch (autoState) {
       case AutoReconnectState.idle:
-        return _StatusInfo(
-          text: 'Initializing',
-          icon: Icons.hourglass_empty_rounded,
-          color: context.accentColor,
-          showSpinner: true,
-        );
+        return ConnectionStatusInfo.initializing(context.accentColor);
       case AutoReconnectState.scanning:
-        return _StatusInfo(
-          text: 'Scanning for device',
-          icon: Icons.bluetooth_searching_rounded,
-          color: context.accentColor,
-          showSpinner: true,
-        );
+        return ConnectionStatusInfo.scanning(context.accentColor);
       case AutoReconnectState.connecting:
         final isConnected =
             connState.whenOrNull(
@@ -743,166 +717,14 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
             ) ??
             false;
         if (isConnected) {
-          return _StatusInfo(
-            text: 'Configuring device',
-            icon: Icons.settings_rounded,
-            color: context.accentColor,
-            showSpinner: true,
-          );
+          return ConnectionStatusInfo.configuring(context.accentColor);
         }
-        return _StatusInfo(
-          text: 'Connecting',
-          icon: Icons.bluetooth_connected_rounded,
-          color: context.accentColor,
-          showSpinner: true,
-        );
+        return ConnectionStatusInfo.connecting(context.accentColor);
       case AutoReconnectState.success:
-        return _StatusInfo(
-          text: 'Connected',
-          icon: Icons.check_circle_rounded,
-          color: AppTheme.successGreen,
-          showSpinner: false,
-        );
+        return ConnectionStatusInfo.connected();
       case AutoReconnectState.failed:
-        return _StatusInfo(
-          text: 'Connection failed',
-          icon: Icons.error_outline_rounded,
-          color: AppTheme.errorRed,
-          showSpinner: false,
-        );
+        return ConnectionStatusInfo.failed();
     }
-  }
-
-  Widget _buildStatusIndicator(_StatusInfo info) {
-    return AnimatedBuilder(
-      animation: _pulseAnimation,
-      builder: (context, child) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Spinner or icon
-            SizedBox(
-              width: 48,
-              height: 48,
-              child: Center(
-                child: info.showSpinner
-                    ? SizedBox(
-                        width: 32,
-                        height: 32,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: info.color,
-                        ),
-                      )
-                    : Transform.scale(
-                        scale: _pulseAnimation.value,
-                        child: Icon(info.icon, color: info.color, size: 24),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Animated text with dots
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: Row(
-                key: ValueKey(info.text),
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    info.text,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: info.color,
-
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  if (info.showSpinner) _AnimatedDots(color: info.color),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _StatusInfo {
-  final String text;
-  final IconData icon;
-  final Color color;
-  final bool showSpinner;
-
-  const _StatusInfo({
-    required this.text,
-    required this.icon,
-    required this.color,
-    required this.showSpinner,
-  });
-}
-
-/// Animated dots that cycle through visibility
-class _AnimatedDots extends StatefulWidget {
-  final Color color;
-
-  const _AnimatedDots({required this.color});
-
-  @override
-  State<_AnimatedDots> createState() => _AnimatedDotsState();
-}
-
-class _AnimatedDotsState extends State<_AnimatedDots>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        final progress = _controller.value;
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(3, (index) {
-            // Stagger the animation for each dot
-            final dotProgress = ((progress * 3) - index).clamp(0.0, 1.0);
-            final opacity = dotProgress < 0.5
-                ? dotProgress * 2
-                : 2 - (dotProgress * 2);
-            return Padding(
-              padding: const EdgeInsets.only(left: 1),
-              child: Text(
-                '.',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: widget.color.withValues(
-                    alpha: opacity.clamp(0.3, 1.0),
-                  ),
-                ),
-              ),
-            );
-          }),
-        );
-      },
-    );
   }
 }
 

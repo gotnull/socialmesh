@@ -36,19 +36,21 @@ class PurchaseService {
     if (_isInitialized) return;
 
     try {
-      final apiKey = Platform.isIOS
-          ? RevenueCatConfig.iosApiKey
-          : RevenueCatConfig.androidApiKey;
+      final apiKey = RevenueCatConfig.currentPlatformApiKey;
 
       if (apiKey.isEmpty) {
-        AppLogging.subscriptions('💰 RevenueCat API key not configured');
+        AppLogging.subscriptions(
+          '💰 RevenueCat API key not configured for ${Platform.isIOS ? 'iOS' : 'Android'}',
+        );
         return;
       }
 
       // Enable verbose debug logging in debug mode for sandbox testing
       if (kDebugMode) {
         await Purchases.setLogLevel(LogLevel.verbose);
-        AppLogging.subscriptions('💰 RevenueCat debug logging enabled for sandbox testing');
+        AppLogging.subscriptions(
+          '💰 RevenueCat debug logging enabled for sandbox testing',
+        );
       }
 
       AppLogging.subscriptions('💰 Configuring RevenueCat...');
@@ -114,7 +116,7 @@ class PurchaseService {
     try {
       final products = await Purchases.getProducts([productId]);
       if (products.isEmpty) {
-        AppLogging.subscriptions('Product not found: $productId');
+        AppLogging.subscriptions('💳 Product not found: $productId');
         return PurchaseResult.error;
       }
 
@@ -202,8 +204,12 @@ class PurchaseService {
     try {
       final customerInfo = await Purchases.getCustomerInfo();
       // In sandbox, the environment will be "sandbox"
-      AppLogging.subscriptions('💰 RevenueCat environment: sandbox (debug build)');
-      AppLogging.subscriptions('💰 Customer ID: ${customerInfo.originalAppUserId}');
+      AppLogging.subscriptions(
+        '💰 RevenueCat environment: sandbox (debug build)',
+      );
+      AppLogging.subscriptions(
+        '💰 Customer ID: ${customerInfo.originalAppUserId}',
+      );
       return kDebugMode;
     } catch (e) {
       AppLogging.subscriptions('💰 Error checking sandbox mode: $e');
@@ -236,7 +242,9 @@ class PurchaseService {
     if (!_isInitialized) return null;
     try {
       final offerings = await Purchases.getOfferings();
-      AppLogging.subscriptions('💰 Current offering: ${offerings.current?.identifier}');
+      AppLogging.subscriptions(
+        '💰 Current offering: ${offerings.current?.identifier}',
+      );
       if (offerings.current != null) {
         for (final package in offerings.current!.availablePackages) {
           AppLogging.subscriptions(
@@ -257,7 +265,9 @@ class PurchaseService {
     try {
       final customerInfo = await Purchases.getCustomerInfo();
       AppLogging.subscriptions('💰 === Customer Info ===');
-      AppLogging.subscriptions('💰 App User ID: ${customerInfo.originalAppUserId}');
+      AppLogging.subscriptions(
+        '💰 App User ID: ${customerInfo.originalAppUserId}',
+      );
       AppLogging.subscriptions(
         '💰 Non-subscription transactions: ${customerInfo.nonSubscriptionTransactions.length}',
       );
@@ -266,7 +276,9 @@ class PurchaseService {
           '💰   - ${transaction.productIdentifier} (${transaction.purchaseDate})',
         );
       }
-      AppLogging.subscriptions('💰 Entitlements: ${customerInfo.entitlements.all.keys}');
+      AppLogging.subscriptions(
+        '💰 Entitlements: ${customerInfo.entitlements.all.keys}',
+      );
       AppLogging.subscriptions('💰 ======================');
     } catch (e) {
       AppLogging.subscriptions('💰 Error getting customer info: $e');

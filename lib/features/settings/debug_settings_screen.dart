@@ -45,7 +45,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   double _lineThickness = 0.5;
   double _nodeSize = 0.8;
   bool _animate = true;
-  int _selectedColorPreset = 0; // Brand
   bool _useAccelerometer = true;
   double _accelerometerSensitivity = 0.5;
   double _accelerometerFriction = 0.97; // Low friction
@@ -67,37 +66,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   SettingsService? _settingsService;
   bool _hasUnsavedChanges = false;
   bool _isLoadingRemote = false;
-
-  // Color presets
-  static const List<List<Color>> _colorPresets = [
-    // Brand gradient (orange → magenta → blue)
-    [Color(0xFFFF6B4A), Color(0xFFE91E8C), Color(0xFF4F6AF6)],
-    // Cyan-Teal
-    [Color(0xFF06B6D4), Color(0xFF14B8A6), Color(0xFF10B981)],
-    // Sunset
-    [Color(0xFFFF6B6B), Color(0xFFFF8E53), Color(0xFFFECA57)],
-    // Ocean
-    [Color(0xFF667EEA), Color(0xFF764BA2), Color(0xFF6B8DD6)],
-    // Emerald
-    [Color(0xFF059669), Color(0xFF10B981), Color(0xFF34D399)],
-    // Fire
-    [Color(0xFFDC2626), Color(0xFFF97316), Color(0xFFEAB308)],
-    // Neon
-    [Color(0xFFFF00FF), Color(0xFF00FFFF), Color(0xFF00FF00)],
-    // Monochrome
-    [Color(0xFFFFFFFF), Color(0xFFAAAAAA), Color(0xFF666666)],
-  ];
-
-  static const List<String> _colorPresetNames = [
-    'Brand',
-    'Cyan-Teal',
-    'Sunset',
-    'Ocean',
-    'Emerald',
-    'Fire',
-    'Neon',
-    'Mono',
-  ];
 
   @override
   void initState() {
@@ -126,10 +94,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           _glowIntensity = remoteConfig.glowIntensity;
           _lineThickness = remoteConfig.lineThickness;
           _nodeSize = remoteConfig.nodeSize;
-          _selectedColorPreset = remoteConfig.colorPreset.clamp(
-            0,
-            _colorPresets.length - 1,
-          );
+          // Color is now controlled by accent color in Theme settings
           _useAccelerometer = remoteConfig.useAccelerometer;
           _accelerometerSensitivity = remoteConfig.accelerometerSensitivity;
           _accelerometerFriction = remoteConfig.accelerometerFriction;
@@ -169,10 +134,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       _glowIntensity = _settingsService!.splashMeshGlowIntensity;
       _lineThickness = _settingsService!.splashMeshLineThickness;
       _nodeSize = _settingsService!.splashMeshNodeSize;
-      _selectedColorPreset = _settingsService!.splashMeshColorPreset.clamp(
-        0,
-        _colorPresets.length - 1,
-      );
+      // Color is now controlled by accent color in Theme settings
       _useAccelerometer = _settingsService!.splashMeshUseAccelerometer;
       _accelerometerSensitivity = _settingsService!.splashMeshAccelSensitivity;
       _accelerometerFriction = _settingsService!.splashMeshAccelFriction;
@@ -208,7 +170,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       glowIntensity: _glowIntensity,
       lineThickness: _lineThickness,
       nodeSize: _nodeSize,
-      colorPreset: _selectedColorPreset,
       useAccelerometer: _useAccelerometer,
       accelerometerSensitivity: _accelerometerSensitivity,
       accelerometerFriction: _accelerometerFriction,
@@ -229,7 +190,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             splashMeshGlowIntensity: _glowIntensity,
             splashMeshLineThickness: _lineThickness,
             splashMeshNodeSize: _nodeSize,
-            splashMeshColorPreset: _selectedColorPreset,
             splashMeshUseAccelerometer: _useAccelerometer,
             splashMeshAccelSensitivity: _accelerometerSensitivity,
             splashMeshAccelFriction: _accelerometerFriction,
@@ -258,7 +218,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         glowIntensity: _glowIntensity,
         lineThickness: _lineThickness,
         nodeSize: _nodeSize,
-        colorPreset: _selectedColorPreset,
         useAccelerometer: _useAccelerometer,
         accelerometerSensitivity: _accelerometerSensitivity,
         accelerometerFriction: _accelerometerFriction,
@@ -286,8 +245,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
 
     setState(() => _hasUnsavedChanges = false);
 
-    // Invalidate the splash mesh provider so changes take effect immediately
+    // Invalidate providers so changes take effect immediately
     ref.invalidate(splashMeshConfigProvider);
+    ref.invalidate(secretGestureConfigProvider);
 
     final locationText = _saveLocation == MeshConfigSaveLocation.localDevice
         ? 'this device'
@@ -314,10 +274,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           _glowIntensity = remoteConfig.glowIntensity;
           _lineThickness = remoteConfig.lineThickness;
           _nodeSize = remoteConfig.nodeSize;
-          _selectedColorPreset = remoteConfig.colorPreset.clamp(
-            0,
-            _colorPresets.length - 1,
-          );
           _useAccelerometer = remoteConfig.useAccelerometer;
           _accelerometerSensitivity = remoteConfig.accelerometerSensitivity;
           _accelerometerFriction = remoteConfig.accelerometerFriction;
@@ -939,7 +895,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                   glowIntensity: _glowIntensity,
                   lineThickness: _lineThickness,
                   nodeSize: _nodeSize,
-                  gradientColors: _colorPresets[_selectedColorPreset],
+                  gradientColors: gradientColorsFromAccent(context.accentColor),
                   accelerometerSensitivity: _accelerometerSensitivity,
                   friction: _accelerometerFriction,
                   // When accelerometer disabled, use touchOnly mode
@@ -1017,55 +973,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               ),
             );
           }).toList(),
-        ),
-        const SizedBox(height: 20),
-
-        // Color Preset
-        _buildSectionLabel('Color Preset'),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 44,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _colorPresets.length,
-            itemBuilder: (context, index) {
-              final isSelected = index == _selectedColorPreset;
-              final colors = _colorPresets[index];
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: BouncyTap(
-                  onTap: () {
-                    setState(() => _selectedColorPreset = index);
-                    _markChanged();
-                  },
-                  child: Container(
-                    width: 60,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: colors),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isSelected ? Colors.white : Colors.transparent,
-                        width: 2,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        _colorPresetNames[index],
-                        style: const TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(color: Colors.black54, blurRadius: 4),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
         ),
         const SizedBox(height: 20),
 
@@ -1984,7 +1891,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       'glowIntensity': double.parse(_glowIntensity.toStringAsFixed(2)),
       'lineThickness': double.parse(_lineThickness.toStringAsFixed(2)),
       'nodeSize': double.parse(_nodeSize.toStringAsFixed(2)),
-      'colorPreset': _colorPresetNames[_selectedColorPreset],
+      'colorSource': 'accent color (Theme settings)',
       'useAccelerometer': _useAccelerometer,
       'accelerometerSensitivity': double.parse(
         _accelerometerSensitivity.toStringAsFixed(2),

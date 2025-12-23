@@ -53,7 +53,7 @@ class SecretGestureDetector extends StatefulWidget {
     this.pattern = SecretGesturePattern.sevenTaps,
     this.onProgress,
     this.timeWindow = const Duration(seconds: 3),
-    this.showFeedback = true,
+    this.showFeedback = false,
     this.enableHaptics = true,
   });
 

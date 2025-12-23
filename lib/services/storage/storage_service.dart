@@ -431,7 +431,6 @@ class SettingsService {
     required double glowIntensity,
     required double lineThickness,
     required double nodeSize,
-    required int colorPreset,
     required bool useAccelerometer,
     required double accelerometerSensitivity,
     required double accelerometerFriction,
@@ -446,7 +445,7 @@ class SettingsService {
     await _preferences.setDouble('splash_mesh_glow_intensity', glowIntensity);
     await _preferences.setDouble('splash_mesh_line_thickness', lineThickness);
     await _preferences.setDouble('splash_mesh_node_size', nodeSize);
-    await _preferences.setInt('splash_mesh_color_preset', colorPreset);
+    // Color is now controlled by accent color in Theme settings
     await _preferences.setBool(
       'splash_mesh_use_accelerometer',
       useAccelerometer,

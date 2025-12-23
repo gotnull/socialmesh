@@ -204,7 +204,6 @@ class MeshConfigData {
       glowIntensity: glowIntensity,
       lineThickness: lineThickness,
       nodeSize: nodeSize,
-      colorPreset: colorPreset,
       useAccelerometer: useAccelerometer,
       accelerometerSensitivity: accelerometerSensitivity,
       accelerometerFriction: accelerometerFriction,

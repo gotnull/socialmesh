@@ -90,6 +90,9 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   
+  # Launcher icons generator
+  flutter_launcher_icons: ^0.14.3
+  
   # Code generation (3.x to match riverpod 3.x)
   build_runner: ^2.4.13
   riverpod_generator: ^3.0.3
@@ -144,3 +147,12 @@ flutter:
           weight: 600
         - asset: assets/fonts/Inter-Bold.ttf
           weight: 700
+
+# Flutter launcher icons configuration
+flutter_launcher_icons:
+  android: true
+  ios: false  # iOS icons are already correct
+  image_path: "assets/app_icons/source/socialmesh_icon_v4_1024.png"
+  adaptive_icon_background: "#1F2633"  # Dark background matching app theme
+  adaptive_icon_foreground: "assets/app_icons/source/socialmesh_icon_v4_1024.png"
+  min_sdk_android: 21

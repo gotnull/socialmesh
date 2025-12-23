@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../core/transport.dart';
 import '../../core/theme.dart';
-import '../../core/widgets/animated_tagline.dart';
+import '../../core/widgets/connecting_content.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
@@ -411,72 +411,21 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   }
 
   Widget _buildConnectingContent() {
-    final statusText = _autoReconnecting ? 'Auto-reconnecting' : 'Connecting';
+    final statusInfo = _autoReconnecting
+        ? ConnectionStatusInfo.autoReconnecting(context.accentColor)
+        : ConnectionStatusInfo.connecting(context.accentColor);
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const ConfiguredSplashMeshNode(),
-        const SizedBox(height: 32),
-        const Text(
-          'Socialmesh',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 8),
-        const AnimatedTagline(taglines: appTaglines),
-        const SizedBox(height: 48),
-        // Status indicator
-        SizedBox(
-          width: 48,
-          height: 48,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 48,
-                height: 48,
-                child: MeshLoadingIndicator(size: 48),
-              ),
-              Icon(
-                Icons.bluetooth_connected_rounded,
-                color: context.accentColor,
-                size: 24,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          statusText,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: context.accentColor,
-
-            letterSpacing: 0.3,
-          ),
-        ),
-        if (_autoReconnecting) ...[
-          const SizedBox(height: 24),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _connecting = false;
-                _autoReconnecting = false;
-              });
-              _startScan();
-            },
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 16),
-            ),
-          ),
-        ],
-      ],
+    return ConnectingContent(
+      statusInfo: statusInfo,
+      showMeshNode: true,
+      showCancel: _autoReconnecting,
+      onCancel: () {
+        setState(() {
+          _connecting = false;
+          _autoReconnecting = false;
+        });
+        _startScan();
+      },
     );
   }
 

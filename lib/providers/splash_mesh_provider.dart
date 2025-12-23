@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/logging.dart';
+import '../core/theme.dart';
 import '../core/widgets/animated_mesh_node.dart';
 import '../core/widgets/node_names_mesh.dart';
 import '../core/widgets/secret_gesture_detector.dart';
@@ -52,17 +53,30 @@ class SplashMeshConfig {
   static const SplashMeshConfig defaultConfig = SplashMeshConfig();
 }
 
-/// Color presets matching the debug settings screen
-const List<List<Color>> splashMeshColorPresets = [
-  [Color(0xFFFF6B4A), Color(0xFFE91E8C), Color(0xFF4F6AF6)], // Brand
-  [Color(0xFF06B6D4), Color(0xFF14B8A6), Color(0xFF10B981)], // Cyan-Teal
-  [Color(0xFFFF6B6B), Color(0xFFFF8E53), Color(0xFFFECA57)], // Sunset
-  [Color(0xFF667EEA), Color(0xFF764BA2), Color(0xFF6B8DD6)], // Ocean
-  [Color(0xFF059669), Color(0xFF10B981), Color(0xFF34D399)], // Emerald
-  [Color(0xFFDC2626), Color(0xFFF97316), Color(0xFFEAB308)], // Fire
-  [Color(0xFFFF00FF), Color(0xFF00FFFF), Color(0xFF00FF00)], // Neon
-  [Color(0xFFFFFFFF), Color(0xFFAAAAAA), Color(0xFF666666)], // Mono
-];
+/// Generate gradient colors from a single accent color
+/// Creates a harmonious 3-color gradient based on the accent
+List<Color> gradientColorsFromAccent(Color accent) {
+  final hslColor = HSLColor.fromColor(accent);
+
+  // Create a triad-like gradient: shift hue by -30° and +30°
+  final color1 = HSLColor.fromAHSL(
+    1.0,
+    (hslColor.hue - 30) % 360,
+    (hslColor.saturation * 1.1).clamp(0.0, 1.0),
+    (hslColor.lightness * 0.9).clamp(0.0, 1.0),
+  ).toColor();
+
+  final color2 = accent; // Keep accent as middle color
+
+  final color3 = HSLColor.fromAHSL(
+    1.0,
+    (hslColor.hue + 30) % 360,
+    (hslColor.saturation * 0.9).clamp(0.0, 1.0),
+    (hslColor.lightness * 1.1).clamp(0.0, 1.0),
+  ).toColor();
+
+  return [color1, color2, color3];
+}
 
 /// Provider that loads splash mesh config.
 /// Priority:
@@ -133,10 +147,7 @@ SplashMeshConfig _loadConfigFromPrefs(SharedPreferences prefs) {
       prefs.getDouble('splash_mesh_glow_intensity') ?? 0.7145593869731794;
   final lineThickness = prefs.getDouble('splash_mesh_line_thickness') ?? 0.7;
   final nodeSize = prefs.getDouble('splash_mesh_node_size') ?? 0.8;
-  final colorPreset = (prefs.getInt('splash_mesh_color_preset') ?? 0).clamp(
-    0,
-    splashMeshColorPresets.length - 1,
-  );
+  // Color is now controlled by accent color, not stored in config
   final useAccelerometer =
       prefs.getBool('splash_mesh_use_accelerometer') ?? false;
   final accelSensitivity =
@@ -167,7 +178,7 @@ SplashMeshConfig _loadConfigFromPrefs(SharedPreferences prefs) {
     glowIntensity: glowIntensity,
     lineThickness: lineThickness,
     nodeSize: nodeSize,
-    gradientColors: splashMeshColorPresets[colorPreset],
+    // gradientColors will be set from accent color in the widget
     useAccelerometer: useAccelerometer,
     accelerometerSensitivity: accelSensitivity,
     accelerometerFriction: accelFriction,
@@ -189,7 +200,7 @@ Future<void> _saveGlobalConfigToPrefs(
   await prefs.setDouble('splash_mesh_glow_intensity', config.glowIntensity);
   await prefs.setDouble('splash_mesh_line_thickness', config.lineThickness);
   await prefs.setDouble('splash_mesh_node_size', config.nodeSize);
-  await prefs.setInt('splash_mesh_color_preset', config.colorPreset);
+  // Color is now controlled by accent color, not stored in config
   await prefs.setBool('splash_mesh_use_accelerometer', config.useAccelerometer);
   await prefs.setDouble(
     'splash_mesh_accel_sensitivity',
@@ -214,18 +225,13 @@ Future<void> _saveGlobalConfigToPrefs(
 
 /// Convert MeshConfigData to SplashMeshConfig
 SplashMeshConfig _configFromMeshConfigData(MeshConfigData data) {
-  final colorPreset = data.colorPreset.clamp(
-    0,
-    splashMeshColorPresets.length - 1,
-  );
-
   return SplashMeshConfig(
     size: data.size,
     animationType: data.animationTypeEnum,
     glowIntensity: data.glowIntensity,
     lineThickness: data.lineThickness,
     nodeSize: data.nodeSize,
-    gradientColors: splashMeshColorPresets[colorPreset],
+    // gradientColors will be set from accent color in the widget
     useAccelerometer: data.useAccelerometer,
     accelerometerSensitivity: data.accelerometerSensitivity,
     accelerometerFriction: data.accelerometerFriction,
@@ -296,6 +302,9 @@ class _ConfiguredSplashMeshNodeState
   @override
   Widget build(BuildContext context) {
     final configAsync = ref.watch(splashMeshConfigProvider);
+    // Watch accent color to generate gradient colors
+    final accentColorAsync = ref.watch(accentColorProvider);
+    final accentColor = accentColorAsync.asData?.value ?? AccentColors.magenta;
 
     return configAsync.when(
       data: (config) {
@@ -309,7 +318,7 @@ class _ConfiguredSplashMeshNodeState
             }
           });
         }
-        return _buildAnimatedMeshNode(config);
+        return _buildAnimatedMeshNode(config, accentColor);
       },
       // While loading, show nothing (size 0) - no default config blip!
       loading: () => SizedBox(
@@ -326,14 +335,19 @@ class _ConfiguredSplashMeshNodeState
             }
           });
         }
-        return _buildAnimatedMeshNode(SplashMeshConfig.defaultConfig);
+        return _buildAnimatedMeshNode(
+          SplashMeshConfig.defaultConfig,
+          accentColor,
+        );
       },
     );
   }
 
-  Widget _buildAnimatedMeshNode(SplashMeshConfig config) {
+  Widget _buildAnimatedMeshNode(SplashMeshConfig config, Color accentColor) {
     final layoutSize = widget.layoutSize ?? 200.0;
     final meshSize = config.size;
+    // Generate gradient colors from accent color
+    final gradientColors = gradientColorsFromAccent(accentColor);
 
     // Use NodeNamesMeshNode when showNodeNames is enabled
     final meshWidget = widget.showNodeNames
@@ -343,7 +357,7 @@ class _ConfiguredSplashMeshNodeState
             glowIntensity: config.glowIntensity,
             lineThickness: config.lineThickness,
             nodeSize: config.nodeSize,
-            gradientColors: config.gradientColors,
+            gradientColors: gradientColors,
             showNodeNames: true,
             maxVisibleNames: 6,
             chipDisplayDuration: const Duration(seconds: 5),
@@ -354,7 +368,7 @@ class _ConfiguredSplashMeshNodeState
             glowIntensity: config.glowIntensity,
             lineThickness: config.lineThickness,
             nodeSize: config.nodeSize,
-            gradientColors: config.gradientColors,
+            gradientColors: gradientColors,
             accelerometerSensitivity: config.accelerometerSensitivity,
             friction: config.accelerometerFriction,
             physicsMode: config.useAccelerometer

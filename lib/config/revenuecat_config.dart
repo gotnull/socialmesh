@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// RevenueCat configuration loaded from environment variables
@@ -77,9 +79,19 @@ class RevenueCatConfig {
   /// Default offering ID
   static const String defaultOfferingId = 'default';
 
-  /// Check if RevenueCat is configured
+  /// Check if RevenueCat is configured for the current platform
   static bool get isConfigured {
-    // Check based on platform
-    return iosApiKey.isNotEmpty || androidApiKey.isNotEmpty;
+    return currentPlatformApiKey.isNotEmpty;
   }
+
+  /// Get the API key for the current platform (iOS or Android)
+  static String get currentPlatformApiKey {
+    return Platform.isIOS ? iosApiKey : androidApiKey;
+  }
+
+  /// Check if configured for iOS specifically
+  static bool get isConfiguredForIOS => iosApiKey.isNotEmpty;
+
+  /// Check if configured for Android specifically
+  static bool get isConfiguredForAndroid => androidApiKey.isNotEmpty;
 }
