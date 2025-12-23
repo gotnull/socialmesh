@@ -98,40 +98,43 @@ class ConnectingContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (showMeshNode) ...[
-          const ConfiguredSplashMeshNode(),
-          const SizedBox(height: 32),
-        ],
-        const Text(
-          'Socialmesh',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 8),
-        const AnimatedTagline(taglines: appTaglines),
-        const SizedBox(height: 48),
-        // Status indicator
-        ConnectionStatusIndicator(
-          statusInfo: statusInfo,
-          pulseAnimation: pulseAnimation,
-        ),
-        if (showCancel) ...[
-          const SizedBox(height: 24),
-          TextButton(
-            onPressed: onCancel,
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 16),
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showMeshNode) ...[
+            const ConfiguredSplashMeshNode(),
+            const SizedBox(height: 32),
+          ],
+          const Text(
+            'Socialmesh',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
+          const SizedBox(height: 8),
+          const AnimatedTagline(taglines: appTaglines),
+          const SizedBox(height: 48),
+          // Status indicator
+          ConnectionStatusIndicator(
+            statusInfo: statusInfo,
+            pulseAnimation: pulseAnimation,
+          ),
+          if (showCancel) ...[
+            const SizedBox(height: 24),
+            TextButton(
+              onPressed: onCancel,
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: AppTheme.textTertiary, fontSize: 16),
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
