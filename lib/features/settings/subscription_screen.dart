@@ -810,15 +810,80 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }
 
   Future<void> _restorePurchases() async {
+    debugPrint(
+      '💳 [SubscriptionScreen] ═══════════════════════════════════════════════',
+    );
+    debugPrint('💳 [SubscriptionScreen] _restorePurchases() called');
+    debugPrint('💳 [SubscriptionScreen] mounted: $mounted');
+
     ref.haptics.buttonTap();
+
+    // Log current state before restore
+    final stateBefore = ref.read(purchaseStateProvider);
+    debugPrint('💳 [SubscriptionScreen] State BEFORE restore:');
+    debugPrint(
+      '💳 [SubscriptionScreen]   purchasedProductIds: ${stateBefore.purchasedProductIds}',
+    );
+    debugPrint(
+      '💳 [SubscriptionScreen]   customerId: ${stateBefore.customerId}',
+    );
+
+    debugPrint('💳 [SubscriptionScreen] Calling restorePurchases(ref)...');
+    final stopwatch = Stopwatch()..start();
     final success = await restorePurchases(ref);
+    stopwatch.stop();
+
+    debugPrint('💳 [SubscriptionScreen] restorePurchases returned: $success');
+    debugPrint(
+      '💳 [SubscriptionScreen] Duration: ${stopwatch.elapsedMilliseconds}ms',
+    );
+
+    // Log state after restore
+    final stateAfter = ref.read(purchaseStateProvider);
+    debugPrint('💳 [SubscriptionScreen] State AFTER restore:');
+    debugPrint(
+      '💳 [SubscriptionScreen]   purchasedProductIds: ${stateAfter.purchasedProductIds}',
+    );
+    debugPrint(
+      '💳 [SubscriptionScreen]   customerId: ${stateAfter.customerId}',
+    );
+
+    // Check each feature
+    debugPrint('💳 [SubscriptionScreen] Feature status after restore:');
+    debugPrint(
+      '💳 [SubscriptionScreen]   premiumThemes: ${stateAfter.hasFeature(PremiumFeature.premiumThemes)}',
+    );
+    debugPrint(
+      '💳 [SubscriptionScreen]   customRingtones: ${stateAfter.hasFeature(PremiumFeature.customRingtones)}',
+    );
+    debugPrint(
+      '💳 [SubscriptionScreen]   homeWidgets: ${stateAfter.hasFeature(PremiumFeature.homeWidgets)}',
+    );
+    debugPrint(
+      '💳 [SubscriptionScreen]   automations: ${stateAfter.hasFeature(PremiumFeature.automations)}',
+    );
+    debugPrint(
+      '💳 [SubscriptionScreen]   iftttIntegration: ${stateAfter.hasFeature(PremiumFeature.iftttIntegration)}',
+    );
+    debugPrint(
+      '💳 [SubscriptionScreen] ═══════════════════════════════════════════════',
+    );
+
     if (mounted) {
       if (success) {
+        debugPrint('💳 [SubscriptionScreen] Showing success snackbar');
         ref.haptics.success();
         showSuccessSnackBar(context, 'Purchases restored successfully');
       } else {
+        debugPrint(
+          '💳 [SubscriptionScreen] Showing info snackbar (no purchases)',
+        );
         showInfoSnackBar(context, 'No purchases to restore');
       }
+    } else {
+      debugPrint(
+        '💳 [SubscriptionScreen] Widget not mounted, skipping snackbar',
+      );
     }
   }
 }
