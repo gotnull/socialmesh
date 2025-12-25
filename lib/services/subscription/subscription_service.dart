@@ -208,10 +208,37 @@ class PurchaseService {
       );
       _updateStateFromCustomerInfo(result.customerInfo);
       return PurchaseResult.success;
+    } on PlatformException catch (e) {
+      // Handle "product already owned" as success - just need to sync
+      if (e.code == '6' ||
+          e.message?.contains('already active') == true ||
+          e.message?.contains('ITEM_ALREADY_OWNED') == true) {
+        AppLogging.subscriptions(
+          '💳 Product already owned, syncing purchases...',
+        );
+        // Restore/sync to get the existing purchase recognized
+        await restorePurchases();
+        return PurchaseResult.success;
+      }
+      // Handle user cancellation
+      if (e.code == '1' ||
+          e.message?.contains('cancelled') == true ||
+          e.message?.contains('canceled') == true) {
+        AppLogging.subscriptions('💳 User cancelled purchase');
+        return PurchaseResult.canceled;
+      }
+      AppLogging.subscriptions('💳 Purchase error: $e');
+      return PurchaseResult.error;
     } on PurchasesErrorCode catch (e) {
       if (e == PurchasesErrorCode.purchaseCancelledError) {
         AppLogging.subscriptions('User cancelled purchase');
         return PurchaseResult.canceled;
+      } else if (e == PurchasesErrorCode.productAlreadyPurchasedError) {
+        AppLogging.subscriptions(
+          '💳 Product already owned, syncing purchases...',
+        );
+        await restorePurchases();
+        return PurchaseResult.success;
       } else {
         AppLogging.subscriptions('Purchase error: $e');
         return PurchaseResult.error;
