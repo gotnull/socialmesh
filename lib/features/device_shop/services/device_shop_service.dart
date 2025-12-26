@@ -1,19 +1,13 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 
 import '../models/shop_models.dart';
-
-/// Cloud Functions base URL
-const String _functionsBaseUrl =
-    'https://us-central1-social-mesh-app.cloudfunctions.net';
 
 /// Service for device shop operations
 class DeviceShopService {
@@ -272,21 +266,15 @@ class DeviceShopService {
     });
   }
 
-  /// Increment view count via Cloud Function
-  /// This is more secure as it doesn't require client-side Firestore write permissions
+  /// Increment view count for analytics
+  /// Fails silently if permission denied (non-critical operation)
   Future<void> incrementViewCount(String productId) async {
     try {
-      final response = await http.post(
-        Uri.parse('$_functionsBaseUrl/shopIncrementViewCount'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'productId': productId}),
-      );
-
-      if (response.statusCode != 200) {
-        debugPrint('Failed to increment view count: ${response.statusCode}');
-      }
+      await _productsCollection.doc(productId).update({
+        'viewCount': FieldValue.increment(1),
+      });
     } catch (e) {
-      // Log but don't crash - view count is non-critical
+      // Log but don't crash - view count is non-critical analytics
       debugPrint('Failed to increment view count for $productId: $e');
     }
   }

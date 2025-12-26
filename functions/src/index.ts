@@ -5,6 +5,8 @@
  * - Widget Marketplace API
  * - Rich Share Links (Open Graph)
  * - Admin operations
+ * 
+ * MIGRATION: Uses process.env for config (functions.config() deprecated March 2026)
  */
 
 import * as admin from 'firebase-admin';
@@ -16,6 +18,15 @@ import { z } from 'zod';
 admin.initializeApp();
 
 const db = admin.firestore();
+
+// =============================================================================
+// ENVIRONMENT CONFIG - Replaces functions.config()
+// =============================================================================
+const APP_BASE_URL = process.env.APP_BASE_URL || 'https://socialmesh.app';
+const APP_STORE_URL = process.env.APP_STORE_URL || 'https://apps.apple.com/app/socialmesh/id6739187207';
+const PLAY_STORE_URL = process.env.PLAY_STORE_URL || 'https://play.google.com/store/apps/details?id=app.socialmesh';
+const IOS_APP_STORE_ID = process.env.IOS_APP_STORE_ID || '6739187207';
+const ANDROID_PACKAGE = process.env.ANDROID_PACKAGE || 'app.socialmesh';
 
 // =============================================================================
 // TYPES & SCHEMAS
@@ -811,7 +822,7 @@ export const onFirstWidget = onDocumentCreated('widgets/{widgetId}', async () =>
  */
 export const share = onRequest(async (req, res) => {
   const path = req.path;
-  const baseUrl = 'https://socialmesh.app';
+  const baseUrl = APP_BASE_URL;
   const appIcon = `${baseUrl}/images/app-icon.png`;
 
   // Parse the share path
@@ -923,10 +934,10 @@ export const share = onRequest(async (req, res) => {
   <meta name="twitter:image" content="${image}">
   
   <!-- App Links -->
-  <meta property="al:ios:app_store_id" content="YOUR_APP_STORE_ID">
+  <meta property="al:ios:app_store_id" content="${IOS_APP_STORE_ID}">
   <meta property="al:ios:app_name" content="Socialmesh">
   <meta property="al:ios:url" content="${deepLink}">
-  <meta property="al:android:package" content="app.socialmesh">
+  <meta property="al:android:package" content="${ANDROID_PACKAGE}">
   <meta property="al:android:app_name" content="Socialmesh">
   <meta property="al:android:url" content="${deepLink}">
   
@@ -974,9 +985,9 @@ export const share = onRequest(async (req, res) => {
     setTimeout(function() {
       var ua = navigator.userAgent.toLowerCase();
       if (ua.indexOf('iphone') > -1 || ua.indexOf('ipad') > -1) {
-        window.location.href = 'https://apps.apple.com/app/socialmesh/idYOUR_APP_ID';
+        window.location.href = '${APP_STORE_URL}';
       } else if (ua.indexOf('android') > -1) {
-        window.location.href = 'https://play.google.com/store/apps/details?id=app.socialmesh';
+        window.location.href = '${PLAY_STORE_URL}';
       }
     }, 2500);
   </script>
@@ -989,8 +1000,8 @@ export const share = onRequest(async (req, res) => {
   <a href="${deepLink}" class="btn">Open in Socialmesh</a>
   
   <div class="stores">
-    <a href="https://apps.apple.com/app/socialmesh/idYOUR_APP_ID" class="btn btn-secondary">App Store</a>
-    <a href="https://play.google.com/store/apps/details?id=app.socialmesh" class="btn btn-secondary">Google Play</a>
+    <a href="${APP_STORE_URL}" class="btn btn-secondary">App Store</a>
+    <a href="${PLAY_STORE_URL}" class="btn btn-secondary">Google Play</a>
   </div>
 </body>
 </html>`;

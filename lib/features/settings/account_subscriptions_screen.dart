@@ -1288,24 +1288,152 @@ class _ProviderIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (icon, color) = switch (providerId) {
-      'google.com' => (Icons.g_mobiledata, Colors.red),
-      'apple.com' => (Icons.apple, Colors.white),
-      'github.com' => (Icons.code, Colors.white),
-      'password' => (Icons.email, Colors.blue),
-      _ => (Icons.account_circle, AppTheme.textSecondary),
-    };
-
     return Container(
-      width: 24,
-      height: 24,
+      width: 28,
+      height: 28,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
+        color: AppTheme.darkBackground,
         shape: BoxShape.circle,
+        border: Border.all(color: AppTheme.darkBorder),
       ),
-      child: Icon(icon, size: 14, color: color),
+      child: Center(child: _getIcon()),
     );
   }
+
+  Widget _getIcon() {
+    return switch (providerId) {
+      'google.com' => SizedBox(
+        width: 14,
+        height: 14,
+        child: CustomPaint(painter: _GoogleLogoSmallPainter()),
+      ),
+      'apple.com' => const Icon(Icons.apple, size: 16, color: Colors.white),
+      'github.com' => SizedBox(
+        width: 14,
+        height: 14,
+        child: CustomPaint(painter: _GitHubLogoSmallPainter()),
+      ),
+      'password' => const Icon(Icons.email, size: 14, color: Colors.blue),
+      _ => Icon(Icons.link, size: 14, color: AppTheme.textSecondary),
+    };
+  }
+}
+
+/// Custom painter for Google's 4-color "G" logo (small version)
+class _GoogleLogoSmallPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.width / 24;
+    canvas.scale(scale, scale);
+
+    final bluePaint = Paint()
+      ..color = const Color(0xFF4285F4)
+      ..style = PaintingStyle.fill;
+    final bluePath = Path()
+      ..moveTo(22.56, 12.25)
+      ..cubicTo(22.56, 11.47, 22.49, 10.72, 22.36, 10)
+      ..lineTo(12, 10)
+      ..lineTo(12, 14.26)
+      ..lineTo(17.92, 14.26)
+      ..cubicTo(17.66, 15.63, 16.88, 16.79, 15.71, 17.57)
+      ..lineTo(15.71, 20.34)
+      ..lineTo(19.28, 20.34)
+      ..cubicTo(21.36, 18.42, 22.56, 15.6, 22.56, 12.25)
+      ..close();
+    canvas.drawPath(bluePath, bluePaint);
+
+    final greenPaint = Paint()
+      ..color = const Color(0xFF34A853)
+      ..style = PaintingStyle.fill;
+    final greenPath = Path()
+      ..moveTo(12, 23)
+      ..cubicTo(14.97, 23, 17.46, 22.02, 19.28, 20.34)
+      ..lineTo(15.71, 17.57)
+      ..cubicTo(14.73, 18.23, 13.48, 18.63, 12, 18.63)
+      ..cubicTo(9.14, 18.63, 6.71, 16.7, 5.84, 14.1)
+      ..lineTo(2.18, 14.1)
+      ..lineTo(2.18, 16.94)
+      ..cubicTo(3.99, 20.53, 7.7, 23, 12, 23)
+      ..close();
+    canvas.drawPath(greenPath, greenPaint);
+
+    final yellowPaint = Paint()
+      ..color = const Color(0xFFFBBC05)
+      ..style = PaintingStyle.fill;
+    final yellowPath = Path()
+      ..moveTo(5.84, 14.09)
+      ..cubicTo(5.62, 13.43, 5.49, 12.73, 5.49, 12)
+      ..cubicTo(5.49, 11.27, 5.62, 10.57, 5.84, 9.91)
+      ..lineTo(5.84, 7.07)
+      ..lineTo(2.18, 7.07)
+      ..cubicTo(1.43, 8.55, 1, 10.22, 1, 12)
+      ..cubicTo(1, 13.78, 1.43, 15.45, 2.18, 16.93)
+      ..lineTo(5.84, 14.09)
+      ..close();
+    canvas.drawPath(yellowPath, yellowPaint);
+
+    final redPaint = Paint()
+      ..color = const Color(0xFFEA4335)
+      ..style = PaintingStyle.fill;
+    final redPath = Path()
+      ..moveTo(12, 5.38)
+      ..cubicTo(13.62, 5.38, 15.06, 5.94, 16.21, 7.02)
+      ..lineTo(19.36, 3.87)
+      ..cubicTo(17.45, 2.09, 14.97, 1, 12, 1)
+      ..cubicTo(7.7, 1, 3.99, 3.47, 2.18, 7.07)
+      ..lineTo(5.84, 9.91)
+      ..cubicTo(6.71, 7.31, 9.14, 5.38, 12, 5.38)
+      ..close();
+    canvas.drawPath(redPath, redPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Custom painter for GitHub's octocat logo (small version)
+class _GitHubLogoSmallPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.width / 24;
+    canvas.scale(scale, scale);
+
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    final path = Path()
+      ..moveTo(12, 0.297)
+      ..cubicTo(5.37, 0.297, 0, 5.67, 0, 12.297)
+      ..cubicTo(0, 17.6, 3.438, 22.097, 8.205, 23.682)
+      ..cubicTo(8.805, 23.795, 9.025, 23.424, 9.025, 23.105)
+      ..cubicTo(9.025, 22.82, 9.015, 22.065, 9.01, 21.065)
+      ..cubicTo(5.672, 21.789, 4.968, 19.455, 4.968, 19.455)
+      ..cubicTo(4.422, 18.07, 3.633, 17.7, 3.633, 17.7)
+      ..cubicTo(2.546, 16.956, 3.717, 16.971, 3.717, 16.971)
+      ..cubicTo(4.922, 17.055, 5.555, 18.207, 5.555, 18.207)
+      ..cubicTo(6.625, 20.042, 8.364, 19.512, 9.05, 19.205)
+      ..cubicTo(9.158, 18.429, 9.467, 17.9, 9.81, 17.6)
+      ..cubicTo(7.145, 17.3, 4.344, 16.268, 4.344, 11.67)
+      ..cubicTo(4.344, 10.36, 4.809, 9.29, 5.579, 8.45)
+      ..cubicTo(5.444, 8.147, 5.039, 6.927, 5.684, 5.274)
+      ..cubicTo(5.684, 5.274, 6.689, 4.952, 8.984, 6.504)
+      ..cubicTo(9.944, 6.237, 10.964, 6.105, 11.984, 6.099)
+      ..cubicTo(13.004, 6.105, 14.024, 6.237, 14.984, 6.504)
+      ..cubicTo(17.264, 4.952, 18.269, 5.274, 18.269, 5.274)
+      ..cubicTo(18.914, 6.927, 18.509, 8.147, 18.389, 8.45)
+      ..cubicTo(19.154, 9.29, 19.619, 10.36, 19.619, 11.67)
+      ..cubicTo(19.619, 16.28, 16.814, 17.295, 14.144, 17.59)
+      ..cubicTo(14.564, 17.95, 14.954, 18.686, 14.954, 19.81)
+      ..cubicTo(14.954, 21.416, 14.939, 22.706, 14.939, 23.096)
+      ..cubicTo(14.939, 23.411, 15.149, 23.786, 15.764, 23.666)
+      ..cubicTo(20.565, 22.092, 24, 17.592, 24, 12.297)
+      ..cubicTo(24, 5.67, 18.627, 0.297, 12, 0.297)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _SocialSignInButton extends StatelessWidget {

@@ -12,6 +12,8 @@ module.exports = {
   parserOptions: {
     project: ["tsconfig.json"],
     sourceType: "module",
+    // Support newer TypeScript versions
+    warnOnUnsupportedTypeScriptVersion: false,
   },
   ignorePatterns: [
     "/lib/**/*",

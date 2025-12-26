@@ -4,14 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
+import '../core/constants.dart';
 import '../models/world_mesh_node.dart';
 
 /// Service to fetch global mesh node data from mesh-observer
 class WorldMeshMapService {
   /// Get the base URL based on environment
   static String get _defaultApiUrl {
-    const productionUrl = 'https://api.socialmesh.app';
-
     // Check .env flag for local API usage
     final useLocalApi = dotenv.env['USE_LOCAL_API']?.toLowerCase() == 'true';
     if (useLocalApi) {
@@ -23,7 +22,7 @@ class WorldMeshMapService {
       }
     }
 
-    return productionUrl;
+    return AppUrls.worldMeshApiUrl;
   }
 
   /// Default API endpoint

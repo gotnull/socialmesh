@@ -5,12 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../core/constants.dart';
 import '../models/mesh_models.dart';
 
 /// Service for sharing content with rich Open Graph link previews
 class ShareLinkService {
-  static const String baseUrl = 'https://socialmesh.app';
-
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
@@ -46,7 +45,7 @@ class ShareLinkService {
       'createdAt': FieldValue.serverTimestamp(),
     });
 
-    final shareUrl = '$baseUrl/share/node/${docRef.id}';
+    final shareUrl = AppUrls.shareNodeUrl(docRef.id);
 
     await Share.share(
       'Check out ${node.displayName} on Socialmesh!\n$shareUrl',
@@ -72,7 +71,7 @@ class ShareLinkService {
       'createdAt': FieldValue.serverTimestamp(),
     });
 
-    final shareUrl = '$baseUrl/share/node/${docRef.id}';
+    final shareUrl = AppUrls.shareNodeUrl(docRef.id);
 
     await Share.share(
       'Check out $nodeName on Socialmesh!\n$shareUrl',
@@ -87,7 +86,7 @@ class ShareLinkService {
     required String displayName,
     Rect? sharePositionOrigin,
   }) async {
-    final shareUrl = '$baseUrl/share/profile/$userId';
+    final shareUrl = AppUrls.shareProfileUrl(userId);
 
     await Share.share(
       'Check out $displayName on Socialmesh!\n$shareUrl',
@@ -102,7 +101,7 @@ class ShareLinkService {
     required String widgetName,
     Rect? sharePositionOrigin,
   }) async {
-    final shareUrl = '$baseUrl/share/widget/$widgetId';
+    final shareUrl = AppUrls.shareWidgetUrl(widgetId);
 
     await Share.share(
       'Check out $widgetName on Socialmesh!\n$shareUrl',
@@ -118,13 +117,11 @@ class ShareLinkService {
     String? label,
     Rect? sharePositionOrigin,
   }) async {
-    final lat = latitude.toStringAsFixed(6);
-    final lng = longitude.toStringAsFixed(6);
-
-    var shareUrl = '$baseUrl/share/location?lat=$lat&lng=$lng';
-    if (label != null) {
-      shareUrl += '&label=${Uri.encodeComponent(label)}';
-    }
+    final shareUrl = AppUrls.shareLocationUrl(
+      latitude,
+      longitude,
+      label: label,
+    );
 
     final text = label != null
         ? 'Check out $label on Socialmesh!\n$shareUrl'

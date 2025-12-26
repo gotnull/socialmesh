@@ -1,4 +1,15 @@
-import * as functions from 'firebase-functions';
+/**
+ * Cloud Sync Entitlement Functions
+ * 
+ * Handles RevenueCat webhooks and user entitlement management for cloud sync feature.
+ * 
+ * MIGRATION NOTE (functions.config() → process.env):
+ * As of March 2026, functions.config() is deprecated. This module now uses
+ * process.env for configuration. Set values in functions/.env or Firebase secrets.
+ */
+
+import { onRequest, onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 import * as crypto from 'crypto';
 
@@ -9,8 +20,9 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// RevenueCat webhook secret (set in Firebase config)
-const REVENUECAT_WEBHOOK_SECRET = functions.config().revenuecat?.webhook_secret;
+// Configuration from environment variables (replaces functions.config())
+const REVENUECAT_WEBHOOK_SECRET = process.env.REVENUECAT_WEBHOOK_SECRET;
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
 interface RevenueCatWebhookEvent {
   api_version: string;
@@ -69,7 +81,8 @@ function verifyWebhookSignature(
  * RevenueCat webhook handler
  * Processes subscription events and updates user entitlements
  */
-export const onRevenueCatWebhook = functions.https.onRequest(
+export const onRevenueCatWebhook = onRequest(
+  { cors: false },
   async (req, res) => {
     // Only accept POST requests
     if (req.method !== 'POST') {
@@ -186,10 +199,16 @@ export const onRevenueCatWebhook = functions.https.onRequest(
  * Cloud Function to enforce sync writes
  * Triggered before any write to synced data collections
  */
-export const onSyncWrite = functions.firestore
-  .document('sync_data/{userId}/{collection}/{docId}')
-  .onCreate(async (snap, context) => {
-    const userId = context.params.userId;
+export const onSyncWrite = onDocumentCreated(
+  'sync_data/{userId}/{collection}/{docId}',
+  async (event) => {
+    const userId = event.params.userId;
+    const snap = event.data;
+
+    if (!snap) {
+      console.log('No document data');
+      return;
+    }
 
     try {
       // Check entitlement
@@ -229,22 +248,23 @@ export const onSyncWrite = functions.firestore
       // On error, reject the write to be safe
       await snap.ref.delete();
     }
-  });
+  }
+);
 
 /**
  * Firestore security rules enforcement helper
  * Call this from security rules to check entitlement
  */
-export const checkCloudSyncEntitlement = functions.https.onCall(
-  async (data, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError(
+export const checkCloudSyncEntitlement = onCall(
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError(
         'unauthenticated',
         'User must be authenticated'
       );
     }
 
-    const uid = context.auth.uid;
+    const uid = request.auth.uid;
 
     try {
       const entitlementDoc = await db
@@ -273,7 +293,7 @@ export const checkCloudSyncEntitlement = functions.https.onCall(
       };
     } catch (error) {
       console.error('Error checking entitlement:', error);
-      throw new functions.https.HttpsError('internal', 'Error checking entitlement');
+      throw new HttpsError('internal', 'Error checking entitlement');
     }
   }
 );
@@ -282,11 +302,12 @@ export const checkCloudSyncEntitlement = functions.https.onCall(
  * Migration function to grandfather existing cloud sync users
  * Run this ONCE before enabling subscription enforcement
  */
-export const grandfatherExistingUsers = functions.https.onRequest(
+export const grandfatherExistingUsers = onRequest(
+  { cors: false },
   async (req, res) => {
     // Require admin authentication (use a secret key)
     const adminKey = req.headers['x-admin-key'];
-    if (adminKey !== functions.config().admin?.key) {
+    if (!ADMIN_KEY || adminKey !== ADMIN_KEY) {
       res.status(401).send('Unauthorized');
       return;
     }
@@ -345,10 +366,16 @@ export const grandfatherExistingUsers = functions.https.onRequest(
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const MAX_WRITES_PER_WINDOW = 100;
 
-export const rateLimitSyncWrite = functions.firestore
-  .document('sync_data/{userId}/{collection}/{docId}')
-  .onCreate(async (snap, context) => {
-    const userId = context.params.userId;
+export const rateLimitSyncWrite = onDocumentCreated(
+  'sync_data/{userId}/{collection}/{docId}',
+  async (event) => {
+    const userId = event.params.userId;
+    const snap = event.data;
+
+    if (!snap) {
+      return;
+    }
+
     const now = admin.firestore.Timestamp.now();
     const windowStart = admin.firestore.Timestamp.fromMillis(
       now.toMillis() - RATE_LIMIT_WINDOW_MS
@@ -380,4 +407,5 @@ export const rateLimitSyncWrite = functions.firestore
     } catch (error) {
       console.error('Error checking rate limit:', error);
     }
-  });
+  }
+);

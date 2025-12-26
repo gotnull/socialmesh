@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import '../constants.dart';
 import '../theme.dart';
 
 /// Opens legal documents (Terms, Privacy, Support) in an in-app webview.
@@ -9,36 +10,32 @@ class LegalDocumentSheet {
 
   /// Show Terms of Service
   static void showTerms(BuildContext context) {
-    _showWebView(context, 'Terms of Service', 'https://socialmesh.app/terms');
+    _showWebView(context, 'Terms of Service', AppUrls.termsUrl);
   }
 
   /// Show Privacy Policy
   static void showPrivacy(BuildContext context) {
-    _showWebView(context, 'Privacy Policy', 'https://socialmesh.app/privacy');
+    _showWebView(context, 'Privacy Policy', AppUrls.privacyUrl);
   }
 
   /// Show Support / FAQ
   static void showSupport(BuildContext context) {
-    _showWebView(context, 'Help & Support', 'https://socialmesh.app/support');
+    _showWebView(context, 'Help & Support', AppUrls.supportUrl);
   }
 
   /// Show Documentation
   static void showDocs(BuildContext context) {
-    _showWebView(context, 'Documentation', 'https://socialmesh.app/docs');
+    _showWebView(context, 'Documentation', AppUrls.docsUrl);
   }
 
   /// Show FAQ
   static void showFAQ(BuildContext context) {
-    _showWebView(context, 'FAQ', 'https://socialmesh.app/faq');
+    _showWebView(context, 'FAQ', AppUrls.faqUrl);
   }
 
   /// Show Delete Account page
   static void showDeleteAccount(BuildContext context) {
-    _showWebView(
-      context,
-      'Delete Account',
-      'https://socialmesh.app/delete-account',
-    );
+    _showWebView(context, 'Delete Account', AppUrls.deleteAccountUrl);
   }
 
   static void _showWebView(BuildContext context, String title, String url) {

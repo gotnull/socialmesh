@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
+import '../../../core/constants.dart';
 import '../models/widget_schema.dart';
 
 /// Service for interacting with the widget marketplace
@@ -27,8 +28,8 @@ class WidgetMarketplaceService {
       return envUrl;
     }
 
-    // Default to Firebase Cloud Functions
-    return 'https://us-central1-social-mesh-app.cloudfunctions.net';
+    // Default to Firebase Cloud Functions from AppUrls
+    return AppUrls.cloudFunctionsUrl;
   }
 
   WidgetMarketplaceService({

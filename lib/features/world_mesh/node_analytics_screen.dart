@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
 import '../../models/world_mesh_node.dart';
@@ -273,7 +274,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
       'createdAt': FieldValue.serverTimestamp(),
     });
 
-    final shareUrl = 'https://socialmesh.app/share/node/${docRef.id}';
+    final shareUrl = AppUrls.shareNodeUrl(docRef.id);
 
     Share.share(
       'Check out ${node.displayName} on Socialmesh!\n$shareUrl',

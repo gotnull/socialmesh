@@ -1,7 +1,127 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/core/constants.dart';
 
 void main() {
+  setUpAll(() {
+    // Initialize dotenv with minimal env to use default values
+    // We use a dummy key since flutter_dotenv requires non-empty content
+    dotenv.loadFromString(envString: 'TEST_MODE=true');
+  });
+
+  group('AppUrls', () {
+    group('Share URLs', () {
+      test('shareNodeUrl generates correct URL', () {
+        final url = AppUrls.shareNodeUrl('abc123');
+        expect(url, contains('/share/node/abc123'));
+        expect(url, startsWith('https://'));
+      });
+
+      test('shareProfileUrl generates correct URL', () {
+        final url = AppUrls.shareProfileUrl('user456');
+        expect(url, contains('/share/profile/user456'));
+        expect(url, startsWith('https://'));
+      });
+
+      test('shareWidgetUrl generates correct URL', () {
+        final url = AppUrls.shareWidgetUrl('widget789');
+        expect(url, contains('/share/widget/widget789'));
+        expect(url, startsWith('https://'));
+      });
+
+      test('shareLocationUrl without label generates correct URL', () {
+        final url = AppUrls.shareLocationUrl(37.7749, -122.4194);
+        expect(url, contains('/share/location?'));
+        expect(url, contains('lat=37.7749'));
+        expect(url, contains('lng=-122.4194'));
+        expect(url, isNot(contains('label=')));
+      });
+
+      test('shareLocationUrl with label encodes properly', () {
+        final url = AppUrls.shareLocationUrl(
+          37.7749,
+          -122.4194,
+          label: 'San Francisco',
+        );
+        expect(url, contains('lat=37.7749'));
+        expect(url, contains('lng=-122.4194'));
+        expect(url, contains('label=San%20Francisco'));
+      });
+    });
+
+    group('Legal URLs', () {
+      test('termsUrl ends with /terms', () {
+        expect(AppUrls.termsUrl, endsWith('/terms'));
+      });
+
+      test('privacyUrl ends with /privacy', () {
+        expect(AppUrls.privacyUrl, endsWith('/privacy'));
+      });
+
+      test('supportUrl ends with /support', () {
+        expect(AppUrls.supportUrl, endsWith('/support'));
+      });
+
+      test('docsUrl ends with /docs', () {
+        expect(AppUrls.docsUrl, endsWith('/docs'));
+      });
+
+      test('faqUrl ends with /faq', () {
+        expect(AppUrls.faqUrl, endsWith('/faq'));
+      });
+
+      test('deleteAccountUrl ends with /delete-account', () {
+        expect(AppUrls.deleteAccountUrl, endsWith('/delete-account'));
+      });
+    });
+
+    group('Default base URL', () {
+      test('baseUrl defaults to socialmesh.app', () {
+        expect(AppUrls.baseUrl, 'https://socialmesh.app');
+      });
+
+      test('cloudFunctionsUrl defaults to us-central1', () {
+        expect(
+          AppUrls.cloudFunctionsUrl,
+          'https://us-central1-social-mesh-app.cloudfunctions.net',
+        );
+      });
+
+      test('worldMeshApiUrl defaults to api subdomain', () {
+        expect(AppUrls.worldMeshApiUrl, 'https://api.socialmesh.app');
+      });
+    });
+
+    group('App identifiers', () {
+      test('iosAppId is correct format', () {
+        expect(AppUrls.iosAppId, matches(RegExp(r'^\d+$')));
+        expect(AppUrls.iosAppId.length, greaterThan(5));
+      });
+
+      test('androidPackage follows reverse domain notation', () {
+        expect(AppUrls.androidPackage, 'app.socialmesh');
+        expect(AppUrls.androidPackage, contains('.'));
+      });
+
+      test('deepLinkScheme is lowercase', () {
+        expect(AppUrls.deepLinkScheme, 'socialmesh');
+        expect(AppUrls.deepLinkScheme, AppUrls.deepLinkScheme.toLowerCase());
+      });
+    });
+
+    group('Store URLs', () {
+      test('appStoreUrl is valid Apple URL', () {
+        expect(AppUrls.appStoreUrl, startsWith('https://apps.apple.com'));
+        expect(AppUrls.appStoreUrl, contains('socialmesh'));
+      });
+
+      test('playStoreUrl is valid Google URL', () {
+        expect(AppUrls.playStoreUrl, startsWith('https://play.google.com'));
+        expect(AppUrls.playStoreUrl, contains('app.socialmesh'));
+      });
+    });
+  });
+
   group('StorageConstants', () {
     test('has correct database name', () {
       expect(StorageConstants.databaseName, 'socialmesh.db');

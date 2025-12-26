@@ -1,6 +1,59 @@
 /// Application constants and configuration values
 library;
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+/// App URLs - centralized URL management
+/// Use .env for overrides in development/staging
+class AppUrls {
+  AppUrls._();
+
+  /// Base website URL
+  static String get baseUrl =>
+      dotenv.env['APP_BASE_URL'] ?? 'https://socialmesh.app';
+
+  /// Cloud Functions base URL
+  static String get cloudFunctionsUrl =>
+      dotenv.env['CLOUD_FUNCTIONS_URL'] ??
+      'https://us-central1-social-mesh-app.cloudfunctions.net';
+
+  /// World Mesh API URL
+  static String get worldMeshApiUrl =>
+      dotenv.env['WORLD_MESH_API_URL'] ?? 'https://api.socialmesh.app';
+
+  // Legal & Documentation URLs
+  static String get termsUrl => '$baseUrl/terms';
+  static String get privacyUrl => '$baseUrl/privacy';
+  static String get supportUrl => '$baseUrl/support';
+  static String get docsUrl => '$baseUrl/docs';
+  static String get faqUrl => '$baseUrl/faq';
+  static String get deleteAccountUrl => '$baseUrl/delete-account';
+
+  // Share link URLs
+  static String shareNodeUrl(String id) => '$baseUrl/share/node/$id';
+  static String shareProfileUrl(String id) => '$baseUrl/share/profile/$id';
+  static String shareWidgetUrl(String id) => '$baseUrl/share/widget/$id';
+  static String shareLocationUrl(double lat, double lng, {String? label}) {
+    final params =
+        'lat=$lat&lng=$lng${label != null ? '&label=${Uri.encodeComponent(label)}' : ''}';
+    return '$baseUrl/share/location?$params';
+  }
+
+  // App Store URLs
+  static String get appStoreUrl =>
+      dotenv.env['APP_STORE_URL'] ??
+      'https://apps.apple.com/app/socialmesh/id6739187207';
+
+  static String get playStoreUrl =>
+      dotenv.env['PLAY_STORE_URL'] ??
+      'https://play.google.com/store/apps/details?id=app.socialmesh';
+
+  // App identifiers
+  static const String iosAppId = '6739187207';
+  static const String androidPackage = 'app.socialmesh';
+  static const String deepLinkScheme = 'socialmesh';
+}
+
 /// Database and storage constants
 class StorageConstants {
   static const String databaseName = 'socialmesh.db';

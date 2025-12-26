@@ -3,7 +3,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper functions
+    // =============================================================================
+    // HELPER FUNCTIONS
+    // =============================================================================
+    
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -17,10 +20,35 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
     
+    // Validate document size (Firestore limit is 1MB, use 500KB for safety)
+    function isValidSize() {
+      return request.resource.size() < 500 * 1024;
+    }
+    
+    // =============================================================================
+    // USER DATA COLLECTIONS
+    // =============================================================================
+    
     // User data - owner read/write
     match /users/{userId} {
       allow read, write: if isOwner(userId);
     }
+    
+    // User profiles - public read, owner write
+    match /profiles/{userId} {
+      allow read: if true;
+      allow write: if isOwner(userId) && isValidSize();
+    }
+    
+    // Admin list - only readable by admins
+    match /admins/{adminId} {
+      allow read: if isAdmin() || isOwner(adminId);
+      allow write: if false; // Managed via Firebase Console
+    }
+    
+    // =============================================================================
+    // APP CONFIG & WIDGETS
+    // =============================================================================
     
     // App config - public read, admin write
     match /app_config/{configId} {
@@ -28,11 +56,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    // Widgets - public read, authenticated write
+    // Widgets marketplace - public read, authenticated write
     match /widgets/{widgetId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && 
+      allow create: if isAuthenticated() && isValidSize();
+      allow update: if isAuthenticated() && isValidSize() &&
         (resource.data.authorId == request.auth.uid || isAdmin());
       allow delete: if isAuthenticated() && 
         (resource.data.authorId == request.auth.uid || isAdmin());
@@ -50,51 +78,46 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    // User profiles - public read, owner write
-    match /profiles/{userId} {
-      allow read: if true;
-      allow write: if isOwner(userId);
-    }
+    // =============================================================================
+    // SHARING & SOCIAL
+    // =============================================================================
     
     // Shared nodes (for share links)
     match /shared_nodes/{nodeId} {
       allow read: if true;
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidSize();
       allow update, delete: if isAuthenticated() && 
         resource.data.createdBy == request.auth.uid;
-    }
-    
-    // Admin list - only readable by admins
-    match /admins/{adminId} {
-      allow read: if isAdmin() || isOwner(adminId);
-      allow write: if false; // Managed via Firebase Console
     }
     
     // =============================================================================
     // DEVICE SHOP COLLECTIONS
     // =============================================================================
     
-    // Shop Products - public read, admin write
+    // Shop Products - public read, admin write, authenticated users can increment viewCount
     match /shopProducts/{productId} {
       allow read: if true;
       allow create: if isAdmin();
-      allow update: if isAdmin();
       allow delete: if isAdmin();
+      // Allow admins full update, or authenticated users to only update viewCount
+      allow update: if isAdmin() || 
+        (isAuthenticated() && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount']) &&
+         request.resource.data.viewCount == resource.data.viewCount + 1);
     }
     
     // Shop Sellers - public read, admin write
     match /shopSellers/{sellerId} {
       allow read: if true;
-      allow create: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow write: if isAdmin();
     }
     
     // Product Reviews - public read, authenticated create, owner/admin manage
     match /productReviews/{reviewId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && 
+      allow create: if isAuthenticated() && isValidSize() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && isValidSize() &&
         (resource.data.userId == request.auth.uid || isAdmin());
       allow delete: if isAuthenticated() && 
         (resource.data.userId == request.auth.uid || isAdmin());
@@ -112,18 +135,17 @@ service cloud.firestore {
     
     // Shop Analytics - admin only
     match /shopAnalytics/{docId} {
-      allow read: if isAdmin();
-      allow write: if isAdmin();
+      allow read, write: if isAdmin();
     }
 
     // =============================================================================
-    // CLOUD SYNC COLLECTIONS
+    // CLOUD SYNC / SUBSCRIPTION COLLECTIONS
     // =============================================================================
     
     // User entitlements - owner read, write via Cloud Functions only
     match /user_entitlements/{userId} {
       allow read: if isOwner(userId);
-      allow write: if false; // Managed by Cloud Functions only
+      allow write: if false; // Managed by Cloud Functions (RevenueCat webhook)
     }
     
     // Helper function to check cloud sync entitlement
@@ -143,25 +165,36 @@ service cloud.firestore {
     // Synced nodes - cloud sync required for write, read-only for expired
     match /synced_nodes/{userId}/{document=**} {
       allow read: if isOwner(userId) && hasCloudSyncReadAccess(userId);
-      allow write: if isOwner(userId) && hasCloudSyncAccess(userId);
+      allow write: if isOwner(userId) && hasCloudSyncAccess(userId) && isValidSize();
     }
     
     // Synced messages - cloud sync required for write, read-only for expired  
     match /synced_messages/{userId}/{document=**} {
       allow read: if isOwner(userId) && hasCloudSyncReadAccess(userId);
-      allow write: if isOwner(userId) && hasCloudSyncAccess(userId);
+      allow write: if isOwner(userId) && hasCloudSyncAccess(userId) && isValidSize();
     }
     
     // Synced channels - cloud sync required for write, read-only for expired
     match /synced_channels/{userId}/{document=**} {
       allow read: if isOwner(userId) && hasCloudSyncReadAccess(userId);
-      allow write: if isOwner(userId) && hasCloudSyncAccess(userId);
+      allow write: if isOwner(userId) && hasCloudSyncAccess(userId) && isValidSize();
     }
     
     // Synced settings - cloud sync required for write, read-only for expired
     match /synced_settings/{userId} {
       allow read: if isOwner(userId) && hasCloudSyncReadAccess(userId);
-      allow write: if isOwner(userId) && hasCloudSyncAccess(userId);
+      allow write: if isOwner(userId) && hasCloudSyncAccess(userId) && isValidSize();
+    }
+    
+    // Sync data (generic sync collection used by Cloud Functions)
+    match /sync_data/{userId}/{collection}/{docId} {
+      allow read: if isOwner(userId) && hasCloudSyncReadAccess(userId);
+      allow write: if isOwner(userId) && hasCloudSyncAccess(userId) && isValidSize();
+      
+      // Rate limit tracking (managed by Cloud Functions)
+      match /_rate_limit/{limitId} {
+        allow read, write: if false; // Cloud Functions only
+      }
     }
   }
 }
