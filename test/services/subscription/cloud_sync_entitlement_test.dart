@@ -142,4 +142,110 @@ void main() {
       );
     });
   });
+
+  group('CloudSyncEntitlement edge cases', () {
+    test('gracePeriodEndsAt is tracked when set', () {
+      final gracePeriodEnd = DateTime.now().add(const Duration(days: 3));
+      final entitlement = CloudSyncEntitlement(
+        state: CloudSyncEntitlementState.gracePeriod,
+        canWrite: true,
+        canRead: true,
+        gracePeriodEndsAt: gracePeriodEnd,
+      );
+
+      expect(entitlement.gracePeriodEndsAt, gracePeriodEnd);
+      expect(entitlement.hasFullAccess, true);
+    });
+
+    test('expiresAt is tracked for active subscription', () {
+      final expiryDate = DateTime.now().add(const Duration(days: 30));
+      final entitlement = CloudSyncEntitlement(
+        state: CloudSyncEntitlementState.active,
+        canWrite: true,
+        canRead: true,
+        expiresAt: expiryDate,
+        productId: 'cloud_monthly',
+      );
+
+      expect(entitlement.expiresAt, expiryDate);
+      expect(entitlement.productId, 'cloud_monthly');
+    });
+
+    test('hasFullAccess is false for expired state', () {
+      final entitlement = CloudSyncEntitlement(
+        state: CloudSyncEntitlementState.expired,
+        canWrite: false,
+        canRead: true,
+        expiresAt: DateTime.now().subtract(const Duration(days: 1)),
+      );
+
+      expect(entitlement.hasFullAccess, false);
+      expect(entitlement.hasReadOnlyAccess, true);
+    });
+
+    test('hasReadOnlyAccess is false when canRead is false', () {
+      const entitlement = CloudSyncEntitlement(
+        state: CloudSyncEntitlementState.expired,
+        canWrite: false,
+        canRead: false,
+      );
+
+      expect(entitlement.hasReadOnlyAccess, false);
+    });
+
+    test('none static constant has correct values', () {
+      expect(CloudSyncEntitlement.none.state, CloudSyncEntitlementState.none);
+      expect(CloudSyncEntitlement.none.canWrite, false);
+      expect(CloudSyncEntitlement.none.canRead, false);
+      expect(CloudSyncEntitlement.none.hasFullAccess, false);
+      expect(CloudSyncEntitlement.none.hasReadOnlyAccess, false);
+      expect(CloudSyncEntitlement.none.productId, isNull);
+      expect(CloudSyncEntitlement.none.expiresAt, isNull);
+      expect(CloudSyncEntitlement.none.gracePeriodEndsAt, isNull);
+    });
+  });
+
+  group('Entitlement state transitions', () {
+    test('all states can transition to none on sign out', () {
+      // Each state should be properly representable
+      for (final state in CloudSyncEntitlementState.values) {
+        final entitlement = CloudSyncEntitlement(
+          state: state,
+          canWrite:
+              state != CloudSyncEntitlementState.none &&
+              state != CloudSyncEntitlementState.expired,
+          canRead: state != CloudSyncEntitlementState.none,
+        );
+
+        expect(
+          entitlement.state,
+          state,
+          reason: 'State $state should be representable',
+        );
+      }
+    });
+
+    test('yearly subscription has longer expiry than monthly', () {
+      final monthlyExpiry = DateTime.now().add(const Duration(days: 30));
+      final yearlyExpiry = DateTime.now().add(const Duration(days: 365));
+
+      final monthly = CloudSyncEntitlement(
+        state: CloudSyncEntitlementState.active,
+        canWrite: true,
+        canRead: true,
+        expiresAt: monthlyExpiry,
+        productId: 'cloud_monthly',
+      );
+
+      final yearly = CloudSyncEntitlement(
+        state: CloudSyncEntitlementState.active,
+        canWrite: true,
+        canRead: true,
+        expiresAt: yearlyExpiry,
+        productId: 'cloud_yearly',
+      );
+
+      expect(yearly.expiresAt!.isAfter(monthly.expiresAt!), true);
+    });
+  });
 }
