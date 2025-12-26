@@ -522,6 +522,12 @@ class _AccountSubscriptionsScreenState
 
   Widget _buildPremiumFeaturesCard() {
     final purchaseState = ref.watch(purchaseStateProvider);
+    final storeProductsAsync = ref.watch(storeProductsProvider);
+    final storeProducts = storeProductsAsync.when(
+      data: (data) => data,
+      loading: () => <String, StoreProductInfo>{},
+      error: (e, s) => <String, StoreProductInfo>{},
+    );
     final accentColor = context.accentColor;
 
     // Count owned features
@@ -598,36 +604,17 @@ class _AccountSubscriptionsScreenState
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Column(
-                children: [
-                  _FeatureRow(
-                    icon: Icons.music_note,
-                    text: 'Custom ringtones',
+                children: OneTimePurchases.allPurchases.map((purchase) {
+                  return _FeatureRow(
+                    icon: _getIconForFeature(purchase.unlocksFeature),
+                    text:
+                        storeProducts[purchase.productId]?.title ??
+                        purchase.name,
                     isUnlocked: purchaseState.hasFeature(
-                      PremiumFeature.customRingtones,
+                      purchase.unlocksFeature,
                     ),
-                  ),
-                  _FeatureRow(
-                    icon: Icons.palette,
-                    text: 'Premium themes',
-                    isUnlocked: purchaseState.hasFeature(
-                      PremiumFeature.premiumThemes,
-                    ),
-                  ),
-                  _FeatureRow(
-                    icon: Icons.auto_awesome,
-                    text: 'Automations',
-                    isUnlocked: purchaseState.hasFeature(
-                      PremiumFeature.automations,
-                    ),
-                  ),
-                  _FeatureRow(
-                    icon: Icons.widgets,
-                    text: 'Home widgets',
-                    isUnlocked: purchaseState.hasFeature(
-                      PremiumFeature.homeWidgets,
-                    ),
-                  ),
-                ],
+                  );
+                }).toList(),
               ),
             ),
           ],
@@ -706,6 +693,16 @@ class _AccountSubscriptionsScreenState
   // ═══════════════════════════════════════════════════════════════════════════
   // HELPERS
   // ═══════════════════════════════════════════════════════════════════════════
+
+  IconData _getIconForFeature(PremiumFeature feature) {
+    return switch (feature) {
+      PremiumFeature.customRingtones => Icons.music_note,
+      PremiumFeature.premiumThemes => Icons.palette,
+      PremiumFeature.automations => Icons.auto_awesome,
+      PremiumFeature.homeWidgets => Icons.widgets,
+      PremiumFeature.iftttIntegration => Icons.webhook,
+    };
+  }
 
   Widget _buildSectionHeader(String title) {
     return Padding(
@@ -937,126 +934,39 @@ class _AccountSubscriptionsScreenState
     debugPrint('═══════════════════════════════════════════════════════════');
 
     try {
-      // Step 1: Get current customer info BEFORE restore
-      debugPrint(
-        '📊 [RESTORE] Step 1: Getting current customer info BEFORE restore...',
-      );
-      final beforeInfo = await Purchases.getCustomerInfo();
-      debugPrint('📊 [RESTORE] Customer ID: ${beforeInfo.originalAppUserId}');
-      debugPrint(
-        '📊 [RESTORE] Active entitlements BEFORE: ${beforeInfo.entitlements.active.keys.toList()}',
-      );
-      debugPrint(
-        '📊 [RESTORE] All entitlements BEFORE: ${beforeInfo.entitlements.all.keys.toList()}',
-      );
-      for (final entry in beforeInfo.entitlements.all.entries) {
-        debugPrint(
-          '   📋 Entitlement "${entry.key}": isActive=${entry.value.isActive}, '
-          'willRenew=${entry.value.willRenew}, productId=${entry.value.productIdentifier}',
-        );
-      }
-      debugPrint(
-        '📊 [RESTORE] Active subscriptions BEFORE: ${beforeInfo.activeSubscriptions}',
-      );
-      debugPrint(
-        '📊 [RESTORE] All purchased product IDs: ${beforeInfo.allPurchasedProductIdentifiers}',
-      );
+      // Use the same provider function as SubscriptionScreen
+      // This handles: Firebase UID sync, RevenueCat restore, Riverpod state refresh
+      debugPrint('🔄 [RESTORE] Calling restorePurchases(ref) provider...');
+      final success = await restorePurchases(ref);
+      debugPrint('🔄 [RESTORE] Provider returned: $success');
 
-      // Step 2: Call restore purchases
-      debugPrint('');
-      debugPrint(
-        '🔄 [RESTORE] Step 2: Calling Purchases.restorePurchases()...',
-      );
-      final restoredInfo = await Purchases.restorePurchases();
-      debugPrint('✅ [RESTORE] Restore call completed successfully');
-
-      // Step 3: Check customer info AFTER restore
-      debugPrint('');
-      debugPrint('📊 [RESTORE] Step 3: Customer info AFTER restore:');
-      debugPrint('📊 [RESTORE] Customer ID: ${restoredInfo.originalAppUserId}');
-      debugPrint(
-        '📊 [RESTORE] Active entitlements AFTER: ${restoredInfo.entitlements.active.keys.toList()}',
-      );
-      debugPrint(
-        '📊 [RESTORE] All entitlements AFTER: ${restoredInfo.entitlements.all.keys.toList()}',
-      );
-      for (final entry in restoredInfo.entitlements.all.entries) {
-        debugPrint(
-          '   📋 Entitlement "${entry.key}": isActive=${entry.value.isActive}, '
-          'willRenew=${entry.value.willRenew}, productId=${entry.value.productIdentifier}, '
-          'expirationDate=${entry.value.expirationDate}',
-        );
-      }
-      debugPrint(
-        '📊 [RESTORE] Active subscriptions AFTER: ${restoredInfo.activeSubscriptions}',
-      );
-      debugPrint(
-        '📊 [RESTORE] All purchased product IDs: ${restoredInfo.allPurchasedProductIdentifiers}',
-      );
-
-      // Step 4: Check for "Socialmesh Pro" entitlement specifically
-      debugPrint('');
-      debugPrint(
-        '🔍 [RESTORE] Step 4: Checking for "Socialmesh Pro" entitlement...',
-      );
-      final proEntitlement = restoredInfo.entitlements.all['Socialmesh Pro'];
-      if (proEntitlement != null) {
-        debugPrint('✅ [RESTORE] Found "Socialmesh Pro" entitlement!');
-        debugPrint('   - isActive: ${proEntitlement.isActive}');
-        debugPrint(
-          '   - productIdentifier: ${proEntitlement.productIdentifier}',
-        );
-        debugPrint('   - willRenew: ${proEntitlement.willRenew}');
-        debugPrint('   - periodType: ${proEntitlement.periodType}');
-        debugPrint(
-          '   - latestPurchaseDate: ${proEntitlement.latestPurchaseDate}',
-        );
-        debugPrint(
-          '   - originalPurchaseDate: ${proEntitlement.originalPurchaseDate}',
-        );
-        debugPrint('   - expirationDate: ${proEntitlement.expirationDate}');
-        debugPrint('   - store: ${proEntitlement.store}');
-        debugPrint('   - isSandbox: ${proEntitlement.isSandbox}');
-      } else {
-        debugPrint('❌ [RESTORE] "Socialmesh Pro" entitlement NOT found!');
-        debugPrint(
-          '   Available entitlement keys: ${restoredInfo.entitlements.all.keys.toList()}',
-        );
-      }
-
-      // Step 5: Refresh cloud sync entitlement service
-      debugPrint('');
-      debugPrint(
-        '🔄 [RESTORE] Step 5: Refreshing CloudSyncEntitlementService...',
-      );
-      final service = ref.read(cloudSyncEntitlementServiceProvider);
-      await service.refreshEntitlement();
+      // Also refresh cloud sync entitlement service for cloud sync status
+      debugPrint('🔄 [RESTORE] Refreshing CloudSyncEntitlementService...');
+      final cloudService = ref.read(cloudSyncEntitlementServiceProvider);
+      await cloudService.refreshEntitlement();
       debugPrint('✅ [RESTORE] CloudSyncEntitlementService refreshed');
 
-      // Step 6: Check final entitlement state
-      debugPrint('');
-      debugPrint('📊 [RESTORE] Step 6: Final entitlement state check...');
-      final finalEntitlement = service.currentEntitlement;
+      // Log final state
+      final purchaseState = ref.read(purchaseStateProvider);
       debugPrint(
-        '📊 [RESTORE] Final entitlement state: ${finalEntitlement.state}',
+        '📊 [RESTORE] Final purchasedProductIds: ${purchaseState.purchasedProductIds}',
       );
-      debugPrint(
-        '📊 [RESTORE] Final hasFullAccess: ${finalEntitlement.hasFullAccess}',
-      );
-      debugPrint('📊 [RESTORE] Final productId: ${finalEntitlement.productId}');
-      debugPrint('📊 [RESTORE] Final expiresAt: ${finalEntitlement.expiresAt}');
 
-      debugPrint('');
+      final cloudEntitlement = cloudService.currentEntitlement;
+      debugPrint(
+        '📊 [RESTORE] Final cloud sync state: ${cloudEntitlement.state}',
+      );
+      debugPrint(
+        '📊 [RESTORE] Final cloud sync hasFullAccess: ${cloudEntitlement.hasFullAccess}',
+      );
+
       debugPrint('═══════════════════════════════════════════════════════════');
       debugPrint('✅ [RESTORE] Restore purchases flow completed!');
       debugPrint('═══════════════════════════════════════════════════════════');
 
       if (mounted) {
-        if (restoredInfo.entitlements.active.isNotEmpty) {
-          showSuccessSnackBar(
-            context,
-            'Purchases restored: ${restoredInfo.entitlements.active.keys.join(", ")}',
-          );
+        if (success) {
+          showSuccessSnackBar(context, 'Purchases restored successfully');
         } else {
           showInfoSnackBar(context, 'No active purchases found to restore');
         }

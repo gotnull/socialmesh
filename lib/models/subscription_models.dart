@@ -46,7 +46,7 @@ class OneTimePurchases {
 
   static OneTimePurchase get ringtonePack => OneTimePurchase(
     id: 'ringtone_pack',
-    name: 'Ringtone Library',
+    name: 'Ringtone Pack',
     description:
         'Access a massive searchable library of thousands of RTTTL ringtones — from classic melodies to TV themes, movie scores, and video game soundtracks',
     price: 0.99,

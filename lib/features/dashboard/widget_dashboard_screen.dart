@@ -907,7 +907,7 @@ class _AddWidgetSheet extends ConsumerWidget {
             itemBuilder: (context, index) {
               // Show upsell card after free widgets
               if (!hasWidgetPack && index == _freeWidgetTypes.length) {
-                return _buildUpsellCard(context);
+                return _buildUpsellCard(context, ref);
               }
 
               // Adjust index for items after upsell card
@@ -948,7 +948,17 @@ class _AddWidgetSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildUpsellCard(BuildContext context) {
+  Widget _buildUpsellCard(BuildContext context, WidgetRef ref) {
+    final storeProductsAsync = ref.watch(storeProductsProvider);
+    final storeProducts = storeProductsAsync.when(
+      data: (data) => data,
+      loading: () => <String, StoreProductInfo>{},
+      error: (e, s) => <String, StoreProductInfo>{},
+    );
+    final widgetPackName =
+        storeProducts[RevenueCatConfig.widgetPackProductId]?.title ??
+        'Widget Pack';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16, top: 8),
       padding: const EdgeInsets.all(16),
@@ -994,7 +1004,7 @@ class _AddWidgetSheet extends ConsumerWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Get Widget Pack for ${DashboardWidgetType.values.length - _freeWidgetTypes.length} more widgets',
+                  'Get $widgetPackName for ${DashboardWidgetType.values.length - _freeWidgetTypes.length} more widgets',
                   style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                 ),
               ],

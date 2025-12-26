@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../config/revenuecat_config.dart';
 import '../../core/theme.dart';
+import '../../providers/subscription_providers.dart';
 
 /// Home widgets configuration screen for Widget Pack owners
 /// Shows available iOS/Android widgets and instructions for adding them
@@ -102,6 +104,16 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
   }
 
   Widget _buildHeader(BuildContext context, Color accentColor) {
+    final storeProductsAsync = ref.watch(storeProductsProvider);
+    final storeProducts = storeProductsAsync.when(
+      data: (data) => data,
+      loading: () => <String, StoreProductInfo>{},
+      error: (e, s) => <String, StoreProductInfo>{},
+    );
+    final widgetPackName =
+        storeProducts[RevenueCatConfig.widgetPackProductId]?.title ??
+        'Widget Pack';
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -140,7 +152,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Widget Pack',
+                  widgetPackName,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,

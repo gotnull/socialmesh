@@ -69,7 +69,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
 
     test('ringtonePack has correct properties', () {
       expect(OneTimePurchases.ringtonePack.id, 'ringtone_pack');
-      expect(OneTimePurchases.ringtonePack.name, 'Ringtone Library');
+      expect(OneTimePurchases.ringtonePack.name, 'Ringtone Pack');
       expect(OneTimePurchases.ringtonePack.price, 0.99);
       expect(
         OneTimePurchases.ringtonePack.unlocksFeature,

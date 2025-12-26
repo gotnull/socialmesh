@@ -1144,12 +1144,20 @@ final liveActivityManagerProvider =
 class MessagesNotifier extends Notifier<List<Message>> {
   final Map<int, String> _packetToMessageId = {};
   MessageStorageService? _storage;
+  StreamSubscription<Message>? _messageSubscription;
+  StreamSubscription<MessageDeliveryUpdate>? _deliverySubscription;
 
   @override
   List<Message> build() {
     final protocol = ref.watch(protocolServiceProvider);
     final storageAsync = ref.watch(messageStorageProvider);
     _storage = storageAsync.value;
+
+    // Set up disposal for stream subscriptions
+    ref.onDispose(() {
+      _messageSubscription?.cancel();
+      _deliverySubscription?.cancel();
+    });
 
     // Initialize asynchronously
     _init(protocol);
@@ -1162,6 +1170,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     if (_storage != null) {
       final savedMessages = await _storage!.loadMessages();
       if (savedMessages.isNotEmpty) {
+        if (!ref.mounted) return;
         state = savedMessages;
         AppLogging.messages(
           'Loaded ${savedMessages.length} messages from storage',
@@ -1170,7 +1179,8 @@ class MessagesNotifier extends Notifier<List<Message>> {
     }
 
     // Listen for new messages
-    protocol.messageStream.listen((message) {
+    _messageSubscription = protocol.messageStream.listen((message) {
+      if (!ref.mounted) return;
       // For sent messages, check if they're already in state (from optimistic UI)
       // If not (e.g., from automations, app intents, reactions), we need to add them
       if (message.sent) {
@@ -1210,7 +1220,10 @@ class MessagesNotifier extends Notifier<List<Message>> {
     });
 
     // Listen for delivery status updates
-    protocol.deliveryStream.listen(_handleDeliveryUpdate);
+    _deliverySubscription = protocol.deliveryStream.listen((update) {
+      if (!ref.mounted) return;
+      _handleDeliveryUpdate(update);
+    });
   }
 
   void _notifyNewMessage(Message message) {
@@ -1459,6 +1472,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   Timer? _stalenessTimer;
   NodeStorageService? _storage;
   DeviceFavoritesService? _deviceFavorites;
+  StreamSubscription<MeshNode>? _nodeSubscription;
 
   /// Timeout after which a node is considered offline (15 minutes)
   /// The iOS Meshtastic app uses 120 minutes, but we use 15 minutes as a
@@ -1477,6 +1491,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // Set up disposal
     ref.onDispose(() {
       _stalenessTimer?.cancel();
+      _nodeSubscription?.cancel();
     });
 
     // Initialize asynchronously
@@ -1547,7 +1562,8 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     );
 
     // Listen for new nodes
-    protocol.nodeStream.listen((node) {
+    _nodeSubscription = protocol.nodeStream.listen((node) {
+      if (!ref.mounted) return;
       final isNewNode = !state.containsKey(node.nodeNum);
       final existing = state[node.nodeNum];
 
@@ -1661,9 +1677,16 @@ final nodesProvider = NotifierProvider<NodesNotifier, Map<int, MeshNode>>(
 
 // Channels
 class ChannelsNotifier extends Notifier<List<ChannelConfig>> {
+  StreamSubscription<ChannelConfig>? _channelSubscription;
+
   @override
   List<ChannelConfig> build() {
     final protocol = ref.watch(protocolServiceProvider);
+
+    // Set up disposal
+    ref.onDispose(() {
+      _channelSubscription?.cancel();
+    });
 
     AppLogging.debug(
       '🔵 ChannelsNotifier build - protocol has ${protocol.channels.length} channels',
@@ -1683,7 +1706,8 @@ class ChannelsNotifier extends Notifier<List<ChannelConfig>> {
     );
 
     // Listen for future channel updates
-    protocol.channelStream.listen((channel) {
+    _channelSubscription = protocol.channelStream.listen((channel) {
+      if (!ref.mounted) return;
       AppLogging.debug(
         '🔵 ChannelsNotifier received channel update: '
         'index=${channel.index}, name="${channel.name}", '
@@ -1736,9 +1760,16 @@ final channelsProvider =
 
 // My node number - updates when received from device
 class MyNodeNumNotifier extends Notifier<int?> {
+  StreamSubscription<int>? _myNodeNumSubscription;
+
   @override
   int? build() {
     final protocol = ref.watch(protocolServiceProvider);
+
+    // Set up disposal
+    ref.onDispose(() {
+      _myNodeNumSubscription?.cancel();
+    });
 
     // Initialize with existing myNodeNum from protocol service
     final initial = protocol.myNodeNum;
@@ -1746,7 +1777,10 @@ class MyNodeNumNotifier extends Notifier<int?> {
     // Listen for updates and persist the myNodeNum
     // Note: Data clearing now happens proactively in clearDeviceDataBeforeConnect()
     // before each connection, so this is mainly for persistence and edge cases
-    protocol.myNodeNumStream.listen((newNodeNum) async {
+    _myNodeNumSubscription = protocol.myNodeNumStream.listen((
+      newNodeNum,
+    ) async {
+      if (!ref.mounted) return;
       // Persist the current myNodeNum so we can track device identity
       await _saveMyNodeNum(newNodeNum);
       state = newNodeNum;

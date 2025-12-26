@@ -238,6 +238,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   Widget _buildBundleCard() {
     final purchaseState = ref.watch(purchaseStateProvider);
     final isLoading = ref.watch(subscriptionLoadingProvider);
+    final storeProductsAsync = ref.watch(storeProductsProvider);
+    final storeProducts = storeProductsAsync.when(
+      data: (data) => data,
+      loading: () => <String, StoreProductInfo>{},
+      error: (e, s) => <String, StoreProductInfo>{},
+    );
 
     // Check if user already owns all individual packs
     final ownedCount = OneTimePurchases.allIndividualPurchases
@@ -410,27 +416,34 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               children: [
                 _buildBundleFeature(
                   Icons.music_note,
-                  'Ringtone Library',
+                  storeProducts[RevenueCatConfig.ringtonePackProductId]
+                          ?.title ??
+                      'Ringtone Pack',
                   '$_ringtoneCountFormatted tones',
                 ),
                 _buildBundleFeature(
                   Icons.palette,
-                  'Theme Pack',
+                  storeProducts[RevenueCatConfig.themePackProductId]?.title ??
+                      'Theme Pack',
                   '12 accent colors',
                 ),
                 _buildBundleFeature(
                   Icons.widgets,
-                  'Widget Pack',
+                  storeProducts[RevenueCatConfig.widgetPackProductId]?.title ??
+                      'Widget Pack',
                   '9 dashboard widgets',
                 ),
                 _buildBundleFeature(
                   Icons.auto_awesome,
-                  'Automations',
+                  storeProducts[RevenueCatConfig.automationsPackProductId]
+                          ?.title ??
+                      'Automations',
                   'Triggers & schedules',
                 ),
                 _buildBundleFeature(
                   Icons.webhook,
-                  'IFTTT',
+                  storeProducts[RevenueCatConfig.iftttPackProductId]?.title ??
+                      'IFTTT',
                   '700+ app integrations',
                 ),
               ],
@@ -446,33 +459,18 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
+                      Text(
+                        storeProducts[RevenueCatConfig.completePackProductId]
+                                ?.priceString ??
                             '\$${OneTimePurchases.bundlePrice.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(
-                              '\$${OneTimePurchases.allIndividualPurchases.fold<double>(0, (sum, p) => sum + p.price).toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white.withValues(alpha: 0.5),
-                                decoration: TextDecoration.lineThrough,
-                              ),
-                            ),
-                          ),
-                        ],
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                       Text(
-                        'Save \$${OneTimePurchases.bundleSavings.toStringAsFixed(2)}',
+                        'Best value - all features',
                         style: TextStyle(
                           fontSize: 13,
                           color: AppTheme.warningYellow,
@@ -562,6 +560,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   Widget _buildOneTimePurchases() {
     final purchaseState = ref.watch(purchaseStateProvider);
+    final storeProductsAsync = ref.watch(storeProductsProvider);
+    final storeProducts = storeProductsAsync.when(
+      data: (data) => data,
+      loading: () => <String, StoreProductInfo>{},
+      error: (e, s) => <String, StoreProductInfo>{},
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -610,7 +614,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                             Row(
                               children: [
                                 Text(
-                                  purchase.name,
+                                  storeProducts[purchase.productId]?.title ??
+                                      purchase.name,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 16,
@@ -668,7 +673,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                             border: Border.all(color: context.accentColor),
                           ),
                           child: Text(
-                            '\$${purchase.price.toStringAsFixed(2)}',
+                            storeProducts[purchase.productId]?.priceString ??
+                                '\$${purchase.price.toStringAsFixed(2)}',
                             style: TextStyle(
                               color: context.accentColor,
                               fontWeight: FontWeight.w600,

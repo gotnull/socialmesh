@@ -4,11 +4,15 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/revenuecat_config.dart';
 import '../../models/subscription_models.dart';
 
 /// Result of a purchase attempt
 enum PurchaseResult { success, canceled, error }
+
+/// Key for storing store-confirmed products in SharedPreferences
+const String _storeConfirmedProductsKey = 'store_confirmed_products';
 
 /// Service for managing one-time purchases via RevenueCat
 ///
@@ -25,7 +29,7 @@ class PurchaseService {
 
   /// Products that were confirmed owned by the store but couldn't be synced to RevenueCat
   /// (e.g., due to PaymentPendingError or anonymous user issues)
-  /// These are preserved across refreshes to prevent losing unlock status
+  /// These are preserved across refreshes AND app restarts to prevent losing unlock status
   final Set<String> _storeConfirmedProducts = {};
 
   /// Current purchase state
@@ -36,6 +40,48 @@ class PurchaseService {
 
   /// Whether RevenueCat SDK is initialized
   bool get isInitialized => _isInitialized;
+
+  /// Load store-confirmed products from persistent storage
+  Future<void> _loadStoreConfirmedProducts() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedProducts = prefs.getStringList(_storeConfirmedProductsKey);
+      if (savedProducts != null && savedProducts.isNotEmpty) {
+        _storeConfirmedProducts.addAll(savedProducts);
+        AppLogging.subscriptions(
+          '💰 Loaded store-confirmed products from storage: $_storeConfirmedProducts',
+        );
+      }
+    } catch (e) {
+      AppLogging.subscriptions(
+        '💰 ⚠️ Error loading store-confirmed products: $e',
+      );
+    }
+  }
+
+  /// Save store-confirmed products to persistent storage
+  Future<void> _saveStoreConfirmedProducts() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+        _storeConfirmedProductsKey,
+        _storeConfirmedProducts.toList(),
+      );
+      AppLogging.subscriptions(
+        '💰 Saved store-confirmed products to storage: $_storeConfirmedProducts',
+      );
+    } catch (e) {
+      AppLogging.subscriptions(
+        '💰 ⚠️ Error saving store-confirmed products: $e',
+      );
+    }
+  }
+
+  /// Add a store-confirmed product and persist it
+  Future<void> _addStoreConfirmedProduct(String productId) async {
+    _storeConfirmedProducts.add(productId);
+    await _saveStoreConfirmedProducts();
+  }
 
   /// Initialize RevenueCat SDK
   Future<void> initialize() async {
@@ -89,6 +135,11 @@ class PurchaseService {
 
       await Purchases.configure(configuration);
       AppLogging.subscriptions('💰 Purchases.configure() completed');
+
+      // Load store-confirmed products from persistent storage
+      // (products confirmed by Google Play but not synced to RevenueCat)
+      AppLogging.subscriptions('💰 Loading store-confirmed products...');
+      await _loadStoreConfirmedProducts();
 
       // Listen for customer info updates
       AppLogging.subscriptions('💰 Adding customer info update listener...');
@@ -290,7 +341,7 @@ class PurchaseService {
     // If restore didn't work, the purchase exists in Google Play but
     // RevenueCat can't sync it (likely because user is signed out/anonymous,
     // or there's a PaymentPendingError).
-    // Force-add it to store-confirmed products so it persists across refreshes.
+    // Force-add it to store-confirmed products so it persists across refreshes AND app restarts.
     AppLogging.subscriptions(
       '💳 ⚠️ Product $productId still not recognized after restore',
     );
@@ -298,8 +349,8 @@ class PurchaseService {
       '💳 Store confirmed ownership - adding to persistent store-confirmed set',
     );
 
-    // Add to store-confirmed products (persists across refreshes)
-    _storeConfirmedProducts.add(productId);
+    // Add to store-confirmed products (persists across refreshes AND app restarts)
+    await _addStoreConfirmedProduct(productId);
     AppLogging.subscriptions(
       '💳 Store-confirmed products: $_storeConfirmedProducts',
     );
@@ -492,10 +543,18 @@ class PurchaseService {
       AppLogging.subscriptions(
         '💰   hasPurchasedProducts: $hasPurchasedProducts',
       );
+      AppLogging.subscriptions(
+        '💰   storeConfirmedProducts: $_storeConfirmedProducts',
+      );
 
       // Return true if ANY purchases were found from any source
+      // Include store-confirmed products that may not be synced to RevenueCat
+      final hasStoreConfirmed = _storeConfirmedProducts.isNotEmpty;
       final hasPurchases =
-          hasTransactions || hasEntitlements || hasPurchasedProducts;
+          hasTransactions ||
+          hasEntitlements ||
+          hasPurchasedProducts ||
+          hasStoreConfirmed;
       AppLogging.subscriptions('💰   Final hasPurchases: $hasPurchases');
       AppLogging.subscriptions(
         '💰 ═══════════════════════════════════════════════',
@@ -511,6 +570,50 @@ class PurchaseService {
       AppLogging.subscriptions('💰   Code: ${e.code}');
       AppLogging.subscriptions('💰   Message: ${e.message}');
       AppLogging.subscriptions('💰   Details: ${e.details}');
+
+      // Handle PaymentPendingError (code 20) - this can happen when there are
+      // old pending purchases (e.g., test transactions). In this case, we should
+      // still try to get the current customer info and check for active entitlements.
+      if (e.code == '20' || e.message?.contains('pending') == true) {
+        AppLogging.subscriptions(
+          '💰 ⚠️ PaymentPendingError detected (old pending purchase)',
+        );
+        AppLogging.subscriptions('💰 ⚠️ Falling back to getCustomerInfo()...');
+        try {
+          final customerInfo = await Purchases.getCustomerInfo();
+          // IMPORTANT: Update state so Riverpod gets the current entitlements
+          _updateStateFromCustomerInfo(customerInfo);
+
+          final hasActiveEntitlements = customerInfo.entitlements.all.values
+              .any((e) => e.isActive);
+          final hasPurchasedProducts =
+              customerInfo.allPurchasedProductIdentifiers.isNotEmpty;
+          // Also check store-confirmed products
+          final hasStoreConfirmed = _storeConfirmedProducts.isNotEmpty;
+
+          AppLogging.subscriptions('💰 ⚠️ Fallback getCustomerInfo succeeded');
+          AppLogging.subscriptions(
+            '💰 ⚠️ hasActiveEntitlements: $hasActiveEntitlements',
+          );
+          AppLogging.subscriptions(
+            '💰 ⚠️ hasPurchasedProducts: $hasPurchasedProducts',
+          );
+          AppLogging.subscriptions(
+            '💰 ⚠️ hasStoreConfirmed: $hasStoreConfirmed',
+          );
+          AppLogging.subscriptions(
+            '💰 ═══════════════════════════════════════════════',
+          );
+          return hasActiveEntitlements ||
+              hasPurchasedProducts ||
+              hasStoreConfirmed;
+        } catch (fallbackError) {
+          AppLogging.subscriptions(
+            '💰 ❌ Fallback getCustomerInfo also failed: $fallbackError',
+          );
+        }
+      }
+
       AppLogging.subscriptions(
         '💰 ═══════════════════════════════════════════════',
       );

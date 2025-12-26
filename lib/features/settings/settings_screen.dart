@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/admin_config.dart';
+import '../../config/revenuecat_config.dart';
 import '../../core/transport.dart' show DeviceConnectionState;
 import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
@@ -97,6 +98,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   ) {
     final settingsServiceAsync = ref.read(settingsServiceProvider);
     final purchaseState = ref.watch(purchaseStateProvider);
+    final storeProductsAsync = ref.watch(storeProductsProvider);
+    final storeProducts = storeProductsAsync.when(
+      data: (data) => data,
+      loading: () => <String, StoreProductInfo>{},
+      error: (e, s) => <String, StoreProductInfo>{},
+    );
 
     return settingsServiceAsync.maybeWhen(
       data: (settingsService) => [
@@ -114,7 +121,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         _SearchableSettingItem(
           icon: Icons.music_note,
-          title: 'Ringtones',
+          title:
+              storeProducts[RevenueCatConfig.ringtonePackProductId]?.title ??
+              'Ringtone Pack',
           subtitle: 'Custom notification sounds',
           keywords: ['sound', 'audio', 'tone', 'music', 'alert'],
           section: 'UPGRADES',
@@ -134,7 +143,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         _SearchableSettingItem(
           icon: Icons.palette,
-          title: 'Themes',
+          title:
+              storeProducts[RevenueCatConfig.themePackProductId]?.title ??
+              'Theme Pack',
           subtitle: 'Accent colors and visual customization',
           keywords: ['color', 'accent', 'visual', 'appearance', 'dark'],
           section: 'UPGRADES',
@@ -154,7 +165,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         _SearchableSettingItem(
           icon: Icons.bolt,
-          title: 'Automations',
+          title:
+              storeProducts[RevenueCatConfig.automationsPackProductId]?.title ??
+              'Automations Pack',
           subtitle: 'Automated actions and triggers',
           keywords: ['auto', 'trigger', 'action', 'rule', 'automatic'],
           section: 'UPGRADES',
@@ -174,7 +187,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         _SearchableSettingItem(
           icon: Icons.webhook,
-          title: 'IFTTT',
+          title:
+              storeProducts[RevenueCatConfig.iftttPackProductId]?.title ??
+              'IFTTT Pack',
           subtitle: 'Integration with external services',
           keywords: ['integration', 'webhook', 'external', 'connect'],
           section: 'UPGRADES',
@@ -194,7 +209,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         _SearchableSettingItem(
           icon: Icons.widgets,
-          title: 'Widgets',
+          title:
+              storeProducts[RevenueCatConfig.widgetPackProductId]?.title ??
+              'Widget Pack',
           subtitle: 'Home screen widgets',
           keywords: ['home', 'widget', 'screen', 'launcher'],
           section: 'UPGRADES',
@@ -940,6 +957,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _buildUpgradesSection(BuildContext context) {
     final purchaseState = ref.watch(purchaseStateProvider);
+    final storeProductsAsync = ref.watch(storeProductsProvider);
+    final storeProducts = storeProductsAsync.when(
+      data: (data) => data,
+      loading: () => <String, StoreProductInfo>{},
+      error: (e, s) => <String, StoreProductInfo>{},
+    );
     final accentColor = context.accentColor;
 
     // Count owned items
@@ -1034,7 +1057,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         // Premium feature tiles
         _PremiumFeatureTile(
           icon: Icons.music_note,
-          title: 'Ringtones',
+          title:
+              storeProducts[RevenueCatConfig.ringtonePackProductId]?.title ??
+              'Ringtone Pack',
           feature: PremiumFeature.customRingtones,
           onTap: () {
             final hasFeature = purchaseState.hasFeature(
@@ -1055,7 +1080,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         _PremiumFeatureTile(
           icon: Icons.palette,
-          title: 'Themes',
+          title:
+              storeProducts[RevenueCatConfig.themePackProductId]?.title ??
+              'Theme Pack',
           feature: PremiumFeature.premiumThemes,
           onTap: () {
             final hasFeature = purchaseState.hasFeature(
@@ -1076,7 +1103,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         _PremiumFeatureTile(
           icon: Icons.bolt,
-          title: 'Automations',
+          title:
+              storeProducts[RevenueCatConfig.automationsPackProductId]?.title ??
+              'Automations Pack',
           feature: PremiumFeature.automations,
           onTap: () {
             final hasFeature = purchaseState.hasFeature(
@@ -1097,7 +1126,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         _PremiumFeatureTile(
           icon: Icons.webhook,
-          title: 'IFTTT',
+          title:
+              storeProducts[RevenueCatConfig.iftttPackProductId]?.title ??
+              'IFTTT Pack',
           feature: PremiumFeature.iftttIntegration,
           onTap: () {
             final hasFeature = purchaseState.hasFeature(
@@ -1118,7 +1149,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         _PremiumFeatureTile(
           icon: Icons.widgets,
-          title: 'Widgets',
+          title:
+              storeProducts[RevenueCatConfig.widgetPackProductId]?.title ??
+              'Widget Pack',
           feature: PremiumFeature.homeWidgets,
           onTap: () {
             final hasFeature = purchaseState.hasFeature(
