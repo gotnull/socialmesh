@@ -24,6 +24,7 @@ import 'providers/auth_providers.dart';
 import 'providers/profile_providers.dart';
 import 'providers/telemetry_providers.dart';
 import 'providers/subscription_providers.dart';
+import 'providers/cloud_sync_entitlement_providers.dart';
 import 'providers/analytics_providers.dart';
 import 'features/automations/automation_providers.dart';
 import 'models/mesh_models.dart';
@@ -287,6 +288,11 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     try {
       await ref.read(subscriptionServiceProvider.future);
       AppLogging.debug('💰 RevenueCat initialized');
+
+      // Initialize cloud sync entitlement service
+      final cloudSyncService = ref.read(cloudSyncEntitlementServiceProvider);
+      await cloudSyncService.initialize();
+      AppLogging.debug('☁️ Cloud sync entitlement service initialized');
     } catch (e) {
       AppLogging.debug('💰 RevenueCat init failed: $e');
     }

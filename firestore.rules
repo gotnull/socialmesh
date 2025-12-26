@@ -115,5 +115,53 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if isAdmin();
     }
+
+    // =============================================================================
+    // CLOUD SYNC COLLECTIONS
+    // =============================================================================
+    
+    // User entitlements - owner read, write via Cloud Functions only
+    match /user_entitlements/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if false; // Managed by Cloud Functions only
+    }
+    
+    // Helper function to check cloud sync entitlement
+    function hasCloudSyncAccess(userId) {
+      let entitlement = get(/databases/$(database)/documents/user_entitlements/$(userId));
+      return entitlement != null && 
+        (entitlement.data.cloud_sync == 'active' || 
+         entitlement.data.cloud_sync == 'grace_period' ||
+         entitlement.data.cloud_sync == 'grandfathered');
+    }
+    
+    function hasCloudSyncReadAccess(userId) {
+      let entitlement = get(/databases/$(database)/documents/user_entitlements/$(userId));
+      return entitlement != null && entitlement.data.cloud_sync != null;
+    }
+    
+    // Synced nodes - cloud sync required for write, read-only for expired
+    match /synced_nodes/{userId}/{document=**} {
+      allow read: if isOwner(userId) && hasCloudSyncReadAccess(userId);
+      allow write: if isOwner(userId) && hasCloudSyncAccess(userId);
+    }
+    
+    // Synced messages - cloud sync required for write, read-only for expired  
+    match /synced_messages/{userId}/{document=**} {
+      allow read: if isOwner(userId) && hasCloudSyncReadAccess(userId);
+      allow write: if isOwner(userId) && hasCloudSyncAccess(userId);
+    }
+    
+    // Synced channels - cloud sync required for write, read-only for expired
+    match /synced_channels/{userId}/{document=**} {
+      allow read: if isOwner(userId) && hasCloudSyncReadAccess(userId);
+      allow write: if isOwner(userId) && hasCloudSyncAccess(userId);
+    }
+    
+    // Synced settings - cloud sync required for write, read-only for expired
+    match /synced_settings/{userId} {
+      allow read: if isOwner(userId) && hasCloudSyncReadAccess(userId);
+      allow write: if isOwner(userId) && hasCloudSyncAccess(userId);
+    }
   }
 }

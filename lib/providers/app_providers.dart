@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../core/logging.dart';
 import '../core/transport.dart';
 import '../services/transport/ble_transport.dart';
@@ -235,6 +236,12 @@ class SettingsRefreshNotifier extends Notifier<int> {
 final settingsRefreshProvider = NotifierProvider<SettingsRefreshNotifier, int>(
   SettingsRefreshNotifier.new,
 );
+
+/// App version info from pubspec.yaml
+final appVersionProvider = FutureProvider<String>((ref) async {
+  final packageInfo = await PackageInfo.fromPlatform();
+  return '${packageInfo.version}+${packageInfo.buildNumber}';
+});
 
 /// Cached settings service instance
 SettingsService? _cachedSettingsService;

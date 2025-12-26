@@ -13,6 +13,7 @@ import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
+import '../settings/widgets/cloud_sync_paywall.dart';
 
 /// Screen for viewing and editing user profile with integrated cloud backup
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -50,28 +51,40 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ),
-      body: profileAsync.when(
-        data: (profile) => profile != null
-            ? _ProfileView(
-                profile: profile,
-                user: authState.value,
-                onEditTap: () => _showEditSheet(context),
-              )
-            : _EmptyProfileView(onEditTap: () => _showEditSheet(context)),
-        loading: () => const ScreenLoadingIndicator(),
-        error: (e, _) {
-          // Try to show cached/previous data with an error banner
-          final cachedProfile = profileAsync.value;
-          if (cachedProfile != null) {
-            return _ProfileView(
-              profile: cachedProfile,
-              user: authState.value,
-              onEditTap: () => _showEditSheet(context),
-            );
-          }
-          // No cached data - show empty profile with setup prompt
-          return _EmptyProfileView(onEditTap: () => _showEditSheet(context));
-        },
+      body: Column(
+        children: [
+          // Cloud sync status banners
+          const CloudSyncExpiredBanner(),
+          const CloudSyncGracePeriodBanner(),
+          // Main content
+          Expanded(
+            child: profileAsync.when(
+              data: (profile) => profile != null
+                  ? _ProfileView(
+                      profile: profile,
+                      user: authState.value,
+                      onEditTap: () => _showEditSheet(context),
+                    )
+                  : _EmptyProfileView(onEditTap: () => _showEditSheet(context)),
+              loading: () => const ScreenLoadingIndicator(),
+              error: (e, _) {
+                // Try to show cached/previous data with an error banner
+                final cachedProfile = profileAsync.value;
+                if (cachedProfile != null) {
+                  return _ProfileView(
+                    profile: cachedProfile,
+                    user: authState.value,
+                    onEditTap: () => _showEditSheet(context),
+                  );
+                }
+                // No cached data - show empty profile with setup prompt
+                return _EmptyProfileView(
+                  onEditTap: () => _showEditSheet(context),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

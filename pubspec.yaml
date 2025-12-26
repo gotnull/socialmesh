@@ -2,7 +2,7 @@ name: socialmesh
 description: "Flutter Meshtastic companion app with BLE and USB serial support."
 publish_to: 'none'
 
-version: 1.0.2+17
+version: 1.0.2+24
 
 environment:
   sdk: ^3.10.0
@@ -58,6 +58,7 @@ dependencies:
   flutter_local_notifications: ^19.5.0
   just_audio: ^0.10.5
   live_activities: ^2.4.3
+  package_info_plus: ^8.0.0
   
   # In-App Purchases (RevenueCat)
   purchases_flutter: ^9.9.10

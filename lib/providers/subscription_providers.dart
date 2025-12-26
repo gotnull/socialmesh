@@ -30,25 +30,46 @@ final purchaseStateProvider =
 class PurchaseStateNotifier extends Notifier<PurchaseState> {
   @override
   PurchaseState build() {
+    debugPrint('💳 [PurchaseStateNotifier] build() called');
     _init();
     return PurchaseState.initial;
   }
 
   Future<void> _init() async {
+    debugPrint('💳 [PurchaseStateNotifier] _init() starting...');
     final service = await ref.read(subscriptionServiceProvider.future);
-    state = service.currentState;
+    final initialState = service.currentState;
+    debugPrint(
+      '💳 [PurchaseStateNotifier] Setting initial state: ${initialState.purchasedProductIds}',
+    );
+    state = initialState;
 
-    // Listen for state changes
-    service.stateStream.listen((newState) {
-      state = newState;
-    });
+    // Listen for state changes from the service
+    debugPrint('💳 [PurchaseStateNotifier] Setting up stateStream listener...');
+    service.stateStream.listen(
+      (newState) {
+        debugPrint(
+          '💳 [PurchaseStateNotifier] Stream received new state: ${newState.purchasedProductIds}',
+        );
+        state = newState;
+      },
+      onError: (e) {
+        debugPrint('💳 [PurchaseStateNotifier] Stream error: $e');
+      },
+    );
+    debugPrint('💳 [PurchaseStateNotifier] _init() complete');
   }
 
   /// Refresh purchases from RevenueCat
   Future<void> refresh() async {
+    debugPrint('💳 [PurchaseStateNotifier] refresh() called');
     final service = await ref.read(subscriptionServiceProvider.future);
     await service.refreshPurchases();
-    state = service.currentState;
+    final newState = service.currentState;
+    debugPrint(
+      '💳 [PurchaseStateNotifier] refresh() setting state: ${newState.purchasedProductIds}',
+    );
+    state = newState;
   }
 
   /// For debug/testing - add purchase
@@ -113,17 +134,33 @@ final subscriptionErrorProvider =
 /// Purchase a one-time product
 /// Returns PurchaseResult indicating success, cancellation, or error
 Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
+  debugPrint('💳 [PurchaseProduct] Starting purchase for: $productId');
   ref.read(subscriptionLoadingProvider.notifier).setLoading(true);
   ref.read(subscriptionErrorProvider.notifier).clear();
 
   try {
     final service = await ref.read(subscriptionServiceProvider.future);
+    debugPrint('💳 [PurchaseProduct] Calling service.purchaseProduct...');
     final result = await service.purchaseProduct(productId);
+    debugPrint('💳 [PurchaseProduct] Result: $result');
+
     if (result == PurchaseResult.success) {
-      ref.read(purchaseStateProvider.notifier).refresh();
+      debugPrint(
+        '💳 [PurchaseProduct] Success! Refreshing purchase state notifier...',
+      );
+      // Await the refresh to ensure state is updated before returning
+      await ref.read(purchaseStateProvider.notifier).refresh();
+      debugPrint('💳 [PurchaseProduct] Refresh complete');
+
+      // Double-check the state
+      final state = ref.read(purchaseStateProvider);
+      debugPrint(
+        '💳 [PurchaseProduct] Final state: ${state.purchasedProductIds}',
+      );
     }
     return result;
   } catch (e) {
+    debugPrint('💳 [PurchaseProduct] Error: $e');
     ref.read(subscriptionErrorProvider.notifier).setError(e.toString());
     return PurchaseResult.error;
   } finally {
@@ -152,8 +189,14 @@ Future<bool> restorePurchases(WidgetRef ref) async {
       '💳 [RestorePurchases] Service obtained, isInitialized: ${service.isInitialized}',
     );
 
+    // Capture state BEFORE restore to compare later
+    final stateBefore = ref.read(purchaseStateProvider);
+    final purchaseCountBefore = stateBefore.purchasedProductIds.length;
+    debugPrint(
+      '💳 [RestorePurchases] State BEFORE restore: ${stateBefore.purchasedProductIds} (count: $purchaseCountBefore)',
+    );
+
     // Optional: Sync with Firebase Auth for cross-device consistency
-    // Note: iOS restore works via Apple ID regardless of this
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser != null) {
       debugPrint(
@@ -165,52 +208,42 @@ Future<bool> restorePurchases(WidgetRef ref) async {
       await service.logIn(firebaseUser.uid);
     } else {
       debugPrint(
-        '💳 [RestorePurchases] No Firebase user signed in (restore still works via Apple ID)',
+        '💳 [RestorePurchases] No Firebase user signed in (restore still works via store account)',
       );
     }
-
-    debugPrint(
-      '💳 [RestorePurchases] Current state before restore: ${service.currentState.purchasedProductIds}',
-    );
 
     debugPrint('💳 [RestorePurchases] Calling service.restorePurchases()...');
-    debugPrint(
-      '💳 [RestorePurchases] This queries App Store for purchases tied to your Apple ID',
-    );
-    final success = await service.restorePurchases();
-    debugPrint(
-      '💳 [RestorePurchases] service.restorePurchases() returned: $success',
-    );
+    await service.restorePurchases();
+    debugPrint('💳 [RestorePurchases] service.restorePurchases() completed');
 
-    if (success) {
-      debugPrint(
-        '💳 [RestorePurchases] Success! Refreshing purchase state notifier...',
-      );
-      ref.read(purchaseStateProvider.notifier).refresh();
-    } else {
-      debugPrint('💳 [RestorePurchases] No purchases found for this Apple ID');
-      debugPrint('💳 [RestorePurchases] Possible reasons:');
-      debugPrint(
-        '💳 [RestorePurchases]   1. No purchases made with this Apple ID',
-      );
-      debugPrint(
-        '💳 [RestorePurchases]   2. Using different Apple ID than when purchased',
-      );
-      debugPrint(
-        '💳 [RestorePurchases]   3. Sandbox vs Production environment mismatch',
-      );
-      debugPrint('💳 [RestorePurchases]   4. Purchase was refunded or revoked');
-    }
+    // Always refresh state after restore
+    debugPrint(
+      '💳 [RestorePurchases] Explicitly refreshing purchase state notifier...',
+    );
+    await ref.read(purchaseStateProvider.notifier).refresh();
+    debugPrint('💳 [RestorePurchases] Refresh complete');
 
+    // Determine success by comparing state BEFORE and AFTER
     final stateAfter = ref.read(purchaseStateProvider);
+    final purchaseCountAfter = stateAfter.purchasedProductIds.length;
     debugPrint(
-      '💳 [RestorePurchases] State after restore: ${stateAfter.purchasedProductIds}',
+      '💳 [RestorePurchases] State AFTER restore: ${stateAfter.purchasedProductIds} (count: $purchaseCountAfter)',
     );
+
+    // Success if we have ANY purchases now, regardless of what we had before
+    // This handles the case where purchases were already restored but user taps again
+    final hasPurchases = purchaseCountAfter > 0;
+    final restoredNew = purchaseCountAfter > purchaseCountBefore;
+
+    debugPrint('💳 [RestorePurchases] Result analysis:');
+    debugPrint('💳 [RestorePurchases]   hasPurchases: $hasPurchases');
+    debugPrint('💳 [RestorePurchases]   restoredNew: $restoredNew');
     debugPrint(
       '💳 [RestorePurchases] ═══════════════════════════════════════════════',
     );
 
-    return success;
+    // Return true if user has purchases (either already had or just restored)
+    return hasPurchases;
   } catch (e, stackTrace) {
     debugPrint('💳 [RestorePurchases] ❌ ERROR: $e');
     debugPrint('💳 [RestorePurchases] Stack trace: $stackTrace');

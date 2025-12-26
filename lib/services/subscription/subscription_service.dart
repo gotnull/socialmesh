@@ -23,6 +23,11 @@ class PurchaseService {
   PurchaseState _currentState = PurchaseState.initial;
   bool _isInitialized = false;
 
+  /// Products that were confirmed owned by the store but couldn't be synced to RevenueCat
+  /// (e.g., due to PaymentPendingError or anonymous user issues)
+  /// These are preserved across refreshes to prevent losing unlock status
+  final Set<String> _storeConfirmedProducts = {};
+
   /// Current purchase state
   PurchaseState get currentState => _currentState;
 
@@ -148,11 +153,19 @@ class PurchaseService {
     );
 
     // Combine all sources of purchased products
+    // IMPORTANT: Also include store-confirmed products that couldn't sync to RevenueCat
     final combinedPurchasedIds = {
       ...purchasedIds,
       ...entitlementProductIds,
       ...allPurchased,
+      ..._storeConfirmedProducts, // Preserve store-confirmed products
     };
+
+    if (_storeConfirmedProducts.isNotEmpty) {
+      AppLogging.subscriptions(
+        '💰 Store-confirmed products (preserved): $_storeConfirmedProducts',
+      );
+    }
     AppLogging.subscriptions(
       '💰 Combined purchased IDs: $combinedPurchasedIds',
     );
@@ -192,7 +205,11 @@ class PurchaseService {
   /// Purchase a specific product by ID
   /// Returns PurchaseResult indicating success, cancellation, or error
   Future<PurchaseResult> purchaseProduct(String productId) async {
-    if (!_isInitialized) return PurchaseResult.error;
+    AppLogging.subscriptions('💳 purchaseProduct($productId) called');
+    if (!_isInitialized) {
+      AppLogging.subscriptions('💳 ❌ Not initialized');
+      return PurchaseResult.error;
+    }
 
     try {
       final products = await Purchases.getProducts([
@@ -203,22 +220,26 @@ class PurchaseService {
         return PurchaseResult.error;
       }
 
+      AppLogging.subscriptions('💳 Attempting purchase...');
       final result = await Purchases.purchase(
         PurchaseParams.storeProduct(products.first),
       );
+      AppLogging.subscriptions('💳 ✅ Purchase successful');
       _updateStateFromCustomerInfo(result.customerInfo);
       return PurchaseResult.success;
     } on PlatformException catch (e) {
-      // Handle "product already owned" as success - just need to sync
+      AppLogging.subscriptions(
+        '💳 PlatformException: code=${e.code}, message=${e.message}',
+      );
+
+      // Handle "product already owned" - need to sync with store
       if (e.code == '6' ||
           e.message?.contains('already active') == true ||
           e.message?.contains('ITEM_ALREADY_OWNED') == true) {
         AppLogging.subscriptions(
-          '💳 Product already owned, syncing purchases...',
+          '💳 Product already owned by store, attempting to sync...',
         );
-        // Restore/sync to get the existing purchase recognized
-        await restorePurchases();
-        return PurchaseResult.success;
+        return _handleAlreadyOwned(productId);
       }
       // Handle user cancellation
       if (e.code == '1' ||
@@ -230,15 +251,15 @@ class PurchaseService {
       AppLogging.subscriptions('💳 Purchase error: $e');
       return PurchaseResult.error;
     } on PurchasesErrorCode catch (e) {
+      AppLogging.subscriptions('💳 PurchasesErrorCode: $e');
       if (e == PurchasesErrorCode.purchaseCancelledError) {
         AppLogging.subscriptions('User cancelled purchase');
         return PurchaseResult.canceled;
       } else if (e == PurchasesErrorCode.productAlreadyPurchasedError) {
         AppLogging.subscriptions(
-          '💳 Product already owned, syncing purchases...',
+          '💳 Product already owned (PurchasesErrorCode), attempting to sync...',
         );
-        await restorePurchases();
-        return PurchaseResult.success;
+        return _handleAlreadyOwned(productId);
       } else {
         AppLogging.subscriptions('Purchase error: $e');
         return PurchaseResult.error;
@@ -247,6 +268,52 @@ class PurchaseService {
       AppLogging.subscriptions('Purchase error: $e');
       return PurchaseResult.error;
     }
+  }
+
+  /// Handle the case where a product is already owned by the store
+  /// but not recognized by RevenueCat
+  Future<PurchaseResult> _handleAlreadyOwned(String productId) async {
+    AppLogging.subscriptions('💳 _handleAlreadyOwned($productId)');
+
+    // First, try to restore purchases from the store
+    final restored = await restorePurchases();
+    AppLogging.subscriptions('💳 restorePurchases returned: $restored');
+
+    // Check if the product is now recognized
+    if (_currentState.hasPurchased(productId)) {
+      AppLogging.subscriptions(
+        '💳 ✅ Product $productId now recognized after restore',
+      );
+      return PurchaseResult.success;
+    }
+
+    // If restore didn't work, the purchase exists in Google Play but
+    // RevenueCat can't sync it (likely because user is signed out/anonymous,
+    // or there's a PaymentPendingError).
+    // Force-add it to store-confirmed products so it persists across refreshes.
+    AppLogging.subscriptions(
+      '💳 ⚠️ Product $productId still not recognized after restore',
+    );
+    AppLogging.subscriptions(
+      '💳 Store confirmed ownership - adding to persistent store-confirmed set',
+    );
+
+    // Add to store-confirmed products (persists across refreshes)
+    _storeConfirmedProducts.add(productId);
+    AppLogging.subscriptions(
+      '💳 Store-confirmed products: $_storeConfirmedProducts',
+    );
+
+    // Add the product to the current state
+    final newIds = {..._currentState.purchasedProductIds, productId};
+    _updateState(_currentState.copyWith(purchasedProductIds: newIds));
+
+    AppLogging.subscriptions('💳 ✅ Manually added $productId to state');
+    AppLogging.subscriptions(
+      '💳 Current state: ${_currentState.purchasedProductIds}',
+    );
+
+    return PurchaseResult.success;
   }
 
   /// Refresh purchases from RevenueCat
@@ -425,7 +492,11 @@ class PurchaseService {
       AppLogging.subscriptions(
         '💰   hasPurchasedProducts: $hasPurchasedProducts',
       );
-      AppLogging.subscriptions('💰   Returning: $hasTransactions');
+
+      // Return true if ANY purchases were found from any source
+      final hasPurchases =
+          hasTransactions || hasEntitlements || hasPurchasedProducts;
+      AppLogging.subscriptions('💰   Final hasPurchases: $hasPurchases');
       AppLogging.subscriptions(
         '💰 ═══════════════════════════════════════════════',
       );
@@ -434,7 +505,7 @@ class PurchaseService {
         '💰 ═══════════════════════════════════════════════',
       );
 
-      return hasTransactions;
+      return hasPurchases;
     } on PlatformException catch (e) {
       AppLogging.subscriptions('💰 ❌ RESTORE ERROR (PlatformException):');
       AppLogging.subscriptions('💰   Code: ${e.code}');

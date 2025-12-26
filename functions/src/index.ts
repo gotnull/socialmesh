@@ -1658,3 +1658,12 @@ export const shopGetUploadUrl = onRequest({ cors: true }, async (req, res) => {
   }
 });
 
+// =============================================================================
+// CLOUD SYNC ENTITLEMENTS
+// =============================================================================
+
+export {
+  onRevenueCatWebhook,
+  checkCloudSyncEntitlement,
+  grandfatherExistingUsers,
+} from './cloud_sync_entitlements';

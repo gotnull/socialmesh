@@ -10,10 +10,12 @@ import '../../core/transport.dart' show DeviceConnectionState;
 import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
+import '../../providers/cloud_sync_entitlement_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
 import '../../models/subscription_models.dart';
+import '../../services/subscription/cloud_sync_entitlement_service.dart';
 import '../../services/storage/storage_service.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../services/haptic_service.dart';
@@ -49,6 +51,7 @@ import 'range_test_screen.dart';
 import 'store_forward_config_screen.dart';
 import 'detection_sensor_config_screen.dart';
 import 'external_notification_config_screen.dart';
+import 'widgets/cloud_sync_paywall.dart';
 import '../map/offline_maps_screen.dart';
 import 'data_export_screen.dart';
 import '../device/serial_config_screen.dart';
@@ -353,12 +356,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           section: 'DATA & STORAGE',
         ),
         _SearchableSettingItem(
-          icon: Icons.cloud_upload_outlined,
-          title: 'Cloud backup',
-          subtitle: 'Sync data to Firebase cloud',
-          keywords: ['cloud', 'backup', 'sync', 'firebase', 'storage'],
+          icon: Icons.cloud_sync,
+          title: 'Cloud Sync',
+          subtitle: 'Sync data across all your devices',
+          keywords: [
+            'cloud',
+            'backup',
+            'sync',
+            'subscription',
+            'storage',
+            'devices',
+          ],
           section: 'DATA & STORAGE',
-          hasSwitch: true,
+          onTap: () => showCloudSyncPaywall(context),
         ),
         _SearchableSettingItem(
           icon: Icons.map_outlined,
@@ -2053,7 +2063,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             const SizedBox(height: 16),
 
                             // Data Section
-                            _SectionHeader(title: 'DATA & STORAGE'),
+                            const _SectionHeader(title: 'DATA & STORAGE'),
                             _SettingsTile(
                               icon: Icons.history,
                               title: 'Message history',
@@ -2064,12 +2074,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 settingsService,
                               ),
                             ),
-                            // Cloud Backup
-                            _SettingsTile(
-                              icon: Icons.cloud_upload,
-                              title: 'Cloud Backup',
-                              subtitle: 'Backup messages and settings to cloud',
-                            ),
+                            // Cloud Sync
+                            const _CloudSyncTile(),
                             // Offline Maps
                             _SettingsTile(
                               icon: Icons.map,
@@ -2552,6 +2558,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 final gestureConfig = ref.watch(
                                   secretGestureConfigProvider,
                                 );
+                                final appVersion = ref.watch(
+                                  appVersionProvider,
+                                );
+                                final versionString = appVersion.when(
+                                  data: (v) =>
+                                      'Meshtastic companion app • Version $v',
+                                  loading: () => 'Meshtastic companion app',
+                                  error: (_, _) => 'Meshtastic companion app',
+                                );
                                 return gestureConfig.when(
                                   data: (config) => SecretGestureDetector(
                                     pattern: config.pattern,
@@ -2562,8 +2577,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     child: _SettingsTile(
                                       icon: Icons.info,
                                       title: 'Socialmesh',
-                                      subtitle:
-                                          'Meshtastic companion app • Version 1.0.0',
+                                      subtitle: versionString,
                                     ),
                                   ),
                                   loading: () => SecretGestureDetector(
@@ -2572,8 +2586,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     child: _SettingsTile(
                                       icon: Icons.info,
                                       title: 'Socialmesh',
-                                      subtitle:
-                                          'Meshtastic companion app • Version 1.0.0',
+                                      subtitle: versionString,
                                     ),
                                   ),
                                   error: (_, _) => SecretGestureDetector(
@@ -2582,8 +2595,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     child: _SettingsTile(
                                       icon: Icons.info,
                                       title: 'Socialmesh',
-                                      subtitle:
-                                          'Meshtastic companion app • Version 1.0.0',
+                                      subtitle: versionString,
                                     ),
                                   ),
                                 );
@@ -3198,6 +3210,266 @@ class _SettingsTile extends StatelessWidget {
   }
 }
 
+/// Cloud Sync settings tile with dynamic status
+class _CloudSyncTile extends ConsumerWidget {
+  const _CloudSyncTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entitlementAsync = ref.watch(cloudSyncEntitlementProvider);
+    final accentColor = context.accentColor;
+
+    return entitlementAsync.when(
+      data: (entitlement) {
+        final (subtitle, statusColor, statusIcon) = switch (entitlement.state) {
+          CloudSyncEntitlementState.active => (
+            'Active • Syncing across devices',
+            Colors.green,
+            Icons.check_circle,
+          ),
+          CloudSyncEntitlementState.grandfathered => (
+            'Lifetime Access • Thank you for being an early user!',
+            accentColor,
+            Icons.star,
+          ),
+          CloudSyncEntitlementState.gracePeriod => (
+            'Payment issue • Update payment method',
+            Colors.orange,
+            Icons.warning_amber,
+          ),
+          CloudSyncEntitlementState.expired => (
+            'Expired • Read-only access',
+            Colors.red,
+            Icons.error_outline,
+          ),
+          CloudSyncEntitlementState.none => (
+            'Sync data across all your devices',
+            AppTheme.textTertiary,
+            null,
+          ),
+        };
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          decoration: BoxDecoration(
+            color: AppTheme.darkCard,
+            borderRadius: BorderRadius.circular(12),
+            border: entitlement.hasFullAccess
+                ? Border.all(
+                    color: statusColor.withValues(alpha: 0.5),
+                    width: 1,
+                  )
+                : null,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () {
+                if (entitlement.hasFullAccess) {
+                  // Show status/manage subscription
+                  _showCloudSyncStatus(context, ref, entitlement);
+                } else {
+                  // Show paywall
+                  showCloudSyncPaywall(context);
+                }
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.cloud_sync,
+                      color: entitlement.hasFullAccess
+                          ? statusColor
+                          : AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Text(
+                                'Cloud Sync',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              if (statusIcon != null) ...[
+                                const SizedBox(width: 8),
+                                Icon(statusIcon, size: 16, color: statusColor),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: statusColor == AppTheme.textTertiary
+                                  ? statusColor
+                                  : statusColor.withValues(alpha: 0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!entitlement.hasFullAccess)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Subscribe',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: accentColor,
+                          ),
+                        ),
+                      )
+                    else
+                      const Icon(
+                        Icons.chevron_right,
+                        color: AppTheme.textTertiary,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () => _SettingsTile(
+        icon: Icons.cloud_sync,
+        title: 'Cloud Sync',
+        subtitle: 'Loading...',
+      ),
+      error: (e, s) => _SettingsTile(
+        icon: Icons.cloud_sync,
+        title: 'Cloud Sync',
+        subtitle: 'Sync data across all your devices',
+        onTap: () => showCloudSyncPaywall(context),
+      ),
+    );
+  }
+
+  void _showCloudSyncStatus(
+    BuildContext context,
+    WidgetRef ref,
+    CloudSyncEntitlement entitlement,
+  ) {
+    final accentColor = context.accentColor;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.textTertiary.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                entitlement.state == CloudSyncEntitlementState.grandfathered
+                    ? Icons.star
+                    : Icons.cloud_done,
+                size: 48,
+                color: accentColor,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              entitlement.state == CloudSyncEntitlementState.grandfathered
+                  ? 'Lifetime Access'
+                  : 'Cloud Sync Active',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              entitlement.state == CloudSyncEntitlementState.grandfathered
+                  ? 'Thank you for being an early supporter! You have permanent free access to Cloud Sync.'
+                  : 'Your data is syncing across all your devices.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+            ),
+            if (entitlement.expiresAt != null &&
+                entitlement.state == CloudSyncEntitlementState.active) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Renews ${_formatDate(entitlement.expiresAt!)}',
+                style: TextStyle(fontSize: 13, color: AppTheme.textTertiary),
+              ),
+            ],
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Done'),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+}
+
 /// Premium feature tile with owned/locked badge
 class _PremiumFeatureTile extends ConsumerWidget {
   final IconData icon;
@@ -3706,12 +3978,18 @@ class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen> {
 }
 
 /// Custom themed Open Source Licenses screen
-class _OpenSourceLicensesScreen extends StatelessWidget {
+class _OpenSourceLicensesScreen extends ConsumerWidget {
   const _OpenSourceLicensesScreen();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final accentColor = Theme.of(context).colorScheme.primary;
+    final appVersion = ref.watch(appVersionProvider);
+    final versionString = appVersion.when(
+      data: (v) => v,
+      loading: () => '',
+      error: (_, _) => '',
+    );
 
     return Theme(
       // Apply dark theme to the license page
@@ -3730,7 +4008,7 @@ class _OpenSourceLicensesScreen extends StatelessWidget {
       ),
       child: LicensePage(
         applicationName: 'Socialmesh',
-        applicationVersion: '1.0.0',
+        applicationVersion: versionString,
         applicationIcon: const _TappableMeshtasticLogo(width: 140),
         applicationLegalese:
             '© 2024 Socialmesh\n\nThis app uses open source software. '
