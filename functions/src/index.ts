@@ -1658,6 +1658,51 @@ export const shopGetUploadUrl = onRequest({ cors: true }, async (req, res) => {
   }
 });
 
+/**
+ * Increment product view count
+ * This is a lightweight endpoint that doesn't require authentication
+ * Rate limiting is handled by Firebase's built-in protections
+ */
+export const shopIncrementViewCount = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders()).status(204).send('');
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  try {
+    const { productId } = req.body as { productId: string };
+
+    if (!productId || typeof productId !== 'string') {
+      res.status(400).json({ error: 'productId is required' });
+      return;
+    }
+
+    // Check if product exists
+    const productRef = db.collection('shopProducts').doc(productId);
+    const productDoc = await productRef.get();
+
+    if (!productDoc.exists) {
+      res.status(404).json({ error: 'Product not found' });
+      return;
+    }
+
+    // Increment view count
+    await productRef.update({
+      viewCount: admin.firestore.FieldValue.increment(1),
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Increment view count error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // =============================================================================
 // CLOUD SYNC ENTITLEMENTS
 // =============================================================================

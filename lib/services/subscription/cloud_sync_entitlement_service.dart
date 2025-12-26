@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -219,18 +220,73 @@ class CloudSyncEntitlementService {
   CloudSyncEntitlement _resolveEntitlementFromCustomerInfo(
     CustomerInfo customerInfo,
   ) {
+    // Extensive debug logging for troubleshooting
+    debugPrint('');
+    debugPrint('═══════════════════════════════════════════════════════════');
+    debugPrint('☁️ [ENTITLEMENT] Resolving entitlement from CustomerInfo...');
+    debugPrint('═══════════════════════════════════════════════════════════');
+    debugPrint(
+      '☁️ [ENTITLEMENT] Looking for entitlement ID: "$_entitlementId"',
+    );
+    debugPrint(
+      '☁️ [ENTITLEMENT] Customer ID: ${customerInfo.originalAppUserId}',
+    );
+    debugPrint(
+      '☁️ [ENTITLEMENT] All entitlement keys: ${customerInfo.entitlements.all.keys.toList()}',
+    );
+    debugPrint(
+      '☁️ [ENTITLEMENT] Active entitlement keys: ${customerInfo.entitlements.active.keys.toList()}',
+    );
+    debugPrint(
+      '☁️ [ENTITLEMENT] Active subscriptions: ${customerInfo.activeSubscriptions}',
+    );
+    debugPrint(
+      '☁️ [ENTITLEMENT] All purchased products: ${customerInfo.allPurchasedProductIdentifiers}',
+    );
+
+    // List all entitlements with details
+    for (final entry in customerInfo.entitlements.all.entries) {
+      debugPrint('');
+      debugPrint('   📋 Entitlement "${entry.key}":');
+      debugPrint('      - isActive: ${entry.value.isActive}');
+      debugPrint('      - productIdentifier: ${entry.value.productIdentifier}');
+      debugPrint('      - willRenew: ${entry.value.willRenew}');
+      debugPrint('      - periodType: ${entry.value.periodType}');
+      debugPrint('      - expirationDate: ${entry.value.expirationDate}');
+      debugPrint('      - isSandbox: ${entry.value.isSandbox}');
+      debugPrint(
+        '      - billingIssueDetectedAt: ${entry.value.billingIssueDetectedAt}',
+      );
+    }
+
     final entitlement = customerInfo.entitlements.all[_entitlementId];
 
     if (entitlement == null) {
+      debugPrint('');
+      debugPrint('❌ [ENTITLEMENT] No "$_entitlementId" entitlement found!');
+      debugPrint(
+        '   Available keys: ${customerInfo.entitlements.all.keys.toList()}',
+      );
+      debugPrint(
+        '   TIP: Check RevenueCat dashboard that entitlement Identifier matches exactly',
+      );
       AppLogging.subscriptions('☁️ No $_entitlementId entitlement found');
       return CloudSyncEntitlement.none;
     }
+
+    debugPrint('');
+    debugPrint('✅ [ENTITLEMENT] Found "$_entitlementId" entitlement!');
+    debugPrint('   - isActive: ${entitlement.isActive}');
+    debugPrint('   - productIdentifier: ${entitlement.productIdentifier}');
 
     if (entitlement.isActive) {
       // Check if in billing retry / grace period
       final billingIssue = entitlement.billingIssueDetectedAt != null;
 
       if (billingIssue) {
+        debugPrint(
+          '⚠️ [ENTITLEMENT] Subscription in grace period (billing issue detected)',
+        );
         AppLogging.subscriptions('☁️ Subscription in grace period');
         return CloudSyncEntitlement(
           state: CloudSyncEntitlementState.gracePeriod,
@@ -243,6 +299,7 @@ class CloudSyncEntitlementService {
         );
       }
 
+      debugPrint('✅ [ENTITLEMENT] Subscription is ACTIVE!');
       AppLogging.subscriptions('☁️ Subscription active');
       return CloudSyncEntitlement(
         state: CloudSyncEntitlementState.active,
@@ -258,6 +315,9 @@ class CloudSyncEntitlementService {
     // Entitlement exists but not active - expired
     // Allow read-only access for previously subscribed users
     if (entitlement.expirationDate != null) {
+      debugPrint(
+        '⚠️ [ENTITLEMENT] Subscription EXPIRED, granting read-only access',
+      );
       AppLogging.subscriptions('☁️ Subscription expired, read-only access');
       return CloudSyncEntitlement(
         state: CloudSyncEntitlementState.expired,
@@ -268,6 +328,9 @@ class CloudSyncEntitlementService {
       );
     }
 
+    debugPrint(
+      '❌ [ENTITLEMENT] Entitlement not active and no expiration date, returning none',
+    );
     return CloudSyncEntitlement.none;
   }
 

@@ -29,9 +29,9 @@ import '../presence/presence_screen.dart';
 import '../mesh3d/mesh_3d_screen.dart';
 import '../world_mesh/world_mesh_screen.dart';
 import '../settings/subscription_screen.dart';
+import '../settings/account_subscriptions_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import '../reachability/mesh_reachability_screen.dart';
-import '../profile/profile_screen.dart';
 import '../sky_tracker/screens/sky_tracker_screen.dart';
 import '../device_shop/screens/device_shop_screen.dart';
 import '../device_shop/screens/shop_admin_dashboard.dart';
@@ -1290,7 +1290,7 @@ class _DrawerProfileSection extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(left: 12, bottom: 8),
             child: Text(
-              'PROFILE',
+              'ACCOUNT',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -1300,7 +1300,7 @@ class _DrawerProfileSection extends ConsumerWidget {
             ),
           ),
 
-          // Profile tile with avatar - now the single destination for all profile/account needs
+          // Account tile with avatar - unified destination for profile, account & subscriptions
           profileAsync.when(
             data: (profile) => _ProfileTile(
               profile: profile,
@@ -1309,7 +1309,9 @@ class _DrawerProfileSection extends ConsumerWidget {
                 ref.haptics.tabChange();
                 Navigator.of(context).pop();
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const AccountSubscriptionsScreen(),
+                  ),
                 );
               },
             ),
@@ -1319,13 +1321,15 @@ class _DrawerProfileSection extends ConsumerWidget {
             ),
             error: (e, st) => _DrawerMenuTile(
               icon: Icons.person_outline,
-              label: 'Profile',
+              label: 'Account',
               isSelected: false,
               onTap: () {
                 ref.haptics.tabChange();
                 Navigator.of(context).pop();
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const AccountSubscriptionsScreen(),
+                  ),
                 );
               },
             ),
