@@ -54,7 +54,7 @@ class ColorSelector extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
               letterSpacing: 1,
             ),
           ),
@@ -199,9 +199,9 @@ class InlineColorSelector extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: AppTheme.darkBackground,
+          color: context.background,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppTheme.darkBorder),
+          border: Border.all(color: context.border),
         ),
         child: Row(
           children: [
@@ -214,7 +214,7 @@ class InlineColorSelector extends StatelessWidget {
                 border: Border.all(color: Colors.white24),
               ),
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,12 +223,12 @@ class InlineColorSelector extends StatelessWidget {
                     label,
                     style: TextStyle(
                       fontSize: 11,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                   ),
                   Text(
                     colorName,
-                    style: const TextStyle(fontSize: 13, color: Colors.white),
+                    style: TextStyle(fontSize: 13, color: Colors.white),
                   ),
                 ],
               ),
@@ -236,7 +236,7 @@ class InlineColorSelector extends StatelessWidget {
             Icon(
               Icons.palette_outlined,
               size: 18,
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
             ),
           ],
         ),

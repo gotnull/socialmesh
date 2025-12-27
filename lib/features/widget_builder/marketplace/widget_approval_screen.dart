@@ -95,8 +95,8 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
       builder: (context) {
         final controller = TextEditingController();
         return AlertDialog(
-          backgroundColor: AppTheme.darkCard,
-          title: const Text(
+          backgroundColor: context.card,
+          title: Text(
             'Reject Widget',
             style: TextStyle(color: Colors.white),
           ),
@@ -106,23 +106,23 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
             children: [
               Text(
                 'Why is "${widget.name}" being rejected?',
-                style: TextStyle(color: AppTheme.textSecondary),
+                style: TextStyle(color: context.textSecondary),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               TextField(
                 controller: controller,
                 maxLines: 3,
                 decoration: InputDecoration(
                   hintText: 'Enter reason...',
-                  hintStyle: TextStyle(color: AppTheme.textSecondary),
+                  hintStyle: TextStyle(color: context.textSecondary),
                   filled: true,
-                  fillColor: AppTheme.darkBackground,
+                  fillColor: context.background,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
                   ),
                 ),
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.white),
               ),
             ],
           ),
@@ -131,7 +131,7 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
               onPressed: () => Navigator.pop(context),
               child: Text(
                 'Cancel',
-                style: TextStyle(color: AppTheme.textSecondary),
+                style: TextStyle(color: context.textSecondary),
               ),
             ),
             TextButton(
@@ -181,9 +181,9 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         title: const Text('Widget Approval'),
         actions: [
           IconButton(
@@ -207,10 +207,10 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.error_outline, size: 64, color: AppTheme.errorRed),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               _error!,
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -233,10 +233,10 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
               size: 64,
               color: AppTheme.successGreen,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               'No widgets pending approval',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 18),
+              style: TextStyle(color: context.textSecondary, fontSize: 18),
             ),
           ],
         ),
@@ -275,7 +275,7 @@ class _PendingWidgetCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: AppTheme.darkCard,
+      color: context.card,
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -288,7 +288,7 @@ class _PendingWidgetCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     widget.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -321,11 +321,11 @@ class _PendingWidgetCard extends StatelessWidget {
             if (widget.description.isNotEmpty)
               Text(
                 widget.description,
-                style: TextStyle(color: AppTheme.textSecondary),
+                style: TextStyle(color: context.textSecondary),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
             // Meta info
             Row(
@@ -333,34 +333,34 @@ class _PendingWidgetCard extends StatelessWidget {
                 Icon(
                   Icons.person_outline,
                   size: 16,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Text(
                   widget.author,
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  style: TextStyle(color: context.textSecondary, fontSize: 12),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Icon(
                   Icons.category_outlined,
                   size: 16,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Text(
                   WidgetCategories.getDisplayName(widget.category),
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  style: TextStyle(color: context.textSecondary, fontSize: 12),
                 ),
-                const SizedBox(width: 16),
-                Icon(Icons.schedule, size: 16, color: AppTheme.textSecondary),
-                const SizedBox(width: 4),
+                SizedBox(width: 16),
+                Icon(Icons.schedule, size: 16, color: context.textSecondary),
+                SizedBox(width: 4),
                 Text(
                   _formatDate(widget.createdAt),
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  style: TextStyle(color: context.textSecondary, fontSize: 12),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Tags
             if (widget.tags.isNotEmpty)
@@ -374,13 +374,13 @@ class _PendingWidgetCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkBackground,
+                      color: context.background,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       tag,
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 11,
                       ),
                     ),

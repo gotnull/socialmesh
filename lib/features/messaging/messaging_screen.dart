@@ -115,26 +115,26 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
+          backgroundColor: context.background,
           leading: const HamburgerMenuButton(),
           centerTitle: true,
           title: Text(
             'Messages${conversations.isNotEmpty ? ' (${conversations.length})' : ''}',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.edit_square, color: Colors.white),
+              icon: Icon(Icons.edit_square, color: context.textPrimary),
               onPressed: () => _showNewMessageSheet(context, ref),
             ),
             IconButton(
-              icon: const Icon(Icons.settings_outlined, color: Colors.white),
+              icon: Icon(Icons.settings_outlined, color: context.textPrimary),
               tooltip: 'Settings',
               onPressed: () => Navigator.of(context).pushNamed('/settings'),
             ),
@@ -147,25 +147,22 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.darkCard,
+                  color: context.card,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextField(
                   controller: _searchController,
                   onChanged: (value) => setState(() => _searchQuery = value),
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Search conversations',
-                    hintStyle: const TextStyle(color: AppTheme.textTertiary),
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      color: AppTheme.textTertiary,
-                    ),
+                    hintStyle: TextStyle(color: context.textTertiary),
+                    prefixIcon: Icon(Icons.search, color: context.textTertiary),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.clear,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                             onPressed: () {
                               _searchController.clear();
@@ -183,10 +180,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
               ),
             ),
             // Divider
-            Container(
-              height: 1,
-              color: AppTheme.darkBorder.withValues(alpha: 0.3),
-            ),
+            Container(height: 1, color: context.border.withValues(alpha: 0.3)),
             // Conversations list
             Expanded(
               child: filteredConversations.isEmpty
@@ -198,33 +192,33 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                             width: 72,
                             height: 72,
                             decoration: BoxDecoration(
-                              color: AppTheme.darkCard,
+                              color: context.card,
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.chat_bubble_outline,
                               size: 40,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          SizedBox(height: 24),
                           Text(
                             _searchQuery.isNotEmpty
                                 ? 'No conversations match "$_searchQuery"'
                                 : 'No conversations yet',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                             ),
                           ),
                           if (_searchQuery.isEmpty) ...[
-                            const SizedBox(height: 8),
-                            const Text(
+                            SizedBox(height: 8),
+                            Text(
                               'Start a new message',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: AppTheme.textTertiary,
+                                color: context.textTertiary,
                               ),
                             ),
                           ],
@@ -311,14 +305,14 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
+              Padding(
                 padding: EdgeInsets.fromLTRB(24, 0, 24, 16),
                 child: Text(
                   'New Message',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: context.textPrimary,
                   ),
                 ),
               ),
@@ -328,20 +322,20 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 child: TextField(
                   autofocus: false,
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  style: TextStyle(color: context.textPrimary, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Search nodes...',
-                    hintStyle: const TextStyle(
-                      color: AppTheme.textTertiary,
+                    hintStyle: TextStyle(
+                      color: context.textTertiary,
                       fontSize: 14,
                     ),
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.search,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       size: 20,
                     ),
                     filled: true,
-                    fillColor: AppTheme.darkBackground,
+                    fillColor: context.background,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: BorderSide.none,
@@ -359,7 +353,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
 
               Container(
                 height: 1,
-                color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                color: context.border.withValues(alpha: 0.3),
               ),
 
               // Nodes section
@@ -374,16 +368,16 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                               ? Icons.people_outline
                               : Icons.search_off,
                           size: 48,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         Text(
                           searchQuery.isEmpty
                               ? 'No other nodes in range'
                               : 'No nodes match "$searchQuery"',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
                         ),
                       ],
@@ -395,21 +389,21 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Row(
                     children: [
-                      const Text(
+                      Text(
                         'NEARBY NODES',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                           letterSpacing: 0.5,
                         ),
                       ),
                       const Spacer(),
                       Text(
                         '${filteredNodes.length} ${filteredNodes.length == 1 ? 'node' : 'nodes'}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                         ),
                       ),
                     ],
@@ -445,7 +439,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                                     color: AppTheme.successGreen,
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: AppTheme.darkCard,
+                                      color: context.card,
                                       width: 2,
                                     ),
                                   ),
@@ -455,10 +449,10 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                         ),
                         title: Text(
                           node.displayName,
-                          style: const TextStyle(color: Colors.white),
+                          style: TextStyle(color: context.textPrimary),
                         ),
                         subtitle: node.isOnline
-                            ? const Text(
+                            ? Text(
                                 'Online',
                                 style: TextStyle(
                                   color: AppTheme.successGreen,
@@ -467,8 +461,8 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                               )
                             : Text(
                                 node.shortName ?? 'Offline',
-                                style: const TextStyle(
-                                  color: AppTheme.textTertiary,
+                                style: TextStyle(
+                                  color: context.textTertiary,
                                   fontSize: 12,
                                 ),
                               ),
@@ -537,9 +531,9 @@ class _ConversationTile extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.darkBorder),
+          border: Border.all(color: context.border),
         ),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -557,7 +551,7 @@ class _ConversationTile extends StatelessWidget {
                     : AppTheme.graphPurple,
                 size: 52,
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               // Content
               Expanded(
                 child: Column(
@@ -568,10 +562,10 @@ class _ConversationTile extends StatelessWidget {
                         Expanded(
                           child: Text(
                             conversation.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: context.textPrimary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -580,22 +574,22 @@ class _ConversationTile extends StatelessWidget {
                         if (conversation.lastMessageTime != null)
                           Text(
                             timeFormat.format(conversation.lastMessageTime!),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Row(
                       children: [
                         Expanded(
                           child: Text(
                             conversation.lastMessage ?? 'Start a conversation',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -614,7 +608,7 @@ class _ConversationTile extends StatelessWidget {
                             ),
                             child: Text(
                               '${conversation.unreadCount}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
@@ -628,7 +622,7 @@ class _ConversationTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+              Icon(Icons.chevron_right, color: context.textTertiary),
             ],
           ),
         ),
@@ -952,7 +946,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             title: 'Encryption Key Issue',
             subtitle: 'Direct message to $targetName failed',
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -974,8 +968,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   child: Text(
                     message.routingError?.fixSuggestion ??
                         'The encryption keys may be out of sync. This can happen when a node has been reset or rolled out of the mesh database.',
-                    style: const TextStyle(
-                      color: AppTheme.textSecondary,
+                    style: TextStyle(
+                      color: context.textSecondary,
                       fontSize: 13,
                     ),
                   ),
@@ -1030,8 +1024,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 _retryMessage(message);
               },
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.textSecondary,
-                side: BorderSide(color: AppTheme.darkBorder),
+                foregroundColor: context.textSecondary,
+                side: BorderSide(color: context.border),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -1056,9 +1050,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
               );
             },
-            child: const Text(
+            child: Text(
               'Advanced: Reset Node Database',
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 13),
+              style: TextStyle(color: context.textTertiary, fontSize: 13),
             ),
           ),
         ],
@@ -1070,21 +1064,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text(
+        backgroundColor: context.card,
+        title: Text(
           'Delete Message',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.textPrimary),
         ),
-        content: const Text(
+        content: Text(
           'Are you sure you want to delete this message? This only removes it locally.',
-          style: TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: context.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
           ),
           TextButton(
@@ -1149,14 +1143,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               Icons.key,
               color: channel.psk.isNotEmpty
                   ? Colors.white
-                  : AppTheme.textTertiary,
+                  : context.textTertiary,
             ),
             title: Text(
               'View Encryption Key',
               style: TextStyle(
                 color: channel.psk.isNotEmpty
                     ? Colors.white
-                    : AppTheme.textTertiary,
+                    : context.textTertiary,
               ),
             ),
             enabled: channel.psk.isNotEmpty,
@@ -1172,14 +1166,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               Icons.qr_code,
               color: channel.psk.isNotEmpty
                   ? Colors.white
-                  : AppTheme.textTertiary,
+                  : context.textTertiary,
             ),
             title: Text(
               'Show QR Code',
               style: TextStyle(
                 color: channel.psk.isNotEmpty
                     ? Colors.white
-                    : AppTheme.textTertiary,
+                    : context.textTertiary,
               ),
             ),
             enabled: channel.psk.isNotEmpty,
@@ -1328,9 +1322,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
+          backgroundColor: context.background,
           titleSpacing: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -1374,7 +1368,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         : AppTheme.graphPurple,
                     size: 36,
                   ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Flexible(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1382,10 +1376,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     children: [
                       AutoScrollText(
                         widget.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                       Text(
@@ -1394,7 +1388,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             : 'Direct Message',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                         ),
                       ),
                     ],
@@ -1407,14 +1401,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             IconButton(
               icon: Icon(
                 _isSearching ? Icons.close : Icons.search,
-                color: _isSearching ? context.accentColor : Colors.white,
+                color: _isSearching ? context.accentColor : context.textPrimary,
               ),
               tooltip: _isSearching ? 'Close Search' : 'Search Messages',
               onPressed: _toggleSearch,
             ),
             if (widget.type == ConversationType.channel)
               IconButton(
-                icon: const Icon(Icons.settings, color: Colors.white),
+                icon: Icon(Icons.settings, color: context.textPrimary),
                 tooltip: 'Channel Settings',
                 onPressed: () => _showChannelSettings(context),
               ),
@@ -1428,22 +1422,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
+                    color: context.card,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
                     controller: _searchController,
                     focusNode: _searchFocusNode,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
+                    style: TextStyle(color: context.textPrimary),
+                    decoration: InputDecoration(
                       hintText: 'Find a message',
-                      hintStyle: TextStyle(color: AppTheme.textTertiary),
+                      hintStyle: TextStyle(color: context.textTertiary),
                       prefixIcon: Icon(
                         Icons.search,
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                       ),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
+                      contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 14,
                       ),
@@ -1455,7 +1449,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             if (_isSearching)
               Container(
                 height: 1,
-                color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                color: context.border.withValues(alpha: 0.3),
               ),
             // Search results count
             if (_isSearching && _searchQuery.isNotEmpty)
@@ -1464,20 +1458,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   horizontal: 16,
                   vertical: 8,
                 ),
-                color: AppTheme.darkCard,
+                color: context.card,
                 child: Row(
                   children: [
                     Icon(
                       Icons.info_outline,
                       size: 16,
-                      color: AppTheme.textSecondary.withValues(alpha: 0.8),
+                      color: context.textSecondary.withValues(alpha: 0.8),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
                       '${filteredMessages.length} message${filteredMessages.length == 1 ? '' : 's'} found',
                       style: TextStyle(
                         fontSize: 13,
-                        color: AppTheme.textSecondary.withValues(alpha: 0.8),
+                        color: context.textSecondary.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -1495,18 +1489,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                 ? Icons.search_off
                                 : Icons.chat_bubble_outline,
                             size: 48,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                           Text(
                             _isSearching
                                 ? 'No messages match your search'
                                 : widget.type == ConversationType.channel
                                 ? 'No messages in this channel'
                                 : 'Start the conversation',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           ),
                         ],
@@ -1570,11 +1564,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.darkCard,
+                color: context.card,
                 border: Border(
-                  top: BorderSide(
-                    color: AppTheme.darkBorder.withValues(alpha: 0.3),
-                  ),
+                  top: BorderSide(color: context.border.withValues(alpha: 0.3)),
                 ),
               ),
               child: SafeArea(
@@ -1588,32 +1580,32 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: AppTheme.darkBackground,
+                          color: context.background,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.bolt,
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                           size: 20,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: AppTheme.darkBackground,
+                          color: context.background,
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: TextField(
                           controller: _messageController,
                           focusNode: _messageFocusNode,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: const InputDecoration(
+                          style: TextStyle(color: context.textPrimary),
+                          decoration: InputDecoration(
                             hintText: 'Message...',
-                            hintStyle: TextStyle(color: AppTheme.textTertiary),
+                            hintStyle: TextStyle(color: context.textTertiary),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
+                            contentPadding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 12,
                             ),
@@ -1846,10 +1838,7 @@ class _MessageBubble extends StatelessWidget {
                         children: [
                           Text(
                             message.text,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: Colors.white,
-                            ),
+                            style: TextStyle(fontSize: 15, color: Colors.white),
                           ),
                           const SizedBox(height: 2),
                           Row(
@@ -1941,7 +1930,7 @@ class _MessageBubble extends StatelessWidget {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppTheme.darkCard,
+                                color: context.card,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -2045,7 +2034,7 @@ class _MessageBubble extends StatelessWidget {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: AppTheme.darkCard,
+                  color: context.card,
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Column(
@@ -2060,7 +2049,7 @@ class _MessageBubble extends StatelessWidget {
                           color: _getAvatarColor(),
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                     ],
                     Text(
                       message.text,
@@ -2071,18 +2060,18 @@ class _MessageBubble extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (isEncrypted) ...[
-                          const Icon(
+                          Icon(
                             Icons.lock,
                             size: 10,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
-                          const SizedBox(width: 3),
+                          SizedBox(width: 3),
                         ],
                         Text(
                           timeFormat.format(message.timestamp),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
                         ),
                       ],
@@ -2139,8 +2128,8 @@ class _QuickResponsesSheet extends StatelessWidget {
                   ),
                   child: Icon(Icons.bolt, color: context.accentColor, size: 18),
                 ),
-                const SizedBox(width: 12),
-                const Text(
+                SizedBox(width: 12),
+                Text(
                   'Quick Responses',
                   style: TextStyle(
                     fontSize: 18,
@@ -2151,16 +2140,16 @@ class _QuickResponsesSheet extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(color: AppTheme.darkBorder, height: 1),
+          Divider(color: context.border, height: 1),
           // Responses grid
           Flexible(
             child: responses.isEmpty
-                ? const Padding(
-                    padding: EdgeInsets.all(32),
+                ? Padding(
+                    padding: const EdgeInsets.all(32),
                     child: Text(
                       'No quick responses configured.\nAdd some in Settings → Quick responses.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: AppTheme.textSecondary),
+                      style: TextStyle(color: context.textSecondary),
                     ),
                   )
                 : GridView.builder(
@@ -2184,7 +2173,7 @@ class _QuickResponsesSheet extends StatelessWidget {
                   ),
           ),
           // Footer with settings link
-          const Divider(color: AppTheme.darkBorder, height: 1),
+          Divider(color: context.border, height: 1),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: GestureDetector(
@@ -2203,21 +2192,21 @@ class _QuickResponsesSheet extends StatelessWidget {
                   Icon(
                     Icons.settings,
                     size: 16,
-                    color: AppTheme.textSecondary.withValues(alpha: 0.8),
+                    color: context.textSecondary.withValues(alpha: 0.8),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Text(
                     'Configure quick responses in Settings',
                     style: TextStyle(
-                      color: AppTheme.textSecondary.withValues(alpha: 0.8),
+                      color: context.textSecondary.withValues(alpha: 0.8),
                       fontSize: 13,
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4),
                   Icon(
                     Icons.arrow_forward_ios,
                     size: 12,
-                    color: AppTheme.textSecondary.withValues(alpha: 0.6),
+                    color: context.textSecondary.withValues(alpha: 0.6),
                   ),
                 ],
               ),
@@ -2239,7 +2228,7 @@ class _QuickResponseTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppTheme.darkBackground,
+      color: context.background,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: () {
@@ -2299,9 +2288,9 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.darkBackground,
+            color: context.background,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.darkBorder),
+            border: Border.all(color: context.border),
           ),
           child: _showKey
               ? SelectableText(
@@ -2316,12 +2305,12 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                   '•' * 32,
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                    color: context.textTertiary.withValues(alpha: 0.5),
                     fontFamily: 'monospace',
                   ),
                 ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Row(
           children: [
             Expanded(
@@ -2329,7 +2318,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                 onPressed: () => setState(() => _showKey = !_showKey),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: const BorderSide(color: AppTheme.darkBorder),
+                  side: BorderSide(color: context.border),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -2355,7 +2344,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.accentColor,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppTheme.darkBackground,
+                  disabledBackgroundColor: context.background,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

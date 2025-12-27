@@ -240,7 +240,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
             padding: const EdgeInsets.fromLTRB(24, 16, 16, 0),
             child: Row(
               children: [
-                const Text(
+                Text(
                   'Select Target Node',
                   style: TextStyle(
                     color: Colors.white,
@@ -251,15 +251,15 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                 const Spacer(),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text(
+                  child: Text(
                     'Cancel',
-                    style: TextStyle(color: AppTheme.textSecondary),
+                    style: TextStyle(color: context.textSecondary),
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           ConstrainedBox(
             constraints: BoxConstraints(
               maxHeight: MediaQuery.of(context).size.height * 0.4,
@@ -281,7 +281,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                     decoration: BoxDecoration(
                       color: node.isOnline
                           ? context.accentColor.withValues(alpha: 0.15)
-                          : AppTheme.darkBackground,
+                          : context.background,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
@@ -290,7 +290,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                         style: TextStyle(
                           color: node.isOnline
                               ? context.accentColor
-                              : AppTheme.textTertiary,
+                              : context.textTertiary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -305,7 +305,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                     style: TextStyle(
                       color: node.isOnline
                           ? context.accentColor
-                          : AppTheme.textTertiary,
+                          : context.textTertiary,
                       fontSize: 12,
                     ),
                   ),
@@ -340,10 +340,10 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
             : 'Select target');
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkSurface,
-        title: const Text('Range Test'),
+        backgroundColor: context.surface,
+        title: Text('Range Test'),
         actions: [
           if (!_isRunning)
             TextButton(
@@ -396,10 +396,10 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: AppTheme.textTertiary,
+          color: context.textTertiary,
           letterSpacing: 1,
         ),
       ),
@@ -410,12 +410,12 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: _isRunning
               ? context.accentColor.withValues(alpha: 0.3)
-              : AppTheme.darkBorder,
+              : context.border,
         ),
       ),
       child: Column(
@@ -427,13 +427,13 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
             decoration: BoxDecoration(
               color: _isRunning
                   ? context.accentColor.withValues(alpha: 0.15)
-                  : AppTheme.darkBackground,
+                  : context.background,
               shape: BoxShape.circle,
             ),
             child: Icon(
               _isRunning ? Icons.radar : Icons.radar_outlined,
               size: 32,
-              color: _isRunning ? context.accentColor : AppTheme.textTertiary,
+              color: _isRunning ? context.accentColor : context.textTertiary,
             ),
           ),
           SizedBox(height: 12),
@@ -447,15 +447,15 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
               color: _isRunning ? context.accentColor : Colors.white,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             _isRunning
                 ? '${_results.length} packets received'
                 : 'Target: $targetName',
-            style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 13, color: context.textSecondary),
           ),
 
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
 
           // Action buttons
           Row(
@@ -467,8 +467,8 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                     icon: const Icon(Icons.person_search, size: 18),
                     label: const Text('Select Node'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.textSecondary,
-                      side: const BorderSide(color: AppTheme.darkBorder),
+                      foregroundColor: context.textSecondary,
+                      side: BorderSide(color: context.border),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -507,43 +507,40 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
   Widget _buildConfigCard() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
           ListTile(
-            title: const Text(
+            title: Text(
               'Enable Range Test Module',
               style: TextStyle(color: Colors.white),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Allow this device to participate in range tests',
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             trailing: ThemedSwitch(
               value: _enabled,
               onChanged: (v) => setState(() => _enabled = v),
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           ListTile(
-            title: const Text(
+            title: Text(
               'Sender Interval',
               style: TextStyle(color: Colors.white),
             ),
             subtitle: Text(
               'Send test packet every $_senderInterval seconds',
-              style: const TextStyle(
-                color: AppTheme.textTertiary,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: Icon(Icons.remove, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.remove, color: context.textSecondary),
                   onPressed: _senderInterval > 10
                       ? () => setState(() => _senderInterval -= 10)
                       : null,
@@ -556,7 +553,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.add, color: context.textSecondary),
                   onPressed: _senderInterval < 300
                       ? () => setState(() => _senderInterval += 10)
                       : null,
@@ -564,15 +561,15 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
               ],
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           ListTile(
-            title: const Text(
+            title: Text(
               'Save Results to SD',
               style: TextStyle(color: Colors.white),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Store test results on device SD card',
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             trailing: ThemedSwitch(
               value: _saveResults,
@@ -587,7 +584,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
   Widget _buildResultsCard() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -618,14 +615,14 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
               ],
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           // Results list
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _results.length.clamp(0, 10),
             separatorBuilder: (_, _) =>
-                const Divider(height: 1, color: AppTheme.darkBorder),
+                Divider(height: 1, color: context.border),
             itemBuilder: (context, index) {
               final result = _results[_results.length - 1 - index];
               return ListTile(
@@ -650,14 +647,11 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                 ),
                 title: Text(
                   'SNR: ${result.snr.toStringAsFixed(1)} dB • RSSI: ${result.rssi.toStringAsFixed(0)} dBm',
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: TextStyle(color: Colors.white, fontSize: 13),
                 ),
                 subtitle: Text(
                   '${(result.distance / 1000).toStringAsFixed(2)} km • ${result.hopCount} hop(s)',
-                  style: const TextStyle(
-                    color: AppTheme.textTertiary,
-                    fontSize: 11,
-                  ),
+                  style: TextStyle(color: context.textTertiary, fontSize: 11),
                 ),
               );
             },
@@ -679,10 +673,10 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(color: AppTheme.textTertiary, fontSize: 11),
+            style: TextStyle(color: context.textTertiary, fontSize: 11),
           ),
         ],
       ),
@@ -693,7 +687,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -702,8 +696,8 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
           Row(
             children: [
               Icon(Icons.info_outline, color: AppTheme.primaryBlue, size: 20),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: 8),
+              Text(
                 'How Range Test Works',
                 style: TextStyle(
                   color: Colors.white,
@@ -713,14 +707,14 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             '1. Select a target node to test range with\n'
             '2. Start the test to begin sending packets\n'
             '3. View real-time signal metrics (SNR, RSSI)\n'
             '4. Track maximum distance achieved\n\n'
             'Both nodes must have Range Test module enabled for best results.',
             style: TextStyle(
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
               fontSize: 13,
               height: 1.5,
             ),

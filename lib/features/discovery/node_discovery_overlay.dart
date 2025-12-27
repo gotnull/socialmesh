@@ -112,7 +112,7 @@ class _ConnectingIndicator extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard.withValues(alpha: 0.95),
+        color: context.card.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
         boxShadow: [
@@ -246,8 +246,8 @@ class _AnimatedNodeCardState extends State<_AnimatedNodeCard>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppTheme.darkCard.withValues(alpha: 0.98),
-              AppTheme.darkSurface.withValues(alpha: 0.95),
+              context.card.withValues(alpha: 0.98),
+              context.surface.withValues(alpha: 0.95),
             ],
           ),
           borderRadius: BorderRadius.circular(16),
@@ -295,7 +295,7 @@ class _AnimatedNodeCardState extends State<_AnimatedNodeCard>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     displayName,
                     style: const TextStyle(
@@ -310,7 +310,7 @@ class _AnimatedNodeCardState extends State<_AnimatedNodeCard>
                   Text(
                     '!$nodeId',
                     style: TextStyle(
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       fontFamily: 'monospace',
@@ -324,7 +324,7 @@ class _AnimatedNodeCardState extends State<_AnimatedNodeCard>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppTheme.darkBackground,
+                  color: context.background,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(

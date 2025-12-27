@@ -17,10 +17,10 @@ class FavoritesScreen extends ConsumerWidget {
 
     if (user == null) {
       return Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkCard,
-          title: const Text('Favorites', style: TextStyle(color: Colors.white)),
+          backgroundColor: context.card,
+          title: Text('Favorites', style: TextStyle(color: Colors.white)),
         ),
         body: Center(
           child: Column(
@@ -28,10 +28,10 @@ class FavoritesScreen extends ConsumerWidget {
             children: [
               Icon(
                 Icons.favorite_outline,
-                color: AppTheme.textTertiary,
+                color: context.textTertiary,
                 size: 64,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Text(
                 'Sign in to save favorites',
                 style: TextStyle(color: Colors.white, fontSize: 18),
@@ -39,7 +39,7 @@ class FavoritesScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 'Your favorite devices will appear here',
-                style: TextStyle(color: AppTheme.textSecondary),
+                style: TextStyle(color: context.textSecondary),
               ),
             ],
           ),
@@ -50,13 +50,13 @@ class FavoritesScreen extends ConsumerWidget {
     final favoritesAsync = ref.watch(userFavoritesProvider(user.uid));
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text('Favorites', style: TextStyle(color: Colors.white)),
+        backgroundColor: context.card,
+        title: Text('Favorites', style: TextStyle(color: Colors.white)),
       ),
       body: favoritesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -83,10 +83,10 @@ class FavoritesScreen extends ConsumerWidget {
                 children: [
                   Icon(
                     Icons.favorite_outline,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                     size: 64,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Text(
                     'No favorites yet',
                     style: TextStyle(color: Colors.white, fontSize: 18),
@@ -94,7 +94,7 @@ class FavoritesScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Text(
                     'Tap the heart icon on products to save them',
-                    style: TextStyle(color: AppTheme.textSecondary),
+                    style: TextStyle(color: context.textSecondary),
                   ),
                 ],
               ),
@@ -128,7 +128,7 @@ class _FavoriteProductCard extends ConsumerWidget {
     final productAsync = ref.watch(singleProductProvider(favorite.productId));
 
     return productAsync.when(
-      loading: () => _buildLoadingCard(),
+      loading: () => _buildLoadingCard(context),
       error: (error, stack) => _buildErrorCard(context, ref),
       data: (product) {
         if (product == null) {
@@ -139,9 +139,9 @@ class _FavoriteProductCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildLoadingCard() {
+  Widget _buildLoadingCard(BuildContext context) {
     return Card(
-      color: AppTheme.darkCard,
+      color: context.card,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
@@ -154,7 +154,7 @@ class _FavoriteProductCard extends ConsumerWidget {
 
   Widget _buildErrorCard(BuildContext context, WidgetRef ref) {
     return Card(
-      color: AppTheme.darkCard,
+      color: context.card,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
@@ -164,7 +164,7 @@ class _FavoriteProductCard extends ConsumerWidget {
           style: TextStyle(color: Colors.white),
         ),
         trailing: IconButton(
-          icon: Icon(Icons.delete_outline, color: AppTheme.textTertiary),
+          icon: Icon(Icons.delete_outline, color: context.textTertiary),
           onPressed: () => _removeFavorite(ref),
         ),
       ),
@@ -173,17 +173,17 @@ class _FavoriteProductCard extends ConsumerWidget {
 
   Widget _buildRemovedCard(BuildContext context, WidgetRef ref) {
     return Card(
-      color: AppTheme.darkCard,
+      color: context.card,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: Icon(Icons.inventory_2_outlined, color: AppTheme.textTertiary),
+        leading: Icon(Icons.inventory_2_outlined, color: context.textTertiary),
         title: Text(
           'Product no longer available',
-          style: TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: context.textSecondary),
         ),
         trailing: IconButton(
-          icon: Icon(Icons.delete_outline, color: AppTheme.textTertiary),
+          icon: Icon(Icons.delete_outline, color: context.textTertiary),
           onPressed: () => _removeFavorite(ref),
         ),
       ),
@@ -206,11 +206,11 @@ class _FavoriteProductCard extends ConsumerWidget {
         ),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(Icons.delete, color: Colors.white),
+        child: Icon(Icons.delete, color: Colors.white),
       ),
       onDismissed: (_) => _removeFavorite(ref),
       child: Card(
-        color: AppTheme.darkCard,
+        color: context.card,
         margin: const EdgeInsets.only(bottom: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: InkWell(
@@ -235,11 +235,11 @@ class _FavoriteProductCard extends ConsumerWidget {
                           height: 80,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
-                              _imagePlaceholder(),
+                              _imagePlaceholder(context),
                         )
-                      : _imagePlaceholder(),
+                      : _imagePlaceholder(context),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
 
                 // Details
                 Expanded(
@@ -260,11 +260,11 @@ class _FavoriteProductCard extends ConsumerWidget {
                       Text(
                         product.sellerName,
                         style: TextStyle(
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                           fontSize: 12,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Row(
                         children: [
                           Text(
@@ -339,12 +339,12 @@ class _FavoriteProductCard extends ConsumerWidget {
     );
   }
 
-  Widget _imagePlaceholder() {
+  Widget _imagePlaceholder(BuildContext context) {
     return Container(
       width: 80,
       height: 80,
-      color: AppTheme.darkBackground,
-      child: Icon(Icons.router, color: AppTheme.textTertiary, size: 32),
+      color: context.background,
+      child: Icon(Icons.router, color: context.textTertiary, size: 32),
     );
   }
 

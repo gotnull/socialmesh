@@ -151,16 +151,16 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
               decoration: InputDecoration(
                 hintText: 'Search nodes...',
                 hintStyle: TextStyle(
-                  color: AppTheme.textTertiary,
+                  color: context.textTertiary,
                   fontSize: 14,
                 ),
                 prefixIcon: Icon(
                   Icons.search,
-                  color: AppTheme.textTertiary,
+                  color: context.textTertiary,
                   size: 20,
                 ),
                 filled: true,
-                fillColor: AppTheme.darkBackground,
+                fillColor: context.background,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
@@ -175,7 +175,7 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
             ),
           ),
 
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
 
           // Broadcast option
           if (widget.allowBroadcast) ...[
@@ -199,7 +199,7 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       letterSpacing: 1,
                     ),
                   ),
@@ -208,7 +208,7 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
                     '${nodes.length} nodes',
                     style: TextStyle(
                       fontSize: 11,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                 ],
@@ -240,7 +240,7 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
                           icon: Icons.person,
                           iconColor: node.isOnline
                               ? context.accentColor
-                              : AppTheme.textTertiary,
+                              : context.textTertiary,
                           title: displayName,
                           subtitle: node.shortName ?? 'Unknown',
                           isSelected: _selectedNodeNum == node.nodeNum,
@@ -269,13 +269,13 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.search_off, size: 48, color: AppTheme.textTertiary),
+          Icon(Icons.search_off, size: 48, color: context.textTertiary),
           const SizedBox(height: 12),
           Text(
             _searchQuery.isEmpty
                 ? 'No nodes available'
                 : 'No nodes match "$_searchQuery"',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+            style: TextStyle(color: context.textSecondary, fontSize: 14),
             textAlign: TextAlign.center,
           ),
         ],
@@ -337,7 +337,7 @@ class _NodeTile extends StatelessWidget {
                             color: context.accentColor,
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppTheme.darkSurface,
+                              color: context.surface,
                               width: 2,
                             ),
                           ),
@@ -362,7 +362,7 @@ class _NodeTile extends StatelessWidget {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                         fontSize: 12,
                       ),
                     ),

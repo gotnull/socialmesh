@@ -132,10 +132,10 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'Power',
           style: TextStyle(
             fontSize: 20,
@@ -222,7 +222,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                     ),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkCard,
+                      color: context.card,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: _buildSliderSetting(
@@ -237,7 +237,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                           setState(() => _shutdownAfterSecs = value.toInt()),
                     ),
                   ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
 
                 // Battery Section (ADC Multiplier)
                 const _SectionHeader(title: 'BATTERY'),
@@ -269,7 +269,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                     ),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkCard,
+                      color: context.card,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -278,7 +278,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               'ADC Multiplier',
                               style: TextStyle(
                                 color: Colors.white,
@@ -300,18 +300,18 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                                     horizontal: 12,
                                     vertical: 8,
                                   ),
-                                  fillColor: AppTheme.darkBackground,
+                                  fillColor: context.background,
                                   filled: true,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
                                     borderSide: BorderSide(
-                                      color: AppTheme.darkBorder,
+                                      color: context.border,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
                                     borderSide: BorderSide(
-                                      color: AppTheme.darkBorder,
+                                      color: context.border,
                                     ),
                                   ),
                                 ),
@@ -330,18 +330,18 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
                           'Voltage divider ratio (2.0 - 6.0)',
                           style: TextStyle(
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                             fontSize: 12,
                           ),
                         ),
                       ],
                     ),
                   ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
 
                 // Sleep Settings Section
                 const _SectionHeader(title: 'SLEEP SETTINGS'),
@@ -352,7 +352,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
+                    color: context.card,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   padding: const EdgeInsets.all(16),
@@ -372,9 +372,9 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                         onChanged: (value) =>
                             setState(() => _waitBluetoothSecs = value.toInt()),
                       ),
-                      const SizedBox(height: 20),
-                      const Divider(height: 1, color: AppTheme.darkBorder),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
+                      Divider(height: 1, color: context.border),
+                      SizedBox(height: 20),
 
                       // Light Sleep
                       _buildSliderSetting(
@@ -389,8 +389,8 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                             setState(() => _lsSecs = value.toInt()),
                       ),
                       const SizedBox(height: 20),
-                      const Divider(height: 1, color: AppTheme.darkBorder),
-                      const SizedBox(height: 20),
+                      Divider(height: 1, color: context.border),
+                      SizedBox(height: 20),
 
                       // Deep Sleep
                       _buildSliderSetting(
@@ -405,8 +405,8 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                             setState(() => _sdsSecs = value.toInt()),
                       ),
                       const SizedBox(height: 20),
-                      const Divider(height: 1, color: AppTheme.darkBorder),
-                      const SizedBox(height: 20),
+                      Divider(height: 1, color: context.border),
+                      SizedBox(height: 20),
 
                       // Min Wake
                       _buildSliderSetting(
@@ -448,11 +448,11 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                         size: 20,
                       ),
                       const SizedBox(width: 12),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'Power settings affect battery life and device responsiveness. Aggressive sleep settings may cause delays in receiving messages.',
                           style: TextStyle(
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                             fontSize: 13,
                           ),
                         ),
@@ -506,15 +506,15 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(
           subtitle,
-          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          style: TextStyle(color: context.textSecondary, fontSize: 13),
         ),
         SizedBox(height: 8),
         SliderTheme(
           data: SliderThemeData(
-            inactiveTrackColor: AppTheme.darkBorder,
+            inactiveTrackColor: context.border,
             thumbColor: context.accentColor,
             overlayColor: context.accentColor.withValues(alpha: 0.2),
             trackHeight: 4,
@@ -543,10 +543,10 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: AppTheme.textTertiary,
+          color: context.textTertiary,
           letterSpacing: 1.2,
         ),
       ),
@@ -574,15 +574,15 @@ class _SettingsTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? AppTheme.textSecondary),
-            const SizedBox(width: 16),
+            Icon(icon, color: iconColor ?? context.textSecondary),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -598,9 +598,9 @@ class _SettingsTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                 ],

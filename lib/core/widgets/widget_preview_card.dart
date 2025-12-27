@@ -56,9 +56,9 @@ class WidgetPreviewCard extends ConsumerWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.darkBorder, width: 1),
+          border: Border.all(color: context.border, width: 1),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -79,7 +79,7 @@ class WidgetPreviewCard extends ConsumerWidget {
               ),
             ),
             // Divider between widget and info
-            Container(height: 1, color: AppTheme.darkBorder),
+            Container(height: 1, color: context.border),
             // Info section inside the card
             Padding(
               padding: const EdgeInsets.all(12),
@@ -113,7 +113,7 @@ class WidgetPreviewCard extends ConsumerWidget {
                           Text(
                             subtitle!,
                             style: TextStyle(
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                               fontSize: 12,
                             ),
                             maxLines: 2,
@@ -157,9 +157,9 @@ class WidgetPreviewCardLoading extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.darkBorder, width: 1),
+        border: Border.all(color: context.border, width: 1),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -178,7 +178,7 @@ class WidgetPreviewCardLoading extends StatelessWidget {
             ),
           ),
           // Divider between widget and info
-          Container(height: 1, color: AppTheme.darkBorder),
+          Container(height: 1, color: context.border),
           // Show placeholder text if provided
           if (title != null || subtitle != null)
             Padding(
@@ -204,7 +204,7 @@ class WidgetPreviewCardLoading extends StatelessWidget {
                           Text(
                             subtitle!,
                             style: TextStyle(
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                               fontSize: 12,
                             ),
                             maxLines: 2,
@@ -248,17 +248,17 @@ class WidgetMarketplaceStats extends StatelessWidget {
         Text(
           rating.toStringAsFixed(1),
           style: TextStyle(
-            color: AppTheme.textSecondary,
+            color: context.textSecondary,
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(width: 12),
-        Icon(Icons.download_done, size: 14, color: AppTheme.textTertiary),
+        Icon(Icons.download_done, size: 14, color: context.textTertiary),
         const SizedBox(width: 4),
         Text(
           _formatInstalls(installs),
-          style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          style: TextStyle(color: context.textSecondary, fontSize: 12),
         ),
         if (onFavoriteToggle != null) ...[
           const SizedBox(width: 12),
@@ -267,7 +267,7 @@ class WidgetMarketplaceStats extends StatelessWidget {
             child: Icon(
               isFavorited ? Icons.favorite : Icons.favorite_border,
               size: 18,
-              color: isFavorited ? Colors.redAccent : AppTheme.textTertiary,
+              color: isFavorited ? Colors.redAccent : context.textTertiary,
             ),
           ),
         ],

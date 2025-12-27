@@ -29,12 +29,12 @@ class AutomationCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isEnabled
                 ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
-                : AppTheme.darkBorder,
+                : context.border,
           ),
         ),
         child: Column(
@@ -51,7 +51,7 @@ class AutomationCard extends StatelessWidget {
                         ? Theme.of(
                             context,
                           ).colorScheme.primary.withValues(alpha: 0.2)
-                        : AppTheme.darkBackground,
+                        : context.background,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(

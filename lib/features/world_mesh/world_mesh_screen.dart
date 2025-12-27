@@ -236,7 +236,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 if (_showSearch)
                   Container(
                     height: 1,
-                    color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                    color: context.border.withValues(alpha: 0.3),
                   ),
                 // Map content (wrapping in Expanded with Stack for dropdown)
                 Expanded(
@@ -268,20 +268,20 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Container(
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           borderRadius: BorderRadius.circular(12),
         ),
         child: TextField(
           controller: _searchController,
           focusNode: _searchFocusNode,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: 'Find a node',
-            hintStyle: const TextStyle(color: AppTheme.textTertiary),
-            prefixIcon: const Icon(Icons.search, color: AppTheme.textTertiary),
+            hintStyle: TextStyle(color: context.textTertiary),
+            prefixIcon: Icon(Icons.search, color: context.textTertiary),
             // Close button as suffix
             suffixIcon: IconButton(
-              icon: const Icon(Icons.close, color: AppTheme.textTertiary),
+              icon: Icon(Icons.close, color: context.textTertiary),
               onPressed: () {
                 setState(() {
                   _showSearch = false;
@@ -373,9 +373,9 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
       child: Container(
         constraints: const BoxConstraints(maxHeight: 400),
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.darkBorder),
+          border: Border.all(color: context.border),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.3),
@@ -393,19 +393,16 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: Row(
                 children: [
-                  Icon(Icons.search, size: 14, color: AppTheme.textTertiary),
-                  const SizedBox(width: 8),
+                  Icon(Icons.search, size: 14, color: context.textTertiary),
+                  SizedBox(width: 8),
                   Text(
                     '${results.length} node${results.length == 1 ? '' : 's'} found',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 12, color: context.textTertiary),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1, color: AppTheme.darkBorder),
+            Divider(height: 1, color: context.border),
             // Lazy loading results list
             Flexible(
               child: _LazySearchResultsList(
@@ -432,7 +429,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               ),
             ),
             // Status legend
-            const Divider(height: 1, color: AppTheme.darkBorder),
+            Divider(height: 1, color: context.border),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
@@ -442,11 +439,11 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                     color: AppTheme.successGreen,
                     label: 'Online (<1h)',
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: 16),
                   _StatusLegendItem(color: Colors.amber, label: 'Idle (1-24h)'),
                   const SizedBox(width: 16),
                   _StatusLegendItem(
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                     label: 'Offline (>24h)',
                   ),
                 ],
@@ -471,15 +468,15 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               size: 48,
               color: accentColor.withValues(alpha: 0.7),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               'Unable to load mesh map',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
+              style: TextStyle(color: context.textSecondary, fontSize: 16),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               error,
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -518,7 +515,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               initialZoom: 3.0,
               minZoom: 2.0,
               maxZoom: 18.0,
-              backgroundColor: AppTheme.darkBackground,
+              backgroundColor: context.background,
               interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
               ),
@@ -750,7 +747,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
       key: const ValueKey('loading'),
       height: 120,
       decoration: BoxDecoration(
-        color: AppTheme.darkCard.withValues(alpha: 0.98),
+        color: context.card.withValues(alpha: 0.98),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: accentColor.withValues(alpha: 0.3)),
         boxShadow: [
@@ -773,10 +770,10 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 accentColor.withValues(alpha: 0.3),
               ],
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Text(
               'Loading node info...',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+              style: TextStyle(color: context.textSecondary, fontSize: 14),
             ),
           ],
         ),
@@ -1008,7 +1005,7 @@ class _LazySearchResultsListState extends State<_LazySearchResultsList> {
             child: Center(
               child: Text(
                 'Scroll for more...',
-                style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+                style: TextStyle(fontSize: 12, color: context.textTertiary),
               ),
             ),
           );
@@ -1042,10 +1039,10 @@ class _StatusLegendItem extends StatelessWidget {
           height: 8,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 4),
+        SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(fontSize: 10, color: AppTheme.textTertiary),
+          style: TextStyle(fontSize: 10, color: context.textTertiary),
         ),
       ],
     );
@@ -1064,14 +1061,14 @@ class _SearchResultTile extends StatelessWidget {
     required this.onTap,
   });
 
-  Color get _statusColor {
+  Color _statusColor(BuildContext context) {
     switch (node.status) {
       case NodeStatus.online:
         return AppTheme.successGreen;
       case NodeStatus.idle:
         return Colors.amber;
       case NodeStatus.offline:
-        return AppTheme.textTertiary;
+        return context.textTertiary;
     }
   }
 
@@ -1096,14 +1093,14 @@ class _SearchResultTile extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isActive
                         ? accentColor.withValues(alpha: 0.2)
-                        : AppTheme.darkBorder.withValues(alpha: 0.3),
+                        : context.border.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
                     child: Text(
                       _getAvatarText(),
                       style: TextStyle(
-                        color: isActive ? accentColor : AppTheme.textSecondary,
+                        color: isActive ? accentColor : context.textSecondary,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                         fontFamily: 'JetBrainsMono',
@@ -1120,15 +1117,15 @@ class _SearchResultTile extends StatelessWidget {
                       width: 12,
                       height: 12,
                       decoration: BoxDecoration(
-                        color: _statusColor,
+                        color: _statusColor(context),
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.darkCard, width: 2),
+                        border: Border.all(color: context.card, width: 2),
                       ),
                     ),
                   ),
               ],
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             // Info
             Expanded(
               child: Column(
@@ -1147,10 +1144,7 @@ class _SearchResultTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     _buildSubtitle(),
-                    style: TextStyle(
-                      color: AppTheme.textTertiary,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: context.textTertiary, fontSize: 12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1158,7 +1152,7 @@ class _SearchResultTile extends StatelessWidget {
               ),
             ),
             // Arrow
-            Icon(Icons.chevron_right, color: AppTheme.textTertiary, size: 20),
+            Icon(Icons.chevron_right, color: context.textTertiary, size: 20),
           ],
         ),
       ),
@@ -1245,7 +1239,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
     return Container(
       constraints: const BoxConstraints(maxHeight: 400),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard.withValues(alpha: 0.98),
+        color: context.card.withValues(alpha: 0.98),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: accentColor.withValues(alpha: 0.3)),
         boxShadow: [
@@ -1283,7 +1277,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1303,12 +1297,12 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                             Text(
                               node.nodeId,
                               style: TextStyle(
-                                color: AppTheme.textSecondary,
+                                color: context.textSecondary,
                                 fontFamily: 'JetBrainsMono',
                                 fontSize: 12,
                               ),
                             ),
-                          if (node.hasName) const SizedBox(width: 8),
+                          if (node.hasName) SizedBox(width: 8),
                           if (node.isRecentlySeen)
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -1342,7 +1336,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                     size: 22,
                     color: isFavorite
                         ? const Color(0xFFFFD700)
-                        : AppTheme.textSecondary,
+                        : context.textSecondary,
                   ),
                   onPressed: _toggleFavorite,
                   tooltip: isFavorite
@@ -1350,15 +1344,15 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                       : 'Add to favorites',
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: Icon(Icons.close, size: 20),
                   onPressed: onClose,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                 ),
               ],
             ),
           ),
 
-          const Divider(height: 1),
+          Divider(height: 1),
 
           // SCROLLABLE CONTENT - middle section
           Flexible(
@@ -1452,7 +1446,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                         child: Text(
                           'Uptime: ${node.uptimeString}',
                           style: TextStyle(
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -1538,7 +1532,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                            color: context.border.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -1555,7 +1549,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
 
                   // Seen By Section
                   if (node.seenBy.isNotEmpty) ...[
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     _buildSectionHeader(
                       theme,
                       Icons.wifi_tethering,
@@ -1568,26 +1562,26 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                               ? ' +${node.seenBy.length - 3} more'
                               : ''),
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 12,
                       ),
                     ),
                   ],
 
                   // Last Seen
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Row(
                     children: [
                       Icon(
                         Icons.schedule,
                         size: 14,
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                       ),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       Text(
                         'Last seen: ${node.lastSeenString}',
                         style: TextStyle(
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                           fontSize: 12,
                         ),
                       ),
@@ -1666,7 +1660,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
             children: [
               Text(
                 item.label,
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                style: TextStyle(color: context.textSecondary, fontSize: 11),
               ),
               Text(
                 item.value,

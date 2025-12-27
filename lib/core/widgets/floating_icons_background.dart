@@ -183,6 +183,7 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
   Widget build(BuildContext context) {
     final accentColor = widget.accentColor ?? AppTheme.primaryMagenta;
     final size = MediaQuery.sizeOf(context);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -191,6 +192,9 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
         AnimatedBuilder(
           animation: _pulseController,
           builder: (context, child) {
+            // Stronger accent visibility in light mode
+            final accentAlpha = isDarkMode ? 0.12 : 0.18;
+
             return Container(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
@@ -200,9 +204,9 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
                   ),
                   radius: 1.5 + (_pulseController.value * 0.2),
                   colors: [
-                    accentColor.withValues(alpha: 0.12),
-                    AppTheme.darkBackground.withValues(alpha: 0.98),
-                    AppTheme.darkBackground,
+                    accentColor.withValues(alpha: accentAlpha),
+                    context.background.withValues(alpha: 0.98),
+                    context.background,
                   ],
                   stops: const [0.0, 0.5, 1.0],
                 ),
@@ -223,6 +227,7 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
       builder: (context, child) {
         // Get top padding to adjust for status bar offset
         final topPadding = MediaQuery.paddingOf(context).top;
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
         // Calculate floating position with parallax
         final time = _floatController.value * 2 * math.pi * iconData.floatSpeed;
@@ -239,13 +244,23 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
         // Subtle rotation
         final rotation = math.sin(time * 0.5) * 0.1;
 
-        // Opacity pulse
-        final opacity = 0.3 + (_pulseController.value * 0.25);
+        // Opacity pulse - higher opacity in light mode for visibility
+        final baseOpacity = isDarkMode ? 0.3 : 0.5;
+        final pulseRange = isDarkMode ? 0.25 : 0.3;
+        final opacity = baseOpacity + (_pulseController.value * pulseRange);
 
-        final baseColor = iconData.color;
-        final colorWithAlpha = baseColor.withValues(
-          alpha: opacity * iconData.colorAlpha,
-        );
+        // Use darker version of color in light mode for better contrast
+        var baseColor = iconData.color;
+        // Replace textSecondary (light gray) with a more visible color in light mode
+        if (baseColor == AppTheme.textSecondary && !isDarkMode) {
+          baseColor = AppTheme.graphBlue;
+        }
+
+        final effectiveAlpha = isDarkMode
+            ? opacity * iconData.colorAlpha
+            : opacity * math.min(iconData.colorAlpha + 0.3, 1.0);
+
+        final colorWithAlpha = baseColor.withValues(alpha: effectiveAlpha);
 
         // Position relative to screen, but Stack may start below status bar
         // So subtract topPadding to compensate

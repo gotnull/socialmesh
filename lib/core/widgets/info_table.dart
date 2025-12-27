@@ -30,7 +30,7 @@ class InfoTable extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(11),
@@ -42,12 +42,10 @@ class InfoTable extends StatelessWidget {
 
             return Container(
               decoration: BoxDecoration(
-                color: isOdd
-                    ? const Color(0xFF29303D)
-                    : AppTheme.darkBackground,
+                color: isOdd ? const Color(0xFF29303D) : context.background,
                 border: Border(
                   bottom: index < rows.length - 1
-                      ? const BorderSide(color: AppTheme.darkBorder, width: 1)
+                      ? BorderSide(color: context.border, width: 1)
                       : BorderSide.none,
                 ),
               ),
@@ -62,12 +60,9 @@ class InfoTable extends StatelessWidget {
                           horizontal: 16,
                           vertical: 14,
                         ),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           border: Border(
-                            right: BorderSide(
-                              color: AppTheme.darkBorder,
-                              width: 1,
-                            ),
+                            right: BorderSide(color: context.border, width: 1),
                           ),
                         ),
                         child: Row(
@@ -83,9 +78,9 @@ class InfoTable extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 item.label,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
-                                  color: AppTheme.textTertiary,
+                                  color: context.textTertiary,
 
                                   fontWeight: FontWeight.w400,
                                 ),

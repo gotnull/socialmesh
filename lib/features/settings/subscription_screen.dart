@@ -61,7 +61,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         purchaseState.hasPurchased(RevenueCatConfig.completePackProductId);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Upgrades')),
+      appBar: AppBar(title: Text('Upgrades')),
       body: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
@@ -69,7 +69,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Header - only show if not all unlocked
-            if (!allUnlocked) ...[_buildHeader(), const SizedBox(height: 24)],
+            if (!allUnlocked) ...[_buildHeader(), SizedBox(height: 24)],
 
             // Complete Pack Bundle (prominent)
             _buildBundleCard(),
@@ -80,41 +80,41 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               // Divider with "or buy individually"
               Row(
                 children: [
-                  Expanded(child: Divider(color: AppTheme.darkBorder)),
+                  Expanded(child: Divider(color: context.border)),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
                       'or buy individually',
                       style: TextStyle(
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                         fontSize: 12,
                       ),
                     ),
                   ),
-                  Expanded(child: Divider(color: AppTheme.darkBorder)),
+                  Expanded(child: Divider(color: context.border)),
                 ],
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
             ] else ...[
               const SizedBox(height: 24),
               // Divider with "Included Features"
               Row(
                 children: [
-                  Expanded(child: Divider(color: AppTheme.darkBorder)),
+                  Expanded(child: Divider(color: context.border)),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
                       'Included Features',
                       style: TextStyle(
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                         fontSize: 12,
                       ),
                     ),
                   ),
-                  Expanded(child: Divider(color: AppTheme.darkBorder)),
+                  Expanded(child: Divider(color: context.border)),
                 ],
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
             ],
             // One-time purchases (shows OWNED or price depending on state)
             _buildOneTimePurchases(),
@@ -140,7 +140,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             Center(
               child: TextButton(
                 onPressed: isLoading ? null : _restorePurchases,
-                child: const Text('Restore Purchases'),
+                child: Text('Restore Purchases'),
               ),
             ),
 
@@ -155,18 +155,18 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     child: Text(
                       'Terms',
                       style: TextStyle(
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                         fontSize: 12,
                       ),
                     ),
                   ),
-                  Text('•', style: TextStyle(color: AppTheme.textTertiary)),
+                  Text('•', style: TextStyle(color: context.textTertiary)),
                   TextButton(
                     onPressed: () => LegalDocumentSheet.showPrivacy(context),
                     child: Text(
                       'Privacy',
                       style: TextStyle(
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                         fontSize: 12,
                       ),
                     ),
@@ -210,7 +210,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               size: 28,
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,9 +223,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     color: context.accentColor,
                   ),
                 ),
-                const Text(
+                Text(
                   'One-time purchases, yours forever',
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                  style: TextStyle(color: context.textSecondary, fontSize: 14),
                 ),
               ],
             ),
@@ -282,7 +282,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               ),
               child: Icon(Icons.verified, color: context.accentColor, size: 32),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,10 +295,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                       color: context.accentColor,
                     ),
                   ),
-                  const Text(
+                  Text(
                     'Thank you for your support!',
                     style: TextStyle(
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                       fontSize: 14,
                     ),
                   ),
@@ -346,7 +346,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     ),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.all_inclusive,
                     color: Colors.white,
                     size: 30,
@@ -576,7 +576,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Material(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
               child: InkWell(
                 onTap: isPurchased ? null : () => _purchaseItem(purchase),
@@ -588,7 +588,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     border: Border.all(
                       color: isPurchased
                           ? context.accentColor.withValues(alpha: 0.5)
-                          : AppTheme.darkBorder,
+                          : context.border,
                     ),
                   ),
                   child: Row(
@@ -606,7 +606,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                           size: 22,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -616,14 +616,14 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                                 Text(
                                   storeProducts[purchase.productId]?.title ??
                                       purchase.name,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 16,
-                                    color: AppTheme.textPrimary,
+                                    color: context.textPrimary,
                                   ),
                                 ),
                                 if (isPurchased) ...[
-                                  const SizedBox(width: 8),
+                                  SizedBox(width: 8),
                                   Icon(
                                     Icons.check_circle,
                                     color: context.accentColor,
@@ -634,15 +634,15 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                             ),
                             Text(
                               _getDescription(purchase),
-                              style: const TextStyle(
-                                color: AppTheme.textTertiary,
+                              style: TextStyle(
+                                color: context.textTertiary,
                                 fontSize: 13,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       if (isPurchased)
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -752,7 +752,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => Dialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -769,7 +769,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   fit: BoxFit.contain,
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Text(
                 'All Features Unlocked!',
                 style: TextStyle(
@@ -779,17 +779,17 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 12),
-              const Text(
+              SizedBox(height: 12),
+              Text(
                 'You now have access to everything Socialmesh has to offer. Thank you for your support!',
                 style: TextStyle(
                   fontSize: 15,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                   height: 1.4,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

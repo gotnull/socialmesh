@@ -30,9 +30,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final authState = ref.watch(authStateProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         leading: const HamburgerMenuButton(),
         centerTitle: true,
         title: const Text(
@@ -119,7 +119,7 @@ class _EmptyProfileView extends ConsumerWidget {
           // Sync error banner (if any)
           if (syncError != null) ...[
             _SyncErrorBanner(error: syncError),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
           ],
 
           const SizedBox(height: 40),
@@ -145,7 +145,7 @@ class _EmptyProfileView extends ConsumerWidget {
 
           const SizedBox(height: 24),
 
-          const Text(
+          Text(
             'Set up your profile',
             style: TextStyle(
               fontSize: 24,
@@ -156,11 +156,11 @@ class _EmptyProfileView extends ConsumerWidget {
 
           const SizedBox(height: 8),
 
-          const Text(
+          Text(
             'Add your name, photo, and bio to personalize your mesh presence.',
             style: TextStyle(
               fontSize: 14,
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
               height: 1.4,
             ),
             textAlign: TextAlign.center,
@@ -210,7 +210,7 @@ class _ProfileView extends ConsumerWidget {
           // Sync error banner (if any)
           if (syncError != null) ...[
             _SyncErrorBanner(error: syncError),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
           ],
 
           // Avatar section
@@ -254,17 +254,17 @@ class _ProfileView extends ConsumerWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.darkCard,
+                color: context.card,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                  color: context.border.withValues(alpha: 0.3),
                 ),
               ),
               child: Text(
                 profile.bio!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
@@ -426,10 +426,10 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
   }
 
   Color _getStatusColor() {
-    if (!isSignedIn) return AppTheme.textTertiary;
+    if (!isSignedIn) return context.textTertiary;
     final syncStatus = ref.watch(syncStatusProvider);
     return switch (syncStatus) {
-      SyncStatus.syncing => AppTheme.textTertiary,
+      SyncStatus.syncing => context.textTertiary,
       SyncStatus.error => AppTheme.errorRed,
       SyncStatus.synced || SyncStatus.idle => AccentColors.green,
     };
@@ -453,7 +453,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       children: [
         Text(
           'Linked accounts',
-          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+          style: TextStyle(fontSize: 12, color: context.textSecondary),
         ),
         const SizedBox(width: 12),
         ...providers.map(
@@ -470,12 +470,12 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSignedIn
               ? AccentColors.green.withValues(alpha: 0.3)
-              : AppTheme.darkBorder.withValues(alpha: 0.3),
+              : context.border.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -512,7 +512,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
                             color: _getStatusColor(),
                           ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -540,7 +540,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
                     _isExpanded
                         ? Icons.keyboard_arrow_up
                         : Icons.keyboard_arrow_down,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                   ),
                 ],
               ),
@@ -574,13 +574,13 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Divider(color: AppTheme.darkBorder),
-          const SizedBox(height: 12),
-          const Text(
+          Divider(color: context.border),
+          SizedBox(height: 12),
+          Text(
             'Sign in to backup your profile to the cloud and sync across devices.',
             style: TextStyle(
               fontSize: 13,
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
               height: 1.4,
             ),
           ),
@@ -633,7 +633,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Divider(color: AppTheme.darkBorder),
+          Divider(color: context.border),
           const SizedBox(height: 12),
 
           // Linked providers chips
@@ -791,7 +791,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     final shouldLink = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         title: const Text('Link GitHub Account'),
         content: Text(
           'An account with ${e.email} already exists using $providerName.\n\n'
@@ -854,7 +854,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         title: const Text('Sign Out'),
         content: const Text('Are you sure you want to sign out?'),
         actions: [
@@ -880,7 +880,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         title: const Text('Delete Account'),
         content: const Text(
           'This will permanently delete your account and all associated data. This action cannot be undone.',
@@ -927,28 +927,28 @@ class _ProviderIcon extends StatelessWidget {
       width: 28,
       height: 28,
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
+        color: context.background,
         shape: BoxShape.circle,
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
-      child: Center(child: _getIcon()),
+      child: Center(child: _getIcon(context)),
     );
   }
 
-  Widget _getIcon() {
+  Widget _getIcon(BuildContext context) {
     return switch (providerId) {
       'google.com' => SizedBox(
         width: 14,
         height: 14,
         child: CustomPaint(painter: _GoogleLogoSmallPainter()),
       ),
-      'apple.com' => const Icon(Icons.apple, size: 16, color: Colors.white),
+      'apple.com' => Icon(Icons.apple, size: 16, color: Colors.white),
       'github.com' => SizedBox(
         width: 14,
         height: 14,
         child: CustomPaint(painter: _GitHubLogoSmallPainter()),
       ),
-      _ => Icon(Icons.link, size: 14, color: AppTheme.textSecondary),
+      _ => Icon(Icons.link, size: 14, color: context.textSecondary),
     };
   }
 }
@@ -1084,7 +1084,7 @@ class _AccountOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isDestructive ? AppTheme.errorRed : AppTheme.textSecondary;
+    final color = isDestructive ? AppTheme.errorRed : context.textSecondary;
 
     return InkWell(
       onTap: onTap,
@@ -1094,10 +1094,10 @@ class _AccountOptionTile extends StatelessWidget {
         child: Row(
           children: [
             Icon(icon, size: 18, color: color),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Text(label, style: TextStyle(fontSize: 14, color: color)),
             const Spacer(),
-            Icon(Icons.chevron_right, size: 18, color: AppTheme.textTertiary),
+            Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
           ],
         ),
       ),
@@ -1418,7 +1418,7 @@ class _AvatarSection extends StatelessWidget {
             height: 120,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppTheme.darkCard,
+              color: context.card,
               border: Border.all(color: accentColor, width: 3),
             ),
             child: ClipOval(child: _buildAvatarContent(context)),
@@ -1433,7 +1433,7 @@ class _AvatarSection extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AccentColors.blue,
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppTheme.darkBackground, width: 2),
+                  border: Border.all(color: context.background, width: 2),
                 ),
                 child: const Icon(Icons.check, size: 16, color: Colors.white),
               ),
@@ -1503,9 +1503,9 @@ class _ProfileInfoCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.3)),
+        border: Border.all(color: context.border.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1522,23 +1522,23 @@ class _ProfileInfoCard extends StatelessWidget {
               ),
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           ...items.map(
             (item) => Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  Icon(item.icon, size: 20, color: AppTheme.textTertiary),
-                  const SizedBox(width: 12),
+                  Icon(item.icon, size: 20, color: context.textTertiary),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           item.label,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -1782,7 +1782,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
         builder: (context, scrollController) {
           return Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
+              color: context.background,
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(20),
               ),
@@ -1802,7 +1802,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                   height: 4,
                   margin: const EdgeInsets.only(top: 12, bottom: 8),
                   decoration: BoxDecoration(
-                    color: AppTheme.textTertiary.withValues(alpha: 0.4),
+                    color: context.textTertiary.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -1812,7 +1812,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
-                        color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                        color: context.border.withValues(alpha: 0.3),
                       ),
                     ),
                   ),
@@ -1820,9 +1820,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                     children: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
+                        child: Text('Cancel'),
                       ),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'Edit Profile',
                           style: TextStyle(
@@ -1882,7 +1882,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                       height: 100,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: AppTheme.darkCard,
+                                        color: context.card,
                                         border: Border.all(
                                           color: accentColor,
                                           width: 2,
@@ -1966,7 +1966,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                           color: accentColor,
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: AppTheme.darkBackground,
+                                            color: context.background,
                                             width: 2,
                                           ),
                                         ),
@@ -2143,31 +2143,31 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       children: [
         Row(
           children: [
-            Icon(Icons.format_quote, size: 18, color: AppTheme.textTertiary),
-            const SizedBox(width: 8),
+            Icon(Icons.format_quote, size: 18, color: context.textTertiary),
+            SizedBox(width: 8),
             Text(
               'Bio',
-              style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+              style: TextStyle(fontSize: 12, color: context.textTertiary),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         TextFormField(
           controller: _bioController,
           decoration: InputDecoration(
             hintText: 'Tell us about yourself',
             filled: true,
-            fillColor: AppTheme.darkCard,
+            fillColor: context.card,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                color: context.border.withValues(alpha: 0.3),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                color: context.border.withValues(alpha: 0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -2202,14 +2202,14 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
           decoration: InputDecoration(
             labelText: label,
             hintText: hint,
-            prefixIcon: Icon(icon, color: AppTheme.textTertiary),
+            prefixIcon: Icon(icon, color: context.textTertiary),
             prefixText: prefixText,
             suffixIcon: controller.text.isNotEmpty
                 ? IconButton(
                     icon: Icon(
                       Icons.clear,
                       size: 18,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                     onPressed: () {
                       controller.clear();
@@ -2217,17 +2217,17 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                   )
                 : null,
             filled: true,
-            fillColor: AppTheme.darkCard,
+            fillColor: context.card,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                color: context.border.withValues(alpha: 0.3),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: AppTheme.darkBorder.withValues(alpha: 0.3),
+                color: context.border.withValues(alpha: 0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(

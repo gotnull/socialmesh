@@ -44,7 +44,7 @@ class _ActionSelectorState extends State<ActionSelector> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppTheme.darkBackground,
+          color: context.background,
           borderRadius: BorderRadius.circular(8),
           border: hasAction
               ? Border.all(color: context.accentColor.withValues(alpha: 0.5))
@@ -55,9 +55,9 @@ class _ActionSelectorState extends State<ActionSelector> {
             Icon(
               hasAction ? Icons.touch_app : Icons.add_circle_outline,
               size: 20,
-              color: hasAction ? context.accentColor : AppTheme.textSecondary,
+              color: hasAction ? context.accentColor : context.textSecondary,
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +67,7 @@ class _ActionSelectorState extends State<ActionSelector> {
                         ? _getActionLabel(widget.currentAction!)
                         : 'Add tap action...',
                     style: TextStyle(
-                      color: hasAction ? Colors.white : AppTheme.textSecondary,
+                      color: hasAction ? Colors.white : context.textSecondary,
                       fontWeight: hasAction
                           ? FontWeight.w500
                           : FontWeight.normal,
@@ -78,7 +78,7 @@ class _ActionSelectorState extends State<ActionSelector> {
                       _getActionDescription(widget.currentAction!),
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                       ),
                     ),
                 ],
@@ -90,14 +90,14 @@ class _ActionSelectorState extends State<ActionSelector> {
                 icon: Icon(
                   Icons.close,
                   size: 18,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                 ),
                 visualDensity: VisualDensity.compact,
               )
             else
               Icon(
                 Icons.chevron_right,
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
                 size: 20,
               ),
           ],
@@ -201,8 +201,8 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
         Row(
           children: [
             Icon(Icons.touch_app, size: 20, color: accentColor),
-            const SizedBox(width: 8),
-            const Text(
+            SizedBox(width: 8),
+            Text(
               'What should happen when tapped?',
               style: TextStyle(
                 fontSize: 18,
@@ -215,9 +215,9 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
         const SizedBox(height: 8),
         Text(
           'Choose an action for this element',
-          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          style: TextStyle(color: context.textSecondary, fontSize: 13),
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
 
         // Action categories
         _buildSectionLabel('MESSAGING'),
@@ -283,7 +283,7 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
             onPressed: _selectedType != null ? _confirm : null,
             style: FilledButton.styleFrom(
               backgroundColor: accentColor,
-              disabledBackgroundColor: AppTheme.darkBorder,
+              disabledBackgroundColor: context.border,
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
             child: Text(
@@ -301,7 +301,7 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
       style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        color: AppTheme.textTertiary,
+        color: context.textTertiary,
         letterSpacing: 1,
       ),
     );
@@ -324,10 +324,10 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
         decoration: BoxDecoration(
           color: isSelected
               ? color.withValues(alpha: 0.15)
-              : AppTheme.darkBackground,
+              : context.background,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSelected ? color : AppTheme.darkBorder,
+            color: isSelected ? color : context.border,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -341,7 +341,7 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
               ),
               child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -359,7 +359,7 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
                     description,
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                   ),
                 ],
@@ -435,7 +435,7 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
         return [
           Text(
             'No additional options',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
         ];
     }
@@ -464,11 +464,11 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: TextStyle(color: Colors.white, fontSize: 13),
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                  style: TextStyle(color: context.textSecondary, fontSize: 11),
                 ),
               ],
             ),

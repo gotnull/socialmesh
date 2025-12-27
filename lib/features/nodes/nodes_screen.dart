@@ -100,17 +100,17 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
+          backgroundColor: context.background,
           leading: const HamburgerMenuButton(),
           centerTitle: true,
           title: Text(
             'Nodes (${nodes.length})',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           actions: [
@@ -133,25 +133,22 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.darkCard,
+                  color: context.card,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextField(
                   controller: _searchController,
                   onChanged: (value) => setState(() => _searchQuery = value),
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Find a node',
-                    hintStyle: const TextStyle(color: AppTheme.textTertiary),
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      color: AppTheme.textTertiary,
-                    ),
+                    hintStyle: TextStyle(color: context.textTertiary),
+                    prefixIcon: Icon(Icons.search, color: context.textTertiary),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.clear,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                             onPressed: () {
                               _searchController.clear();
@@ -177,7 +174,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                   Expanded(
                     child: EdgeFade.end(
                       fadeSize: 32,
-                      fadeColor: AppTheme.darkBackground,
+                      fadeColor: context.background,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.only(left: 16),
@@ -189,7 +186,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                             onTap: () =>
                                 setState(() => _activeFilter = NodeFilter.all),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           _FilterChip(
                             label: 'Online',
                             count: onlineCount,
@@ -227,12 +224,12 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                             label: 'Offline',
                             count: nodes.length - onlineCount,
                             isSelected: _activeFilter == NodeFilter.offline,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                             onTap: () => setState(
                               () => _activeFilter = NodeFilter.offline,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           _FilterChip(
                             label: 'New',
                             count: recentlyDiscoveredCount,
@@ -270,10 +267,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
             ),
             const SizedBox(height: 8),
             // Divider
-            Container(
-              height: 1,
-              color: AppTheme.darkBorder.withValues(alpha: 0.3),
-            ),
+            Container(height: 1, color: context.border.withValues(alpha: 0.3)),
             // Node list
             Expanded(
               child: nodesList.isEmpty
@@ -285,24 +279,24 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                             width: 72,
                             height: 72,
                             decoration: BoxDecoration(
-                              color: AppTheme.darkCard,
+                              color: context.card,
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.group,
                               size: 40,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          SizedBox(height: 24),
                           Text(
                             _activeFilter == NodeFilter.all
                                 ? 'No nodes discovered yet'
                                 : 'No nodes match this filter',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                             ),
                           ),
                           if (_activeFilter != NodeFilter.all) ...[
@@ -584,7 +578,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
 
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -607,15 +601,15 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                       color: context.accentColor,
                       size: 40,
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             node.displayName,
-                            style: const TextStyle(
-                              color: AppTheme.textPrimary,
+                            style: TextStyle(
+                              color: context.textPrimary,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -633,7 +627,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                   ],
                 ),
               ),
-              const Divider(color: AppTheme.darkBorder),
+              Divider(color: context.border),
               // Disconnect option
               ListTile(
                 leading: Icon(Icons.link_off_rounded, color: AppTheme.errorRed),
@@ -704,14 +698,12 @@ class _FilterChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected
-              ? chipColor.withValues(alpha: 0.2)
-              : AppTheme.darkCard,
+          color: isSelected ? chipColor.withValues(alpha: 0.2) : context.card,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
                 ? chipColor.withValues(alpha: 0.5)
-                : AppTheme.darkBorder.withValues(alpha: 0.3),
+                : context.border.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -721,25 +713,25 @@ class _FilterChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 14,
-                color: isSelected ? chipColor : AppTheme.textTertiary,
+                color: isSelected ? chipColor : context.textTertiary,
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
             ],
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? chipColor : AppTheme.textSecondary,
+                color: isSelected ? chipColor : context.textSecondary,
               ),
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
                 color: isSelected
                     ? chipColor.withValues(alpha: 0.3)
-                    : AppTheme.darkBorder.withValues(alpha: 0.3),
+                    : context.border.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -747,7 +739,7 @@ class _FilterChip extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: isSelected ? chipColor : AppTheme.textTertiary,
+                  color: isSelected ? chipColor : context.textTertiary,
                 ),
               ),
             ),
@@ -783,35 +775,31 @@ class _SortButton extends StatelessWidget {
     return PopupMenuButton<NodeSortOrder>(
       initialValue: sortOrder,
       onSelected: onChanged,
-      color: AppTheme.darkCard,
+      color: context.card,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       offset: const Offset(0, 40),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.3)),
+          border: Border.all(color: context.border.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.sort, size: 14, color: AppTheme.textTertiary),
-            const SizedBox(width: 4),
+            Icon(Icons.sort, size: 14, color: context.textTertiary),
+            SizedBox(width: 4),
             Text(
               _sortLabel,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
               ),
             ),
-            const SizedBox(width: 2),
-            const Icon(
-              Icons.arrow_drop_down,
-              size: 18,
-              color: AppTheme.textTertiary,
-            ),
+            SizedBox(width: 2),
+            Icon(Icons.arrow_drop_down, size: 18, color: context.textTertiary),
           ],
         ),
       ),
@@ -859,7 +847,7 @@ class _SortButton extends StatelessWidget {
           Icon(
             isSelected ? Icons.check : icon,
             size: 18,
-            color: isSelected ? accentColor : AppTheme.textSecondary,
+            color: isSelected ? accentColor : context.textSecondary,
           ),
           const SizedBox(width: 12),
           Text(label),
@@ -885,18 +873,18 @@ class _HeadersToggle extends StatelessWidget {
         decoration: BoxDecoration(
           color: enabled
               ? context.accentColor.withValues(alpha: 0.2)
-              : AppTheme.darkCard,
+              : context.card,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: enabled
                 ? context.accentColor.withValues(alpha: 0.5)
-                : AppTheme.darkBorder.withValues(alpha: 0.3),
+                : context.border.withValues(alpha: 0.3),
           ),
         ),
         child: Icon(
           Icons.view_agenda_outlined,
           size: 16,
-          color: enabled ? context.accentColor : AppTheme.textTertiary,
+          color: enabled ? context.accentColor : context.textTertiary,
         ),
       ),
     );
@@ -913,7 +901,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppTheme.darkBackground,
+      color: context.background,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
         children: [
@@ -926,7 +914,7 @@ class _SectionHeader extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
@@ -1067,12 +1055,12 @@ class _NodeCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: isMyNode
               ? context.accentColor.withValues(alpha: 0.08)
-              : AppTheme.darkCard,
+              : context.card,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isMyNode
                 ? context.accentColor.withValues(alpha: 0.5)
-                : AppTheme.darkBorder,
+                : context.border,
             width: isMyNode ? 1.5 : 1,
           ),
         ),
@@ -1108,7 +1096,7 @@ class _NodeCard extends StatelessWidget {
                             width: 20,
                             height: 20,
                             decoration: BoxDecoration(
-                              color: AppTheme.darkCard,
+                              color: context.card,
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: context.accentColor,
@@ -1137,7 +1125,7 @@ class _NodeCard extends StatelessWidget {
                             color: context.accentColor,
                           ),
                         if (node.batteryLevel != null) ...[
-                          if (node.role != null) const SizedBox(width: 4),
+                          if (node.role != null) SizedBox(width: 4),
                           Icon(
                             _getBatteryIcon(node.batteryLevel!),
                             size: 14,
@@ -1171,17 +1159,17 @@ class _NodeCard extends StatelessWidget {
                           size: 16,
                           color: node.hasPublicKey
                               ? context.accentColor
-                              : AppTheme.textTertiary,
+                              : context.textTertiary,
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         // Name
                         Flexible(
                           child: Text(
                             node.displayName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: context.textPrimary,
                             ),
                           ),
                         ),
@@ -1197,7 +1185,7 @@ class _NodeCard extends StatelessWidget {
                               color: context.accentColor,
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: const Text(
+                            child: Text(
                               'YOU',
                               style: TextStyle(
                                 fontSize: 10,
@@ -1240,14 +1228,14 @@ class _NodeCard extends StatelessWidget {
                             size: 14,
                             color: node.isOnline
                                 ? context.accentColor
-                                : AppTheme.textTertiary,
+                                : context.textTertiary,
                           ),
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Text(
                             node.isOnline ? 'Connected' : 'Offline',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                             ),
                           ),
                         ],
@@ -1262,33 +1250,33 @@ class _NodeCard extends StatelessWidget {
                             size: 14,
                             color: context.accentColor,
                           ),
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Text(
                             _formatLastHeard(node.lastHeard!),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                     ],
                     // Role and GPS status
                     Row(
                       children: [
                         if (node.role != null) ...[
-                          const Icon(
+                          Icon(
                             Icons.smartphone,
                             size: 14,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Text(
                             node.role!,
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           ),
                           SizedBox(width: 12),
@@ -1298,7 +1286,7 @@ class _NodeCard extends StatelessWidget {
                           size: 14,
                           color: node.hasPosition
                               ? context.accentColor
-                              : AppTheme.textTertiary,
+                              : context.textTertiary,
                         ),
                         SizedBox(width: 4),
                         Text(
@@ -1307,79 +1295,79 @@ class _NodeCard extends StatelessWidget {
                             fontSize: 12,
                             color: node.hasPosition
                                 ? context.accentColor
-                                : AppTheme.textTertiary,
+                                : context.textTertiary,
                           ),
                         ),
                       ],
                     ),
                     // Distance & heading
                     if (node.distance != null) ...[
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.near_me,
                             size: 14,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Text(
                             _formatDistance(node.distance),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           ),
                         ],
                       ),
                     ],
                     // Logs indicators
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.article,
                           size: 14,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                         ),
-                        const SizedBox(width: 4),
-                        const Text(
+                        SizedBox(width: 4),
+                        Text(
                           'Logs:',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Icon(
+                        SizedBox(width: 8),
+                        Icon(
                           Icons.message,
                           size: 14,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                         ),
-                        const SizedBox(width: 8),
-                        const Icon(
+                        SizedBox(width: 8),
+                        Icon(
                           Icons.place,
                           size: 14,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                         ),
                       ],
                     ),
                     // Signal bars
                     if (node.rssi != null) ...[
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.signal_cellular_alt,
                             size: 14,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
-                          const SizedBox(width: 6),
-                          const Text(
+                          SizedBox(width: 6),
+                          Text(
                             'Signal Good',
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           ),
                           SizedBox(width: 12),
@@ -1393,7 +1381,7 @@ class _NodeCard extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: i < signalBars
                                       ? context.accentColor
-                                      : AppTheme.textTertiary.withValues(
+                                      : context.textTertiary.withValues(
                                           alpha: 0.3,
                                         ),
                                   borderRadius: BorderRadius.circular(1),
@@ -1415,7 +1403,7 @@ class _NodeCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (node.isIgnored)
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.only(right: 4),
                           child: Icon(
                             Icons.volume_off,
@@ -1434,9 +1422,9 @@ class _NodeCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                     size: 24,
                   ),
                 ],
@@ -1509,7 +1497,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
             title: node.displayName,
             subtitle: 'Scan to add this node',
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // QR Code
           Container(
@@ -1539,19 +1527,19 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
+              color: context.background,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.tag, size: 16, color: AppTheme.textTertiary),
-                const SizedBox(width: 8),
+                Icon(Icons.tag, size: 16, color: context.textTertiary),
+                SizedBox(width: 8),
                 Text(
                   'Node ID: ${node.nodeNum.toRadixString(16).toUpperCase()}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                     fontFamily: 'monospace',
                   ),
                 ),
@@ -1765,9 +1753,9 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.restart_alt, color: AppTheme.warningYellow, size: 24),
             SizedBox(width: 12),
@@ -1780,19 +1768,19 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
             ),
           ],
         ),
-        content: const Text(
+        content: Text(
           'This will reboot your Meshtastic device. The app will automatically reconnect once the device restarts.',
           style: TextStyle(
-            color: AppTheme.textSecondary,
+            color: context.textSecondary,
             fontFamily: 'JetBrainsMono',
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -1846,9 +1834,9 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.power_settings_new, color: AppTheme.errorRed, size: 24),
             SizedBox(width: 12),
@@ -1861,19 +1849,19 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
             ),
           ],
         ),
-        content: const Text(
+        content: Text(
           'This will turn off your Meshtastic device. You will need to physically power it back on to reconnect.',
           style: TextStyle(
-            color: AppTheme.textSecondary,
+            color: context.textSecondary,
             fontFamily: 'JetBrainsMono',
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -1915,22 +1903,25 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
+        title: Text(
           'Remove Node',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            color: context.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         content: Text(
           'Remove ${node.displayName} from the node database? This will remove the node from your local device.',
-          style: const TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: context.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -2070,16 +2061,16 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
         children: [
           ListTile(
             leading: Icon(Icons.refresh, color: context.accentColor),
-            title: const Text(
+            title: Text(
               'Request User Info',
               style: TextStyle(
-                color: Colors.white,
+                color: context.textPrimary,
                 fontFamily: 'JetBrainsMono',
               ),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Refresh node info and encryption keys',
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             onTap: () {
               Navigator.pop(context);
@@ -2088,16 +2079,16 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
           ),
           ListTile(
             leading: Icon(Icons.swap_horiz, color: context.accentColor),
-            title: const Text(
+            title: Text(
               'Exchange Positions',
               style: TextStyle(
-                color: Colors.white,
+                color: context.textPrimary,
                 fontFamily: 'JetBrainsMono',
               ),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Request GPS position from this node',
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             onTap: () {
               Navigator.pop(context);
@@ -2109,12 +2100,12 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
               node.isFavorite ? Icons.star : Icons.star_border,
               color: node.isFavorite
                   ? AppTheme.warningYellow
-                  : AppTheme.textSecondary,
+                  : context.textSecondary,
             ),
             title: Text(
               node.isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.textPrimary,
                 fontFamily: 'JetBrainsMono',
               ),
             ),
@@ -2126,14 +2117,12 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
           ListTile(
             leading: Icon(
               node.isIgnored ? Icons.volume_off : Icons.volume_up,
-              color: node.isIgnored
-                  ? AppTheme.errorRed
-                  : AppTheme.textSecondary,
+              color: node.isIgnored ? AppTheme.errorRed : context.textSecondary,
             ),
             title: Text(
               node.isIgnored ? 'Unmute Node' : 'Mute Node',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.textPrimary,
                 fontFamily: 'JetBrainsMono',
               ),
             ),
@@ -2141,10 +2130,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
               node.isIgnored
                   ? 'Receive messages from this node'
                   : 'Hide messages from this node',
-              style: const TextStyle(
-                color: AppTheme.textTertiary,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             onTap: () {
               Navigator.pop(context);
@@ -2153,14 +2139,11 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
           ),
           if (node.hasPosition)
             ListTile(
-              leading: const Icon(
-                Icons.location_on,
-                color: AppTheme.textSecondary,
-              ),
-              title: const Text(
+              leading: Icon(Icons.location_on, color: context.textSecondary),
+              title: Text(
                 'Set as Fixed Position',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.textPrimary,
                   fontFamily: 'JetBrainsMono',
                 ),
               ),
@@ -2209,7 +2192,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                 color: isMyNode ? context.accentColor : _getAvatarColor(node),
                 size: 64,
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -2219,10 +2202,10 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                         Flexible(
                           child: Text(
                             node.displayName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
-                              color: Colors.white,
+                              color: context.textPrimary,
                             ),
                           ),
                         ),
@@ -2237,7 +2220,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                               color: context.accentColor,
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: const Text(
+                            child: Text(
                               'YOU',
                               style: TextStyle(
                                 fontSize: 10,
@@ -2249,12 +2232,12 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       '!${node.nodeNum.toRadixString(16)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontFamily: 'monospace',
                       ),
                     ),
@@ -2278,14 +2261,14 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
               // QR code button
               IconButton(
                 onPressed: () => _showNodeQrCode(context, node),
-                icon: const Icon(Icons.qr_code, color: AppTheme.textSecondary),
+                icon: Icon(Icons.qr_code, color: context.textSecondary),
               ),
             ],
           ),
           Container(
             margin: const EdgeInsets.symmetric(vertical: 20),
             height: 1,
-            color: AppTheme.darkBorder.withValues(alpha: 0.3),
+            color: context.border.withValues(alpha: 0.3),
           ),
 
           // Scrollable details
@@ -2369,7 +2352,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                     icon: node.hasPublicKey ? Icons.lock : Icons.lock_open,
                     iconColor: node.hasPublicKey
                         ? context.accentColor
-                        : AppTheme.textTertiary,
+                        : context.textTertiary,
                     label: 'Encryption',
                     value: node.hasPublicKey ? 'PKI Enabled' : 'No Public Key',
                   ),
@@ -2378,7 +2361,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
             ),
           ),
 
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
 
           // Remote Administration button (only for nodes with PKI)
           if (!isMyNode && node.hasPublicKey)
@@ -2412,11 +2395,11 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                     // Favorite button
                     Container(
                       decoration: BoxDecoration(
-                        border: Border.all(color: AppTheme.darkBorder),
+                        border: Border.all(color: context.border),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: _isTogglingFavorite
-                          ? const Padding(
+                          ? Padding(
                               padding: EdgeInsets.all(12),
                               child: SizedBox(
                                 width: 22,
@@ -2435,7 +2418,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                                     : Icons.star_border,
                                 color: node.isFavorite
                                     ? AppTheme.warningYellow
-                                    : AppTheme.textSecondary,
+                                    : context.textSecondary,
                                 size: 22,
                               ),
                               tooltip: node.isFavorite
@@ -2445,15 +2428,15 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                               constraints: const BoxConstraints(),
                             ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     // Mute button
                     Container(
                       decoration: BoxDecoration(
-                        border: Border.all(color: AppTheme.darkBorder),
+                        border: Border.all(color: context.border),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: _isTogglingMute
-                          ? const Padding(
+                          ? Padding(
                               padding: EdgeInsets.all(12),
                               child: SizedBox(
                                 width: 22,
@@ -2472,7 +2455,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                                     : Icons.volume_up,
                                 color: node.isIgnored
                                     ? AppTheme.errorRed
-                                    : AppTheme.textSecondary,
+                                    : context.textSecondary,
                                 size: 22,
                               ),
                               tooltip: node.isIgnored
@@ -2482,18 +2465,18 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                               constraints: const BoxConstraints(),
                             ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     // More options button
                     Container(
                       decoration: BoxDecoration(
-                        border: Border.all(color: AppTheme.darkBorder),
+                        border: Border.all(color: context.border),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: IconButton(
                         onPressed: () => _showMoreOptions(context, node),
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.more_horiz,
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                           size: 22,
                         ),
                         tooltip: 'More options',
@@ -2501,20 +2484,20 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                         constraints: const BoxConstraints(),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     // QR Code button
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => _showNodeQrCode(context, node),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,
-                          side: const BorderSide(color: AppTheme.darkBorder),
+                          side: BorderSide(color: context.border),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        icon: const Icon(Icons.qr_code, size: 20),
+                        icon: Icon(Icons.qr_code, size: 20),
                         label: const Text(
                           'QR Code',
                           style: TextStyle(
@@ -2537,7 +2520,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        icon: const Icon(Icons.message, size: 20),
+                        icon: Icon(Icons.message, size: 20),
                         label: const Text(
                           'Message',
                           style: TextStyle(

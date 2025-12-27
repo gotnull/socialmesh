@@ -19,9 +19,9 @@ class NodeComparisonScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         title: const Text(
           'Compare Nodes',
           style: TextStyle(
@@ -41,25 +41,25 @@ class NodeComparisonScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Status comparison
-            _buildSectionHeader('Status'),
+            _buildSectionHeader(context, 'Status'),
             const SizedBox(height: 8),
-            _buildStatusComparison(),
+            _buildStatusComparison(context),
             const SizedBox(height: 24),
 
             // Device info comparison
-            _buildSectionHeader('Device Info'),
+            _buildSectionHeader(context, 'Device Info'),
             const SizedBox(height: 8),
             _buildDeviceComparison(),
             const SizedBox(height: 24),
 
             // Metrics comparison
-            _buildSectionHeader('Metrics'),
+            _buildSectionHeader(context, 'Metrics'),
             const SizedBox(height: 8),
             _buildMetricsComparison(),
             const SizedBox(height: 24),
 
             // Network comparison
-            _buildSectionHeader('Network'),
+            _buildSectionHeader(context, 'Network'),
             const SizedBox(height: 8),
             _buildNetworkComparison(),
             const SizedBox(height: 32),
@@ -73,22 +73,22 @@ class NodeComparisonScreen extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: _buildNodeCard(context, nodeA, Colors.blue)),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Container(
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: AppTheme.darkCard,
+            color: context.card,
             shape: BoxShape.circle,
-            border: Border.all(color: AppTheme.darkBorder),
+            border: Border.all(color: context.border),
           ),
-          child: const Center(
+          child: Center(
             child: Text(
               'VS',
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textTertiary,
+                color: context.textTertiary,
               ),
             ),
           ),
@@ -103,12 +103,12 @@ class NodeComparisonScreen extends StatelessWidget {
     final nodeId = node.nodeNum.toRadixString(16).toUpperCase();
     final statusColor = node.isOnline
         ? AccentColors.green
-        : (node.isIdle ? AppTheme.warningYellow : AppTheme.textTertiary);
+        : (node.isIdle ? AppTheme.warningYellow : context.textTertiary);
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
@@ -150,9 +150,9 @@ class NodeComparisonScreen extends StatelessWidget {
             },
             child: Text(
               '!$nodeId',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: AppTheme.textTertiary,
+                color: context.textTertiary,
                 fontFamily: 'monospace',
               ),
             ),
@@ -162,19 +162,19 @@ class NodeComparisonScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        color: AppTheme.textSecondary,
+        color: context.textSecondary,
         letterSpacing: 0.5,
       ),
     );
   }
 
-  Widget _buildStatusComparison() {
+  Widget _buildStatusComparison(BuildContext context) {
     return _ComparisonTable(
       rows: [
         _ComparisonRow(
@@ -185,8 +185,8 @@ class NodeComparisonScreen extends StatelessWidget {
           valueB: nodeB.isOnline
               ? 'Online'
               : (nodeB.isIdle ? 'Idle' : 'Offline'),
-          colorA: _getStatusColor(nodeA),
-          colorB: _getStatusColor(nodeB),
+          colorA: _getStatusColor(context, nodeA),
+          colorB: _getStatusColor(context, nodeB),
         ),
         _ComparisonRow(label: 'Role', valueA: nodeA.role, valueB: nodeB.role),
       ],
@@ -303,10 +303,10 @@ class NodeComparisonScreen extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(WorldMeshNode node) {
+  Color _getStatusColor(BuildContext context, WorldMeshNode node) {
     return node.isOnline
         ? AccentColors.green
-        : (node.isIdle ? AppTheme.warningYellow : AppTheme.textTertiary);
+        : (node.isIdle ? AppTheme.warningYellow : context.textTertiary);
   }
 
   String _formatBattery(int? level) {
@@ -390,23 +390,23 @@ class _ComparisonTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         children: [
           for (var i = 0; i < rows.length; i++) ...[
-            _buildRow(rows[i]),
+            _buildRow(context, rows[i]),
             if (i < rows.length - 1)
-              Container(height: 1, color: AppTheme.darkBorder),
+              Container(height: 1, color: context.border),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildRow(_ComparisonRow row) {
+  Widget _buildRow(BuildContext context, _ComparisonRow row) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -423,7 +423,7 @@ class _ComparisonTable extends StatelessWidget {
                       color: AccentColors.green.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.check,
                       size: 10,
                       color: AccentColors.green,
@@ -452,10 +452,7 @@ class _ComparisonTable extends StatelessWidget {
             child: Text(
               row.label,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 11,
-                color: AppTheme.textTertiary,
-              ),
+              style: TextStyle(fontSize: 11, color: context.textTertiary),
             ),
           ),
 

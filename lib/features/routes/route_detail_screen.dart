@@ -99,7 +99,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
         .toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       body: Stack(
         children: [
           // Map using shared MeshMapWidget
@@ -395,12 +395,12 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
                     ],
                   ),
                   if (route.notes != null && route.notes!.isNotEmpty) ...[
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.darkCard,
+                        color: context.card,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -541,7 +541,7 @@ class _NodeInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: AppTheme.darkCard.withValues(alpha: 0.95),
+      color: context.card.withValues(alpha: 0.95),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
@@ -554,7 +554,7 @@ class _NodeInfoCard extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: node.isOnline
                     ? AccentColors.green
-                    : AppTheme.textTertiary,
+                    : context.textTertiary,
               ),
             ),
             const SizedBox(width: 12),

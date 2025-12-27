@@ -984,7 +984,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'RTTTL Format Guide',
               style: TextStyle(
                 fontSize: 20,
@@ -992,7 +992,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _buildHelpSection(
               'What is RTTTL?',
               'Ring Tone Text Transfer Language (RTTTL) is a format for creating musical output with simple text strings.',
@@ -1036,12 +1036,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                     color: context.accentColor.withValues(alpha: 0.8),
                     size: 20,
                   ),
-                  const SizedBox(width: 12),
-                  const Expanded(
+                  SizedBox(width: 12),
+                  Expanded(
                     child: Text(
                       'Try Nokia Composer online to create and preview RTTTL strings',
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -1070,12 +1070,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
               color: context.accentColor,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             content,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
 
               height: 1.5,
             ),
@@ -1090,10 +1090,10 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     final customRingtones = ref.watch(customRingtonesProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'Ringtone',
           style: TextStyle(
             fontSize: 20,
@@ -1104,7 +1104,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
         actions: [
           IconButton(
             onPressed: _showRtttlHelp,
-            icon: Icon(Icons.help_outline, color: AppTheme.textSecondary),
+            icon: Icon(Icons.help_outline, color: context.textSecondary),
             tooltip: 'RTTTL Help',
           ),
           Padding(
@@ -1149,19 +1149,19 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   // Current RTTTL input
-                  const Text(
+                  Text(
                     'RTTTL STRING',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       letterSpacing: 1,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppTheme.darkCard,
+                      color: context.card,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     padding: const EdgeInsets.all(16),
@@ -1170,7 +1170,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       children: [
                         TextField(
                           controller: _rtttlController,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontFamily: 'monospace',
                             fontSize: 13,
@@ -1179,18 +1179,18 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           decoration: InputDecoration(
                             hintText: 'Paste or select an RTTTL ringtone...',
                             hintStyle: TextStyle(
-                              color: AppTheme.textTertiary.withValues(
+                              color: context.textTertiary.withValues(
                                 alpha: 0.5,
                               ),
                               fontFamily: 'monospace',
                               fontSize: 13,
                             ),
                             filled: true,
-                            fillColor: AppTheme.darkBackground,
+                            fillColor: context.background,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                               borderSide: _validationError != null
-                                  ? const BorderSide(
+                                  ? BorderSide(
                                       color: AppTheme.errorRed,
                                       width: 1,
                                     )
@@ -1218,7 +1218,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           ),
                         ),
                         if (_validationError != null) ...[
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           Row(
                             children: [
                               const Icon(
@@ -1273,10 +1273,10 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                   _validationError = null;
                                 });
                               },
-                              icon: const Icon(Icons.clear, size: 16),
-                              label: const Text('Clear'),
+                              icon: Icon(Icons.clear, size: 16),
+                              label: Text('Clear'),
                               style: TextButton.styleFrom(
-                                foregroundColor: AppTheme.textSecondary,
+                                foregroundColor: context.textSecondary,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8,
                                 ),
@@ -1284,14 +1284,14 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Row(
                           children: [
                             Expanded(
                               child: Text(
                                 'Tap Preview to hear, then Save to device',
                                 style: TextStyle(
-                                  color: AppTheme.textSecondary.withValues(
+                                  color: context.textSecondary.withValues(
                                     alpha: 0.7,
                                   ),
                                   fontSize: 12,
@@ -1307,7 +1307,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                   style: TextStyle(
                                     color: isTooLong
                                         ? AppTheme.warningYellow
-                                        : AppTheme.textTertiary,
+                                        : context.textTertiary,
                                     fontSize: 12,
                                     fontWeight: isTooLong
                                         ? FontWeight.w600
@@ -1321,25 +1321,25 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // Browse Library section
-                  const Text(
+                  Text(
                     'RINGTONE LIBRARY',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       letterSpacing: 1,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   InkWell(
                     onTap: _showLibraryBrowser,
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppTheme.darkCard,
+                        color: context.card,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: context.accentColor.withValues(alpha: 0.3),
@@ -1363,7 +1363,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                               size: 24,
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1380,7 +1380,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                 Text(
                                   'Search classic tunes, TV themes, movie soundtracks, and more',
                                   style: TextStyle(
-                                    color: AppTheme.textSecondary.withValues(
+                                    color: context.textSecondary.withValues(
                                       alpha: 0.8,
                                     ),
                                     fontSize: 13,
@@ -1389,7 +1389,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Icon(
                             Icons.arrow_forward_ios,
                             color: context.accentColor,
@@ -1399,23 +1399,23 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // Selected ringtone section (unified across all sources)
                   if (_selectedName != null) ...[
-                    const Text(
+                    Text(
                       'SELECTED RINGTONE',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                         letterSpacing: 1,
                       ),
                     ),
                     SizedBox(height: 12),
                     Container(
                       decoration: BoxDecoration(
-                        color: AppTheme.darkCard,
+                        color: context.card,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: context.accentColor.withValues(alpha: 0.3),
@@ -1467,8 +1467,8 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                   if (_selectedDescription != null)
                                     Text(
                                       _selectedDescription!,
-                                      style: const TextStyle(
-                                        color: AppTheme.textSecondary,
+                                      style: TextStyle(
+                                        color: context.textSecondary,
                                         fontSize: 13,
                                       ),
                                     ),
@@ -1486,7 +1486,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                       ? context.accentColor.withValues(
                                           alpha: 0.15,
                                         )
-                                      : AppTheme.darkBackground,
+                                      : context.background,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Icon(
@@ -1495,7 +1495,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                       : Icons.play_arrow,
                                   color: _playingSelected
                                       ? context.accentColor
-                                      : AppTheme.textSecondary,
+                                      : context.textSecondary,
                                   size: 20,
                                 ),
                               ),
@@ -1525,12 +1525,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                 width: 36,
                                 height: 36,
                                 decoration: BoxDecoration(
-                                  color: AppTheme.darkBackground,
+                                  color: context.background,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.close,
-                                  color: AppTheme.textSecondary,
+                                  color: context.textSecondary,
                                   size: 20,
                                 ),
                               ),
@@ -1539,23 +1539,23 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                   ],
 
                   // Built-in presets section
-                  const Text(
+                  Text(
                     'BUILT-IN PRESETS',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       letterSpacing: 1,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppTheme.darkCard,
+                      color: context.card,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -1597,7 +1597,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                             ? context.accentColor.withValues(
                                                 alpha: 0.15,
                                               )
-                                            : AppTheme.darkBackground,
+                                            : context.background,
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Icon(
@@ -1606,7 +1606,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                             : Icons.music_note_outlined,
                                         color: isSelected
                                             ? context.accentColor
-                                            : AppTheme.textSecondary,
+                                            : context.textSecondary,
                                         size: 20,
                                       ),
                                     ),
@@ -1630,18 +1630,18 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                               fontSize: 15,
                                             ),
                                           ),
-                                          const SizedBox(height: 2),
+                                          SizedBox(height: 2),
                                           Text(
                                             preset.description,
-                                            style: const TextStyle(
-                                              color: AppTheme.textSecondary,
+                                            style: TextStyle(
+                                              color: context.textSecondary,
                                               fontSize: 12,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
+                                    SizedBox(width: 8),
                                     // Play button
                                     SizedBox(
                                       width: 40,
@@ -1651,7 +1651,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                             ? AppTheme.errorRed.withValues(
                                                 alpha: 0.15,
                                               )
-                                            : AppTheme.darkBackground,
+                                            : context.background,
                                         borderRadius: BorderRadius.circular(20),
                                         child: InkWell(
                                           onTap: () =>
@@ -1665,7 +1665,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                                 : Icons.play_arrow,
                                             color: isPlaying
                                                 ? AppTheme.errorRed
-                                                : AppTheme.textSecondary,
+                                                : context.textSecondary,
                                             size: 20,
                                           ),
                                         ),
@@ -1681,9 +1681,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                               color: context.accentColor,
                                               size: 22,
                                             )
-                                          : const Icon(
+                                          : Icon(
                                               Icons.chevron_right,
-                                              color: AppTheme.textTertiary,
+                                              color: context.textTertiary,
                                               size: 22,
                                             ),
                                     ),
@@ -1692,28 +1692,28 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                               ),
                             ),
                             if (index < _builtInPresets.length - 1)
-                              const Divider(
+                              Divider(
                                 height: 1,
                                 indent: 68,
-                                color: AppTheme.darkBorder,
+                                color: context.border,
                               ),
                           ],
                         );
                       }).toList(),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // Custom presets section
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'CUSTOM PRESETS',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                           letterSpacing: 1,
                         ),
                       ),
@@ -1728,12 +1728,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
 
                   if (customRingtones.isEmpty)
                     Container(
                       decoration: BoxDecoration(
-                        color: AppTheme.darkCard,
+                        color: context.card,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.all(24),
@@ -1742,21 +1742,21 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           Icon(
                             Icons.library_music_outlined,
                             size: 48,
-                            color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                            color: context.textTertiary.withValues(alpha: 0.5),
                           ),
-                          const SizedBox(height: 12),
-                          const Text(
+                          SizedBox(height: 12),
+                          Text(
                             'No custom ringtones',
                             style: TextStyle(
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                               fontSize: 14,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           Text(
                             'Tap "Add" to create your own presets',
                             style: TextStyle(
-                              color: AppTheme.textTertiary.withValues(
+                              color: context.textTertiary.withValues(
                                 alpha: 0.7,
                               ),
                               fontSize: 12,
@@ -1770,7 +1770,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: AppTheme.darkCard,
+                          color: context.card,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -1814,7 +1814,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                               color: isSelected
                                                   ? context.accentColor
                                                         .withValues(alpha: 0.15)
-                                                  : AppTheme.darkBackground,
+                                                  : context.background,
                                               borderRadius:
                                                   BorderRadius.circular(8),
                                             ),
@@ -1824,11 +1824,11 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                                   : Icons.music_note_outlined,
                                               color: isSelected
                                                   ? context.accentColor
-                                                  : AppTheme.textSecondary,
+                                                  : context.textSecondary,
                                               size: 20,
                                             ),
                                           ),
-                                          const SizedBox(width: 12),
+                                          SizedBox(width: 12),
                                           // Title and description
                                           Expanded(
                                             child: Column(
@@ -1848,19 +1848,19 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                                     fontSize: 15,
                                                   ),
                                                 ),
-                                                const SizedBox(height: 2),
+                                                SizedBox(height: 2),
                                                 Text(
                                                   preset.description,
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                     color:
-                                                        AppTheme.textSecondary,
+                                                        context.textSecondary,
                                                     fontSize: 12,
                                                   ),
                                                 ),
                                               ],
                                             ),
                                           ),
-                                          const SizedBox(width: 8),
+                                          SizedBox(width: 8),
                                           // Play button
                                           SizedBox(
                                             width: 40,
@@ -1869,7 +1869,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                               color: isPlaying
                                                   ? AppTheme.errorRed
                                                         .withValues(alpha: 0.15)
-                                                  : AppTheme.darkBackground,
+                                                  : context.background,
                                               borderRadius:
                                                   BorderRadius.circular(20),
                                               child: InkWell(
@@ -1886,13 +1886,13 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                                       : Icons.play_arrow,
                                                   color: isPlaying
                                                       ? AppTheme.errorRed
-                                                      : AppTheme.textSecondary,
+                                                      : context.textSecondary,
                                                   size: 20,
                                                 ),
                                               ),
                                             ),
                                           ),
-                                          const SizedBox(width: 8),
+                                          SizedBox(width: 8),
                                           // Selected indicator
                                           SizedBox(
                                             width: 24,
@@ -1902,10 +1902,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                                     color: context.accentColor,
                                                     size: 22,
                                                   )
-                                                : const Icon(
+                                                : Icon(
                                                     Icons.chevron_right,
-                                                    color:
-                                                        AppTheme.textTertiary,
+                                                    color: context.textTertiary,
                                                     size: 22,
                                                   ),
                                           ),
@@ -1915,10 +1914,10 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                   ),
                                 ),
                                 if (!isLast)
-                                  const Divider(
+                                  Divider(
                                     height: 1,
                                     indent: 68,
-                                    color: AppTheme.darkBorder,
+                                    color: context.border,
                                   ),
                               ],
                             );
@@ -1926,7 +1925,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                         ),
                       ),
                     ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // Info card
                   Container(
@@ -1947,7 +1946,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           size: 20,
                         ),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -1963,7 +1962,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                               Text(
                                 'Send a message with the bell emoji (🔔) to trigger the ringtone on your device. Great for finding lost nodes!',
                                 style: TextStyle(
-                                  color: AppTheme.textSecondary,
+                                  color: context.textSecondary,
                                   fontSize: 13,
                                 ),
                               ),
@@ -2199,279 +2198,281 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
     return GestureDetector(
       onTap: () => _searchFocus.unfocus(),
       child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Ringtone Library',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Ringtone Library',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _totalCount > 0
-                    ? 'Search ${_totalCount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')} available tones'
-                    : 'Search thousands of available tones',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.textSecondary,
+                SizedBox(height: 4),
+                Text(
+                  _totalCount > 0
+                      ? 'Search ${_totalCount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')} available tones'
+                      : 'Search thousands of available tones',
+                  style: TextStyle(fontSize: 14, color: context.textSecondary),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
+          SizedBox(height: 16),
 
-        // Search field
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: TextField(
-            controller: _searchController,
-            focusNode: _searchFocus,
-            style: const TextStyle(color: Colors.white, fontSize: 15),
-            decoration: InputDecoration(
-              hintText: 'Search by song, artist, or theme...',
-              hintStyle: TextStyle(
-                color: AppTheme.textTertiary.withValues(alpha: 0.6),
-                fontSize: 15,
-              ),
-              prefixIcon: const Icon(
-                Icons.search,
-                color: AppTheme.textSecondary,
-                size: 22,
-              ),
-              suffixIcon: hasSearch
-                  ? IconButton(
-                      onPressed: () {
-                        _searchController.clear();
-                        _searchFocus.unfocus();
-                      },
-                      icon: const Icon(
-                        Icons.clear,
-                        color: AppTheme.textSecondary,
-                        size: 20,
-                      ),
-                    )
-                  : null,
-              filled: true,
-              fillColor: AppTheme.darkCard,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: context.accentColor, width: 1),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
+          // Search field
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: TextField(
+              controller: _searchController,
+              focusNode: _searchFocus,
+              style: const TextStyle(color: Colors.white, fontSize: 15),
+              decoration: InputDecoration(
+                hintText: 'Search by song, artist, or theme...',
+                hintStyle: TextStyle(
+                  color: context.textTertiary.withValues(alpha: 0.6),
+                  fontSize: 15,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: context.textSecondary,
+                  size: 22,
+                ),
+                suffixIcon: hasSearch
+                    ? IconButton(
+                        onPressed: () {
+                          _searchController.clear();
+                          _searchFocus.unfocus();
+                        },
+                        icon: Icon(
+                          Icons.clear,
+                          color: context.textSecondary,
+                          size: 20,
+                        ),
+                      )
+                    : null,
+                filled: true,
+                fillColor: context.card,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: context.accentColor, width: 1),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 16),
+          SizedBox(height: 16),
 
-        // Results header
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Row(
-            children: [
-              Text(
-                hasSearch
-                    ? '${_results.length} result${_results.length == 1 ? '' : 's'}'
-                    : 'Popular Picks',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textTertiary,
-                  letterSpacing: 1,
+          // Results header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                Text(
+                  hasSearch
+                      ? '${_results.length} result${_results.length == 1 ? '' : 's'}'
+                      : 'Popular Picks',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: context.textTertiary,
+                    letterSpacing: 1,
+                  ),
                 ),
-              ),
-              if (_loading) ...[
-                const SizedBox(width: 8),
-                MeshLoadingIndicator(
-                  size: 12,
-                  colors: [
-                    context.accentColor,
-                    context.accentColor.withValues(alpha: 0.6),
-                    context.accentColor.withValues(alpha: 0.3),
-                  ],
-                ),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-
-        // Results list
-        Expanded(
-          child: _loadingSuggestions && !hasSearch
-              ? Center(
-                  child: MeshLoadingIndicator(
-                    size: 48,
+                if (_loading) ...[
+                  SizedBox(width: 8),
+                  MeshLoadingIndicator(
+                    size: 12,
                     colors: [
                       context.accentColor,
                       context.accentColor.withValues(alpha: 0.6),
                       context.accentColor.withValues(alpha: 0.3),
                     ],
                   ),
-                )
-              : displayList.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        hasSearch
-                            ? Icons.search_off
-                            : Icons.library_music_outlined,
-                        size: 48,
-                        color: AppTheme.textTertiary.withValues(alpha: 0.5),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        hasSearch
-                            ? 'No results found'
-                            : 'Start typing to search',
-                        style: const TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontSize: 14,
+                ],
+              ],
+            ),
+          ),
+          SizedBox(height: 12),
+
+          // Results list
+          Expanded(
+            child: _loadingSuggestions && !hasSearch
+                ? Center(
+                    child: MeshLoadingIndicator(
+                      size: 48,
+                      colors: [
+                        context.accentColor,
+                        context.accentColor.withValues(alpha: 0.6),
+                        context.accentColor.withValues(alpha: 0.3),
+                      ],
+                    ),
+                  )
+                : displayList.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          hasSearch
+                              ? Icons.search_off
+                              : Icons.library_music_outlined,
+                          size: 48,
+                          color: context.textTertiary.withValues(alpha: 0.5),
                         ),
-                      ),
-                      if (hasSearch) ...[
-                        const SizedBox(height: 4),
+                        SizedBox(height: 12),
                         Text(
-                          'Try a different search term',
+                          hasSearch
+                              ? 'No results found'
+                              : 'Start typing to search',
                           style: TextStyle(
-                            color: AppTheme.textTertiary.withValues(alpha: 0.7),
-                            fontSize: 12,
+                            color: context.textSecondary,
+                            fontSize: 14,
                           ),
                         ),
+                        if (hasSearch) ...[
+                          SizedBox(height: 4),
+                          Text(
+                            'Try a different search term',
+                            style: TextStyle(
+                              color: context.textTertiary.withValues(
+                                alpha: 0.7,
+                              ),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  controller: widget.scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  itemCount: displayList.length,
-                  itemBuilder: (context, index) {
-                    final item = displayList[index];
-                    final isPlaying = _playingFilename == item.filename;
+                    ),
+                  )
+                : ListView.builder(
+                    controller: widget.scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    itemCount: displayList.length,
+                    itemBuilder: (context, index) {
+                      final item = displayList[index];
+                      final isPlaying = _playingFilename == item.filename;
 
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      decoration: BoxDecoration(
-                        color: AppTheme.darkCard,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: InkWell(
-                        onTap: () => widget.onSelect(item),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            children: [
-                              // Music icon
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: context.accentColor.withValues(
-                                    alpha: 0.12,
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: InkWell(
+                          onTap: () => widget.onSelect(item),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                // Music icon
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: context.accentColor.withValues(
+                                      alpha: 0.12,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
-                                  borderRadius: BorderRadius.circular(10),
+                                  child: Icon(
+                                    Icons.music_note,
+                                    color: context.accentColor,
+                                    size: 22,
+                                  ),
                                 ),
-                                child: Icon(
-                                  Icons.music_note,
-                                  color: context.accentColor,
+                                SizedBox(width: 12),
+                                // Title and subtitle
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.formattedTitle,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+
+                                          fontSize: 15,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        item.subtitle ??
+                                            '${item.rtttl.length} chars',
+                                        style: TextStyle(
+                                          color: context.textSecondary,
+                                          fontSize: 12,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                // Play button
+                                SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: Material(
+                                    color: isPlaying
+                                        ? AppTheme.errorRed.withValues(
+                                            alpha: 0.15,
+                                          )
+                                        : context.background,
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: InkWell(
+                                      onTap: () => _playItem(item),
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: Icon(
+                                        isPlaying
+                                            ? Icons.stop
+                                            : Icons.play_arrow,
+                                        color: isPlaying
+                                            ? AppTheme.errorRed
+                                            : context.textSecondary,
+                                        size: 22,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                // Select indicator
+                                Icon(
+                                  Icons.chevron_right,
+                                  color: context.textTertiary,
                                   size: 22,
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              // Title and subtitle
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item.formattedTitle,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
-
-                                        fontSize: 15,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      item.subtitle ??
-                                          '${item.rtttl.length} chars',
-                                      style: const TextStyle(
-                                        color: AppTheme.textSecondary,
-                                        fontSize: 12,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              // Play button
-                              SizedBox(
-                                width: 40,
-                                height: 40,
-                                child: Material(
-                                  color: isPlaying
-                                      ? AppTheme.errorRed.withValues(
-                                          alpha: 0.15,
-                                        )
-                                      : AppTheme.darkBackground,
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: InkWell(
-                                    onTap: () => _playItem(item),
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: Icon(
-                                      isPlaying ? Icons.stop : Icons.play_arrow,
-                                      color: isPlaying
-                                          ? AppTheme.errorRed
-                                          : AppTheme.textSecondary,
-                                      size: 22,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              // Select indicator
-                              const Icon(
-                                Icons.chevron_right,
-                                color: AppTheme.textTertiary,
-                                size: 22,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-        ),
+                      );
+                    },
+                  ),
+          ),
 
-        // Bottom safe area
-        const SizedBox(height: 16),
-      ],
+          // Bottom safe area
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }

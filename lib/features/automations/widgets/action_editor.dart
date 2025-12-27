@@ -119,9 +119,9 @@ class _ActionEditorState extends State<ActionEditor> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         children: [
@@ -265,16 +265,16 @@ class _ActionEditorState extends State<ActionEditor> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Target selector (node or channel)
-          const Text(
+          Text(
             'TO',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
               letterSpacing: 1,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           GestureDetector(
             onTap: () => toChannel
                 ? _showChannelPicker(context, channels)
@@ -282,9 +282,9 @@ class _ActionEditorState extends State<ActionEditor> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
+                color: context.background,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.darkBorder),
+                border: Border.all(color: context.border),
               ),
               child: Row(
                 children: [
@@ -303,7 +303,7 @@ class _ActionEditorState extends State<ActionEditor> {
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,7 +317,7 @@ class _ActionEditorState extends State<ActionEditor> {
                                         : widget.action.targetNodeNum) !=
                                     null
                                 ? Colors.white
-                                : AppTheme.textSecondary,
+                                : context.textSecondary,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
@@ -325,7 +325,7 @@ class _ActionEditorState extends State<ActionEditor> {
                         Text(
                           toChannel ? 'Channel message' : 'Direct message',
                           style: TextStyle(
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                             fontSize: 11,
                           ),
                         ),
@@ -334,7 +334,7 @@ class _ActionEditorState extends State<ActionEditor> {
                   ),
                   Icon(
                     Icons.keyboard_arrow_down,
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                   ),
                 ],
               ),
@@ -395,7 +395,7 @@ class _ActionEditorState extends State<ActionEditor> {
               padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
               child: Row(
                 children: [
-                  const Text(
+                  Text(
                     'Select Node',
                     style: TextStyle(
                       color: Colors.white,
@@ -417,16 +417,16 @@ class _ActionEditorState extends State<ActionEditor> {
                 ],
               ),
             ),
-            const Divider(height: 1, color: AppTheme.darkBorder),
+            Divider(height: 1, color: context.border),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   Text(
                     '${nodes.length} nodes',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                 ],
@@ -446,7 +446,7 @@ class _ActionEditorState extends State<ActionEditor> {
                     icon: Icons.person,
                     iconColor: node.isOnline
                         ? Theme.of(context).colorScheme.primary
-                        : AppTheme.textTertiary,
+                        : context.textTertiary,
                     title: node.displayName,
                     subtitle:
                         node.shortName ?? '!${node.nodeNum.toRadixString(16)}',
@@ -495,7 +495,7 @@ class _ActionEditorState extends State<ActionEditor> {
               padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
               child: Row(
                 children: [
-                  const Text(
+                  Text(
                     'Select Channel',
                     style: TextStyle(
                       color: Colors.white,
@@ -517,16 +517,16 @@ class _ActionEditorState extends State<ActionEditor> {
                 ],
               ),
             ),
-            const Divider(height: 1, color: AppTheme.darkBorder),
+            Divider(height: 1, color: context.border),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   Text(
                     '${channels.length} channels',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                 ],
@@ -619,7 +619,7 @@ class _ActionEditorState extends State<ActionEditor> {
                             color: Theme.of(context).colorScheme.primary,
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppTheme.darkSurface,
+                              color: context.surface,
                               width: 2,
                             ),
                           ),
@@ -628,7 +628,7 @@ class _ActionEditorState extends State<ActionEditor> {
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -645,8 +645,8 @@ class _ActionEditorState extends State<ActionEditor> {
                     ),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: AppTheme.textTertiary,
+                      style: TextStyle(
+                        color: context.textTertiary,
                         fontSize: 12,
                       ),
                     ),
@@ -675,24 +675,24 @@ class _ActionEditorState extends State<ActionEditor> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'SOUND',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
               letterSpacing: 1,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           GestureDetector(
             onTap: () => _showSoundPicker(context),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
+                color: context.background,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.darkBorder),
+                border: Border.all(color: context.border),
               ),
               child: Row(
                 children: [
@@ -703,7 +703,7 @@ class _ActionEditorState extends State<ActionEditor> {
                       color: Colors.orange.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.music_note,
                       color: Colors.orange,
                       size: 20,
@@ -719,15 +719,15 @@ class _ActionEditorState extends State<ActionEditor> {
                           style: TextStyle(
                             color: hasSound
                                 ? Colors.white
-                                : AppTheme.textSecondary,
+                                : context.textSecondary,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         Text(
                           hasSound ? 'RTTTL ringtone' : 'Tap to choose',
-                          style: const TextStyle(
-                            color: AppTheme.textTertiary,
+                          style: TextStyle(
+                            color: context.textTertiary,
                             fontSize: 11,
                           ),
                         ),
@@ -736,7 +736,7 @@ class _ActionEditorState extends State<ActionEditor> {
                   ),
                   Icon(
                     Icons.keyboard_arrow_down,
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                   ),
                 ],
               ),
@@ -770,7 +770,7 @@ class _ActionEditorState extends State<ActionEditor> {
   void _showSoundPicker(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkSurface,
+      backgroundColor: context.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -851,7 +851,7 @@ class _ActionEditorState extends State<ActionEditor> {
             maxLines: 2,
             triggerType: widget.triggerType,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           VariableChipPicker(
             targetField: _insertTargetField,
             isActive: _insertTargetField != null,
@@ -865,9 +865,9 @@ class _ActionEditorState extends State<ActionEditor> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
+                color: context.background,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.darkBorder),
+                border: Border.all(color: context.border),
               ),
               child: Row(
                 children: [
@@ -877,18 +877,18 @@ class _ActionEditorState extends State<ActionEditor> {
                     decoration: BoxDecoration(
                       color: hasCustomSound
                           ? Colors.orange.withValues(alpha: 0.15)
-                          : AppTheme.darkCard,
+                          : context.card,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       Icons.music_note,
                       color: hasCustomSound
                           ? Colors.orange
-                          : AppTheme.textTertiary,
+                          : context.textTertiary,
                       size: 18,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -900,7 +900,7 @@ class _ActionEditorState extends State<ActionEditor> {
                           style: TextStyle(
                             color: hasCustomSound
                                 ? Colors.white
-                                : AppTheme.textSecondary,
+                                : context.textSecondary,
                             fontSize: 14,
                           ),
                         ),
@@ -908,8 +908,8 @@ class _ActionEditorState extends State<ActionEditor> {
                           hasCustomSound
                               ? 'Plays after notification'
                               : 'System default',
-                          style: const TextStyle(
-                            color: AppTheme.textTertiary,
+                          style: TextStyle(
+                            color: context.textTertiary,
                             fontSize: 11,
                           ),
                         ),
@@ -929,14 +929,14 @@ class _ActionEditorState extends State<ActionEditor> {
                           ),
                         );
                       },
-                      icon: const Icon(Icons.close, size: 18),
-                      color: AppTheme.textTertiary,
+                      icon: Icon(Icons.close, size: 18),
+                      color: context.textTertiary,
                       visualDensity: VisualDensity.compact,
                     )
                   else
-                    const Icon(
+                    Icon(
                       Icons.keyboard_arrow_down,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                 ],
               ),
@@ -950,7 +950,7 @@ class _ActionEditorState extends State<ActionEditor> {
   void _showNotificationSoundPicker(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkSurface,
+      backgroundColor: context.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -996,11 +996,11 @@ class _ActionEditorState extends State<ActionEditor> {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
+              color: context.background,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -1079,8 +1079,8 @@ class _ActionEditorState extends State<ActionEditor> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Row(
+        backgroundColor: context.card,
+        title: Row(
           children: [
             Icon(Icons.lightbulb_outline, color: Colors.amber),
             SizedBox(width: 8),
@@ -1203,7 +1203,7 @@ class _ActionEditorState extends State<ActionEditor> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
+              color: context.background,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
@@ -1230,7 +1230,7 @@ class _ActionEditorState extends State<ActionEditor> {
   void _showActionTypePicker(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkSurface,
+      backgroundColor: context.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -1292,12 +1292,12 @@ class _ActionEditorState extends State<ActionEditor> {
                           ? Theme.of(
                               context,
                             ).colorScheme.primary.withValues(alpha: 0.2)
-                          : AppTheme.darkCard,
+                          : context.card,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isSelected
                             ? Theme.of(context).colorScheme.primary
-                            : AppTheme.darkBorder,
+                            : context.border,
                       ),
                     ),
                     child: Row(
@@ -1449,10 +1449,10 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                     color: Colors.orange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.library_music, color: Colors.orange),
+                  child: Icon(Icons.library_music, color: Colors.orange),
                 ),
                 const SizedBox(width: 12),
-                const Text(
+                Text(
                   'Select Sound',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
@@ -1470,7 +1470,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                 prefixIcon: const Icon(Icons.search),
                 isDense: true,
                 filled: true,
-                fillColor: AppTheme.darkBackground,
+                fillColor: context.background,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -1487,19 +1487,19 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                   _searchController.text.isEmpty
                       ? 'SUGGESTIONS'
                       : 'SEARCH RESULTS',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                     letterSpacing: 1,
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Text(
                   '${displayItems.length} sounds',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                   ),
                 ),
               ],
@@ -1548,12 +1548,12 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? Colors.orange.withValues(alpha: 0.15)
-                                  : AppTheme.darkCard,
+                                  : context.card,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isSelected
                                     ? Colors.orange
-                                    : AppTheme.darkBorder,
+                                    : context.border,
                               ),
                             ),
                             child: Row(
@@ -1564,18 +1564,18 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                                   decoration: BoxDecoration(
                                     color: isSelected
                                         ? Colors.orange.withValues(alpha: 0.2)
-                                        : AppTheme.darkBackground,
+                                        : context.background,
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Icon(
                                     Icons.music_note,
                                     color: isSelected
                                         ? Colors.orange
-                                        : AppTheme.textSecondary,
+                                        : context.textSecondary,
                                     size: 20,
                                   ),
                                 ),
-                                const SizedBox(width: 12),
+                                SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
@@ -1593,9 +1593,9 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                                       if (item.subtitle != null)
                                         Text(
                                           item.subtitle!,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 11,
-                                            color: AppTheme.textTertiary,
+                                            color: context.textTertiary,
                                           ),
                                         ),
                                     ],
@@ -1604,7 +1604,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                                 IconButton(
                                   onPressed: () => _playPreview(item),
                                   icon: isPlaying
-                                      ? const SizedBox(
+                                      ? SizedBox(
                                           width: 20,
                                           height: 20,
                                           child: MeshLoadingIndicator(
@@ -1620,7 +1620,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                                           Icons.play_circle_outline,
                                           color: isSelected
                                               ? Colors.orange
-                                              : AppTheme.textSecondary,
+                                              : context.textSecondary,
                                         ),
                                 ),
                                 if (isSelected)

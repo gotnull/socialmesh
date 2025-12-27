@@ -85,10 +85,10 @@ class _PaxCounterConfigScreenState
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
-          title: const Text(
+          backgroundColor: context.background,
+          title: Text(
             'PAX Counter',
             style: TextStyle(
               fontSize: 20,
@@ -114,10 +114,10 @@ class _PaxCounterConfigScreenState
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'PAX Counter',
           style: TextStyle(
             fontSize: 20,
@@ -126,7 +126,7 @@ class _PaxCounterConfigScreenState
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -213,14 +213,14 @@ class _PaxCounterConfigScreenState
             ),
           ),
 
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
 
           // Detection Methods
           if (_paxCounterEnabled) ...[
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.darkCard,
+                color: context.card,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -234,7 +234,7 @@ class _PaxCounterConfigScreenState
                       color: Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -263,7 +263,7 @@ class _PaxCounterConfigScreenState
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -296,13 +296,13 @@ class _PaxCounterConfigScreenState
               ),
             ),
 
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
             // Update Interval
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.darkCard,
+                color: context.card,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -316,7 +316,7 @@ class _PaxCounterConfigScreenState
                       color: Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     '${_paxCounterUpdateInterval ~/ 60} minutes',
                     style: TextStyle(
@@ -325,7 +325,7 @@ class _PaxCounterConfigScreenState
                       color: context.accentColor,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   SliderTheme(
                     data: SliderThemeData(
                       activeTrackColor: context.accentColor,
@@ -372,7 +372,7 @@ class _PaxCounterConfigScreenState
             ),
           ],
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Info card
           Container(
@@ -394,7 +394,7 @@ class _PaxCounterConfigScreenState
                       color: context.accentColor,
                       size: 20,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
                       'About PAX Counter',
                       style: TextStyle(
@@ -439,7 +439,7 @@ class _SettingsTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

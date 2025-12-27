@@ -93,9 +93,9 @@ class AppBottomSheet extends StatelessWidget {
         maxChildSize: maxChildSize,
         expand: false,
         builder: (context, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: AppTheme.darkCard,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             children: [
@@ -134,7 +134,7 @@ class AppBottomSheet extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 15, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 15, color: context.textSecondary),
           ),
           const SizedBox(height: 24),
           Row(
@@ -201,7 +201,7 @@ class AppBottomSheet extends StatelessWidget {
               ),
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           ...items.map(
             (item) => InkWell(
               onTap: () => Navigator.pop(context, item),
@@ -250,8 +250,8 @@ class AppBottomSheet extends StatelessWidget {
               subtitle: action.subtitle != null
                   ? Text(
                       action.subtitle!,
-                      style: const TextStyle(
-                        color: AppTheme.textTertiary,
+                      style: TextStyle(
+                        color: context.textTertiary,
                         fontSize: 12,
                       ),
                     )
@@ -273,9 +273,9 @@ class AppBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppTheme.darkCard,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Padding(
         padding: EdgeInsets.only(
@@ -306,7 +306,7 @@ class _DragPill extends StatelessWidget {
       height: 4,
       margin: const EdgeInsets.only(top: 12, bottom: 20),
       decoration: BoxDecoration(
-        color: AppTheme.textTertiary.withValues(alpha: 0.4),
+        color: context.textTertiary.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(2),
       ),
     );
@@ -329,7 +329,7 @@ class DragPill extends StatelessWidget {
       height: 4,
       margin: margin,
       decoration: BoxDecoration(
-        color: AppTheme.textTertiary.withValues(alpha: 0.4),
+        color: context.textTertiary.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(2),
       ),
     );
@@ -370,10 +370,7 @@ class BottomSheetHeader extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               subtitle!,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppTheme.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: context.textSecondary),
             ),
           ],
         ],
@@ -409,10 +406,7 @@ class BottomSheetHeader extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle!,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppTheme.textTertiary,
-                  ),
+                  style: TextStyle(fontSize: 13, color: context.textTertiary),
                 ),
               ],
             ],
@@ -474,15 +468,15 @@ class BottomSheetTextField extends StatelessWidget {
       ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: AppTheme.textSecondary),
+        labelStyle: TextStyle(color: context.textSecondary),
         hintText: hint,
         hintStyle: TextStyle(
-          color: AppTheme.textSecondary.withAlpha(128),
+          color: context.textSecondary.withAlpha(128),
           fontFamily: monospace ? 'monospace' : null,
         ),
         errorText: errorText,
         filled: true,
-        fillColor: AppTheme.darkBackground,
+        fillColor: context.background,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -502,7 +496,7 @@ class BottomSheetTextField extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppTheme.errorRed, width: 2),
         ),
-        counterStyle: const TextStyle(color: AppTheme.textSecondary),
+        counterStyle: TextStyle(color: context.textSecondary),
       ),
     );
   }

@@ -139,9 +139,9 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
+          backgroundColor: context.background,
           title: const Text(
             'Telemetry',
             style: TextStyle(
@@ -160,10 +160,10 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'Telemetry',
           style: TextStyle(
             fontSize: 20,
@@ -172,7 +172,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -320,7 +320,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
             description: 'Voltage and current for channels 1-3',
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Info card
           Container(
@@ -415,7 +415,7 @@ class _TelemetrySection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

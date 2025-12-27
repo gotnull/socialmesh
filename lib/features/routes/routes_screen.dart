@@ -30,9 +30,9 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
     final activeRoute = ref.watch(activeRouteProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         leading: const HamburgerMenuButton(),
         centerTitle: true,
         title: const Text(
@@ -388,7 +388,7 @@ class _RouteCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Material(
@@ -411,7 +411,7 @@ class _RouteCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -440,13 +440,13 @@ class _RouteCard extends StatelessWidget {
                         Icons.more_vert,
                         color: Colors.white.withValues(alpha: 0.5),
                       ),
-                      color: AppTheme.darkCard,
+                      color: context.card,
                       onSelected: (value) {
                         if (value == 'export') onExport();
                         if (value == 'delete') onDelete();
                       },
                       itemBuilder: (context) => [
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'export',
                           child: Row(
                             children: [
@@ -456,7 +456,7 @@ class _RouteCard extends StatelessWidget {
                             ],
                           ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'delete',
                           child: Row(
                             children: [

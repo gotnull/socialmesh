@@ -31,12 +31,12 @@ class DashboardWidgetBase extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isEditMode
               ? context.accentColor.withValues(alpha: 0.5)
-              : AppTheme.darkBorder,
+              : context.border,
           width: isEditMode ? 2 : 1,
         ),
       ),
@@ -58,8 +58,8 @@ class DashboardWidgetBase extends StatelessWidget {
   Widget _buildEditHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: const BoxDecoration(
-        color: AppTheme.darkBackground,
+      decoration: BoxDecoration(
+        color: context.background,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(10),
           topRight: Radius.circular(10),
@@ -68,10 +68,10 @@ class DashboardWidgetBase extends StatelessWidget {
       child: Row(
         children: [
           // Drag handle
-          Icon(Icons.drag_indicator, color: AppTheme.textTertiary, size: 20),
+          Icon(Icons.drag_indicator, color: context.textTertiary, size: 20),
           SizedBox(width: 8),
           Icon(icon, color: context.accentColor, size: 18),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Expanded(
             child: Text(
               title,
@@ -89,7 +89,7 @@ class DashboardWidgetBase extends StatelessWidget {
                 isFavorite ? Icons.star : Icons.star_border,
                 color: isFavorite
                     ? AppTheme.warningYellow
-                    : AppTheme.textTertiary,
+                    : context.textTertiary,
                 size: 20,
               ),
               onPressed: onFavorite,
@@ -121,14 +121,14 @@ class DashboardWidgetBase extends StatelessWidget {
     final shouldRemove = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text(
+        backgroundColor: context.card,
+        title: Text(
           'Remove Widget?',
           style: TextStyle(color: Colors.white),
         ),
         content: Text(
           'Are you sure you want to remove "$title" from your dashboard?',
-          style: TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: context.textSecondary),
         ),
         actions: [
           TextButton(
@@ -174,9 +174,9 @@ class StatCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Material(
         color: Colors.transparent,
@@ -188,7 +188,7 @@ class StatCardWidget extends StatelessWidget {
             child: Column(
               children: [
                 Icon(icon, size: 40, color: Colors.white),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Text(
                   value,
                   style: TextStyle(
@@ -200,9 +200,9 @@ class StatCardWidget extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                   ),
                 ),
               ],
@@ -236,9 +236,9 @@ class ActionCardWidget extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Material(
         color: Colors.transparent,
@@ -253,12 +253,12 @@ class ActionCardWidget extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: AppTheme.darkBackground,
+                    color: context.background,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: context.accentColor, size: 24),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,18 +274,18 @@ class ActionCardWidget extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                         ),
                       ),
                     ],
                   ),
                 ),
                 trailing ??
-                    const Icon(
+                    Icon(
                       Icons.chevron_right,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
               ],
             ),

@@ -95,7 +95,7 @@ class NodeInfoCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard.withAlpha(230),
+        color: context.card.withAlpha(230),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: context.accentColor.withAlpha(100)),
       ),
@@ -137,7 +137,7 @@ class NodeInfoCard extends ConsumerWidget {
                   height: 24,
                   child: IconButton(
                     icon: const Icon(Icons.close, size: 16),
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                     onPressed: onClose,
                     padding: EdgeInsets.zero,
                   ),
@@ -149,16 +149,16 @@ class NodeInfoCard extends ConsumerWidget {
             const SizedBox(height: 8),
             Text(
               'Lat: ${node.latitude?.toStringAsFixed(4) ?? 'N/A'}°',
-              style: const TextStyle(
-                color: AppTheme.textSecondary,
+              style: TextStyle(
+                color: context.textSecondary,
                 fontSize: 12,
                 fontFamily: 'JetBrainsMono',
               ),
             ),
             Text(
               'Lon: ${node.longitude?.toStringAsFixed(4) ?? 'N/A'}°',
-              style: const TextStyle(
-                color: AppTheme.textSecondary,
+              style: TextStyle(
+                color: context.textSecondary,
                 fontSize: 12,
                 fontFamily: 'JetBrainsMono',
               ),
@@ -173,7 +173,7 @@ class NodeInfoCard extends ConsumerWidget {
                 size: 14,
                 color: node.isOnline
                     ? AppTheme.successGreen
-                    : AppTheme.textTertiary,
+                    : context.textTertiary,
               ),
               const SizedBox(width: 4),
               Text(
@@ -181,7 +181,7 @@ class NodeInfoCard extends ConsumerWidget {
                 style: TextStyle(
                   color: node.isOnline
                       ? AppTheme.successGreen
-                      : AppTheme.textTertiary,
+                      : context.textTertiary,
                   fontSize: 12,
                 ),
               ),
@@ -196,9 +196,9 @@ class NodeInfoCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+        border: Border.all(color: context.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.3),
@@ -281,9 +281,9 @@ class NodeInfoCard extends ConsumerWidget {
                       children: [
                         Text(
                           node.userId ?? '!${node.nodeNum.toRadixString(16)}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
                         ),
                         if (distanceFromMe != null) ...[
@@ -291,8 +291,8 @@ class NodeInfoCard extends ConsumerWidget {
                           Container(
                             width: 3,
                             height: 3,
-                            decoration: const BoxDecoration(
-                              color: AppTheme.textTertiary,
+                            decoration: BoxDecoration(
+                              color: context.textTertiary,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -310,9 +310,9 @@ class NodeInfoCard extends ConsumerWidget {
                           const SizedBox(width: 6),
                           Text(
                             _formatBearing(bearingFromMe!),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                             ),
                           ),
                         ],
@@ -329,7 +329,7 @@ class NodeInfoCard extends ConsumerWidget {
                   height: 32,
                   child: IconButton(
                     icon: const Icon(Icons.close, size: 20),
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                     onPressed: onClose,
                     padding: EdgeInsets.zero,
                   ),
@@ -352,19 +352,19 @@ class NodeInfoCard extends ConsumerWidget {
                 NodeStatChip(
                   icon: Icons.signal_cellular_alt,
                   value: '${node.snr} dB',
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                 ),
               if (node.altitude != null)
                 NodeStatChip(
                   icon: Icons.terrain,
                   value: '${node.altitude}m',
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                 ),
               if (node.hardwareModel != null)
                 NodeStatChip(
                   icon: Icons.memory,
                   value: node.hardwareModel!,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                 ),
               // Last heard
               NodeStatChip(
@@ -372,7 +372,7 @@ class NodeInfoCard extends ConsumerWidget {
                 value: _formatLastHeard(node.lastHeard),
                 color: node.isOnline
                     ? AppTheme.successGreen
-                    : AppTheme.textTertiary,
+                    : context.textTertiary,
               ),
             ],
           ),
@@ -386,16 +386,16 @@ class NodeInfoCard extends ConsumerWidget {
                   width: 40,
                   height: 40,
                   child: Material(
-                    color: AppTheme.darkBackground,
+                    color: context.background,
                     borderRadius: BorderRadius.circular(8),
                     child: InkWell(
                       onTap: onShareLocation,
                       borderRadius: BorderRadius.circular(8),
-                      child: const Center(
+                      child: Center(
                         child: Icon(
                           Icons.share,
                           size: 18,
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                         ),
                       ),
                     ),
@@ -407,16 +407,16 @@ class NodeInfoCard extends ConsumerWidget {
                   width: 40,
                   height: 40,
                   child: Material(
-                    color: AppTheme.darkBackground,
+                    color: context.background,
                     borderRadius: BorderRadius.circular(8),
                     child: InkWell(
                       onTap: onCopyCoordinates,
                       borderRadius: BorderRadius.circular(8),
-                      child: const Center(
+                      child: Center(
                         child: Icon(
                           Icons.copy,
                           size: 18,
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                         ),
                       ),
                     ),
@@ -431,7 +431,7 @@ class NodeInfoCard extends ConsumerWidget {
                     child: OutlinedButton.icon(
                       onPressed: () => _exchangePositions(context, ref),
                       icon: const Icon(Icons.swap_horiz, size: 18),
-                      label: const Text('Position'),
+                      label: Text('Position'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: context.accentColor,
                         side: BorderSide(
@@ -452,7 +452,7 @@ class NodeInfoCard extends ConsumerWidget {
                     child: ElevatedButton.icon(
                       onPressed: onMessage,
                       icon: const Icon(Icons.message, size: 18),
-                      label: const Text('Message'),
+                      label: Text('Message'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: context.accentColor,
                         foregroundColor: Colors.white,
@@ -492,7 +492,7 @@ class NodeStatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
+        color: context.background,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(

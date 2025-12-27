@@ -88,7 +88,7 @@ class _AnimatedTaglineState extends State<AnimatedTagline>
         position: _slideAnimation,
         child: Text(
           widget.taglines[_currentIndex],
-          style: const TextStyle(fontSize: 16, color: AppTheme.textSecondary),
+          style: TextStyle(fontSize: 16, color: context.textSecondary),
         ),
       ),
     );

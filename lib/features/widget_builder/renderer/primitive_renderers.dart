@@ -224,7 +224,7 @@ class GaugeRenderer extends StatelessWidget {
         : accentColor;
     final backgroundColor = element.gaugeBackgroundColor != null
         ? StyleSchema.parseColor(element.gaugeBackgroundColor!)
-        : AppTheme.darkBorder;
+        : context.border;
 
     switch (element.gaugeType ?? GaugeType.linear) {
       case GaugeType.linear:
@@ -1096,7 +1096,7 @@ class _ChartRendererState extends State<ChartRenderer> {
           drawVerticalLine: false,
           horizontalInterval: interval > 0 ? interval : 20,
           getDrawingHorizontalLine: (value) =>
-              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+              FlLine(color: context.border, strokeWidth: 1),
         ),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
@@ -1218,7 +1218,7 @@ class _ChartRendererState extends State<ChartRenderer> {
           drawVerticalLine: false,
           horizontalInterval: interval > 0 ? interval : 20,
           getDrawingHorizontalLine: (value) =>
-              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+              FlLine(color: context.border, strokeWidth: 1),
         ),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
@@ -1301,7 +1301,7 @@ class _ChartRendererState extends State<ChartRenderer> {
           drawVerticalLine: false,
           horizontalInterval: interval > 0 ? interval : 20,
           getDrawingHorizontalLine: (value) =>
-              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+              FlLine(color: context.border, strokeWidth: 1),
         ),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
@@ -1388,7 +1388,7 @@ class _ChartRendererState extends State<ChartRenderer> {
           drawVerticalLine: false,
           horizontalInterval: interval > 0 ? interval : 20,
           getDrawingHorizontalLine: (value) =>
-              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+              FlLine(color: context.border, strokeWidth: 1),
         ),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
@@ -1455,7 +1455,7 @@ class _ChartRendererState extends State<ChartRenderer> {
           drawVerticalLine: false,
           horizontalInterval: interval > 0 ? interval : 20,
           getDrawingHorizontalLine: (value) =>
-              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+              FlLine(color: context.border, strokeWidth: 1),
         ),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
@@ -1548,7 +1548,7 @@ class _ChartRendererState extends State<ChartRenderer> {
           drawVerticalLine: false,
           horizontalInterval: interval > 0 ? interval : 20,
           getDrawingHorizontalLine: (value) =>
-              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+              FlLine(color: context.border, strokeWidth: 1),
         ),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
@@ -1640,7 +1640,7 @@ class _ChartRendererState extends State<ChartRenderer> {
           drawVerticalLine: false,
           horizontalInterval: interval > 0 ? interval : 20,
           getDrawingHorizontalLine: (value) =>
-              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+              FlLine(color: context.border, strokeWidth: 1),
         ),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
@@ -1696,7 +1696,7 @@ class _ChartRendererState extends State<ChartRenderer> {
           drawVerticalLine: false,
           horizontalInterval: (maxY - minY) / 4,
           getDrawingHorizontalLine: (value) =>
-              FlLine(color: AppTheme.darkBorder, strokeWidth: 1),
+              FlLine(color: context.border, strokeWidth: 1),
         ),
         titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),

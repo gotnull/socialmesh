@@ -131,9 +131,9 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         title: Text('Quick Responses'),
         actions: [
           IconButton(
@@ -148,19 +148,19 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
             },
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            color: AppTheme.darkCard,
+            icon: Icon(Icons.more_vert),
+            color: context.card,
             onSelected: (value) {
               if (value == 'reset') {
                 _resetToDefaults();
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'reset',
                 child: Row(
                   children: [
-                    Icon(Icons.restore, color: AppTheme.textSecondary),
+                    Icon(Icons.restore, color: context.textSecondary),
                     SizedBox(width: 12),
                     Text('Reset to defaults'),
                   ],
@@ -178,7 +178,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
               _isReordering
                   ? 'Drag to reorder responses'
                   : 'Tap to edit, swipe to delete',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+              style: TextStyle(color: context.textSecondary, fontSize: 14),
             ),
           ),
           Expanded(
@@ -283,7 +283,7 @@ class _ResponseTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: ListTile(
@@ -302,20 +302,20 @@ class _ResponseTile extends StatelessWidget {
         ),
         title: Text(
           response.text,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w500,
           ),
         ),
         subtitle: response.isDefault
-            ? const Text(
+            ? Text(
                 'Default',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                style: TextStyle(color: context.textSecondary, fontSize: 12),
               )
             : null,
         trailing: isReordering
-            ? const Icon(Icons.drag_handle, color: AppTheme.textSecondary)
-            : const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+            ? Icon(Icons.drag_handle, color: context.textSecondary)
+            : Icon(Icons.chevron_right, color: context.textSecondary),
       ),
     );
   }

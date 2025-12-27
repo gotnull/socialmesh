@@ -48,7 +48,7 @@ class _IntroAnimationPreviewScreenState
                 left: 8,
                 child: IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close_rounded),
+                  icon: Icon(Icons.close_rounded),
                   color: Colors.white,
                   style: IconButton.styleFrom(backgroundColor: Colors.black45),
                 ),

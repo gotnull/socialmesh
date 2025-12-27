@@ -118,10 +118,10 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
-          title: const Text(
+          backgroundColor: context.background,
+          title: Text(
             'Network',
             style: TextStyle(
               fontSize: 20,
@@ -187,7 +187,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                       ),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppTheme.darkCard,
+                        color: context.card,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -195,25 +195,21 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                           TextField(
                             controller: _ssidController,
                             textInputAction: TextInputAction.next,
-                            style: const TextStyle(color: Colors.white),
+                            style: TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                               labelText: 'Network Name (SSID)',
-                              labelStyle: const TextStyle(
-                                color: AppTheme.textSecondary,
+                              labelStyle: TextStyle(
+                                color: context.textSecondary,
                               ),
                               filled: true,
-                              fillColor: AppTheme.darkBackground,
+                              fillColor: context.background,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: AppTheme.darkBorder,
-                                ),
+                                borderSide: BorderSide(color: context.border),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(
-                                  color: AppTheme.darkBorder,
-                                ),
+                                borderSide: BorderSide(color: context.border),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -221,13 +217,13 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                                   color: context.accentColor,
                                 ),
                               ),
-                              prefixIcon: const Icon(
+                              prefixIcon: Icon(
                                 Icons.wifi,
-                                color: AppTheme.textSecondary,
+                                color: context.textSecondary,
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           TextField(
                             controller: _passwordController,
                             obscureText: _obscurePassword,
@@ -237,22 +233,18 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                             style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              labelStyle: const TextStyle(
-                                color: AppTheme.textSecondary,
+                              labelStyle: TextStyle(
+                                color: context.textSecondary,
                               ),
                               filled: true,
-                              fillColor: AppTheme.darkBackground,
+                              fillColor: context.background,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: AppTheme.darkBorder,
-                                ),
+                                borderSide: BorderSide(color: context.border),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(
-                                  color: AppTheme.darkBorder,
-                                ),
+                                borderSide: BorderSide(color: context.border),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -260,16 +252,16 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                                   color: context.accentColor,
                                 ),
                               ),
-                              prefixIcon: const Icon(
+                              prefixIcon: Icon(
                                 Icons.lock,
-                                color: AppTheme.textSecondary,
+                                color: context.textSecondary,
                               ),
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscurePassword
                                       ? Icons.visibility_off
                                       : Icons.visibility,
-                                  color: AppTheme.textSecondary,
+                                  color: context.textSecondary,
                                 ),
                                 onPressed: () => setState(
                                   () => _obscurePassword = !_obscurePassword,
@@ -298,7 +290,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // NTP Server Section
                   const _SectionHeader(title: 'TIME SYNC'),
@@ -309,21 +301,21 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkCard,
+                      color: context.card,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'NTP Server',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         TextField(
                           controller: _ntpController,
                           textInputAction: TextInputAction.done,
@@ -331,22 +323,16 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             hintText: 'pool.ntp.org',
-                            hintStyle: const TextStyle(
-                              color: AppTheme.textTertiary,
-                            ),
+                            hintStyle: TextStyle(color: context.textTertiary),
                             filled: true,
-                            fillColor: AppTheme.darkBackground,
+                            fillColor: context.background,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: AppTheme.darkBorder,
-                              ),
+                              borderSide: BorderSide(color: context.border),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: AppTheme.darkBorder,
-                              ),
+                              borderSide: BorderSide(color: context.border),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -354,24 +340,24 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                                 color: context.accentColor,
                               ),
                             ),
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               Icons.access_time,
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
+                        SizedBox(height: 8),
+                        Text(
                           'Server used for time synchronization',
                           style: TextStyle(
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                             fontSize: 13,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Info card
                   Container(
@@ -395,12 +381,12 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                           color: context.accentColor.withValues(alpha: 0.8),
                           size: 20,
                         ),
-                        const SizedBox(width: 12),
-                        const Expanded(
+                        SizedBox(width: 12),
+                        Expanded(
                           child: Text(
                             'Network settings are only available on devices with WiFi or Ethernet hardware support.',
                             style: TextStyle(
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                               fontSize: 13,
                             ),
                           ),
@@ -427,10 +413,10 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: AppTheme.textTertiary,
+          color: context.textTertiary,
           letterSpacing: 1.2,
         ),
       ),
@@ -458,15 +444,15 @@ class _SettingsTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? AppTheme.textSecondary),
-            const SizedBox(width: 16),
+            Icon(icon, color: iconColor ?? context.textSecondary),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -482,10 +468,7 @@ class _SettingsTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppTheme.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 13, color: context.textTertiary),
                   ),
                 ],
               ),

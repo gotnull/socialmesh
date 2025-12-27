@@ -8,34 +8,36 @@ import '../theme.dart';
 /// ```dart
 /// Skeletonizer(
 ///   enabled: isLoading,
-///   effect: AppSkeletonConfig.effect,
+///   effect: AppSkeletonConfig.effect(context),
 ///   child: YourWidget(),
 /// )
 /// ```
 class AppSkeletonConfig {
   /// The shimmer effect used across the app
-  static const effect = ShimmerEffect(
-    baseColor: AppTheme.darkCard,
-    highlightColor: AppTheme.darkBorder,
-    duration: Duration(milliseconds: 1500),
+  static ShimmerEffect effect(BuildContext context) => ShimmerEffect(
+    baseColor: context.card,
+    highlightColor: context.border,
+    duration: const Duration(milliseconds: 1500),
   );
 
   /// Alternative pulse effect for simpler animations
-  static const pulseEffect = PulseEffect(
-    from: AppTheme.darkCard,
-    to: AppTheme.darkBorder,
-    duration: Duration(milliseconds: 1000),
+  static PulseEffect pulseEffect(BuildContext context) => PulseEffect(
+    from: context.card,
+    to: context.border,
+    duration: const Duration(milliseconds: 1000),
   );
 
   /// Standard skeleton config
-  static SkeletonizerConfigData get config => SkeletonizerConfigData(
-    effect: effect,
-    justifyMultiLineText: true,
-    textBorderRadius: TextBoneBorderRadius(BorderRadius.circular(4)),
-  );
+  static SkeletonizerConfigData config(BuildContext context) =>
+      SkeletonizerConfigData(
+        effect: effect(context),
+        justifyMultiLineText: true,
+        textBorderRadius: TextBoneBorderRadius(BorderRadius.circular(4)),
+      );
 
   /// Wrap a widget with skeletonizer using app defaults
   static Widget wrap({
+    required BuildContext context,
     required bool enabled,
     required Widget child,
     bool ignoreContainers = false,
@@ -43,7 +45,7 @@ class AppSkeletonConfig {
   }) {
     return Skeletonizer(
       enabled: enabled,
-      effect: effect,
+      effect: effect(context),
       ignoreContainers: ignoreContainers,
       ignorePointers: ignorePointers,
       child: child,
@@ -61,9 +63,9 @@ class SkeletonNodeCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Row(
         children: [
@@ -102,9 +104,9 @@ class SkeletonConversationCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Row(
         children: [
@@ -144,9 +146,9 @@ class SkeletonChannelCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Row(
         children: [
@@ -180,7 +182,7 @@ class SkeletonDashboardWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(

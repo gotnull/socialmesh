@@ -325,7 +325,7 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(bottom: 16),
             child: Text(
               'Select Icon',
@@ -344,17 +344,17 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
               hintText: 'Search icons...',
-              hintStyle: TextStyle(color: AppTheme.textSecondary),
+              hintStyle: TextStyle(color: context.textSecondary),
               prefixIcon: Icon(
                 Icons.search,
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
                 size: 20,
               ),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
                       icon: Icon(
                         Icons.clear,
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         size: 20,
                       ),
                       onPressed: () {
@@ -364,7 +364,7 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
                     )
                   : null,
               filled: true,
-              fillColor: AppTheme.darkBackground,
+              fillColor: context.background,
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -393,11 +393,11 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.search_off, size: 48, color: AppTheme.textSecondary),
-            const SizedBox(height: 8),
+            Icon(Icons.search_off, size: 48, color: context.textSecondary),
+            SizedBox(height: 8),
             Text(
               'No icons found',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
           ],
         ),
@@ -434,7 +434,7 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                 ),
               ),
             ),
@@ -470,7 +470,7 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
           decoration: BoxDecoration(
             color: isSelected
                 ? accentColor.withValues(alpha: 0.2)
-                : AppTheme.darkBackground,
+                : context.background,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isSelected ? accentColor : Colors.transparent,
@@ -485,12 +485,12 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
                 size: 24,
                 color: isSelected ? accentColor : Colors.white70,
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               Text(
                 option.displayName,
                 style: TextStyle(
                   fontSize: 9,
-                  color: isSelected ? accentColor : AppTheme.textSecondary,
+                  color: isSelected ? accentColor : context.textSecondary,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,

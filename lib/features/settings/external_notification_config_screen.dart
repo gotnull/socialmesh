@@ -131,10 +131,10 @@ class _ExternalNotificationConfigScreenState
     final isConnected = protocol.isConnected;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        title: const Text('External Notification'),
-        backgroundColor: AppTheme.darkSurface,
+        title: Text('External Notification'),
+        backgroundColor: context.surface,
         actions: [
           if (isConnected)
             IconButton(
@@ -172,7 +172,7 @@ class _ExternalNotificationConfigScreenState
                       children: [
                         Icon(Icons.warning, color: AppTheme.warningYellow),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'Connect to a device to configure external notification settings',
                           ),
@@ -378,16 +378,16 @@ class _ExternalNotificationConfigScreenState
   Widget _buildCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface,
+        color: context.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(children: children),
     );
   }
 
   Widget _buildDivider() {
-    return Divider(height: 1, indent: 56, color: AppTheme.darkBorder);
+    return Divider(height: 1, indent: 56, color: context.border);
   }
 
   Widget _buildSwitch(
@@ -402,7 +402,7 @@ class _ExternalNotificationConfigScreenState
       title: Text(title),
       subtitle: Text(
         subtitle,
-        style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+        style: TextStyle(color: context.textSecondary, fontSize: 12),
       ),
       secondary: Icon(icon, color: context.accentColor),
       value: value,
@@ -421,7 +421,7 @@ class _ExternalNotificationConfigScreenState
       title: Text(title),
       subtitle: Text(
         value == 0 ? 'Unset' : 'GPIO $value',
-        style: TextStyle(color: AppTheme.textSecondary),
+        style: TextStyle(color: context.textSecondary),
       ),
       trailing: DropdownButton<int>(
         value: value,
@@ -459,7 +459,7 @@ class _ExternalNotificationConfigScreenState
       title: Text(title),
       subtitle: Text(
         subtitle,
-        style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+        style: TextStyle(color: context.textSecondary, fontSize: 12),
       ),
       trailing: DropdownButton<int>(
         value: durations.any((d) => d.$1 == valueMs) ? valueMs : 0,
@@ -494,7 +494,7 @@ class _ExternalNotificationConfigScreenState
       title: Text(title),
       subtitle: Text(
         subtitle,
-        style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+        style: TextStyle(color: context.textSecondary, fontSize: 12),
       ),
       trailing: DropdownButton<int>(
         value: timeouts.any((t) => t.$1 == valueSecs) ? valueSecs : 0,

@@ -37,7 +37,7 @@ class NearbyNodesContent extends ConsumerWidget {
       itemCount: topNodes.length,
       separatorBuilder: (_, i) => Divider(
         height: 1,
-        color: AppTheme.darkBorder.withValues(alpha: 0.5),
+        color: context.border.withValues(alpha: 0.5),
         indent: 56,
       ),
       itemBuilder: (context, index) {
@@ -88,7 +88,7 @@ class _NodeTile extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           // Node info
           Expanded(
             child: Column(
@@ -128,9 +128,9 @@ class _NodeTile extends StatelessWidget {
                     ],
                     Text(
                       lastSeen,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                       ),
                     ),
                   ],
@@ -176,12 +176,12 @@ class _RoleChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: isRouter
             ? context.accentColor.withValues(alpha: 0.15)
-            : AppTheme.darkBackground,
+            : context.background,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
           color: isRouter
               ? context.accentColor.withValues(alpha: 0.3)
-              : AppTheme.darkBorder,
+              : context.border,
         ),
       ),
       child: Text(
@@ -189,7 +189,7 @@ class _RoleChip extends StatelessWidget {
         style: TextStyle(
           fontSize: 9,
           fontWeight: FontWeight.w600,
-          color: isRouter ? context.accentColor : AppTheme.textTertiary,
+          color: isRouter ? context.accentColor : context.textTertiary,
         ),
       ),
     );

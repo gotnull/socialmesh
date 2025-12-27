@@ -107,7 +107,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
   void _showFilterSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -161,7 +161,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
                 trailing: DropdownButton<int?>(
                   value: _minSatellites,
                   items: [
-                    const DropdownMenuItem(value: null, child: Text('Any')),
+                    DropdownMenuItem(value: null, child: Text('Any')),
                     ...[4, 6, 8, 10, 12].map(
                       (v) => DropdownMenuItem(value: v, child: Text('$v+')),
                     ),
@@ -190,7 +190,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
                       width: 60,
                       child: TextField(
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: 'Min',
                           isDense: true,
                         ),
@@ -208,7 +208,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
                       width: 60,
                       child: TextField(
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: 'Max',
                           isDense: true,
                         ),
@@ -287,15 +287,15 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
                     Icon(
                       Icons.location_off,
                       size: 64,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Text(
                       _hasActiveFilters
                           ? 'No positions match filters'
                           : 'No position history',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                       ),
                     ),
                     if (_hasActiveFilters) ...[
@@ -484,7 +484,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
               if (_nodeNums.length > 1)
                 Container(
                   decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
+                    color: context.card,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -493,7 +493,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
                       value: _selectedNodeNum,
                       hint: const Text('All nodes'),
                       items: [
-                        const DropdownMenuItem(
+                        DropdownMenuItem(
                           value: null,
                           child: Text('All nodes'),
                         ),
@@ -509,12 +509,12 @@ class _PositionMapViewState extends State<_PositionMapView> {
                   ),
                 ),
 
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
 
               // Toggle trail
               Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.darkCard,
+                  color: context.card,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: IconButton(
@@ -522,7 +522,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
                     _showTrail ? Icons.timeline : Icons.timeline_outlined,
                     color: _showTrail
                         ? Theme.of(context).colorScheme.primary
-                        : AppTheme.textSecondary,
+                        : context.textSecondary,
                   ),
                   tooltip: 'Toggle trail',
                   onPressed: () => setState(() => _showTrail = !_showTrail),
@@ -559,7 +559,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.darkCard.withValues(alpha: 0.9),
+              color: context.card.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -646,7 +646,7 @@ class _StatItem extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 20, color: AppTheme.textTertiary),
+        Icon(icon, size: 20, color: context.textTertiary),
         const SizedBox(height: 4),
         Text(
           value,
@@ -768,18 +768,18 @@ class _MetricChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: (color ?? AppTheme.textTertiary).withValues(alpha: 0.15),
+        color: (color ?? context.textTertiary).withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color ?? AppTheme.textTertiary),
-          const SizedBox(width: 4),
+          Icon(icon, size: 14, color: color ?? context.textTertiary),
+          SizedBox(width: 4),
           Text(
             value,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: color ?? AppTheme.textSecondary,
+              color: color ?? context.textSecondary,
             ),
           ),
         ],

@@ -887,21 +887,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Icon(
               Icons.search_off_rounded,
               size: 64,
-              color: AppTheme.textTertiary.withValues(alpha: 0.5),
+              color: context.textTertiary.withValues(alpha: 0.5),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               'No settings found',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'Try a different search term',
-              style: TextStyle(fontSize: 14, color: AppTheme.textTertiary),
+              style: TextStyle(fontSize: 14, color: context.textTertiary),
             ),
           ],
         ),
@@ -933,7 +933,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 trailing: item.hasSwitch
                     ? Icon(
                         Icons.toggle_on_outlined,
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                         size: 24,
                       )
                     : null,
@@ -1020,7 +1020,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         size: 26,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1038,9 +1038,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ownedCount == totalCount
                                 ? 'All features unlocked'
                                 : '$ownedCount of $totalCount features unlocked',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                             ),
                           ),
                         ],
@@ -1206,7 +1206,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           decoration: BoxDecoration(
             color: remoteState.isRemote
                 ? accentColor.withValues(alpha: 0.1)
-                : AppTheme.darkCard,
+                : context.card,
             borderRadius: BorderRadius.circular(12),
             border: remoteState.isRemote
                 ? Border.all(color: accentColor.withValues(alpha: 0.5))
@@ -1236,7 +1236,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       : Icons.settings_remote,
                   color: remoteState.isRemote
                       ? accentColor
-                      : AppTheme.textSecondary,
+                      : context.textSecondary,
                 ),
                 title: Text(
                   remoteState.isRemote
@@ -1260,13 +1260,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         style: TextStyle(
                           color: remoteState.isRemote
                               ? accentColor.withValues(alpha: 0.8)
-                              : AppTheme.textSecondary,
+                              : context.textSecondary,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (remoteState.isRemote) ...[
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       Icon(
                         Icons.lock,
                         size: 12,
@@ -1280,17 +1280,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   children: [
                     Text(
                       '${adminableNodes.length} nodes',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Icon(
                       Icons.chevron_right,
                       color: remoteState.isRemote
                           ? accentColor
-                          : AppTheme.textSecondary,
+                          : context.textSecondary,
                     ),
                   ],
                 ),
@@ -1635,11 +1635,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
+          backgroundColor: context.background,
           centerTitle: true,
-          title: const Text(
+          title: Text(
             'Settings',
             style: TextStyle(
               fontSize: 20,
@@ -1655,26 +1655,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.darkCard,
+                  color: context.card,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextField(
                   controller: _searchController,
                   focusNode: _searchFocusNode,
                   onChanged: (value) => setState(() => _searchQuery = value),
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Find a setting',
-                    hintStyle: const TextStyle(color: AppTheme.textTertiary),
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      color: AppTheme.textTertiary,
-                    ),
+                    hintStyle: TextStyle(color: context.textTertiary),
+                    prefixIcon: Icon(Icons.search, color: context.textTertiary),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.clear,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                             onPressed: () {
                               _searchController.clear();
@@ -1713,7 +1710,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.error_outline,
                               size: 48,
                               color: Colors.red,
@@ -1721,9 +1718,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             const SizedBox(height: 16),
                             Text(
                               'Error loading settings: $error',
-                              style: const TextStyle(
-                                color: AppTheme.textSecondary,
-                              ),
+                              style: TextStyle(color: context.textSecondary),
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton(
@@ -2736,7 +2731,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -2745,7 +2740,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(16),
               child: Text(
                 'Haptic Intensity',
@@ -2765,12 +2760,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       : Icons.radio_button_unchecked,
                   color: isSelected
                       ? context.accentColor
-                      : AppTheme.textTertiary,
+                      : context.textTertiary,
                 ),
                 title: Text(
                   intensity.label,
                   style: TextStyle(
-                    color: isSelected ? Colors.white : AppTheme.textSecondary,
+                    color: isSelected ? Colors.white : context.textSecondary,
                     fontWeight: isSelected
                         ? FontWeight.w600
                         : FontWeight.normal,
@@ -2778,10 +2773,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 subtitle: Text(
                   _hapticIntensityDescription(intensity),
-                  style: const TextStyle(
-                    color: AppTheme.textTertiary,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: context.textTertiary, fontSize: 12),
                 ),
                 onTap: () async {
                   await settingsService.setHapticIntensity(intensity.value);
@@ -2830,7 +2822,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           isSelected
               ? Icons.radio_button_checked
               : Icons.radio_button_unchecked,
-          color: isSelected ? context.accentColor : AppTheme.textTertiary,
+          color: isSelected ? context.accentColor : context.textTertiary,
         ),
         title: Text(
           '$limit messages',
@@ -2854,14 +2846,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text(
+        backgroundColor: context.card,
+        title: Text(
           'Clear Messages',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.textPrimary),
         ),
-        content: const Text(
+        content: Text(
           'This will delete all stored messages. This action cannot be undone.',
-          style: TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: context.textSecondary),
         ),
         actions: [
           TextButton(
@@ -2890,16 +2882,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text(
+        backgroundColor: context.card,
+        title: Text(
           'Reset Local Data',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.textPrimary),
         ),
-        content: const Text(
+        content: Text(
           'This will clear all messages and node data, forcing a fresh sync from your device on next connection.\n\n'
           'Your settings, theme, and preferences will be kept.\n\n'
           'Use this if nodes show incorrect status or messages appear wrong.',
-          style: TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: context.textSecondary),
         ),
         actions: [
           TextButton(
@@ -2956,7 +2948,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         content: Row(
           children: [
             MeshLoadingIndicator(
@@ -2968,9 +2960,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ],
             ),
             const SizedBox(width: 20),
-            const Text(
+            Text(
               'Syncing from device...',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
           ],
         ),
@@ -3010,14 +3002,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text(
+        backgroundColor: context.card,
+        title: Text(
           'Clear All Data',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.textPrimary),
         ),
-        content: const Text(
+        content: Text(
           'This will delete all messages, settings, and channel keys. This action cannot be undone.',
-          style: TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: context.textSecondary),
         ),
         actions: [
           TextButton(
@@ -3134,10 +3126,10 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: AppTheme.textTertiary,
+          color: context.textTertiary,
 
           letterSpacing: 0.5,
         ),
@@ -3172,7 +3164,7 @@ class _SettingsTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Material(
@@ -3186,8 +3178,8 @@ class _SettingsTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                Icon(icon, color: iconColor ?? AppTheme.textSecondary),
-                const SizedBox(width: 16),
+                Icon(icon, color: iconColor ?? context.textSecondary),
+                SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -3197,7 +3189,7 @@ class _SettingsTile extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
-                          color: titleColor ?? Colors.white,
+                          color: titleColor ?? context.textPrimary,
                         ),
                       ),
                       if (subtitle != null) ...[
@@ -3206,7 +3198,7 @@ class _SettingsTile extends StatelessWidget {
                           subtitle!,
                           style: TextStyle(
                             fontSize: 13,
-                            color: subtitleColor ?? AppTheme.textTertiary,
+                            color: subtitleColor ?? context.textTertiary,
                           ),
                         ),
                       ],
@@ -3216,7 +3208,7 @@ class _SettingsTile extends StatelessWidget {
                 if (trailing != null)
                   trailing!
                 else if (onTap != null)
-                  const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+                  Icon(Icons.chevron_right, color: context.textTertiary),
               ],
             ),
           ),
@@ -3250,7 +3242,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
         border: hasFeature
             ? Border.all(color: accentColor.withValues(alpha: 0.3), width: 1)
@@ -3269,16 +3261,16 @@ class _PremiumFeatureTile extends ConsumerWidget {
               children: [
                 Icon(
                   icon,
-                  color: hasFeature ? accentColor : AppTheme.textTertiary,
+                  color: hasFeature ? accentColor : context.textTertiary,
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: Text(
                     title,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: hasFeature ? Colors.white : AppTheme.textSecondary,
+                      color: hasFeature ? Colors.white : context.textSecondary,
                     ),
                   ),
                 ),
@@ -3291,7 +3283,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: hasFeature
                         ? accentColor.withValues(alpha: 0.2)
-                        : AppTheme.textTertiary.withValues(alpha: 0.15),
+                        : context.textTertiary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -3307,30 +3299,26 @@ class _PremiumFeatureTile extends ConsumerWidget {
                           ),
                         ),
                       ] else ...[
-                        Icon(
-                          Icons.lock,
-                          size: 12,
-                          color: AppTheme.textTertiary,
-                        ),
-                        const SizedBox(width: 4),
+                        Icon(Icons.lock, size: 12, color: context.textTertiary),
+                        SizedBox(width: 4),
                         Text(
                           purchase != null
                               ? '\$${purchase.price.toStringAsFixed(2)}'
                               : 'LOCKED',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
                         ),
                       ],
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Icon(
                   Icons.chevron_right,
-                  color: hasFeature ? accentColor : AppTheme.textTertiary,
+                  color: hasFeature ? accentColor : context.textTertiary,
                 ),
               ],
             ),
@@ -3368,11 +3356,9 @@ class _ProfileTile extends ConsumerWidget {
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           decoration: BoxDecoration(
-            color: AppTheme.darkCard,
+            color: context.card,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: AppTheme.darkBorder.withValues(alpha: 0.3),
-            ),
+            border: Border.all(color: context.border.withValues(alpha: 0.3)),
           ),
           child: Material(
             color: Colors.transparent,
@@ -3391,7 +3377,7 @@ class _ProfileTile extends ConsumerWidget {
                       height: 48,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppTheme.darkSurface,
+                        color: context.surface,
                         border: Border.all(
                           color: accentColor.withValues(alpha: 0.5),
                           width: 2,
@@ -3440,7 +3426,7 @@ class _ProfileTile extends ConsumerWidget {
                             : _buildInitials(profile.initials, accentColor),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     // Info
                     Expanded(
                       child: Column(
@@ -3490,31 +3476,31 @@ class _ProfileTile extends ConsumerWidget {
                                 size: 12,
                                 color: isSignedIn
                                     ? AccentColors.green
-                                    : AppTheme.textTertiary,
+                                    : context.textTertiary,
                               ),
-                              const SizedBox(width: 4),
+                              SizedBox(width: 4),
                               Text(
                                 isSignedIn ? 'Synced' : 'Local only',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.textSecondary,
+                                  color: context.textSecondary,
                                 ),
                               ),
                               if (profile.bio != null &&
                                   profile.bio!.isNotEmpty) ...[
-                                const Text(
+                                Text(
                                   ' • ',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: AppTheme.textTertiary,
+                                    color: context.textTertiary,
                                   ),
                                 ),
                                 Expanded(
                                   child: Text(
                                     profile.bio!,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
-                                      color: AppTheme.textTertiary,
+                                      color: context.textTertiary,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -3526,10 +3512,7 @@ class _ProfileTile extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    const Icon(
-                      Icons.chevron_right,
-                      color: AppTheme.textTertiary,
-                    ),
+                    Icon(Icons.chevron_right, color: context.textTertiary),
                   ],
                 ),
               ),
@@ -3651,12 +3634,12 @@ class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen> {
     final accentColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         title: Text(
           _title,
-          style: const TextStyle(fontSize: 18),
+          style: TextStyle(fontSize: 18),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -3684,7 +3667,7 @@ class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen> {
           if (_progress < 1.0)
             LinearProgressIndicator(
               value: _progress,
-              backgroundColor: AppTheme.darkCard,
+              backgroundColor: context.card,
               valueColor: AlwaysStoppedAnimation<Color>(accentColor),
               minHeight: 2,
             ),
@@ -3750,13 +3733,13 @@ class _OpenSourceLicensesScreen extends ConsumerWidget {
     return Theme(
       // Apply dark theme to the license page
       data: Theme.of(context).copyWith(
-        scaffoldBackgroundColor: AppTheme.darkBackground,
+        scaffoldBackgroundColor: context.background,
         appBarTheme: AppBarTheme(
-          backgroundColor: AppTheme.darkBackground,
+          backgroundColor: context.background,
           foregroundColor: Colors.white,
           elevation: 0,
         ),
-        cardColor: AppTheme.darkCard,
+        cardColor: context.card,
         listTileTheme: ListTileThemeData(
           textColor: Colors.white,
           iconColor: accentColor,

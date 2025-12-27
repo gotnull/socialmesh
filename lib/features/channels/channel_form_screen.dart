@@ -339,11 +339,11 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
+          backgroundColor: context.background,
           leading: IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
+            icon: Icon(Icons.close, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
@@ -445,10 +445,10 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
   Widget _buildFieldLabel(String label) {
     return Text(
       label,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: AppTheme.textSecondary,
+        color: context.textSecondary,
 
         letterSpacing: 0.3,
       ),
@@ -458,9 +458,9 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
   Widget _buildNameField() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -479,8 +479,8 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   ),
                   child: Icon(Icons.tag, color: context.accentColor, size: 20),
                 ),
-                const SizedBox(width: 14),
-                const Expanded(
+                SizedBox(width: 14),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -497,7 +497,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                         'Max 11 characters',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                         ),
                       ),
                     ],
@@ -511,7 +511,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   decoration: BoxDecoration(
                     color: _nameController.text.length > 9
                         ? AppTheme.warningYellow.withValues(alpha: 0.15)
-                        : AppTheme.darkBackground,
+                        : context.background,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -521,7 +521,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                       fontWeight: FontWeight.w600,
                       color: _nameController.text.length > 9
                           ? AppTheme.warningYellow
-                          : AppTheme.textTertiary,
+                          : context.textTertiary,
                     ),
                   ),
                 ),
@@ -533,28 +533,28 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
           Container(
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
+              color: context.background,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: AppTheme.darkBorder.withValues(alpha: 0.5),
+                color: context.border.withValues(alpha: 0.5),
               ),
             ),
             child: TextFormField(
               controller: _nameController,
               focusNode: _nameFocusNode,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 color: Colors.white,
 
                 fontWeight: FontWeight.w500,
               ),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.all(16),
                 hintText: 'Enter channel name (no spaces)',
                 hintStyle: TextStyle(
-                  color: AppTheme.textTertiary,
+                  color: context.textTertiary,
                   fontWeight: FontWeight.w400,
                 ),
               ),
@@ -584,9 +584,9 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
   Widget _buildEncryptionSelector() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         children: KeySize.values.asMap().entries.map((entry) {
@@ -628,7 +628,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? context.accentColor.withValues(alpha: 0.15)
-                                : AppTheme.darkBackground,
+                                : context.background,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
@@ -638,11 +638,11 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                                 : Icons.lock,
                             color: isSelected
                                 ? context.accentColor
-                                : AppTheme.textTertiary,
+                                : context.textTertiary,
                             size: 20,
                           ),
                         ),
-                        const SizedBox(width: 14),
+                        SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -656,19 +656,19 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                                       : FontWeight.w500,
                                   color: isSelected
                                       ? Colors.white
-                                      : AppTheme.textSecondary,
+                                      : context.textSecondary,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              SizedBox(height: 2),
                               Text(
                                 keySize == KeySize.none
                                     ? 'Messages sent in plaintext'
                                     : keySize == KeySize.default1
                                     ? '1-byte simple key (AQ==)'
                                     : '${keySize.bytes * 8}-bit encryption key',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.textTertiary,
+                                  color: context.textTertiary,
                                 ),
                               ),
                             ],
@@ -682,7 +682,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                             border: Border.all(
                               color: isSelected
                                   ? context.accentColor
-                                  : AppTheme.darkBorder,
+                                  : context.border,
                               width: 2,
                             ),
                             color: isSelected
@@ -690,7 +690,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                                 : Colors.transparent,
                           ),
                           child: isSelected
-                              ? const Icon(
+                              ? Icon(
                                   Icons.check,
                                   color: Colors.white,
                                   size: 14,
@@ -706,7 +706,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                 Container(
                   height: 1,
                   margin: const EdgeInsets.symmetric(horizontal: 16),
-                  color: AppTheme.darkBorder.withValues(alpha: 0.5),
+                  color: context.border.withValues(alpha: 0.5),
                 ),
             ],
           );
@@ -718,9 +718,9 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
   Widget _buildPositionOptions() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         children: [
@@ -745,7 +745,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
             Container(
               height: 1,
               margin: const EdgeInsets.symmetric(horizontal: 16),
-              color: AppTheme.darkBorder.withValues(alpha: 0.5),
+              color: context.border.withValues(alpha: 0.5),
             ),
             _buildPositionPrecisionSection(),
           ],
@@ -757,9 +757,9 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
   Widget _buildMqttOptions() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         children: [
@@ -774,7 +774,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
           Container(
             height: 1,
             margin: const EdgeInsets.symmetric(horizontal: 16),
-            color: AppTheme.darkBorder.withValues(alpha: 0.5),
+            color: context.border.withValues(alpha: 0.5),
           ),
           _buildToggleRow(
             icon: Icons.cloud_download_outlined,
@@ -810,7 +810,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
             ),
             child: Icon(icon, color: iconColor, size: 20),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -826,7 +826,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+                  style: TextStyle(fontSize: 12, color: context.textTertiary),
                 ),
               ],
             ),
@@ -887,12 +887,12 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                     size: 20,
                   ),
                 ),
-                const SizedBox(width: 14),
+                SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Precise Location',
                         style: TextStyle(
                           fontSize: 15,
@@ -905,7 +905,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                         'Share exact GPS coordinates',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                         ),
                       ),
                     ],
@@ -941,7 +941,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                   ),
                 ),
                 const SizedBox(width: 14),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Approximate Location',
                     style: TextStyle(
@@ -1009,14 +1009,14 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
               color: AppTheme.warningYellow.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.info_outline,
               color: AppTheme.warningYellow,
               size: 22,
             ),
           ),
           const SizedBox(width: 14),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1031,7 +1031,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                 SizedBox(height: 4),
                 Text(
                   'This is the main channel for device communication. Changes may affect connectivity.',
-                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  style: TextStyle(fontSize: 12, color: context.textSecondary),
                 ),
               ],
             ),

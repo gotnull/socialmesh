@@ -20,7 +20,7 @@ class NodeMapContent extends ConsumerWidget {
         .toList();
 
     if (nodesWithPosition.isEmpty) {
-      return _buildEmptyState();
+      return _buildEmptyState(context);
     }
 
     // Convert to marker data
@@ -91,10 +91,10 @@ class NodeMapContent extends ConsumerWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkCard.withValues(alpha: 0.9),
+                      color: context.card.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppTheme.darkBorder.withValues(alpha: 0.5),
+                        color: context.border.withValues(alpha: 0.5),
                       ),
                     ),
                     child: Row(
@@ -103,7 +103,7 @@ class NodeMapContent extends ConsumerWidget {
                         Container(
                           width: 6,
                           height: 6,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: AppTheme.successGreen,
                             shape: BoxShape.circle,
                           ),
@@ -131,7 +131,7 @@ class NodeMapContent extends ConsumerWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkCard.withValues(alpha: 0.9),
+                      color: context.card.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -140,14 +140,14 @@ class NodeMapContent extends ConsumerWidget {
                         Icon(
                           Icons.open_in_full,
                           size: 12,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: 4),
                         Text(
                           'Tap to expand',
                           style: TextStyle(
                             fontSize: 10,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
                         ),
                       ],
@@ -172,7 +172,7 @@ class NodeMapContent extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -180,21 +180,21 @@ class NodeMapContent extends ConsumerWidget {
           Icon(
             Icons.map_outlined,
             size: 32,
-            color: AppTheme.textTertiary.withValues(alpha: 0.5),
+            color: context.textTertiary.withValues(alpha: 0.5),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'No GPS data',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'Nodes will appear when\nthey report position',
-            style: TextStyle(fontSize: 11, color: AppTheme.textTertiary),
+            style: TextStyle(fontSize: 11, color: context.textTertiary),
             textAlign: TextAlign.center,
           ),
         ],

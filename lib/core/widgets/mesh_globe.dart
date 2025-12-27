@@ -313,7 +313,7 @@ class MeshGlobeState extends State<MeshGlobe> {
 
     if (_controller == null || !_isInitialized) {
       return Container(
-        color: AppTheme.darkBackground,
+        color: context.background,
         child: const ScreenLoadingIndicator(),
       );
     }
@@ -324,7 +324,7 @@ class MeshGlobeState extends State<MeshGlobe> {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
 
         return Container(
-          color: AppTheme.darkBackground,
+          color: context.background,
           child: Center(
             child: Earth3D(
               controller: _controller!,

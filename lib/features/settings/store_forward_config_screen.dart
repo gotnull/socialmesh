@@ -88,10 +88,10 @@ class _StoreForwardConfigScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkSurface,
-        title: const Text('Store & Forward'),
+        backgroundColor: context.surface,
+        title: Text('Store & Forward'),
         actions: [
           TextButton(
             onPressed: _isSaving ? null : _saveConfig,
@@ -136,10 +136,10 @@ class _StoreForwardConfigScreenState
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: AppTheme.textTertiary,
+          color: context.textTertiary,
           letterSpacing: 1,
         ),
       ),
@@ -158,12 +158,12 @@ class _StoreForwardConfigScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.storage, color: AppTheme.primaryBlue, size: 24),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Store & Forward',
                   style: TextStyle(
                     color: Colors.white,
@@ -176,7 +176,7 @@ class _StoreForwardConfigScreenState
                   'Allows nodes to store messages and forward them to devices that were offline. '
                   'A "server" node stores messages, while "client" nodes can request missed messages.',
                   style: TextStyle(
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                     fontSize: 13,
                     height: 1.4,
                   ),
@@ -192,49 +192,49 @@ class _StoreForwardConfigScreenState
   Widget _buildConfigCard() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
           ListTile(
-            title: const Text(
+            title: Text(
               'Enable Store & Forward',
               style: TextStyle(color: Colors.white),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Participate in the S&F network',
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             trailing: ThemedSwitch(
               value: _enabled,
               onChanged: (v) => setState(() => _enabled = v),
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           ListTile(
-            title: const Text(
+            title: Text(
               'Act as Server',
               style: TextStyle(color: Colors.white),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Store messages for other nodes (uses more RAM)',
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             trailing: ThemedSwitch(
               value: _isServer,
               onChanged: _enabled ? (v) => setState(() => _isServer = v) : null,
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           ListTile(
-            title: const Text(
+            title: Text(
               'Heartbeat',
               style: TextStyle(color: Colors.white),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Send periodic announcements to the mesh',
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             trailing: ThemedSwitch(
               value: _heartbeat,
@@ -251,20 +251,20 @@ class _StoreForwardConfigScreenState
   Widget _buildServerSettingsCard() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
           ListTile(
-            title: const Text(
+            title: Text(
               'Records Limit',
               style: TextStyle(color: Colors.white),
             ),
             subtitle: Text(
               _records == 0 ? 'Use device default' : '$_records records',
-              style: const TextStyle(
-                color: AppTheme.textTertiary,
+              style: TextStyle(
+                color: context.textTertiary,
                 fontSize: 12,
               ),
             ),
@@ -272,7 +272,7 @@ class _StoreForwardConfigScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: Icon(Icons.remove, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.remove, color: context.textSecondary),
                   onPressed: _records > 0
                       ? () => setState(() => _records -= 50)
                       : null,
@@ -285,7 +285,7 @@ class _StoreForwardConfigScreenState
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.add, color: context.textSecondary),
                   onPressed: _records < 500
                       ? () => setState(() => _records += 50)
                       : null,
@@ -293,16 +293,16 @@ class _StoreForwardConfigScreenState
               ],
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           ListTile(
-            title: const Text(
+            title: Text(
               'History Return Max',
               style: TextStyle(color: Colors.white),
             ),
             subtitle: Text(
               'Max $_historyReturnMax messages per request',
-              style: const TextStyle(
-                color: AppTheme.textTertiary,
+              style: TextStyle(
+                color: context.textTertiary,
                 fontSize: 12,
               ),
             ),
@@ -310,7 +310,7 @@ class _StoreForwardConfigScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: Icon(Icons.remove, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.remove, color: context.textSecondary),
                   onPressed: _historyReturnMax > 25
                       ? () => setState(() => _historyReturnMax -= 25)
                       : null,
@@ -323,7 +323,7 @@ class _StoreForwardConfigScreenState
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.add, color: context.textSecondary),
                   onPressed: _historyReturnMax < 250
                       ? () => setState(() => _historyReturnMax += 25)
                       : null,
@@ -331,16 +331,16 @@ class _StoreForwardConfigScreenState
               ],
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           ListTile(
-            title: const Text(
+            title: Text(
               'History Window',
               style: TextStyle(color: Colors.white),
             ),
             subtitle: Text(
               'Keep messages for ${_historyReturnWindow ~/ 60} hours',
-              style: const TextStyle(
-                color: AppTheme.textTertiary,
+              style: TextStyle(
+                color: context.textTertiary,
                 fontSize: 12,
               ),
             ),
@@ -348,7 +348,7 @@ class _StoreForwardConfigScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: Icon(Icons.remove, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.remove, color: context.textSecondary),
                   onPressed: _historyReturnWindow > 60
                       ? () => setState(() => _historyReturnWindow -= 60)
                       : null,
@@ -361,7 +361,7 @@ class _StoreForwardConfigScreenState
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.add, color: context.textSecondary),
                   onPressed: _historyReturnWindow < 720
                       ? () => setState(() => _historyReturnWindow += 60)
                       : null,

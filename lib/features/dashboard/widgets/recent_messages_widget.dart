@@ -32,7 +32,7 @@ class RecentMessagesContent extends ConsumerWidget {
       itemCount: recentMessages.length,
       separatorBuilder: (_, i) => Divider(
         height: 1,
-        color: AppTheme.darkBorder.withValues(alpha: 0.5),
+        color: context.border.withValues(alpha: 0.5),
         indent: 56,
       ),
       itemBuilder: (context, index) {
@@ -97,7 +97,7 @@ class _MessageTile extends StatelessWidget {
               size: 18,
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           // Content
           Expanded(
             child: Column(
@@ -120,19 +120,19 @@ class _MessageTile extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       timeAgo,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   message,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

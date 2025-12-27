@@ -143,7 +143,7 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = enabled ? context.accentColor : AppTheme.textTertiary;
+    final color = enabled ? context.accentColor : context.textTertiary;
 
     return BouncyTap(
       onTap: enabled ? onTap : null,
@@ -155,12 +155,12 @@ class _ActionButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: enabled
               ? context.accentColor.withValues(alpha: 0.08)
-              : AppTheme.darkBackground,
+              : context.background,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: enabled
                 ? context.accentColor.withValues(alpha: 0.2)
-                : AppTheme.darkBorder,
+                : context.border,
           ),
         ),
         child: Column(
@@ -208,12 +208,12 @@ class _SosButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: enabled
                 ? AppTheme.errorRed.withValues(alpha: 0.15)
-                : AppTheme.darkBackground,
+                : context.background,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: enabled
                   ? AppTheme.errorRed.withValues(alpha: 0.4)
-                  : AppTheme.darkBorder,
+                  : context.border,
             ),
           ),
           child: Row(
@@ -222,15 +222,15 @@ class _SosButton extends StatelessWidget {
               Icon(
                 Icons.emergency,
                 size: 16,
-                color: enabled ? AppTheme.errorRed : AppTheme.textTertiary,
+                color: enabled ? AppTheme.errorRed : context.textTertiary,
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               Text(
                 'Emergency SOS',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: enabled ? AppTheme.errorRed : AppTheme.textTertiary,
+                  color: enabled ? AppTheme.errorRed : context.textTertiary,
                   letterSpacing: 0.5,
                 ),
               ),

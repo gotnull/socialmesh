@@ -187,7 +187,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Quick Message',
                   style: TextStyle(
@@ -199,13 +199,13 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
               ),
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close, color: AppTheme.textTertiary),
+                icon: Icon(Icons.close, color: context.textTertiary),
               ),
             ],
           ),
         ),
 
-        const Divider(height: 1, color: AppTheme.darkBorder),
+        Divider(height: 1, color: context.border),
 
         Padding(
           padding: const EdgeInsets.all(20),
@@ -213,12 +213,12 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Recipient selector
-              const Text(
+              Text(
                 'TO',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textTertiary,
+                  color: context.textTertiary,
                   letterSpacing: 1,
                 ),
               ),
@@ -231,9 +231,9 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkBackground,
+                    color: context.background,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.darkBorder),
+                    border: Border.all(color: context.border),
                   ),
                   child: Row(
                     children: [
@@ -266,19 +266,19 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
                               ),
                             ),
                             if (_selectedNodeNum == null)
-                              const Text(
+                              Text(
                                 'Broadcast to all nodes',
                                 style: TextStyle(
-                                  color: AppTheme.textTertiary,
+                                  color: context.textTertiary,
                                   fontSize: 12,
                                 ),
                               ),
                           ],
                         ),
                       ),
-                      const Icon(
+                      Icon(
                         Icons.keyboard_arrow_right,
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                       ),
                     ],
                   ),
@@ -288,12 +288,12 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
               const SizedBox(height: 20),
 
               // Quick presets
-              const Text(
+              Text(
                 'QUICK MESSAGE',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textTertiary,
+                  color: context.textTertiary,
                   letterSpacing: 1,
                 ),
               ),
@@ -324,12 +324,12 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? context.accentColor.withValues(alpha: 0.15)
-                            : AppTheme.darkBackground,
+                            : context.background,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected
                               ? context.accentColor
-                              : AppTheme.darkBorder,
+                              : context.border,
                         ),
                       ),
                       child: Text(
@@ -339,7 +339,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
                           fontWeight: FontWeight.w500,
                           color: isSelected
                               ? context.accentColor
-                              : AppTheme.textSecondary,
+                              : context.textSecondary,
                         ),
                       ),
                     ),
@@ -350,12 +350,12 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
               const SizedBox(height: 16),
 
               // Custom message input
-              const Text(
+              Text(
                 'OR TYPE CUSTOM',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textTertiary,
+                  color: context.textTertiary,
                   letterSpacing: 1,
                 ),
               ),
@@ -365,19 +365,19 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
                 style: const TextStyle(color: Colors.white, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Type a message...',
-                  hintStyle: const TextStyle(
-                    color: AppTheme.textTertiary,
+                  hintStyle: TextStyle(
+                    color: context.textTertiary,
                     fontSize: 14,
                   ),
                   filled: true,
-                  fillColor: AppTheme.darkBackground,
+                  fillColor: context.background,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.darkBorder),
+                    borderSide: BorderSide(color: context.border),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.darkBorder),
+                    borderSide: BorderSide(color: context.border),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -409,7 +409,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.accentColor,
                     foregroundColor: Colors.black,
-                    disabledBackgroundColor: AppTheme.darkBorder,
+                    disabledBackgroundColor: context.border,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -596,7 +596,7 @@ class _SosSheetContentState extends State<SosSheetContent> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Emergency SOS',
                 style: TextStyle(
                   color: Colors.white,
@@ -607,13 +607,13 @@ class _SosSheetContentState extends State<SosSheetContent> {
               const Spacer(),
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close, color: AppTheme.textTertiary),
+                icon: Icon(Icons.close, color: context.textTertiary),
               ),
             ],
           ),
         ),
 
-        const Divider(height: 1, color: AppTheme.darkBorder),
+        Divider(height: 1, color: context.border),
 
         // Content
         Padding(
@@ -634,7 +634,7 @@ class _SosSheetContentState extends State<SosSheetContent> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'This will:',
                       style: TextStyle(
                         color: Colors.white,
@@ -663,7 +663,7 @@ class _SosSheetContentState extends State<SosSheetContent> {
                       ? 'Ready to send emergency alert'
                       : 'Please wait $_countdown seconds...',
                   style: TextStyle(
-                    color: _canSend ? AppTheme.errorRed : AppTheme.textTertiary,
+                    color: _canSend ? AppTheme.errorRed : context.textTertiary,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -681,14 +681,14 @@ class _SosSheetContentState extends State<SosSheetContent> {
                           ? null
                           : () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.textSecondary,
-                        side: const BorderSide(color: AppTheme.darkBorder),
+                        foregroundColor: context.textSecondary,
+                        side: BorderSide(color: context.border),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Cancel',
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
@@ -701,7 +701,7 @@ class _SosSheetContentState extends State<SosSheetContent> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.errorRed,
                         foregroundColor: Colors.white,
-                        disabledBackgroundColor: AppTheme.darkBorder,
+                        disabledBackgroundColor: context.border,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -748,15 +748,15 @@ class _SosSheetContentState extends State<SosSheetContent> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '• ',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                color: AppTheme.textSecondary,
+              style: TextStyle(
+                color: context.textSecondary,
                 fontSize: 13,
                 height: 1.3,
               ),
@@ -870,7 +870,7 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
                 child: Icon(Icons.route, color: context.accentColor, size: 22),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Traceroute',
                 style: TextStyle(
                   color: Colors.white,
@@ -881,13 +881,13 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
               const Spacer(),
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close, color: AppTheme.textTertiary),
+                icon: Icon(Icons.close, color: context.textTertiary),
               ),
             ],
           ),
         ),
 
-        const Divider(height: 1, color: AppTheme.darkBorder),
+        Divider(height: 1, color: context.border),
 
         Padding(
           padding: const EdgeInsets.all(20),
@@ -909,11 +909,11 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
                       size: 20,
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Traceroute discovers the path packets take to reach a node through the mesh network.',
                         style: TextStyle(
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                           fontSize: 13,
                           height: 1.4,
                         ),
@@ -926,12 +926,12 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
               const SizedBox(height: 20),
 
               // Node selector
-              const Text(
+              Text(
                 'TARGET NODE',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textTertiary,
+                  color: context.textTertiary,
                   letterSpacing: 1,
                 ),
               ),
@@ -944,12 +944,12 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkBackground,
+                    color: context.background,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: _selectedNodeNum != null
                           ? context.accentColor.withValues(alpha: 0.5)
-                          : AppTheme.darkBorder,
+                          : context.border,
                     ),
                   ),
                   child: Row(
@@ -960,7 +960,7 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
                         decoration: BoxDecoration(
                           color: _selectedNodeNum != null
                               ? context.accentColor.withValues(alpha: 0.15)
-                              : AppTheme.darkBorder.withValues(alpha: 0.5),
+                              : context.border.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
@@ -969,7 +969,7 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
                               : Icons.person_add_outlined,
                           color: _selectedNodeNum != null
                               ? context.accentColor
-                              : AppTheme.textTertiary,
+                              : context.textTertiary,
                           size: 22,
                         ),
                       ),
@@ -982,7 +982,7 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
                           style: TextStyle(
                             color: _selectedNodeNum != null
                                 ? Colors.white
-                                : AppTheme.textTertiary,
+                                : context.textTertiary,
                             fontSize: 15,
                             fontWeight: _selectedNodeNum != null
                                 ? FontWeight.w500
@@ -994,7 +994,7 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
                         Icons.keyboard_arrow_right,
                         color: _selectedNodeNum != null
                             ? context.accentColor
-                            : AppTheme.textTertiary,
+                            : context.textTertiary,
                       ),
                     ],
                   ),
@@ -1012,14 +1012,14 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
                           ? null
                           : () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.textSecondary,
-                        side: const BorderSide(color: AppTheme.darkBorder),
+                        foregroundColor: context.textSecondary,
+                        side: BorderSide(color: context.border),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Cancel',
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
@@ -1034,7 +1034,7 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: context.accentColor,
                         foregroundColor: Colors.black,
-                        disabledBackgroundColor: AppTheme.darkBorder,
+                        disabledBackgroundColor: context.border,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -1049,7 +1049,7 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
                                 color: Colors.black,
                               ),
                             )
-                          : const Row(
+                          : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(Icons.route, size: 18),

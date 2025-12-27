@@ -440,12 +440,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         leading: const HamburgerMenuButton(),
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Mesh Map',
           style: TextStyle(
             fontSize: 20,
@@ -462,14 +462,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   : Icons.filter_alt_outlined,
               color: _nodeFilter != NodeFilter.all || _showFilters
                   ? context.accentColor
-                  : AppTheme.textSecondary,
+                  : context.textSecondary,
             ),
             onPressed: () => setState(() => _showFilters = !_showFilters),
             tooltip: 'Filter nodes',
           ),
           // Map style
           PopupMenuButton<MapTileStyle>(
-            icon: Icon(Icons.map, color: AppTheme.textSecondary),
+            icon: Icon(Icons.map, color: context.textSecondary),
             tooltip: 'Map style',
             onSelected: (style) => setState(() => _mapStyle = style),
             itemBuilder: (context) => MapTileStyle.values.map((style) {
@@ -482,7 +482,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       size: 18,
                       color: _mapStyle == style
                           ? context.accentColor
-                          : AppTheme.textSecondary,
+                          : context.textSecondary,
                     ),
                     const SizedBox(width: 8),
                     Text(style.label),
@@ -493,7 +493,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           ),
           // More options menu
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: AppTheme.textSecondary),
+            icon: Icon(Icons.more_vert, color: context.textSecondary),
             onSelected: (value) {
               switch (value) {
                 case 'refresh':
@@ -547,8 +547,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       Icons.refresh,
                       size: 18,
                       color: _isRefreshing
-                          ? AppTheme.textTertiary
-                          : AppTheme.textSecondary,
+                          ? context.textTertiary
+                          : context.textSecondary,
                     ),
                     SizedBox(width: 8),
                     Text(_isRefreshing ? 'Refreshing...' : 'Refresh positions'),
@@ -564,7 +564,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       size: 18,
                       color: _showHeatmap
                           ? context.accentColor
-                          : AppTheme.textSecondary,
+                          : context.textSecondary,
                     ),
                     SizedBox(width: 8),
                     Text(_showHeatmap ? 'Hide heatmap' : 'Show heatmap'),
@@ -580,9 +580,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       size: 18,
                       color: _showConnectionLines
                           ? context.accentColor
-                          : AppTheme.textSecondary,
+                          : context.textSecondary,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
                       _showConnectionLines
                           ? 'Hide connection lines'
@@ -600,7 +600,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     'Max Distance',
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -616,9 +616,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         size: 16,
                         color: _connectionMaxDistance == 1.0
                             ? context.accentColor
-                            : AppTheme.textTertiary,
+                            : context.textTertiary,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       const Text('1 km'),
                     ],
                   ),
@@ -634,9 +634,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         size: 16,
                         color: _connectionMaxDistance == 5.0
                             ? context.accentColor
-                            : AppTheme.textTertiary,
+                            : context.textTertiary,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       const Text('5 km'),
                     ],
                   ),
@@ -652,9 +652,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         size: 16,
                         color: _connectionMaxDistance == 10.0
                             ? context.accentColor
-                            : AppTheme.textTertiary,
+                            : context.textTertiary,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       const Text('10 km'),
                     ],
                   ),
@@ -670,9 +670,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         size: 16,
                         color: _connectionMaxDistance == 25.0
                             ? context.accentColor
-                            : AppTheme.textTertiary,
+                            : context.textTertiary,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       const Text('25 km'),
                     ],
                   ),
@@ -688,9 +688,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         size: 16,
                         color: _connectionMaxDistance >= 100.0
                             ? context.accentColor
-                            : AppTheme.textTertiary,
+                            : context.textTertiary,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       const Text('All'),
                     ],
                   ),
@@ -706,9 +706,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       size: 18,
                       color: _showRangeCircles
                           ? context.accentColor
-                          : AppTheme.textSecondary,
+                          : context.textSecondary,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
                       _showRangeCircles
                           ? 'Hide range circles'
@@ -726,9 +726,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       size: 18,
                       color: _measureMode
                           ? context.accentColor
-                          : AppTheme.textSecondary,
+                          : context.textSecondary,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
                       _measureMode ? 'Exit measure mode' : 'Measure distance',
                     ),
@@ -740,8 +740,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 value: 'globe',
                 child: Row(
                   children: [
-                    Icon(Icons.public, size: 18, color: AppTheme.textSecondary),
-                    const SizedBox(width: 8),
+                    Icon(Icons.public, size: 18, color: context.textSecondary),
+                    SizedBox(width: 8),
                     const Text('3D Globe View'),
                   ],
                 ),
@@ -754,9 +754,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     Icon(
                       Icons.settings_outlined,
                       size: 18,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     const Text('Settings'),
                   ],
                 ),
@@ -776,7 +776,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     initialZoom: zoom,
                     minZoom: 4,
                     maxZoom: 18,
-                    backgroundColor: AppTheme.darkBackground,
+                    backgroundColor: context.background,
                     interactionOptions: const InteractionOptions(
                       flags: InteractiveFlag.all,
                       pinchZoomThreshold: 0.5,
@@ -1216,10 +1216,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.darkCard.withValues(alpha: 0.9),
+                          color: context.card.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: AppTheme.darkBorder.withValues(alpha: 0.5),
+                            color: context.border.withValues(alpha: 0.5),
                           ),
                         ),
                         child: Row(
@@ -1228,7 +1228,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             Container(
                               width: 8,
                               height: 8,
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 color: AppTheme.successGreen,
                                 shape: BoxShape.circle,
                               ),
@@ -1243,10 +1243,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ),
                             ),
                             const SizedBox(width: 4),
-                            const Icon(
+                            Icon(
                               Icons.chevron_right,
                               size: 16,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           ],
                         ),
@@ -1322,14 +1322,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
         ),
         BottomSheetAction(
           icon: Icons.copy,
-          iconColor: AppTheme.textSecondary,
+          iconColor: context.textSecondary,
           label: 'Copy Coordinates',
           onTap: () => _copyCoordinates(point),
         ),
       ],
       header: Text(
         '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}',
-        style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+        style: TextStyle(fontSize: 14, color: context.textSecondary),
       ),
     );
   }
@@ -1346,7 +1346,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         ),
         BottomSheetAction(
           icon: Icons.copy,
-          iconColor: AppTheme.textSecondary,
+          iconColor: context.textSecondary,
           label: 'Copy Coordinates',
           onTap: () => _copyCoordinates(waypoint.position),
         ),
@@ -1361,7 +1361,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         children: [
           Text(
             waypoint.label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -1370,7 +1370,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           const SizedBox(height: 8),
           Text(
             '${waypoint.position.latitude.toStringAsFixed(6)}, ${waypoint.position.longitude.toStringAsFixed(6)}',
-            style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 14, color: context.textSecondary),
           ),
         ],
       ),
@@ -1483,8 +1483,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 color: context.accentColor,
               ),
             ),
-            const SizedBox(height: 24),
-            const Text(
+            SizedBox(height: 24),
+            Text(
               'No Nodes with GPS',
               style: TextStyle(
                 fontSize: 20,
@@ -1497,13 +1497,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
               totalNodes > 0
                   ? '$totalNodes nodes discovered but none have\nreported GPS position yet.'
                   : 'Nodes will appear on the map once they\nreport their GPS position.',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _isRefreshing ? null : _refreshPositions,
               icon: _isRefreshing
@@ -1528,10 +1528,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
               'Position broadcasts can take up to 15 minutes.\nTap to request immediately.',
-              style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+              style: TextStyle(fontSize: 12, color: context.textTertiary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -1658,7 +1658,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: AppTheme.darkCard.withValues(alpha: 0.85),
+                color: context.card.withValues(alpha: 0.85),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: context.accentColor.withValues(alpha: 0.3),
@@ -1775,7 +1775,7 @@ class _NodeMarker extends StatelessWidget {
   Widget build(BuildContext context) {
     final baseColor = isMyNode
         ? context.accentColor
-        : (node.isOnline ? AppTheme.primaryPurple : AppTheme.textTertiary);
+        : (node.isOnline ? AppTheme.primaryPurple : context.textTertiary);
     final color = isStale ? baseColor.withValues(alpha: 0.5) : baseColor;
 
     return AnimatedContainer(
@@ -1826,7 +1826,7 @@ class _NodeMarker extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppTheme.warningYellow,
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppTheme.darkCard, width: 1.5),
+                  border: Border.all(color: context.card, width: 1.5),
                 ),
                 child: const Center(
                   child: Text(
@@ -1891,10 +1891,10 @@ class _NodeListPanel extends StatelessWidget {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Container(
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           border: Border(
             right: BorderSide(
-              color: AppTheme.darkBorder.withValues(alpha: 0.5),
+              color: context.border.withValues(alpha: 0.5),
             ),
           ),
           boxShadow: [
@@ -1913,15 +1913,15 @@ class _NodeListPanel extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: AppTheme.darkBorder.withValues(alpha: 0.5),
+                    color: context.border.withValues(alpha: 0.5),
                   ),
                 ),
               ),
               child: Row(
                 children: [
                   Icon(Icons.list, size: 20, color: context.accentColor),
-                  const SizedBox(width: 8),
-                  const Expanded(
+                  SizedBox(width: 8),
+                  Expanded(
                     child: Text(
                       'Nodes',
                       style: TextStyle(
@@ -1933,15 +1933,15 @@ class _NodeListPanel extends StatelessWidget {
                   ),
                   Text(
                     '${sortedNodes.length}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, size: 20),
-                    color: AppTheme.textTertiary,
+                    icon: Icon(Icons.close, size: 20),
+                    color: context.textTertiary,
                     onPressed: onClose,
                     visualDensity: VisualDensity.compact,
                   ),
@@ -1953,22 +1953,22 @@ class _NodeListPanel extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               child: TextField(
                 controller: searchController,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+                style: TextStyle(color: Colors.white, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Search nodes...',
                   hintStyle: TextStyle(
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                     fontSize: 14,
                   ),
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.search,
                     size: 20,
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                   ),
                   suffixIcon: searchController.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear, size: 18),
-                          color: AppTheme.textSecondary,
+                          icon: Icon(Icons.clear, size: 18),
+                          color: context.textSecondary,
                           onPressed: () {
                             searchController.clear();
                             onSearchChanged('');
@@ -1976,7 +1976,7 @@ class _NodeListPanel extends StatelessWidget {
                         )
                       : null,
                   filled: true,
-                  fillColor: AppTheme.darkBackground,
+                  fillColor: context.background,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
@@ -1995,7 +1995,7 @@ class _NodeListPanel extends StatelessWidget {
                   ? Center(
                       child: Text(
                         'No nodes found',
-                        style: TextStyle(color: AppTheme.textTertiary),
+                        style: TextStyle(color: context.textTertiary),
                       ),
                     )
                   : ListView.builder(
@@ -2056,7 +2056,7 @@ class _NodeListItem extends StatelessWidget {
     final node = nodeWithPos.node;
     final baseColor = isMyNode
         ? context.accentColor
-        : (node.isOnline ? AppTheme.primaryPurple : AppTheme.textTertiary);
+        : (node.isOnline ? AppTheme.primaryPurple : context.textTertiary);
 
     return Material(
       color: isSelected
@@ -2112,11 +2112,11 @@ class _NodeListItem extends StatelessWidget {
                             color: AppTheme.warningYellow,
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppTheme.darkCard,
+                              color: context.card,
                               width: 1.5,
                             ),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Text(
                               '?',
                               style: TextStyle(
@@ -2149,7 +2149,7 @@ class _NodeListItem extends StatelessWidget {
                                   ? Colors.white
                                   : (node.isOnline
                                         ? Colors.white
-                                        : AppTheme.textSecondary),
+                                        : context.textSecondary),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -2177,7 +2177,7 @@ class _NodeListItem extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Row(
                       children: [
                         // Online/offline status
@@ -2187,20 +2187,20 @@ class _NodeListItem extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: node.isOnline
                                 ? AppTheme.successGreen
-                                : AppTheme.textTertiary,
+                                : context.textTertiary,
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: 4),
                         Text(
                           node.isOnline ? 'Online' : 'Offline',
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
                         ),
                         if (nodeWithPos.isStale) ...[
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Text(
                             '• Last known',
                             style: TextStyle(
@@ -2224,15 +2224,15 @@ class _NodeListItem extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkBackground,
+                    color: context.background,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     _formatDistance(distance!),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                   ),
                 ),
@@ -2243,7 +2243,7 @@ class _NodeListItem extends StatelessWidget {
                 size: 18,
                 color: isSelected
                     ? context.accentColor
-                    : AppTheme.textTertiary.withValues(alpha: 0.5),
+                    : context.textTertiary.withValues(alpha: 0.5),
               ),
             ],
           ),
@@ -2272,9 +2272,9 @@ class _FilterBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard.withValues(alpha: 0.95),
+        color: context.card.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+        border: Border.all(color: context.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
@@ -2290,7 +2290,7 @@ class _FilterBar extends StatelessWidget {
           Row(
             children: [
               Icon(Icons.filter_alt, size: 16, color: context.accentColor),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 'Filter Nodes',
                 style: const TextStyle(
@@ -2302,7 +2302,7 @@ class _FilterBar extends StatelessWidget {
               const Spacer(),
               Text(
                 '$filteredCount / $totalCount',
-                style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+                style: TextStyle(fontSize: 12, color: context.textTertiary),
               ),
             ],
           ),
@@ -2323,12 +2323,12 @@ class _FilterBar extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? context.accentColor.withValues(alpha: 0.2)
-                        : AppTheme.darkBackground,
+                        : context.background,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isSelected
                           ? context.accentColor
-                          : AppTheme.darkBorder,
+                          : context.border,
                       width: isSelected ? 1.5 : 1,
                     ),
                   ),
@@ -2341,7 +2341,7 @@ class _FilterBar extends StatelessWidget {
                           : FontWeight.w400,
                       color: isSelected
                           ? context.accentColor
-                          : AppTheme.textSecondary,
+                          : context.textSecondary,
                     ),
                   ),
                 ),
@@ -2391,7 +2391,7 @@ class _MeasurementCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard.withValues(alpha: 0.95),
+        color: context.card.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: AppTheme.warningYellow.withValues(alpha: 0.5),
@@ -2413,7 +2413,7 @@ class _MeasurementCard extends StatelessWidget {
               color: AppTheme.warningYellow.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.straighten,
               size: 18,
               color: AppTheme.warningYellow,
@@ -2435,24 +2435,24 @@ class _MeasurementCard extends StatelessWidget {
                 ),
                 Text(
                   'A: ${start.latitude.toStringAsFixed(4)}, ${start.longitude.toStringAsFixed(4)}',
-                  style: TextStyle(fontSize: 10, color: AppTheme.textTertiary),
+                  style: TextStyle(fontSize: 10, color: context.textTertiary),
                 ),
                 Text(
                   'B: ${end.latitude.toStringAsFixed(4)}, ${end.longitude.toStringAsFixed(4)}',
-                  style: TextStyle(fontSize: 10, color: AppTheme.textTertiary),
+                  style: TextStyle(fontSize: 10, color: context.textTertiary),
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.share, size: 20),
-            color: AppTheme.textSecondary,
+            icon: Icon(Icons.share, size: 20),
+            color: context.textSecondary,
             onPressed: onShare,
             tooltip: 'Share',
           ),
           IconButton(
-            icon: const Icon(Icons.refresh, size: 20),
-            color: AppTheme.textTertiary,
+            icon: Icon(Icons.refresh, size: 20),
+            color: context.textTertiary,
             onPressed: onClear,
             tooltip: 'New measurement',
           ),

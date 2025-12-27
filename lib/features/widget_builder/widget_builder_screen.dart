@@ -154,9 +154,9 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         title: const Text(
           'My Widgets',
           style: TextStyle(
@@ -204,8 +204,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
           children: [
             ElevatedButton.icon(
               onPressed: _createNewWidget,
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
+              icon: Icon(Icons.add, color: Colors.white),
+              label: Text(
                 'Create Widget',
                 style: TextStyle(color: Colors.white),
               ),
@@ -217,7 +217,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             TextButton.icon(
               onPressed: _openMarketplace,
               icon: Icon(Icons.store, color: context.accentColor),
@@ -279,8 +279,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
               ),
             )
           : PopupMenuButton<String>(
-              icon: Icon(Icons.more_vert, color: AppTheme.textSecondary),
-              color: AppTheme.darkCard,
+              icon: Icon(Icons.more_vert, color: context.textSecondary),
+              color: context.card,
               onSelected: (action) => _handleAction(action, schema),
               itemBuilder: (context) => [
                 PopupMenuItem(
@@ -296,7 +296,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                         size: 18,
                         color: isOnDashboard ? AppTheme.errorRed : Colors.white,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         isOnDashboard
                             ? 'Remove from Dashboard'
@@ -310,7 +310,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'edit',
                   child: Row(
                     children: [
@@ -320,7 +320,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'duplicate',
                   child: Row(
                     children: [
@@ -330,7 +330,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'export',
                   child: Row(
                     children: [
@@ -350,7 +350,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                           size: 18,
                           color: context.accentColor,
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Text(
                           'Submit to Marketplace',
                           style: TextStyle(color: context.accentColor),
@@ -402,7 +402,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                   color: context.accentColor.withValues(alpha: 0.6),
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               Text(
                 title,
                 style: const TextStyle(
@@ -414,7 +414,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
               const SizedBox(height: 8),
               Text(
                 subtitle,
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                style: TextStyle(color: context.textSecondary, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
               if (action != null) ...[const SizedBox(height: 24), action],
@@ -617,7 +617,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         title: Row(
           children: [
             if (isOnDashboard) ...[
@@ -626,21 +626,21 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                 color: AppTheme.warningYellow,
                 size: 24,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
             ],
-            const Text('Delete Widget?', style: TextStyle(color: Colors.white)),
+            Text('Delete Widget?', style: TextStyle(color: Colors.white)),
           ],
         ),
         content: Text(
           warningMessage,
-          style: TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: context.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
           ),
           TextButton(
@@ -696,8 +696,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text(
+        backgroundColor: context.card,
+        title: Text(
           'Submit to Marketplace',
           style: TextStyle(color: Colors.white),
         ),
@@ -707,15 +707,15 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
           children: [
             Text(
               'Submit "${schema.name}" for marketplace approval?',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
+                color: context.background,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.darkBorder),
+                border: Border.all(color: context.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -727,7 +727,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                         size: 16,
                         color: context.accentColor,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         'Review Guidelines',
                         style: TextStyle(
@@ -738,13 +738,13 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     '• Widget will be reviewed for quality\n'
                     '• Similar widgets may be rejected\n'
                     '• You\'ll be credited as the author',
                     style: TextStyle(
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       fontSize: 12,
                       height: 1.5,
                     ),
@@ -759,7 +759,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'Cancel',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -806,7 +806,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              backgroundColor: AppTheme.darkCard,
+              backgroundColor: context.card,
               title: Row(
                 children: [
                   Icon(
@@ -814,8 +814,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                     color: AppTheme.warningYellow,
                     size: 24,
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
+                  SizedBox(width: 8),
+                  Text(
                     'Similar Widget Found',
                     style: TextStyle(color: Colors.white),
                   ),
@@ -827,13 +827,13 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                 children: [
                   Text(
                     'A similar widget already exists in the marketplace:',
-                    style: TextStyle(color: AppTheme.textSecondary),
+                    style: TextStyle(color: context.textSecondary),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkBackground,
+                      color: context.background,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
@@ -841,7 +841,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                       children: [
                         Text(
                           duplicateCheck.duplicateName ?? 'Unknown',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
                           ),
@@ -851,7 +851,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                           Text(
                             'Similarity: ${(duplicateCheck.similarityScore! * 100).toInt()}%',
                             style: TextStyle(
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                               fontSize: 12,
                             ),
                           ),
@@ -859,11 +859,11 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Text(
                     'Consider making your widget more unique before submitting.',
                     style: TextStyle(
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       fontSize: 13,
                     ),
                   ),

@@ -53,7 +53,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
         data: ThemeData.dark().copyWith(
           colorScheme: ColorScheme.dark(
             primary: context.accentColor,
-            surface: AppTheme.darkCard,
+            surface: context.card,
           ),
         ),
         child: child!,
@@ -76,7 +76,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
         data: ThemeData.dark().copyWith(
           colorScheme: ColorScheme.dark(
             primary: context.accentColor,
-            surface: AppTheme.darkCard,
+            surface: context.card,
           ),
         ),
         child: child!,
@@ -99,7 +99,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
         data: ThemeData.dark().copyWith(
           colorScheme: ColorScheme.dark(
             primary: context.accentColor,
-            surface: AppTheme.darkCard,
+            surface: context.card,
           ),
         ),
         child: child!,
@@ -122,7 +122,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
         data: ThemeData.dark().copyWith(
           colorScheme: ColorScheme.dark(
             primary: context.accentColor,
-            surface: AppTheme.darkCard,
+            surface: context.card,
           ),
         ),
         child: child!,
@@ -201,7 +201,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Flight scheduled! ✈️'),
+            content: Text('Flight scheduled! ✈️'),
             backgroundColor: context.accentColor,
           ),
         );
@@ -228,10 +228,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
     final timeFormat = DateFormat('h:mm a');
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'Schedule Flight',
           style: TextStyle(
             fontSize: 20,
@@ -279,7 +279,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
               child: Row(
                 children: [
                   Icon(Icons.flight, color: context.accentColor),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Share your flight so others can try to receive your Meshtastic signal!',
@@ -292,7 +292,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // Flight Info Section
             _buildSectionHeader('Flight Information'),
@@ -456,9 +456,9 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.darkCard,
+                color: context.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.darkBorder),
+                border: Border.all(color: context.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -499,7 +499,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
     return Text(
       title,
       style: TextStyle(
-        color: AppTheme.textSecondary,
+        color: context.textSecondary,
         fontSize: 13,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.5,
@@ -522,26 +522,26 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
       maxLines: maxLines,
       maxLength: maxLength,
       textCapitalization: textCapitalization,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: Colors.white),
       validator: validator,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        labelStyle: TextStyle(color: AppTheme.textSecondary),
-        hintStyle: TextStyle(color: AppTheme.textTertiary),
+        labelStyle: TextStyle(color: context.textSecondary),
+        hintStyle: TextStyle(color: context.textTertiary),
         prefixIcon: icon != null
-            ? Icon(icon, color: AppTheme.textTertiary, size: 20)
+            ? Icon(icon, color: context.textTertiary, size: 20)
             : null,
         filled: true,
-        fillColor: AppTheme.darkCard,
+        fillColor: context.card,
         counterText: '',
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppTheme.darkBorder),
+          borderSide: BorderSide(color: context.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppTheme.darkBorder),
+          borderSide: BorderSide(color: context.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -566,14 +566,14 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.darkBorder),
+          border: Border.all(color: context.border),
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppTheme.textTertiary, size: 20),
-            const SizedBox(width: 12),
+            Icon(icon, color: context.textTertiary, size: 20),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -581,16 +581,16 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
                   Text(
                     label,
                     style: TextStyle(
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       fontSize: 12,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     value,
                     style: TextStyle(
                       color: value == 'Select'
-                          ? AppTheme.textTertiary
+                          ? context.textTertiary
                           : Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -611,11 +611,11 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('• ', style: TextStyle(color: AppTheme.textSecondary)),
+          Text('• ', style: TextStyle(color: context.textSecondary)),
           Expanded(
             child: Text(
               text,
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              style: TextStyle(color: context.textSecondary, fontSize: 13),
             ),
           ),
         ],

@@ -171,7 +171,7 @@ class _AutomationEditorScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text(_isEditing ? 'Edit Automation' : 'New Automation'),
@@ -193,20 +193,20 @@ class _AutomationEditorScreenState
             children: [
               // Name field
               _buildSectionTitle(context, 'Name'),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               TextField(
                 controller: _nameController,
                 decoration: InputDecoration(
                   hintText: 'e.g., Low Battery Alert',
                   filled: true,
-                  fillColor: AppTheme.darkCard,
+                  fillColor: context.card,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppTheme.darkBorder),
+                    borderSide: BorderSide(color: context.border),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -217,7 +217,7 @@ class _AutomationEditorScreenState
                 ),
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               // Description field
               _buildSectionTitle(context, 'Description (optional)'),
@@ -227,14 +227,14 @@ class _AutomationEditorScreenState
                 decoration: InputDecoration(
                   hintText: 'What does this automation do?',
                   filled: true,
-                  fillColor: AppTheme.darkCard,
+                  fillColor: context.card,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppTheme.darkBorder),
+                    borderSide: BorderSide(color: context.border),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -498,7 +498,7 @@ class _AutomationEditorScreenState
   void _addAction() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkSurface,
+      backgroundColor: context.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -623,7 +623,7 @@ class _ActionTypeSelector extends StatelessWidget {
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
 
           Wrap(
             spacing: 8,
@@ -637,9 +637,9 @@ class _ActionTypeSelector extends StatelessWidget {
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
+                    color: context.card,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.darkBorder),
+                    border: Border.all(color: context.border),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

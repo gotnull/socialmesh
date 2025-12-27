@@ -119,7 +119,7 @@ class _StatItem extends StatelessWidget {
                   ),
                   child: Text(
                     badge! > 9 ? '9+' : badge.toString(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -142,7 +142,7 @@ class _StatItem extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(fontSize: 11, color: AppTheme.textTertiary),
+          style: TextStyle(fontSize: 11, color: context.textTertiary),
         ),
       ],
     );
@@ -156,7 +156,7 @@ class _VerticalDivider extends StatelessWidget {
       width: 1,
       height: 50,
       margin: const EdgeInsets.symmetric(horizontal: 8),
-      color: AppTheme.darkBorder.withValues(alpha: 0.5),
+      color: context.border.withValues(alpha: 0.5),
     );
   }
 }

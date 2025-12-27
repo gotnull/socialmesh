@@ -29,7 +29,7 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Products'),
+        title: Text('Manage Products'),
         actions: [
           IconButton(
             icon: Icon(
@@ -40,7 +40,7 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen> {
             tooltip: _showInactive ? 'Hide inactive' : 'Show inactive',
           ),
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: Icon(Icons.add),
             onPressed: () => _navigateToEdit(null),
             tooltip: 'Add Product',
           ),
@@ -143,7 +143,7 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen> {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Text('Error: $e')),
             ),
           ),
@@ -277,7 +277,7 @@ class _ProductListItem extends StatelessWidget {
                       )
                     : _placeholderImage(),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
 
               // Product Info
               Expanded(
@@ -304,7 +304,7 @@ class _ProductListItem extends StatelessWidget {
                               color: Colors.red.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text(
+                            child: Text(
                               'INACTIVE',
                               style: TextStyle(
                                 fontSize: 10,
@@ -683,7 +683,7 @@ class _AdminProductEditScreenState
                     },
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: TextFormField(
                     controller: _compareAtPriceController,
@@ -777,21 +777,21 @@ class _AdminProductEditScreenState
                   checkmarkColor: context.accentColor,
                 ),
                 FilterChip(
-                  label: const Text('WiFi'),
+                  label: Text('WiFi'),
                   selected: _hasWifi,
                   onSelected: (v) => setState(() => _hasWifi = v),
                   selectedColor: context.accentColor.withValues(alpha: 0.3),
                   checkmarkColor: context.accentColor,
                 ),
                 FilterChip(
-                  label: const Text('Bluetooth'),
+                  label: Text('Bluetooth'),
                   selected: _hasBluetooth,
                   onSelected: (v) => setState(() => _hasBluetooth = v),
                   selectedColor: context.accentColor.withValues(alpha: 0.3),
                   checkmarkColor: context.accentColor,
                 ),
                 FilterChip(
-                  label: const Text('Display'),
+                  label: Text('Display'),
                   selected: _hasDisplay,
                   onSelected: (v) => setState(() => _hasDisplay = v),
                   selectedColor: context.accentColor.withValues(alpha: 0.3),
@@ -825,7 +825,7 @@ class _AdminProductEditScreenState
                 );
               }).toList(),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // Physical Specs
             _buildSectionTitle('Physical Specifications'),
@@ -874,7 +874,7 @@ class _AdminProductEditScreenState
               }),
             ),
             SwitchListTile(
-              title: const Text('Featured'),
+              title: Text('Featured'),
               subtitle: const Text('Show in featured products section'),
               value: _isFeatured,
               onChanged: (v) => setState(() => _isFeatured = v),
@@ -887,7 +887,7 @@ class _AdminProductEditScreenState
               }),
             ),
             SwitchListTile(
-              title: const Text('Active'),
+              title: Text('Active'),
               subtitle: const Text('Product is visible in the shop'),
               value: _isActive,
               onChanged: (v) => setState(() => _isActive = v),
@@ -900,7 +900,7 @@ class _AdminProductEditScreenState
               }),
             ),
 
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
             // Save Button
             SizedBox(
@@ -994,7 +994,7 @@ class _AdminProductEditScreenState
                           },
                           child: Container(
                             padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: Colors.red,
                               shape: BoxShape.circle,
                             ),

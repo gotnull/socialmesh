@@ -74,9 +74,9 @@ class _TriggerSelectorState extends State<TriggerSelector> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             child: Row(
               children: [
@@ -245,9 +245,9 @@ class _TriggerSelectorState extends State<TriggerSelector> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,9 +281,9 @@ class _TriggerSelectorState extends State<TriggerSelector> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,11 +304,11 @@ class _TriggerSelectorState extends State<TriggerSelector> {
               isDense: true,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: AppTheme.darkBorder),
+                borderSide: BorderSide(color: context.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: AppTheme.darkBorder),
+                borderSide: BorderSide(color: context.border),
               ),
             ),
           ),
@@ -328,14 +328,14 @@ class _TriggerSelectorState extends State<TriggerSelector> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Filter by node (optional)',
             style: TextStyle(color: Colors.grey),
           ),
@@ -350,9 +350,9 @@ class _TriggerSelectorState extends State<TriggerSelector> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
+                color: context.background,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.darkBorder),
+                border: Border.all(color: context.border),
               ),
               child: Row(
                 children: [
@@ -460,7 +460,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
               padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
               child: Row(
                 children: [
-                  const Text(
+                  Text(
                     'Select Node',
                     style: TextStyle(
                       color: Colors.white,
@@ -482,16 +482,16 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                 ],
               ),
             ),
-            const Divider(height: 1, color: AppTheme.darkBorder),
+            Divider(height: 1, color: context.border),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   Text(
                     '${nodes.length} nodes',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                 ],
@@ -539,7 +539,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
   }) {
     final iconColor = node.isOnline
         ? Theme.of(context).colorScheme.primary
-        : AppTheme.textTertiary;
+        : context.textTertiary;
 
     return Material(
       color: Colors.transparent,
@@ -575,7 +575,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                             color: Theme.of(context).colorScheme.primary,
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppTheme.darkSurface,
+                              color: context.surface,
                               width: 2,
                             ),
                           ),
@@ -584,7 +584,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -602,7 +602,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                     Text(
                       node.shortName ?? '!${node.nodeNum.toRadixString(16)}',
                       style: TextStyle(
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                         fontSize: 13,
                       ),
                     ),
@@ -626,14 +626,14 @@ class _TriggerSelectorState extends State<TriggerSelector> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(Icons.location_on, size: 18, color: Colors.grey),
               SizedBox(width: 8),
@@ -772,7 +772,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
   void _showTriggerTypePicker(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkSurface,
+      backgroundColor: context.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -848,7 +848,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                     ? Theme.of(
                         context,
                       ).colorScheme.primary.withValues(alpha: 0.2)
-                    : AppTheme.darkCard,
+                    : context.card,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(

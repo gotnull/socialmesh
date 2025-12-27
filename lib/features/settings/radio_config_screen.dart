@@ -139,15 +139,15 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'Radio',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -211,7 +211,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                   ),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
+                    color: context.card,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -223,7 +223,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                           Text(
                             'Hop Limit',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: context.textPrimary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -249,18 +249,18 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         'Number of times messages can be relayed',
                         style: TextStyle(
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                           fontSize: 13,
                         ),
                       ),
                       SizedBox(height: 8),
                       SliderTheme(
                         data: SliderThemeData(
-                          inactiveTrackColor: AppTheme.darkBorder,
+                          inactiveTrackColor: context.border,
                           thumbColor: context.accentColor,
                           overlayColor: context.accentColor.withValues(
                             alpha: 0.2,
@@ -277,14 +277,14 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                           },
                         ),
                       ),
-                      const Divider(height: 24, color: AppTheme.darkBorder),
+                      Divider(height: 24, color: context.border),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             'TX Power Override',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: context.textPrimary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -310,18 +310,18 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         'Override transmit power (0 = use default)',
                         style: TextStyle(
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                           fontSize: 13,
                         ),
                       ),
                       SizedBox(height: 8),
                       SliderTheme(
                         data: SliderThemeData(
-                          inactiveTrackColor: AppTheme.darkBorder,
+                          inactiveTrackColor: context.border,
                           thumbColor: context.accentColor,
                           overlayColor: context.accentColor.withValues(
                             alpha: 0.2,
@@ -384,7 +384,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -398,18 +398,18 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Use Preset',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.textPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       'Use preset modem settings instead of custom',
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -428,28 +428,28 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
 
           // Custom modem settings (only when preset disabled)
           if (!_usePreset) ...[
-            const Divider(height: 24, color: AppTheme.darkBorder),
+            Divider(height: 24, color: context.border),
             // Bandwidth
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Bandwidth',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: context.textPrimary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: AppTheme.darkBackground,
+                    color: context.background,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppTheme.darkBorder),
+                    border: Border.all(color: context.border),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: DropdownButton<int>(
                     underline: const SizedBox.shrink(),
-                    dropdownColor: AppTheme.darkCard,
+                    dropdownColor: context.card,
                     style: const TextStyle(color: Colors.white),
                     value: _bandwidth,
                     items: bandwidthOptions.map((b) {
@@ -462,28 +462,28 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             // Spread Factor
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Spread Factor',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: context.textPrimary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: AppTheme.darkBackground,
+                    color: context.background,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppTheme.darkBorder),
+                    border: Border.all(color: context.border),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: DropdownButton<int>(
                     underline: const SizedBox.shrink(),
-                    dropdownColor: AppTheme.darkCard,
+                    dropdownColor: context.card,
                     style: const TextStyle(color: Colors.white),
                     value: _spreadFactor,
                     items: spreadFactorOptions.map((s) {
@@ -496,29 +496,29 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             // Coding Rate
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Coding Rate',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: context.textPrimary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: AppTheme.darkBackground,
+                    color: context.background,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppTheme.darkBorder),
+                    border: Border.all(color: context.border),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: DropdownButton<int>(
                     underline: const SizedBox.shrink(),
-                    dropdownColor: AppTheme.darkCard,
-                    style: const TextStyle(color: Colors.white),
+                    dropdownColor: context.card,
+                    style: TextStyle(color: context.textPrimary),
                     value: _codingRate,
                     items: codingRateOptions.map((c) {
                       return DropdownMenuItem(value: c.$1, child: Text(c.$2));
@@ -532,7 +532,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
             ),
           ],
 
-          const Divider(height: 24, color: AppTheme.darkBorder),
+          Divider(height: 24, color: context.border),
 
           // Frequency Slot
           Row(
@@ -542,18 +542,18 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Frequency Slot',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.textPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       'Channel number for frequency calculation',
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -565,22 +565,22 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                 child: TextField(
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.textPrimary),
                   decoration: InputDecoration(
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 8,
                     ),
-                    fillColor: AppTheme.darkBackground,
+                    fillColor: context.background,
                     filled: true,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: AppTheme.darkBorder),
+                      borderSide: BorderSide(color: context.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: AppTheme.darkBorder),
+                      borderSide: BorderSide(color: context.border),
                     ),
                   ),
                   controller: TextEditingController(text: '$_channelNum'),
@@ -593,7 +593,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
             ],
           ),
 
-          const Divider(height: 24, color: AppTheme.darkBorder),
+          Divider(height: 24, color: context.border),
 
           // RX Boosted Gain
           Row(
@@ -603,18 +603,18 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'RX Boosted Gain',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.textPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       'Enable boosted gain on SX126x receivers',
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -631,7 +631,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
             ],
           ),
 
-          const Divider(height: 24, color: AppTheme.darkBorder),
+          Divider(height: 24, color: context.border),
 
           // Frequency Override
           Row(
@@ -641,18 +641,18 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Frequency Override',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.textPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       'Override frequency in MHz (0 = disabled)',
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -666,24 +666,24 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                     decimal: true,
                   ),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.textPrimary),
                   decoration: InputDecoration(
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 8,
                     ),
-                    fillColor: AppTheme.darkBackground,
+                    fillColor: context.background,
                     filled: true,
                     hintText: '0.0',
-                    hintStyle: TextStyle(color: AppTheme.textTertiary),
+                    hintStyle: TextStyle(color: context.textTertiary),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: AppTheme.darkBorder),
+                      borderSide: BorderSide(color: context.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: AppTheme.darkBorder),
+                      borderSide: BorderSide(color: context.border),
                     ),
                   ),
                   controller: TextEditingController(
@@ -704,7 +704,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
             ],
           ),
 
-          const Divider(height: 24, color: AppTheme.darkBorder),
+          Divider(height: 24, color: context.border),
 
           // Ignore MQTT
           Row(
@@ -714,18 +714,18 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Ignore MQTT',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.textPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       'Ignore messages via MQTT from this device',
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -742,7 +742,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
             ],
           ),
 
-          const Divider(height: 24, color: AppTheme.darkBorder),
+          Divider(height: 24, color: context.border),
 
           // Ok to MQTT
           Row(
@@ -752,18 +752,18 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Ok to MQTT',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.textPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       'Config is ok to send via MQTT uplink',
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -811,30 +811,30 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Select the region that matches your country\'s regulations',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
+              color: context.background,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: DropdownButton<pbenum.RegionCode>(
               isExpanded: true,
               underline: const SizedBox.shrink(),
-              dropdownColor: AppTheme.darkCard,
-              style: const TextStyle(
-                color: Colors.white,
+              dropdownColor: context.card,
+              style: TextStyle(
+                color: context.textPrimary,
                 fontFamily: 'JetBrainsMono',
               ),
               items: regions.map((r) {
@@ -876,15 +876,15 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'All devices in the mesh must use the same preset',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
           SizedBox(height: 16),
           ...presets.map((p) {
@@ -901,9 +901,9 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                           : Icons.radio_button_unchecked,
                       color: isSelected
                           ? context.accentColor
-                          : AppTheme.textSecondary,
+                          : context.textSecondary,
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -913,14 +913,14 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                             style: TextStyle(
                               color: isSelected
                                   ? Colors.white
-                                  : AppTheme.textSecondary,
+                                  : context.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                           Text(
                             p.$3,
-                            style: const TextStyle(
-                              color: AppTheme.textTertiary,
+                            style: TextStyle(
+                              color: context.textTertiary,
                               fontSize: 13,
                             ),
                           ),
@@ -956,12 +956,12 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
             color: AppTheme.warningYellow.withValues(alpha: 0.8),
             size: 20,
           ),
-          const SizedBox(width: 12),
-          const Expanded(
+          SizedBox(width: 12),
+          Expanded(
             child: Text(
               'Changing radio settings will cause the device to reboot. '
               'All devices in your mesh network must use the same region and modem preset.',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              style: TextStyle(color: context.textSecondary, fontSize: 13),
             ),
           ),
         ],
@@ -981,10 +981,10 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: AppTheme.textTertiary,
+          color: context.textTertiary,
           letterSpacing: 1.2,
         ),
       ),
@@ -1012,34 +1012,31 @@ class _SettingsTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? AppTheme.textSecondary),
-            const SizedBox(width: 16),
+            Icon(icon, color: iconColor ?? context.textSecondary),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white,
+                      color: context.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppTheme.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 13, color: context.textTertiary),
                   ),
                 ],
               ),

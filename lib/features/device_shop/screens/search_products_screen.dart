@@ -71,9 +71,9 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         titleSpacing: 0,
         title: _buildSearchField(),
         actions: [
@@ -96,10 +96,10 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
     return TextField(
       controller: _searchController,
       focusNode: _focusNode,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: 'Search devices, modules, antennas...',
-        hintStyle: TextStyle(color: AppTheme.textTertiary),
+        hintStyle: TextStyle(color: context.textTertiary),
         border: InputBorder.none,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -154,7 +154,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
                   )
                   .toList(),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
           ],
 
           // Popular searches
@@ -211,9 +211,9 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
               title: Text(cat.label, style: TextStyle(color: Colors.white)),
               subtitle: Text(
                 cat.description,
-                style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+                style: TextStyle(color: context.textTertiary, fontSize: 12),
               ),
-              trailing: Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+              trailing: Icon(Icons.chevron_right, color: context.textTertiary),
               onTap: () => _performSearch(cat.label),
             ),
           ),
@@ -245,7 +245,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
     final searchAsync = ref.watch(productSearchProvider(_query));
 
     return searchAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -266,8 +266,8 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.search_off, color: AppTheme.textTertiary, size: 64),
-                const SizedBox(height: 16),
+                Icon(Icons.search_off, color: context.textTertiary, size: 64),
+                SizedBox(height: 16),
                 Text(
                   'No results for "$_query"',
                   style: TextStyle(color: Colors.white, fontSize: 18),
@@ -275,7 +275,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Try different keywords or browse categories',
-                  style: TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: context.textSecondary),
                 ),
               ],
             ),
@@ -290,7 +290,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
               padding: const EdgeInsets.all(16),
               child: Text(
                 '${products.length} result${products.length == 1 ? '' : 's'} for "$_query"',
-                style: TextStyle(color: AppTheme.textSecondary),
+                style: TextStyle(color: context.textSecondary),
               ),
             ),
 
@@ -327,7 +327,7 @@ class _SearchChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppTheme.darkCard,
+      color: context.card,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
@@ -337,8 +337,8 @@ class _SearchChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: AppTheme.textTertiary, size: 16),
-              const SizedBox(width: 6),
+              Icon(icon, color: context.textTertiary, size: 16),
+              SizedBox(width: 6),
               Text(label, style: TextStyle(color: Colors.white, fontSize: 13)),
               if (onDelete != null) ...[
                 const SizedBox(width: 4),
@@ -346,7 +346,7 @@ class _SearchChip extends StatelessWidget {
                   onTap: onDelete,
                   child: Icon(
                     Icons.close,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                     size: 16,
                   ),
                 ),
@@ -367,7 +367,7 @@ class _SearchResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: AppTheme.darkCard,
+      color: context.card,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
@@ -392,11 +392,11 @@ class _SearchResultCard extends StatelessWidget {
                         height: 80,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
-                            _imagePlaceholder(),
+                            _imagePlaceholder(context),
                       )
-                    : _imagePlaceholder(),
+                    : _imagePlaceholder(context),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
 
               // Details
               Expanded(
@@ -422,7 +422,7 @@ class _SearchResultCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
 
                     // Name
                     Text(
@@ -441,11 +441,11 @@ class _SearchResultCard extends StatelessWidget {
                     Text(
                       product.sellerName,
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 12,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
 
                     // Price & Rating
                     Row(
@@ -459,11 +459,11 @@ class _SearchResultCard extends StatelessWidget {
                           ),
                         ),
                         if (product.isOnSale) ...[
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Text(
                             product.formattedComparePrice!,
                             style: TextStyle(
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                               fontSize: 12,
                               decoration: TextDecoration.lineThrough,
                             ),
@@ -472,11 +472,11 @@ class _SearchResultCard extends StatelessWidget {
                         const Spacer(),
                         if (product.reviewCount > 0) ...[
                           Icon(Icons.star, color: Colors.amber, size: 14),
-                          const SizedBox(width: 2),
+                          SizedBox(width: 2),
                           Text(
                             product.rating.toStringAsFixed(1),
                             style: TextStyle(
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                               fontSize: 12,
                             ),
                           ),
@@ -514,12 +514,12 @@ class _SearchResultCard extends StatelessWidget {
     );
   }
 
-  Widget _imagePlaceholder() {
+  Widget _imagePlaceholder(BuildContext context) {
     return Container(
       width: 80,
       height: 80,
-      color: AppTheme.darkBackground,
-      child: Icon(Icons.router, color: AppTheme.textTertiary, size: 32),
+      color: context.background,
+      child: Icon(Icons.router, color: context.textTertiary, size: 32),
     );
   }
 }

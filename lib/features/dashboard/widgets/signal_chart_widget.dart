@@ -120,7 +120,7 @@ class _SignalBars extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isActive
                     ? _getBarColor(bars)
-                    : AppTheme.darkBorder.withValues(alpha: 0.3),
+                    : context.border.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(3),
               ),
             ),
@@ -159,7 +159,7 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _getQualityColor(quality);
+    final color = _getQualityColor(context, quality);
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
@@ -178,17 +178,17 @@ class _MetricCard extends StatelessWidget {
               color: color,
             ),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(fontSize: 10, color: AppTheme.textTertiary),
+            style: TextStyle(fontSize: 10, color: context.textTertiary),
           ),
         ],
       ),
     );
   }
 
-  Color _getQualityColor(String quality) {
+  Color _getQualityColor(BuildContext context, String quality) {
     switch (quality) {
       case 'excellent':
       case 'good':
@@ -198,7 +198,7 @@ class _MetricCard extends StatelessWidget {
       case 'poor':
         return AppTheme.errorRed;
       default:
-        return AppTheme.textTertiary;
+        return context.textTertiary;
     }
   }
 }

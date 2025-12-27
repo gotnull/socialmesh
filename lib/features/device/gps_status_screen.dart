@@ -31,10 +31,10 @@ class GpsStatusScreen extends ConsumerWidget {
         longitude != 0;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'GPS Status',
           style: TextStyle(
             fontSize: 20,
@@ -53,16 +53,16 @@ class GpsStatusScreen extends ConsumerWidget {
             satsInView: satsInView,
           ),
 
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
 
           // Position Card
           if (hasGpsFix) ...[
-            _buildSectionHeader('Position'),
+            _buildSectionHeader(context, 'Position'),
             Container(
               decoration: BoxDecoration(
-                color: AppTheme.darkCard,
+                color: context.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.darkBorder),
+                border: Border.all(color: context.border),
               ),
               child: Column(
                 children: [
@@ -72,28 +72,28 @@ class GpsStatusScreen extends ConsumerWidget {
                     value: '${latitude.toStringAsFixed(6)}°',
                     context: context,
                   ),
-                  _buildDivider(),
+                  _buildDivider(context),
                   _buildInfoRow(
                     icon: Icons.my_location,
                     label: 'Longitude',
                     value: '${longitude.toStringAsFixed(6)}°',
                     context: context,
                   ),
-                  _buildDivider(),
+                  _buildDivider(context),
                   _buildInfoRow(
                     icon: Icons.terrain,
                     label: 'Altitude',
                     value: altitude != null ? '${altitude}m' : 'Unknown',
                     context: context,
                   ),
-                  _buildDivider(),
+                  _buildDivider(context),
                   _buildInfoRow(
                     icon: Icons.gps_fixed,
                     label: 'Accuracy',
                     value: gpsAccuracy != null ? '±${gpsAccuracy}m' : 'Unknown',
                     context: context,
                   ),
-                  _buildDivider(),
+                  _buildDivider(context),
                   _buildInfoRow(
                     icon: Icons.grid_4x4,
                     label: 'Precision Bits',
@@ -104,15 +104,15 @@ class GpsStatusScreen extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Motion Card
-            _buildSectionHeader('Motion'),
+            _buildSectionHeader(context, 'Motion'),
             Container(
               decoration: BoxDecoration(
-                color: AppTheme.darkCard,
+                color: context.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.darkBorder),
+                border: Border.all(color: context.border),
               ),
               child: Column(
                 children: [
@@ -124,7 +124,7 @@ class GpsStatusScreen extends ConsumerWidget {
                         : 'Unknown',
                     context: context,
                   ),
-                  _buildDivider(),
+                  _buildDivider(context),
                   _buildInfoRow(
                     icon: Icons.explore,
                     label: 'Ground Track',
@@ -137,7 +137,7 @@ class GpsStatusScreen extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Map Button
             SizedBox(
@@ -151,7 +151,7 @@ class GpsStatusScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                icon: const Icon(Icons.map),
+                icon: Icon(Icons.map),
                 label: const Text(
                   'Open in Maps',
                   style: TextStyle(fontWeight: FontWeight.w600),
@@ -163,18 +163,18 @@ class GpsStatusScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: AppTheme.darkCard,
+                color: context.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.darkBorder),
+                border: Border.all(color: context.border),
               ),
               child: Column(
                 children: [
                   Icon(
                     Icons.gps_off,
                     size: 64,
-                    color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                    color: context.textTertiary.withValues(alpha: 0.5),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   const Text(
                     'No GPS Fix',
                     style: TextStyle(
@@ -184,13 +184,13 @@ class GpsStatusScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'The device has not acquired a GPS position yet. '
                     'Make sure the device has a clear view of the sky.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                   ),
                 ],
@@ -198,15 +198,15 @@ class GpsStatusScreen extends ConsumerWidget {
             ),
           ],
 
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
 
           // Satellites Card
-          _buildSectionHeader('Satellites'),
+          _buildSectionHeader(context, 'Satellites'),
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -228,7 +228,7 @@ class GpsStatusScreen extends ConsumerWidget {
                         size: 24,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,11 +241,11 @@ class GpsStatusScreen extends ConsumerWidget {
                               color: _getSatelliteColor(satsInView),
                             ),
                           ),
-                          const Text(
+                          Text(
                             'Satellites in View',
                             style: TextStyle(
                               fontSize: 13,
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                             ),
                           ),
                         ],
@@ -253,16 +253,24 @@ class GpsStatusScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _buildSatelliteBar(satsInView ?? 0, context),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildSatelliteLabel('No Fix', Colors.grey),
-                    _buildSatelliteLabel('Poor', AppTheme.errorRed),
-                    _buildSatelliteLabel('Fair', AppTheme.warningYellow),
-                    _buildSatelliteLabel('Good', AppTheme.successGreen),
+                    _buildSatelliteLabel(context, 'No Fix', Colors.grey),
+                    _buildSatelliteLabel(context, 'Poor', AppTheme.errorRed),
+                    _buildSatelliteLabel(
+                      context,
+                      'Fair',
+                      AppTheme.warningYellow,
+                    ),
+                    _buildSatelliteLabel(
+                      context,
+                      'Good',
+                      AppTheme.successGreen,
+                    ),
                   ],
                 ),
               ],
@@ -273,12 +281,12 @@ class GpsStatusScreen extends ConsumerWidget {
 
           // Last Update
           if (positionTimestamp != null) ...[
-            _buildSectionHeader('Last Update'),
+            _buildSectionHeader(context, 'Last Update'),
             Container(
               decoration: BoxDecoration(
-                color: AppTheme.darkCard,
+                color: context.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.darkBorder),
+                border: Border.all(color: context.border),
               ),
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -296,7 +304,7 @@ class GpsStatusScreen extends ConsumerWidget {
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,9 +319,9 @@ class GpsStatusScreen extends ConsumerWidget {
                         ),
                         Text(
                           _timeAgo(positionTimestamp),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
                         ),
                       ],
@@ -337,10 +345,10 @@ class GpsStatusScreen extends ConsumerWidget {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: hasGpsFix ? AppTheme.successGreen : AppTheme.darkBorder,
+          color: hasGpsFix ? AppTheme.successGreen : context.border,
           width: hasGpsFix ? 2 : 1,
         ),
       ),
@@ -351,17 +359,17 @@ class GpsStatusScreen extends ConsumerWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: (hasGpsFix ? AppTheme.successGreen : AppTheme.textTertiary)
+              color: (hasGpsFix ? AppTheme.successGreen : context.textTertiary)
                   .withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
               hasGpsFix ? Icons.gps_fixed : Icons.gps_not_fixed,
-              color: hasGpsFix ? AppTheme.successGreen : AppTheme.textTertiary,
+              color: hasGpsFix ? AppTheme.successGreen : context.textTertiary,
               size: 28,
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,18 +381,15 @@ class GpsStatusScreen extends ConsumerWidget {
                     fontWeight: FontWeight.w600,
                     color: hasGpsFix
                         ? AppTheme.successGreen
-                        : AppTheme.textSecondary,
+                        : context.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   hasGpsFix
                       ? '${satsInView ?? 0} satellites in view'
                       : 'Searching for satellites...',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.textTertiary,
-                  ),
+                  style: TextStyle(fontSize: 14, color: context.textTertiary),
                 ),
               ],
             ),
@@ -410,15 +415,15 @@ class GpsStatusScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: AppTheme.textSecondary,
+          color: context.textSecondary,
         ),
       ),
     );
@@ -435,10 +440,10 @@ class GpsStatusScreen extends ConsumerWidget {
       child: Row(
         children: [
           Icon(icon, color: context.accentColor, size: 20),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Text(
             label,
-            style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 14, color: context.textSecondary),
           ),
           const Spacer(),
           Text(
@@ -454,11 +459,11 @@ class GpsStatusScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider(BuildContext context) {
     return Container(
       height: 1,
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      color: AppTheme.darkBorder.withValues(alpha: 0.3),
+      color: context.border.withValues(alpha: 0.3),
     );
   }
 
@@ -466,7 +471,7 @@ class GpsStatusScreen extends ConsumerWidget {
     return Container(
       height: 8,
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
+        color: context.background,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
@@ -486,7 +491,7 @@ class GpsStatusScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSatelliteLabel(String label, Color color) {
+  Widget _buildSatelliteLabel(BuildContext context, String label, Color color) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -498,10 +503,10 @@ class GpsStatusScreen extends ConsumerWidget {
             borderRadius: BorderRadius.circular(2),
           ),
         ),
-        const SizedBox(width: 4),
+        SizedBox(width: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 10, color: AppTheme.textTertiary),
+          style: TextStyle(fontSize: 10, color: context.textTertiary),
         ),
       ],
     );

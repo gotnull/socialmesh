@@ -23,12 +23,12 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       body: CustomScrollView(
         slivers: [
           // App Bar
           SliverAppBar(
-            backgroundColor: AppTheme.darkCard,
+            backgroundColor: context.card,
             floating: true,
             pinned: true,
             expandedHeight: 120,
@@ -40,7 +40,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                     end: Alignment.bottomRight,
                     colors: [
                       context.accentColor.withValues(alpha: 0.3),
-                      AppTheme.darkCard,
+                      context.card,
                     ],
                   ),
                 ),
@@ -199,7 +199,7 @@ class _CategoryCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Material(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
@@ -319,7 +319,7 @@ class _PartnerCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Material(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: () => Navigator.push(
@@ -523,7 +523,7 @@ class ProductCard extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Material(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: () => Navigator.push(
@@ -540,7 +540,7 @@ class ProductCard extends ConsumerWidget {
               border: Border.all(
                 color: product.isOnSale
                     ? (highlightColor ?? Colors.red).withValues(alpha: 0.5)
-                    : AppTheme.darkBorder,
+                    : context.border,
               ),
             ),
             child: Column(
@@ -564,7 +564,7 @@ class ProductCard extends ConsumerWidget {
                                     if (loadingProgress == null) return child;
                                     return Container(
                                       height: 120,
-                                      color: AppTheme.darkBackground,
+                                      color: context.background,
                                       child: const Center(
                                         child: CircularProgressIndicator(),
                                       ),
@@ -573,20 +573,20 @@ class ProductCard extends ConsumerWidget {
                               errorBuilder: (context, error, stackTrace) =>
                                   Container(
                                     height: 120,
-                                    color: AppTheme.darkBackground,
+                                    color: context.background,
                                     child: Icon(
                                       Icons.image,
-                                      color: AppTheme.textTertiary,
+                                      color: context.textTertiary,
                                       size: 40,
                                     ),
                                   ),
                             )
                           : Container(
                               height: 120,
-                              color: AppTheme.darkBackground,
+                              color: context.background,
                               child: Icon(
                                 Icons.router,
-                                color: AppTheme.textTertiary,
+                                color: context.textTertiary,
                                 size: 40,
                               ),
                             ),
@@ -607,7 +607,7 @@ class ProductCard extends ConsumerWidget {
                           ),
                           child: Text(
                             '-${product.discountPercent}%',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -673,7 +673,7 @@ class ProductCard extends ConsumerWidget {
                         Text(
                           product.sellerName,
                           style: TextStyle(
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                             fontSize: 11,
                           ),
                           maxLines: 1,
@@ -692,11 +692,11 @@ class ProductCard extends ConsumerWidget {
                               ),
                             ),
                             if (product.isOnSale) ...[
-                              const SizedBox(width: 6),
+                              SizedBox(width: 6),
                               Text(
                                 product.formattedComparePrice!,
                                 style: TextStyle(
-                                  color: AppTheme.textTertiary,
+                                  color: context.textTertiary,
                                   fontSize: 11,
                                   decoration: TextDecoration.lineThrough,
                                 ),
@@ -706,7 +706,7 @@ class ProductCard extends ConsumerWidget {
                         ),
                         // Rating
                         if (product.reviewCount > 0) ...[
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           Row(
                             children: [
                               Icon(Icons.star, color: Colors.amber, size: 14),
@@ -714,14 +714,14 @@ class ProductCard extends ConsumerWidget {
                               Text(
                                 product.rating.toStringAsFixed(1),
                                 style: TextStyle(
-                                  color: AppTheme.textSecondary,
+                                  color: context.textSecondary,
                                   fontSize: 11,
                                 ),
                               ),
                               Text(
                                 ' (${product.reviewCount})',
                                 style: TextStyle(
-                                  color: AppTheme.textTertiary,
+                                  color: context.textTertiary,
                                   fontSize: 11,
                                 ),
                               ),
@@ -780,7 +780,7 @@ class _SectionLoading extends StatelessWidget {
                 child: Container(
                   width: 160,
                   decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
+                    color: context.card,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Center(child: CircularProgressIndicator()),

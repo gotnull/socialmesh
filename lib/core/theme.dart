@@ -946,3 +946,27 @@ extension AccentColorExtension on BuildContext {
   /// Returns the current accent color from the theme
   Color get accentColor => Theme.of(this).colorScheme.primary;
 }
+
+/// Theme-aware color extension for proper light/dark mode support
+/// Use these instead of hardcoded AppTheme.dark* etc.
+extension ThemeAwareColors on BuildContext {
+  bool get isDarkMode => Theme.of(this).brightness == Brightness.dark;
+
+  // Background colors
+  Color get background =>
+      isDarkMode ? AppTheme.darkBackground : AppTheme.lightBackground;
+  Color get surface =>
+      isDarkMode ? AppTheme.darkSurface : AppTheme.lightSurface;
+  Color get card => isDarkMode ? AppTheme.darkCard : AppTheme.lightCard;
+  Color get cardAlt =>
+      isDarkMode ? AppTheme.darkCardAlt : AppTheme.lightCardAlt;
+  Color get border => isDarkMode ? AppTheme.darkBorder : AppTheme.lightBorder;
+
+  // Text colors
+  Color get textPrimary =>
+      isDarkMode ? AppTheme.textPrimary : AppTheme.textPrimaryLight;
+  Color get textSecondary =>
+      isDarkMode ? AppTheme.textSecondary : AppTheme.textSecondaryLight;
+  Color get textTertiary =>
+      isDarkMode ? AppTheme.textTertiary : AppTheme.textTertiaryLight;
+}

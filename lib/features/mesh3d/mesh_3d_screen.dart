@@ -200,9 +200,9 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     ref.watch(currentChannelUtilProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         leading: const HamburgerMenuButton(),
         centerTitle: true,
         title: Text(
@@ -344,7 +344,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
   Widget _buildViewModeChips(ThemeData theme) {
     return EdgeFade.horizontal(
       fadeSize: 24,
-      fadeColor: AppTheme.darkBackground,
+      fadeColor: context.background,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -752,7 +752,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
         case PresenceStatus.idle:
           nodeColor = AppTheme.warningYellow;
         case PresenceStatus.offline:
-          nodeColor = AppTheme.textTertiary;
+          nodeColor = context.textTertiary;
       }
 
       // Highlight my node with larger size and special effects
@@ -898,7 +898,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
         Axis3D.y,
         false,
         vector.Vector3(0, 0, 0),
-        color: AppTheme.darkSurface.withValues(alpha: 0.5),
+        color: context.surface.withValues(alpha: 0.5),
       ),
     );
 
@@ -1081,7 +1081,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
         Axis3D.y,
         false,
         vector.Vector3(0, 0, 0),
-        color: AppTheme.darkSurface.withValues(alpha: 0.3),
+        color: context.surface.withValues(alpha: 0.3),
       ),
     );
 
@@ -1338,7 +1338,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
         Axis3D.y,
         false,
         vector.Vector3(0, 0, 0),
-        color: AppTheme.darkSurface.withValues(alpha: 0.5),
+        color: context.surface.withValues(alpha: 0.5),
       ),
     );
 
@@ -1519,7 +1519,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     return switch (status) {
       PresenceStatus.active => AppTheme.successGreen,
       PresenceStatus.idle => AppTheme.warningYellow,
-      PresenceStatus.offline => AppTheme.textTertiary,
+      PresenceStatus.offline => context.textTertiary,
     };
   }
 
@@ -1553,7 +1553,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
           (AppTheme.primaryBlue, 'My Node'),
           (AppTheme.successGreen, 'Active'),
           (AppTheme.warningYellow, 'Idle'),
-          (AppTheme.textTertiary, 'Offline'),
+          (context.textTertiary, 'Offline'),
         ]);
     }
 

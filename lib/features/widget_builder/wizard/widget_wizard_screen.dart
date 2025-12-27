@@ -586,14 +586,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     final shouldClose = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text(
+        backgroundColor: context.card,
+        title: Text(
           'Discard Changes?',
           style: TextStyle(color: Colors.white),
         ),
         content: Text(
           'You have unsaved changes. Are you sure you want to close without saving?',
-          style: TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: context.textSecondary),
         ),
         actions: [
           TextButton(
@@ -660,12 +660,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       final shouldSwitch = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          backgroundColor: AppTheme.darkCard,
+          backgroundColor: context.card,
           title: Row(
             children: [
               Icon(Icons.warning_amber_rounded, color: AppTheme.warningYellow),
-              const SizedBox(width: 12),
-              const Text(
+              SizedBox(width: 12),
+              Text(
                 'Switch Template?',
                 style: TextStyle(color: Colors.white),
               ),
@@ -677,14 +677,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             children: [
               Text(
                 'You have $itemCount $currentDataType selected.',
-                style: TextStyle(color: AppTheme.textSecondary),
+                style: TextStyle(color: context.textSecondary),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Text(
                 '"${template.name}" uses $newDataType instead, so your current selections won\'t be used.',
-                style: TextStyle(color: AppTheme.textSecondary),
+                style: TextStyle(color: context.textSecondary),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Text(
                 'What would you like to do?',
                 style: TextStyle(
@@ -758,9 +758,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   Widget build(BuildContext context) {
     final isEditing = widget.initialSchema != null;
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         leading: _currentStep > 0
             ? IconButton(
                 icon: Icon(Icons.arrow_back, color: context.accentColor),
@@ -769,7 +769,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             : null,
         title: Text(
           _steps[_currentStep].title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -788,7 +788,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             child: Text(
               _steps[_currentStep].subtitle,
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+              style: TextStyle(color: context.textSecondary, fontSize: 14),
               textAlign: TextAlign.center,
             ),
           ),
@@ -841,14 +841,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                           ? context.accentColor
                           : isCurrent
                           ? context.accentColor.withValues(alpha: 0.2)
-                          : AppTheme.darkCard,
+                          : context.card,
                       border: isCurrent
                           ? Border.all(color: context.accentColor, width: 2)
                           : null,
                     ),
                     child: Center(
                       child: isCompleted
-                          ? const Icon(
+                          ? Icon(
                               Icons.check,
                               size: 16,
                               color: Colors.white,
@@ -858,7 +858,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                               style: TextStyle(
                                 color: isCurrent
                                     ? context.accentColor
-                                    : AppTheme.textSecondary,
+                                    : context.textSecondary,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 12,
                               ),
@@ -873,7 +873,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       color: isCompleted
                           ? context.accentColor
-                          : AppTheme.darkBorder,
+                          : context.border,
                     ),
                   ),
               ],
@@ -953,9 +953,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard.withValues(alpha: 0.5),
+        color: context.card.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -965,12 +965,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
             child: Row(
               children: [
-                Icon(Icons.preview, size: 14, color: AppTheme.textSecondary),
-                const SizedBox(width: 6),
+                Icon(Icons.preview, size: 14, color: context.textSecondary),
+                SizedBox(width: 6),
                 Text(
                   'Live Preview',
                   style: TextStyle(
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1029,10 +1029,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppTheme.darkCard,
+            color: context.card,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? context.accentColor : AppTheme.darkBorder,
+              color: isSelected ? context.accentColor : context.border,
               width: isSelected ? 2 : 1,
             ),
           ),
@@ -1049,7 +1049,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 ),
                 child: Icon(template.icon, color: template.color, size: 24),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               // Name
               Text(
                 template.name,
@@ -1149,7 +1149,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         name: 'Start from Scratch',
         description: 'Empty canvas - build exactly what you want',
         icon: Icons.add_box_outlined,
-        color: AppTheme.textSecondary,
+        color: context.textSecondary,
         suggestedBindings: [],
       ),
     ];
@@ -1166,27 +1166,27 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         Text(
           'Widget Name',
           style: TextStyle(
-            color: AppTheme.textSecondary,
+            color: context.textSecondary,
             fontSize: 13,
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         TextField(
           controller: _nameController,
           style: const TextStyle(color: Colors.white, fontSize: 16),
           decoration: InputDecoration(
             hintText: 'e.g., My Battery Widget',
-            hintStyle: TextStyle(color: AppTheme.textTertiary),
+            hintStyle: TextStyle(color: context.textTertiary),
             filled: true,
-            fillColor: AppTheme.darkCard,
+            fillColor: context.card,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppTheme.darkBorder),
+              borderSide: BorderSide(color: context.border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppTheme.darkBorder),
+              borderSide: BorderSide(color: context.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -1194,7 +1194,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
         // Helpful tip
         Container(
           padding: const EdgeInsets.all(16),
@@ -1212,7 +1212,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 color: context.accentColor,
                 size: 20,
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Pick a name that helps you remember what this widget shows.',
@@ -1270,7 +1270,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             child: Row(
               children: [
                 Icon(Icons.info_outline, color: context.accentColor, size: 18),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Gauge widgets display a single numeric value with a visual indicator. Only numeric data is shown below.',
@@ -1280,7 +1280,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
         ],
         // Graph-specific guidance
         if (isGraph) ...[
@@ -1296,7 +1296,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             child: Row(
               children: [
                 Icon(Icons.show_chart, color: context.accentColor, size: 18),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Graph widgets display numeric values over time. Select up to 3 data series to track. Only numeric data is shown below.',
@@ -1306,7 +1306,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
         ],
         // Selection counter
         Container(
@@ -1334,7 +1334,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                     ? Colors.orange
                     : context.accentColor,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 '${_selectedBindings.length} / $_maxDataItems selected',
                 style: TextStyle(
@@ -1449,12 +1449,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                     decoration: BoxDecoration(
                       color: isSelected
                           ? context.accentColor.withValues(alpha: 0.2)
-                          : AppTheme.darkCard,
+                          : context.card,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: isSelected
                             ? context.accentColor
-                            : AppTheme.darkBorder,
+                            : context.border,
                       ),
                     ),
                     child: Row(
@@ -1466,7 +1466,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                             size: 16,
                             color: context.accentColor,
                           ),
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                         ],
                         Text(
                           binding.label,
@@ -1577,7 +1577,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       children: [
         Text(
           'Tap to select the actions you want:',
-          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          style: TextStyle(color: context.textSecondary, fontSize: 13),
         ),
         const SizedBox(height: 16),
         ...actions.map((action) => _buildActionCard(action)),
@@ -1605,10 +1605,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected ? context.accentColor : AppTheme.darkBorder,
+                color: isSelected ? context.accentColor : context.border,
                 width: isSelected ? 2 : 1,
               ),
             ),
@@ -1623,7 +1623,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   ),
                   child: Icon(action.icon, color: action.color, size: 22),
                 ),
-                const SizedBox(width: 14),
+                SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1639,7 +1639,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                       Text(
                         action.description,
                         style: TextStyle(
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                           fontSize: 12,
                         ),
                       ),
@@ -1729,19 +1729,19 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         // Validation warning banner if there's an error
         if (validationError != null) ...[
           _buildValidationWarningBanner(validationError),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
         ],
         // Color selection (not for actions or merged graphs)
         if (showAccentColor) ...[
           Text(
             'Accent Color',
             style: TextStyle(
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           _buildColorPicker(),
           const SizedBox(height: 24),
         ],
@@ -1756,12 +1756,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           Text(
             'Layout',
             style: TextStyle(
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           _buildLayoutOptions(),
           const SizedBox(height: 24),
           // Show labels toggle
@@ -1788,23 +1788,23 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.info_outline,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                   size: 20,
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'Action buttons use their own colors based on the action type.',
                     style: TextStyle(
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                       fontSize: 13,
                     ),
                   ),
@@ -1834,12 +1834,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             color: AppTheme.warningYellow,
             size: 24,
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Cannot Save Widget',
                   style: TextStyle(
                     color: Colors.white,
@@ -1850,13 +1850,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 const SizedBox(height: 4),
                 Text(
                   message,
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                  style: TextStyle(color: context.textSecondary, fontSize: 13),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   'Go back to Step 1 to change your template, or Step 3 to update your selections.',
                   style: TextStyle(
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                     fontSize: 12,
                     fontStyle: FontStyle.italic,
                   ),
@@ -1933,12 +1933,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? context.accentColor.withValues(alpha: 0.15)
-                        : AppTheme.darkCard,
+                        : context.card,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected
                           ? context.accentColor
-                          : AppTheme.darkBorder,
+                          : context.border,
                     ),
                   ),
                   child: Column(
@@ -1947,10 +1947,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                         layout.$3,
                         color: isSelected
                             ? context.accentColor
-                            : AppTheme.textSecondary,
+                            : context.textSecondary,
                         size: 24,
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Text(
                         layout.$2,
                         style: TextStyle(
@@ -1983,7 +1983,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -1994,7 +1994,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -2002,7 +2002,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  style: TextStyle(color: context.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -2028,7 +2028,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         Text(
           'Chart Type',
           style: TextStyle(
-            color: AppTheme.textSecondary,
+            color: context.textSecondary,
             fontSize: 13,
             fontWeight: FontWeight.w500,
           ),
@@ -2050,7 +2050,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         // Merge option at top when multiple bindings
         if (showMergeOption) ...[
           _buildMergeChartsOption(),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
         ],
 
         // When merged: single chart type for all + color pickers
@@ -2071,7 +2071,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             child: Row(
               children: [
                 Icon(Icons.info_outline, color: context.accentColor, size: 18),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Merged charts use a combined multi-line view. Individual chart types are disabled.',
@@ -2087,11 +2087,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         if (!_mergeCharts) ...[
           if (_selectedBindings.length > 1) ...[
             _buildSeriesColorPickers(),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               'Chart Type per Series',
               style: TextStyle(
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -2194,9 +2194,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppTheme.darkCard,
+            color: context.card,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.darkBorder),
+            border: Border.all(color: context.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2270,10 +2270,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           decoration: BoxDecoration(
             color: isSelected
                 ? context.accentColor.withValues(alpha: 0.15)
-                : AppTheme.darkCard,
+                : context.card,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isSelected ? context.accentColor : AppTheme.darkBorder,
+              color: isSelected ? context.accentColor : context.border,
             ),
           ),
           child: Column(
@@ -2282,10 +2282,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 type.$3,
                 color: isSelected
                     ? context.accentColor
-                    : AppTheme.textSecondary,
+                    : context.textSecondary,
                 size: 18,
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2),
               Text(
                 type.$2,
                 style: TextStyle(
@@ -2307,10 +2307,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       decoration: BoxDecoration(
         color: _mergeCharts
             ? context.accentColor.withValues(alpha: 0.1)
-            : AppTheme.darkCard,
+            : context.card,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _mergeCharts ? context.accentColor : AppTheme.darkBorder,
+          color: _mergeCharts ? context.accentColor : context.border,
         ),
       ),
       child: InkWell(
@@ -2322,10 +2322,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               Icons.merge_type,
               color: _mergeCharts
                   ? context.accentColor
-                  : AppTheme.textSecondary,
+                  : context.textSecondary,
               size: 20,
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2341,7 +2341,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   Text(
                     'Combine all data series with color-coded legend',
                     style: TextStyle(
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                       fontSize: 11,
                     ),
                   ),
@@ -2442,8 +2442,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text(
+        backgroundColor: context.card,
+        title: Text(
           'Merge Charts?',
           style: TextStyle(color: Colors.white),
         ),
@@ -2452,14 +2452,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           'Merging will combine all series into a single multi-line chart view. '
           'Individual chart types will no longer apply.\n\n'
           'Do you want to continue?',
-          style: TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: context.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
           ),
           TextButton(
@@ -2485,9 +2485,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2495,7 +2495,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           Text(
             'Series Colors',
             style: TextStyle(
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -2611,9 +2611,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2621,7 +2621,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           Text(
             'Series Colors',
             style: TextStyle(
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -2882,9 +2882,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2906,11 +2906,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: context.accentColor,
-              inactiveTrackColor: AppTheme.darkBorder,
+              inactiveTrackColor: context.border,
               thumbColor: context.accentColor,
               overlayColor: context.accentColor.withValues(alpha: 0.2),
               trackHeight: 4,
@@ -2928,11 +2928,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             children: [
               Text(
                 '10',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                style: TextStyle(color: context.textSecondary, fontSize: 11),
               ),
               Text(
                 '60',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                style: TextStyle(color: context.textSecondary, fontSize: 11),
               ),
             ],
           ),
@@ -2989,10 +2989,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       decoration: BoxDecoration(
         color: anyEnabled
             ? context.accentColor.withValues(alpha: 0.1)
-            : AppTheme.darkCard,
+            : context.card,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: anyEnabled ? context.accentColor : AppTheme.darkBorder,
+          color: anyEnabled ? context.accentColor : context.border,
         ),
       ),
       child: Column(
@@ -3002,10 +3002,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             'Gradient Fill',
             style: TextStyle(color: Colors.white, fontSize: 13),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'Color based on value (low → high)',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+            style: TextStyle(color: context.textSecondary, fontSize: 11),
           ),
           const SizedBox(height: 12),
           // Per-series gradient sections
@@ -3073,7 +3073,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   ),
                   // Color pickers when enabled
                   if (config.enabled) ...[
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     Row(
                       children: [
                         // Low color
@@ -3084,7 +3084,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                               Text(
                                 'Low',
                                 style: TextStyle(
-                                  color: AppTheme.textSecondary,
+                                  color: context.textSecondary,
                                   fontSize: 10,
                                 ),
                               ),
@@ -3126,7 +3126,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         // High color
                         Expanded(
                           child: Column(
@@ -3135,7 +3135,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                               Text(
                                 'High',
                                 style: TextStyle(
-                                  color: AppTheme.textSecondary,
+                                  color: context.textSecondary,
                                   fontSize: 10,
                                 ),
                               ),
@@ -3199,9 +3199,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3233,7 +3233,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                       border: Border.all(
                         color: isSelected
                             ? context.accentColor
-                            : AppTheme.darkBorder,
+                            : context.border,
                       ),
                     ),
                     child: Column(
@@ -3248,11 +3248,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        SizedBox(height: 2),
                         Text(
                           opt.$3,
                           style: TextStyle(
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                             fontSize: 9,
                           ),
                           textAlign: TextAlign.center,
@@ -3279,9 +3279,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3310,7 +3310,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                       border: Border.all(
                         color: isSelected
                             ? context.accentColor
-                            : AppTheme.darkBorder,
+                            : context.border,
                       ),
                     ),
                     child: Column(
@@ -3322,7 +3322,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                               : Colors.white,
                           size: 18,
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
                           opt.$2,
                           style: TextStyle(
@@ -3366,7 +3366,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ),
           child: Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(20),
               ),
@@ -3384,7 +3384,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                          color: context.textSecondary.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -3420,7 +3420,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                               color: Colors.red.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.delete_outline,
                               color: Colors.red,
                               size: 20,
@@ -3434,7 +3434,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                     Text(
                       'Color',
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -3478,17 +3478,17 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
                     // Value input
                     Text(
                       'Value',
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     TextField(
                       controller: valueController,
                       keyboardType: const TextInputType.numberWithOptions(
@@ -3498,9 +3498,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                       style: const TextStyle(color: Colors.white, fontSize: 16),
                       decoration: InputDecoration(
                         hintText: 'Enter threshold value',
-                        hintStyle: TextStyle(color: AppTheme.textSecondary),
+                        hintStyle: TextStyle(color: context.textSecondary),
                         filled: true,
-                        fillColor: AppTheme.darkSurface,
+                        fillColor: context.surface,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,
@@ -3518,25 +3518,25 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     // Label input
                     Text(
                       'Label (optional)',
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     TextField(
                       controller: labelController,
                       style: const TextStyle(color: Colors.white, fontSize: 16),
                       decoration: InputDecoration(
                         hintText: 'e.g., "Warning", "Critical"',
-                        hintStyle: TextStyle(color: AppTheme.textSecondary),
+                        hintStyle: TextStyle(color: context.textSecondary),
                         filled: true,
-                        fillColor: AppTheme.darkSurface,
+                        fillColor: context.surface,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,
@@ -3642,9 +3642,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3653,10 +3653,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             'Threshold Lines',
             style: TextStyle(color: Colors.white, fontSize: 13),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'Add reference lines at specific values',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+            style: TextStyle(color: context.textSecondary, fontSize: 11),
           ),
           const SizedBox(height: 12),
           // Per-series threshold sections
@@ -3782,7 +3782,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              SizedBox(width: 8),
                               // Value
                               Text(
                                 '${threshold.value}',
@@ -3820,7 +3820,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                               // Edit indicator
                               Icon(
                                 Icons.edit,
-                                color: AppTheme.textSecondary,
+                                color: context.textSecondary,
                                 size: 14,
                               ),
                               const SizedBox(width: 6),
@@ -3838,7 +3838,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                                 },
                                 child: Icon(
                                   Icons.close,
-                                  color: AppTheme.textSecondary,
+                                  color: context.textSecondary,
                                   size: 16,
                                 ),
                               ),
@@ -3867,9 +3867,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3898,7 +3898,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                       border: Border.all(
                         color: isSelected
                             ? context.accentColor
-                            : AppTheme.darkBorder,
+                            : context.border,
                       ),
                     ),
                     child: Column(
@@ -3910,7 +3910,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                               : Colors.white,
                           size: 20,
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
                           opt.$2,
                           style: TextStyle(
@@ -3943,8 +3943,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
-        border: Border(top: BorderSide(color: AppTheme.darkBorder)),
+        color: context.card,
+        border: Border(top: BorderSide(color: context.border)),
       ),
       child: SafeArea(
         top: false,
@@ -3972,12 +3972,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                           border: Border.all(
                             color: _addToDashboard
                                 ? context.accentColor
-                                : AppTheme.textSecondary,
+                                : context.textSecondary,
                             width: 2,
                           ),
                         ),
                         child: _addToDashboard
-                            ? const Icon(
+                            ? Icon(
                                 Icons.check,
                                 size: 16,
                                 color: Colors.white,
@@ -4589,7 +4589,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               type: ElementType.text,
               text: 'No data selected',
               style: StyleSchema(
-                textColor: _colorToHex(AppTheme.textSecondary),
+                textColor: _colorToHex(context.textSecondary),
                 fontSize: 13,
               ),
             ),
@@ -4658,7 +4658,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           type: ElementType.text,
           text: 'Select up to 3 numeric values',
           style: StyleSchema(
-            textColor: _colorToHex(AppTheme.textSecondary),
+            textColor: _colorToHex(context.textSecondary),
             fontSize: 13,
           ),
         ),
@@ -4735,7 +4735,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 type: ElementType.text,
                 text: binding.label,
                 style: StyleSchema(
-                  textColor: _colorToHex(AppTheme.textSecondary),
+                  textColor: _colorToHex(context.textSecondary),
                   fontSize: labelFontSize,
                   fontWeight: 'w500',
                 ),
@@ -4778,7 +4778,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           type: ElementType.text,
           text: 'Select data to graph',
           style: StyleSchema(
-            textColor: _colorToHex(AppTheme.textSecondary),
+            textColor: _colorToHex(context.textSecondary),
             fontSize: 13,
           ),
         ),
@@ -4864,7 +4864,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                       type: ElementType.text,
                       text: legendLabels[i],
                       style: StyleSchema(
-                        textColor: _colorToHex(AppTheme.textSecondary),
+                        textColor: _colorToHex(context.textSecondary),
                         fontSize: 10,
                       ),
                     ),
@@ -4971,7 +4971,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   type: ElementType.text,
                   text: binding.label,
                   style: StyleSchema(
-                    textColor: _colorToHex(AppTheme.textSecondary),
+                    textColor: _colorToHex(context.textSecondary),
                     fontSize: 12,
                     fontWeight: 'w500',
                   ),
@@ -5070,7 +5070,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           type: ElementType.text,
           text: 'No info selected',
           style: StyleSchema(
-            textColor: _colorToHex(AppTheme.textSecondary),
+            textColor: _colorToHex(context.textSecondary),
             fontSize: 13,
           ),
         ),
@@ -5093,7 +5093,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               type: ElementType.text,
               text: binding.label,
               style: StyleSchema(
-                textColor: _colorToHex(AppTheme.textSecondary),
+                textColor: _colorToHex(context.textSecondary),
                 fontSize: 13,
               ),
             ),
@@ -5128,7 +5128,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           type: ElementType.text,
           text: 'No location data selected',
           style: StyleSchema(
-            textColor: _colorToHex(AppTheme.textSecondary),
+            textColor: _colorToHex(context.textSecondary),
             fontSize: 13,
           ),
         ),
@@ -5166,7 +5166,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   type: ElementType.text,
                   text: binding.label,
                   style: StyleSchema(
-                    textColor: _colorToHex(AppTheme.textSecondary),
+                    textColor: _colorToHex(context.textSecondary),
                     fontSize: 12,
                   ),
                 ),
@@ -5203,7 +5203,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           type: ElementType.text,
           text: 'No sensor data selected',
           style: StyleSchema(
-            textColor: _colorToHex(AppTheme.textSecondary),
+            textColor: _colorToHex(context.textSecondary),
             fontSize: 13,
           ),
         ),
@@ -5242,7 +5242,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   type: ElementType.text,
                   text: binding.label,
                   style: StyleSchema(
-                    textColor: _colorToHex(AppTheme.textSecondary),
+                    textColor: _colorToHex(context.textSecondary),
                     fontSize: 12,
                   ),
                 ),
@@ -5279,7 +5279,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           type: ElementType.text,
           text: 'No data selected',
           style: StyleSchema(
-            textColor: _colorToHex(AppTheme.textSecondary),
+            textColor: _colorToHex(context.textSecondary),
             fontSize: 13,
           ),
         ),
@@ -5304,7 +5304,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               type: ElementType.text,
               text: binding.label,
               style: StyleSchema(
-                textColor: _colorToHex(AppTheme.textSecondary),
+                textColor: _colorToHex(context.textSecondary),
                 fontSize: 13,
               ),
             ),
@@ -5357,7 +5357,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           type: ElementType.text,
           text: 'No data selected',
           style: StyleSchema(
-            textColor: _colorToHex(AppTheme.textSecondary),
+            textColor: _colorToHex(context.textSecondary),
             fontSize: 13,
           ),
         ),
@@ -5376,7 +5376,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             style: StyleSchema(
               padding: isHorizontal ? 4 : 8,
               backgroundColor: _colorToHex(
-                AppTheme.darkCard.withValues(alpha: 0.5),
+                context.card.withValues(alpha: 0.5),
               ),
               borderRadius: 6,
               alignment: AlignmentOption.center,
@@ -5387,7 +5387,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   type: ElementType.text,
                   text: binding.label,
                   style: StyleSchema(
-                    textColor: _colorToHex(AppTheme.textSecondary),
+                    textColor: _colorToHex(context.textSecondary),
                     fontSize: isHorizontal ? 9 : 11,
                   ),
                 ),
@@ -5419,7 +5419,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 type: ElementType.text,
                 text: binding.label,
                 style: StyleSchema(
-                  textColor: _colorToHex(AppTheme.textSecondary),
+                  textColor: _colorToHex(context.textSecondary),
                   fontSize: 13,
                 ),
               ),
@@ -5501,7 +5501,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           type: ElementType.text,
           text: 'No actions selected',
           style: StyleSchema(
-            textColor: _colorToHex(AppTheme.textSecondary),
+            textColor: _colorToHex(context.textSecondary),
             fontSize: 13,
           ),
         ),
@@ -5519,10 +5519,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         type: ElementType.row,
         style: StyleSchema(
           padding: 12,
-          backgroundColor: _colorToHex(AppTheme.darkCard),
+          backgroundColor: _colorToHex(context.card),
           borderRadius: 12,
           borderWidth: 1,
-          borderColor: _colorToHex(AppTheme.darkBorder),
+          borderColor: _colorToHex(context.border),
           spacing: 12,
           expanded: true, // Fill width so entire row is tappable
         ),

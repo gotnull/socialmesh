@@ -66,17 +66,17 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
         autoReconnectState == AutoReconnectState.connecting;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         leading: const HamburgerMenuButton(),
         centerTitle: true,
         title: Text(
           _editMode ? 'Edit Dashboard' : 'Dashboard',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -94,7 +94,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
             ),
             // Settings
             IconButton(
-              icon: Icon(Icons.settings_outlined, color: Colors.white),
+              icon: Icon(Icons.settings_outlined, color: context.textPrimary),
               onPressed: () => Navigator.of(context).pushNamed('/settings'),
               tooltip: 'Settings',
             ),
@@ -137,17 +137,17 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                   ? Icons.wifi_off
                   : Icons.bluetooth_disabled,
               size: 64,
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               autoReconnectState == AutoReconnectState.failed
                   ? 'Connection Failed'
                   : 'No Device Connected',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -155,13 +155,10 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               autoReconnectState == AutoReconnectState.failed
                   ? 'Could not find saved device'
                   : 'Connect to a Meshtastic device to get started',
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppTheme.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: context.textSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: () => Navigator.of(context).pushNamed('/scanner'),
               icon: Icon(Icons.bluetooth_searching, size: 20),
@@ -193,7 +190,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           MeshLoadingIndicator(size: 48),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Text(
             autoReconnectState == AutoReconnectState.scanning
                 ? 'Scanning for device...'
@@ -205,9 +202,9 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Please wait while we reconnect',
-            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 14, color: context.textSecondary),
           ),
         ],
       ),
@@ -294,7 +291,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.accentColor.withValues(alpha: 0.4)),
         boxShadow: [
@@ -346,7 +343,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                     size: 24,
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -359,12 +356,12 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                           color: context.accentColor,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         'Battery, messages, map, and more',
                         style: TextStyle(
                           fontSize: 13,
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                         ),
                       ),
                     ],
@@ -545,10 +542,10 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
             Icon(
               Icons.dashboard_customize,
               size: 64,
-              color: AppTheme.textTertiary.withValues(alpha: 0.5),
+              color: context.textTertiary.withValues(alpha: 0.5),
             ),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: 16),
+            Text(
               'No Widgets Added',
               style: TextStyle(
                 fontSize: 20,
@@ -557,12 +554,12 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Customize your dashboard with widgets that matter to you',
-              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              style: TextStyle(fontSize: 14, color: context.textSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () => _showAddWidgetSheet(context),
               icon: Icon(Icons.add, size: 20),
@@ -656,28 +653,28 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
                     size: 20,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     isCustomWidget ? 'Custom Widget' : widgetInfo.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: context.textPrimary,
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           // Edit option (only for custom widgets)
           if (isCustomWidget)
             ListTile(
               leading: Icon(Icons.edit, color: context.accentColor),
-              title: const Text(
+              title: Text(
                 'Edit Widget',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
               ),
               onTap: () async {
                 Navigator.pop(context);
@@ -688,11 +685,13 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
           ListTile(
             leading: Icon(
               config.isFavorite ? Icons.star : Icons.star_border,
-              color: config.isFavorite ? AppTheme.warningYellow : Colors.white,
+              color: config.isFavorite
+                  ? AppTheme.warningYellow
+                  : context.textPrimary,
             ),
             title: Text(
               config.isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             onTap: () {
               ref
@@ -703,10 +702,13 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
           ),
           // Edit dashboard mode
           ListTile(
-            leading: const Icon(Icons.dashboard_customize, color: Colors.white),
-            title: const Text(
+            leading: Icon(
+              Icons.dashboard_customize,
+              color: context.textPrimary,
+            ),
+            title: Text(
               'Edit Dashboard',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             onTap: () {
               Navigator.pop(context);
@@ -728,14 +730,14 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               final shouldRemove = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
-                  backgroundColor: AppTheme.darkCard,
-                  title: const Text(
+                  backgroundColor: context.card,
+                  title: Text(
                     'Remove Widget?',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.textPrimary),
                   ),
                   content: Text(
                     'Are you sure you want to remove this widget from your dashboard?',
-                    style: TextStyle(color: AppTheme.textSecondary),
+                    style: TextStyle(color: context.textSecondary),
                   ),
                   actions: [
                     TextButton(
@@ -789,7 +791,7 @@ class _DeviceButton extends StatelessWidget {
                 ? context.accentColor
                 : isReconnecting
                 ? AppTheme.warningYellow
-                : AppTheme.textTertiary,
+                : context.textTertiary,
           ),
           Positioned(
             right: -2,
@@ -804,7 +806,7 @@ class _DeviceButton extends StatelessWidget {
                     ? AppTheme.warningYellow
                     : AppTheme.errorRed,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.darkBackground, width: 2),
+                border: Border.all(color: context.background, width: 2),
               ),
             ),
           ),
@@ -884,11 +886,11 @@ class _AddWidgetSheet extends ConsumerWidget {
             ],
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             'Tap to add or remove widgets from your dashboard',
-            style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 13, color: context.textSecondary),
           ),
         ),
         const SizedBox(height: 16),
@@ -989,7 +991,7 @@ class _AddWidgetSheet extends ConsumerWidget {
               size: 22,
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1005,7 +1007,7 @@ class _AddWidgetSheet extends ConsumerWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Get $widgetPackName for ${DashboardWidgetType.values.length - _freeWidgetTypes.length} more widgets',
-                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  style: TextStyle(fontSize: 12, color: context.textSecondary),
                 ),
               ],
             ),
@@ -1061,12 +1063,12 @@ class _WidgetOption extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.darkBackground,
+            color: context.background,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isAdded
                   ? context.accentColor.withValues(alpha: 0.3)
-                  : AppTheme.darkBorder,
+                  : context.border,
             ),
           ),
           child: Row(
@@ -1076,23 +1078,23 @@ class _WidgetOption extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: isLocked
-                      ? AppTheme.darkSurface.withValues(alpha: 0.5)
+                      ? context.surface.withValues(alpha: 0.5)
                       : isAdded
                       ? context.accentColor.withValues(alpha: 0.15)
-                      : AppTheme.darkSurface,
+                      : context.surface,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   isLocked ? Icons.lock_outline : info.icon,
                   color: isLocked
-                      ? AppTheme.textTertiary
+                      ? context.textTertiary
                       : isAdded
                       ? context.accentColor
-                      : AppTheme.textSecondary,
+                      : context.textSecondary,
                   size: 22,
                 ),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1106,15 +1108,15 @@ class _WidgetOption extends StatelessWidget {
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                               color: isLocked
-                                  ? AppTheme.textTertiary
+                                  ? context.textTertiary
                                   : isAdded
                                   ? Colors.white
-                                  : AppTheme.textSecondary,
+                                  : context.textSecondary,
                             ),
                           ),
                         ),
                         if (isLocked) ...[
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,
@@ -1139,14 +1141,14 @@ class _WidgetOption extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       info.description,
                       style: TextStyle(
                         fontSize: 12,
                         color: isLocked
-                            ? AppTheme.textTertiary
-                            : AppTheme.textSecondary,
+                            ? context.textTertiary
+                            : context.textSecondary,
                       ),
                     ),
                   ],
@@ -1158,10 +1160,10 @@ class _WidgetOption extends StatelessWidget {
                 height: 28,
                 decoration: BoxDecoration(
                   color: isLocked
-                      ? AppTheme.darkBorder.withValues(alpha: 0.5)
+                      ? context.border.withValues(alpha: 0.5)
                       : isAdded
                       ? context.accentColor
-                      : AppTheme.darkBorder,
+                      : context.border,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -1171,10 +1173,10 @@ class _WidgetOption extends StatelessWidget {
                       ? Icons.check
                       : Icons.add,
                   color: isLocked
-                      ? AppTheme.textTertiary
+                      ? context.textTertiary
                       : isAdded
                       ? Colors.black
-                      : AppTheme.textTertiary,
+                      : context.textTertiary,
                   size: isLocked ? 14 : 18,
                 ),
               ),

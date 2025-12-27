@@ -225,9 +225,9 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
+        title: Text(
           'Import Channel',
           style: TextStyle(color: Colors.white),
         ),
@@ -236,7 +236,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildInfoRow('Name', channel.name),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             _buildInfoRow('Slot', '${channel.index}'),
             const SizedBox(height: 8),
             _buildInfoRow('Encryption', '${channel.psk.length * 8}-bit AES'),
@@ -250,7 +250,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
                   color: AppTheme.accentOrange.withValues(alpha: 0.3),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 children: [
                   Icon(
                     Icons.restart_alt,
@@ -277,7 +277,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
             onPressed: () => Navigator.pop(context, null),
             child: Text(
               'Cancel',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
           ),
           TextButton(
@@ -302,7 +302,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
       children: [
         Text(
           '$label: ',
-          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+          style: TextStyle(color: context.textSecondary, fontSize: 14),
         ),
         Expanded(
           child: Text(
@@ -367,10 +367,10 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'Scan Channel QR',
           style: TextStyle(
             fontSize: 20,
@@ -380,7 +380,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.flash_on, color: Colors.white),
+            icon: Icon(Icons.flash_on, color: Colors.white),
             onPressed: () => _controller.toggleTorch(),
           ),
           IconButton(
@@ -427,8 +427,8 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    AppTheme.darkBackground.withValues(alpha: 0.9),
-                    AppTheme.darkBackground,
+                    context.background.withValues(alpha: 0.9),
+                    context.background,
                   ],
                 ),
               ),
@@ -450,7 +450,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
                   Text(
                     'The channel will be automatically imported',
                     style: TextStyle(
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                       fontSize: 12,
                     ),
                     textAlign: TextAlign.center,

@@ -63,8 +63,8 @@ class MeshMapWidget extends StatelessWidget {
   /// Whether to animate tile loading
   final bool animateTiles;
 
-  /// Background color
-  final Color backgroundColor;
+  /// Background color (defaults to context.background if null)
+  final Color? backgroundColor;
 
   /// Enable clustering for markers (for large datasets like world mesh)
   final bool enableClustering;
@@ -109,7 +109,7 @@ class MeshMapWidget extends StatelessWidget {
     this.myNodeNum,
     this.onNodeTap,
     this.animateTiles = true,
-    this.backgroundColor = AppTheme.darkBackground,
+    this.backgroundColor,
     // Clustering options
     this.enableClustering = false,
     this.clusteredMarkers,
@@ -140,7 +140,7 @@ class MeshMapWidget extends StatelessWidget {
           initialZoom: initialZoom,
           minZoom: minZoom,
           maxZoom: maxZoom,
-          backgroundColor: backgroundColor,
+          backgroundColor: backgroundColor ?? context.background,
           interactionOptions: InteractionOptions(
             flags: interactionFlags,
             pinchZoomThreshold: 0.5,
@@ -343,7 +343,7 @@ class MeshNodeMarker extends StatelessWidget {
     final accentColor = context.accentColor;
     final baseColor = isMyNode
         ? accentColor
-        : (isStale ? AppTheme.textTertiary : accentColor);
+        : (isStale ? context.textTertiary : accentColor);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -398,7 +398,7 @@ class MiniMeshNodeMarker extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isMyNode
         ? context.accentColor
-        : (node.isOnline ? context.accentColor : AppTheme.textTertiary);
+        : (node.isOnline ? context.accentColor : context.textTertiary);
 
     return Container(
       decoration: BoxDecoration(

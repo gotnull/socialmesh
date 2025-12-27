@@ -139,12 +139,12 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
       width: double.infinity,
       child: Container(
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: _keyValidationError != null
                 ? AppTheme.errorRed.withAlpha(128)
-                : AppTheme.darkBorder,
+                : context.border,
           ),
         ),
         child: Column(
@@ -163,7 +163,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                           ? _accentColor.withAlpha(38)
                           : _keyValidationError != null
                           ? AppTheme.errorRed.withAlpha(38)
-                          : AppTheme.darkBackground,
+                          : context.background,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -172,7 +172,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                           ? _accentColor
                           : _keyValidationError != null
                           ? AppTheme.errorRed
-                          : AppTheme.textTertiary,
+                          : context.textTertiary,
                       size: 20,
                     ),
                   ),
@@ -200,7 +200,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                             fontSize: 12,
                             color: hasValidKey
                                 ? _accentColor
-                                : AppTheme.textTertiary,
+                                : context.textTertiary,
                           ),
                         ),
                       ],
@@ -238,12 +238,12 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
             Container(
               margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
+                color: context.background,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: _keyValidationError != null
                       ? AppTheme.errorRed.withAlpha(128)
-                      : AppTheme.darkBorder.withAlpha(128),
+                      : context.border.withAlpha(128),
                 ),
               ),
               child: _isEditingKey && widget.editable
@@ -260,7 +260,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                         contentPadding: const EdgeInsets.all(16),
                         hintText: 'e.g., AQ== or AAAAAAAAAAAAAAAAAAAAAA==',
                         hintStyle: TextStyle(
-                          color: AppTheme.textTertiary.withAlpha(128),
+                          color: context.textTertiary.withAlpha(128),
                           fontFamily: 'monospace',
                         ),
                         suffixIcon: IconButton(
@@ -299,7 +299,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: _keyController.text.isEmpty
-                                      ? AppTheme.textTertiary
+                                      ? context.textTertiary
                                       : _accentColor,
                                   fontFamily: 'monospace',
                                   fontWeight: FontWeight.w500,
@@ -313,7 +313,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                                     : '•' * min(32, _keyController.text.length),
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: AppTheme.textTertiary.withAlpha(128),
+                                  color: context.textTertiary.withAlpha(128),
                                   fontFamily: 'monospace',
                                   letterSpacing: 2,
                                 ),
@@ -447,8 +447,8 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                   icon,
                   size: 16,
                   color: isEnabled
-                      ? AppTheme.textSecondary
-                      : AppTheme.textTertiary.withAlpha(102),
+                      ? context.textSecondary
+                      : context.textTertiary.withAlpha(102),
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -457,8 +457,8 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     color: isEnabled
-                        ? AppTheme.textSecondary
-                        : AppTheme.textTertiary.withAlpha(102),
+                        ? context.textSecondary
+                        : context.textTertiary.withAlpha(102),
                   ),
                 ),
               ],

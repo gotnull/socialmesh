@@ -29,12 +29,12 @@ class _CategoryProductsScreenState
     final productsAsync = ref.watch(categoryProductsProvider(widget.category));
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         title: Text(
           widget.category.label,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white),
         ),
         actions: [
           IconButton(
@@ -45,7 +45,7 @@ class _CategoryProductsScreenState
           PopupMenuButton<String>(
             icon: const Icon(Icons.sort),
             tooltip: 'Sort',
-            color: AppTheme.darkCard,
+            color: context.card,
             onSelected: (value) => setState(() => _sortBy = value),
             itemBuilder: (context) => [
               _sortMenuItem('popular', 'Most Popular'),
@@ -86,8 +86,8 @@ class _CategoryProductsScreenState
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(_categoryIcon, color: AppTheme.textTertiary, size: 64),
-                  const SizedBox(height: 16),
+                  Icon(_categoryIcon, color: context.textTertiary, size: 64),
+                  SizedBox(height: 16),
                   Text(
                     'No products found',
                     style: TextStyle(color: Colors.white, fontSize: 18),
@@ -95,7 +95,7 @@ class _CategoryProductsScreenState
                   const SizedBox(height: 8),
                   Text(
                     'Try adjusting your filters',
-                    style: TextStyle(color: AppTheme.textSecondary),
+                    style: TextStyle(color: context.textSecondary),
                   ),
                   if (_hasActiveFilters)
                     TextButton(
@@ -120,7 +120,7 @@ class _CategoryProductsScreenState
                     children: [
                       Text(
                         '${sorted.length} products',
-                        style: TextStyle(color: AppTheme.textSecondary),
+                        style: TextStyle(color: context.textSecondary),
                       ),
                       const Spacer(),
                       TextButton.icon(
@@ -128,7 +128,7 @@ class _CategoryProductsScreenState
                         icon: Icon(Icons.clear, size: 18),
                         label: Text('Clear Filters'),
                         style: TextButton.styleFrom(
-                          foregroundColor: AppTheme.textSecondary,
+                          foregroundColor: context.textSecondary,
                         ),
                       ),
                     ],
@@ -250,7 +250,7 @@ class _CategoryProductsScreenState
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -274,7 +274,7 @@ class _CategoryProductsScreenState
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: AppTheme.darkBorder,
+                          color: context.border,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -331,7 +331,7 @@ class _CategoryProductsScreenState
                         return null;
                       }),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
 
                     // Price Range
                     Text(
@@ -348,11 +348,11 @@ class _CategoryProductsScreenState
                       children: [
                         Text(
                           '\$${_priceRange.start.round()}',
-                          style: TextStyle(color: AppTheme.textSecondary),
+                          style: TextStyle(color: context.textSecondary),
                         ),
                         Text(
                           '\$${_priceRange.end.round()}',
-                          style: TextStyle(color: AppTheme.textSecondary),
+                          style: TextStyle(color: context.textSecondary),
                         ),
                       ],
                     ),
@@ -403,16 +403,16 @@ class _CategoryProductsScreenState
                             alpha: 0.3,
                           ),
                           checkmarkColor: context.accentColor,
-                          backgroundColor: AppTheme.darkBackground,
+                          backgroundColor: context.background,
                           labelStyle: TextStyle(
                             color: isSelected
                                 ? context.accentColor
-                                : AppTheme.textSecondary,
+                                : context.textSecondary,
                           ),
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
 
                     // Apply button
                     SizedBox(
@@ -456,7 +456,7 @@ class _ProductGridCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Material(
-      color: AppTheme.darkCard,
+      color: context.card,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: () => Navigator.push(
@@ -503,7 +503,7 @@ class _ProductGridCard extends ConsumerWidget {
                         ),
                         child: Text(
                           '-${product.discountPercent}%',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -558,7 +558,7 @@ class _ProductGridCard extends ConsumerWidget {
                     Text(
                       product.sellerName,
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 11,
                       ),
                       maxLines: 1,
@@ -576,11 +576,11 @@ class _ProductGridCard extends ConsumerWidget {
                           ),
                         ),
                         if (product.isOnSale) ...[
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4),
                           Text(
                             product.formattedComparePrice!,
                             style: TextStyle(
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                               fontSize: 10,
                               decoration: TextDecoration.lineThrough,
                             ),
@@ -589,7 +589,7 @@ class _ProductGridCard extends ConsumerWidget {
                       ],
                     ),
                     if (product.reviewCount > 0) ...[
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Row(
                         children: [
                           Icon(Icons.star, color: Colors.amber, size: 12),
@@ -597,7 +597,7 @@ class _ProductGridCard extends ConsumerWidget {
                           Text(
                             '${product.rating.toStringAsFixed(1)} (${product.reviewCount})',
                             style: TextStyle(
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                               fontSize: 10,
                             ),
                           ),
@@ -616,9 +616,9 @@ class _ProductGridCard extends ConsumerWidget {
 
   Widget _placeholder(BuildContext context) {
     return Container(
-      color: AppTheme.darkBackground,
+      color: context.background,
       child: Center(
-        child: Icon(Icons.router, color: AppTheme.textTertiary, size: 40),
+        child: Icon(Icons.router, color: context.textTertiary, size: 40),
       ),
     );
   }

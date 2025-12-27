@@ -413,10 +413,10 @@ class _IntelligenceGauge extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             label,
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+            style: TextStyle(color: context.textSecondary, fontSize: 11),
           ),
         ],
       ),
@@ -602,9 +602,9 @@ class _ChannelUtilizationBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: AppTheme.darkBorder.withValues(alpha: 0.2),
+        color: context.border.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.3)),
+        border: Border.all(color: context.border.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -614,7 +614,7 @@ class _ChannelUtilizationBar extends StatelessWidget {
             children: [
               Text(
                 'Channel Utilization',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                style: TextStyle(color: context.textSecondary, fontSize: 11),
               ),
               Text(
                 '${utilization.toStringAsFixed(1)}%',

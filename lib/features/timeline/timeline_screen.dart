@@ -315,7 +315,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     final events = allEvents.where((e) => _filter.matches(e.type)).toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         leading: const HamburgerMenuButton(),
@@ -349,7 +349,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: EdgeFade.end(
         fadeSize: 32,
-        fadeColor: AppTheme.darkBackground,
+        fadeColor: context.background,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: TimelineFilter.values.length,
@@ -364,7 +364,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               avatar: Icon(
                 filter.icon,
                 size: 18,
-                color: isSelected ? Colors.white : AppTheme.textSecondary,
+                color: isSelected ? Colors.white : context.textSecondary,
               ),
               onSelected: (selected) {
                 setState(() {
@@ -372,9 +372,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 });
               },
               selectedColor: context.accentColor,
-              backgroundColor: AppTheme.darkSurface,
+              backgroundColor: context.surface,
               labelStyle: TextStyle(
-                color: isSelected ? Colors.white : AppTheme.textSecondary,
+                color: isSelected ? Colors.white : context.textSecondary,
               ),
             );
           },
@@ -392,27 +392,27 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.timeline,
               size: 40,
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Text(
             'No events yet',
             style: theme.textTheme.titleMedium?.copyWith(
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'Activity will appear here as it happens',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
             ),
           ),
         ],
@@ -451,7 +451,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     child: Text(
                       dateKey,
                       style: theme.textTheme.labelLarge?.copyWith(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -488,17 +488,17 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               Container(
                 width: 2,
                 height: 40,
-                color: AppTheme.darkBorder.withAlpha(77),
+                color: context.border.withAlpha(77),
               ),
             ],
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           // Event content
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.darkSurface,
+                color: context.surface,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -518,17 +518,17 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                       Text(
                         _formatTime(event.timestamp),
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                         ),
                       ),
                     ],
                   ),
                   if (event.subtitle != null) ...[
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       event.subtitle!,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -583,7 +583,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(bottom: 16),
             child: Text(
               'Filter Events',
@@ -600,7 +600,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 filter.icon,
                 color: _filter == filter
                     ? context.accentColor
-                    : AppTheme.textSecondary,
+                    : context.textSecondary,
               ),
               title: Text(filter.label),
               trailing: _filter == filter

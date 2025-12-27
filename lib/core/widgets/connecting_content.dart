@@ -107,7 +107,7 @@ class ConnectingContent extends StatelessWidget {
             const ConfiguredSplashMeshNode(),
             const SizedBox(height: 32),
           ],
-          const Text(
+          Text(
             'Socialmesh',
             style: TextStyle(
               fontSize: 32,
@@ -127,9 +127,9 @@ class ConnectingContent extends StatelessWidget {
             const SizedBox(height: 24),
             TextButton(
               onPressed: onCancel,
-              child: const Text(
+              child: Text(
                 'Cancel',
-                style: TextStyle(color: AppTheme.textTertiary, fontSize: 16),
+                style: TextStyle(color: context.textTertiary, fontSize: 16),
               ),
             ),
           ],

@@ -186,7 +186,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
           title: const Text('IFTTT Integration'),
           actions: [
@@ -248,7 +248,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.darkCard,
+            color: context.card,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -261,29 +261,29 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                 keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Webhook Key',
-                  labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                  labelStyle: TextStyle(color: context.textSecondary),
                   hintText: 'e.g., cMcOnB_zaJTrZwsVvzVTHY',
                   hintStyle: TextStyle(color: Colors.grey.shade600),
                   helperText: 'Copy from IFTTT Webhooks URL after /use/',
-                  helperStyle: const TextStyle(color: AppTheme.textTertiary),
+                  helperStyle: TextStyle(color: context.textTertiary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.darkBorder),
+                    borderSide: BorderSide(color: context.border),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.darkBorder),
+                    borderSide: BorderSide(color: context.border),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: context.accentColor),
                   ),
-                  prefixIcon: Icon(Icons.key, color: AppTheme.textSecondary),
+                  prefixIcon: Icon(Icons.key, color: context.textSecondary),
                   filled: true,
-                  fillColor: AppTheme.darkBackground,
+                  fillColor: context.background,
                 ),
               ),
               SizedBox(height: 16),
@@ -398,7 +398,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
             ),
             child: TextField(
@@ -406,32 +406,32 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
               keyboardType: TextInputType.number,
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => FocusScope.of(context).unfocus(),
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Battery Threshold',
-                labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                labelStyle: TextStyle(color: context.textSecondary),
                 hintText: '20',
                 hintStyle: TextStyle(color: Colors.grey.shade600),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppTheme.darkBorder),
+                  borderSide: BorderSide(color: context.border),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppTheme.darkBorder),
+                  borderSide: BorderSide(color: context.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: context.accentColor),
                 ),
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.battery_3_bar,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                 ),
                 suffixText: '%',
-                suffixStyle: const TextStyle(color: AppTheme.textSecondary),
+                suffixStyle: TextStyle(color: context.textSecondary),
                 filled: true,
-                fillColor: AppTheme.darkBackground,
+                fillColor: context.background,
               ),
             ),
           ),
@@ -452,7 +452,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
             ),
             child: TextField(
@@ -462,32 +462,32 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
               ),
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => FocusScope.of(context).unfocus(),
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Temperature Threshold',
-                labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                labelStyle: TextStyle(color: context.textSecondary),
                 hintText: '40.0',
                 hintStyle: TextStyle(color: Colors.grey.shade600),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppTheme.darkBorder),
+                  borderSide: BorderSide(color: context.border),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppTheme.darkBorder),
+                  borderSide: BorderSide(color: context.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: context.accentColor),
                 ),
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.device_thermostat,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                 ),
                 suffixText: '°C',
-                suffixStyle: const TextStyle(color: AppTheme.textSecondary),
+                suffixStyle: TextStyle(color: context.textSecondary),
                 filled: true,
-                fillColor: AppTheme.darkBackground,
+                fillColor: context.background,
               ),
             ),
           ),
@@ -515,7 +515,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -524,35 +524,35 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                   controller: _geofenceRadiusController,
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: 'Geofence Radius',
-                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                    labelStyle: TextStyle(color: context.textSecondary),
                     hintText: '1000',
                     hintStyle: TextStyle(color: Colors.grey.shade600),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppTheme.darkBorder),
+                      borderSide: BorderSide(color: context.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: AppTheme.darkBorder),
+                      borderSide: BorderSide(color: context.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(color: context.accentColor),
                     ),
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.radar,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                     suffixText: 'm',
-                    suffixStyle: const TextStyle(color: AppTheme.textSecondary),
+                    suffixStyle: TextStyle(color: context.textSecondary),
                     filled: true,
-                    fillColor: AppTheme.darkBackground,
+                    fillColor: context.background,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 TextField(
                   controller: _geofenceLatController,
                   keyboardType: const TextInputType.numberWithOptions(
@@ -563,30 +563,30 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: 'Center Latitude',
-                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                    labelStyle: TextStyle(color: context.textSecondary),
                     hintText: '-33.8688',
                     hintStyle: TextStyle(color: Colors.grey.shade600),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppTheme.darkBorder),
+                      borderSide: BorderSide(color: context.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: AppTheme.darkBorder),
+                      borderSide: BorderSide(color: context.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(color: context.accentColor),
                     ),
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.my_location,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                     filled: true,
-                    fillColor: AppTheme.darkBackground,
+                    fillColor: context.background,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 TextField(
                   controller: _geofenceLonController,
                   keyboardType: const TextInputType.numberWithOptions(
@@ -598,27 +598,27 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: 'Center Longitude',
-                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                    labelStyle: TextStyle(color: context.textSecondary),
                     hintText: '151.2093',
                     hintStyle: TextStyle(color: Colors.grey.shade600),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppTheme.darkBorder),
+                      borderSide: BorderSide(color: context.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: AppTheme.darkBorder),
+                      borderSide: BorderSide(color: context.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(color: context.accentColor),
                     ),
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.my_location,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                     filled: true,
-                    fillColor: AppTheme.darkBackground,
+                    fillColor: context.background,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -709,19 +709,19 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     child: Row(
                       children: [
                         Icon(Icons.radar, color: context.accentColor, size: 20),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Monitored Node',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.textTertiary,
+                                  color: context.textTertiary,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              SizedBox(height: 2),
                               Text(
                                 _geofenceNodeName!,
                                 style: const TextStyle(
@@ -735,7 +735,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.close, size: 18),
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                           visualDensity: VisualDensity.compact,
                           onPressed: () => setState(() {
                             _geofenceNodeNum = null;
@@ -745,7 +745,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                 ] else ...[
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -764,30 +764,30 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                           size: 18,
                         ),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'No node selected. All nodes will be monitored.',
                             style: TextStyle(
                               fontSize: 13,
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                 ],
                 // Throttle setting
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.timer_outlined,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                       size: 20,
                     ),
-                    const SizedBox(width: 12),
-                    const Expanded(
+                    SizedBox(width: 12),
+                    Expanded(
                       child: Text(
                         'Alert Cooldown',
                         style: TextStyle(fontSize: 14, color: Colors.white),
@@ -799,13 +799,13 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.darkBackground,
+                        color: context.background,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppTheme.darkBorder),
+                        border: Border.all(color: context.border),
                       ),
                       child: DropdownButton<int>(
                         value: _geofenceThrottleMinutes,
-                        dropdownColor: AppTheme.darkCard,
+                        dropdownColor: context.card,
                         underline: const SizedBox.shrink(),
                         isDense: true,
                         style: const TextStyle(
@@ -837,7 +837,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                 SizedBox(height: 8),
                 Text(
                   'Minimum time between geofence alerts for the same node',
-                  style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+                  style: TextStyle(fontSize: 12, color: context.textTertiary),
                 ),
                 SizedBox(height: 16),
                 // Pick on Map button
@@ -960,13 +960,13 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
               ),
             ),
           ),
@@ -979,7 +979,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       clipBehavior: Clip.antiAlias,
@@ -991,8 +991,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           hoverColor: Colors.transparent,
         ),
         child: ExpansionTile(
-          leading: const Icon(Icons.code, color: AppTheme.textSecondary),
-          title: const Text(
+          leading: Icon(Icons.code, color: context.textSecondary),
+          title: Text(
             'Event Names Reference',
             style: TextStyle(
               fontSize: 15,
@@ -1000,12 +1000,12 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
               color: Colors.white,
             ),
           ),
-          subtitle: const Text(
+          subtitle: Text(
             'Use these names in your IFTTT applets',
-            style: TextStyle(fontSize: 13, color: AppTheme.textTertiary),
+            style: TextStyle(fontSize: 13, color: context.textTertiary),
           ),
-          iconColor: AppTheme.textSecondary,
-          collapsedIconColor: AppTheme.textSecondary,
+          iconColor: context.textSecondary,
+          collapsedIconColor: context.textSecondary,
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -1064,14 +1064,14 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Expanded(
             flex: 2,
             child: Text(
               params,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: AppTheme.textTertiary,
+                color: context.textTertiary,
               ),
             ),
           ),
@@ -1092,10 +1092,10 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: AppTheme.textTertiary,
+          color: context.textTertiary,
           letterSpacing: 1.2,
         ),
       ),
@@ -1123,15 +1123,15 @@ class _SettingsTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? AppTheme.textSecondary),
-            const SizedBox(width: 16),
+            Icon(icon, color: iconColor ?? context.textSecondary),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1147,9 +1147,9 @@ class _SettingsTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                 ],

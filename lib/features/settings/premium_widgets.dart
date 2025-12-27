@@ -63,9 +63,9 @@ class _LockedFeatureCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -79,20 +79,20 @@ class _LockedFeatureCard extends StatelessWidget {
             ),
             child: Icon(Icons.lock_outline, color: context.accentColor, size: 32),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             featureName,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
+              color: context.textPrimary,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             featureDescription,
-            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+            style: TextStyle(color: context.textSecondary, fontSize: 14),
             textAlign: TextAlign.center,
           ),
           if (showUpgradeButton) ...[
@@ -177,7 +177,7 @@ class PremiumFeatureRow extends ConsumerWidget {
         children: [
           Expanded(child: child),
           if (!hasFeature && showLockIfLocked) ...[
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Icon(
               Icons.lock_outline,
               size: 16,
@@ -207,17 +207,17 @@ Future<bool> checkFeatureOrShowUpgrade(
   await showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.card,
       title: Row(
         children: [
           Icon(Icons.lock_outline, color: context.accentColor),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Text(purchase?.name ?? 'Premium Feature'),
         ],
       ),
       content: Text(
         purchase?.description ?? 'This feature requires a purchase to unlock.',
-        style: const TextStyle(color: AppTheme.textSecondary),
+        style: TextStyle(color: context.textSecondary),
       ),
       actions: [
         TextButton(

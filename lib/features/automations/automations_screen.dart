@@ -26,7 +26,7 @@ class AutomationsScreen extends ConsumerWidget {
     final stats = ref.watch(automationStatsProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         leading: const HamburgerMenuButton(),
@@ -97,7 +97,7 @@ class AutomationsScreen extends ConsumerWidget {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: AppTheme.darkCard,
+                color: context.card,
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -108,7 +108,7 @@ class AutomationsScreen extends ConsumerWidget {
                 ).colorScheme.primary.withValues(alpha: 0.5),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Text(
               'No Automations Yet',
               style: Theme.of(
@@ -145,9 +145,9 @@ class AutomationsScreen extends ConsumerWidget {
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkCard,
+                      color: context.card,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.darkBorder),
+                      border: Border.all(color: context.border),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -181,9 +181,9 @@ class AutomationsScreen extends ConsumerWidget {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -194,7 +194,7 @@ class AutomationsScreen extends ConsumerWidget {
                   value: stats.total.toString(),
                   icon: Icons.bolt,
                 ),
-                Container(width: 1, height: 40, color: AppTheme.darkBorder),
+                Container(width: 1, height: 40, color: context.border),
                 _buildStatItem(
                   context,
                   label: 'Active',
@@ -202,7 +202,7 @@ class AutomationsScreen extends ConsumerWidget {
                   icon: Icons.play_circle,
                   color: AppTheme.successGreen,
                 ),
-                Container(width: 1, height: 40, color: AppTheme.darkBorder),
+                Container(width: 1, height: 40, color: context.border),
                 _buildStatItem(
                   context,
                   label: 'Executions',
@@ -280,7 +280,7 @@ class AutomationsScreen extends ConsumerWidget {
   void _showAddAutomation(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkSurface,
+      backgroundColor: context.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -365,7 +365,7 @@ class AutomationsScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
+        backgroundColor: context.surface,
         title: const Text('Delete Automation'),
         content: Text('Are you sure you want to delete "${automation.name}"?'),
         actions: [
@@ -394,7 +394,7 @@ class AutomationsScreen extends ConsumerWidget {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkSurface,
+      backgroundColor: context.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -561,7 +561,7 @@ class _AutomationDebugSheet extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         if (evaluations.isEmpty)
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 32),
             child: Center(
               child: Text(
@@ -762,7 +762,7 @@ class _AddAutomationSheet extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 16),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -813,9 +813,9 @@ class _AddAutomationSheet extends StatelessWidget {
                           width: 140,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppTheme.darkCard,
+                            color: context.card,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppTheme.darkBorder),
+                            border: Border.all(color: context.border),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -923,9 +923,9 @@ class _AddAutomationSheet extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppTheme.darkBorder),
+          border: Border.all(color: context.border),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -131,9 +131,9 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
+        title: Text(
           'Node Already Exists',
           style: TextStyle(color: Colors.white),
         ),
@@ -143,7 +143,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
           children: [
             Text(
               'This node is already in your list as "${existing.displayName}".',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+              style: TextStyle(color: context.textSecondary, fontSize: 14),
             ),
             if (newName != null && newName != existing.longName) ...[
               SizedBox(height: 12),
@@ -181,7 +181,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'Cancel',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
           ),
           FilledButton(
@@ -206,15 +206,15 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Add Node', style: TextStyle(color: Colors.white)),
+        title: Text('Add Node', style: TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildInfoRow('Name', displayName),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             _buildInfoRow('Node ID', '!$nodeId'),
             if (userId != null) ...[
               SizedBox(height: 8),
@@ -253,7 +253,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'Cancel',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
           ),
           FilledButton(
@@ -274,7 +274,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
           width: 70,
           child: Text(
             '$label:',
-            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+            style: TextStyle(color: context.textSecondary, fontSize: 14),
           ),
         ),
         Expanded(
@@ -348,10 +348,10 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'Scan Node QR',
           style: TextStyle(
             fontSize: 20,
@@ -361,7 +361,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.flash_on, color: Colors.white),
+            icon: Icon(Icons.flash_on, color: Colors.white),
             onPressed: () => _controller.toggleTorch(),
           ),
           IconButton(
@@ -408,8 +408,8 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    AppTheme.darkBackground.withValues(alpha: 0.9),
-                    AppTheme.darkBackground,
+                    context.background.withValues(alpha: 0.9),
+                    context.background,
                   ],
                 ),
               ),
@@ -427,7 +427,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
                   Text(
                     'The node will be added to your favorites',
                     style: TextStyle(
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                       fontSize: 12,
                     ),
                     textAlign: TextAlign.center,

@@ -81,9 +81,9 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
+          backgroundColor: context.background,
           leading: const HamburgerMenuButton(),
           centerTitle: true,
           title: Text(
@@ -125,7 +125,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.settings_outlined),
+              icon: Icon(Icons.settings_outlined),
               tooltip: 'Settings',
               onPressed: () => Navigator.of(context).pushNamed('/settings'),
             ),
@@ -138,25 +138,25 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.darkCard,
+                  color: context.card,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextField(
                   controller: _searchController,
                   onChanged: (value) => setState(() => _searchQuery = value),
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: 'Search channels',
-                    hintStyle: const TextStyle(color: AppTheme.textTertiary),
-                    prefixIcon: const Icon(
+                    hintStyle: TextStyle(color: context.textTertiary),
+                    prefixIcon: Icon(
                       Icons.search,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.clear,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                             onPressed: () {
                               _searchController.clear();
@@ -178,7 +178,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
               height: 44,
               child: EdgeFade.end(
                 fadeSize: 32,
-                fadeColor: AppTheme.darkBackground,
+                fadeColor: context.background,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -190,7 +190,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
                       onTap: () =>
                           setState(() => _activeFilter = ChannelFilter.all),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     _ChannelFilterChip(
                       label: 'Primary',
                       count: primaryCount,
@@ -240,7 +240,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
             // Divider
             Container(
               height: 1,
-              color: AppTheme.darkBorder.withValues(alpha: 0.3),
+              color: context.border.withValues(alpha: 0.3),
             ),
             // Channels list
             Expanded(
@@ -253,33 +253,33 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
                             width: 72,
                             height: 72,
                             decoration: BoxDecoration(
-                              color: AppTheme.darkCard,
+                              color: context.card,
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.wifi_tethering,
                               size: 40,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          SizedBox(height: 24),
                           Text(
                             _searchQuery.isNotEmpty
                                 ? 'No channels match "$_searchQuery"'
                                 : 'No channels configured',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                             ),
                           ),
                           if (_searchQuery.isEmpty) ...[
-                            const SizedBox(height: 8),
-                            const Text(
+                            SizedBox(height: 8),
+                            Text(
                               'Channels are still being loaded from device\nor use the icons above to add channels',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: AppTheme.textTertiary,
+                                color: context.textTertiary,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -340,9 +340,9 @@ class _ChannelTile extends ConsumerWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.darkBorder),
+          border: Border.all(color: context.border),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -354,21 +354,21 @@ class _ChannelTile extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: isPrimary
                       ? context.accentColor
-                      : AppTheme.darkBackground,
+                      : context.background,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Text(
                     '${channel.index}',
                     style: TextStyle(
-                      color: isPrimary ? Colors.white : AppTheme.textSecondary,
+                      color: isPrimary ? Colors.white : context.textSecondary,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,14 +393,14 @@ class _ChannelTile extends ConsumerWidget {
                           size: 14,
                           color: hasKey
                               ? context.accentColor
-                              : AppTheme.textTertiary,
+                              : context.textTertiary,
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Text(
                           hasKey ? 'Encrypted' : 'No encryption',
                           style: TextStyle(
                             fontSize: 13,
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                           ),
                         ),
                         if (isPrimary) ...[
@@ -431,7 +431,7 @@ class _ChannelTile extends ConsumerWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+              Icon(Icons.chevron_right, color: context.textTertiary),
             ],
           ),
         ),
@@ -707,9 +707,9 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.darkBackground,
+            color: context.background,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.darkBorder),
+            border: Border.all(color: context.border),
           ),
           child: _showKey
               ? SelectableText(
@@ -727,13 +727,13 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                   '•' * 32,
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                    color: context.textTertiary.withValues(alpha: 0.5),
                     fontFamily: 'monospace',
                     letterSpacing: 2,
                   ),
                 ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Row(
           children: [
             Expanded(
@@ -741,7 +741,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                 onPressed: () => setState(() => _showKey = !_showKey),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: const BorderSide(color: AppTheme.darkBorder),
+                  side: BorderSide(color: context.border),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -775,8 +775,8 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.accentColor,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppTheme.darkBackground,
-                  disabledForegroundColor: AppTheme.textTertiary.withValues(
+                  disabledBackgroundColor: context.background,
+                  disabledForegroundColor: context.textTertiary.withValues(
                     alpha: 0.5,
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -828,12 +828,12 @@ class _ChannelFilterChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? chipColor.withValues(alpha: 0.2)
-              : AppTheme.darkCard,
+              : context.card,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
                 ? chipColor.withValues(alpha: 0.5)
-                : AppTheme.darkBorder.withValues(alpha: 0.3),
+                : context.border.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -843,25 +843,25 @@ class _ChannelFilterChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 14,
-                color: isSelected ? chipColor : AppTheme.textTertiary,
+                color: isSelected ? chipColor : context.textTertiary,
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
             ],
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? chipColor : AppTheme.textSecondary,
+                color: isSelected ? chipColor : context.textSecondary,
               ),
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
                 color: isSelected
                     ? chipColor.withValues(alpha: 0.3)
-                    : AppTheme.darkBorder.withValues(alpha: 0.3),
+                    : context.border.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -869,7 +869,7 @@ class _ChannelFilterChip extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: isSelected ? chipColor : AppTheme.textTertiary,
+                  color: isSelected ? chipColor : context.textTertiary,
                 ),
               ),
             ),

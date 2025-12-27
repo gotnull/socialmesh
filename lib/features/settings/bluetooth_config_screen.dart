@@ -152,10 +152,10 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
-          title: const Text(
+          backgroundColor: context.background,
+          title: Text(
             'Bluetooth',
             style: TextStyle(
               fontSize: 20,
@@ -200,7 +200,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                   // Bluetooth enabled toggle
                   Container(
                     decoration: BoxDecoration(
-                      color: AppTheme.darkCard,
+                      color: context.card,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     padding: const EdgeInsets.symmetric(
@@ -211,15 +211,15 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                       children: [
                         Icon(
                           Icons.bluetooth,
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                           size: 22,
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text(
+                            children: [
+                              const Text(
                                 'Bluetooth Enabled',
                                 style: TextStyle(
                                   color: Colors.white,
@@ -229,7 +229,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                               Text(
                                 'Enable Bluetooth connectivity',
                                 style: TextStyle(
-                                  color: AppTheme.textSecondary,
+                                  color: context.textSecondary,
                                   fontSize: 13,
                                 ),
                               ),
@@ -246,23 +246,23 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // Pairing mode section
-                  const Text(
+                  Text(
                     'PAIRING MODE',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       letterSpacing: 1,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
 
                   Container(
                     decoration: BoxDecoration(
-                      color: AppTheme.darkCard,
+                      color: context.card,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -275,7 +275,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                             ListTile(
                               title: Text(
                                 _getModeLabel(mode),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -283,7 +283,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                               subtitle: Text(
                                 _getModeDescription(mode),
                                 style: TextStyle(
-                                  color: AppTheme.textSecondary,
+                                  color: context.textSecondary,
                                   fontSize: 13,
                                 ),
                               ),
@@ -293,41 +293,41 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                                     : Icons.radio_button_unchecked,
                                 color: isSelected
                                     ? context.accentColor
-                                    : AppTheme.textTertiary,
+                                    : context.textTertiary,
                               ),
                               selected: isSelected,
                               onTap: () => setState(() => _mode = mode),
                             ),
                             if (index < modes.length - 1)
-                              const Divider(
+                              Divider(
                                 height: 1,
                                 indent: 16,
                                 endIndent: 16,
-                                color: AppTheme.darkBorder,
+                                color: context.border,
                               ),
                           ],
                         );
                       }).toList(),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // Fixed PIN (only show when mode is Fixed PIN)
                   if (_mode ==
                       pb.Config_BluetoothConfig_PairingMode.FIXED_PIN) ...[
-                    const Text(
+                    Text(
                       'FIXED PIN',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                         letterSpacing: 1,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     Container(
                       decoration: BoxDecoration(
-                        color: AppTheme.darkCard,
+                        color: context.card,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.all(16),
@@ -344,7 +344,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                             ],
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 24,
                               fontWeight: FontWeight.w600,
@@ -356,7 +356,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                               counterText: '',
                               hintText: '123456',
                               hintStyle: TextStyle(
-                                color: AppTheme.textTertiary.withValues(
+                                color: context.textTertiary.withValues(
                                   alpha: 0.5,
                                 ),
                                 fontSize: 24,
@@ -365,7 +365,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                                 fontFamily: 'monospace',
                               ),
                               filled: true,
-                              fillColor: AppTheme.darkBackground,
+                              fillColor: context.background,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                                 borderSide: BorderSide.none,
@@ -380,18 +380,18 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                               }
                             },
                           ),
-                          const SizedBox(height: 8),
-                          const Text(
+                          SizedBox(height: 8),
+                          Text(
                             'Enter a 6-digit PIN code for Bluetooth pairing',
                             style: TextStyle(
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                               fontSize: 13,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                   ],
 
                   // Info card
@@ -412,12 +412,12 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                           color: context.accentColor.withValues(alpha: 0.8),
                           size: 20,
                         ),
-                        const SizedBox(width: 12),
-                        const Expanded(
+                        SizedBox(width: 12),
+                        Expanded(
                           child: Text(
                             'Bluetooth settings control how your device pairs with phones and other devices.',
                             style: TextStyle(
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                               fontSize: 13,
                             ),
                           ),

@@ -85,14 +85,14 @@ class _DashboardWidgetState extends State<DashboardWidget>
     final shouldRemove = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text(
+        backgroundColor: context.card,
+        title: Text(
           'Remove Widget?',
           style: TextStyle(color: Colors.white),
         ),
         content: Text(
           'Are you sure you want to remove "$displayName" from your dashboard?',
-          style: TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: context.textSecondary),
         ),
         actions: [
           TextButton(
@@ -161,7 +161,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: widget.isEditMode
@@ -169,7 +169,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
                     .transparent // Border handled by CustomPaint
               : isFavorite
               ? context.accentColor
-              : AppTheme.darkBorder,
+              : context.border,
           width: 1,
         ),
       ),
@@ -199,16 +199,16 @@ class _DashboardWidgetState extends State<DashboardWidget>
         bottom: 12,
       ),
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground.withValues(alpha: 0.5),
+        color: context.background.withValues(alpha: 0.5),
         border: Border(
-          bottom: BorderSide(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+          bottom: BorderSide(color: context.border.withValues(alpha: 0.5)),
         ),
       ),
       child: Row(
         children: [
           if (widget.isEditMode) ...[
             // Drag handle
-            Icon(Icons.drag_indicator, color: AppTheme.textTertiary, size: 20),
+            Icon(Icons.drag_indicator, color: context.textTertiary, size: 20),
             SizedBox(width: 8),
           ],
           // Icon
@@ -220,7 +220,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
             ),
             child: Icon(displayIcon, color: context.accentColor, size: 16),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           // Title
           Expanded(
             child: Text(
@@ -250,7 +250,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
               icon: widget.config.isFavorite ? Icons.star : Icons.star_border,
               color: widget.config.isFavorite
                   ? AppTheme.warningYellow
-                  : AppTheme.textTertiary,
+                  : context.textTertiary,
               onTap: () {
                 HapticFeedback.lightImpact();
                 widget.onFavorite?.call();
@@ -344,14 +344,14 @@ class WidgetEmptyState extends StatelessWidget {
             Icon(
               icon,
               size: 32,
-              color: AppTheme.textTertiary.withValues(alpha: 0.5),
+              color: context.textTertiary.withValues(alpha: 0.5),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
               message,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppTheme.textTertiary,
+                color: context.textTertiary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -395,12 +395,12 @@ class WidgetLoadingState extends StatelessWidget {
             child: MeshLoadingIndicator(size: 24),
           ),
           if (message != null) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
               message!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppTheme.textTertiary,
+                color: context.textTertiary,
               ),
             ),
           ],

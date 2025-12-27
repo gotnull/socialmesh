@@ -27,10 +27,10 @@ enum LogLevel {
   warning,
   error;
 
-  Color get color {
+  Color getColor(BuildContext context) {
     switch (this) {
       case LogLevel.debug:
-        return AppTheme.textTertiary;
+        return context.textTertiary;
       case LogLevel.info:
         return AccentColors.blue;
       case LogLevel.warning:
@@ -177,8 +177,8 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: AppTheme.darkCard,
-          title: const Text(
+          backgroundColor: context.card,
+          title: Text(
             'Filter Log Levels',
             style: TextStyle(color: Colors.white),
           ),
@@ -186,7 +186,10 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
             mainAxisSize: MainAxisSize.min,
             children: LogLevel.values.map((level) {
               return CheckboxListTile(
-                title: Text(level.label, style: TextStyle(color: level.color)),
+                title: Text(
+                  level.label,
+                  style: TextStyle(color: level.getColor(context)),
+                ),
                 value: selected.contains(level),
                 activeColor: context.accentColor,
                 onChanged: (value) {
@@ -272,11 +275,11 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text('Clear Logs', style: TextStyle(color: Colors.white)),
-        content: const Text(
+        backgroundColor: context.card,
+        title: Text('Clear Logs', style: TextStyle(color: Colors.white)),
+        content: Text(
           'Are you sure you want to clear all logs?',
-          style: TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: context.textSecondary),
         ),
         actions: [
           TextButton(
@@ -305,10 +308,10 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
     final filters = ref.watch(filteredLogsProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'App Log',
           style: TextStyle(
             fontSize: 20,
@@ -320,7 +323,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
           IconButton(
             icon: Icon(
               _autoScroll ? Icons.vertical_align_bottom : Icons.pause,
-              color: _autoScroll ? context.accentColor : AppTheme.textSecondary,
+              color: _autoScroll ? context.accentColor : context.textSecondary,
             ),
             tooltip: _autoScroll ? 'Auto-scroll on' : 'Auto-scroll off',
             onPressed: () {
@@ -328,8 +331,8 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
             },
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            color: AppTheme.darkCard,
+            icon: Icon(Icons.more_vert, color: Colors.white),
+            color: context.card,
             onSelected: (value) {
               switch (value) {
                 case 'filter':
@@ -358,29 +361,29 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
                       Icons.filter_list,
                       color: filters.length < LogLevel.values.length
                           ? context.accentColor
-                          : AppTheme.textSecondary,
+                          : context.textSecondary,
                       size: 20,
                     ),
-                    const SizedBox(width: 12),
-                    const Text('Filter', style: TextStyle(color: Colors.white)),
+                    SizedBox(width: 12),
+                    Text('Filter', style: TextStyle(color: Colors.white)),
                   ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'copy',
                 child: Row(
                   children: [
-                    Icon(Icons.copy, color: AppTheme.textSecondary, size: 20),
+                    Icon(Icons.copy, color: context.textSecondary, size: 20),
                     SizedBox(width: 12),
                     Text('Copy', style: TextStyle(color: Colors.white)),
                   ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'share',
                 child: Row(
                   children: [
-                    Icon(Icons.share, color: AppTheme.textSecondary, size: 20),
+                    Icon(Icons.share, color: context.textSecondary, size: 20),
                     SizedBox(width: 12),
                     Text('Share Log', style: TextStyle(color: Colors.white)),
                   ],
@@ -395,7 +398,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
                       color: context.accentColor,
                       size: 20,
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Text(
                       'Export Debug JSON',
                       style: TextStyle(color: context.accentColor),
@@ -403,7 +406,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
                   ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'clear',
                 child: Row(
                   children: [
@@ -428,20 +431,14 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
             padding: const EdgeInsets.all(16),
             child: TextField(
               controller: _searchController,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'Search logs...',
-                hintStyle: const TextStyle(color: AppTheme.textTertiary),
-                prefixIcon: const Icon(
-                  Icons.search,
-                  color: AppTheme.textTertiary,
-                ),
+                hintStyle: TextStyle(color: context.textTertiary),
+                prefixIcon: Icon(Icons.search, color: context.textTertiary),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(
-                          Icons.clear,
-                          color: AppTheme.textTertiary,
-                        ),
+                        icon: Icon(Icons.clear, color: context.textTertiary),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
@@ -449,7 +446,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
                       )
                     : null,
                 filled: true,
-                fillColor: AppTheme.darkCard,
+                fillColor: context.card,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -472,10 +469,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
               children: [
                 Text(
                   '${logs.length} entries',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppTheme.textTertiary,
-                  ),
+                  style: TextStyle(fontSize: 13, color: context.textTertiary),
                 ),
                 const Spacer(),
                 if (filters.length < LogLevel.values.length)
@@ -501,7 +495,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
             ),
           ),
 
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
 
           // Log list
           Expanded(
@@ -513,14 +507,14 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
                         Icon(
                           Icons.article_outlined,
                           size: 64,
-                          color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                          color: context.textTertiary.withValues(alpha: 0.5),
                         ),
-                        const SizedBox(height: 16),
-                        const Text(
+                        SizedBox(height: 16),
+                        Text(
                           'No log entries',
                           style: TextStyle(
                             fontSize: 16,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
                         ),
                       ],
@@ -565,20 +559,20 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
           // Timestamp
           Text(
             time,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontFamily: 'monospace',
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
 
           // Level badge
           Container(
             width: 44,
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(
-              color: entry.level.color.withValues(alpha: 0.15),
+              color: entry.level.getColor(context).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
@@ -587,7 +581,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
               style: TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.w600,
-                color: entry.level.color,
+                color: entry.level.getColor(context),
                 fontFamily: 'monospace',
               ),
             ),

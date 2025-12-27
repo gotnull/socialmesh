@@ -108,7 +108,7 @@ class _RemoteAdminSelectorSheetState
               children: [
                 Icon(Icons.admin_panel_settings, color: accentColor, size: 24),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Remote Administration',
                     style: TextStyle(
@@ -120,9 +120,9 @@ class _RemoteAdminSelectorSheetState
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.close,
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                     size: 22,
                   ),
                 ),
@@ -138,13 +138,13 @@ class _RemoteAdminSelectorSheetState
               style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Search nodes...',
-                hintStyle: const TextStyle(
-                  color: AppTheme.textTertiary,
+                hintStyle: TextStyle(
+                  color: context.textTertiary,
                   fontSize: 14,
                 ),
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.search,
-                  color: AppTheme.textTertiary,
+                  color: context.textTertiary,
                   size: 20,
                 ),
                 suffixIcon: _searchQuery.isNotEmpty
@@ -153,15 +153,15 @@ class _RemoteAdminSelectorSheetState
                           _searchController.clear();
                           setState(() => _searchQuery = '');
                         },
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.clear,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                           size: 18,
                         ),
                       )
                     : null,
                 filled: true,
-                fillColor: AppTheme.darkBackground,
+                fillColor: context.background,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
@@ -176,12 +176,12 @@ class _RemoteAdminSelectorSheetState
             ),
           ),
 
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
 
           // Local device option
           _DeviceTile(
             icon: Icons.bluetooth_connected,
-            iconColor: isLocalSelected ? accentColor : AppTheme.textSecondary,
+            iconColor: isLocalSelected ? accentColor : context.textSecondary,
             title: connectedDevice?.name ?? 'Connected Device',
             subtitle: 'Local (via BLE/USB)',
             isSelected: isLocalSelected,
@@ -209,9 +209,9 @@ class _RemoteAdminSelectorSheetState
                 const Spacer(),
                 Text(
                   '${nodes.length} available',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                   ),
                 ),
               ],
@@ -292,22 +292,22 @@ class _RemoteAdminSelectorSheetState
           Icon(
             _searchQuery.isEmpty ? Icons.lock_open : Icons.search_off,
             size: 48,
-            color: AppTheme.textTertiary,
+            color: context.textTertiary,
           ),
           const SizedBox(height: 12),
           Text(
             _searchQuery.isEmpty
                 ? 'No PKI-enabled nodes available'
                 : 'No nodes match "$_searchQuery"',
-            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+            style: TextStyle(color: context.textSecondary, fontSize: 14),
             textAlign: TextAlign.center,
           ),
           if (_searchQuery.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.only(top: 8),
               child: Text(
                 'Nodes need PKI encryption enabled\nto accept remote admin commands',
-                style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+                style: TextStyle(color: context.textTertiary, fontSize: 12),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -373,8 +373,8 @@ class _DeviceTile extends StatelessWidget {
                     ),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: AppTheme.textTertiary,
+                      style: TextStyle(
+                        color: context.textTertiary,
                         fontSize: 12,
                       ),
                     ),
@@ -452,7 +452,7 @@ class _NodeAdminTile extends StatelessWidget {
                           color: accentColor,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppTheme.darkCard,
+                            color: context.card,
                             width: 2,
                           ),
                         ),
@@ -465,7 +465,7 @@ class _NodeAdminTile extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
-                        color: AppTheme.darkCard,
+                        color: context.card,
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: accentColor.withValues(alpha: 0.5),
@@ -498,7 +498,7 @@ class _NodeAdminTile extends StatelessWidget {
                           style: TextStyle(
                             color: node.isOnline
                                 ? accentColor.withValues(alpha: 0.8)
-                                : AppTheme.textTertiary,
+                                : context.textTertiary,
                             fontSize: 12,
                           ),
                         ),
@@ -506,7 +506,7 @@ class _NodeAdminTile extends StatelessWidget {
                         Text(
                           '• PKI enabled',
                           style: TextStyle(
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                             fontSize: 12,
                           ),
                         ),
@@ -520,7 +520,7 @@ class _NodeAdminTile extends StatelessWidget {
               else
                 Icon(
                   Icons.chevron_right,
-                  color: AppTheme.textTertiary,
+                  color: context.textTertiary,
                   size: 20,
                 ),
             ],

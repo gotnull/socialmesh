@@ -33,12 +33,12 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
     );
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       body: CustomScrollView(
         slivers: [
           // App bar with flight info
           SliverAppBar(
-            backgroundColor: AppTheme.darkCard,
+            backgroundColor: context.card,
             expandedHeight: 200,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
@@ -46,7 +46,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
             ),
             title: Text(
               widget.skyNode.flightNumber,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
@@ -127,7 +127,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
           end: Alignment.bottomCenter,
           colors: [
             context.accentColor.withValues(alpha: 0.3),
-            AppTheme.darkCard,
+            context.card,
           ],
         ),
       ),
@@ -150,11 +150,11 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
                           Icons.flight,
                           color: widget.skyNode.isActive
                               ? context.accentColor
-                              : AppTheme.textTertiary,
+                              : context.textTertiary,
                           size: 32,
                         ),
                         if (positionState?.position != null) ...[
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           Text(
                             'FL${(positionState!.position!.altitudeFeet / 100).round()}',
                             style: TextStyle(
@@ -182,7 +182,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
       children: [
         Text(
           code,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -192,7 +192,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+          style: TextStyle(color: context.textTertiary, fontSize: 12),
         ),
       ],
     );
@@ -206,7 +206,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: context.accentColor.withValues(alpha: 0.5),
@@ -219,7 +219,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
           Row(
             children: [
               _AnimatedRadar(color: context.accentColor),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Text(
                 'Live Position',
                 style: TextStyle(
@@ -232,21 +232,21 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
               if (positionAsync.value?.lastFetch != null)
                 Text(
                   'Updated ${_getRelativeTime(positionAsync.value!.lastFetch!)}',
-                  style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+                  style: TextStyle(color: context.textTertiary, fontSize: 12),
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           positionAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(
               child: Column(
                 children: [
-                  Icon(Icons.cloud_off, color: AppTheme.textTertiary, size: 32),
-                  const SizedBox(height: 8),
+                  Icon(Icons.cloud_off, color: context.textTertiary, size: 32),
+                  SizedBox(height: 8),
                   Text(
                     'Error: $e',
-                    style: TextStyle(color: AppTheme.textTertiary),
+                    style: TextStyle(color: context.textTertiary),
                   ),
                 ],
               ),
@@ -258,13 +258,13 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
                     children: [
                       Icon(
                         Icons.cloud_off,
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                         size: 32,
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Text(
                         positionState.error ?? 'Position data unavailable',
-                        style: TextStyle(color: AppTheme.textTertiary),
+                        style: TextStyle(color: context.textTertiary),
                       ),
                     ],
                   ),
@@ -278,7 +278,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
                     'Altitude',
                     '${positionState.position!.altitudeFeet.round().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ft',
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _buildPositionRow(
                     context,
                     Icons.speed,
@@ -313,7 +313,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
                           color: context.accentColor,
                           size: 18,
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Text(
                           '${positionState.position!.latitude.toStringAsFixed(4)}, ${positionState.position!.longitude.toStringAsFixed(4)}',
                           style: TextStyle(
@@ -342,11 +342,11 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
   ) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: AppTheme.textTertiary),
-        const SizedBox(width: 8),
+        Icon(icon, size: 18, color: context.textTertiary),
+        SizedBox(width: 8),
         Text(
           label,
-          style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+          style: TextStyle(color: context.textSecondary, fontSize: 14),
         ),
         const Spacer(),
         Text(
@@ -366,9 +366,9 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -424,15 +424,15 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: AppTheme.textTertiary),
-        const SizedBox(width: 12),
+        Icon(icon, size: 18, color: context.textTertiary),
+        SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+                style: TextStyle(color: context.textTertiary, fontSize: 12),
               ),
               const SizedBox(height: 2),
               Text(
@@ -462,7 +462,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
                 color: context.accentColor,
                 size: 20,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 'Reception Reports',
                 style: const TextStyle(
@@ -485,25 +485,25 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
                 return Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
+                    color: context.card,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.darkBorder),
+                    border: Border.all(color: context.border),
                   ),
                   child: Center(
                     child: Column(
                       children: [
                         Icon(
                           Icons.signal_cellular_0_bar,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                           size: 32,
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Text(
                           'No receptions reported yet',
-                          style: TextStyle(color: AppTheme.textSecondary),
+                          style: TextStyle(color: context.textSecondary),
                         ),
                         if (widget.skyNode.isActive) ...[
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           Text(
                             'Be the first to receive this signal!',
                             style: TextStyle(
@@ -535,9 +535,9 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Row(
         children: [
@@ -550,7 +550,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
             ),
             child: Icon(Icons.person, color: context.accentColor, size: 20),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -582,7 +582,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
                   Text(
                     '${report.rssi!.round()} dBm',
                     style: TextStyle(
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -590,7 +590,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
                   Text(
                     'SNR ${report.snr!.toStringAsFixed(1)}',
                     style: TextStyle(
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       fontSize: 12,
                     ),
                   ),
@@ -605,7 +605,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -801,7 +801,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Reception reported! 📡'),
+            content: Text('Reception reported! 📡'),
             backgroundColor: context.accentColor,
           ),
         );
@@ -839,17 +839,17 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.textTertiary,
+                  color: context.textTertiary,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Row(
               children: [
                 Icon(Icons.signal_cellular_alt, color: context.accentColor),
-                const SizedBox(width: 12),
-                const Text(
+                SizedBox(width: 12),
+                Text(
                   'Report Reception',
                   style: TextStyle(
                     color: Colors.white,
@@ -862,9 +862,9 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
             const SizedBox(height: 8),
             Text(
               'I received a signal from ${widget.skyNode.flightNumber}!',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // Signal info (optional)
             Row(
@@ -876,11 +876,11 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: 'RSSI (dBm)',
-                      labelStyle: TextStyle(color: AppTheme.textSecondary),
+                      labelStyle: TextStyle(color: context.textSecondary),
                       hintText: '-90',
-                      hintStyle: TextStyle(color: AppTheme.textTertiary),
+                      hintStyle: TextStyle(color: context.textTertiary),
                       filled: true,
-                      fillColor: AppTheme.darkBackground,
+                      fillColor: context.background,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -888,7 +888,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: TextField(
                     controller: _snrController,
@@ -898,11 +898,11 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: 'SNR (dB)',
-                      labelStyle: TextStyle(color: AppTheme.textSecondary),
+                      labelStyle: TextStyle(color: context.textSecondary),
                       hintText: '9.5',
-                      hintStyle: TextStyle(color: AppTheme.textTertiary),
+                      hintStyle: TextStyle(color: context.textTertiary),
                       filled: true,
-                      fillColor: AppTheme.darkBackground,
+                      fillColor: context.background,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -912,7 +912,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Notes
             TextField(
@@ -921,18 +921,18 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Notes (optional)',
-                labelStyle: TextStyle(color: AppTheme.textSecondary),
+                labelStyle: TextStyle(color: context.textSecondary),
                 hintText: 'Equipment used, antenna, location details...',
-                hintStyle: TextStyle(color: AppTheme.textTertiary),
+                hintStyle: TextStyle(color: context.textTertiary),
                 filled: true,
-                fillColor: AppTheme.darkBackground,
+                fillColor: context.background,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // Submit button
             ElevatedButton(

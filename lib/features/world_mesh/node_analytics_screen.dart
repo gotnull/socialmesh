@@ -145,9 +145,9 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.delete_outline, color: AppTheme.errorRed, size: 24),
             SizedBox(width: 12),
@@ -160,16 +160,16 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
             ),
           ],
         ),
-        content: const Text(
+        content: Text(
           'This will delete all historical data for this node. This action cannot be undone.',
-          style: TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: context.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -195,15 +195,15 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: AppTheme.darkCard,
+        decoration: BoxDecoration(
+          color: context.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'Share Node',
               style: TextStyle(
                 fontSize: 18,
@@ -211,7 +211,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(10),
@@ -225,9 +225,9 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                 'Share Link',
                 style: TextStyle(color: Colors.white),
               ),
-              subtitle: const Text(
+              subtitle: Text(
                 'Rich preview in iMessage, Slack, etc.',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                style: TextStyle(color: context.textSecondary, fontSize: 12),
               ),
               onTap: () {
                 Navigator.pop(ctx);
@@ -243,13 +243,13 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                 ),
                 child: Icon(Icons.text_snippet, color: AccentColors.green),
               ),
-              title: const Text(
+              title: Text(
                 'Share Details',
                 style: TextStyle(color: Colors.white),
               ),
-              subtitle: const Text(
+              subtitle: Text(
                 'Full technical info as text',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                style: TextStyle(color: context.textSecondary, fontSize: 12),
               ),
               onTap: () {
                 Navigator.pop(ctx);
@@ -334,15 +334,15 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: AppTheme.darkCard,
+        decoration: BoxDecoration(
+          color: context.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'Export History',
               style: TextStyle(
                 fontSize: 18,
@@ -350,12 +350,12 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               '${_history.length} records',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppTheme.textTertiary,
+                color: context.textTertiary,
               ),
             ),
             const SizedBox(height: 24),
@@ -367,7 +367,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                       Navigator.pop(ctx);
                       _exportAsJson();
                     },
-                    icon: const Icon(Icons.code, size: 18),
+                    icon: Icon(Icons.code, size: 18),
                     label: const Text('JSON'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: context.accentColor,
@@ -385,7 +385,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                       Navigator.pop(ctx);
                       _exportAsCsv();
                     },
-                    icon: const Icon(Icons.table_chart, size: 18),
+                    icon: Icon(Icons.table_chart, size: 18),
                     label: const Text('CSV'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: context.accentColor,
@@ -481,12 +481,12 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     final node = _node;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         title: Text(
           node.longName.isNotEmpty ? node.longName : node.shortName,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -579,7 +579,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
   Widget _buildStatusCard(WorldMeshNode node) {
     final statusColor = node.isOnline
         ? AccentColors.green
-        : (node.isIdle ? AppTheme.warningYellow : AppTheme.textTertiary);
+        : (node.isIdle ? AppTheme.warningYellow : context.textTertiary);
     final statusText = node.isOnline
         ? 'Online'
         : (node.isIdle ? 'Idle' : 'Offline');
@@ -587,9 +587,9 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Row(
         children: [
@@ -612,7 +612,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -647,7 +647,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                           color: AccentColors.green.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Text(
+                        child: Text(
                           'LIVE',
                           style: TextStyle(
                             fontSize: 10,
@@ -663,19 +663,19 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '!$_nodeId',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                     fontFamily: 'monospace',
                   ),
                 ),
                 if (node.role != 'UNKNOWN') ...[
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     _formatRole(node.role),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                 ],
@@ -684,8 +684,8 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
           ),
           // Copy button
           IconButton(
-            icon: const Icon(Icons.copy, size: 20),
-            color: AppTheme.textTertiary,
+            icon: Icon(Icons.copy, size: 20),
+            color: context.textTertiary,
             onPressed: () {
               Clipboard.setData(ClipboardData(text: '!$_nodeId'));
               showSuccessSnackBar(context, 'Node ID copied');
@@ -706,7 +706,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: _showOnMap,
-              icon: const Icon(Icons.map, size: 18),
+              icon: Icon(Icons.map, size: 18),
               label: const Text('Show on Map'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: context.accentColor,
@@ -718,7 +718,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
             ),
           ),
         if (hasLocation && widget.onShowOnMap != null)
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
         // Refresh button
         Expanded(
           child: OutlinedButton.icon(
@@ -747,10 +747,10 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        color: AppTheme.textSecondary,
+        color: context.textSecondary,
         letterSpacing: 0.5,
       ),
     );
@@ -760,12 +760,12 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
+        Text(
           'History',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppTheme.textSecondary,
+            color: context.textSecondary,
             letterSpacing: 0.5,
           ),
         ),
@@ -774,7 +774,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
             if (_history.isNotEmpty)
               TextButton.icon(
                 onPressed: _exportHistory,
-                icon: const Icon(Icons.download, size: 16),
+                icon: Icon(Icons.download, size: 16),
                 label: const Text('Export'),
                 style: TextButton.styleFrom(
                   foregroundColor: context.accentColor,
@@ -784,10 +784,10 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
             if (_history.isNotEmpty)
               TextButton.icon(
                 onPressed: _clearHistory,
-                icon: const Icon(Icons.delete_outline, size: 16),
+                icon: Icon(Icons.delete_outline, size: 16),
                 label: const Text('Clear'),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppTheme.textTertiary,
+                  foregroundColor: context.textTertiary,
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                 ),
               ),
@@ -885,9 +885,9 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
   Widget _buildNetworkSection(WorldMeshNode node) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -900,29 +900,29 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.people,
                       size: 16,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
                       'Direct Neighbors (${node.neighbors?.length ?? 0})',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 if (node.neighbors == null || node.neighbors!.isEmpty)
-                  const Text(
+                  Text(
                     'No neighbor data available',
                     style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       fontStyle: FontStyle.italic,
                     ),
                   )
@@ -937,7 +937,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
               ],
             ),
           ),
-          Container(height: 1, color: AppTheme.darkBorder),
+          Container(height: 1, color: context.border),
           // Gateways
           Padding(
             padding: const EdgeInsets.all(16),
@@ -946,29 +946,29 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.router,
                       size: 16,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
                       'Seen by Gateways (${node.seenBy.length})',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 if (node.seenBy.isEmpty)
-                  const Text(
+                  Text(
                     'No gateway data available',
                     style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       fontStyle: FontStyle.italic,
                     ),
                   )
@@ -993,7 +993,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
         ? (snr > 5
               ? AccentColors.green
               : (snr > 0 ? AppTheme.warningYellow : AppTheme.errorRed))
-        : AppTheme.textTertiary;
+        : context.textTertiary;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -1043,7 +1043,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.router, size: 12, color: context.accentColor),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           Text(
             gateway.length > 12 ? '${gateway.substring(0, 12)}…' : gateway,
             style: TextStyle(
@@ -1060,28 +1060,28 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
   Widget _buildHistorySection() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       padding: const EdgeInsets.all(16),
       child: _history.isEmpty
           ? Column(
               children: [
-                const Icon(
+                Icon(
                   Icons.history,
                   size: 40,
-                  color: AppTheme.textTertiary,
+                  color: context.textTertiary,
                 ),
-                const SizedBox(height: 12),
-                const Text(
+                SizedBox(height: 12),
+                Text(
                   'No historical data yet',
-                  style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                  style: TextStyle(fontSize: 14, color: context.textSecondary),
                 ),
-                const SizedBox(height: 4),
-                const Text(
+                SizedBox(height: 4),
+                Text(
                   'Visit this node again to build history',
-                  style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+                  style: TextStyle(fontSize: 12, color: context.textTertiary),
                 ),
               ],
             )
@@ -1116,9 +1116,9 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                       ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Container(height: 1, color: AppTheme.darkBorder),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
+                Container(height: 1, color: context.border),
+                SizedBox(height: 16),
                 // Time info
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1126,18 +1126,18 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'First seen',
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
                         ),
                         Text(
                           _formatTimeAgo(_history.first.timestamp),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                           ),
                         ),
                       ],
@@ -1145,18 +1145,18 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text(
+                        Text(
                           'Last update',
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                           ),
                         ),
                         Text(
                           _formatTimeAgo(_history.last.timestamp),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                           ),
                         ),
                       ],
@@ -1171,8 +1171,8 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
   Widget _buildStatItem(String label, String value, IconData icon) {
     return Column(
       children: [
-        Icon(icon, size: 20, color: AppTheme.textTertiary),
-        const SizedBox(height: 4),
+        Icon(icon, size: 20, color: context.textTertiary),
+        SizedBox(height: 4),
         Text(
           value,
           style: TextStyle(
@@ -1183,7 +1183,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
         ),
         Text(
           label,
-          style: const TextStyle(fontSize: 11, color: AppTheme.textTertiary),
+          style: TextStyle(fontSize: 11, color: context.textTertiary),
         ),
       ],
     );

@@ -1119,7 +1119,7 @@ class _DrawerNodeHeader extends ConsumerWidget {
               child: isConnected
                   ? Text(
                       shortName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         fontFamily: AppTheme.fontFamily,
@@ -1128,7 +1128,7 @@ class _DrawerNodeHeader extends ConsumerWidget {
                     )
                   : Icon(
                       Icons.bluetooth_disabled,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       size: 24,
                     ),
             ),

@@ -54,15 +54,15 @@ class _MeshReachabilityScreenState
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
+          backgroundColor: context.background,
           leading: const HamburgerMenuButton(),
           centerTitle: true,
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Mesh Reachability',
                 style: TextStyle(
                   fontSize: 20,
@@ -117,18 +117,18 @@ class _MeshReachabilityScreenState
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.darkCard,
+                  color: context.card,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextField(
                   onChanged: (value) => setState(() => _searchQuery = value),
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
                     hintText: 'Search nodes',
-                    hintStyle: TextStyle(color: AppTheme.textTertiary),
+                    hintStyle: TextStyle(color: context.textTertiary),
                     prefixIcon: Icon(
                       Icons.search,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
@@ -144,7 +144,7 @@ class _MeshReachabilityScreenState
             Container(
               height: 1,
               margin: const EdgeInsets.symmetric(horizontal: 16),
-              color: AppTheme.darkBorder.withValues(alpha: 0.3),
+              color: context.border.withValues(alpha: 0.3),
             ),
 
             // Node list
@@ -183,10 +183,10 @@ class _MeshReachabilityScreenState
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Row(
+        backgroundColor: context.card,
+        title: Row(
           children: [
-            Icon(Icons.info_outline, color: AppTheme.textSecondary),
+            Icon(Icons.info_outline, color: context.textSecondary),
             SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -275,7 +275,7 @@ class _InfoSection extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -284,9 +284,9 @@ class _InfoSection extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           content,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
-            color: AppTheme.textSecondary,
+            color: context.textSecondary,
             height: 1.4,
           ),
         ),
@@ -308,7 +308,7 @@ class _DisclaimerBanner extends StatelessWidget {
           color: AppTheme.warningYellow.withValues(alpha: 0.3),
         ),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Icon(Icons.info_outline, size: 20, color: AppTheme.warningYellow),
           SizedBox(width: 12),
@@ -317,7 +317,7 @@ class _DisclaimerBanner extends StatelessWidget {
               'Likelihood estimates only. Delivery is never guaranteed in a mesh network.',
               style: TextStyle(
                 fontSize: 12,
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
                 height: 1.3,
               ),
             ),
@@ -426,29 +426,29 @@ class _EmptyState extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.wifi_find,
               size: 40,
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
             ),
           ),
-          const SizedBox(height: 24),
-          const Text(
+          SizedBox(height: 24),
+          Text(
             'No nodes discovered yet',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Nodes will appear as they\'re observed\non the mesh network.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: AppTheme.textTertiary),
+            style: TextStyle(fontSize: 13, color: context.textTertiary),
           ),
         ],
       ),
@@ -496,9 +496,9 @@ class _ReachabilityNodeCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.darkBorder),
+          border: Border.all(color: context.border),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -526,7 +526,7 @@ class _ReachabilityNodeCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
 
               // Info
               Expanded(
@@ -577,9 +577,9 @@ class _ReachabilityNodeCard extends StatelessWidget {
                     // Short ID
                     Text(
                       '!${nodeData.node.nodeNum.toRadixString(16).padLeft(8, '0')}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                         fontFamily: AppTheme.fontFamily,
                       ),
                     ),
@@ -626,11 +626,11 @@ class _MetricItem extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: AppTheme.textTertiary),
-        const SizedBox(width: 4),
+        Icon(icon, size: 14, color: context.textTertiary),
+        SizedBox(width: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+          style: TextStyle(fontSize: 12, color: context.textSecondary),
         ),
       ],
     );

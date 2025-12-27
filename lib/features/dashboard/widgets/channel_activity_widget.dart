@@ -39,7 +39,7 @@ class ChannelActivityContent extends ConsumerWidget {
       itemCount: channels.length.clamp(0, 5),
       separatorBuilder: (_, i) => Divider(
         height: 1,
-        color: AppTheme.darkBorder.withValues(alpha: 0.5),
+        color: context.border.withValues(alpha: 0.5),
         indent: 56,
       ),
       itemBuilder: (context, index) {
@@ -86,7 +86,7 @@ class _ChannelTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isPrimary
                       ? context.accentColor.withValues(alpha: 0.15)
-                      : AppTheme.darkBackground,
+                      : context.background,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Center(
@@ -97,7 +97,7 @@ class _ChannelTile extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       color: isPrimary
                           ? context.accentColor
-                          : AppTheme.textSecondary,
+                          : context.textSecondary,
                       
                     ),
                   ),
@@ -114,7 +114,7 @@ class _ChannelTile extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: context.accentColor,
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.darkCard, width: 2),
+                      border: Border.all(color: context.card, width: 2),
                       boxShadow: [
                         BoxShadow(
                           color: context.accentColor.withValues(alpha: 0.5),
@@ -126,7 +126,7 @@ class _ChannelTile extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           // Channel info
           Expanded(
             child: Column(
@@ -170,7 +170,7 @@ class _ChannelTile extends StatelessWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   messageCount == 0
                       ? 'No recent activity'
@@ -178,8 +178,8 @@ class _ChannelTile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     color: messageCount > 0
-                        ? AppTheme.textSecondary
-                        : AppTheme.textTertiary,
+                        ? context.textSecondary
+                        : context.textTertiary,
                     
                   ),
                 ),

@@ -142,12 +142,12 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     final isRemote = remoteState.isRemote;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         title: Text(
           isRemote ? 'Device (Remote)' : 'Device',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -231,7 +231,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                   ),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
+                    color: context.card,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -269,18 +269,18 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         'How often to broadcast device info',
                         style: TextStyle(
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                           fontSize: 13,
                         ),
                       ),
                       SizedBox(height: 8),
                       SliderTheme(
                         data: SliderThemeData(
-                          inactiveTrackColor: AppTheme.darkBorder,
+                          inactiveTrackColor: context.border,
                           thumbColor: context.accentColor,
                           overlayColor: context.accentColor.withValues(
                             alpha: 0.2,
@@ -302,7 +302,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 const _SectionHeader(title: 'HARDWARE'),
                 _SettingsTile(
                   icon: Icons.touch_app,
@@ -401,7 +401,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -411,7 +411,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Button GPIO',
                 style: TextStyle(
                   color: Colors.white,
@@ -420,14 +420,14 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               ),
               Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.darkBackground,
+                  color: context.background,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.darkBorder),
+                  border: Border.all(color: context.border),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: DropdownButton<int>(
                   underline: const SizedBox.shrink(),
-                  dropdownColor: AppTheme.darkCard,
+                  dropdownColor: context.card,
                   style: const TextStyle(color: Colors.white),
                   value: _buttonGpio,
                   items: List.generate(49, (i) {
@@ -443,17 +443,17 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'GPIO pin for user button',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
-          const Divider(height: 24, color: AppTheme.darkBorder),
+          Divider(height: 24, color: context.border),
           // Buzzer GPIO
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Buzzer GPIO',
                 style: TextStyle(
                   color: Colors.white,
@@ -462,14 +462,14 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               ),
               Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.darkBackground,
+                  color: context.background,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.darkBorder),
+                  border: Border.all(color: context.border),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: DropdownButton<int>(
                   underline: const SizedBox.shrink(),
-                  dropdownColor: AppTheme.darkCard,
+                  dropdownColor: context.card,
                   style: const TextStyle(color: Colors.white),
                   value: _buzzerGpio,
                   items: List.generate(49, (i) {
@@ -485,10 +485,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'GPIO pin for PWM buzzer',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
         ],
       ),
@@ -500,7 +500,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -508,13 +508,13 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.schedule, color: AppTheme.textSecondary, size: 20),
-              const SizedBox(width: 12),
+              Icon(Icons.schedule, color: context.textSecondary, size: 20),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Time Zone',
                       style: TextStyle(
                         color: Colors.white,
@@ -525,7 +525,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                     Text(
                       'POSIX timezone for device display',
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -534,7 +534,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           TextField(
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
@@ -543,17 +543,17 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 horizontal: 12,
                 vertical: 12,
               ),
-              fillColor: AppTheme.darkBackground,
+              fillColor: context.background,
               filled: true,
               hintText: 'e.g., EST5EDT,M3.2.0,M11.1.0',
-              hintStyle: TextStyle(color: AppTheme.textTertiary),
+              hintStyle: TextStyle(color: context.textTertiary),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: AppTheme.darkBorder),
+                borderSide: BorderSide(color: context.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: AppTheme.darkBorder),
+                borderSide: BorderSide(color: context.border),
               ),
             ),
             controller: TextEditingController(text: _tzdef),
@@ -643,15 +643,15 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Select how this device should behave in the mesh',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
           SizedBox(height: 16),
           ...roles.map((r) {
@@ -668,7 +668,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                     border: Border.all(
                       color: isSelected
                           ? context.accentColor
-                          : AppTheme.darkBorder,
+                          : context.border,
                       width: isSelected ? 2 : 1,
                     ),
                     color: isSelected
@@ -681,7 +681,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                         r.$4,
                         color: isSelected
                             ? context.accentColor
-                            : AppTheme.textSecondary,
+                            : context.textSecondary,
                       ),
                       SizedBox(width: 12),
                       Expanded(
@@ -702,7 +702,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                             Text(
                               r.$3,
                               style: TextStyle(
-                                color: AppTheme.textSecondary,
+                                color: context.textSecondary,
                                 fontSize: 13,
                               ),
                             ),
@@ -755,15 +755,15 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Controls which messages this device will relay',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
           SizedBox(height: 16),
           ...modes.map((m) {
@@ -780,9 +780,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                           : Icons.radio_button_unchecked,
                       color: isSelected
                           ? context.accentColor
-                          : AppTheme.textSecondary,
+                          : context.textSecondary,
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -792,14 +792,14 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                             style: TextStyle(
                               color: isSelected
                                   ? Colors.white
-                                  : AppTheme.textSecondary,
+                                  : context.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                           Text(
                             m.$3,
-                            style: const TextStyle(
-                              color: AppTheme.textTertiary,
+                            style: TextStyle(
+                              color: context.textTertiary,
                               fontSize: 13,
                             ),
                           ),
@@ -835,10 +835,10 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: AppTheme.textTertiary,
+          color: context.textTertiary,
           letterSpacing: 1.2,
         ),
       ),
@@ -866,15 +866,15 @@ class _SettingsTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? AppTheme.textSecondary),
-            const SizedBox(width: 16),
+            Icon(icon, color: iconColor ?? context.textSecondary),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -890,9 +890,9 @@ class _SettingsTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                 ],

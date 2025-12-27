@@ -193,10 +193,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     final connectedDevice = ref.watch(connectedDeviceProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'Device Config',
           style: TextStyle(
             fontSize: 20,
@@ -240,7 +240,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             hint: 'Enter display name',
           ),
 
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
 
           // Short Name Field
           _buildNameField(
@@ -263,11 +263,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               'Your device name is broadcast to the mesh and visible to other nodes.',
-              style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+              style: TextStyle(fontSize: 12, color: context.textTertiary),
             ),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Device Info Section
           _buildSectionHeader('Device Info'),
@@ -302,9 +302,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           _buildSectionHeader('Device Role'),
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             child: Material(
               color: Colors.transparent,
@@ -348,7 +348,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                   border: Border.all(
                                     color: isSelected
                                         ? context.accentColor
-                                        : AppTheme.darkBorder,
+                                        : context.border,
                                     width: 2,
                                   ),
                                   color: isSelected
@@ -356,7 +356,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                       : Colors.transparent,
                                 ),
                                 child: isSelected
-                                    ? const Icon(
+                                    ? Icon(
                                         Icons.check,
                                         color: Colors.white,
                                         size: 16,
@@ -377,15 +377,15 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                             : FontWeight.w500,
                                         color: isSelected
                                             ? Colors.white
-                                            : AppTheme.textSecondary,
+                                            : context.textSecondary,
                                       ),
                                     ),
-                                    const SizedBox(height: 2),
+                                    SizedBox(height: 2),
                                     Text(
                                       option.description,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 12,
-                                        color: AppTheme.textTertiary,
+                                        color: context.textTertiary,
                                       ),
                                     ),
                                   ],
@@ -447,10 +447,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: AppTheme.textSecondary,
+          color: context.textSecondary,
         ),
       ),
     );
@@ -460,7 +460,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     return Container(
       height: 1,
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      color: AppTheme.darkBorder.withValues(alpha: 0.3),
+      color: context.border.withValues(alpha: 0.3),
     );
   }
 
@@ -476,9 +476,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -497,7 +497,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                   ),
                   child: Icon(icon, color: context.accentColor, size: 20),
                 ),
-                const SizedBox(width: 14),
+                SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -513,9 +513,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                         ),
                       ),
                     ],
@@ -529,7 +529,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                   decoration: BoxDecoration(
                     color: controller.text.length >= maxLength
                         ? AppTheme.warningYellow.withValues(alpha: 0.15)
-                        : AppTheme.darkBackground,
+                        : context.background,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -539,7 +539,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                       fontWeight: FontWeight.w600,
                       color: controller.text.length >= maxLength
                           ? AppTheme.warningYellow
-                          : AppTheme.textTertiary,
+                          : context.textTertiary,
                     ),
                   ),
                 ),
@@ -551,10 +551,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           Container(
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
+              color: context.background,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: AppTheme.darkBorder.withValues(alpha: 0.5),
+                color: context.border.withValues(alpha: 0.5),
               ),
             ),
             child: TextField(
@@ -562,7 +562,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               maxLength: maxLength,
               inputFormatters: inputFormatters,
               textCapitalization: textCapitalization,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 color: Colors.white,
 
@@ -573,8 +573,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 isDense: true,
                 contentPadding: const EdgeInsets.all(16),
                 hintText: hint,
-                hintStyle: const TextStyle(
-                  color: AppTheme.textTertiary,
+                hintStyle: TextStyle(
+                  color: context.textTertiary,
                   fontWeight: FontWeight.w400,
                 ),
                 counterText: '',

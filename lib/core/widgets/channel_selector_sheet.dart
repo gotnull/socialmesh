@@ -78,17 +78,17 @@ class ChannelSelectorSheet extends ConsumerWidget {
                 const Spacer(),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close, color: AppTheme.textTertiary),
+                  icon: Icon(Icons.close, color: context.textTertiary),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
 
           // Channel list
           Flexible(
             child: activeChannels.isEmpty
-                ? _buildEmptyState()
+                ? _buildEmptyState(context)
                 : ListView.builder(
                     shrinkWrap: true,
                     itemCount: activeChannels.length,
@@ -133,21 +133,17 @@ class ChannelSelectorSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState() {
-    return const Padding(
-      padding: EdgeInsets.all(32),
+  Widget _buildEmptyState(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.wifi_tethering_off,
-            size: 48,
-            color: AppTheme.textTertiary,
-          ),
-          SizedBox(height: 12),
+          Icon(Icons.wifi_tethering_off, size: 48, color: context.textTertiary),
+          const SizedBox(height: 12),
           Text(
             'No channels configured',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+            style: TextStyle(color: context.textSecondary, fontSize: 14),
             textAlign: TextAlign.center,
           ),
         ],
@@ -251,7 +247,7 @@ class _ChannelTile extends StatelessWidget {
                     Text(
                       'Channel $index',
                       style: TextStyle(
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                         fontSize: 12,
                       ),
                     ),

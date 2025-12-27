@@ -66,10 +66,10 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
     final myNodeNum = ref.watch(myNodeNumProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text('Mesh Globe'),
+        backgroundColor: context.card,
+        title: Text('Mesh Globe'),
         actions: [
           // Toggle connections
           IconButton(
@@ -77,7 +77,7 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
               _showConnections ? Icons.link : Icons.link_off,
               color: _showConnections
                   ? context.accentColor
-                  : AppTheme.textTertiary,
+                  : context.textTertiary,
             ),
             onPressed: () {
               setState(() {
@@ -138,19 +138,19 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: AppTheme.darkCard.withAlpha(220),
+                  color: context.card.withAlpha(220),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppTheme.darkBorder),
+                  border: Border.all(color: context.border),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.public, size: 14, color: context.accentColor),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Text(
                       '${nodesList.length} nodes',
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
+                      style: TextStyle(
+                        color: context.textPrimary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         fontFamily: 'JetBrainsMono',
@@ -197,21 +197,21 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
                   Icon(
                     Icons.public,
                     size: 64,
-                    color: AppTheme.textTertiary.withAlpha(100),
+                    color: context.textTertiary.withAlpha(100),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
+                  SizedBox(height: 16),
+                  Text(
                     'No nodes with GPS',
                     style: TextStyle(
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       fontSize: 16,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 8),
+                  Text(
                     'Nodes with position data will appear here',
                     style: TextStyle(
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       fontSize: 12,
                     ),
                   ),

@@ -123,9 +123,9 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         title: Text('Display Configuration'),
         actions: [
           TextButton(
@@ -173,7 +173,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
   Widget _buildScreenSettings() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
@@ -183,7 +183,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
           Text(
             'Screen Timeout: ${_screenOnSecs == 0 ? 'Always On' : '${_screenOnSecs}s'}',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -191,7 +191,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
           SizedBox(height: 4),
           Text(
             'How long before screen turns off',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
           SliderTheme(
             data: SliderThemeData(
@@ -210,12 +210,12 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
               },
             ),
           ),
-          Divider(color: AppTheme.darkBorder),
-          const SizedBox(height: 8),
+          Divider(color: context.border),
+          SizedBox(height: 8),
           Text(
             'Auto Carousel: ${_autoCarouselSecs == 0 ? 'Disabled' : '${_autoCarouselSecs}s'}',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -223,7 +223,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
           SizedBox(height: 4),
           Text(
             'Automatically cycle through screens',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
           SliderTheme(
             data: SliderThemeData(
@@ -242,7 +242,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
               },
             ),
           ),
-          Divider(color: AppTheme.darkBorder),
+          Divider(color: context.border),
           const SizedBox(height: 8),
           _SettingsTile(
             icon: Icons.screen_rotation,
@@ -300,7 +300,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
@@ -319,13 +319,13 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
               },
             ),
           ),
-          const SizedBox(height: 16),
-          Divider(color: AppTheme.darkBorder),
-          const SizedBox(height: 16),
-          const Text(
+          SizedBox(height: 16),
+          Divider(color: context.border),
+          SizedBox(height: 16),
+          Text(
             'Compass Orientation',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -333,24 +333,24 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
           const SizedBox(height: 4),
           Text(
             'Adjust compass display rotation',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
+              color: context.background,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             child: DropdownButton<pb.Config_DisplayConfig_CompassOrientation>(
               value:
                   _compassOrientation ??
                   pb.Config_DisplayConfig_CompassOrientation.DEGREES_0,
               isExpanded: true,
-              underline: const SizedBox(),
-              dropdownColor: AppTheme.darkCard,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              underline: SizedBox(),
+              dropdownColor: context.card,
+              style: TextStyle(color: context.textPrimary, fontSize: 14),
               items: compassOrientations.map((item) {
                 return DropdownMenuItem(value: item.$1, child: Text(item.$2));
               }).toList(),
@@ -396,25 +396,25 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'OLED Type',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'Override automatic OLED detection',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
           const SizedBox(height: 16),
           ...oledTypes.map((item) {
@@ -433,14 +433,12 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected
-                          ? context.accentColor
-                          : AppTheme.darkBorder,
+                      color: isSelected ? context.accentColor : context.border,
                       width: isSelected ? 2 : 1,
                     ),
                     color: isSelected
                         ? context.accentColor.withAlpha(20)
-                        : AppTheme.darkBackground,
+                        : context.background,
                   ),
                   child: Row(
                     children: [
@@ -450,7 +448,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                             : Icons.radio_button_unchecked,
                         color: isSelected ? context.accentColor : Colors.grey,
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -458,7 +456,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                             Text(
                               item.$2,
                               style: TextStyle(
-                                color: Colors.white,
+                                color: context.textPrimary,
                                 fontWeight: isSelected
                                     ? FontWeight.bold
                                     : FontWeight.w500,
@@ -467,7 +465,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                             Text(
                               item.$3,
                               style: TextStyle(
-                                color: AppTheme.textSecondary,
+                                color: context.textSecondary,
                                 fontSize: 12,
                               ),
                             ),
@@ -490,17 +488,17 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
   Widget _buildUnitsSettings() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Measurement Units',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
@@ -526,7 +524,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          Divider(color: AppTheme.darkBorder),
+          Divider(color: context.border),
           const SizedBox(height: 8),
           _SettingsTile(
             icon: Icons.format_bold,
@@ -562,12 +560,12 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? context.accentColor : AppTheme.darkBorder,
+            color: isSelected ? context.accentColor : context.border,
             width: isSelected ? 2 : 1,
           ),
           color: isSelected
               ? context.accentColor.withAlpha(20)
-              : AppTheme.darkBackground,
+              : context.background,
         ),
         child: Row(
           children: [
@@ -580,9 +578,9 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
             SizedBox(width: 12),
             Icon(
               icon,
-              color: isSelected ? context.accentColor : AppTheme.textSecondary,
+              color: isSelected ? context.accentColor : context.textSecondary,
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -590,7 +588,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                   Text(
                     title,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.textPrimary,
                       fontWeight: isSelected
                           ? FontWeight.bold
                           : FontWeight.w500,
@@ -599,7 +597,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -642,25 +640,25 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Display Mode',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'Choose the display rendering mode',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
           const SizedBox(height: 16),
           ...modes.map((m) {
@@ -677,14 +675,12 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected
-                          ? context.accentColor
-                          : AppTheme.darkBorder,
+                      color: isSelected ? context.accentColor : context.border,
                       width: isSelected ? 2 : 1,
                     ),
                     color: isSelected
                         ? context.accentColor.withAlpha(20)
-                        : AppTheme.darkBackground,
+                        : context.background,
                   ),
                   child: Row(
                     children: [
@@ -692,9 +688,9 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                         m.$4,
                         color: isSelected
                             ? context.accentColor
-                            : AppTheme.textSecondary,
+                            : context.textSecondary,
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -702,7 +698,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                             Text(
                               m.$2,
                               style: TextStyle(
-                                color: Colors.white,
+                                color: context.textPrimary,
                                 fontWeight: isSelected
                                     ? FontWeight.bold
                                     : FontWeight.w500,
@@ -711,7 +707,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                             Text(
                               m.$3,
                               style: TextStyle(
-                                color: AppTheme.textSecondary,
+                                color: context.textSecondary,
                                 fontSize: 12,
                               ),
                             ),
@@ -749,16 +745,16 @@ class _SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: AppTheme.textSecondary, size: 22),
-        const SizedBox(width: 12),
+        Icon(icon, color: context.textSecondary, size: 22),
+        SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.textPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -766,7 +762,7 @@ class _SettingsTile extends StatelessWidget {
               if (subtitle != null)
                 Text(
                   subtitle!,
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  style: TextStyle(color: context.textSecondary, fontSize: 12),
                 ),
             ],
           ),
@@ -789,7 +785,7 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title,
         style: TextStyle(
-          color: AppTheme.textTertiary,
+          color: context.textTertiary,
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,

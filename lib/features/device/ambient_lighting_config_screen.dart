@@ -105,9 +105,9 @@ class _AmbientLightingConfigScreenState
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
+          backgroundColor: context.background,
           title: const Text(
             'Ambient Lighting',
             style: TextStyle(
@@ -126,10 +126,10 @@ class _AmbientLightingConfigScreenState
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'Ambient Lighting',
           style: TextStyle(
             fontSize: 20,
@@ -138,7 +138,7 @@ class _AmbientLightingConfigScreenState
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -171,7 +171,7 @@ class _AmbientLightingConfigScreenState
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -324,7 +324,7 @@ class _AmbientLightingConfigScreenState
             },
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Info card
           Container(

@@ -44,24 +44,24 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.darkBorder),
+          border: Border.all(color: context.border),
         ),
         child: Column(
           children: [
-            Icon(Icons.show_chart, size: 40, color: AppTheme.textTertiary),
-            const SizedBox(height: 12),
-            const Text(
+            Icon(Icons.show_chart, size: 40, color: context.textTertiary),
+            SizedBox(height: 12),
+            Text(
               'Need more data for charts',
-              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              style: TextStyle(fontSize: 14, color: context.textSecondary),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               '${widget.history.length}/2 data points',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppTheme.textTertiary,
+                color: context.textTertiary,
               ),
             ),
           ],
@@ -71,9 +71,9 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,9 +98,9 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
                             size: 14,
                             color: isSelected
                                 ? widget.accentColor
-                                : AppTheme.textSecondary,
+                                : context.textSecondary,
                           ),
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Text(metric.label),
                         ],
                       ),
@@ -111,13 +111,13 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
                       labelStyle: TextStyle(
                         color: isSelected
                             ? widget.accentColor
-                            : AppTheme.textSecondary,
+                            : context.textSecondary,
                         fontSize: 12,
                       ),
                       side: BorderSide(
                         color: isSelected
                             ? widget.accentColor.withValues(alpha: 0.5)
-                            : AppTheme.darkBorder,
+                            : context.border,
                       ),
                     ),
                   );
@@ -173,13 +173,13 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(_selectedMetric.icon, size: 32, color: AppTheme.textTertiary),
-            const SizedBox(height: 8),
+            Icon(_selectedMetric.icon, size: 32, color: context.textTertiary),
+            SizedBox(height: 8),
             Text(
               'No ${_selectedMetric.label.toLowerCase()} data',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppTheme.textTertiary,
+                color: context.textTertiary,
               ),
             ),
           ],
@@ -228,7 +228,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
           drawVerticalLine: false,
           horizontalInterval: ((finalMaxY - finalMinY) / 4).clamp(1, 100),
           getDrawingHorizontalLine: (value) => FlLine(
-            color: AppTheme.darkBorder.withValues(alpha: 0.5),
+            color: context.border.withValues(alpha: 0.5),
             strokeWidth: 1,
           ),
         ),
@@ -254,9 +254,9 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     DateFormat('HH:mm').format(entry.timestamp),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 9,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                 );
@@ -271,9 +271,9 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
               getTitlesWidget: (value, meta) {
                 return Text(
                   '${value.toStringAsFixed(0)}${_selectedMetric.unit}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 9,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                   ),
                 );
               },
@@ -287,7 +287,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
         maxY: finalMaxY,
         lineTouchData: LineTouchData(
           touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (_) => AppTheme.darkCard,
+            getTooltipColor: (_) => context.card,
             tooltipBorder: BorderSide(color: lineColor.withValues(alpha: 0.5)),
             getTooltipItems: (touchedSpots) {
               return touchedSpots.map((spot) {
@@ -323,7 +323,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
                     radius: 3,
                     color: lineColor,
                     strokeWidth: 1,
-                    strokeColor: AppTheme.darkCard,
+                    strokeColor: context.card,
                   ),
             ),
             belowBarData: BarAreaData(

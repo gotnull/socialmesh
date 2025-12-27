@@ -98,7 +98,7 @@ class _HexTerrainState extends State<HexTerrain> {
       },
       setup: _setup,
       settings: three.Settings(
-        clearColor: AppTheme.darkBackground.toARGB32(),
+        clearColor: context.background.toARGB32(),
         enableShadowMap: true,
         shadowMapType: three.PCFSoftShadowMap,
         antialias: true,
@@ -120,7 +120,7 @@ class _HexTerrainState extends State<HexTerrain> {
       // Scene
       threeJs.scene = three.Scene();
       threeJs.scene.background = three.Color.fromHex32(
-        AppTheme.darkBackground.toARGB32(),
+        context.background.toARGB32(),
       );
 
       // Camera - looking down at terrain from above at an angle
@@ -610,7 +610,7 @@ class _HexTerrainState extends State<HexTerrain> {
   @override
   Widget build(BuildContext context) {
     if (!widget.enabled) {
-      return Container(color: AppTheme.darkBackground);
+      return Container(color: context.background);
     }
 
     if (_hasError) {
@@ -621,8 +621,8 @@ class _HexTerrainState extends State<HexTerrain> {
             center: Alignment.center,
             radius: 1.2,
             colors: [
-              AppTheme.darkBackground,
-              AppTheme.darkBackground.withValues(alpha: 0.8),
+              context.background,
+              context.background.withValues(alpha: 0.8),
               const Color(0xFF1a3050),
             ],
           ),
@@ -630,7 +630,7 @@ class _HexTerrainState extends State<HexTerrain> {
       );
     }
 
-    return Container(color: AppTheme.darkBackground, child: threeJs.build());
+    return Container(color: context.background, child: threeJs.build());
   }
 }
 

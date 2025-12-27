@@ -43,9 +43,9 @@ class _AccountSubscriptionsScreenState
     final profileAsync = ref.watch(userProfileProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         leading: const HamburgerMenuButton(),
         centerTitle: true,
         title: const Text(
@@ -146,7 +146,7 @@ class _AccountSubscriptionsScreenState
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AccentColors.green.withValues(alpha: 0.3)),
       ),
@@ -177,7 +177,7 @@ class _AccountSubscriptionsScreenState
                     size: 20,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,7 +194,7 @@ class _AccountSubscriptionsScreenState
                           user.email!,
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                           ),
                         ),
                     ],
@@ -215,10 +215,10 @@ class _AccountSubscriptionsScreenState
                     'Linked accounts',
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   ...user.providerData.map(
                     (p) => Padding(
                       padding: const EdgeInsets.only(right: 8),
@@ -253,13 +253,13 @@ class _AccountSubscriptionsScreenState
                           color: context.accentColor,
                           size: 20,
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'Link an email to keep your data across devices',
                             style: TextStyle(
                               fontSize: 13,
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                             ),
                           ),
                         ),
@@ -297,19 +297,19 @@ class _AccountSubscriptionsScreenState
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         children: [
           Icon(
             Icons.account_circle_outlined,
             size: 48,
-            color: AppTheme.textSecondary,
+            color: context.textSecondary,
           ),
-          const SizedBox(height: 12),
-          const Text(
+          SizedBox(height: 12),
+          Text(
             'Sign in to sync across devices',
             style: TextStyle(
               fontSize: 16,
@@ -320,13 +320,13 @@ class _AccountSubscriptionsScreenState
           const SizedBox(height: 4),
           Text(
             'Your local data is always available',
-            style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 13, color: context.textSecondary),
           ),
           const SizedBox(height: 20),
 
           // Sign in buttons
           if (_isSigningIn)
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(16),
               child: CircularProgressIndicator(),
             )
@@ -385,14 +385,14 @@ class _AccountSubscriptionsScreenState
 
         return Container(
           decoration: BoxDecoration(
-            color: AppTheme.darkCard,
+            color: context.card,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: hasAccess
                   ? AccentColors.green.withValues(alpha: 0.3)
                   : isExpired
                   ? AppTheme.errorRed.withValues(alpha: 0.3)
-                  : AppTheme.darkBorder,
+                  : context.border,
             ),
           ),
           child: Column(
@@ -412,7 +412,7 @@ class _AccountSubscriptionsScreenState
                     size: 24,
                   ),
                 ),
-                title: const Text(
+                title: Text(
                   'Cloud Sync',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
@@ -430,10 +430,10 @@ class _AccountSubscriptionsScreenState
                     color: hasAccess
                         ? (isGracePeriod
                               ? Colors.orange
-                              : AppTheme.textSecondary)
+                              : context.textSecondary)
                         : (isExpired
                               ? AppTheme.errorRed
-                              : AppTheme.textSecondary),
+                              : context.textSecondary),
                   ),
                 ),
                 trailing: hasAccess
@@ -539,12 +539,12 @@ class _AccountSubscriptionsScreenState
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: allUnlocked
               ? accentColor.withValues(alpha: 0.3)
-              : AppTheme.darkBorder,
+              : context.border,
         ),
       ),
       child: Column(
@@ -563,7 +563,7 @@ class _AccountSubscriptionsScreenState
                 size: 24,
               ),
             ),
-            title: const Text(
+            title: Text(
               'Premium Features',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
@@ -574,7 +574,7 @@ class _AccountSubscriptionsScreenState
               allUnlocked
                   ? 'All features unlocked!'
                   : '$ownedCount of $totalCount unlocked',
-              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              style: TextStyle(fontSize: 12, color: context.textSecondary),
             ),
             trailing: allUnlocked
                 ? Container(
@@ -658,9 +658,9 @@ class _AccountSubscriptionsScreenState
   Widget _buildManageCard() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -672,13 +672,13 @@ class _AccountSubscriptionsScreenState
             onTap: _restorePurchases,
             isFirst: true,
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           _ManageListTile(
             icon: Icons.description_outlined,
             title: 'Terms of Service',
             onTap: () => LegalDocumentSheet.showTerms(context),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           _ManageListTile(
             icon: Icons.privacy_tip_outlined,
             title: 'Privacy Policy',
@@ -713,7 +713,7 @@ class _AccountSubscriptionsScreenState
           fontSize: 12,
           fontWeight: FontWeight.w600,
           letterSpacing: 1.2,
-          color: AppTheme.textTertiary,
+          color: context.textTertiary,
         ),
       ),
     );
@@ -845,7 +845,7 @@ class _AccountSubscriptionsScreenState
   void _showLinkAccountSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -854,7 +854,7 @@ class _AccountSubscriptionsScreenState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'Link Account',
               style: TextStyle(
                 fontSize: 20,
@@ -862,10 +862,10 @@ class _AccountSubscriptionsScreenState
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'Link a sign-in method to keep your data',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.textSecondary),
             ),
             const SizedBox(height: 24),
             _SocialSignInButton(
@@ -1066,7 +1066,7 @@ class _ProfilePreviewCard extends StatelessWidget {
                           ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1094,7 +1094,7 @@ class _ProfilePreviewCard extends StatelessWidget {
                           'Tap to edit profile',
                           style: TextStyle(
                             fontSize: 13,
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                           ),
                         ),
                     ],
@@ -1118,9 +1118,9 @@ class _LoadingCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: const Center(child: CircularProgressIndicator()),
     );
@@ -1138,7 +1138,7 @@ class _SyncStatusBadge extends StatelessWidget {
       SyncStatus.syncing => (Colors.blue, 'Syncing'),
       SyncStatus.synced => (AccentColors.green, 'Synced'),
       SyncStatus.error => (AppTheme.errorRed, 'Error'),
-      SyncStatus.idle => (AppTheme.textTertiary, 'Idle'),
+      SyncStatus.idle => (context.textTertiary, 'Idle'),
     };
 
     return Container(
@@ -1172,7 +1172,7 @@ class _FeatureRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isUnlocked ? AccentColors.green : AppTheme.textSecondary;
+    final color = isUnlocked ? AccentColors.green : context.textSecondary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -1202,29 +1202,29 @@ class _ProviderIcon extends StatelessWidget {
       width: 28,
       height: 28,
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
+        color: context.background,
         shape: BoxShape.circle,
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
-      child: Center(child: _getIcon()),
+      child: Center(child: _getIcon(context)),
     );
   }
 
-  Widget _getIcon() {
+  Widget _getIcon(BuildContext context) {
     return switch (providerId) {
       'google.com' => SizedBox(
         width: 14,
         height: 14,
         child: CustomPaint(painter: _GoogleLogoSmallPainter()),
       ),
-      'apple.com' => const Icon(Icons.apple, size: 16, color: Colors.white),
+      'apple.com' => Icon(Icons.apple, size: 16, color: Colors.white),
       'github.com' => SizedBox(
         width: 14,
         height: 14,
         child: CustomPaint(painter: _GitHubLogoSmallPainter()),
       ),
       'password' => const Icon(Icons.email, size: 14, color: Colors.blue),
-      _ => Icon(Icons.link, size: 14, color: AppTheme.textSecondary),
+      _ => Icon(Icons.link, size: 14, color: context.textSecondary),
     };
   }
 }
@@ -1611,7 +1611,7 @@ class _CloudSyncPaywallSheetState
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -1622,11 +1622,11 @@ class _CloudSyncPaywallSheetState
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppTheme.darkBorder,
+              color: context.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Icon
           Container(
@@ -1640,7 +1640,7 @@ class _CloudSyncPaywallSheetState
           const SizedBox(height: 16),
 
           // Title
-          const Text(
+          Text(
             'Unlock Cloud Sync',
             style: TextStyle(
               fontSize: 22,
@@ -1653,9 +1653,9 @@ class _CloudSyncPaywallSheetState
           Text(
             'Sync your mesh data across all your devices',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppTheme.textSecondary),
+            style: TextStyle(color: context.textSecondary),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Features
           _FeatureRow(icon: Icons.devices, text: 'Sync across all devices'),
@@ -1678,7 +1678,7 @@ class _CloudSyncPaywallSheetState
           // Restore
           TextButton(
             onPressed: () => _restorePurchases(),
-            child: const Text('Restore Purchases'),
+            child: Text('Restore Purchases'),
           ),
 
           const SizedBox(height: 8),
@@ -1687,7 +1687,7 @@ class _CloudSyncPaywallSheetState
           Text(
             'Subscriptions auto-renew unless cancelled at least 24 hours before the end of the current period.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11, color: AppTheme.textTertiary),
+            style: TextStyle(fontSize: 11, color: context.textTertiary),
           ),
 
           const SizedBox(height: 16),
@@ -1730,7 +1730,7 @@ class _CloudSyncPaywallSheetState
         child: ElevatedButton(
           onPressed: () => _purchase(product),
           style: ElevatedButton.styleFrom(
-            backgroundColor: isYearly ? accentColor : AppTheme.darkCard,
+            backgroundColor: isYearly ? accentColor : context.card,
             foregroundColor: isYearly ? Colors.white : accentColor,
             padding: const EdgeInsets.symmetric(vertical: 16),
             side: isYearly ? null : BorderSide(color: accentColor),
@@ -1786,8 +1786,8 @@ class _ManageListTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              Icon(icon, color: AppTheme.textSecondary, size: 24),
-              const SizedBox(width: 16),
+              Icon(icon, color: context.textSecondary, size: 24),
+              SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1802,14 +1802,14 @@ class _ManageListTile extends StatelessWidget {
                         subtitle!,
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                         ),
                       ),
                     ],
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+              Icon(Icons.chevron_right, color: context.textTertiary),
             ],
           ),
         ),

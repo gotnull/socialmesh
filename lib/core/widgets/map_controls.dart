@@ -41,9 +41,9 @@ class MapZoomControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard.withValues(alpha: 0.95),
+        color: context.card.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+        border: Border.all(color: context.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
@@ -102,7 +102,7 @@ class _Divider extends StatelessWidget {
     return Container(
       height: 1,
       width: 32,
-      color: AppTheme.darkBorder.withValues(alpha: 0.3),
+      color: context.border.withValues(alpha: 0.3),
     );
   }
 }
@@ -140,8 +140,8 @@ class _ZoomButton extends StatelessWidget {
             icon,
             size: 20,
             color: onPressed != null
-                ? AppTheme.textSecondary
-                : AppTheme.textTertiary.withValues(alpha: 0.5),
+                ? context.textSecondary
+                : context.textTertiary.withValues(alpha: 0.5),
           ),
         ),
       ),
@@ -171,9 +171,9 @@ class MapNavigationControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard.withValues(alpha: 0.95),
+        color: context.card.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+        border: Border.all(color: context.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
@@ -246,9 +246,9 @@ class MapCompass extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: AppTheme.darkCard.withValues(alpha: 0.95),
+          color: context.card.withValues(alpha: 0.95),
           shape: BoxShape.circle,
-          border: Border.all(color: AppTheme.darkBorder.withValues(alpha: 0.5)),
+          border: Border.all(color: context.border.withValues(alpha: 0.5)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.2),
@@ -281,7 +281,7 @@ class MapCompass extends StatelessWidget {
                   width: 3,
                   height: 12,
                   decoration: BoxDecoration(
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -290,8 +290,8 @@ class MapCompass extends StatelessWidget {
               Container(
                 width: 6,
                 height: 6,
-                decoration: const BoxDecoration(
-                  color: AppTheme.textSecondary,
+                decoration: BoxDecoration(
+                  color: context.textSecondary,
                   shape: BoxShape.circle,
                 ),
               ),

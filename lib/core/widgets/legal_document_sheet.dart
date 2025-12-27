@@ -76,9 +76,9 @@ class _LegalWebViewScreenState extends State<_LegalWebViewScreen> {
     final accentColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         title: Text(
           _title,
           style: const TextStyle(fontSize: 18),
@@ -109,7 +109,7 @@ class _LegalWebViewScreenState extends State<_LegalWebViewScreen> {
           if (_progress < 1.0)
             LinearProgressIndicator(
               value: _progress,
-              backgroundColor: AppTheme.darkCard,
+              backgroundColor: context.card,
               valueColor: AlwaysStoppedAnimation<Color>(accentColor),
               minHeight: 2,
             ),

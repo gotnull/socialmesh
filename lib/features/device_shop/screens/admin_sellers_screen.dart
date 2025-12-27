@@ -27,7 +27,7 @@ class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Sellers'),
+        title: Text('Manage Sellers'),
         actions: [
           IconButton(
             icon: Icon(
@@ -109,7 +109,7 @@ class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen> {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Text('Error: $e')),
             ),
           ),
@@ -414,7 +414,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
             // Logo Section
             _buildSectionTitle('Seller Logo'),
             _buildLogoSection(),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // Basic Info
             _buildSectionTitle('Basic Information'),
@@ -490,7 +490,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
               }),
             ),
             SwitchListTile(
-              title: const Text('Official Partner'),
+              title: Text('Official Partner'),
               subtitle: const Text('Display as official Meshtastic partner'),
               value: _isOfficialPartner,
               onChanged: (v) => setState(() => _isOfficialPartner = v),
@@ -503,7 +503,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
               }),
             ),
             SwitchListTile(
-              title: const Text('Active'),
+              title: Text('Active'),
               subtitle: const Text('Seller is visible in the shop'),
               value: _isActive,
               onChanged: (v) => setState(() => _isActive = v),
@@ -516,7 +516,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
               }),
             ),
 
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
             // Save Button
             SizedBox(

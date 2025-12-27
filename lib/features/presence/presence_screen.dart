@@ -33,14 +33,14 @@ extension PresenceStatusExt on PresenceStatus {
     }
   }
 
-  Color get color {
+  Color getColor(BuildContext context) {
     switch (this) {
       case PresenceStatus.active:
         return AppTheme.successGreen;
       case PresenceStatus.idle:
         return AppTheme.warningYellow;
       case PresenceStatus.offline:
-        return AppTheme.textTertiary;
+        return context.textTertiary;
     }
   }
 
@@ -167,19 +167,21 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
     final summary = ref.watch(presenceSummaryProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         leading: const HamburgerMenuButton(),
         centerTitle: true,
-        title: const Text('Presence'),
+        title: Text('Presence'),
       ),
       body: presences.isEmpty
           ? _buildEmptyState(theme)
           : CustomScrollView(
               slivers: [
                 // Summary section
-                SliverToBoxAdapter(child: _buildSummarySection(theme, summary)),
+                SliverToBoxAdapter(
+                  child: _buildSummarySection(context, theme, summary),
+                ),
                 // Activity chart
                 SliverToBoxAdapter(
                   child: _buildActivityChart(theme, presences),
@@ -191,7 +193,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                     child: Text(
                       'All Nodes',
                       style: theme.textTheme.labelLarge?.copyWith(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -220,27 +222,27 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.people_outline,
               size: 40,
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Text(
             'No nodes discovered',
             style: theme.textTheme.titleMedium?.copyWith(
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'Nodes will appear here as they are discovered',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
             ),
           ),
         ],
@@ -249,6 +251,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
   }
 
   Widget _buildSummarySection(
+    BuildContext context,
     ThemeData theme,
     Map<PresenceStatus, int> summary,
   ) {
@@ -264,18 +267,20 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
               ),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: status.color.withAlpha(26),
+                color: status.getColor(context).withAlpha(26),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: status.color.withAlpha(77)),
+                border: Border.all(
+                  color: status.getColor(context).withAlpha(77),
+                ),
               ),
               child: Column(
                 children: [
-                  Icon(status.icon, color: status.color, size: 24),
+                  Icon(status.icon, color: status.getColor(context), size: 24),
                   const SizedBox(height: 8),
                   Text(
                     count.toString(),
                     style: theme.textTheme.headlineMedium?.copyWith(
-                      color: status.color,
+                      color: status.getColor(context),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -283,7 +288,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                   Text(
                     status.label,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: status.color,
+                      color: status.getColor(context),
                     ),
                   ),
                 ],
@@ -310,7 +315,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -318,16 +323,12 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
           children: [
             Row(
               children: [
-                const Icon(
-                  Icons.show_chart,
-                  color: AppTheme.textSecondary,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
+                Icon(Icons.show_chart, color: context.textSecondary, size: 20),
+                SizedBox(width: 8),
                 Text(
                   'Recent Activity',
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -360,7 +361,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface,
+        color: context.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: ListTile(
@@ -371,7 +372,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
               backgroundColor: _getAvatarColor(node),
               child: Text(
                 _getInitials(node),
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
@@ -384,9 +385,9 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                 width: 14,
                 height: 14,
                 decoration: BoxDecoration(
-                  color: presence.status.color,
+                  color: presence.status.getColor(context),
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppTheme.darkSurface, width: 2),
+                  border: Border.all(color: context.surface, width: 2),
                 ),
               ),
             ),
@@ -402,19 +403,19 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Row(
               children: [
                 Icon(
                   presence.status.icon,
                   size: 12,
-                  color: presence.status.color,
+                  color: presence.status.getColor(context),
                 ),
                 const SizedBox(width: 4),
                 Text(
                   presence.status.label,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: presence.status.color,
+                    color: presence.status.getColor(context),
                   ),
                 ),
                 if (presence.timeSinceLastHeard != null) ...[
@@ -422,7 +423,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                   Text(
                     '• ${_formatTimeSince(presence.timeSinceLastHeard!)}',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                 ],
@@ -503,12 +504,12 @@ class _LegendItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(3),
           ),
         ),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Text(
           label,
           style: Theme.of(
             context,
-          ).textTheme.bodySmall?.copyWith(color: AppTheme.textTertiary),
+          ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
         ),
       ],
     );
@@ -524,19 +525,15 @@ class _SignalQualityBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(
-          Icons.signal_cellular_alt,
-          size: 12,
-          color: AppTheme.textTertiary,
-        ),
-        const SizedBox(width: 8),
+        Icon(Icons.signal_cellular_alt, size: 12, color: context.textTertiary),
+        SizedBox(width: 8),
         Expanded(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(2),
             child: LinearProgressIndicator(
               value: quality,
               minHeight: 4,
-              backgroundColor: AppTheme.darkBorder,
+              backgroundColor: context.border,
               valueColor: AlwaysStoppedAnimation<Color>(
                 quality > 0.6
                     ? AppTheme.successGreen
@@ -547,12 +544,12 @@ class _SignalQualityBar extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8),
         Text(
           '${(quality * 100).toInt()}%',
           style: Theme.of(
             context,
-          ).textTheme.labelSmall?.copyWith(color: AppTheme.textTertiary),
+          ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
         ),
       ],
     );
@@ -611,7 +608,7 @@ class _ActivityTimeline extends StatelessWidget {
                     child: Text(
                       count.toString(),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: _getBucketColor(index),
+                        color: _getBucketColor(context, index),
                       ),
                     ),
                   ),
@@ -619,6 +616,7 @@ class _ActivityTimeline extends StatelessWidget {
                   height: height,
                   decoration: BoxDecoration(
                     color: _getBucketColor(
+                      context,
                       index,
                     ).withAlpha(count > 0 ? 200 : 51),
                     borderRadius: BorderRadius.circular(4),
@@ -632,9 +630,9 @@ class _ActivityTimeline extends StatelessWidget {
     );
   }
 
-  Color _getBucketColor(int bucket) {
+  Color _getBucketColor(BuildContext context, int bucket) {
     if (bucket < 2) return AppTheme.successGreen;
     if (bucket < 4) return AppTheme.warningYellow;
-    return AppTheme.textTertiary;
+    return context.textTertiary;
   }
 }

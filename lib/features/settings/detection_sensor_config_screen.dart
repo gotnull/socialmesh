@@ -116,10 +116,10 @@ class _DetectionSensorConfigScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkSurface,
-        title: const Text('Detection Sensor'),
+        backgroundColor: context.surface,
+        title: Text('Detection Sensor'),
         actions: [
           TextButton(
             onPressed: _isSaving ? null : _saveConfig,
@@ -170,10 +170,10 @@ class _DetectionSensorConfigScreenState
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: AppTheme.textTertiary,
+          color: context.textTertiary,
           letterSpacing: 1,
         ),
       ),
@@ -192,12 +192,12 @@ class _DetectionSensorConfigScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.sensors, color: AppTheme.accentOrange, size: 24),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Detection Sensor',
                   style: TextStyle(
                     color: Colors.white,
@@ -210,7 +210,7 @@ class _DetectionSensorConfigScreenState
                   'Monitor a GPIO pin and broadcast state changes to the mesh. '
                   'Use with PIR motion sensors, door/window contacts, or other binary sensors.',
                   style: TextStyle(
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                     fontSize: 13,
                     height: 1.4,
                   ),
@@ -226,19 +226,19 @@ class _DetectionSensorConfigScreenState
   Widget _buildBasicSettingsCard() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
           ListTile(
-            title: const Text(
+            title: Text(
               'Enable Detection Sensor',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Monitor GPIO pin and broadcast state changes',
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             trailing: ThemedSwitch(
               value: _enabled,
@@ -246,21 +246,21 @@ class _DetectionSensorConfigScreenState
             ),
           ),
           if (_enabled) ...[
-            const Divider(height: 1, color: AppTheme.darkBorder),
+            Divider(height: 1, color: context.border),
             Padding(
               padding: const EdgeInsets.all(16),
               child: TextField(
                 controller: _nameController,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Sensor Name',
-                  labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                  labelStyle: TextStyle(color: context.textSecondary),
                   hintText: 'e.g., Front Door, Motion Sensor',
                   hintStyle: TextStyle(
-                    color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                    color: context.textTertiary.withValues(alpha: 0.5),
                   ),
                   filled: true,
-                  fillColor: AppTheme.darkBackground,
+                  fillColor: context.background,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide.none,
@@ -282,7 +282,7 @@ class _DetectionSensorConfigScreenState
   Widget _buildPinConfigCard() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -295,15 +295,15 @@ class _DetectionSensorConfigScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'GPIO Pin',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: context.textPrimary),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         'The GPIO pin number to monitor',
                         style: TextStyle(
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                           fontSize: 12,
                         ),
                       ),
@@ -314,16 +314,16 @@ class _DetectionSensorConfigScreenState
                   width: 80,
                   child: TextField(
                     controller: _pinController,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.textPrimary),
                     textAlign: TextAlign.center,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       hintText: '0',
                       hintStyle: TextStyle(
-                        color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                        color: context.textTertiary.withValues(alpha: 0.5),
                       ),
                       filled: true,
-                      fillColor: AppTheme.darkBackground,
+                      fillColor: context.background,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,
@@ -339,49 +339,46 @@ class _DetectionSensorConfigScreenState
               ],
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           ListTile(
-            title: const Text(
+            title: Text(
               'Trigger Type',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             subtitle: Text(
               _getTriggerTypeDescription(_triggerType),
-              style: const TextStyle(
-                color: AppTheme.textTertiary,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
-            trailing: const Icon(
+            trailing: Icon(
               Icons.keyboard_arrow_down,
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
             ),
             onTap: () => _showTriggerTypePicker(),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           ListTile(
-            title: const Text(
+            title: Text(
               'Use Internal Pullup',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Enable internal pullup resistor on the pin',
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             trailing: ThemedSwitch(
               value: _usePullup,
               onChanged: (v) => setState(() => _usePullup = v),
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           ListTile(
-            title: const Text(
+            title: Text(
               'Send Bell Character',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Send bell (\\a) in detection messages',
-              style: TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             trailing: ThemedSwitch(
               value: _sendBell,
@@ -396,28 +393,25 @@ class _DetectionSensorConfigScreenState
   Widget _buildTimingCard() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
           ListTile(
-            title: const Text(
+            title: Text(
               'Minimum Broadcast Interval',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             subtitle: Text(
               'Wait $_minimumBroadcastSecs seconds between broadcasts',
-              style: const TextStyle(
-                color: AppTheme.textTertiary,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: Icon(Icons.remove, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.remove, color: context.textSecondary),
                   onPressed: _minimumBroadcastSecs > 15
                       ? () => setState(() => _minimumBroadcastSecs -= 15)
                       : null,
@@ -430,7 +424,7 @@ class _DetectionSensorConfigScreenState
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.add, color: context.textSecondary),
                   onPressed: _minimumBroadcastSecs < 300
                       ? () => setState(() => _minimumBroadcastSecs += 15)
                       : null,
@@ -438,24 +432,21 @@ class _DetectionSensorConfigScreenState
               ],
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorder),
+          Divider(height: 1, color: context.border),
           ListTile(
-            title: const Text(
+            title: Text(
               'State Broadcast Interval',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             subtitle: Text(
               'Broadcast current state every ${_stateBroadcastSecs ~/ 60} minutes',
-              style: const TextStyle(
-                color: AppTheme.textTertiary,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: Icon(Icons.remove, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.remove, color: context.textSecondary),
                   onPressed: _stateBroadcastSecs > 60
                       ? () => setState(() => _stateBroadcastSecs -= 60)
                       : null,
@@ -468,7 +459,7 @@ class _DetectionSensorConfigScreenState
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add, color: AppTheme.textSecondary),
+                  icon: Icon(Icons.add, color: context.textSecondary),
                   onPressed: _stateBroadcastSecs < 1800
                       ? () => setState(() => _stateBroadcastSecs += 60)
                       : null,
@@ -509,7 +500,7 @@ class _DetectionSensorConfigScreenState
   void _showTriggerTypePicker() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkSurface,
+      backgroundColor: context.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -521,7 +512,7 @@ class _DetectionSensorConfigScreenState
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  const Text(
+                  Text(
                     'Trigger Type',
                     style: TextStyle(
                       color: Colors.white,
@@ -532,12 +523,12 @@ class _DetectionSensorConfigScreenState
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: Icon(Icons.close, color: AppTheme.textTertiary),
+                    icon: Icon(Icons.close, color: context.textTertiary),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1, color: AppTheme.darkBorder),
+            Divider(height: 1, color: context.border),
             ...pbenum.ModuleConfig_DetectionSensorConfig_TriggerType.values.map(
               (type) {
                 return ListTile(

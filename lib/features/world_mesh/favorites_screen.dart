@@ -71,14 +71,11 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
-        title: const Text(
-          'Remove Favorite?',
-          style: TextStyle(color: Colors.white),
-        ),
+        backgroundColor: context.card,
+        title: Text('Remove Favorite?', style: TextStyle(color: Colors.white)),
         content: Text(
           'Remove ${item.displayName} from your favorites?',
-          style: const TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: context.textSecondary),
         ),
         actions: [
           TextButton(
@@ -179,10 +176,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
 
     return favoritesAsync.when(
       loading: () => Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
-          title: const Text(
+          backgroundColor: context.background,
+          title: Text(
             'Favorite Nodes',
             style: TextStyle(
               fontSize: 20,
@@ -194,9 +191,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
         body: const ScreenLoadingIndicator(),
       ),
       error: (error, stack) => Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
+          backgroundColor: context.background,
           title: const Text(
             'Favorite Nodes',
             style: TextStyle(
@@ -236,16 +233,16 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
             favorites.where((f) => f.hasLiveData).length >= 2;
 
         return Scaffold(
-          backgroundColor: AppTheme.darkBackground,
+          backgroundColor: context.background,
           appBar: AppBar(
-            backgroundColor: AppTheme.darkBackground,
+            backgroundColor: context.background,
             title: Text(
               _isCompareMode
                   ? (_selectedForCompare == null
                         ? 'Select first node'
                         : 'Select second node')
                   : 'Favorite Nodes',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
@@ -307,18 +304,18 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppTheme.darkCard,
+                color: context.card,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.darkBorder),
+                border: Border.all(color: context.border),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.star_border,
                 size: 40,
-                color: AppTheme.textTertiary,
+                color: context.textTertiary,
               ),
             ),
-            const SizedBox(height: 24),
-            const Text(
+            SizedBox(height: 24),
+            Text(
               'No Favorites Yet',
               style: TextStyle(
                 fontSize: 18,
@@ -327,10 +324,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Tap the star icon on any node to add it to your favorites for quick access.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              style: TextStyle(fontSize: 14, color: context.textSecondary),
             ),
           ],
         ),
@@ -342,7 +339,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     return RefreshIndicator(
       onRefresh: () => ref.read(nodeFavoritesProvider.notifier).refresh(),
       color: context.accentColor,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.card,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: favorites.length,
@@ -364,10 +361,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
           key: Key(item.metadata.nodeId),
           direction: DismissDirection.endToStart,
           background: Container(
-            decoration: const BoxDecoration(color: AppTheme.errorRed),
+            decoration: BoxDecoration(color: AppTheme.errorRed),
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 24),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.delete, color: Colors.white, size: 24),
@@ -387,14 +384,14 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
             return await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    backgroundColor: AppTheme.darkCard,
-                    title: const Text(
+                    backgroundColor: context.card,
+                    title: Text(
                       'Remove Favorite?',
                       style: TextStyle(color: Colors.white),
                     ),
                     content: Text(
                       'Remove ${item.displayName} from your favorites?',
-                      style: const TextStyle(color: AppTheme.textSecondary),
+                      style: TextStyle(color: context.textSecondary),
                     ),
                     actions: [
                       TextButton(
@@ -423,7 +420,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   Widget _buildFavoriteCard(_FavoriteItem item) {
     final statusColor = item.isOnline
         ? AccentColors.green
-        : (item.isIdle ? AppTheme.warningYellow : AppTheme.textTertiary);
+        : (item.isIdle ? AppTheme.warningYellow : context.textTertiary);
     final statusText = item.hasLiveData
         ? (item.isOnline ? 'Online' : (item.isIdle ? 'Idle' : 'Offline'))
         : 'Not in mesh';
@@ -433,7 +430,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
         _selectedForCompare?.metadata.nodeId == item.metadata.nodeId;
 
     return Material(
-      color: AppTheme.darkCard,
+      color: context.card,
       child: InkWell(
         onTap: () => _handleItemTap(item),
         child: Container(
@@ -443,8 +440,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
               color: isSelected
                   ? AccentColors.green
                   : (_isCompareMode && !item.hasLiveData
-                        ? AppTheme.textTertiary.withValues(alpha: 0.3)
-                        : AppTheme.darkBorder),
+                        ? context.textTertiary.withValues(alpha: 0.3)
+                        : context.border),
               width: isSelected ? 2 : 1,
             ),
           ),
@@ -461,14 +458,14 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                       color: item.hasLiveData
                           ? (isSelected
                                 ? AccentColors.green
-                                : AppTheme.textTertiary)
-                          : AppTheme.textTertiary.withValues(alpha: 0.3),
+                                : context.textTertiary)
+                          : context.textTertiary.withValues(alpha: 0.3),
                       width: 2,
                     ),
                     color: isSelected ? AccentColors.green : Colors.transparent,
                   ),
                   child: isSelected
-                      ? const Icon(Icons.check, size: 16, color: Colors.white)
+                      ? Icon(Icons.check, size: 16, color: Colors.white)
                       : null,
                 ),
                 const SizedBox(width: 12),
@@ -535,23 +532,23 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                       children: [
                         Text(
                           '!${item.metadata.nodeId}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
                             fontFamily: 'monospace',
                           ),
                         ),
                         if (item.metadata.role.isNotEmpty) ...[
-                          const Text(
+                          Text(
                             ' • ',
-                            style: TextStyle(color: AppTheme.textTertiary),
+                            style: TextStyle(color: context.textTertiary),
                           ),
                           Expanded(
                             child: Text(
                               item.metadata.role,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: AppTheme.textTertiary,
+                                color: context.textTertiary,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -560,7 +557,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                       ],
                     ),
                     if (item.liveNode?.batteryLevel != null) ...[
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Row(
                         children: [
                           Icon(
@@ -610,8 +607,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                     icon: Icon(
                       Icons.chevron_right,
                       color: item.hasLiveData
-                          ? AppTheme.textTertiary
-                          : AppTheme.textTertiary.withValues(alpha: 0.3),
+                          ? context.textTertiary
+                          : context.textTertiary.withValues(alpha: 0.3),
                       size: 22,
                     ),
                     onPressed: () => _openNodeAnalytics(item),
@@ -640,7 +637,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
 
   Color _getBatteryColor(int level) {
     if (level > 100) return AccentColors.green;
-    if (level > 20) return AppTheme.textSecondary;
+    if (level > 20) return context.textSecondary;
     return AppTheme.errorRed;
   }
 }

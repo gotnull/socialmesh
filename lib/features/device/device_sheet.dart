@@ -64,18 +64,18 @@ class _DeviceSheetContent extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: isConnected
                       ? context.accentColor.withValues(alpha: 0.15)
-                      : AppTheme.darkBackground,
+                      : context.background,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.router,
                   color: isConnected
                       ? context.accentColor
-                      : AppTheme.textTertiary,
+                      : context.textTertiary,
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,7 +99,7 @@ class _DeviceSheetContent extends ConsumerWidget {
                                 ? context.accentColor
                                 : isReconnecting
                                 ? AppTheme.warningYellow
-                                : AppTheme.textTertiary,
+                                : context.textTertiary,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -112,7 +112,7 @@ class _DeviceSheetContent extends ConsumerWidget {
                                 ? context.accentColor
                                 : isReconnecting
                                 ? AppTheme.warningYellow
-                                : AppTheme.textTertiary,
+                                : context.textTertiary,
                           ),
                         ),
                       ],
@@ -121,13 +121,13 @@ class _DeviceSheetContent extends ConsumerWidget {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.close, color: AppTheme.textTertiary),
+                icon: Icon(Icons.close, color: context.textTertiary),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
           ),
         ),
-        const Divider(color: AppTheme.darkBorder, height: 1),
+        Divider(color: context.border, height: 1),
         // Content
         Expanded(
           child: ListView(
@@ -135,7 +135,7 @@ class _DeviceSheetContent extends ConsumerWidget {
             padding: const EdgeInsets.all(20),
             children: [
               // Connection Details
-              _buildSectionTitle('Connection Details'),
+              _buildSectionTitle(context, 'Connection Details'),
               const SizedBox(height: 12),
               _DeviceInfoCard(
                 device: connectedDevice,
@@ -146,7 +146,7 @@ class _DeviceSheetContent extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // Quick Actions
-              _buildSectionTitle('Quick Actions'),
+              _buildSectionTitle(context, 'Quick Actions'),
               const SizedBox(height: 12),
               _ActionTile(
                 icon: Icons.tune_outlined,
@@ -188,11 +188,11 @@ class _DeviceSheetContent extends ConsumerWidget {
 
               // Connection Actions
               if (isConnected) ...[
-                _buildSectionTitle('Connection'),
+                _buildSectionTitle(context, 'Connection'),
                 const SizedBox(height: 12),
                 _buildDisconnectButton(context, ref),
               ] else if (!isReconnecting) ...[
-                _buildSectionTitle('Connection'),
+                _buildSectionTitle(context, 'Connection'),
                 const SizedBox(height: 12),
                 _buildScanButton(context),
               ],
@@ -204,13 +204,13 @@ class _DeviceSheetContent extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title.toUpperCase(),
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w600,
-        color: AppTheme.textTertiary,
+        color: context.textTertiary,
 
         letterSpacing: 1,
       ),
@@ -286,7 +286,7 @@ class _DeviceSheetContent extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         title: const Text('Disconnect'),
         content: const Text(
           'Are you sure you want to disconnect from this device?',
@@ -341,7 +341,7 @@ class _DeviceInfoCard extends StatelessWidget {
 
     final statusColor = isConnected
         ? context.accentColor
-        : AppTheme.textTertiary;
+        : context.textTertiary;
 
     final rssiColor = device?.rssi != null
         ? (device!.rssi! > -70
@@ -364,9 +364,9 @@ class _DeviceInfoCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
+        color: context.background,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: InfoTable(
         rows: [
@@ -472,9 +472,9 @@ class _ActionTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
+        color: context.background,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Material(
         color: Colors.transparent,
@@ -489,12 +489,12 @@ class _ActionTile extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
+                    color: context.card,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(icon, color: context.accentColor, size: 22),
                 ),
-                const SizedBox(width: 14),
+                SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,17 +510,17 @@ class _ActionTile extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.chevron_right,
-                  color: AppTheme.textTertiary,
+                  color: context.textTertiary,
                   size: 20,
                 ),
               ],

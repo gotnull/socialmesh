@@ -23,9 +23,9 @@ class DetectionSensorLogScreen extends ConsumerWidget {
     final nodeName = node?.displayName ?? 'All Nodes';
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         title: const Text(
           'Detection Sensor Log',
           style: TextStyle(
@@ -124,7 +124,7 @@ class _DetectionSensorCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
         border: log.detected
             ? Border.all(

@@ -19,9 +19,9 @@ class SellerProfileScreen extends ConsumerWidget {
     final productsAsync = ref.watch(sellerProductsProvider(sellerId));
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       body: sellerAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -47,7 +47,7 @@ class SellerProfileScreen extends ConsumerWidget {
                 children: [
                   Icon(
                     Icons.store_outlined,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                     size: 48,
                   ),
                   const SizedBox(height: 16),
@@ -87,7 +87,7 @@ class SellerProfileScreen extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
                   child: Text(
                     'Products (${seller.productCount})',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -112,7 +112,7 @@ class SellerProfileScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(32),
                       child: Text(
                         'Unable to load products',
-                        style: TextStyle(color: AppTheme.textSecondary),
+                        style: TextStyle(color: context.textSecondary),
                       ),
                     ),
                   ),
@@ -127,13 +127,13 @@ class SellerProfileScreen extends ConsumerWidget {
                             children: [
                               Icon(
                                 Icons.inventory_2_outlined,
-                                color: AppTheme.textTertiary,
+                                color: context.textTertiary,
                                 size: 48,
                               ),
-                              const SizedBox(height: 12),
+                              SizedBox(height: 12),
                               Text(
                                 'No products listed yet',
-                                style: TextStyle(color: AppTheme.textSecondary),
+                                style: TextStyle(color: context.textSecondary),
                               ),
                             ],
                           ),
@@ -171,7 +171,7 @@ class SellerProfileScreen extends ConsumerWidget {
 
   SliverAppBar _buildHeader(BuildContext context, ShopSeller seller) {
     return SliverAppBar(
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.card,
       expandedHeight: 200,
       pinned: true,
       flexibleSpace: FlexibleSpaceBar(
@@ -182,7 +182,7 @@ class SellerProfileScreen extends ConsumerWidget {
               end: Alignment.bottomCenter,
               colors: [
                 context.accentColor.withValues(alpha: 0.3),
-                AppTheme.darkCard,
+                context.card,
               ],
             ),
           ),
@@ -190,14 +190,14 @@ class SellerProfileScreen extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 40),
+                SizedBox(height: 40),
                 // Logo
                 Container(
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppTheme.darkBackground,
+                    color: context.background,
                     border: Border.all(color: context.accentColor, width: 2),
                   ),
                   child: ClipOval(
@@ -278,9 +278,9 @@ class _SellerStats extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -308,7 +308,7 @@ class _SellerStats extends StatelessWidget {
           _StatDivider(),
           _StatItem(
             icon: Icons.calendar_today,
-            iconColor: AppTheme.textSecondary,
+            iconColor: context.textSecondary,
             value: _formatJoinDate(seller.joinedAt),
             label: 'Joined',
           ),
@@ -354,7 +354,7 @@ class _StatItem extends StatelessWidget {
     return Column(
       children: [
         Icon(icon, color: iconColor, size: 20),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(
           value,
           style: const TextStyle(
@@ -365,7 +365,7 @@ class _StatItem extends StatelessWidget {
         ),
         Text(
           label,
-          style: TextStyle(color: AppTheme.textTertiary, fontSize: 11),
+          style: TextStyle(color: context.textTertiary, fontSize: 11),
         ),
       ],
     );
@@ -375,7 +375,7 @@ class _StatItem extends StatelessWidget {
 class _StatDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(width: 1, height: 40, color: AppTheme.darkBorder);
+    return Container(width: 1, height: 40, color: context.border);
   }
 }
 
@@ -393,7 +393,7 @@ class _SellerDescription extends StatelessWidget {
         children: [
           Text(
             'About',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -402,7 +402,7 @@ class _SellerDescription extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             description,
-            style: TextStyle(color: AppTheme.textSecondary, height: 1.5),
+            style: TextStyle(color: context.textSecondary, height: 1.5),
           ),
         ],
       ),
@@ -429,9 +429,9 @@ class _ContactSection extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -513,7 +513,7 @@ class _ContactRow extends StatelessWidget {
         child: Row(
           children: [
             Icon(icon, color: context.accentColor, size: 20),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -521,7 +521,7 @@ class _ContactRow extends StatelessWidget {
                   Text(
                     label,
                     style: TextStyle(
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       fontSize: 12,
                     ),
                   ),
@@ -536,7 +536,7 @@ class _ContactRow extends StatelessWidget {
               ),
             ),
             if (onTap != null)
-              Icon(Icons.open_in_new, color: AppTheme.textTertiary, size: 16),
+              Icon(Icons.open_in_new, color: context.textTertiary, size: 16),
           ],
         ),
       ),

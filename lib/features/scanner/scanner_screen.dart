@@ -434,7 +434,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     // When connecting, use EXACT same structure as onboarding
     if (_connecting) {
       return Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         body: Stack(
           children: [
             // Background - Beautiful parallax floating icons
@@ -447,12 +447,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         leading: widget.isOnboarding
             ? IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                icon: Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () => Navigator.of(context).pop(),
               )
             : null,
@@ -529,12 +529,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     height: 20,
                     child: MeshLoadingIndicator(size: 20),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Scanning for nearby devices',
                           style: TextStyle(
                             color: Colors.white,
@@ -547,8 +547,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                           _devices.isEmpty
                               ? 'Looking for Meshtastic devices...'
                               : '${_devices.length} ${_devices.length == 1 ? 'device' : 'devices'} found so far',
-                          style: const TextStyle(
-                            color: AppTheme.textSecondary,
+                          style: TextStyle(
+                            color: context.textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -564,12 +564,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
               padding: const EdgeInsets.only(bottom: 12),
               child: Row(
                 children: [
-                  const Text(
+                  Text(
                     'Available Devices',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
 
                       letterSpacing: 0.5,
                     ),
@@ -601,28 +601,28 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
             Center(
               child: Column(
                 children: [
-                  const SizedBox(height: 100),
-                  const Icon(
+                  SizedBox(height: 100),
+                  Icon(
                     Icons.bluetooth_searching,
                     size: 80,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
+                  SizedBox(height: 24),
+                  Text(
                     'No devices found',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 8),
+                  Text(
                     'Make sure Bluetooth is enabled and\nyour Meshtastic device is powered on',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -662,7 +662,7 @@ class _DeviceCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
@@ -672,7 +672,7 @@ class _DeviceCard extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -681,7 +681,7 @@ class _DeviceCard extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: AppTheme.darkBackground,
+                    color: context.background,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -692,7 +692,7 @@ class _DeviceCard extends StatelessWidget {
                     size: 24,
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -708,9 +708,9 @@ class _DeviceCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         device.type == TransportType.ble ? 'Bluetooth' : 'USB',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                         ),
                       ),
                     ],
@@ -728,14 +728,14 @@ class _DeviceCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: i < signalBars
                                 ? context.accentColor
-                                : AppTheme.textTertiary.withValues(alpha: 0.3),
+                                : context.textTertiary.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),
                     ],
                   ),
-                const SizedBox(width: 4),
-                const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+                SizedBox(width: 4),
+                Icon(Icons.chevron_right, color: context.textTertiary),
               ],
             ),
           ),
@@ -777,7 +777,7 @@ class _DeviceDetailsTable extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16, top: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(11),
@@ -791,10 +791,10 @@ class _DeviceDetailsTable extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isOdd
                     ? const Color(0xFF29303D)
-                    : AppTheme.darkBackground,
+                    : context.background,
                 border: Border(
                   bottom: index < details.length - 1
-                      ? const BorderSide(color: AppTheme.darkBorder, width: 1)
+                      ? BorderSide(color: context.border, width: 1)
                       : BorderSide.none,
                 ),
               ),
@@ -809,19 +809,19 @@ class _DeviceDetailsTable extends StatelessWidget {
                           horizontal: 20,
                           vertical: 14,
                         ),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           border: Border(
                             right: BorderSide(
-                              color: AppTheme.darkBorder,
+                              color: context.border,
                               width: 1,
                             ),
                           ),
                         ),
                         child: Text(
                           item.$1,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.textTertiary,
+                            color: context.textTertiary,
 
                             fontWeight: FontWeight.w400,
                           ),

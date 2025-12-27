@@ -181,7 +181,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(bottom: 16),
             child: Text(
               'Select Variable',
@@ -200,17 +200,17 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
               hintText: 'Search variables...',
-              hintStyle: TextStyle(color: AppTheme.textSecondary),
+              hintStyle: TextStyle(color: context.textSecondary),
               prefixIcon: Icon(
                 Icons.search,
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
                 size: 20,
               ),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
                       icon: Icon(
                         Icons.clear,
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                         size: 20,
                       ),
                       onPressed: () {
@@ -220,7 +220,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                     )
                   : null,
               filled: true,
-              fillColor: AppTheme.darkBackground,
+              fillColor: context.background,
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -229,7 +229,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
             ),
           ),
 
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
 
           // Category filter chips
           SingleChildScrollView(
@@ -254,7 +254,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
           // "None" option
           _buildBindingTile(null, accentColor),
 
-          const Divider(height: 24, color: AppTheme.darkBorder),
+          Divider(height: 24, color: context.border),
 
           // Bindings list
           Expanded(
@@ -290,15 +290,15 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 14, color: isSelected ? Colors.white : color),
-            const SizedBox(width: 4),
+            SizedBox(width: 4),
             Text(label),
           ],
         ),
         labelStyle: TextStyle(
           fontSize: 12,
-          color: isSelected ? Colors.white : AppTheme.textSecondary,
+          color: isSelected ? Colors.white : context.textSecondary,
         ),
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         selectedColor: color.withValues(alpha: 0.3),
         checkmarkColor: Colors.white,
         showCheckmark: false,
@@ -317,11 +317,11 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.search_off, size: 48, color: AppTheme.textSecondary),
-          const SizedBox(height: 8),
+          Icon(Icons.search_off, size: 48, color: context.textSecondary),
+          SizedBox(height: 8),
           Text(
             'No variables found',
-            style: TextStyle(color: AppTheme.textSecondary),
+            style: TextStyle(color: context.textSecondary),
           ),
         ],
       ),
@@ -354,16 +354,16 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: AppTheme.darkBackground,
+                  color: context.background,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   Icons.block,
                   size: 18,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,7 +380,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                       'No data binding - use static text',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                       ),
                     ),
                   ],
@@ -427,7 +427,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                 color: categoryColor,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
 
             // Label and description
             Expanded(
@@ -453,7 +453,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.darkBackground,
+                          color: context.background,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Row(
@@ -462,14 +462,14 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                             Icon(
                               _typeIcon(binding.valueType),
                               size: 10,
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                             ),
-                            const SizedBox(width: 2),
+                            SizedBox(width: 2),
                             Text(
                               _typeName(binding.valueType),
                               style: TextStyle(
                                 fontSize: 9,
-                                color: AppTheme.textSecondary,
+                                color: context.textSecondary,
                               ),
                             ),
                           ],
@@ -477,15 +477,15 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     binding.description,
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   // Path and unit
                   Row(
                     children: [
@@ -495,7 +495,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                           vertical: 1,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.darkCard,
+                          color: context.card,
                           borderRadius: BorderRadius.circular(2),
                         ),
                         child: Text(
@@ -503,7 +503,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                           style: TextStyle(
                             fontSize: 10,
                             fontFamily: 'monospace',
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                           ),
                         ),
                       ),

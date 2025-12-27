@@ -788,7 +788,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
     final statusInfo = _getStatusInfo(autoReconnectState, connectionState);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
@@ -960,7 +960,7 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: AppTheme.darkCard.withValues(alpha: 0.95),
+          color: context.card.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
           boxShadow: [
@@ -1014,7 +1014,7 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
                   Text(
                     '!$nodeId',
                     style: TextStyle(
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       fontSize: 11,
                       fontFamily: 'monospace',
                     ),
@@ -1059,7 +1059,7 @@ class _ErrorScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -1068,7 +1068,7 @@ class _ErrorScreen extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Something went wrong',
                 style: TextStyle(
                   fontSize: 24,
@@ -1079,7 +1079,7 @@ class _ErrorScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 'Failed to initialize the app. Please try again.',
-                style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
+                style: TextStyle(fontSize: 16, color: context.textSecondary),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 32),

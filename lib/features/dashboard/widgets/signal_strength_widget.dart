@@ -153,7 +153,7 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
             );
           },
         ),
-        const Divider(color: AppTheme.darkBorder, height: 1),
+        Divider(color: context.border, height: 1),
         // Legend
         _buildLegend(),
         // Chart
@@ -166,17 +166,16 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
                     painter: MultiLineChartPainter(
                       _signalHistory,
                       rssiColor: context.accentColor,
+                      borderColor: context.border,
+                      textTertiaryColor: context.textTertiary,
                     ),
                     child: Container(),
                   ),
                 )
-              : const Center(
+              : Center(
                   child: Text(
                     'Waiting for signal data...',
-                    style: TextStyle(
-                      color: AppTheme.textTertiary,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: context.textTertiary, fontSize: 14),
                   ),
                 ),
         ),
@@ -237,7 +236,7 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   padding: const EdgeInsets.symmetric(
@@ -245,15 +244,15 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkBackground,
+                    color: context.background,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     '${rssi.toInt()} dBm',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                       fontFamily: 'monospace',
                     ),
                   ),
@@ -416,10 +415,10 @@ class _LegendItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(2),
           ),
         ),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(fontSize: 10, color: AppTheme.textTertiary),
+          style: TextStyle(fontSize: 10, color: context.textTertiary),
         ),
       ],
     );
@@ -445,11 +444,18 @@ class MultiSignalData {
 class MultiLineChartPainter extends CustomPainter {
   final List<MultiSignalData> data;
   final Color rssiColor;
+  final Color borderColor;
+  final Color textTertiaryColor;
 
   static const Color snrColor = AppTheme.graphBlue;
   static const Color channelUtilColor = AppTheme.accentOrange;
 
-  MultiLineChartPainter(this.data, {required this.rssiColor});
+  MultiLineChartPainter(
+    this.data, {
+    required this.rssiColor,
+    required this.borderColor,
+    required this.textTertiaryColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -471,7 +477,7 @@ class MultiLineChartPainter extends CustomPainter {
     const double maxChannelUtil = 100;
 
     final Paint gridPaint = Paint()
-      ..color = AppTheme.darkBorder.withValues(alpha: 0.3)
+      ..color = borderColor.withValues(alpha: 0.3)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
@@ -489,8 +495,8 @@ class MultiLineChartPainter extends CustomPainter {
       final rssiValue = maxRssi - (i * (maxRssi - minRssi) / 4);
       textPainter.text = TextSpan(
         text: '${rssiValue.toInt()}',
-        style: const TextStyle(
-          color: AppTheme.textTertiary,
+        style: TextStyle(
+          color: textTertiaryColor,
           fontSize: 9,
 
           fontWeight: FontWeight.w500,

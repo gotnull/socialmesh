@@ -212,10 +212,10 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'Security',
           style: TextStyle(
             fontSize: 20,
@@ -260,7 +260,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                 // PKI Keys Section
                 const _SectionHeader(title: 'DIRECT MESSAGE KEY'),
                 _buildKeySection(),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
 
                 // Admin Keys Section
                 const _SectionHeader(title: 'ADMIN KEYS'),
@@ -327,7 +327,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                     },
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
 
                 // Warning card
                 Container(
@@ -352,11 +352,11 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                         size: 20,
                       ),
                       const SizedBox(width: 12),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'Disabling serial console or enabling managed mode may make it difficult to recover the device. Make sure you understand the implications before making changes.',
                           style: TextStyle(
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                             fontSize: 13,
                           ),
                         ),
@@ -377,7 +377,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -386,9 +386,9 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
           // Public Key (read-only display)
           Row(
             children: [
-              Icon(Icons.key, color: AppTheme.textSecondary, size: 20),
-              const SizedBox(width: 8),
-              const Text(
+              Icon(Icons.key, color: context.textSecondary, size: 20),
+              SizedBox(width: 8),
+              Text(
                 'Public Key',
                 style: TextStyle(
                   color: Colors.white,
@@ -402,34 +402,34 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
+              color: context.background,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             child: SelectableText(
               _publicKey.isEmpty ? 'No key set' : _publicKey,
               style: TextStyle(
                 color: _publicKey.isEmpty
-                    ? AppTheme.textTertiary
+                    ? context.textTertiary
                     : Colors.white,
                 fontFamily: 'JetBrainsMono',
                 fontSize: 11,
               ),
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'Your public key is sent to other nodes for secure messaging',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
 
-          const Divider(height: 24, color: AppTheme.darkBorder),
+          Divider(height: 24, color: context.border),
 
           // Private Key
           Row(
             children: [
-              Icon(Icons.vpn_key, color: AppTheme.textSecondary, size: 20),
-              const SizedBox(width: 8),
+              Icon(Icons.vpn_key, color: context.textSecondary, size: 20),
+              SizedBox(width: 8),
               const Text(
                 'Private Key',
                 style: TextStyle(
@@ -441,7 +441,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
               IconButton(
                 icon: Icon(
                   _privateKeyVisible ? Icons.visibility_off : Icons.visibility,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                   size: 20,
                 ),
                 onPressed: () {
@@ -450,7 +450,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           TextField(
             obscureText: !_privateKeyVisible,
             style: const TextStyle(
@@ -461,15 +461,15 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
             decoration: InputDecoration(
               isDense: true,
               contentPadding: const EdgeInsets.all(12),
-              fillColor: AppTheme.darkBackground,
+              fillColor: context.background,
               filled: true,
               hintText: 'Base64 encoded 32-byte key',
-              hintStyle: TextStyle(color: AppTheme.textTertiary),
+              hintStyle: TextStyle(color: context.textTertiary),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
                   color: isValidPrivateKey
-                      ? AppTheme.darkBorder
+                      ? context.border
                       : AppTheme.errorRed,
                 ),
               ),
@@ -477,7 +477,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
                   color: isValidPrivateKey
-                      ? AppTheme.darkBorder
+                      ? context.border
                       : AppTheme.errorRed,
                 ),
               ),
@@ -488,20 +488,20 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
               _recalculatePublicKey();
             },
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'Used to compute shared secret with remote devices',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
 
-          const Divider(height: 24, color: AppTheme.darkBorder),
+          Divider(height: 24, color: context.border),
 
           // Regenerate button
           Row(
             children: [
-              Icon(Icons.refresh, color: AppTheme.textSecondary, size: 20),
-              const SizedBox(width: 8),
-              const Text(
+              Icon(Icons.refresh, color: context.textSecondary, size: 20),
+              SizedBox(width: 8),
+              Text(
                 'Regenerate Key Pair',
                 style: TextStyle(
                   color: Colors.white,
@@ -521,7 +521,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
           ),
           Text(
             'Generate a new key pair (public key will be automatically derived)',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
         ],
       ),
@@ -533,7 +533,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -541,7 +541,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
         children: [
           Text(
             'Public keys authorized to send admin messages to this node',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
           const SizedBox(height: 16),
 
@@ -586,10 +586,10 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
           children: [
             Icon(
               Icons.admin_panel_settings,
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
               size: 18,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text(
               label,
               style: const TextStyle(
@@ -610,20 +610,20 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
           decoration: InputDecoration(
             isDense: true,
             contentPadding: const EdgeInsets.all(12),
-            fillColor: AppTheme.darkBackground,
+            fillColor: context.background,
             filled: true,
             hintText: 'Base64 encoded public key',
-            hintStyle: TextStyle(color: AppTheme.textTertiary, fontSize: 11),
+            hintStyle: TextStyle(color: context.textTertiary, fontSize: 11),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(
-                color: isValid ? AppTheme.darkBorder : AppTheme.errorRed,
+                color: isValid ? context.border : AppTheme.errorRed,
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(
-                color: isValid ? AppTheme.darkBorder : AppTheme.errorRed,
+                color: isValid ? context.border : AppTheme.errorRed,
               ),
             ),
           ),
@@ -646,10 +646,10 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: AppTheme.textTertiary,
+          color: context.textTertiary,
           letterSpacing: 1.2,
         ),
       ),
@@ -677,15 +677,15 @@ class _SettingsTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? AppTheme.textSecondary),
-            const SizedBox(width: 16),
+            Icon(icon, color: iconColor ?? context.textSecondary),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -701,9 +701,9 @@ class _SettingsTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                 ],

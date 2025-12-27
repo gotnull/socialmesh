@@ -174,10 +174,10 @@ class _CannedMessageModuleConfigScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text('Canned Messages Module'),
+        backgroundColor: context.background,
+        title: Text('Canned Messages Module'),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveConfig,
@@ -218,19 +218,19 @@ class _CannedMessageModuleConfigScreenState
   Widget _buildOptionsSection() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'OPTIONS',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
               letterSpacing: 1.2,
             ),
           ),
@@ -274,19 +274,19 @@ class _CannedMessageModuleConfigScreenState
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'CONFIGURATION PRESET',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
               letterSpacing: 1.2,
             ),
           ),
@@ -307,12 +307,12 @@ class _CannedMessageModuleConfigScreenState
                     border: Border.all(
                       color: isSelected
                           ? context.accentColor
-                          : AppTheme.darkBorder,
+                          : context.border,
                       width: isSelected ? 2 : 1,
                     ),
                     color: isSelected
                         ? context.accentColor.withAlpha(20)
-                        : AppTheme.darkBackground,
+                        : context.background,
                   ),
                   child: Row(
                     children: [
@@ -322,7 +322,7 @@ class _CannedMessageModuleConfigScreenState
                             : Icons.radio_button_unchecked,
                         color: isSelected ? context.accentColor : Colors.grey,
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,8 +338,8 @@ class _CannedMessageModuleConfigScreenState
                             ),
                             Text(
                               item.$3,
-                              style: const TextStyle(
-                                color: AppTheme.textSecondary,
+                              style: TextStyle(
+                                color: context.textSecondary,
                                 fontSize: 12,
                               ),
                             ),
@@ -360,19 +360,19 @@ class _CannedMessageModuleConfigScreenState
   Widget _buildControlTypeSection() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'CONTROL TYPE',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
               letterSpacing: 1.2,
             ),
           ),
@@ -414,19 +414,19 @@ class _CannedMessageModuleConfigScreenState
   Widget _buildInputsSection() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'GPIO INPUTS',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
               letterSpacing: 1.2,
             ),
           ),
@@ -453,7 +453,7 @@ class _CannedMessageModuleConfigScreenState
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -463,15 +463,15 @@ class _CannedMessageModuleConfigScreenState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: AppTheme.darkBackground,
+            color: context.background,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.darkBorder),
+            border: Border.all(color: context.border),
           ),
           child: DropdownButton<int>(
             value: value,
             isExpanded: true,
-            underline: const SizedBox(),
-            dropdownColor: AppTheme.darkCard,
+            underline: SizedBox(),
+            dropdownColor: context.card,
             style: const TextStyle(color: Colors.white, fontSize: 14),
             items: List.generate(49, (i) => i).map((pin) {
               return DropdownMenuItem(
@@ -505,19 +505,19 @@ class _CannedMessageModuleConfigScreenState
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'KEY MAPPING',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
               letterSpacing: 1.2,
             ),
           ),
@@ -567,7 +567,7 @@ class _CannedMessageModuleConfigScreenState
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -577,9 +577,9 @@ class _CannedMessageModuleConfigScreenState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: AppTheme.darkBackground,
+            color: context.background,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.darkBorder),
+            border: Border.all(color: context.border),
           ),
           child:
               DropdownButton<
@@ -587,8 +587,8 @@ class _CannedMessageModuleConfigScreenState
               >(
                 value: value,
                 isExpanded: true,
-                underline: const SizedBox(),
-                dropdownColor: AppTheme.darkCard,
+                underline: SizedBox(),
+                dropdownColor: context.card,
                 style: const TextStyle(color: Colors.white, fontSize: 14),
                 items: options.map((item) {
                   return DropdownMenuItem(value: item.$1, child: Text(item.$2));
@@ -617,13 +617,13 @@ class _CannedMessageModuleConfigScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.info_outline, color: context.accentColor, size: 20),
-          const SizedBox(width: 12),
-          const Expanded(
+          SizedBox(width: 12),
+          Expanded(
             child: Text(
               'This configures the device-side canned message module which '
               'allows sending predefined messages using hardware inputs like '
               'rotary encoders or buttons.',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              style: TextStyle(color: context.textSecondary, fontSize: 13),
             ),
           ),
         ],
@@ -649,8 +649,8 @@ class _SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: AppTheme.textSecondary, size: 22),
-        const SizedBox(width: 12),
+        Icon(icon, color: context.textSecondary, size: 22),
+        SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -666,8 +666,8 @@ class _SettingsTile extends StatelessWidget {
               if (subtitle != null)
                 Text(
                   subtitle!,
-                  style: const TextStyle(
-                    color: AppTheme.textSecondary,
+                  style: TextStyle(
+                    color: context.textSecondary,
                     fontSize: 12,
                   ),
                 ),

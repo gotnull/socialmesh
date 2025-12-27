@@ -42,7 +42,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -55,7 +55,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Text(
                 'Channel: ${widget.channelIndex}',
-                style: TextStyle(fontSize: 13, color: AppTheme.textTertiary),
+                style: TextStyle(fontSize: 13, color: context.textTertiary),
               ),
             ),
 
@@ -113,7 +113,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
     return Divider(
       height: 1,
       thickness: 1,
-      color: AppTheme.darkBorder.withValues(alpha: 0.3),
+      color: context.border.withValues(alpha: 0.3),
       indent: 16,
       endIndent: 16,
     );
@@ -135,7 +135,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
         child: Row(
           children: [
             Icon(icon, size: 20, color: color),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Text(label, style: TextStyle(fontSize: 16, color: color)),
             ),
@@ -145,7 +145,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
                     ? Icons.keyboard_arrow_down
                     : Icons.keyboard_arrow_right,
                 size: 20,
-                color: AppTheme.textTertiary,
+                color: context.textTertiary,
               ),
           ],
         ),
@@ -171,7 +171,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
                 ),
                 child: Row(
                   children: [
-                    const Text(
+                    Text(
                       'Tapback',
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
@@ -181,7 +181,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
                           ? Icons.keyboard_arrow_down
                           : Icons.keyboard_arrow_right,
                       size: 20,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ],
                 ),
@@ -191,7 +191,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
               Divider(
                 height: 1,
                 thickness: 1,
-                color: AppTheme.darkBorder.withValues(alpha: 0.2),
+                color: context.border.withValues(alpha: 0.2),
                 indent: 16,
                 endIndent: 16,
               ),
@@ -282,7 +282,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
-                const Text(
+                Text(
                   'Message Details',
                   style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
@@ -292,7 +292,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
                       ? Icons.keyboard_arrow_down
                       : Icons.keyboard_arrow_right,
                   size: 20,
-                  color: AppTheme.textTertiary,
+                  color: context.textTertiary,
                 ),
               ],
             ),
@@ -302,7 +302,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
           Divider(
             height: 1,
             thickness: 1,
-            color: AppTheme.darkBorder.withValues(alpha: 0.2),
+            color: context.border.withValues(alpha: 0.2),
             indent: 16,
             endIndent: 16,
           ),
@@ -315,7 +315,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
                     formattedDate,
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                   ),
                 ),
@@ -333,7 +333,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
                     'From: ${widget.senderName}',
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                   ),
                 ],
@@ -349,7 +349,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
                     _getDeliveryStatusText(),
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                   ),
                 ],

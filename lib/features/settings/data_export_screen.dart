@@ -41,10 +41,10 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'Export Data',
           style: TextStyle(
             fontSize: 20,
@@ -60,9 +60,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           _buildSectionHeader('Messages'),
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             child: Column(
               children: [
@@ -79,15 +79,15 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Telemetry
           _buildSectionHeader('Telemetry'),
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             child: Column(
               children: [
@@ -140,15 +140,15 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Position Data
           _buildSectionHeader('Position Data'),
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             child: Column(
               children: [
@@ -186,15 +186,15 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Automations
           _buildSectionHeader('Automations'),
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             child: Column(
               children: [
@@ -223,15 +223,15 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Nodes
           _buildSectionHeader('Network'),
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             child: Column(
               children: [
@@ -248,7 +248,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // All Data
           _buildSectionHeader('Complete Export'),
@@ -272,7 +272,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Clear All Data
           _buildSectionHeader('Clear Data'),
@@ -305,7 +305,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                       ),
                     ),
                     const SizedBox(width: 14),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -322,13 +322,13 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                             'Delete all stored telemetry, routes, and logs',
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const Icon(
+                    Icon(
                       Icons.warning_amber,
                       color: AppTheme.errorRed,
                       size: 20,
@@ -359,12 +359,12 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Exported files can be shared via email, AirDrop, or saved to Files. Tap the trash icon to clear specific data.',
                     style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                   ),
                 ),
@@ -383,10 +383,10 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: AppTheme.textSecondary,
+          color: context.textSecondary,
         ),
       ),
     );
@@ -396,7 +396,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     return Container(
       height: 1,
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      color: AppTheme.darkBorder.withValues(alpha: 0.3),
+      color: context.border.withValues(alpha: 0.3),
     );
   }
 
@@ -431,7 +431,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
               size: 22,
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,12 +444,12 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                     color: isHighlighted ? context.accentColor : Colors.white,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                   ),
                 ),
               ],
@@ -458,19 +458,19 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
+              color: context.background,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
               format,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.textTertiary,
+                color: context.textTertiary,
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           // Clear button
           if (onClear != null) ...[
             if (isClearing)
@@ -486,7 +486,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
               IconButton(
                 icon: Icon(
                   Icons.delete_outline,
-                  color: AppTheme.textTertiary.withValues(alpha: 0.6),
+                  color: context.textTertiary.withValues(alpha: 0.6),
                   size: 20,
                 ),
                 onPressed: onClear,
@@ -495,7 +495,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                 tooltip: 'Clear data',
               ),
           ],
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           // Export button
           if (isExporting)
             MeshLoadingIndicator(

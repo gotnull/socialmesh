@@ -121,15 +121,15 @@ class _EnvironmentMetricsLogScreenState
                     Icon(
                       Icons.thermostat,
                       size: 64,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Text(
                       _hasActiveFilters
                           ? 'No metrics match filters'
                           : 'No environment history',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                       ),
                     ),
                     if (_hasActiveFilters) ...[
@@ -262,20 +262,20 @@ class _EnvironmentGraphView extends StatelessWidget {
                   Icon(
                     selectedMetric.icon,
                     size: 48,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Text(
                     'No ${selectedMetric.label.toLowerCase()} data',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     'Try selecting a different metric',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                 ],
@@ -289,7 +289,7 @@ class _EnvironmentGraphView extends StatelessWidget {
             child: _StatsRow(logs: sortedLogs, metric: selectedMetric),
           ),
 
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
 
           // Graph
           Expanded(
@@ -302,7 +302,7 @@ class _EnvironmentGraphView extends StatelessWidget {
                     drawVerticalLine: false,
                     horizontalInterval: ((maxY - minY) / 4).clamp(1, 100),
                     getDrawingHorizontalLine: (value) => FlLine(
-                      color: AppTheme.darkBorder.withValues(alpha: 0.5),
+                      color: context.border.withValues(alpha: 0.5),
                       strokeWidth: 1,
                     ),
                   ),
@@ -328,9 +328,9 @@ class _EnvironmentGraphView extends StatelessWidget {
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               DateFormat('HH:mm').format(log.timestamp),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 10,
-                                color: AppTheme.textTertiary,
+                                color: context.textTertiary,
                               ),
                             ),
                           );
@@ -345,9 +345,9 @@ class _EnvironmentGraphView extends StatelessWidget {
                         getTitlesWidget: (value, meta) {
                           return Text(
                             '${value.toStringAsFixed(1)}${selectedMetric.unit}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 10,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           );
                         },
@@ -396,7 +396,7 @@ class _EnvironmentGraphView extends StatelessWidget {
                   ],
                   lineTouchData: LineTouchData(
                     touchTooltipData: LineTouchTooltipData(
-                      getTooltipColor: (_) => AppTheme.darkCard,
+                      getTooltipColor: (_) => context.card,
                       getTooltipItems: (spots) {
                         return spots.map((spot) {
                           final index = spot.x.toInt();
@@ -467,7 +467,7 @@ class _StatsRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface,
+        color: context.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -481,7 +481,7 @@ class _StatsRow extends StatelessWidget {
           _StatItem(
             label: 'Avg',
             value: '${avg.toStringAsFixed(1)}${metric.unit}',
-            color: AppTheme.textSecondary,
+            color: context.textSecondary,
           ),
           _StatItem(
             label: 'Min',
@@ -554,7 +554,7 @@ class _EnvironmentMetricsCard extends StatelessWidget {
                   size: 16,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     nodeName,
@@ -602,7 +602,7 @@ class _EnvironmentMetricsCard extends StatelessWidget {
                     icon: Icons.air,
                     label: 'Gas',
                     value: '${log.gasResistance!.toStringAsFixed(0)} Ω',
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                   ),
                 if (log.iaq != null)
                   _MetricChip(
@@ -675,7 +675,7 @@ class _MetricChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: color),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -691,7 +691,7 @@ class _MetricChip extends StatelessWidget {
                 label,
                 style: Theme.of(
                   context,
-                ).textTheme.labelSmall?.copyWith(color: AppTheme.textTertiary),
+                ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
               ),
             ],
           ),

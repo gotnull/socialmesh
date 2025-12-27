@@ -145,9 +145,9 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkBackground,
+          backgroundColor: context.background,
           title: const Text(
             'Serial Config',
             style: TextStyle(
@@ -162,10 +162,10 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        title: const Text(
+        backgroundColor: context.background,
+        title: Text(
           'Serial Config',
           style: TextStyle(
             fontSize: 20,
@@ -203,9 +203,9 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
           _buildSectionHeader('General'),
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             child: Column(
               children: [
@@ -245,15 +245,15 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Baud Rate
           _buildSectionHeader('Baud Rate'),
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -274,8 +274,8 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                         size: 20,
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    const Expanded(
+                    SizedBox(width: 14),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -292,7 +292,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                             'Serial communication speed',
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           ),
                         ],
@@ -319,12 +319,12 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? context.accentColor
-                              : AppTheme.darkBackground,
+                              : context.background,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: isSelected
                                 ? context.accentColor
-                                : AppTheme.darkBorder,
+                                : context.border,
                           ),
                         ),
                         child: Text(
@@ -334,7 +334,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                             fontWeight: FontWeight.w500,
                             color: isSelected
                                 ? Colors.white
-                                : AppTheme.textSecondary,
+                                : context.textSecondary,
                           ),
                         ),
                       ),
@@ -345,15 +345,15 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Timeout
           _buildSectionHeader('Timeout'),
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -374,12 +374,12 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                         size: 20,
                       ),
                     ),
-                    const SizedBox(width: 14),
+                    SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Timeout',
                             style: TextStyle(
                               fontSize: 15,
@@ -390,9 +390,9 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                           const SizedBox(height: 2),
                           Text(
                             '$_timeout seconds',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           ),
                         ],
@@ -400,11 +400,11 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     activeTrackColor: context.accentColor,
-                    inactiveTrackColor: AppTheme.darkBorder,
+                    inactiveTrackColor: context.border,
                     thumbColor: context.accentColor,
                     overlayColor: context.accentColor.withValues(alpha: 0.2),
                   ),
@@ -423,15 +423,15 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Mode Selection
           _buildSectionHeader('Serial Mode'),
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
+              color: context.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder),
+              border: Border.all(color: context.border),
             ),
             child: Column(
               children: _modes.asMap().entries.map((entry) {
@@ -470,7 +470,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                                 border: Border.all(
                                   color: isSelected
                                       ? context.accentColor
-                                      : AppTheme.darkBorder,
+                                      : context.border,
                                   width: 2,
                                 ),
                                 color: isSelected
@@ -478,7 +478,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                                     : Colors.transparent,
                               ),
                               child: isSelected
-                                  ? const Icon(
+                                  ? Icon(
                                       Icons.check,
                                       color: Colors.white,
                                       size: 16,
@@ -499,15 +499,15 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                                           : FontWeight.w500,
                                       color: isSelected
                                           ? Colors.white
-                                          : AppTheme.textSecondary,
+                                          : context.textSecondary,
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
+                                  SizedBox(height: 2),
                                   Text(
                                     _getModeDescription(mode),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
-                                      color: AppTheme.textTertiary,
+                                      color: context.textTertiary,
                                     ),
                                   ),
                                 ],
@@ -535,10 +535,10 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: AppTheme.textSecondary,
+          color: context.textSecondary,
         ),
       ),
     );
@@ -548,7 +548,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
     return Container(
       height: 1,
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      color: AppTheme.darkBorder.withValues(alpha: 0.3),
+      color: context.border.withValues(alpha: 0.3),
     );
   }
 
@@ -572,7 +572,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
             ),
             child: Icon(icon, color: context.accentColor, size: 20),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -588,9 +588,9 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                   ),
                 ),
               ],

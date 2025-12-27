@@ -49,9 +49,9 @@ class _SkyTrackerScreenState extends ConsumerState<SkyTrackerScreen>
     final stats = ref.watch(skyTrackerStatsProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         title: Row(
           children: [
             Icon(
@@ -59,7 +59,7 @@ class _SkyTrackerScreenState extends ConsumerState<SkyTrackerScreen>
               color: context.accentColor,
               size: 24,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             const Text(
               'Sky Tracker',
               style: TextStyle(
@@ -72,7 +72,7 @@ class _SkyTrackerScreenState extends ConsumerState<SkyTrackerScreen>
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.info_outline, color: AppTheme.textSecondary),
+            icon: Icon(Icons.info_outline, color: context.textSecondary),
             onPressed: _showInfo,
             tooltip: 'About Sky Tracker',
           ),
@@ -81,13 +81,13 @@ class _SkyTrackerScreenState extends ConsumerState<SkyTrackerScreen>
           controller: _tabController,
           indicatorColor: context.accentColor,
           labelColor: context.accentColor,
-          unselectedLabelColor: AppTheme.textSecondary,
+          unselectedLabelColor: context.textSecondary,
           tabs: [
             Tab(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.flight_takeoff, size: 18),
+                  Icon(Icons.flight_takeoff, size: 18),
                   const SizedBox(width: 4),
                   Text(
                     'Active${stats.activeFlights > 0 ? ' (${stats.activeFlights})' : ''}',
@@ -126,12 +126,12 @@ class _SkyTrackerScreenState extends ConsumerState<SkyTrackerScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.card,
         title: Row(
           children: [
             Icon(Icons.flight, color: context.accentColor),
-            const SizedBox(width: 8),
-            const Text(
+            SizedBox(width: 8),
+            Text(
               'Sky Tracker',
               style: TextStyle(color: Colors.white),
             ),
@@ -144,11 +144,11 @@ class _SkyTrackerScreenState extends ConsumerState<SkyTrackerScreen>
             Text(
               'Track Meshtastic nodes at altitude!',
               style: TextStyle(
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _buildInfoRow(
               Icons.flight_takeoff,
               'Schedule your flight with your node',
@@ -176,7 +176,7 @@ class _SkyTrackerScreenState extends ConsumerState<SkyTrackerScreen>
               child: Row(
                 children: [
                   Icon(Icons.lightbulb, color: context.accentColor, size: 20),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'At 35,000ft, LoRa can reach 400+ km!',
@@ -208,12 +208,12 @@ class _SkyTrackerScreenState extends ConsumerState<SkyTrackerScreen>
   Widget _buildInfoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: AppTheme.textTertiary),
-        const SizedBox(width: 8),
+        Icon(icon, size: 18, color: context.textTertiary),
+        SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+            style: TextStyle(color: context.textSecondary, fontSize: 14),
           ),
         ),
       ],
@@ -413,12 +413,12 @@ class _SkyNodeCard extends ConsumerWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.card,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: skyNode.isActive
                 ? context.accentColor.withValues(alpha: 0.5)
-                : AppTheme.darkBorder,
+                : context.border,
             width: skyNode.isActive ? 2 : 1,
           ),
         ),
@@ -445,7 +445,7 @@ class _SkyNodeCard extends ConsumerWidget {
                       children: [
                         if (skyNode.isActive) ...[
                           _PulsingDot(color: _getStatusColor(context)),
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4),
                         ],
                         Text(
                           skyNode.statusText,
@@ -485,13 +485,13 @@ class _SkyNodeCard extends ConsumerWidget {
                         children: [
                           Container(
                             height: 2,
-                            color: AppTheme.darkBorder,
+                            color: context.border,
                           ),
                           Icon(
                             Icons.flight,
                             color: skyNode.isActive
                                 ? context.accentColor
-                                : AppTheme.textTertiary,
+                                : context.textTertiary,
                             size: 20,
                           ),
                         ],
@@ -502,28 +502,28 @@ class _SkyNodeCard extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             // Info row
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  Icon(Icons.schedule, size: 14, color: AppTheme.textTertiary),
-                  const SizedBox(width: 4),
+                  Icon(Icons.schedule, size: 14, color: context.textTertiary),
+                  SizedBox(width: 4),
                   Text(
                     dateFormat.format(skyNode.scheduledDeparture.toLocal()),
                     style: TextStyle(
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                       fontSize: 13,
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Icon(Icons.memory, size: 14, color: AppTheme.textTertiary),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 16),
+                  Icon(Icons.memory, size: 14, color: context.textTertiary),
+                  SizedBox(width: 4),
                   Text(
                     skyNode.nodeName ?? skyNode.nodeId,
                     style: TextStyle(
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                       fontSize: 13,
                     ),
                   ),
@@ -541,7 +541,7 @@ class _SkyNodeCard extends ConsumerWidget {
                       size: 14,
                       color: context.accentColor,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       '${skyNode.receptionCount} reception${skyNode.receptionCount != 1 ? 's' : ''}',
                       style: TextStyle(
@@ -565,9 +565,9 @@ class _SkyNodeCard extends ConsumerWidget {
 
   Color _getStatusColor(BuildContext context) {
     if (skyNode.isActive) return context.accentColor;
-    if (skyNode.isPast) return AppTheme.textTertiary;
+    if (skyNode.isPast) return context.textTertiary;
     if (skyNode.isUpcoming) return AppTheme.warningYellow;
-    return AppTheme.textSecondary;
+    return context.textSecondary;
   }
 }
 
@@ -582,7 +582,7 @@ class _AirportCode extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
+        color: context.background,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -686,7 +686,7 @@ class _LiveTrackingIndicator extends ConsumerWidget {
                 color: context.accentColor,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text(
               'Getting live position...',
               style: TextStyle(
@@ -700,14 +700,14 @@ class _LiveTrackingIndicator extends ConsumerWidget {
           children: [
             Icon(
               Icons.cloud_off,
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
               size: 18,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text(
               'Position unavailable',
               style: TextStyle(
-                color: AppTheme.textTertiary,
+                color: context.textTertiary,
                 fontSize: 13,
               ),
             ),
@@ -719,14 +719,14 @@ class _LiveTrackingIndicator extends ConsumerWidget {
               children: [
                 Icon(
                   Icons.cloud_off,
-                  color: AppTheme.textTertiary,
+                  color: context.textTertiary,
                   size: 18,
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Text(
                   positionState.error ?? 'Position unavailable',
                   style: TextStyle(
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                     fontSize: 13,
                   ),
                 ),
@@ -736,7 +736,7 @@ class _LiveTrackingIndicator extends ConsumerWidget {
           return Row(
             children: [
               Icon(Icons.radar, color: context.accentColor, size: 18),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -784,9 +784,9 @@ class _ReportCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -811,7 +811,7 @@ class _ReportCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             // Details
             Expanded(
               child: Column(
@@ -831,14 +831,14 @@ class _ReportCard extends StatelessWidget {
                         Text(
                           '→ ${report.reporterName}',
                           style: TextStyle(
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                             fontSize: 13,
                           ),
                         ),
                       ],
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Row(
                     children: [
                       if (report.estimatedDistance != null) ...[
@@ -847,7 +847,7 @@ class _ReportCard extends StatelessWidget {
                           size: 14,
                           color: context.accentColor,
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: 4),
                         Text(
                           '${report.estimatedDistance!.round()} km',
                           style: TextStyle(
@@ -856,19 +856,19 @@ class _ReportCard extends StatelessWidget {
                             fontSize: 13,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                       ],
                       if (report.rssi != null) ...[
                         Icon(
                           Icons.signal_cellular_alt,
                           size: 14,
-                          color: AppTheme.textTertiary,
+                          color: context.textTertiary,
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: 4),
                         Text(
                           '${report.rssi!.round()} dBm',
                           style: TextStyle(
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                             fontSize: 13,
                           ),
                         ),
@@ -882,7 +882,7 @@ class _ReportCard extends StatelessWidget {
             Text(
               dateFormat.format(report.receivedAt.toLocal()),
               style: TextStyle(
-                color: AppTheme.textTertiary,
+                color: context.textTertiary,
                 fontSize: 12,
               ),
             ),
@@ -919,8 +919,8 @@ Widget _buildEmpty(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 64, color: AppTheme.textTertiary),
-          const SizedBox(height: 16),
+          Icon(icon, size: 64, color: context.textTertiary),
+          SizedBox(height: 16),
           Text(
             title,
             style: const TextStyle(
@@ -934,7 +934,7 @@ Widget _buildEmpty(
             subtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
               fontSize: 14,
             ),
           ),
@@ -952,12 +952,12 @@ Widget _buildError(BuildContext context, String message) {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.error_outline, size: 64, color: AppTheme.errorRed),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             message,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
               fontSize: 14,
             ),
           ),

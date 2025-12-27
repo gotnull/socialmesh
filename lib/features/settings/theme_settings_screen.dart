@@ -574,7 +574,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                     ),
                   ],
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.wifi_tethering,
                   color: Colors.white,
                   size: 32,
@@ -585,7 +585,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Default Icon',
                       style: TextStyle(
                         fontSize: 16,
@@ -598,7 +598,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                       'Alternative app icons coming soon',
                       style: TextStyle(
                         fontSize: 13,
-                        color: AppTheme.textTertiary,
+                        color: context.textTertiary,
                       ),
                     ),
                   ],

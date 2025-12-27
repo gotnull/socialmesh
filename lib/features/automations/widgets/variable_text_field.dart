@@ -498,7 +498,7 @@ class VariableChipPicker extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
+        color: context.background,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -514,7 +514,9 @@ class VariableChipPicker extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 6,
-            children: universalVars.map((v) => _buildChip(v, false)).toList(),
+            children: universalVars
+                .map((v) => _buildChip(context, v, false))
+                .toList(),
           ),
           if (triggerVars.isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -526,7 +528,9 @@ class VariableChipPicker extends StatelessWidget {
             Wrap(
               spacing: 8,
               runSpacing: 6,
-              children: triggerVars.map((v) => _buildChip(v, true)).toList(),
+              children: triggerVars
+                  .map((v) => _buildChip(context, v, true))
+                  .toList(),
             ),
           ],
           if (showDeleteHint) ...[
@@ -550,7 +554,11 @@ class VariableChipPicker extends StatelessWidget {
     );
   }
 
-  Widget _buildChip(String variable, bool isTriggerSpecific) {
+  Widget _buildChip(
+    BuildContext context,
+    String variable,
+    bool isTriggerSpecific,
+  ) {
     final displayName = _variableDisplayNames[variable] ?? variable;
     final description = _variableDescriptions[variable];
 
@@ -567,14 +575,14 @@ class VariableChipPicker extends StatelessWidget {
                 ? (isTriggerSpecific
                       ? Colors.amber.withValues(alpha: 0.15)
                       : AppTheme.successGreen.withValues(alpha: 0.15))
-                : AppTheme.darkCard,
+                : context.card,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isActive
                   ? (isTriggerSpecific
                         ? Colors.amber.withValues(alpha: 0.4)
                         : AppTheme.successGreen.withValues(alpha: 0.4))
-                  : AppTheme.darkBorder,
+                  : context.border,
             ),
           ),
           child: Text(

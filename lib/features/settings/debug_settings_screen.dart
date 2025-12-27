@@ -336,7 +336,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: const Text('Debug Settings'),
@@ -367,7 +367,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                       _secretGestureExpanded
                   ? Icons.unfold_less_rounded
                   : Icons.unfold_more_rounded,
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
             ),
             tooltip: 'Expand/Collapse all',
           ),
@@ -472,10 +472,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isExpanded ? iconColor.withAlpha(60) : AppTheme.darkBorder,
+          color: isExpanded ? iconColor.withAlpha(60) : context.border,
         ),
       ),
       child: Column(
@@ -495,7 +495,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     ),
                     child: Icon(icon, color: iconColor, size: 20),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,9 +510,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                         ),
                         Text(
                           subtitle,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                           ),
                         ),
                       ],
@@ -523,7 +523,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     duration: const Duration(milliseconds: 200),
                     child: Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      color: isExpanded ? iconColor : AppTheme.textSecondary,
+                      color: isExpanded ? iconColor : context.textSecondary,
                     ),
                   ),
                 ],
@@ -551,9 +551,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         border: Border(
-          top: BorderSide(color: AppTheme.darkBorder.withAlpha(150)),
+          top: BorderSide(color: context.border.withAlpha(150)),
         ),
         boxShadow: [
           BoxShadow(
@@ -571,19 +571,19 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             // Save Location Toggle
             Row(
               children: [
-                const Text(
+                Text(
                   'Save to:',
-                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  style: TextStyle(fontSize: 12, color: context.textSecondary),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkBackground,
+                      color: context.background,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: AppTheme.darkBorder.withAlpha(100),
+                        color: context.border.withAlpha(100),
                       ),
                     ),
                     child: Row(
@@ -611,9 +611,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                                     size: 14,
                                     color: isSelected
                                         ? context.accentColor
-                                        : AppTheme.textSecondary,
+                                        : context.textSecondary,
                                   ),
-                                  const SizedBox(width: 4),
+                                  SizedBox(width: 4),
                                   Text(
                                     location ==
                                             MeshConfigSaveLocation.localDevice
@@ -626,7 +626,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                                           : FontWeight.w400,
                                       color: isSelected
                                           ? context.accentColor
-                                          : AppTheme.textSecondary,
+                                          : context.textSecondary,
                                     ),
                                   ),
                                 ],
@@ -638,7 +638,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 // Load from Firestore mini button
                 BouncyTap(
                   onTap: _isLoadingRemote ? null : _loadFromFirestore,
@@ -694,12 +694,12 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                             : null,
                         color: _hasUnsavedChanges
                             ? null
-                            : AppTheme.darkBackground,
+                            : context.background,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: _hasUnsavedChanges
                               ? context.accentColor
-                              : AppTheme.darkBorder,
+                              : context.border,
                           width: _hasUnsavedChanges ? 1.5 : 1,
                         ),
                       ),
@@ -713,9 +713,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                             size: 18,
                             color: _hasUnsavedChanges
                                 ? context.accentColor
-                                : AppTheme.textSecondary,
+                                : context.textSecondary,
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Text(
                             _hasUnsavedChanges
                                 ? (_saveLocation ==
@@ -728,7 +728,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                               fontWeight: FontWeight.w600,
                               color: _hasUnsavedChanges
                                   ? context.accentColor
-                                  : AppTheme.textSecondary,
+                                  : context.textSecondary,
                             ),
                           ),
                         ],
@@ -736,24 +736,24 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: BouncyTap(
                     onTap: _resetConfig,
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppTheme.darkBackground,
+                        color: context.background,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppTheme.darkBorder),
+                        border: Border.all(color: context.border),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.restore_rounded,
                             size: 18,
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                           ),
                           SizedBox(width: 6),
                           Text(
@@ -761,7 +761,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                             ),
                           ),
                         ],
@@ -772,12 +772,12 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               ],
             ),
             if (_hasUnsavedChanges) ...[
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 'Restart app to apply splash screen changes',
                 style: TextStyle(
                   fontSize: 10,
-                  color: AppTheme.textTertiary.withAlpha(180),
+                  color: context.textTertiary.withAlpha(180),
                   fontStyle: FontStyle.italic,
                 ),
               ),
@@ -795,7 +795,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         Container(
           margin: const EdgeInsets.only(bottom: 16),
           height: 1,
-          color: AppTheme.darkBorder.withAlpha(60),
+          color: context.border.withAlpha(60),
         ),
         // Description
         Padding(
@@ -803,7 +803,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           child: Text(
             'Browse through all splash screen intro animations including '
             'classic demoscene and cracktro effects.',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
         ),
         // Launch preview button
@@ -817,8 +817,8 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                 ),
               );
             },
-            icon: const Icon(Icons.play_circle_filled_rounded),
-            label: const Text('Preview All Animations'),
+            icon: Icon(Icons.play_circle_filled_rounded),
+            label: Text('Preview All Animations'),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF00E5FF).withAlpha(30),
               foregroundColor: const Color(0xFF00E5FF),
@@ -835,22 +835,22 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: AppTheme.darkSurface,
+            color: context.surface,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.darkBorder.withAlpha(60)),
+            border: Border.all(color: context.border.withAlpha(60)),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.lightbulb_outline_rounded,
                 size: 16,
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Swipe left/right or tap arrows to browse. Tap screen to toggle controls.',
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  style: TextStyle(color: context.textSecondary, fontSize: 12),
                 ),
               ),
             ],
@@ -868,7 +868,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         Container(
           margin: const EdgeInsets.only(bottom: 16),
           height: 1,
-          color: AppTheme.darkBorder.withAlpha(60),
+          color: context.border.withAlpha(60),
         ),
 
         // Preview area - wrapped to prevent scroll interference
@@ -880,9 +880,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           child: Container(
             height: (_size + 40).clamp(200, 500),
             decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
+              color: context.background,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.darkBorder.withAlpha(100)),
+              border: Border.all(color: context.border.withAlpha(100)),
             ),
             child: Stack(
               alignment: Alignment.center,
@@ -954,12 +954,12 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                 decoration: BoxDecoration(
                   color: isSelected
                       ? context.accentColor.withAlpha(40)
-                      : AppTheme.darkBackground,
+                      : context.background,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isSelected
                         ? context.accentColor
-                        : AppTheme.darkBorder,
+                        : context.border,
                   ),
                 ),
                 child: Text(
@@ -1093,12 +1093,12 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? context.accentColor.withAlpha(40)
-                        : AppTheme.darkBackground,
+                        : context.background,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isSelected
                           ? context.accentColor
-                          : AppTheme.darkBorder.withAlpha(100),
+                          : context.border.withAlpha(100),
                     ),
                   ),
                   child: Text(
@@ -1107,7 +1107,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                       fontSize: 12,
                       color: isSelected
                           ? context.accentColor
-                          : AppTheme.textSecondary,
+                          : context.textSecondary,
                     ),
                   ),
                 ),
@@ -1144,7 +1144,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               _markChanged();
             },
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
         ],
 
         // Touch Interaction - ALWAYS visible (works with or without accelerometer)
@@ -1152,10 +1152,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         const SizedBox(height: 8),
         Row(
           children: [
-            const Expanded(
+            Expanded(
               child: Text(
                 'Enable Touch Rotation',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                style: TextStyle(fontSize: 12, color: context.textSecondary),
               ),
             ),
             SizedBox(
@@ -1171,13 +1171,13 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Row(
           children: [
-            const Expanded(
+            Expanded(
               child: Text(
                 'Enable Pull-to-Stretch',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                style: TextStyle(fontSize: 12, color: context.textSecondary),
               ),
             ),
             SizedBox(
@@ -1229,32 +1229,32 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               _markChanged();
             },
           ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
 
         // JSON Config Display
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppTheme.darkBackground,
+            color: context.background,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.darkBorder.withAlpha(100)),
+            border: Border.all(color: context.border.withAlpha(100)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.data_object,
                     size: 14,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                   ),
-                  const SizedBox(width: 6),
-                  const Text(
+                  SizedBox(width: 6),
+                  Text(
                     'JSON Config',
                     style: TextStyle(
                       fontSize: 11,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1266,21 +1266,21 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                       );
                       showInfoSnackBar(context, 'JSON config copied!');
                     },
-                    child: const Icon(
+                    child: Icon(
                       Icons.copy,
                       size: 14,
-                      color: AppTheme.textTertiary,
+                      color: context.textTertiary,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               SelectableText(
                 _generateJsonConfig(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontFamily: 'monospace',
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                   height: 1.4,
                 ),
               ),
@@ -1299,7 +1299,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         Container(
           margin: const EdgeInsets.only(bottom: 16),
           height: 1,
-          color: AppTheme.darkBorder.withAlpha(60),
+          color: context.border.withAlpha(60),
         ),
         SizedBox(
           width: double.infinity,
@@ -1346,7 +1346,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         Container(
           margin: const EdgeInsets.only(bottom: 12),
           height: 1,
-          color: AppTheme.darkBorder.withAlpha(60),
+          color: context.border.withAlpha(60),
         ),
         _buildQuickTestButton(
           icon: Icons.bug_report_rounded,
@@ -1394,28 +1394,28 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         Container(
           margin: const EdgeInsets.only(bottom: 16),
           height: 1,
-          color: AppTheme.darkBorder.withAlpha(60),
+          color: context.border.withAlpha(60),
         ),
 
         // Pattern selector
         _buildSectionLabel('GESTURE PATTERN'),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: AppTheme.darkBackground,
+            color: context.background,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppTheme.darkBorder),
+            border: Border.all(color: context.border),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<SecretGesturePattern>(
               value: _secretPattern,
               isExpanded: true,
-              dropdownColor: AppTheme.darkCard,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              icon: const Icon(
+              dropdownColor: context.card,
+              style: TextStyle(color: Colors.white, fontSize: 14),
+              icon: Icon(
                 Icons.keyboard_arrow_down,
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
               ),
               items: SecretGesturePattern.values.map((pattern) {
                 return DropdownMenuItem(
@@ -1427,7 +1427,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                         size: 18,
                         color: AppTheme.primaryPurple,
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -1438,9 +1438,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                           ),
                           Text(
                             _getPatternDescription(pattern),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 10,
-                              color: AppTheme.textTertiary,
+                              color: context.textTertiary,
                             ),
                           ),
                         ],
@@ -1526,7 +1526,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                   size: 32,
                   color: AppTheme.primaryPurple.withAlpha(180),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   'Test ${_secretPattern.name} here',
                   style: const TextStyle(
@@ -1538,9 +1538,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   _getPatternInstructions(_secretPattern),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1548,7 +1548,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
 
         // Generated code snippet
         _buildSectionLabel('CODE SNIPPET'),
@@ -1559,7 +1559,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFF1E1E2E),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.darkBorder.withAlpha(100)),
+            border: Border.all(color: context.border.withAlpha(100)),
           ),
           child: SelectableText(
             _generateGestureCodeSnippet(),
@@ -1587,7 +1587,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: AppTheme.primaryPurple.withAlpha(60)),
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
@@ -1620,7 +1620,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         Container(
           margin: const EdgeInsets.only(bottom: 16),
           height: 1,
-          color: AppTheme.darkBorder.withAlpha(60),
+          color: context.border.withAlpha(60),
         ),
 
         // Widget Approval
@@ -1640,7 +1640,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
+              color: context.background,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppTheme.accentOrange.withAlpha(60)),
             ),
@@ -1652,14 +1652,14 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     color: AppTheme.accentOrange.withAlpha(20),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.widgets_rounded,
                     color: AppTheme.accentOrange,
                     size: 20,
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1676,15 +1676,15 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                         'Review pending marketplace submissions',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                 ),
               ],
             ),
@@ -1704,23 +1704,23 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: AppTheme.darkBackground,
+          color: context.background,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppTheme.darkBorder.withAlpha(100)),
+          border: Border.all(color: context.border.withAlpha(100)),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: AppTheme.textSecondary),
-            const SizedBox(width: 12),
+            Icon(icon, size: 18, color: context.textSecondary),
+            SizedBox(width: 12),
             Text(
               label,
               style: const TextStyle(fontSize: 14, color: Colors.white),
             ),
             const Spacer(),
-            const Icon(
+            Icon(
               Icons.chevron_right,
               size: 18,
-              color: AppTheme.textTertiary,
+              color: context.textTertiary,
             ),
           ],
         ),
@@ -1781,10 +1781,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   Widget _buildSectionLabel(String label) {
     return Text(
       label,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        color: AppTheme.textTertiary,
+        color: context.textTertiary,
         letterSpacing: 0.5,
       ),
     );
@@ -1805,7 +1805,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           width: 110,
           child: Text(
             label,
-            style: const TextStyle(fontSize: 13, color: Colors.white),
+            style: TextStyle(fontSize: 13, color: Colors.white),
           ),
         ),
         Expanded(
@@ -1815,7 +1815,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
               overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
               activeTrackColor: context.accentColor,
-              inactiveTrackColor: AppTheme.darkBorder,
+              inactiveTrackColor: context.border,
               thumbColor: context.accentColor,
               overlayColor: context.accentColor.withAlpha(40),
             ),
@@ -1833,9 +1833,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           child: Text(
             displayValue,
             textAlign: TextAlign.right,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
               fontFamily: 'monospace',
             ),
           ),
@@ -1856,10 +1856,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         decoration: BoxDecoration(
           color: value
               ? context.accentColor.withAlpha(30)
-              : AppTheme.darkBackground,
+              : context.background,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: value ? context.accentColor : AppTheme.darkBorder,
+            color: value ? context.accentColor : context.border,
           ),
         ),
         child: Row(
@@ -1867,9 +1867,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             Icon(
               value ? Icons.check_box : Icons.check_box_outline_blank,
               size: 18,
-              color: value ? context.accentColor : AppTheme.textTertiary,
+              color: value ? context.accentColor : context.textTertiary,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(

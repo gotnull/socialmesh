@@ -201,7 +201,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       body: Stack(
         children: [
           // Animated background
@@ -223,10 +223,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                         onPressed: _currentPage < _pages.length - 1
                             ? _skip
                             : null,
-                        child: const Text(
+                        child: Text(
                           'Skip',
                           style: TextStyle(
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                           ),
@@ -368,7 +368,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
             ).createShader(bounds),
             child: Text(
               page.title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -382,9 +382,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           // Description
           Text(
             page.description,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
               height: 1.4,
             ),
             textAlign: TextAlign.center,
@@ -420,7 +420,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                         ],
                       )
                     : null,
-                color: isActive ? null : AppTheme.darkBorder,
+                color: isActive ? null : context.border,
                 borderRadius: BorderRadius.circular(5),
                 boxShadow: isActive
                     ? [
@@ -524,7 +524,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppTheme.darkCard, AppTheme.darkSurface],
+                  colors: [context.card, context.surface],
                 ),
                 border: Border.all(
                   color: page.accentColor.withValues(alpha: 0.3),
@@ -638,7 +638,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color, size: 18),
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
           Text(
             value,
             style: const TextStyle(
@@ -649,7 +649,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           ),
           Text(
             label,
-            style: TextStyle(fontSize: 9, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 9, color: context.textSecondary),
           ),
         ],
       ),

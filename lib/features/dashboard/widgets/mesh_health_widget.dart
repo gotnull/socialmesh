@@ -52,9 +52,9 @@ class MeshHealthContent extends ConsumerWidget {
                   child: CircularProgressIndicator(
                     value: 1.0,
                     strokeWidth: 8,
-                    backgroundColor: AppTheme.darkBorder,
+                    backgroundColor: context.border,
                     valueColor: AlwaysStoppedAnimation(
-                      AppTheme.darkBorder.withValues(alpha: 0.3),
+                      context.border.withValues(alpha: 0.3),
                     ),
                   ),
                 ),
@@ -200,20 +200,20 @@ class _HealthFactor extends StatelessWidget {
         Icon(
           icon,
           size: 18,
-          color: isGood ? context.accentColor : AppTheme.textTertiary,
+          color: isGood ? context.accentColor : context.textTertiary,
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(
           status,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: isGood ? Colors.white : AppTheme.textSecondary,
+            color: isGood ? Colors.white : context.textSecondary,
           ),
         ),
         Text(
           label,
-          style: const TextStyle(fontSize: 10, color: AppTheme.textTertiary),
+          style: TextStyle(fontSize: 10, color: context.textTertiary),
         ),
       ],
     );

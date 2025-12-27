@@ -199,7 +199,7 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
             borderRadius: BorderRadius.circular(16),
             child: Container(
               decoration: BoxDecoration(
-                color: AppTheme.darkCard.withValues(alpha: 0.9),
+                color: context.card.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: widget.accentColor.withValues(alpha: _glow.value),
@@ -321,12 +321,12 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
 
                           // Subtitle
                           if (widget.subtitle != null) ...[
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8),
                             Text(
                               widget.subtitle!,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppTheme.textTertiary,
+                                color: context.textTertiary,
                                 fontStyle: FontStyle.italic,
                                 fontFamily: AppTheme.fontFamily,
                               ),
@@ -350,7 +350,7 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
               child: CustomPaint(
                 size: const Size(20, 10),
                 painter: _BubbleTailPainter(
-                  color: AppTheme.darkCard.withValues(alpha: 0.9),
+                  color: context.card.withValues(alpha: 0.9),
                   borderColor: widget.accentColor.withValues(
                     alpha: _glow.value,
                   ),

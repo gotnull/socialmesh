@@ -217,13 +217,13 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: context.background,
         leading: widget.isInitialSetup
             ? null
             : IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                icon: Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () => Navigator.of(context).pop(),
               ),
         title: Text(
@@ -256,7 +256,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                       color: context.accentColor,
                       size: 24,
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,18 +290,18 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
               decoration: BoxDecoration(
-                color: AppTheme.darkCard,
+                color: context.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.darkBorder),
+                border: Border.all(color: context.border),
               ),
               child: TextField(
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Search regions...',
-                  hintStyle: const TextStyle(color: AppTheme.textTertiary),
-                  prefixIcon: const Icon(
+                  hintStyle: TextStyle(color: context.textTertiary),
+                  prefixIcon: Icon(
                     Icons.search,
-                    color: AppTheme.textTertiary,
+                    color: context.textTertiary,
                   ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
@@ -330,12 +330,12 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? context.accentColor.withValues(alpha: 0.15)
-                        : AppTheme.darkCard,
+                        : context.card,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected
                           ? context.accentColor
-                          : AppTheme.darkBorder,
+                          : context.border,
                       width: isSelected ? 2 : 1,
                     ),
                   ),
@@ -355,7 +355,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? context.accentColor.withValues(alpha: 0.2)
-                                    : AppTheme.darkBackground,
+                                    : context.background,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Center(
@@ -363,12 +363,12 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                                   Icons.cell_tower,
                                   color: isSelected
                                       ? context.accentColor
-                                      : AppTheme.textTertiary,
+                                      : context.textTertiary,
                                   size: 24,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            SizedBox(width: 16),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,15 +380,15 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                                       fontWeight: FontWeight.w600,
                                       color: isSelected
                                           ? Colors.white
-                                          : AppTheme.textSecondary,
+                                          : context.textSecondary,
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
+                                  SizedBox(height: 2),
                                   Text(
                                     region.description,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 13,
-                                      color: AppTheme.textTertiary,
+                                      color: context.textTertiary,
                                     ),
                                   ),
                                 ],
@@ -402,7 +402,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? context.accentColor
-                                    : AppTheme.darkBackground,
+                                    : context.background,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -412,14 +412,14 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                                   fontWeight: FontWeight.w600,
                                   color: isSelected
                                       ? Colors.white
-                                      : AppTheme.textTertiary,
+                                      : context.textTertiary,
                                 ),
                               ),
                             ),
                             // Show "Current" badge for the device's current region
                             if (_currentRegion == region.code &&
                                 !isSelected) ...[
-                              const SizedBox(width: 8),
+                              SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8,
@@ -473,8 +473,8 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.accentColor,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppTheme.darkCard,
-                    disabledForegroundColor: AppTheme.textTertiary,
+                    disabledBackgroundColor: context.card,
+                    disabledForegroundColor: context.textTertiary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

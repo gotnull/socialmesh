@@ -77,9 +77,9 @@ class WidgetRenderer extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       clipBehavior: Clip.antiAlias,
       alignment: Alignment.topLeft,
@@ -181,7 +181,7 @@ class _ElementRenderer extends StatelessWidget {
         );
 
       case ElementType.image:
-        return _buildImage();
+        return _buildImage(context);
 
       case ElementType.gauge:
         return GaugeRenderer(
@@ -199,28 +199,28 @@ class _ElementRenderer extends StatelessWidget {
         );
 
       case ElementType.map:
-        return _buildMap();
+        return _buildMap(context);
 
       case ElementType.shape:
-        return _buildShape();
+        return _buildShape(context);
 
       case ElementType.conditional:
         return _buildConditional();
 
       case ElementType.container:
-        return _buildContainer();
+        return _buildContainer(context);
 
       case ElementType.row:
-        return _buildRow();
+        return _buildRow(context);
 
       case ElementType.column:
-        return _buildColumn();
+        return _buildColumn(context);
 
       case ElementType.spacer:
         return SpacerRenderer(element: element);
 
       case ElementType.stack:
-        return _buildStack();
+        return _buildStack(context);
 
       case ElementType.button:
         return _buildButton();
@@ -292,14 +292,14 @@ class _ElementRenderer extends StatelessWidget {
     return iconMap[name] ?? Icons.help_outline;
   }
 
-  Widget _buildImage() {
+  Widget _buildImage(BuildContext context) {
     if (element.imageAsset != null) {
       return Image.asset(
         element.imageAsset!,
         width: element.style.width,
         height: element.style.height,
         fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(),
+        errorBuilder: (ctx, error, stackTrace) => _buildImagePlaceholder(ctx),
       );
     }
 
@@ -309,42 +309,42 @@ class _ElementRenderer extends StatelessWidget {
         width: element.style.width,
         height: element.style.height,
         fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(),
-        loadingBuilder: (_, child, progress) {
+        errorBuilder: (ctx, error, stackTrace) => _buildImagePlaceholder(ctx),
+        loadingBuilder: (ctx, child, progress) {
           if (progress == null) return child;
-          return _buildImagePlaceholder();
+          return _buildImagePlaceholder(ctx);
         },
       );
     }
 
-    return _buildImagePlaceholder();
+    return _buildImagePlaceholder(context);
   }
 
-  Widget _buildImagePlaceholder() {
+  Widget _buildImagePlaceholder(BuildContext context) {
     return Container(
       width: element.style.width ?? 40,
       height: element.style.height ?? 40,
       decoration: BoxDecoration(
-        color: AppTheme.darkBorder,
+        color: context.border,
         borderRadius: BorderRadius.circular(element.style.borderRadius ?? 4),
       ),
       child: Icon(
         Icons.image_outlined,
-        color: AppTheme.textTertiary,
+        color: context.textTertiary,
         size: (element.style.width ?? 40) * 0.5,
       ),
     );
   }
 
-  Widget _buildMap() {
+  Widget _buildMap(BuildContext context) {
     // Placeholder for mini map - actual map implementation would use flutter_map
     return Container(
       width: element.style.width,
       height: element.style.height ?? 100,
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
+        color: context.background,
         borderRadius: BorderRadius.circular(element.style.borderRadius ?? 8),
-        border: Border.all(color: AppTheme.darkBorder),
+        border: Border.all(color: context.border),
       ),
       child: Stack(
         children: [
@@ -365,12 +365,12 @@ class _ElementRenderer extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: AppTheme.darkCard.withValues(alpha: 0.8),
+                color: context.card.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 'Map View',
-                style: TextStyle(color: AppTheme.textTertiary, fontSize: 10),
+                style: TextStyle(color: context.textTertiary, fontSize: 10),
               ),
             ),
           ),
@@ -402,7 +402,7 @@ class _ElementRenderer extends StatelessWidget {
     );
   }
 
-  Widget _buildShape() {
+  Widget _buildShape(BuildContext context) {
     // Build child widget if shape has children (e.g., circle with icon inside)
     Widget? childWidget;
     if (element.children.isNotEmpty) {
@@ -441,12 +441,12 @@ class _ElementRenderer extends StatelessWidget {
     return ShapeRenderer(
       element: element,
       accentColor: accentColor,
-      borderColor: AppTheme.darkBorder,
+      borderColor: context.border,
       child: childWidget,
     );
   }
 
-  Widget _buildContainer() {
+  Widget _buildContainer(BuildContext context) {
     final children = element.children.map((child) {
       return _ElementRenderer(
         element: child,
@@ -480,7 +480,7 @@ class _ElementRenderer extends StatelessWidget {
     );
   }
 
-  Widget _buildRow() {
+  Widget _buildRow(BuildContext context) {
     final spacing = element.style.spacing ?? 0;
     final children = <Widget>[];
     final shouldStretch = fillParent || element.style.expanded == true;
@@ -535,7 +535,7 @@ class _ElementRenderer extends StatelessWidget {
     return row;
   }
 
-  Widget _buildColumn() {
+  Widget _buildColumn(BuildContext context) {
     final spacing = element.style.spacing ?? 0;
     final children = <Widget>[];
 
@@ -575,7 +575,7 @@ class _ElementRenderer extends StatelessWidget {
     );
   }
 
-  Widget _buildStack() {
+  Widget _buildStack(BuildContext context) {
     return Stack(
       alignment: element.style.alignmentValue ?? Alignment.center,
       children: element.children.map((child) {
